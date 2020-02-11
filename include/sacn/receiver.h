@@ -239,4 +239,4 @@ uint32_t sacn_get_expired_wait();
  * @}
  */
 
-#endif /* _SACN_RECEIVER_H_ */
+#endif /* SACN_RECEIVER_H_ */
