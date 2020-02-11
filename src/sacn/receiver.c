@@ -82,6 +82,8 @@ static struct SacnRecvState
 
 /*********************** Private function prototypes *************************/
 
+// Receiver creation and destruction
+static etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config);
 static SacnReceiver* create_new_receiver(const SacnReceiverConfig* config);
 static etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnReceiverConfig* config);
 static etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver);
@@ -185,6 +187,19 @@ void sacn_receiver_deinit(void)
 }
 
 /*!
+ * \brief Initialize an sACN Receiver Config struct to default values.
+ *
+ * \param[out] config Config struct to initialize.
+ */
+void sacn_receiver_config_init(SacnReceiverConfig* config)
+{
+  if (config)
+  {
+    memset(config, 0, sizeof(SacnReceiverConfig));
+  }
+}
+
+/*!
  * \brief Create a new sACN receiver to listen for sACN data on a universe.
  *
  * An sACN receiver can listen on one universe at a time, and each universe can only be listened to
@@ -212,11 +227,11 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
   if (!sacn_initialized())
     return kEtcPalErrNotInit;
 
-  etcpal_error_t res = sacn_validate_netint_config(config->netints, config->num_netints);
+  etcpal_error_t res = validate_receiver_config(config);
   if (res != kEtcPalErrOk)
     return res;
 
-  if (SACN_LOCK())
+  if (sacn_lock())
   {
     // First check to see if we are already listening on this universe.
     SacnReceiverKeys lookup_keys;
@@ -255,7 +270,7 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
         FREE_RECEIVER(receiver);
       }
     }
-    SACN_UNLOCK();
+    sacn_unlock();
   }
   else
   {
@@ -283,7 +298,7 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
     return kEtcPalErrNotInit;
 
   etcpal_error_t res = kEtcPalErrOk;
-  if (SACN_LOCK())
+  if (sacn_lock())
   {
     SacnReceiver* receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers, &handle);
     if (receiver)
@@ -297,7 +312,7 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
     {
       res = kEtcPalErrNotFound;
     }
-    SACN_UNLOCK();
+    sacn_unlock();
   }
   else
   {
@@ -322,11 +337,11 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe)
+etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id)
 {
   // TODO
   ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(new_universe);
+  ETCPAL_UNUSED_ARG(new_universe_id);
   return kEtcPalErrNotImpl;
 }
 
@@ -342,10 +357,10 @@ void sacn_set_standard_version(sacn_standard_version_t version)
   if (!sacn_initialized())
     return;
 
-  if (SACN_LOCK())
+  if (sacn_lock())
   {
     receiver_state.version_listening = version;
-    SACN_UNLOCK();
+    sacn_unlock();
   }
 }
 
@@ -357,17 +372,17 @@ void sacn_set_standard_version(sacn_standard_version_t version)
  * \return Version of sACN to which the module is listening, or #kSacnStandardVersionNone if the module is
  *         not initialized.
  */
-sacn_standard_version_t sacnrecv_get_standard_version()
+sacn_standard_version_t sacn_get_standard_version()
 {
   sacn_standard_version_t res = kSacnStandardVersionNone;
 
   if (!sacn_initialized())
     return res;
 
-  if (SACN_LOCK())
+  if (sacn_lock())
   {
     res = receiver_state.version_listening;
-    SACN_UNLOCK();
+    sacn_unlock();
   }
   return res;
 }
@@ -376,20 +391,20 @@ sacn_standard_version_t sacnrecv_get_standard_version()
  * \brief Set the expired notification wait time.
  *
  * The library will wait at least this long after a data loss condition has been encountered before
- * sending a \ref SacnRecvCallbacks::sources_lost "sources_lost()" notification. However, the wait
- * may be longer due to the data loss algorithm (see \ref data_loss_behavior).
+ * sending a \ref SacnSourcesLostCallback "sources_lost()" notification. However, the wait may be
+ * longer due to the data loss algorithm (see \ref data_loss_behavior).
  *
  * \param[in] wait_ms Wait time in milliseconds.
  */
-void sacnrecv_set_expired_wait(uint32_t wait_ms)
+void sacn_set_expired_wait(uint32_t wait_ms)
 {
   if (!sacn_initialized())
     return;
 
-  if (SACN_LOCK())
+  if (sacn_lock())
   {
     receiver_state.expired_wait = wait_ms;
-    SACN_UNLOCK();
+    sacn_unlock();
   }
 }
 
@@ -397,22 +412,22 @@ void sacnrecv_set_expired_wait(uint32_t wait_ms)
  * \brief Get the current value of the expired notification wait time.
  *
  * The library will wait at least this long after a data loss condition has been encountered before
- * sending a \ref SacnRecvCallbacks::sources_lost "sources_lost()" notification. However, the wait
- * may be longer due to the data loss algorithm (see \ref data_loss_behavior).
+ * sending a \ref SacnSourcesLostCallback "sources_lost()" notification. However, the wait may be
+ * longer due to the data loss algorithm (see \ref data_loss_behavior).
  *
  * \return Wait time in milliseconds.
  */
-uint32_t sacnrecv_get_expired_wait()
+uint32_t sacn_get_expired_wait()
 {
   uint32_t res = SACN_DEFAULT_EXPIRED_WAIT_MS;
 
   if (!sacn_initialized())
     return res;
 
-  if (SACN_LOCK())
+  if (sacn_lock())
   {
     res = receiver_state.expired_wait;
-    SACN_UNLOCK();
+    sacn_unlock();
   }
   return res;
 }
@@ -420,6 +435,22 @@ uint32_t sacnrecv_get_expired_wait()
 /**************************************************************************************************
  * Internal helpers for receiver creation and destruction
  *************************************************************************************************/
+
+/*
+ * Make sure the values provided in an SacnReceiverConfig struct are valid.
+ */
+etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
+{
+  SACN_ASSERT(config);
+
+  if (config->universe_id == 0 || config->universe_id > 64000 || !config->callbacks.universe_data ||
+      !config->callbacks.sources_lost)
+  {
+    return kEtcPalErrInvalid;
+  }
+
+  return sacn_validate_netint_config(config->netints, config->num_netints);
+}
 
 /*
  * Allocate a new receiver instances and do essential first initialization, in preparation for
@@ -598,11 +629,11 @@ void sacn_receive_thread(void* arg)
 
   while (context->running)
   {
-    if (SACN_LOCK())
+    if (sacn_lock())
     {
       sacn_add_pending_sockets(context);
       sacn_cleanup_dead_sockets(context);
-      SACN_UNLOCK();
+      sacn_unlock();
     }
 
     SacnReadResult read_result;
@@ -728,7 +759,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     return;
   }
 
-  if (SACN_LOCK())
+  if (sacn_lock())
   {
     SacnReceiverKeys lookup_keys;
     lookup_keys.universe = header->universe_id;
@@ -736,14 +767,14 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     if (!receiver)
     {
       // We are not listening to this universe.
-      SACN_UNLOCK();
+      sacn_unlock();
       return;
     }
 
     if (header->preview && receiver->filter_preview_data)
     {
       // This universe is filtering preview data.
-      SACN_UNLOCK();
+      sacn_unlock();
       return;
     }
 
@@ -760,14 +791,14 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
       // but not yet removed.
       if (src->terminated)
       {
-        SACN_UNLOCK();
+        sacn_unlock();
         return;
       }
 
       if (!check_sequence(seq, src->seq))
       {
         // Drop the packet
-        SACN_UNLOCK();
+        sacn_unlock();
         return;
       }
       src->seq = seq;
@@ -790,7 +821,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     }
     // Else we weren't tracking this source before and it is a termination packet. Ignore.
 
-    SACN_UNLOCK();
+    sacn_unlock();
   }
 
   // Deliver callbacks if applicable.
@@ -1066,7 +1097,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
   SourcesLostNotification* sources_lost = NULL;
   size_t num_sources_lost = 0;
 
-  if (SACN_LOCK())
+  if (sacn_lock())
   {
     size_t num_receivers = recv_thread_context->num_receivers;
 
@@ -1074,7 +1105,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
     sources_lost = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
     if (!sampling_ended || !sources_lost)
     {
-      SACN_UNLOCK();
+      sacn_unlock();
       SACN_LOG_ERR("Could not allocate memory to track state data for sACN receivers!");
       return;
     }
@@ -1094,7 +1125,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
       process_receiver_sources(recv_thread_context->thread_id, receiver, &sources_lost[num_sources_lost++]);
     }
 
-    SACN_UNLOCK();
+    sacn_unlock();
   }
 
   deliver_periodic_callbacks(sources_lost, num_sources_lost, sampling_ended, num_sampling_ended);

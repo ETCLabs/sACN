@@ -29,19 +29,18 @@ To avoid this unwanted behavior, the algorithm is specified as follows:
  * Whenever a source is considered to be lost, either due to the Stream_Terminated bit being set or
    a data loss timeout, the library shall compile a list of all other sources currently being
    tracked for that universe and wait until their online/offline status has been verified before
-   sending a [sources_lost()](@ref SacnReceiverCallbacks::sources_lost) notification.
+   sending a [sources_lost()](@ref SacnSourcesLostCallback) notification.
  * If multiple sources are determined to be offline during this verification, they shall all be
-   included in the same [sources_lost()](@ref SacnReceiverCallbacks::sources_lost) notification so
-   that the application can react to them simultaneously.
+   included in the same [sources_lost()](@ref SacnSourcesLostCallback) notification so that the
+   application can react to them simultaneously.
 
 This results in a time period, hereafter referred to as a **settling time**, after a source has
 been determined to be lost, during which the online/offline status of all other sources is
 verified. This settling time runs concurrently with the **expired notification wait time**, which
-is a global option settable through [sacnrecv_set_expired_wait()](@ref sacnrecv_set_expired_wait()).
+is a global option settable through #sacn_set_expired_wait().
 The settling time could range from almost instantaneous to 2.5 seconds, and thus could be longer or
-shorter than the expired notification wait time. The
-[sources_lost()](@ref SacnRecvCallbacks::sources_lost) notification is not sent until both time
-periods expire.
+shorter than the expired notification wait time. The [sources_lost()](@ref SacnSourcesLostCallback)
+notification is not sent until both time periods expire.
 
 In this example, a source is lost due to timeout, and the settling time is shorter than the expired
 notification wait time:

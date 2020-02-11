@@ -47,12 +47,16 @@
 
 /* Some option hints based on well-known compile definitions */
 
+/*! \cond */
+
 /* Are we being compiled for a full-featured OS? */
 #if defined(_WIN32) || defined(__APPLE__) || defined(__linux__) || defined(__unix__) || defined(_POSIX_VERSION)
 #define SACN_FULL_OS_AVAILABLE_HINT 1
 #else
 #define SACN_FULL_OS_AVAILABLE_HINT 0
 #endif
+
+/*! \endcond */
 
 /*************************** sACN Global Options *****************************/
 
@@ -241,11 +245,16 @@
 #define SACN_RECEIVER_MAX_SUBS_PER_SOCKET 20
 #endif
 
+/*! \cond */
 /* TODO investigate. Windows value was 110592 */
 #ifndef SACN_RECEIVER_SOCKET_RCVBUF_SIZE
 #define SACN_RECEIVER_SOCKET_RCVBUF_SIZE 32768
 #endif
+/*! \endcond */
 
+/*!
+ * \brief Currently unused; will be used in the future.
+ */
 #ifndef SACN_RECEIVER_MAX_THREADS
 #define SACN_RECEIVER_MAX_THREADS 4
 #endif
@@ -264,6 +273,7 @@
  * @{
  */
 
+/*! \cond */
 /* TODO investigate. Windows value was 20 */
 #ifndef SACN_SOURCE_MULTICAST_TTL
 #define SACN_SOURCE_MULTICAST_TTL 64
@@ -273,6 +283,7 @@
 #ifndef SACN_SOURCE_UNICAST_TTL
 #define SACN_SOURCE_UNICAST_TTL 64
 #endif
+/*! \endcond */
 
 /*!
  * \brief The maximum number of universes that can be sent on simultaneously.

@@ -73,7 +73,7 @@ typedef enum
  * after a universe enters a data loss condition before calling the sources_lost() callback. Can be
  * changed with sacn_set_expired_wait().
  */
-#define SACN_DEFAULT_EXPIRED_WAIT_MS 1000
+#define SACN_DEFAULT_EXPIRED_WAIT_MS 1000u
 
 /*! Information about a sACN source. */
 typedef struct SacnSource
@@ -185,40 +185,46 @@ typedef void (*SacnSourceLimitExceededCallback)(sacn_receiver_t handle, void* co
 /*! A set of callback functions that the library uses to notify the application about sACN events. */
 typedef struct SacnRecvCallbacks
 {
-  SacnUniverseDataCallback universe_data;
-  SacnSourcesLostCallback sources_lost;
-  SacnSourcePcpLostCallback source_pcp_lost;
-  SacnSamplingEndedCallback sampling_ended;
-  SacnSourceLimitExceededCallback source_limit_exceeded;
+  SacnUniverseDataCallback universe_data;                /*!< Required */
+  SacnSourcesLostCallback sources_lost;                  /*!< Required */
+  SacnSourcePcpLostCallback source_pcp_lost;             /*!< Optional */
+  SacnSamplingEndedCallback sampling_ended;              /*!< Optional */
+  SacnSourceLimitExceededCallback source_limit_exceeded; /*!< Optional */
 } SacnReceiverCallbacks;
 
 /*! A set of configuration information for an sACN receiver. */
 typedef struct SacnReceiverConfig
 {
+  /********* Required values **********/
+
   /*! Universe number on which to listen for sACN. */
   uint16_t universe_id;
+  /*! The callbacks this receiver will use to notify the application of events. */
+  SacnReceiverCallbacks callbacks;
+
+  /********* Optional values **********/
+
+  /*! A set of option flags. See "sACN receiver flags". */
+  unsigned int flags;
+  /*! Pointer to opaque data passed back with each callback. */
+  void* callback_context;
   /*! (optional) array of network interfaces on which to listen to the specified universe. */
   const SacnMcastNetintId* netints;
   /*! Number of elements in the netints array. */
   size_t num_netints;
-  /*! A set of option flags. See "sACN receiver flags". */
-  unsigned int flags;
-  /*! The callbacks this receiver will use to notify the application of events. */
-  SacnReceiverCallbacks callbacks;
-  /*! Pointer to opaque data passed back with each callback. */
-  void* callback_context;
 } SacnReceiverConfig;
 
+/*! A default-value initializer for an SacnReceiverConfig struct. */
 #define SACN_RECEIVER_CONFIG_DEFAULT_INIT               \
   {                                                     \
-    0, NULL, 0, 0, {NULL, NULL, NULL, NULL, NULL}, NULL \
+    0, {NULL, NULL, NULL, NULL, NULL}, 0, NULL, NULL, 0 \
   }
 
 void sacn_receiver_config_init(SacnReceiverConfig* config);
 
 etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle);
 etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle);
-etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe);
+etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id);
 
 void sacn_set_standard_version(sacn_standard_version_t version);
 sacn_standard_version_t sacn_get_standard_version();

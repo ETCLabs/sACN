@@ -25,8 +25,15 @@
 #include "etcpal_mock/socket.h"
 #include "etcpal/cpp/inet.h"
 #include "sacn/private/mem.h"
+#include "sacn/private/opts.h"
 #include "gtest/gtest.h"
 #include "fff.h"
+
+#if SACN_DYNAMIC_MEM
+#define TestSockets TestSocketsDynamic
+#else
+#define TestSockets TestSocketsStatic
+#endif
 
 #ifdef _MSC_VER
 // disable strcpy() warnings on MSVC

@@ -6,6 +6,21 @@
   C++. CMake can be downloaded [here](https://cmake.org/download). It is also available as a
   package in many Linux distributions.
 
+## Configuring sACN
+
+sACN can be provided a configuration file called "sacn_config.h" when compiling to change its
+behavior. This is most applicable when compiling sACN for an embedded target; for non-embedded
+applications, the default compilation options are usually fine.
+
+To provide an sacn_config.h when building sACN with CMake, pass its location using the
+SACN_CONFIG_LOC CMake option:
+```
+$ cmake -DSACN_CONFIG_LOC=path/to/folder/containing/sacn_config.h ...
+```
+
+If you are building sACN manually/without CMake, add the definition `SACN_HAVE_CONFIG_H` in your
+compile settings and add the sacn_config.h location to your include paths.
+
 ## Including sACN in your project
 
 ### Including sACN in CMake projects
@@ -31,12 +46,13 @@ configuration is necessary. EtcPal helps make this possible; see the
 [EtcPal embedded build documentation](https://etclabs.github.io/EtcPal/docs/head/building_for_embedded.html)
 for more details.
 
-1. ```
+1. Create the build directory:
+   ```
    $ mkdir build && cd build
    ```
 2. Run CMake to configure the sACN project:
    ```
-   cmake -DCMAKE_INSTALL_PREFIX=path/to/install/location path/to/sACN/root
+   $ cmake -DCMAKE_INSTALL_PREFIX=path/to/install/location path/to/sACN/root
    ```
    `-G` can be used to specify a build system; otherwise, CMake will choose a system-appropriate
    default. CMake also has a GUI tool that can be used for this, as well as plugins available for
@@ -45,16 +61,16 @@ for more details.
    `/usr/local/include` and `/usr/local/lib` on a *nix system.
 3. Use CMake to invoke the generated build system to build the sACN library:
    ```
-   cmake --build .
+   $ cmake --build .
    ```
    If you are generating IDE project files, you can use CMake to open the projects in the IDE:
    ```
-   cmake --open .
+   $ cmake --open .
    ```
 4. Use CMake's installation target to install the built binaries and headers. This usually shows up
    as another project called "INSTALL" inside an IDE or as a target called "install"
    (e.g. `make install` for a makefile generator). You can also do it manually from the command
    line in the build directory:
    ```
-   cmake -P cmake_install.cmake
+   $ cmake -P cmake_install.cmake
    ```

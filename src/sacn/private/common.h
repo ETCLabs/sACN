@@ -315,10 +315,9 @@ typedef struct SacnRecvThreadContext
  *****************************************************************************/
 
 extern const EtcPalLogParams* sacn_log_params;
-extern etcpal_mutex_t sacn_lock;
 
-#define SACN_LOCK() etcpal_mutex_lock(&sacn_lock)
-#define SACN_UNLOCK() etcpal_mutex_unlock(&sacn_lock)
+bool sacn_lock(void);
+void sacn_unlock(void);
 
 bool sacn_initialized(void);
 
