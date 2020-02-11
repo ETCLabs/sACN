@@ -39,10 +39,10 @@
  * \name sACN version numbers
  * @{
  */
-#define SACN_VERSION_MAJOR 1 /*!< The major version. */
-#define SACN_VERSION_MINOR 0 /*!< The minor version. */
-#define SACN_VERSION_PATCH 0 /*!< The patch version. */
-#define SACN_VERSION_BUILD 6 /*!< The build number. */
+#define SACN_VERSION_MAJOR @SACN_VERSION_MAJOR@ /*!< The major version. */
+#define SACN_VERSION_MINOR @SACN_VERSION_MINOR@ /*!< The minor version. */
+#define SACN_VERSION_PATCH @SACN_VERSION_PATCH@ /*!< The patch version. */
+#define SACN_VERSION_BUILD @SACN_VERSION_BUILD@ /*!< The build number. */
 /*!
  * @}
  */
@@ -51,9 +51,9 @@
  * \name sACN version strings
  * @{
  */
-#define SACN_VERSION_STRING      "1.0.0.6"
-#define SACN_VERSION_DATESTR     "01.Oct.2018"
-#define SACN_VERSION_COPYRIGHT   "Copyright 2018 Electronic Theatre Controls, Inc."
+#define SACN_VERSION_STRING      "@SACN_VERSION_STRING@"
+#define SACN_VERSION_DATESTR     "@SACN_VERSION_DATESTR@"
+#define SACN_VERSION_COPYRIGHT   "@SACN_VERSION_COPYRIGHT@"
 #define SACN_VERSION_PRODUCTNAME "sACN"
 /*!
  * @}

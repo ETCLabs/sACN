@@ -34,13 +34,15 @@ function(sacn_add_dependency target loc_variable)
                           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                           RESULT_VARIABLE GIT_SUBMOD_RESULT)
           if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-            message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+            message(FATAL_ERROR "Error updating the git submodule for ${target}: code ${GIT_SUBMOD_RESULT}.")
           endif()
         endif()
       endif()
 
       if(NOT EXISTS ${SACN_ROOT}/external/${target}/CMakeLists.txt)
-          message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
+          message(FATAL_ERROR "Unable to update ${target} from its git submodule dependency. Please try updating the submodule manually.\n"
+            "If you are using an imported version of sACN, make sure you have imported ${target} alongside sACN."
+          )
       endif()
 
       add_subdirectory(${SACN_ROOT}/external/${target} ${CMAKE_BINARY_DIR}/external/${target})

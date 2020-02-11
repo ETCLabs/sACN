@@ -26,6 +26,8 @@
 #ifndef SACN_PRIVATE_SOURCE_H_
 #define SACN_PRIVATE_SOURCE_H_
 
+#include "etcpal/error.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
