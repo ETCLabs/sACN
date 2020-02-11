@@ -1,0 +1,50 @@
+# ClangFormat file for ETC R&D Network Products dept.
+#
+# To learn more about ClangFormat, go to https://clang.llvm.org/docs/ClangFormat.html
+#
+# This file is written for ClangFormat 9.0.0 or higher.
+# This file applies to C and C++.
+# Revision 1: 2019-07-01 Initial Creation
+# Revision 2: 2019-11-08 Updated BraceWrapping directive for ClangFormat 9.0.0 - added "AfterCaseLabel"
+
+Language: Cpp
+BasedOnStyle: Google
+
+# Brace wrapping: Allman style, except for extern "C" blocks.
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: false
+  BeforeCatch: true
+  BeforeElse: true
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+
+# Misc other options
+AccessModifierOffset: -2
+AlignAfterOpenBracket: Align
+AlignConsecutiveDeclarations: false
+AlignOperands: true
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortLoopsOnASingleLine: false
+BreakConstructorInitializers: BeforeComma
+ColumnLimit: 120
+DerivePointerAlignment: false
+PointerAlignment: Left
+SortIncludes: false
+
+# Leave Doxygen directives alone
+CommentPragmas: '^(!? +\\|!<)'

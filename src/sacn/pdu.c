@@ -1,0 +1,182 @@
+/******************************************************************************
+ * Copyright 2020 ETC Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************
+ * This file is a part of sACN. For more information, go to:
+ * https://github.com/ETCLabs/sACN
+ *****************************************************************************/
+
+#include "sacn/private/pdu.h"
+
+#include <string.h>
+#include "etcpal/pack.h"
+#include "etcpal/acn_rlp.h"
+
+// Suppress strncpy() warning on Windows/MSVC.
+#ifdef _MSC_VER
+#pragma warning(disable : 4996)
+#endif
+
+#define SACN_DATA_PACKET_MIN_SIZE 88
+#define SACN_DMPVECT_SET_PROPERTY 0x02
+
+bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* header, uint8_t* seq, bool* terminated,
+                            const uint8_t** pdata)
+{
+  // Check the input parameters including buffer size
+  if (!buf || !header || !seq || !terminated || !pdata || buflen < SACN_DATA_PACKET_MIN_SIZE)
+    return false;
+
+  // Check the framing layer vector
+  if (etcpal_unpack_u32b(&buf[2]) != VECTOR_E131_DATA_PACKET)
+    return false;
+
+  // Check the DMP vector and fixed values
+  if (buf[79] != SACN_DMPVECT_SET_PROPERTY || buf[80] != 0xa1u || etcpal_unpack_u16b(&buf[81]) != 0x0000u ||
+      etcpal_unpack_u16b(&buf[83]) != 0x0001u)
+  {
+    return false;
+  }
+
+  // Make sure the length of the slot data as communicated by the slot count doesn't overflow the
+  // data buffer. Slot count value on the wire includes the start code, so subtract 1.
+  header->slot_count = etcpal_unpack_u16b(&buf[85]) - 1;
+  *pdata = &buf[88];
+  if (*pdata + header->slot_count > buf + buflen)
+    return false;
+
+  strncpy(header->source_name, (char*)&buf[6], SACN_SOURCE_NAME_MAX_LEN);
+  // Just in case the string is not null terminated even though it is required to be
+  header->source_name[SACN_SOURCE_NAME_MAX_LEN - 1] = '\0';
+  header->priority = buf[70];
+  // TODO header->sync_address = etcpal_unpack_u16b(&buf[71]);
+  *seq = buf[73];
+  header->preview = (bool)(buf[74] & SACN_OPTVAL_PREVIEW);
+  *terminated = (bool)(buf[74] & SACN_OPTVAL_TERMINATED);
+  header->universe_id = etcpal_unpack_u16b(&buf[75]);
+  header->start_code = buf[87];
+  return true;
+}
+
+#define DRAFT_SACN_DATA_PACKET_MIN_SIZE 52
+#define DRAFT_SACN_DATA_SOURCE_NAME_LEN 32
+
+bool parse_draft_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* header, uint8_t* seq, bool* terminated,
+                                  const uint8_t** pdata)
+{
+  // Check the input parameters including buffer size
+  if (!buf || !header || !seq || !terminated || !pdata || buflen < DRAFT_SACN_DATA_PACKET_MIN_SIZE)
+    return false;
+
+  // Check the framing layer vector
+  if (etcpal_unpack_u32b(&buf[2]) != VECTOR_E131_DATA_PACKET)
+    return false;
+
+  // Check the DMP vector and fixed values
+  if (buf[44] != SACN_DMPVECT_SET_PROPERTY || buf[45] != 0xa1u || etcpal_unpack_u16b(&buf[48]) != 0x0001u)
+    return false;
+
+  // Make sure the length of the slot data as communicated by the slot count doesn't overflow the
+  // data buffer.
+  header->slot_count = etcpal_unpack_u16b(&buf[50]);
+  *pdata = &buf[52];
+  if (*pdata + header->slot_count > buf + buflen)
+    return false;
+
+  strncpy(header->source_name, (char*)&buf[6], DRAFT_SACN_DATA_SOURCE_NAME_LEN);
+  header->source_name[DRAFT_SACN_DATA_SOURCE_NAME_LEN] = '\0';
+  header->priority = buf[38];
+  if (header->priority == 0)
+    header->priority = 100;  // The default priority if the source isn't using priority.
+  *seq = buf[39];
+  header->preview = false;
+  *terminated = false;
+  header->universe_id = etcpal_unpack_u16b(&buf[40]);
+  header->start_code = buf[47];
+  return true;
+}
+
+#define SACN_FRAMING_OFFSET 38
+#define SACN_DMP_OFFSET 115
+
+void pack_sacn_data_header(uint8_t* buf, const EtcPalUuid* source_cid, const char* source_name, uint8_t priority,
+                           bool preview, uint16_t universe_id, uint8_t start_code, uint16_t slot_count)
+{
+  uint8_t* pcur = buf;
+
+  // UDP preamble
+  pcur += acn_pack_udp_preamble(pcur, ACN_UDP_PREAMBLE_SIZE);
+
+  // Root layer flags and length
+  *pcur = 0;
+  ACN_PDU_SET_V_FLAG(*pcur);
+  ACN_PDU_SET_H_FLAG(*pcur);
+  ACN_PDU_SET_D_FLAG(*pcur);
+  ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE - ACN_UDP_PREAMBLE_SIZE + slot_count);
+  pcur += 2;
+
+  // RLP vector and header
+  etcpal_pack_u32b(pcur, ACN_VECTOR_ROOT_E131_DATA);
+  pcur += 4;
+  memcpy(pcur, source_cid->data, ETCPAL_UUID_BYTES);
+  pcur += ETCPAL_UUID_BYTES;
+
+  // Framing layer flags and length
+  *pcur = 0;
+  ACN_PDU_SET_V_FLAG(*pcur);
+  ACN_PDU_SET_H_FLAG(*pcur);
+  ACN_PDU_SET_D_FLAG(*pcur);
+  ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE - SACN_FRAMING_OFFSET + slot_count);
+  pcur += 2;
+
+  // Framing layer
+  etcpal_pack_u32b(pcur, VECTOR_E131_DATA_PACKET);
+  pcur += 4;
+  strncpy((char*)pcur, source_name, SACN_SOURCE_NAME_MAX_LEN);
+  pcur[SACN_SOURCE_NAME_MAX_LEN - 1] = '\0';
+  pcur += SACN_SOURCE_NAME_MAX_LEN;
+  *pcur = priority;
+  ++pcur;
+  etcpal_pack_u16b(pcur, 0u);
+  pcur += 2;
+  *pcur = 0;
+  ++pcur;
+  *pcur = 0;
+  if (preview)
+    *pcur |= SACN_OPTVAL_PREVIEW;
+  ++pcur;
+  etcpal_pack_u16b(pcur, universe_id);
+  pcur += 2;
+
+  // DMP layer flags and length
+  *pcur = 0;
+  ACN_PDU_SET_V_FLAG(*pcur);
+  ACN_PDU_SET_H_FLAG(*pcur);
+  ACN_PDU_SET_D_FLAG(*pcur);
+  ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE - SACN_DMP_OFFSET + slot_count);
+  pcur += 2;
+
+  // DMP layer
+  *pcur = SACN_DMPVECT_SET_PROPERTY;
+  ++pcur;
+  *pcur = 0xa1u;
+  ++pcur;
+  etcpal_pack_u16b(pcur, 0u);
+  pcur += 2;
+  etcpal_pack_u16b(pcur, 1u);
+  pcur += 2;
+  etcpal_pack_u16b(pcur, slot_count + 1);
+  pcur += 2;
+  *pcur = start_code;
+}
