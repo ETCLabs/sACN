@@ -1,2 +1,2 @@
-import sACN/... //NET_sACN/2.0_main/...@sACN_2.0.0.1
-import EtcPal/... //GITHUB_EtcPal/main_latest/...@EtcPal_0.3.0.8
+import sACN/... //GITHUB_sACN/main_latest/...@sACN_2.0.0.1
+import EtcPal/... //GITHUB_EtcPal/main_latest/...@EtcPal_0.3.0.9
