@@ -218,7 +218,7 @@ static void handle_sources_lost(sacn_receiver_t handle, const SacnLostSource* lo
  * sending per-channel priority packets and stopped sending them, but is still sending NULL start
  * code data.
  */
-static void handle_source_pcp_lost(sacn_receiver_t handle, const SacnSource* source, void* context)
+static void handle_source_pcp_lost(sacn_receiver_t handle, const SacnRemoteSource* source, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(context);

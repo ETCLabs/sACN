@@ -459,7 +459,7 @@ bool add_online_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* ci
   SACN_ASSERT(status_lists);
   SACN_ASSERT(cid);
 
-  CHECK_ROOM_FOR_ONE_MORE(status_lists, online, SacnSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  CHECK_ROOM_FOR_ONE_MORE(status_lists, online, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
 
   status_lists->online[status_lists->num_online].cid = *cid;
   status_lists->online[status_lists->num_online].name = name;
@@ -481,7 +481,7 @@ bool add_unknown_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* c
   SACN_ASSERT(status_lists);
   SACN_ASSERT(cid);
 
-  CHECK_ROOM_FOR_ONE_MORE(status_lists, unknown, SacnSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  CHECK_ROOM_FOR_ONE_MORE(status_lists, unknown, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
 
   status_lists->unknown[status_lists->num_unknown].cid = *cid;
   status_lists->unknown[status_lists->num_unknown].name = name;
@@ -694,7 +694,7 @@ etcpal_error_t init_status_lists_entry(SacnSourceStatusLists* status_lists)
 
   if (res == kEtcPalErrOk)
   {
-    status_lists->online = calloc(INITIAL_CAPACITY, sizeof(SacnSourceInternal));
+    status_lists->online = calloc(INITIAL_CAPACITY, sizeof(SacnRemoteSourceInternal));
     if (status_lists->online)
       status_lists->online_capacity = INITIAL_CAPACITY;
     else
@@ -703,7 +703,7 @@ etcpal_error_t init_status_lists_entry(SacnSourceStatusLists* status_lists)
 
   if (res == kEtcPalErrOk)
   {
-    status_lists->unknown = calloc(INITIAL_CAPACITY, sizeof(SacnSourceInternal));
+    status_lists->unknown = calloc(INITIAL_CAPACITY, sizeof(SacnRemoteSourceInternal));
     if (status_lists->unknown)
       status_lists->unknown_capacity = INITIAL_CAPACITY;
     else

@@ -161,7 +161,7 @@ implemented to handle the condition where a source that was previously sending `
 sending them:
 
 ```c
-void my_source_pcp_lost_callback(sacn_receiver_t handle, const SacnSource* source, void* context)
+void my_source_pcp_lost_callback(sacn_receiver_t handle, const SacnRemoteSource* source, void* context)
 {
   // Check handle and/or context as necessary...
 

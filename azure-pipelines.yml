@@ -3,6 +3,7 @@
 trigger:
 - develop
 - master
+- initial-github-impl
 - release/*
 - refs/tags/v*.*.*.*
 

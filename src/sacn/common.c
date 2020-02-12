@@ -52,7 +52,7 @@ static etcpal_mutex_t sacn_mutex;
  * Do all necessary initialization before other sACN API functions can be called.
  *
  * \param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
- *                      #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
+ *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
  * \return #kEtcPalErrOk: Initialization successful.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
@@ -140,7 +140,7 @@ void sacn_deinit(void)
   {
     sacn_state.initted = false;
 
-    // sacn_source_deinit();
+    sacn_source_deinit();
     sacn_receiver_deinit();
     sacn_data_loss_deinit();
     sacn_sockets_deinit();

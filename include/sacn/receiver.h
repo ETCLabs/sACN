@@ -75,14 +75,14 @@ typedef enum
  */
 #define SACN_DEFAULT_EXPIRED_WAIT_MS 1000u
 
-/*! Information about a sACN source. */
-typedef struct SacnSource
+/*! Information about a remote sACN source being tracked by a receiver. */
+typedef struct SacnRemoteSource
 {
   /*! The Component Identifier (CID) of the source. */
   EtcPalUuid cid;
   /*! The name of the source. */
   char name[SACN_SOURCE_NAME_MAX_LEN];
-} SacnSource;
+} SacnRemoteSource;
 
 /*! Information about a sACN source that was lost. */
 typedef struct SacnLostSource
@@ -152,7 +152,7 @@ typedef void (*SacnSourcesLostCallback)(sacn_receiver_t handle, const SacnLostSo
  *                   priority.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnSourcePcpLostCallback)(sacn_receiver_t handle, const SacnSource* source, void* context);
+typedef void (*SacnSourcePcpLostCallback)(sacn_receiver_t handle, const SacnRemoteSource* source, void* context);
 
 /*!
  * \brief Notify that the sampling period has ended for a receiver.

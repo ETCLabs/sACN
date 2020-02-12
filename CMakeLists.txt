@@ -27,6 +27,22 @@ if(PROJECT_SOURCE_DIR_LC STREQUAL CMAKE_SOURCE_DIR_LC)
 
   # Allow folder grouping in generated IDE projects
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+  # Add a target to run Clang Format
+  file(GLOB_RECURSE FILES_TO_REFORMAT 
+    examples/*.c
+    examples/*.cpp
+    examples/*.h
+    include/*.h
+    src/*.c
+    src/*.cpp
+    src/*.h
+    tests/*.c
+    tests/*.cpp
+    tests/*.h
+  )
+  add_custom_target(reformat_all COMMAND clang-format -i ${FILES_TO_REFORMAT})
+  set_target_properties(reformat_all PROPERTIES FOLDER tools)
 endif()
 
 set(SACN_ROOT ${CMAKE_CURRENT_LIST_DIR})
@@ -66,9 +82,3 @@ endif()
 if(SACN_BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
-
-##################################### Misc ####################################
-
-# if(SACN_BUILD_TEST_TOOLS)
-#   add_subdirectory(tools/test)
-# endif()

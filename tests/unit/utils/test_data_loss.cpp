@@ -37,12 +37,12 @@
 #define TestDataLoss TestDataLossStatic
 #endif
 
-bool operator<(const SacnSourceInternal& a, const SacnSourceInternal& b)
+bool operator<(const SacnRemoteSourceInternal& a, const SacnRemoteSourceInternal& b)
 {
   return a.cid < b.cid;
 }
 
-bool operator==(const SacnSourceInternal& a, const SacnSourceInternal& b)
+bool operator==(const SacnRemoteSourceInternal& a, const SacnRemoteSourceInternal& b)
 {
   return (a.cid == b.cid && (0 == std::strcmp(a.name, b.name)));
 }
@@ -65,7 +65,7 @@ protected:
     for (size_t i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
       test_names_.push_back("test name " + std::to_string(i));
-      sources_.push_back(SacnSourceInternal{etcpal::Uuid::V4().get(), test_names_[i].c_str()});
+      sources_.push_back(SacnRemoteSourceInternal{etcpal::Uuid::V4().get(), test_names_[i].c_str()});
     }
     std::sort(sources_.begin(), sources_.end());
   }
@@ -77,13 +77,13 @@ protected:
   }
 
   void VerifySourcesMatch(const SacnLostSource* lost_sources, size_t num_lost_sources,
-                          const std::vector<SacnSourceInternal>& sources)
+                          const std::vector<SacnRemoteSourceInternal>& sources)
   {
-    std::vector<SacnSourceInternal> expired_sources;
+    std::vector<SacnRemoteSourceInternal> expired_sources;
     expired_sources.reserve(num_lost_sources);
     std::transform(lost_sources, lost_sources + num_lost_sources, std::back_inserter(expired_sources),
                    [](const SacnLostSource& src) {
-                     return SacnSourceInternal{src.cid, src.name};
+                     return SacnRemoteSourceInternal{src.cid, src.name};
                    });
 
     std::sort(expired_sources.begin(), expired_sources.end());
@@ -92,7 +92,7 @@ protected:
   }
 
   std::vector<std::string> test_names_;
-  std::vector<SacnSourceInternal> sources_;
+  std::vector<SacnRemoteSourceInternal> sources_;
   TerminationSet* term_set_list_{nullptr};
   SourcesLostNotification* expired_sources_{nullptr};
 };
@@ -104,7 +104,7 @@ TEST_F(TestDataLoss, AllSourcesOfflineAtOnce)
   std::vector<SacnLostSourceInternal> offline_sources;
   offline_sources.reserve(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   std::transform(sources_.begin(), sources_.end(), std::back_inserter(offline_sources),
-                 [](const SacnSourceInternal& source) {
+                 [](const SacnRemoteSourceInternal& source) {
                    return SacnLostSourceInternal{source.cid, source.name, true};
                  });
   mark_sources_offline(offline_sources.data(), offline_sources.size(), sources_.data(), sources_.size(),

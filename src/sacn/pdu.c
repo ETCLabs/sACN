@@ -72,8 +72,8 @@ bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* h
 #define DRAFT_SACN_DATA_PACKET_MIN_SIZE 52
 #define DRAFT_SACN_DATA_SOURCE_NAME_LEN 32
 
-bool parse_draft_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* header, uint8_t* seq, bool* terminated,
-                                  const uint8_t** pdata)
+bool parse_draft_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* header, uint8_t* seq,
+                                  bool* terminated, const uint8_t** pdata)
 {
   // Check the input parameters including buffer size
   if (!buf || !header || !seq || !terminated || !pdata || buflen < DRAFT_SACN_DATA_PACKET_MIN_SIZE)
