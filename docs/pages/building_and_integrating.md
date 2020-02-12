@@ -24,6 +24,12 @@ compile settings and add the sacn_config.h location to your include paths.
 For a list of all possible options that can be included in the sacn_config.h file, see
 \ref sacnopts.
 
+### Special Platform Configuration 
+
+Some platforms require special configuration considerations:
+
+* \subpage configuring_lwip
+
 ## Including sACN in your project
 
 ### Including sACN in CMake projects
