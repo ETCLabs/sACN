@@ -26,7 +26,7 @@ FILE_IN_PATHS = [
     os.path.join(FILE_TEMPLATE_DIR, 'imports.txt.in')
 ]
 FILE_OUT_PATHS = [
-    os.path.join('include', 'rdm', 'version.h'),
+    os.path.join('include', 'sacn', 'version.h'),
     os.path.join('tools', 'version', 'current_version.txt'),
     os.path.join('tools', 'version', 'imports.txt')
 ]
@@ -80,7 +80,7 @@ def resolve_import_versions(repo_root, version):
 
 
 def update_version_files(repo_root, version):
-    """Update the version header rdm/version.h and the current_version.txt file with the new
+    """Update the version header sacn/version.h and the current_version.txt file with the new
     version information. Returns True on success, false otherwise."""
 
     in_file_handles = []
@@ -161,7 +161,7 @@ def main():
         sys.exit(1)
 
     repo_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
-    rdm_repo = git.Repo(repo_root)
+    sacn_repo = git.Repo(repo_root)
 
     if not update_version_files(repo_root, new_version):
         sys.exit(1)
@@ -171,7 +171,7 @@ def main():
     if not prompt_to_continue():
         sys.exit(0)
 
-    commit_and_tag(rdm_repo, new_version, args.release)
+    commit_and_tag(sacn_repo, new_version, args.release)
 
     print("Done - now push using 'git push origin [branch] --tags'.")
 
