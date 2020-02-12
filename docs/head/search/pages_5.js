@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['streaming_20acn',['Streaming ACN',['../index.html',1,'']]]
+  ['network_20interface_20indexes',['Network Interface Indexes',['https://etclabs.github.io/EtcPal/docs/head/interface_indexes.html',1,'']]]
 ];

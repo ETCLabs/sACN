@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['targeting_20freertos',['Targeting FreeRTOS',['https://etclabs.github.io/EtcPal/docs/head/targeting_freertos.html',1,'']]],
-  ['targeting_20lwip',['Targeting lwIP',['https://etclabs.github.io/EtcPal/docs/head/targeting_lwip.html',1,'']]]
+  ['streaming_20acn',['Streaming ACN',['../index.html',1,'']]]
 ];

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['network_20interface_20indexes',['Network Interface Indexes',['https://etclabs.github.io/EtcPal/docs/head/interface_indexes.html',1,'']]]
+  ['getting_20started_20with_20sacn',['Getting Started with sACN',['../getting_started.html',1,'']]]
 ];

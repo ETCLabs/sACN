@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['using_20the_20sacn_20receiver_20api',['Using the sACN Receiver API',['../using_receiver.html',1,'getting_started']]]
+  ['targeting_20freertos',['Targeting FreeRTOS',['https://etclabs.github.io/EtcPal/docs/head/targeting_freertos.html',1,'']]],
+  ['targeting_20lwip',['Targeting lwIP',['https://etclabs.github.io/EtcPal/docs/head/targeting_lwip.html',1,'']]]
 ];
