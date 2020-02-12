@@ -44,12 +44,12 @@ var group__sacn__receiver =
       [ "kSacnStandardVersionPublished", "group__sacn__receiver.html#ggabeec981c5a14c8c0dbddcdfa99717ad0acdfd634d940898beb3475330afac2f52", null ],
       [ "kSacnStandardVersionAll", "group__sacn__receiver.html#ggabeec981c5a14c8c0dbddcdfa99717ad0af2e11730c14bfddd25f13f82e634830d", null ]
     ] ],
-    [ "sacn_get_expired_wait", "group__sacn__receiver.html#gad4bdcbce096dd25cb9cba22e8c2219b4", null ],
-    [ "sacn_get_standard_version", "group__sacn__receiver.html#ga916672d73a76abb80d933b65f4aa0f67", null ],
     [ "sacn_receiver_change_universe", "group__sacn__receiver.html#gabb5ec7d4459ac694e5fa0ae97572f388", null ],
     [ "sacn_receiver_config_init", "group__sacn__receiver.html#ga82f2e3740ce865b7aa3e018aa8a229d9", null ],
     [ "sacn_receiver_create", "group__sacn__receiver.html#gaa6cc04a6522039b031d164ad60610935", null ],
     [ "sacn_receiver_destroy", "group__sacn__receiver.html#ga43f99a2447364832c9ab135ac3d8b6ae", null ],
-    [ "sacn_set_expired_wait", "group__sacn__receiver.html#ga8f4cea4a5ef6ff5754fb5a4396fb3a2d", null ],
-    [ "sacn_set_standard_version", "group__sacn__receiver.html#ga6d05090de253f27619b7d57fde533f35", null ]
+    [ "sacn_receiver_get_expired_wait", "group__sacn__receiver.html#gabd632f80d5da75c47c1f08103a42a391", null ],
+    [ "sacn_receiver_get_standard_version", "group__sacn__receiver.html#gaecb775f60463e32ddb4ce2c7b2281249", null ],
+    [ "sacn_receiver_set_expired_wait", "group__sacn__receiver.html#gabea27e71ae23c9176832f883a8ad7f06", null ],
+    [ "sacn_receiver_set_standard_version", "group__sacn__receiver.html#ga4cb36b56dd22b9122f491182a7315e8c", null ]
 ];
