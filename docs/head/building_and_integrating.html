@@ -136,6 +136,7 @@ $(document).ready(function(){initNavTree('building_and_integrating.html','');});
 <h2>Configuring sACN</h2>
 <p>sACN can be provided a configuration file called "sacn_config.h" when compiling to change its behavior. This is most applicable when compiling sACN for an embedded target; for non-embedded applications, the default compilation options are usually fine.</p>
 <p>To provide an sacn_config.h when building sACN with CMake, pass its location using the SACN_CONFIG_LOC CMake option: </p><div class="fragment"><div class="line">$ cmake -DSACN_CONFIG_LOC=path/to/folder/containing/sacn_config.h ...</div></div><!-- fragment --><p>If you are building sACN manually/without CMake, add the definition <code>SACN_HAVE_CONFIG_H</code> in your compile settings and add the sacn_config.h location to your include paths.</p>
+<p>For a list of all possible options that can be included in the sacn_config.h file, see <a class="el" href="group__sacnopts.html">sACN Configuration Options</a>.</p>
 <h2>Including sACN in your project</h2>
 <h3>Including sACN in CMake projects</h3>
 <p>To include sACN as a source dependency from a CMake project, use the <code>add_subdirectory()</code> command, specifying the root of the sACN repository, and use <code>target_link_libraries()</code> to add the relevant sACN include paths and binaries to your project settings.</p>
