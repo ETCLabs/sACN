@@ -71,7 +71,7 @@ typedef enum
  *
  * Also referred to as a "hold last look" time, the default amount of time the library will wait
  * after a universe enters a data loss condition before calling the sources_lost() callback. Can be
- * changed with sacn_set_expired_wait().
+ * changed with sacn_receiver_set_expired_wait().
  */
 #define SACN_DEFAULT_EXPIRED_WAIT_MS 1000u
 
@@ -227,10 +227,10 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
 etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle);
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id);
 
-void sacn_set_standard_version(sacn_standard_version_t version);
-sacn_standard_version_t sacn_get_standard_version();
-void sacn_set_expired_wait(uint32_t wait_ms);
-uint32_t sacn_get_expired_wait();
+void sacn_receiver_set_standard_version(sacn_standard_version_t version);
+sacn_standard_version_t sacn_receiver_get_standard_version();
+void sacn_receiver_set_expired_wait(uint32_t wait_ms);
+uint32_t sacn_receiver_get_expired_wait();
 
 #ifdef __cplusplus
 }

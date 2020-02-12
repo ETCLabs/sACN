@@ -37,7 +37,7 @@ To avoid this unwanted behavior, the algorithm is specified as follows:
 This results in a time period, hereafter referred to as a **settling time**, after a source has
 been determined to be lost, during which the online/offline status of all other sources is
 verified. This settling time runs concurrently with the **expired notification wait time**, which
-is a global option settable through #sacn_set_expired_wait().
+is a global option settable through #sacn_receiver_set_expired_wait().
 The settling time could range from almost instantaneous to 2.5 seconds, and thus could be longer or
 shorter than the expired notification wait time. The [sources_lost()](@ref SacnSourcesLostCallback)
 notification is not sent until both time periods expire.

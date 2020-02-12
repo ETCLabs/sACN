@@ -324,6 +324,9 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 /*!
  * \brief Change the universe on which an sACN receiver is listening.
  *
+ * **NOTE:** This function is not yet implemented. A workaround is to destroy a receiver and create
+ * a new one with a different universe.
+ *
  * An sACN receiver can only listen on one universe at a time. After this call completes
  * successfully, the receiver is in a sampling period for the new universe where all data on the
  * universe is reported immediately via the universe_data() callback. Data should be stored but not
@@ -352,7 +355,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  *
  * \param[in] version Version of sACN to listen to.
  */
-void sacn_set_standard_version(sacn_standard_version_t version)
+void sacn_receiver_set_standard_version(sacn_standard_version_t version)
 {
   if (!sacn_initialized())
     return;
@@ -372,7 +375,7 @@ void sacn_set_standard_version(sacn_standard_version_t version)
  * \return Version of sACN to which the module is listening, or #kSacnStandardVersionNone if the module is
  *         not initialized.
  */
-sacn_standard_version_t sacn_get_standard_version()
+sacn_standard_version_t sacn_receiver_get_standard_version()
 {
   sacn_standard_version_t res = kSacnStandardVersionNone;
 
@@ -396,7 +399,7 @@ sacn_standard_version_t sacn_get_standard_version()
  *
  * \param[in] wait_ms Wait time in milliseconds.
  */
-void sacn_set_expired_wait(uint32_t wait_ms)
+void sacn_receiver_set_expired_wait(uint32_t wait_ms)
 {
   if (!sacn_initialized())
     return;
@@ -417,7 +420,7 @@ void sacn_set_expired_wait(uint32_t wait_ms)
  *
  * \return Wait time in milliseconds.
  */
-uint32_t sacn_get_expired_wait()
+uint32_t sacn_receiver_get_expired_wait()
 {
   uint32_t res = SACN_DEFAULT_EXPIRED_WAIT_MS;
 

@@ -56,27 +56,27 @@ protected:
 TEST_F(TestReceiver, SetStandardVersionWorks)
 {
   // Initialization should set it to the default
-  EXPECT_EQ(sacn_get_standard_version(), kSacnStandardVersionAll);
+  EXPECT_EQ(sacn_receiver_get_standard_version(), kSacnStandardVersionAll);
 
-  sacn_set_standard_version(kSacnStandardVersionDraft);
-  EXPECT_EQ(sacn_get_standard_version(), kSacnStandardVersionDraft);
-  sacn_set_standard_version(kSacnStandardVersionPublished);
-  EXPECT_EQ(sacn_get_standard_version(), kSacnStandardVersionPublished);
-  sacn_set_standard_version(kSacnStandardVersionAll);
-  EXPECT_EQ(sacn_get_standard_version(), kSacnStandardVersionAll);
-  sacn_set_standard_version(kSacnStandardVersionNone);
-  EXPECT_EQ(sacn_get_standard_version(), kSacnStandardVersionNone);
+  sacn_receiver_set_standard_version(kSacnStandardVersionDraft);
+  EXPECT_EQ(sacn_receiver_get_standard_version(), kSacnStandardVersionDraft);
+  sacn_receiver_set_standard_version(kSacnStandardVersionPublished);
+  EXPECT_EQ(sacn_receiver_get_standard_version(), kSacnStandardVersionPublished);
+  sacn_receiver_set_standard_version(kSacnStandardVersionAll);
+  EXPECT_EQ(sacn_receiver_get_standard_version(), kSacnStandardVersionAll);
+  sacn_receiver_set_standard_version(kSacnStandardVersionNone);
+  EXPECT_EQ(sacn_receiver_get_standard_version(), kSacnStandardVersionNone);
 }
 
 TEST_F(TestReceiver, SetExpiredWaitWorks)
 {
   // Initialization should set it to the default
-  EXPECT_EQ(sacn_get_expired_wait(), SACN_DEFAULT_EXPIRED_WAIT_MS);
+  EXPECT_EQ(sacn_receiver_get_expired_wait(), SACN_DEFAULT_EXPIRED_WAIT_MS);
 
-  sacn_set_expired_wait(0);
-  EXPECT_EQ(sacn_get_expired_wait(), 0u);
-  sacn_set_expired_wait(5000);
-  EXPECT_EQ(sacn_get_expired_wait(), 5000u);
-  sacn_set_expired_wait(std::numeric_limits<uint32_t>::max());
-  EXPECT_EQ(sacn_get_expired_wait(), std::numeric_limits<uint32_t>::max());
+  sacn_receiver_set_expired_wait(0);
+  EXPECT_EQ(sacn_receiver_get_expired_wait(), 0u);
+  sacn_receiver_set_expired_wait(5000);
+  EXPECT_EQ(sacn_receiver_get_expired_wait(), 5000u);
+  sacn_receiver_set_expired_wait(std::numeric_limits<uint32_t>::max());
+  EXPECT_EQ(sacn_receiver_get_expired_wait(), std::numeric_limits<uint32_t>::max());
 }
