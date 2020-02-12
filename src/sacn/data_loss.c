@@ -86,10 +86,10 @@ void sacn_data_loss_deinit(void)
  * [in] num_online_sources Size of online_sources array.
  * [in,out] term_set_list List of termination sets in which to process the online sources.
  */
-void mark_sources_online(const SacnSourceInternal* online_sources, size_t num_online_sources,
+void mark_sources_online(const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
                          TerminationSet* term_set_list)
 {
-  for (const SacnSourceInternal* online_src = online_sources; online_src < online_sources + num_online_sources;
+  for (const SacnRemoteSourceInternal* online_src = online_sources; online_src < online_sources + num_online_sources;
        ++online_src)
   {
     for (TerminationSet* ts = term_set_list; ts; ts = ts->next)
@@ -113,7 +113,7 @@ void mark_sources_online(const SacnSourceInternal* online_sources, size_t num_on
  * [in] expired_wait The current configured expired notification wait time for this universe.
  */
 void mark_sources_offline(const SacnLostSourceInternal* offline_sources, size_t num_offline_sources,
-                          const SacnSourceInternal* unknown_sources, size_t num_unknown_sources,
+                          const SacnRemoteSourceInternal* unknown_sources, size_t num_unknown_sources,
                           TerminationSet** term_set_list, uint32_t expired_wait)
 {
   for (const SacnLostSourceInternal* offline_src = offline_sources; offline_src < offline_sources + num_offline_sources;
@@ -170,7 +170,7 @@ void mark_sources_offline(const SacnLostSourceInternal* offline_sources, size_t 
           {
             // Add all of the other sources tracked by our universe that have sent at least one DMX
             // packet.
-            for (const SacnSourceInternal* unknown_src = unknown_sources;
+            for (const SacnRemoteSourceInternal* unknown_src = unknown_sources;
                  unknown_src < unknown_sources + num_unknown_sources; ++unknown_src)
             {
               ts_src_new = ALLOC_TERM_SET_SOURCE();

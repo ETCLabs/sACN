@@ -113,11 +113,11 @@ typedef unsigned int sacn_thread_id_t;
  * Types used by the data loss module
  *****************************************************************************/
 
-typedef struct SacnSourceInternal
+typedef struct SacnRemoteSourceInternal
 {
   EtcPalUuid cid;
   const char* name;
-} SacnSourceInternal;
+} SacnRemoteSourceInternal;
 
 typedef struct SacnLostSourceInternal
 {
@@ -190,9 +190,9 @@ typedef struct SacnSourceStatusLists
 {
   SACN_DECLARE_BUF(SacnLostSourceInternal, offline, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_offline;
-  SACN_DECLARE_BUF(SacnSourceInternal, online, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  SACN_DECLARE_BUF(SacnRemoteSourceInternal, online, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_online;
-  SACN_DECLARE_BUF(SacnSourceInternal, unknown, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  SACN_DECLARE_BUF(SacnRemoteSourceInternal, unknown, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_unknown;
 } SacnSourceStatusLists;
 
@@ -250,7 +250,7 @@ typedef struct SourcesLostNotification
 typedef struct SourcePcpLostNotification
 {
   SacnSourcePcpLostCallback callback;
-  SacnSource source;
+  SacnRemoteSource source;
   sacn_receiver_t handle;
   void* context;
 } SourcePcpLostNotification;
@@ -315,10 +315,9 @@ typedef struct SacnRecvThreadContext
  *****************************************************************************/
 
 extern const EtcPalLogParams* sacn_log_params;
-extern etcpal_mutex_t sacn_lock;
 
-#define SACN_LOCK() etcpal_mutex_lock(&sacn_lock)
-#define SACN_UNLOCK() etcpal_mutex_unlock(&sacn_lock)
+bool sacn_lock(void);
+void sacn_unlock(void);
 
 bool sacn_initialized(void);
 

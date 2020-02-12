@@ -218,7 +218,7 @@ static void handle_sources_lost(sacn_receiver_t handle, const SacnLostSource* lo
  * sending per-channel priority packets and stopped sending them, but is still sending NULL start
  * code data.
  */
-static void handle_source_pcp_lost(sacn_receiver_t handle, const SacnSource* source, void* context)
+static void handle_source_pcp_lost(sacn_receiver_t handle, const SacnRemoteSource* source, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(context);
@@ -299,13 +299,10 @@ int main(void)
   uint16_t universe = 1;
   for (ListeningUniverse* listener = listeners; listener < listeners + NUM_LISTENERS; ++listener)
   {
-    SacnReceiverConfig config;
+    SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
     config.callbacks = kSacnCallbacks;
     config.callback_context = listener;
-    config.netints = NULL;
-    config.num_netints = 0;
     config.universe_id = universe;
-    config.flags = 0;
 
     result = sacn_receiver_create(&config, &listener->receiver_handle);
     if (result == kEtcPalErrOk)

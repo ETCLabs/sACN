@@ -17,26 +17,22 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/source.h
- * \brief Private constants, types, and function declarations for the \ref sacn_source
- *       "sACN Source" module.
- */
+#ifndef SACN_MOCK_PRIVATE_DATA_LOSS_H_
+#define SACN_MOCK_PRIVATE_DATA_LOSS_H_
 
-#ifndef SACN_PRIVATE_SOURCE_H_
-#define SACN_PRIVATE_SOURCE_H_
+#include "sacn/private/data_loss.h"
+#include "fff.h"
 
-#include "etcpal/error.h"
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_data_loss_init);
+DECLARE_FAKE_VOID_FUNC(sacn_data_loss_deinit);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+DECLARE_FAKE_VOID_FUNC(mark_sources_online, const SacnRemoteSourceInternal*, size_t, TerminationSet*);
+DECLARE_FAKE_VOID_FUNC(mark_sources_offline, const SacnLostSourceInternal*, size_t, const SacnRemoteSourceInternal*,
+                       size_t, TerminationSet**, uint32_t);
+DECLARE_FAKE_VOID_FUNC(get_expired_sources, TerminationSet**, SourcesLostNotification*);
 
-etcpal_error_t sacn_source_init(void);
-void sacn_source_deinit(void);
+DECLARE_FAKE_VOID_FUNC(clear_term_set_list, TerminationSet*);
 
-#ifdef __cplusplus
-}
-#endif
+void sacn_data_loss_reset_all_fakes(void);
 
-#endif /* SACN_PRIVATE_SOURCE_H_ */
+#endif /* SACN_MOCK_PRIVATE_DATA_LOSS_H_ */

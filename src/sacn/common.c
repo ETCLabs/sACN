@@ -33,7 +33,6 @@
 /***************************** Global variables ******************************/
 
 const EtcPalLogParams* sacn_log_params;
-etcpal_mutex_t sacn_lock;
 
 /**************************** Private variables ******************************/
 
@@ -43,15 +42,17 @@ static struct SacnState
   EtcPalLogParams log_params;
 } sacn_state;
 
+static etcpal_mutex_t sacn_mutex;
+
 /*************************** Function definitions ****************************/
 
-/*
+/*!
  * \brief Initialize the sACN library.
  *
  * Do all necessary initialization before other sACN API functions can be called.
  *
  * \param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
- *                      #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
+ *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
  * \return #kEtcPalErrOk: Initialization successful.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
@@ -83,7 +84,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
       etcpal_initted = ((res = etcpal_init(SACN_ETCPAL_FEATURES)) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
     {
-      mutex_initted = etcpal_mutex_create(&sacn_lock);
+      mutex_initted = etcpal_mutex_create(&sacn_mutex);
       if (!mutex_initted)
         res = kEtcPalErrSys;
     }
@@ -116,7 +117,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
       if (mem_initted)
         sacn_mem_deinit();
       if (mutex_initted)
-        etcpal_mutex_destroy(&sacn_lock);
+        etcpal_mutex_destroy(&sacn_mutex);
       if (etcpal_initted)
         etcpal_deinit(SACN_ETCPAL_FEATURES);
 
@@ -127,7 +128,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
   return res;
 }
 
-/*
+/*!
  * \brief Deinitialize the sACN library.
  *
  * Set the sACN library back to an uninitialized state. Calls to other sACN API functions will fail
@@ -139,16 +140,26 @@ void sacn_deinit(void)
   {
     sacn_state.initted = false;
 
-    // sacn_source_deinit();
+    sacn_source_deinit();
     sacn_receiver_deinit();
     sacn_data_loss_deinit();
     sacn_sockets_deinit();
     sacn_mem_deinit();
-    etcpal_mutex_destroy(&sacn_lock);
+    etcpal_mutex_destroy(&sacn_mutex);
     etcpal_deinit(SACN_ETCPAL_FEATURES);
 
     sacn_log_params = NULL;
   }
+}
+
+bool sacn_lock(void)
+{
+  return etcpal_mutex_lock(&sacn_mutex);
+}
+
+void sacn_unlock(void)
+{
+  etcpal_mutex_unlock(&sacn_mutex);
 }
 
 bool sacn_initialized(void)

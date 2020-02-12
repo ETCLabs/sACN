@@ -25,13 +25,22 @@
 #include "etcpal_mock/socket.h"
 #include "etcpal/cpp/inet.h"
 #include "sacn/private/mem.h"
+#include "sacn/private/opts.h"
 #include "gtest/gtest.h"
 #include "fff.h"
+
+#if SACN_DYNAMIC_MEM
+#define TestSockets TestSocketsDynamic
+#else
+#define TestSockets TestSocketsStatic
+#endif
 
 #ifdef _MSC_VER
 // disable strcpy() warnings on MSVC
 #pragma warning(disable : 4996)
 #endif
+
+static etcpal_socket_t next_socket = (etcpal_socket_t)0;
 
 class TestSockets : public ::testing::Test
 {
@@ -64,6 +73,11 @@ protected:
 
     etcpal_netint_get_num_interfaces_fake.return_val = fake_netints_.size();
     etcpal_netint_get_interfaces_fake.return_val = fake_netints_.data();
+    etcpal_socket_fake.custom_fake = [](unsigned int, unsigned int, etcpal_socket_t* new_sock) {
+      EXPECT_NE(new_sock, nullptr);
+      *new_sock = next_socket++;
+      return kEtcPalErrOk;
+    };
 
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_sockets_init(), kEtcPalErrOk);

@@ -1,4 +1,4 @@
-# Streaming ACN                                                     {#mainpage}
+# Streaming ACN                                                                         {#mainpage}
 
 ## Introduction
 
@@ -7,9 +7,11 @@ transport of DMX512 using ACN**, commonly referred to as **Streaming ACN** or **
 library is designed to be portable and scalable to almost any sACN usage scenario, from lightweight
 embedded devices to large-scale data sending operations.
 
-The library can be used to send sACN, receive sACN or both. Check out \ref getting_started to get
-started with using the library in your application. To jump right into the documentation, check out
-the [Modules Overview](\ref sACN).
+**NOTE**: This open-source implementation is still early in development, and currently only
+receiving sACN is implemented.
+
+Check out \ref getting_started to get started with using the library in your application. To jump
+right into the documentation, check out the [Modules Overview](\ref sACN).
 
 ## Standard Revision
 
@@ -26,6 +28,7 @@ platform supported by EtcPal; that list can be found [here](https://etclabs.gith
 
 ### EtcPal
 
-sACN depends on ETC's Platform Abstraction Library (EtcPal) for platform abstraction. See the
-[documentation for EtcPal](https://etclabs.github.io/EtcPal/docs/head/) for details on how to
-include EtcPal in your project.
+sACN depends on ETC's Platform Abstraction Library (EtcPal) for platform abstraction. EtcPal is
+included as a git submodule in the sACN repository. The sACN CMake configuration will also
+automatically detect the presence of an EtcPal directory at the same level as the sACN root
+directory, and use that as its dependency.

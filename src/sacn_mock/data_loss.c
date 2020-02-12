@@ -17,26 +17,22 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/source.h
- * \brief Private constants, types, and function declarations for the \ref sacn_source
- *       "sACN Source" module.
- */
+#include "sacn_mock/private/data_loss.h"
 
-#ifndef SACN_PRIVATE_SOURCE_H_
-#define SACN_PRIVATE_SOURCE_H_
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_data_loss_init);
+DEFINE_FAKE_VOID_FUNC(sacn_data_loss_deinit);
+DEFINE_FAKE_VOID_FUNC(mark_sources_online, const SacnRemoteSourceInternal*, size_t, TerminationSet*);
+DEFINE_FAKE_VOID_FUNC(mark_sources_offline, const SacnLostSourceInternal*, size_t, const SacnRemoteSourceInternal*,
+                      size_t, TerminationSet**, uint32_t);
+DEFINE_FAKE_VOID_FUNC(get_expired_sources, TerminationSet**, SourcesLostNotification*);
+DEFINE_FAKE_VOID_FUNC(clear_term_set_list, TerminationSet*);
 
-#include "etcpal/error.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-etcpal_error_t sacn_source_init(void);
-void sacn_source_deinit(void);
-
-#ifdef __cplusplus
+void sacn_data_loss_reset_all_fakes(void)
+{
+  RESET_FAKE(sacn_data_loss_init);
+  RESET_FAKE(sacn_data_loss_deinit);
+  RESET_FAKE(mark_sources_online);
+  RESET_FAKE(mark_sources_offline);
+  RESET_FAKE(get_expired_sources);
+  RESET_FAKE(clear_term_set_list);
 }
-#endif
-
-#endif /* SACN_PRIVATE_SOURCE_H_ */

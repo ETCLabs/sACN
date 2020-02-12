@@ -17,26 +17,28 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/source.h
- * \brief Private constants, types, and function declarations for the \ref sacn_source
- *       "sACN Source" module.
- */
+#include "sacn_mock/private/common.h"
 
-#ifndef SACN_PRIVATE_SOURCE_H_
-#define SACN_PRIVATE_SOURCE_H_
+#include "sacn_mock/private/data_loss.h"
+#include "sacn_mock/private/sockets.h"
 
-#include "etcpal/error.h"
+DEFINE_FAKE_VALUE_FUNC(bool, sacn_initialized);
+DEFINE_FAKE_VALUE_FUNC(bool, sacn_lock);
+DEFINE_FAKE_VOID_FUNC(sacn_unlock);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+void sacn_common_reset_all_fakes(void)
+{
+  RESET_FAKE(sacn_initialized);
+  RESET_FAKE(sacn_lock);
+  RESET_FAKE(sacn_unlock);
 
-etcpal_error_t sacn_source_init(void);
-void sacn_source_deinit(void);
-
-#ifdef __cplusplus
+  sacn_initialized_fake.return_val = true;
+  sacn_lock_fake.return_val = true;
 }
-#endif
 
-#endif /* SACN_PRIVATE_SOURCE_H_ */
+void sacn_reset_all_fakes(void)
+{
+  sacn_common_reset_all_fakes();
+  sacn_data_loss_reset_all_fakes();
+  sacn_sockets_reset_all_fakes();
+}

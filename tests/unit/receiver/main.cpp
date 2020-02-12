@@ -17,26 +17,19 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/source.h
- * \brief Private constants, types, and function declarations for the \ref sacn_source
- *       "sACN Source" module.
- */
+#include "gtest/gtest.h"
+#include "fff.h"
 
-#ifndef SACN_PRIVATE_SOURCE_H_
-#define SACN_PRIVATE_SOURCE_H_
+DEFINE_FFF_GLOBALS;
 
-#include "etcpal/error.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-etcpal_error_t sacn_source_init(void);
-void sacn_source_deinit(void);
-
-#ifdef __cplusplus
+extern "C" void SacnTestingAssertHandler(const char* expression, const char* file, unsigned int line)
+{
+  FAIL() << "Assertion failure from inside sACN library. Expression: " << expression << " File: " << file
+         << " Line: " << line;
 }
-#endif
 
-#endif /* SACN_PRIVATE_SOURCE_H_ */
+int main(int argc, char* argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

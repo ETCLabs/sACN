@@ -94,7 +94,7 @@ etcpal_error_t sacn_source_destroy(sacn_source_t handle)
  * dirty_handles parameter to sacn_process_sources().
  *
  * \param[in] handle Handle to the source to which to add a start code.
- * \param[in] config Configuration parameters for the start code to be added.
+ * \param[in] sc_config Configuration parameters for the start code to be added.
  * \return #kEtcPalErrOk: Start code successfully added.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.

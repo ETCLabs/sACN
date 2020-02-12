@@ -71,7 +71,7 @@ else
 ## Receiving sACN Data
 
 Each time sACN data is received on a universe that is being listened to, it will be forwarded via
-the corresponding universe_data callback.
+the corresponding `universe_data()` callback.
 
 ```c
 void my_universe_data_callback(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
@@ -87,7 +87,7 @@ void my_universe_data_callback(sacn_receiver_t handle, const EtcPalSockAddr* sou
   char cid_str[ETCPAL_UUID_STRING_BYTES];
   etcpal_uuid_to_string(&header->cid, cid_str);
 
-  printf("Got sACN update from source %s (address %s:%u, name %s) on universe %u, priority %u, start code %u",
+  printf("Got sACN update from source %s (address %s:%u, name %s) on universe %u, priority %u, start code %u\n",
          cid_str, addr_str, source_addr->port, header->source_name, header->universe_id, header->priority,
          header->start_code);
 
@@ -104,8 +104,8 @@ void my_universe_data_callback(sacn_receiver_t handle, const EtcPalSockAddr* sou
 
 Creating a receiver causes the library to immediately start listening for data on the specified
 universe. For a period of time after the receiver is created, it is considered to be in a
-_sampling period_. During this time, data received via the universe_data callback should be stored
-but not yet acted upon.
+_sampling period_. During this time, data received via the `universe_data()` callback should be
+stored but not yet acted upon.
 
 The sampling period exists because sACN allows multiple sources to send data to the same universe.
 When first listening on a universe, you will get updates from any sources that are currently
@@ -130,7 +130,102 @@ void my_sampling_ended_callback(sacn_receiver_t handle, void* context)
 
 ## Tracking Sources
 
-In sACN, multiple sources can send data simultaneously on the same universe. There are many ways to
-resolve conflicting data from different sources and determine the winner; some tools for this are
-given by the library and others can be implemented by the consuming application.
+The sACN library tracks each source that is sending DMX data on a universe. In sACN, multiple
+sources can send data simultaneously on the same universe. There are many ways to resolve
+conflicting data from different sources and determine the winner; some tools for this are given by
+the library and others can be implemented by the consuming application.
 
+Each source has a _Component Identifier_ (CID), which is a UUID that is unique to that source. The
+CID should be used as a primary key to differentiate sources. Sources also have a descriptive name
+that can be user-assigned and is not required to be unique. This source data is provided in the
+#SacnHeaderData struct in the `universe_data()` callback, as well as in the #SacnLostSource struct
+in the `sources_lost()` callback.
+
+### Priority
+
+The sACN standard provides a priority value with each sACN data packet. This unsigned 8-bit value
+ranges from 0 to 200 inclusive, where 0 is the lowest and 200 is the highest priority. The priority
+value for a packet is available in the header structure that accompanies the `universe_data()`
+callback. It is the application's responsibility to ensure that higher-priority data takes
+precedence over lower-priority data.
+
+ETC has extended the sACN standard with a method of tracking priority on a per-channel basis. This
+is implemented by sending an alternate START code packet on the same universe periodically - the
+START code is `0xdd`. When receiving a data packet with the start code `0xdd`, the slots in that
+packet are to be interpreted as a priority value from 0 to 200 inclusive for the corresponding slot
+in the DMX (NULL START code) packets. Receivers which wish to implement the per-channel priority
+extension should check for the `0xdd` start code and handle the data accordingly.
+
+When implementing the per-slot priority extension, the `source_pcp_lost()` callback should be
+implemented to handle the condition where a source that was previously sending `0xdd` packets stops
+sending them:
+
+```c
+void my_source_pcp_lost_callback(sacn_receiver_t handle, const SacnRemoteSource* source, void* context)
+{
+  // Check handle and/or context as necessary...
+
+  // Revert to using the per-packet priority value to resolve priorities for this universe.
+}
+```
+
+### Merging
+
+When multiple sources are sending on the same universe at the same priority, receiver
+implementations are responsible for designating a merge algorithm to merge the data from the
+sources together. The most commonly-used algorithm is Highest Takes Precedence (HTP), where the
+numerically highest value for each slot from any source is the one that is acted upon.
+
+## Sources Lost Conditions
+
+When a previously-tracked source stops sending data, the sACN library implements a custom data-loss
+algorithm to attempt to group lost sources together. See \ref data_loss_behavior for more
+information on this algorithm.
+
+After the data-loss algorithm runs, the library will deliver a `sources_lost()` callback to
+indicate that some number of sources have gone offline.
+
+```c
+void my_sources_lost_callback(sacn_receiver_t handle, const SacnLostSource* lost_sources, size_t num_lost_sources,
+                              void* context)
+{
+  // Check handle and/or context as necessary...
+
+  // You might not normally print a message on this condition, but this is just to demonstrate
+  // the fields available:
+  printf("The following sources have gone offline:\n")
+  for (SacnLostSource* source = lost_sources; source < lost_sources + num_lost_sources; ++source)
+  {
+    char cid_str[ETCPAL_UUID_STRING_BYTES];
+    etcpal_uuid_to_string(&source->cid, cid_str);
+    printf("CID: %s\tName: %s\tTerminated: %s\n", cid_str, source->name, source->terminated ? "true" : "false");
+
+    // Remove the source from your state tracking...
+  }
+}
+```
+
+## Source Limit Exceeded Conditions
+
+The sACN library will only forward data from sources that it is able to track. When the library is
+compilied with #SACN_DYNAMIC_MEM set to 0, this means that it will only track up to
+#SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE sources at a time. (You can change these compile options in
+your sacn_config.h; see \ref building_and_integrating.)
+
+When the library encounters a source that it does not have room to track, it will send a single
+`source_limit_exceeded()` notification. Additional `source_limit_exceeded()` callbacks will not be
+delivered until the number of tracked sources falls below the limit and then exceeds it again.
+
+If sACN was compiled with #SACN_DYNAMIC_MEM set to 1 (the default on non-embedded platforms), the
+library will track as many sources as it is able to dynamically allocate memory for, and this
+callback will not be called in normal program operation (and can be set to NULL in the config
+struct).
+
+```c
+void my_source_limit_exceeded_callback(sacn_receiver_t handle, void* context)
+{
+  // Check handle and/or context as necessary...
+
+  // Handle the condition in an application-defined way. Maybe log it?
+}
+```
