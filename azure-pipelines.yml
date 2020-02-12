@@ -83,7 +83,7 @@ stages:
   # (etclabs.github.io/sACN)
   - job: docs
     displayName: 'Deploy Documentation'
-    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/develop'), startsWith(variables['Build.SourceBranch'], 'refs/pull'))
+    condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/initial-github-impl'), startsWith(variables['Build.SourceBranch'], 'refs/pull'))
     pool:
       # TODO change to ubuntu-latest when this issue is fixed:
       # https://github.com/microsoft/azure-pipelines-image-generation/issues/1379
