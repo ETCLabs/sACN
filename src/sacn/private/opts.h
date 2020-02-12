@@ -33,9 +33,8 @@
  * \brief Compile-time configuration options for sACN.
  *
  * Default values are indicated as the value of the \#define. Default values can be overriden by
- * defining the option in your project's sacn_config.h file. Default values for platform-specific
- * options are contained in sacn_platform_defaults.h, which lives with each platform in the port
- * folder.
+ * defining the option in your project's `sacn_config.h` file. See \ref building_and_integrating
+ * for more information on the `sacn_config.h` file.
  */
 
 #if SACN_HAVE_CONFIG_H

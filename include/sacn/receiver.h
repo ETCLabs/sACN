@@ -208,7 +208,8 @@ typedef struct SacnReceiverConfig
   unsigned int flags;
   /*! Pointer to opaque data passed back with each callback. */
   void* callback_context;
-  /*! (optional) array of network interfaces on which to listen to the specified universe. */
+  /*! (optional) array of network interfaces on which to listen to the specified universe. If NULL,
+   *  all available network interfaces will be used. */
   const SacnMcastNetintId* netints;
   /*! Number of elements in the netints array. */
   size_t num_netints;
