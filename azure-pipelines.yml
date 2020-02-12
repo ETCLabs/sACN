@@ -37,8 +37,15 @@ stages:
         configuration: Release
     - script: |
         cd build
-        ctest -C Release --output-on-failure
+        ctest -C Release -T Test --output-on-failure
       displayName: 'Run Tests'
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      inputs:
+        testResultsFormat: 'CTest'
+        testResultsFiles: '**/Test.xml'
+        testRunTitle: 'Windows x64'
+        failTaskOnFailedTests: true
   - job: macos_build
     displayName: 'macOS'
     pool:
@@ -53,8 +60,15 @@ stages:
       displayName: 'Configure and Build Project'
     - script: |
         cd build
-        ctest --output-on-failure
+        ctest -T Test --output-on-failure
       displayName: 'Run Tests'
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      inputs:
+        testResultsFormat: 'CTest'
+        testResultsFiles: '**/Test.xml'
+        testRunTitle: 'macOS'
+        failTaskOnFailedTests: true
   - job: linux_build
     displayName: 'Linux'
     pool:
@@ -75,8 +89,15 @@ stages:
       displayName: 'Configure and Build Project'
     - script: |
         cd build
-        ctest --output-on-failure
+        ctest -T Test --output-on-failure
       displayName: 'Run Tests'
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      inputs:
+        testResultsFormat: 'CTest'
+        testResultsFiles: '**/Test.xml'
+        testRunTitle: 'Linux'
+        failTaskOnFailedTests: true
   # Generate documentation with doxygen. Documentation is generated from the
   # develop branch and posted to the 'head' portion of the Github page
   # (etclabs.github.io/sACN)
