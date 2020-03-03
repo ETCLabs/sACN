@@ -1,6 +1,7 @@
 var searchData=
 [
   ['info',['Info',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#a221110f73de7530eee4f76769cabaf2b',1,'etcpal::Logger::Info(const char *format,...)'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#a221110f73de7530eee4f76769cabaf2b',1,'etcpal::Logger::Info(const char *format,...)']]],
+  ['invalid',['Invalid',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_log_timestamp.html#ad9fe329da06c0386ffc6fd84b840dcc9',1,'etcpal::LogTimestamp']]],
   ['ip',['ip',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_sock_addr.html#a3ab600814133b2eb30bfc9d2816d6acd',1,'etcpal::SockAddr']]],
   ['ip_5fetcpal_5fto_5fos',['ip_etcpal_to_os',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__inet.html#gafe364c911711c469e0574821e30600e3',1,]]],
   ['ip_5fos_5fto_5fetcpal',['ip_os_to_etcpal',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__inet.html#gad3a164fa82579c3047f6053f7266e6a8',1,]]],
@@ -13,6 +14,6 @@ var searchData=
   ['isok',['IsOk',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html#a030d244ccd9a40a9f9ac813ea912a639',1,'etcpal::Error']]],
   ['isv4',['IsV4',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_ip_addr.html#a3c808bdaebc8f534c871ac28bf379a7a',1,'etcpal::IpAddr']]],
   ['isv6',['IsV6',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_ip_addr.html#a08a35ea1e7f3f0a6047fbf28810d53e9',1,'etcpal::IpAddr']]],
-  ['isvalid',['IsValid',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_ip_addr.html#a6d02bb05c3ab899ab6752bbab4e3dbcf',1,'etcpal::IpAddr']]],
+  ['isvalid',['IsValid',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_ip_addr.html#a6d02bb05c3ab899ab6752bbab4e3dbcf',1,'etcpal::IpAddr::IsValid()'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_log_timestamp.html#a472f705194218179e9cf26ffb288da6c',1,'etcpal::LogTimestamp::IsValid()']]],
   ['iswildcard',['IsWildcard',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_ip_addr.html#ac384adc1cbf470fe6672659bdef8358c',1,'etcpal::IpAddr']]]
 ];

@@ -1,9 +1,9 @@
 var searchData=
 [
   ['data',['data',['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_mac_addr.html#a251236fb1e367947c8f6f5498a86896b',1,'EtcPalMacAddr::data()'],['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html#a814a9e92ac05977a8fce43ba49425d14',1,'EtcPalUuid::data()'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_mac_addr.html#a3f4c46c5e6a3a561bad84c6a91ecc8f0',1,'etcpal::MacAddr::data()'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_uuid.html#a21b8e060baa6eeed3e5e45e6d760b54c',1,'etcpal::Uuid::data()']]],
+  ['data_5flen',['data_len',['https://etclabs.github.io/EtcPal/docs/head/struct_acn_pdu.html#ace1c2e33b74df8973a7d9a19c935af80',1,'AcnPdu::data_len()'],['https://etclabs.github.io/EtcPal/docs/head/struct_acn_root_layer_pdu.html#ace1c2e33b74df8973a7d9a19c935af80',1,'AcnRootLayerPdu::data_len()']]],
   ['data_20loss_20behavior',['Data Loss Behavior',['../data_loss_behavior.html',1,'additional_documentation']]],
-  ['datalen',['datalen',['https://etclabs.github.io/EtcPal/docs/head/struct_acn_pdu.html#a3d12e161726566d24a1d0cf6c6b416bb',1,'AcnPdu::datalen()'],['https://etclabs.github.io/EtcPal/docs/head/struct_acn_root_layer_pdu.html#a3d12e161726566d24a1d0cf6c6b416bb',1,'AcnRootLayerPdu::datalen()']]],
-  ['day',['day',['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_log_timestamp.html#a4c11afc03fc3ee49bab660def6558f2a',1,'EtcPalLogTimestamp']]],
+  ['day',['day',['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_log_timestamp.html#a2398ea43f7d25f677616371d3b545f59',1,'EtcPalLogTimestamp']]],
   ['dealloc_5ff',['dealloc_f',['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_rb_tree.html#a29c69388460d3c40b35a388dcbea6b58',1,'EtcPalRbTree']]],
   ['debug',['Debug',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#ae78231bc988b651151e0f7099a873daa',1,'etcpal::Logger::Debug(const char *format,...)'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#ae78231bc988b651151e0f7099a873daa',1,'etcpal::Logger::Debug(const char *format,...)']]],
   ['device',['Device',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_uuid.html#a1044c778e7f7ece83888dcf35c7613c3',1,'etcpal::Uuid']]],

@@ -16,5 +16,6 @@ var searchData=
   ['log_5fparams',['log_params',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#a986c589bfc9aa466a31a84a9b8575546',1,'etcpal::Logger::log_params() const noexcept'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#a986c589bfc9aa466a31a84a9b8575546',1,'etcpal::Logger::log_params() const noexcept']]],
   ['logdispatchpolicy',['LogDispatchPolicy',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__cpp__log.html#ga886bd6be55942894f6ddb878d1cfc662',1,]]],
   ['logger',['Logger',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html',1,'etcpal']]],
-  ['logmessagehandler',['LogMessageHandler',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_log_message_handler.html',1,'etcpal']]]
+  ['logmessagehandler',['LogMessageHandler',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_log_message_handler.html',1,'etcpal']]],
+  ['logtimestamp',['LogTimestamp',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_log_timestamp.html',1,'LogTimestamp'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_log_timestamp.html#aafc4ef91f7842e34f28549c8b9191376',1,'etcpal::LogTimestamp::LogTimestamp()=default'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_log_timestamp.html#a92d160221d22c19ccf9e027ad770a563',1,'etcpal::LogTimestamp::LogTimestamp(unsigned int year, unsigned int month, unsigned int day, unsigned int hour, unsigned int minute, unsigned int second, unsigned int msec=0, int utc_offset=0)']]]
 ];
