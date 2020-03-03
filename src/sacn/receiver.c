@@ -691,13 +691,13 @@ void handle_incoming(sacn_thread_id_t thread_id, const uint8_t* data, size_t dat
     if (rlp.vector == ACN_VECTOR_ROOT_E131_DATA && (receiver_state.version_listening == kSacnStandardVersionPublished ||
                                                     receiver_state.version_listening == kSacnStandardVersionAll))
     {
-      handle_sacn_data_packet(thread_id, rlp.pdata, rlp.datalen, &rlp.sender_cid, from_addr, false);
+      handle_sacn_data_packet(thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr, false);
     }
     else if (rlp.vector == ACN_VECTOR_ROOT_DRAFT_E131_DATA &&
              (receiver_state.version_listening == kSacnStandardVersionDraft ||
               receiver_state.version_listening == kSacnStandardVersionAll))
     {
-      handle_sacn_data_packet(thread_id, rlp.pdata, rlp.datalen, &rlp.sender_cid, from_addr, true);
+      handle_sacn_data_packet(thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr, true);
     }
   }
 }
