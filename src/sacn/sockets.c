@@ -508,7 +508,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
       else if (recv_res < 0)
       {
         etcpal_poll_remove_socket(&recv_thread_context->poll_context, event.socket);
-        return recv_res;
+        return (etcpal_error_t)recv_res;
       }
     }
   }
