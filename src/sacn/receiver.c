@@ -337,15 +337,58 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
  * \param[in] new_universe_id New universe number that this receiver should listen to.
  * \return #kEtcPalErrOk: Universe changed successfully.
  * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrExists: A receiver already exists which is listening on the specified new universe.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id)
 {
   // TODO
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(new_universe_id);
-  return kEtcPalErrNotImpl;
+  etcpal_error_t res = kEtcPalErrOk;
+
+  if (!sacn_initialized())
+    return kEtcPalErrNotInit;
+
+  if (sacn_lock())
+  {
+    // TODO: Move this copied code to a common function
+    // COPY BEGIN
+    // First check to see if we are already listening on this universe.
+    SacnReceiverKeys new_universe_lookup_keys;
+    new_universe_lookup_keys.universe = new_universe_id;
+    SacnReceiver* receiver =
+        (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers_by_universe, &new_universe_lookup_keys);
+    if (receiver)
+    {
+      res = kEtcPalErrExists;
+      receiver = NULL;
+    }
+    // COPY END
+
+    // Find the receiver to change the universe for.
+    if (res == kEtcPalErrOk)
+    {
+      SacnReceiverKeys handle_lookup_keys;
+      handle_lookup_keys.handle = handle;
+      receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers, &handle_lookup_keys);
+      if (!receiver)
+        res = kEtcPalErrNotFound;
+    }
+
+    if (res == kEtcPalErrOk)
+    {
+      // TODO: Update receiver->keys.universe while keeping rbtree position correct.
+      receiver->sampling = true;
+      etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
+      // TODO: Keep going from here (following create_new_receiver)
+    }
+  }
+  else
+  {
+    res = kEtcPalErrSys;
+  }
+
+  return res;
 }
 
 /*!
