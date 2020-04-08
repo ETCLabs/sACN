@@ -109,6 +109,8 @@ typedef unsigned int sacn_thread_id_t;
 #define SACN_CAN_LOG(pri) false
 #endif
 
+#define UNIVERSE_ID_VALID(universe_id) ((universe_id != 0) && (universe_id <= 64000))
+
 /******************************************************************************
  * Types used by the data loss module
  *****************************************************************************/

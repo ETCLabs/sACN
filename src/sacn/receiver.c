@@ -336,12 +336,13 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
  * successfully, the receiver is in a sampling period for the new universe where all data on the
  * universe is reported immediately via the universe_data() callback. Data should be stored but not
  * acted upon until receiving a sampling_ended() callback for this receiver. This prevents level
- * jumps as sources with different priorities are discovered. If this call fails, the caller must call
- * sacn_receiver_destroy for the receiver, because the receiver is likely in an unusable state.
+ * jumps as sources with different priorities are discovered. If this call fails, the caller must call 
+ * sacn_receiver_destroy for the receiver, because the receiver may be in an invalid state.
  *
  * \param[in] handle Handle to the receiver for which to change the universe.
  * \param[in] new_universe_id New universe number that this receiver should listen to.
  * \return #kEtcPalErrOk: Universe changed successfully.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrExists: A receiver already exists which is listening on the specified new universe.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
@@ -349,25 +350,23 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
  */
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id)
 {
-  // TODO
+  if (!UNIVERSE_ID_VALID(new_universe_id))
+    return kEtcPalErrInvalid;
+
   if (!sacn_initialized())
     return kEtcPalErrNotInit;
 
   etcpal_error_t res = kEtcPalErrOk;
   if (sacn_lock())
   {
-    // TODO: Move this copied code to a common function
-    // COPY BEGIN
-    // First check to see if we are already listening on this universe.
+    // First check to see if there is already a receiver listening on this universe.
     SacnReceiverKeys lookup_keys;
     lookup_keys.universe = new_universe_id;
     SacnReceiver* receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers_by_universe, &lookup_keys);
     if (receiver)
     {
       res = kEtcPalErrExists;
-      receiver = NULL;
     }
-    // COPY END
 
     // Find the receiver to change the universe for.
     if (res == kEtcPalErrOk)
@@ -377,11 +376,9 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
         res = kEtcPalErrNotFound;
     }
 
-    // Update receiver member data.
+    // Clear termination sets and sources since they only pertain to the old universe.
     if (res == kEtcPalErrOk)
     {
-      receiver->sampling = true;
-      etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
       clear_term_set_list(receiver->term_sets);
       receiver->term_sets = NULL;
       res = etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
@@ -396,12 +393,19 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
                                      receiver->num_netints, &receiver->socket);
     }
 
-    // Update receiver key and map positions.
+    // Update receiver key and position in receiver_state.receivers_by_universe.
     if (res == kEtcPalErrOk)
     {
-      remove_receiver_from_maps(receiver);
+      etcpal_rbtree_remove(&receiver_state.receivers_by_universe, receiver);
       receiver->keys.universe = new_universe_id;
-      res = insert_receiver_into_maps(receiver);
+      res = etcpal_rbtree_insert(&receiver_state.receivers_by_universe, receiver);
+    }
+
+    // Begin the sampling period.
+    if (res == kEtcPalErrOk)
+    {
+      receiver->sampling = true;
+      etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
     }
 
     sacn_unlock();
@@ -512,8 +516,7 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
 {
   SACN_ASSERT(config);
 
-  if (config->universe_id == 0 || config->universe_id > 64000 || !config->callbacks.universe_data ||
-      !config->callbacks.sources_lost)
+  if (!UNIVERSE_ID_VALID(config->universe_id) || !config->callbacks.universe_data || !config->callbacks.sources_lost)
   {
     return kEtcPalErrInvalid;
   }
