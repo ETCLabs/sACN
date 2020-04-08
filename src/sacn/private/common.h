@@ -167,6 +167,11 @@ struct SacnReceiver
 
   // Sockets / network interface info
   etcpal_socket_t socket;
+  /* (optional) array of network interfaces on which to listen to the specified universe. If NULL,
+   * all available network interfaces will be used. */
+  const SacnMcastNetintId* netints;
+  /* Number of elements in the netints array. */
+  size_t num_netints;
 
   // State tracking
   bool sampling;

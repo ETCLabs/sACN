@@ -53,7 +53,12 @@ static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PR
 #if SACN_DYNAMIC_MEM
 #define ALLOC_RECEIVER() malloc(sizeof(SacnReceiver))
 #define ALLOC_TRACKED_SOURCE() malloc(sizeof(SacnTrackedSource))
-#define FREE_RECEIVER(ptr) free(ptr)
+#define FREE_RECEIVER(ptr) \
+  do                       \
+  {                        \
+    free(ptr->netints);    \
+    free(ptr);             \
+  } while (0)
 #define FREE_TRACKED_SOURCE(ptr) free(ptr)
 #else
 #define ALLOC_RECEIVER() etcpal_mempool_alloc(sacnrecv_receivers)
@@ -331,7 +336,8 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
  * successfully, the receiver is in a sampling period for the new universe where all data on the
  * universe is reported immediately via the universe_data() callback. Data should be stored but not
  * acted upon until receiving a sampling_ended() callback for this receiver. This prevents level
- * jumps as sources with different priorities are discovered.
+ * jumps as sources with different priorities are discovered. If this call fails, the caller must call
+ * sacn_receiver_destroy for the receiver, because the receiver is likely in an unusable state.
  *
  * \param[in] handle Handle to the receiver for which to change the universe.
  * \param[in] new_universe_id New universe number that this receiver should listen to.
@@ -344,20 +350,18 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id)
 {
   // TODO
-  etcpal_error_t res = kEtcPalErrOk;
-
   if (!sacn_initialized())
     return kEtcPalErrNotInit;
 
+  etcpal_error_t res = kEtcPalErrOk;
   if (sacn_lock())
   {
     // TODO: Move this copied code to a common function
     // COPY BEGIN
     // First check to see if we are already listening on this universe.
-    SacnReceiverKeys new_universe_lookup_keys;
-    new_universe_lookup_keys.universe = new_universe_id;
-    SacnReceiver* receiver =
-        (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers_by_universe, &new_universe_lookup_keys);
+    SacnReceiverKeys lookup_keys;
+    lookup_keys.universe = new_universe_id;
+    SacnReceiver* receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers_by_universe, &lookup_keys);
     if (receiver)
     {
       res = kEtcPalErrExists;
@@ -368,20 +372,39 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
     // Find the receiver to change the universe for.
     if (res == kEtcPalErrOk)
     {
-      SacnReceiverKeys handle_lookup_keys;
-      handle_lookup_keys.handle = handle;
-      receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers, &handle_lookup_keys);
+      receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers, &handle);
       if (!receiver)
         res = kEtcPalErrNotFound;
     }
 
+    // Update receiver member data.
     if (res == kEtcPalErrOk)
     {
-      // TODO: Update receiver->keys.universe while keeping rbtree position correct.
       receiver->sampling = true;
       etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
-      // TODO: Keep going from here (following create_new_receiver)
+      clear_term_set_list(receiver->term_sets);
+      receiver->term_sets = NULL;
+      res = etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
     }
+
+    // Update the receiver's socket and subscription.
+    if (res == kEtcPalErrOk)
+    {
+      sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, false);
+      // TODO IPv6
+      res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, new_universe_id, receiver->netints,
+                                     receiver->num_netints, &receiver->socket);
+    }
+
+    // Update receiver key and map positions.
+    if (res == kEtcPalErrOk)
+    {
+      remove_receiver_from_maps(receiver);
+      receiver->keys.universe = new_universe_id;
+      res = insert_receiver_into_maps(receiver);
+    }
+
+    sacn_unlock();
   }
   else
   {
@@ -522,6 +545,18 @@ SacnReceiver* create_new_receiver(const SacnReceiverConfig* config)
   receiver->thread_id = SACN_THREAD_ID_INVALID;
 
   receiver->socket = ETCPAL_SOCKET_INVALID;
+
+  if (config->netints != NULL)
+  {
+    receiver->netints = calloc(config->num_netints, sizeof(SacnMcastNetintId));
+    memcpy(receiver->netints, config->netints, config->num_netints * sizeof(SacnMcastNetintId));
+  }
+  else
+  {
+    receiver->netints = NULL;
+  }
+
+  receiver->num_netints = config->num_netints;
 
   receiver->sampling = true;
   etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
