@@ -329,14 +329,11 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 /*!
  * \brief Change the universe on which an sACN receiver is listening.
  *
- * **NOTE:** This function is not yet implemented. A workaround is to destroy a receiver and create
- * a new one with a different universe.
- *
  * An sACN receiver can only listen on one universe at a time. After this call completes
  * successfully, the receiver is in a sampling period for the new universe where all data on the
  * universe is reported immediately via the universe_data() callback. Data should be stored but not
  * acted upon until receiving a sampling_ended() callback for this receiver. This prevents level
- * jumps as sources with different priorities are discovered. If this call fails, the caller must call 
+ * jumps as sources with different priorities are discovered. If this call fails, the caller must call
  * sacn_receiver_destroy for the receiver, because the receiver may be in an invalid state.
  *
  * \param[in] handle Handle to the receiver for which to change the universe.
@@ -673,7 +670,11 @@ void remove_receiver_from_thread(SacnReceiver* receiver, bool close_socket_now)
   SacnRecvThreadContext* context = get_recv_thread_context(receiver->thread_id);
   if (context)
   {
-    sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, close_socket_now);
+    if (receiver->socket != ETCPAL_SOCKET_INVALID)
+    {
+      sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, close_socket_now);
+    }
+
     remove_receiver_from_list(context, receiver);
   }
 }

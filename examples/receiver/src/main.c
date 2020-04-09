@@ -41,6 +41,8 @@
  *************************************************************************************************/
 
 #define NUM_LISTENERS 3
+#define DYNAMIC_LISTENER_INDEX (NUM_LISTENERS - 1)
+#define MAX_UNIVERSE_INDEX 9
 #define NUM_SOURCES_PER_LISTENER 4
 #define NUM_SLOTS_DISPLAYED 10
 
@@ -127,6 +129,82 @@ void print_universe_updates(int interval_ms)
     printf("-------------------------------------------------------------------------------------------------------\n");
     etcpal_mutex_unlock(&mutex);
   }
+}
+
+static etcpal_error_t update_dynamic_listener_universe(SacnReceiverCallbacks* callbacks)
+{
+  ListeningUniverse* listener = &listeners[DYNAMIC_LISTENER_INDEX];
+  uint16_t next_universe = listener->universe;
+  etcpal_error_t change_result;
+  etcpal_error_t result_to_return = kEtcPalErrOk;
+
+  do
+  {
+    next_universe = (next_universe % MAX_UNIVERSE_INDEX) + 1;
+
+    printf("Changing sACN receiver %d from universe %u to universe %u.\n", listener->receiver_handle,
+           listener->universe, next_universe);
+    change_result = sacn_receiver_change_universe(listener->receiver_handle, next_universe);
+    printf("Result from sacn_receiver_change_universe: '%s'\n", etcpal_strerror(change_result));
+
+    if (change_result == kEtcPalErrOk)
+    {
+      listener->universe = next_universe;
+      listener->num_sources = 0;
+    }
+
+    if (change_result != kEtcPalErrOk)
+    {
+      result_to_return = recreate_listener(listener, listener->universe, callbacks);
+      printf("Result from recreate_listener: '%s'\n", etcpal_strerror(result_to_return));
+    }
+  } while ((change_result != kEtcPalErrOk) && (result_to_return == kEtcPalErrOk));
+
+  return result_to_return;
+}
+
+static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t universe, SacnReceiverCallbacks* callbacks)
+{
+  SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
+  config.callbacks = *callbacks;
+  config.callback_context = listener;
+  config.universe_id = universe;
+
+  etcpal_error_t result = sacn_receiver_create(&config, &listener->receiver_handle);
+  if (result == kEtcPalErrOk)
+  {
+    listener->universe = universe;
+    listener->num_sources = 0;
+  }
+  else
+  {
+    printf("Creating sACN receiver failed with error: '%s'\n", etcpal_strerror(result));
+  }
+
+  return result;
+}
+
+static etcpal_error_t destroy_listener(ListeningUniverse* listener)
+{
+  etcpal_error_t destroy_res = sacn_receiver_destroy(listener->receiver_handle);
+  if (destroy_res != kEtcPalErrOk)
+  {
+    printf("Error destroying sACN receiver %d: '%s'!\n", listener->receiver_handle, etcpal_strerror(destroy_res));
+  }
+
+  return destroy_res;
+}
+
+static etcpal_error_t recreate_listener(ListeningUniverse* listener, uint16_t universe,
+                                        SacnReceiverCallbacks* callbacks)
+{
+  etcpal_error_t recreate_result = destroy_listener(listener);
+  if (recreate_result == kEtcPalErrOk)
+  {
+    recreate_result = create_listener(listener, universe, callbacks);
+  }
+
+  return recreate_result;
 }
 
 /**************************************************************************************************
@@ -299,20 +377,13 @@ int main(void)
   uint16_t universe = 1;
   for (ListeningUniverse* listener = listeners; listener < listeners + NUM_LISTENERS; ++listener)
   {
-    SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-    config.callbacks = kSacnCallbacks;
-    config.callback_context = listener;
-    config.universe_id = universe;
-
-    result = sacn_receiver_create(&config, &listener->receiver_handle);
+    result = create_listener(listener, universe, &kSacnCallbacks);
     if (result == kEtcPalErrOk)
     {
-      listener->universe = universe++;
-      listener->num_sources = 0;
+      ++universe;
     }
     else
     {
-      printf("Creating sACN receiver failed with error: '%s'\n", etcpal_strerror(result));
       sacn_deinit();
       return 1;
     }
@@ -330,6 +401,16 @@ int main(void)
     if (etcpal_timer_is_expired(&timer))
     {
       print_universe_updates(PRINT_STATUS_INTERVAL);
+
+      // Also cycle the dynamic listener through the universes to test sacn_receiver_change_universe.
+      result = update_dynamic_listener_universe(&kSacnCallbacks);
+      if (result != kEtcPalErrOk)
+      {
+        printf("Ending execution because update_dynamic_listener_universe failed with error: '%s'.\n",
+               etcpal_strerror(result));
+        keep_running = false;
+      }
+
       etcpal_timer_reset(&timer);
     }
   }
@@ -338,11 +419,7 @@ int main(void)
 
   for (ListeningUniverse* listener = listeners; listener < listeners + NUM_LISTENERS; ++listener)
   {
-    etcpal_error_t destroy_res = sacn_receiver_destroy(listener->receiver_handle);
-    if (destroy_res != kEtcPalErrOk)
-    {
-      printf("Error destroying sACN receiver %d: '%s'!\n", listener->receiver_handle, etcpal_strerror(destroy_res));
-    }
+    destroy_listener(listener);
   }
 
   sacn_deinit();
