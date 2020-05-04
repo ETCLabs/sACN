@@ -43,6 +43,8 @@
 #define MAX_LISTENERS 10
 #define NUM_SOURCES_PER_LISTENER 4
 #define NUM_SLOTS_DISPLAYED 10
+#define BORDER_STRING \
+  "-------------------------------------------------------------------------------------------------------\n"
 
 /**************************************************************************************************
  * Global Data
@@ -97,11 +99,24 @@ static SourceData* find_source_hole(ListeningUniverse* listener)
   return NULL;
 }
 
-static void invalidate_listener_handles()
+static void invalidate_listeners()
 {
   for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
   {
     listener->receiver_handle = SACN_RECEIVER_INVALID;
+  }
+}
+
+static void invalidate_sources(ListeningUniverse* listener)
+{
+  if (listener)
+  {
+    for (SourceData* source = listener->sources; source < listener->sources + NUM_SOURCES_PER_LISTENER; ++source)
+    {
+      source->valid = false;
+    }
+
+    listener->num_sources = 0;
   }
 }
 
@@ -133,6 +148,7 @@ static ListeningUniverse* find_listener_on_universe(int universe)
 
 static void console_print_help()
 {
+  printf(BORDER_STRING);
   printf("Each input is listed followed by the action:\n");
   printf("h : Print help.\n");
   printf("p : Print updates for all universe listeners.\n");
@@ -140,6 +156,7 @@ static void console_print_help()
   printf("r : Remove a universe listener.\n");
   printf("c : Change a listener's universe.\n");
   printf("ctrl-c : Exit.\n");
+  printf(BORDER_STRING);
 }
 
 /* Print a status update for each listening universe about the status of its sources. */
@@ -147,7 +164,7 @@ static void console_print_universe_updates()
 {
   if (etcpal_mutex_lock(&mutex))
   {
-    printf("-------------------------------------------------------------------------------------------------------\n");
+    printf(BORDER_STRING);
     for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
     {
       if (listener->receiver_handle != SACN_RECEIVER_INVALID)
@@ -175,7 +192,7 @@ static void console_print_universe_updates()
         }
       }
     }
-    printf("-------------------------------------------------------------------------------------------------------\n");
+    printf(BORDER_STRING);
     etcpal_mutex_unlock(&mutex);
   }
 }
@@ -185,6 +202,7 @@ static etcpal_error_t console_add_listening_universe(SacnReceiverCallbacks* call
   etcpal_error_t result = kEtcPalErrOk;
   ListeningUniverse* new_listener = find_listener_hole();
 
+  printf(BORDER_STRING);
   if (new_listener)
   {
     int universe = 0;
@@ -199,6 +217,7 @@ static etcpal_error_t console_add_listening_universe(SacnReceiverCallbacks* call
   }
 
   printf("Result: %s\n", etcpal_strerror(result));
+  printf(BORDER_STRING);
 
   return result;
 }
@@ -208,6 +227,7 @@ static etcpal_error_t console_remove_listening_universe()
   etcpal_error_t result = kEtcPalErrOk;
 
   int universe = 0;
+  printf(BORDER_STRING);
   printf("Enter the universe number:\n");
   scanf("%d", &universe);
 
@@ -222,6 +242,8 @@ static etcpal_error_t console_remove_listening_universe()
     printf("There are no listeners currently listening to universe %d.\n", universe);
   }
 
+  printf(BORDER_STRING);
+
   return result;
 }
 
@@ -230,6 +252,7 @@ static etcpal_error_t console_change_listening_universe(SacnReceiverCallbacks* c
   etcpal_error_t result = kEtcPalErrOk;
 
   int current_universe = 0;
+  printf(BORDER_STRING);
   printf("Enter the current universe number:\n");
   scanf("%d", &current_universe);
 
@@ -248,6 +271,8 @@ static etcpal_error_t console_change_listening_universe(SacnReceiverCallbacks* c
     printf("There are no listeners currently listening to universe %d.\n", current_universe);
   }
 
+  printf(BORDER_STRING);
+
   return result;
 }
 
@@ -264,7 +289,7 @@ static etcpal_error_t update_listener_universe(ListeningUniverse* listener, uint
   if (change_result == kEtcPalErrOk)
   {
     listener->universe = new_universe;
-    listener->num_sources = 0;
+    invalidate_sources(listener);
   }
   else
   {
@@ -301,6 +326,7 @@ static etcpal_error_t destroy_listener(ListeningUniverse* listener)
   etcpal_error_t destroy_res = sacn_receiver_destroy(listener->receiver_handle);
   if (destroy_res == kEtcPalErrOk)
   {
+    invalidate_sources(listener);
     listener->receiver_handle = SACN_RECEIVER_INVALID;
   }
   else
@@ -491,7 +517,7 @@ int main(void)
   }
 
   // Initialize the listener array by making each handle invalid since there are no listeners to start.
-  invalidate_listener_handles();
+  invalidate_listeners();
 
   // Handle Ctrl+C gracefully and shut down in compatible consoles
   install_keyboard_interrupt_handler(handle_keyboard_interrupt);
