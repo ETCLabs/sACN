@@ -29,4 +29,5 @@ mark_as_advanced(
 
 set_target_properties(gtest gtest_main gmock gmock_main
   PROPERTIES FOLDER "tests"
+  CXX_STANDARD 11
 )
