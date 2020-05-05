@@ -42,7 +42,7 @@
 #define SACN_VERSION_MAJOR 2 /*!< The major version. */
 #define SACN_VERSION_MINOR 0 /*!< The minor version. */
 #define SACN_VERSION_PATCH 0 /*!< The patch version. */
-#define SACN_VERSION_BUILD 1 /*!< The build number. */
+#define SACN_VERSION_BUILD 2 /*!< The build number. */
 /*!
  * @}
  */
@@ -51,8 +51,8 @@
  * \name sACN version strings
  * @{
  */
-#define SACN_VERSION_STRING      "2.0.0.1"
-#define SACN_VERSION_DATESTR     "12.Feb.2020"
+#define SACN_VERSION_STRING      "2.0.0.2"
+#define SACN_VERSION_DATESTR     "05.May.2020"
 #define SACN_VERSION_COPYRIGHT   "Copyright 2020 ETC Inc."
 #define SACN_VERSION_PRODUCTNAME "sACN"
 /*!
