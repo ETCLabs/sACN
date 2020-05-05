@@ -89,11 +89,11 @@ etcpal_error_t sacn_sockets_init(void)
   for (const EtcPalNetintInfo* netint = netint_list; netint < netint_list + num_sys_netints; ++netint)
   {
     // Get the interface IP address for logging
-    char addr_str[ETCPAL_INET6_ADDRSTRLEN];
+    char addr_str[ETCPAL_IP_STRING_BYTES];
     addr_str[0] = '\0';
     if (SACN_CAN_LOG(ETCPAL_LOG_INFO))
     {
-      etcpal_inet_ntop(&netint->addr, addr_str, ETCPAL_INET6_ADDRSTRLEN);
+      etcpal_ip_to_string(&netint->addr, addr_str);
     }
 
     // Create a test send and receive socket on each network interface. If either one fails, we
@@ -360,8 +360,8 @@ etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalG
   {
     if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))
     {
-      char addr_str[ETCPAL_INET6_ADDRSTRLEN];
-      etcpal_inet_ntop(&group->group, addr_str, ETCPAL_INET6_ADDRSTRLEN);
+      char addr_str[ETCPAL_IP_STRING_BYTES];
+      etcpal_ip_to_string(&group->group, addr_str);
       SACN_LOG_WARNING("Error subscribing to multicast address %s on network interface index %u: '%s'", addr_str,
                        group->ifindex, etcpal_strerror(res));
     }

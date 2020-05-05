@@ -81,8 +81,8 @@ void my_universe_data_callback(sacn_receiver_t handle, const EtcPalSockAddr* sou
 
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // header fields available:
-  char addr_str[ETCPAL_INET6_ADDRSTRLEN];
-  etcpal_inet_ntop(&source_addr->ip, addr_str, ETCPAL_INET6_ADDRSTRLEN);
+  char addr_str[ETCPAL_IP_STRING_BYTES];
+  etcpal_ip_to_string(&source_addr->ip, addr_str);
 
   char cid_str[ETCPAL_UUID_STRING_BYTES];
   etcpal_uuid_to_string(&header->cid, cid_str);
