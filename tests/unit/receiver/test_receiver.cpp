@@ -53,6 +53,17 @@ protected:
   }
 };
 
+FAKE_VOID_FUNC(handle_universe_data, sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+               void*);
+
+FAKE_VOID_FUNC(handle_sources_lost, sacn_receiver_t, const SacnLostSource*, size_t, void*);
+
+FAKE_VOID_FUNC(handle_source_pcp_lost, sacn_receiver_t, const SacnRemoteSource*, void*);
+
+FAKE_VOID_FUNC(handle_sampling_ended, sacn_receiver_t, void*);
+
+FAKE_VOID_FUNC(handle_source_limit_exceeded, sacn_receiver_t, void*);
+
 TEST_F(TestReceiver, SetStandardVersionWorks)
 {
   // Initialization should set it to the default
@@ -79,4 +90,16 @@ TEST_F(TestReceiver, SetExpiredWaitWorks)
   EXPECT_EQ(sacn_receiver_get_expired_wait(), 5000u);
   sacn_receiver_set_expired_wait(std::numeric_limits<uint32_t>::max());
   EXPECT_EQ(sacn_receiver_get_expired_wait(), std::numeric_limits<uint32_t>::max());
+}
+
+TEST_F(TestReceiver, Placeholder)
+{
+  SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
+  config.callbacks = {handle_universe_data, handle_sources_lost, handle_source_pcp_lost, handle_sampling_ended,
+                      handle_source_limit_exceeded};
+  config.callback_context = this;
+  config.universe_id = 1;  // Start at universe 1.
+
+  sacn_receiver_t handle;
+  sacn_receiver_create(&config, &handle);
 }
