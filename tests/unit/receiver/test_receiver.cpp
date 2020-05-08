@@ -21,18 +21,32 @@
 
 #include <limits>
 #include "etcpal_mock/common.h"
+#include "etcpal_mock/thread.h"
+#include "etcpal/acn_rlp.h"
 #include "sacn_mock/private/common.h"
+#include "sacn_mock/private/sockets.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
 #include "sacn/private/receiver.h"
+#include "sacn/private/util.h"
 #include "gtest/gtest.h"
 #include "fff.h"
 
 #if SACN_DYNAMIC_MEM
 #define TestReceiver TestReceiverDynamic
+#define TestReceiverWithNetwork TestReceiverWithNetworkDynamic
 #else
 #define TestReceiver TestReceiverStatic
+#define TestReceiverWithNetwork TestReceiverWithNetworkStatic
 #endif
+
+// Fake functions for sACN receiver callbacks.
+FAKE_VOID_FUNC(handle_universe_data, sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+               void*);
+FAKE_VOID_FUNC(handle_sources_lost, sacn_receiver_t, const SacnLostSource*, size_t, void*);
+FAKE_VOID_FUNC(handle_source_pcp_lost, sacn_receiver_t, const SacnRemoteSource*, void*);
+FAKE_VOID_FUNC(handle_sampling_ended, sacn_receiver_t, void*);
+FAKE_VOID_FUNC(handle_source_limit_exceeded, sacn_receiver_t, void*);
 
 class TestReceiver : public ::testing::Test
 {
@@ -53,16 +67,87 @@ protected:
   }
 };
 
-FAKE_VOID_FUNC(handle_universe_data, sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
-               void*);
+class TestReceiverWithNetwork : public TestReceiver
+{
+public:
+  static std::function<void(void*)> sacn_receive_thread;
+  static IntHandleManager socket_handle_mgr;
+  static std::map<etcpal_socket_t, uint16_t> socket_to_universe;
 
-FAKE_VOID_FUNC(handle_sources_lost, sacn_receiver_t, const SacnLostSource*, size_t, void*);
+protected:
+  void SetUp() override
+  {
+    TestReceiver::SetUp();
 
-FAKE_VOID_FUNC(handle_source_pcp_lost, sacn_receiver_t, const SacnRemoteSource*, void*);
+    init_int_handle_manager(&socket_handle_mgr, [](int handle_val) {
+      return (socket_to_universe.find(static_cast<etcpal_socket_t>(handle_val)) != socket_to_universe.end());
+    });
 
-FAKE_VOID_FUNC(handle_sampling_ended, sacn_receiver_t, void*);
+    etcpal_thread_create_fake.custom_fake = [](etcpal_thread_t* id, const EtcPalThreadParams* params,
+                                               void (*thread_fn)(void*), void* thread_arg) {
+      EXPECT_EQ(sacn_receive_thread, nullptr);
+      sacn_receive_thread = thread_fn;
+      return kEtcPalErrOk;
+    };
 
-FAKE_VOID_FUNC(handle_source_limit_exceeded, sacn_receiver_t, void*);
+    sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_iptype_t ip_type,
+                                                   uint16_t universe, const SacnMcastNetintId* netints,
+                                                   size_t num_netints, etcpal_socket_t* socket) {
+      SacnRecvThreadContext* context = get_recv_thread_context(thread_id);
+      EXPECT_NE(context, nullptr);
+
+      etcpal_socket_t new_socket = static_cast<etcpal_socket_t>(get_next_int_handle(&socket_handle_mgr));
+      EXPECT_EQ(add_socket_ref(context, new_socket), true);
+      socket_to_universe.insert(std::make_pair(new_socket, universe));
+
+      *socket = new_socket;
+
+      return kEtcPalErrOk;
+    };
+
+    sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t socket,
+                                                      bool close_now) { socket_to_universe.erase(socket); };
+
+    sacn_read_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context, SacnReadResult* read_result) {
+      EXPECT_NE(recv_thread_context, nullptr);
+      EXPECT_NE(read_result, nullptr);
+      EXPECT_NE(recv_thread_context->socket_refs, nullptr);
+      EXPECT_EQ(recv_thread_context->num_socket_refs, 1);
+
+      etcpal_socket_t socket = recv_thread_context->socket_refs[0].sock;
+
+      auto universe_iter = socket_to_universe.find(socket);
+      EXPECT_NE(universe_iter, socket_to_universe.end());
+      uint16_t universe = universe_iter->second;
+
+      // Pack recv_thread_context->recv_buf with fake network data based on the universe.
+      uint8_t* pack_ptr = recv_thread_context->recv_buf;
+      pack_ptr += acn_pack_udp_preamble(pack_ptr, SACN_MTU);
+
+      AcnRootLayerPdu pdu;  // TODO: Initialize pdu with the fake data.
+      pack_ptr += acn_pack_root_layer_block(pack_ptr, SACN_MTU - (pack_ptr - recv_thread_context->recv_buf), &pdu, 1);
+
+      read_result->data = recv_thread_context->recv_buf;
+      read_result->data_len = (pack_ptr - recv_thread_context->recv_buf);
+      // TODO: Figure out what to do (if anything) with read_result->from_addr
+
+      // Only let sacn_receive_thread run once so it doesn't block forever.
+      recv_thread_context->running = false;
+
+      return kEtcPalErrOk;
+    };
+  }
+
+  void TearDown() override
+  {
+    sacn_receive_thread = nullptr;
+    TestReceiver::TearDown();
+  }
+};
+
+std::function<void(void*)> TestReceiverWithNetwork::sacn_receive_thread;
+IntHandleManager TestReceiverWithNetwork::socket_handle_mgr;
+std::map<etcpal_socket_t, uint16_t> TestReceiverWithNetwork::socket_to_universe;
 
 TEST_F(TestReceiver, SetStandardVersionWorks)
 {
@@ -92,7 +177,7 @@ TEST_F(TestReceiver, SetExpiredWaitWorks)
   EXPECT_EQ(sacn_receiver_get_expired_wait(), std::numeric_limits<uint32_t>::max());
 }
 
-TEST_F(TestReceiver, Placeholder)
+TEST_F(TestReceiverWithNetwork, Placeholder)
 {
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
   config.callbacks = {handle_universe_data, handle_sources_lost, handle_source_pcp_lost, handle_sampling_ended,
@@ -102,4 +187,13 @@ TEST_F(TestReceiver, Placeholder)
 
   sacn_receiver_t handle;
   sacn_receiver_create(&config, &handle);
+
+  unsigned int num_threads = sacn_mem_get_num_threads();
+  ASSERT_NE(num_threads, 0);
+  EXPECT_EQ(num_threads, 1);
+
+  ASSERT_NE(sacn_receive_thread, nullptr);
+  sacn_receive_thread(get_recv_thread_context(0));
+
+  sacn_receiver_destroy(handle);
 }
