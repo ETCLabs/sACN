@@ -70,8 +70,8 @@ bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* h
                             const uint8_t** pdata);
 bool parse_draft_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* header, uint8_t* seq,
                                   bool* terminated, const uint8_t** pdata);
-void pack_sacn_data_header(uint8_t* buf, const EtcPalUuid* source_cid, const char* source_name, uint8_t priority,
-                           bool preview, uint16_t universe_id, uint8_t start_code, uint16_t slot_count);
+size_t pack_sacn_data_header(uint8_t* buf, const EtcPalUuid* source_cid, const char* source_name, uint8_t priority,
+                             bool preview, uint16_t universe_id, uint8_t start_code, uint16_t slot_count);
 
 #ifdef __cplusplus
 }

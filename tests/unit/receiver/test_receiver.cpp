@@ -23,10 +23,12 @@
 #include "etcpal_mock/common.h"
 #include "etcpal_mock/thread.h"
 #include "etcpal/acn_rlp.h"
+#include "etcpal/cpp/uuid.h"
 #include "sacn_mock/private/common.h"
 #include "sacn_mock/private/sockets.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
+#include "sacn/private/pdu.h"
 #include "sacn/private/receiver.h"
 #include "sacn/private/util.h"
 #include "gtest/gtest.h"
@@ -73,11 +75,14 @@ public:
   static std::function<void(void*)> sacn_receive_thread;
   static IntHandleManager socket_handle_mgr;
   static std::map<etcpal_socket_t, uint16_t> socket_to_universe;
+  static etcpal::Uuid fixture_uuid;
 
 protected:
   void SetUp() override
   {
     TestReceiver::SetUp();
+
+    fixture_uuid = etcpal::Uuid::V4();
 
     init_int_handle_manager(&socket_handle_mgr, [](int handle_val) {
       return (socket_to_universe.find(static_cast<etcpal_socket_t>(handle_val)) != socket_to_universe.end());
@@ -114,21 +119,36 @@ protected:
       EXPECT_NE(recv_thread_context->socket_refs, nullptr);
       EXPECT_EQ(recv_thread_context->num_socket_refs, 1);
 
-      etcpal_socket_t socket = recv_thread_context->socket_refs[0].sock;
-
-      auto universe_iter = socket_to_universe.find(socket);
+      // The socket should have a corresponding universe ID in socket_to_universe - grab it.
+      auto universe_iter = socket_to_universe.find(recv_thread_context->socket_refs[0].sock);
       EXPECT_NE(universe_iter, socket_to_universe.end());
-      uint16_t universe = universe_iter->second;
+      const uint16_t kUniverse = universe_iter->second;
 
       // Pack recv_thread_context->recv_buf with fake network data based on the universe.
-      uint8_t* pack_ptr = recv_thread_context->recv_buf;
-      pack_ptr += acn_pack_udp_preamble(pack_ptr, SACN_MTU);
+      char name_buffer[SACN_SOURCE_NAME_MAX_LEN];
+      memset(name_buffer, '\0', SACN_SOURCE_NAME_MAX_LEN);
+      int chars_written = snprintf(name_buffer, SACN_SOURCE_NAME_MAX_LEN, "Fake sACN Universe %u", kUniverse);
 
-      AcnRootLayerPdu pdu;  // TODO: Initialize pdu with the fake data.
-      pack_ptr += acn_pack_root_layer_block(pack_ptr, SACN_MTU - (pack_ptr - recv_thread_context->recv_buf), &pdu, 1);
+      const etcpal::Uuid kSourceCid =
+          etcpal::Uuid::V5(fixture_uuid, name_buffer,
+                           (chars_written < SACN_SOURCE_NAME_MAX_LEN) ? chars_written : SACN_SOURCE_NAME_MAX_LEN);
+
+      const uint8_t kPriority = 100u;
+      const bool kPreview = false;
+      const uint8_t kStartCode = 0x00u;
+      const uint16_t kSlotCount = 0x0200u;
+
+      const size_t kDataHeaderLength =
+          pack_sacn_data_header(recv_thread_context->recv_buf, &kSourceCid.get(), name_buffer, kPriority, kPreview,
+                                kUniverse, kStartCode, kSlotCount);
+
+      for (uint16_t slotIndex = 0; (slotIndex + 1) < kSlotCount; slotIndex += 2)
+      {
+        etcpal_pack_u16b(recv_thread_context->recv_buf + kDataHeaderLength + slotIndex, kUniverse);
+      }
 
       read_result->data = recv_thread_context->recv_buf;
-      read_result->data_len = (pack_ptr - recv_thread_context->recv_buf);
+      read_result->data_len = kDataHeaderLength + kSlotCount;
       // TODO: Figure out what to do (if anything) with read_result->from_addr
 
       // Only let sacn_receive_thread run once so it doesn't block forever.
@@ -148,6 +168,7 @@ protected:
 std::function<void(void*)> TestReceiverWithNetwork::sacn_receive_thread;
 IntHandleManager TestReceiverWithNetwork::socket_handle_mgr;
 std::map<etcpal_socket_t, uint16_t> TestReceiverWithNetwork::socket_to_universe;
+etcpal::Uuid TestReceiverWithNetwork::fixture_uuid;
 
 TEST_F(TestReceiver, SetStandardVersionWorks)
 {
