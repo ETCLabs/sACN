@@ -20,6 +20,7 @@
 #include "sacn/receiver.h"
 
 #include <limits>
+#include <optional>
 #include "etcpal_mock/common.h"
 #include "etcpal_mock/thread.h"
 #include "etcpal/acn_rlp.h"
@@ -69,18 +70,40 @@ protected:
   }
 };
 
+// TODO: Move TestReceiverWithNetwork code into separate cpp file in the same directory.
 class TestReceiverWithNetwork : public TestReceiver
 {
 public:
-  static std::function<void(void*)> sacn_receive_thread;
-  static IntHandleManager socket_handle_mgr;
-  static std::map<etcpal_socket_t, uint16_t> socket_to_universe;
-  static std::map<sacn_receiver_t, uint16_t> handle_to_universe;
-  static etcpal::Uuid fixture_uuid;
   static const uint8_t kPriority;
   static const uint16_t kSlotCount;
 
+  std::optional<uint16_t> GetUniverse(sacn_receiver_t handle)
+  {
+    auto universe_iter = handle_to_universe.find(handle);
+    EXPECT_NE(universe_iter, handle_to_universe.end());
+
+    if (universe_iter == handle_to_universe.end())
+    {
+      return std::nullopt;
+    }
+
+    return universe_iter->second;
+  }
+
+  static std::function<void(void*)> sacn_receive_thread;
+  static IntHandleManager socket_handle_mgr;
+  static std::map<etcpal_socket_t, uint16_t> socket_to_universe;
+  static etcpal::Uuid fixture_uuid;
+
 protected:
+  const SacnReceiverConfig kDefaultReceiverConfig = {1,
+                                                     {handle_universe_data, handle_sources_lost, handle_source_pcp_lost,
+                                                      handle_sampling_ended, handle_source_limit_exceeded},
+                                                     0,
+                                                     this,
+                                                     NULL,
+                                                     0};
+
   void SetUp() override
   {
     TestReceiver::SetUp();
@@ -155,7 +178,6 @@ protected:
 
       read_result->data = recv_thread_context->recv_buf;
       read_result->data_len = kDataHeaderLength + kSlotCount;
-      // TODO: Figure out what to do (if anything) with read_result->from_addr
 
       // Only let sacn_receive_thread run once so it doesn't block forever.
       recv_thread_context->running = false;
@@ -170,13 +192,15 @@ protected:
       ASSERT_NE(pdata, nullptr);
       ASSERT_NE(context, nullptr);
 
+      TestReceiverWithNetwork* fixture = static_cast<TestReceiverWithNetwork*>(context);
+
       std::string source_name(header->source_name, SACN_SOURCE_NAME_MAX_LEN);
       source_name.erase(std::find(source_name.begin(), source_name.end(), '\0'), source_name.end());
       EXPECT_EQ(header->cid, etcpal::Uuid::V5(fixture_uuid, source_name.c_str(), source_name.length()));
 
-      auto universe_iter = handle_to_universe.find(handle);
-      EXPECT_NE(universe_iter, handle_to_universe.end());
-      const uint16_t kUniverse = universe_iter->second;
+      auto universe_opt = fixture->GetUniverse(handle);
+      EXPECT_EQ(universe_opt.has_value(), true);
+      const uint16_t kUniverse = universe_opt.value();
       EXPECT_EQ(header->universe_id, kUniverse);
 
       EXPECT_EQ(header->priority, kPriority);
@@ -208,12 +232,13 @@ protected:
   }
 
   virtual void ExpectUniverse(sacn_receiver_t handle, uint16_t universe) { handle_to_universe[handle] = universe; }
+
+  std::map<sacn_receiver_t, uint16_t> handle_to_universe;
 };
 
 std::function<void(void*)> TestReceiverWithNetwork::sacn_receive_thread;
 IntHandleManager TestReceiverWithNetwork::socket_handle_mgr;
 std::map<etcpal_socket_t, uint16_t> TestReceiverWithNetwork::socket_to_universe;
-std::map<sacn_receiver_t, uint16_t> TestReceiverWithNetwork::handle_to_universe;
 etcpal::Uuid TestReceiverWithNetwork::fixture_uuid;
 const uint8_t TestReceiverWithNetwork::kPriority = 100u;
 const uint16_t TestReceiverWithNetwork::kSlotCount = 0x0200u;
@@ -248,10 +273,7 @@ TEST_F(TestReceiver, SetExpiredWaitWorks)
 
 TEST_F(TestReceiverWithNetwork, CreateAndDestroyWork)
 {
-  SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks = {handle_universe_data, handle_sources_lost, handle_source_pcp_lost, handle_sampling_ended,
-                      handle_source_limit_exceeded};
-  config.callback_context = this;
+  SacnReceiverConfig config = kDefaultReceiverConfig;
 
   for (uint16_t universe = 1u; universe < 0x8000u; universe *= 2u)
   {
@@ -270,4 +292,35 @@ TEST_F(TestReceiverWithNetwork, CreateAndDestroyWork)
 
     sacn_receiver_destroy(handle);
   }
+}
+
+TEST_F(TestReceiverWithNetwork, ChangeUniverseWorks)
+{
+  SacnReceiverConfig config = kDefaultReceiverConfig;
+  sacn_receiver_t handle;
+
+  for (uint16_t universe = 1u; universe < 0x8000u; universe *= 2u)
+  {
+    if (universe == 1u)
+    {
+      config.universe_id = universe;
+      sacn_receiver_create(&config, &handle);
+    }
+    else
+    {
+      sacn_receiver_change_universe(handle, universe);
+      get_recv_thread_context(0)->running = true;  // The sacn_read custom fake sets this to false - reset to true.
+    }
+
+    ExpectUniverse(handle, universe);
+
+    unsigned int num_threads = sacn_mem_get_num_threads();
+    ASSERT_NE(num_threads, 0);
+    EXPECT_EQ(num_threads, 1);
+    ASSERT_NE(sacn_receive_thread, nullptr);
+
+    sacn_receive_thread(get_recv_thread_context(0));
+  }
+
+  sacn_receiver_destroy(handle);
 }
