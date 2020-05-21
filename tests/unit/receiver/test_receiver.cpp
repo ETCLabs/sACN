@@ -36,6 +36,10 @@
 #define TestReceiver TestReceiverStatic
 #endif
 
+constexpr uint16_t CHANGE_UNIVERSE_WORKS_FIRST_SOCKET = 1u;
+constexpr uint16_t CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE = 1u;
+constexpr uint16_t CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE = 2u;
+
 class TestReceiver : public ::testing::Test
 {
 protected:
@@ -85,9 +89,6 @@ TEST_F(TestReceiver, SetExpiredWaitWorks)
 
 TEST_F(TestReceiver, ChangeUniverseWorks)
 {
-#define CHANGE_UNIVERSE_WORKS_FIRST_SOCKET 1u
-#define CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE 1u
-#define CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE 2u
 
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
   config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
@@ -133,4 +134,24 @@ TEST_F(TestReceiver, ChangeUniverseWorks)
   sacn_add_receiver_socket_fake.custom_fake = nullptr;
 
   sacn_receiver_destroy(handle);
+}
+
+TEST_F(TestReceiver, ChangeUniverseErrInvalidWorks)
+{
+}
+
+TEST_F(TestReceiver, ChangeUniverseErrNotInitWorks)
+{
+}
+
+TEST_F(TestReceiver, ChangeUniverseErrExistsWorks)
+{
+}
+
+TEST_F(TestReceiver, ChangeUniverseErrNotFoundWorks)
+{
+}
+
+TEST_F(TestReceiver, ChangeUniverseErrSysWorks)
+{
 }

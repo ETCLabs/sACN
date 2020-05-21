@@ -264,7 +264,7 @@ static void console_print_universe_updates()
           {
             char cid_str[ETCPAL_UUID_STRING_BYTES];
             etcpal_uuid_to_string(&source->cid, cid_str);
-            int interval_ms = etcpal_getms() - source->update_start_time_ms;
+            uint32_t interval_ms = etcpal_getms() - source->update_start_time_ms;
             int update_rate = source->num_updates * 1000 / interval_ms;
             printf("  Source %s\tPriority: %u\tUpdates per second: %d\tLast update: ", cid_str, source->priority,
                    update_rate);
