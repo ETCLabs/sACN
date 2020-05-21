@@ -2,7 +2,6 @@
 
 set(TEST_RECEIVER_SOURCES
   test_receiver.cpp
-  test_receiver_with_network.cpp
   main.cpp
 
   ${SACN_SRC}/sacn/receiver.c
