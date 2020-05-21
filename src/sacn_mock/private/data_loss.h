@@ -23,6 +23,10 @@
 #include "sacn/private/data_loss.h"
 #include "fff.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_data_loss_init);
 DECLARE_FAKE_VOID_FUNC(sacn_data_loss_deinit);
 
@@ -34,5 +38,9 @@ DECLARE_FAKE_VOID_FUNC(get_expired_sources, TerminationSet**, SourcesLostNotific
 DECLARE_FAKE_VOID_FUNC(clear_term_set_list, TerminationSet*);
 
 void sacn_data_loss_reset_all_fakes(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SACN_MOCK_PRIVATE_DATA_LOSS_H_ */
