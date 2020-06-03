@@ -89,6 +89,8 @@ static struct SacnRecvState
 
 // Receiver creation and destruction
 static etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config);
+static etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMcastNetintId* netints,
+                                                  size_t num_netints);
 static SacnReceiver* create_new_receiver(const SacnReceiverConfig* config);
 static etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnReceiverConfig* config);
 static etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver);
@@ -522,6 +524,53 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
 }
 
 /*
+ * Initialize a SacnReceiver's network interface data.
+ */
+etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMcastNetintId* netints, size_t num_netints)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+
+  if (netints)
+  {
+#if SACN_DYNAMIC_MEM
+    const SacnMcastNetintId* calloc_result = calloc(num_netints, sizeof(SacnMcastNetintId));
+
+    if (calloc_result)
+    {
+      receiver->netints = calloc_result;
+    }
+    else
+    {
+      result = kEtcPalErrNoMem;
+    }
+#else
+    if (num_netints > SACN_MAX_NETINTS)
+    {
+      result = kEtcPalErrNoMem;
+    }
+#endif
+
+    if (result == kEtcPalErrOk)
+    {
+      memcpy(receiver->netints, netints, num_netints * sizeof(SacnMcastNetintId));
+    }
+  }
+#if SACN_DYNAMIC_MEM
+  else
+  {
+    receiver->netints = NULL;
+  }
+#endif
+
+  if (result == kEtcPalErrOk)
+  {
+    receiver->num_netints = num_netints;
+  }
+
+  return result;
+}
+
+/*
  * Allocate a new receiver instances and do essential first initialization, in preparation for
  * creating the sockets and subscriptions.
  *
@@ -546,17 +595,11 @@ SacnReceiver* create_new_receiver(const SacnReceiverConfig* config)
 
   receiver->socket = ETCPAL_SOCKET_INVALID;
 
-  if (config->netints != NULL)
+  if (initialize_receiver_netints(receiver, config->netints, config->num_netints) != kEtcPalErrOk)
   {
-    receiver->netints = calloc(config->num_netints, sizeof(SacnMcastNetintId));
-    memcpy(receiver->netints, config->netints, config->num_netints * sizeof(SacnMcastNetintId));
+    FREE_RECEIVER(receiver);
+    return NULL;
   }
-  else
-  {
-    receiver->netints = NULL;
-  }
-
-  receiver->num_netints = config->num_netints;
 
   receiver->sampling = true;
   etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
