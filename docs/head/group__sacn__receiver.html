@@ -577,8 +577,7 @@ sACN receiver flags</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Change the universe on which an sACN receiver is listening. </p>
-<p><b>NOTE:</b> This function is not yet implemented. A workaround is to destroy a receiver and create a new one with a different universe.</p>
-<p>An sACN receiver can only listen on one universe at a time. After this call completes successfully, the receiver is in a sampling period for the new universe where all data on the universe is reported immediately via the universe_data() callback. Data should be stored but not acted upon until receiving a sampling_ended() callback for this receiver. This prevents level jumps as sources with different priorities are discovered.</p>
+<p>An sACN receiver can only listen on one universe at a time. After this call completes successfully, the receiver is in a sampling period for the new universe where all data on the universe is reported immediately via the universe_data() callback. Data should be stored but not acted upon until receiving a sampling_ended() callback for this receiver. This prevents level jumps as sources with different priorities are discovered. If this call fails, the caller must call sacn_receiver_destroy for the receiver, because the receiver may be in an invalid state.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the receiver for which to change the universe. </td></tr>
@@ -588,7 +587,11 @@ sACN receiver flags</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Universe changed successfully. </dd>
 <dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afaeab0ae4d277d52dc56a1d78f81868c2d">kEtcPalErrExists</a>: A receiver already exists which is listening on the specified new universe. </dd>
 <dd>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid receiver. </dd>
 <dd>
