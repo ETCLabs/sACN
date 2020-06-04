@@ -57,6 +57,15 @@ typedef int sacn_receiver_t;
 /*! An invalid sACN receiver handle value. */
 #define SACN_RECEIVER_INVALID -1
 
+/*!
+ * \brief Constant for "infinite" when listening or merging sACN universes.
+ *
+ * When using dynamic memory, this constant can be passed in when creating a receiver or a merger.
+ * It represents an infinite number of sources on that universe.
+ */
+#define SACN_RECEIVER_INFINITE_SOURCES -1
+
+
 /*! An identifier for a version of the sACN standard. */
 typedef enum
 {

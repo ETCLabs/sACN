@@ -24,11 +24,13 @@ set(SACN_PUBLIC_HEADERS
   ${SACN_INCLUDE}/sacn/receiver.h
   ${SACN_INCLUDE}/sacn/source.h
   ${SACN_INCLUDE}/sacn/version.h
+  ${SACN_INCLUDE}/sacn/merge.h
 )
 set(SACN_PRIVATE_HEADERS
   ${SACN_SRC}/sacn/private/common.h
   ${SACN_SRC}/sacn/private/data_loss.h
   ${SACN_SRC}/sacn/private/mem.h
+  ${SACN_SRC}/sacn/private/merge.h
   ${SACN_SRC}/sacn/private/opts.h
   ${SACN_SRC}/sacn/private/pdu.h
   ${SACN_SRC}/sacn/private/receiver.h
@@ -39,6 +41,7 @@ set(SACN_SOURCES
   ${SACN_SRC}/sacn/common.c
   ${SACN_SRC}/sacn/data_loss.c
   ${SACN_SRC}/sacn/mem.c
+  ${SACN_SRC}/sacn/merge.c
   ${SACN_SRC}/sacn/pdu.c
   ${SACN_SRC}/sacn/receiver.c
   ${SACN_SRC}/sacn/sockets.c
