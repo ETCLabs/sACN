@@ -144,18 +144,12 @@ const DmxMergerSource* dmx_merger_get_source(universe_handle_t universe, source_
 etcpal_error_t dmx_merger_update_source_data(universe_handle_t universe, source_id_t source, const uint8_t* new_values,
                                              size_t new_values_count, uint8_t priority,
                                              const uint8_t* address_priorities, size_t address_priorities_count);
-//TODO: If Receiver API changes to notify both values and data in the same callback, this should change!!
+//TODO: If Receiver API changes to notify both values and per-address priority data in the same callback, this should change!!
 etcpal_error_t dmx_merger_update_source_from_sacn(universe_handle_t universe, source_id_t source,
                                                   const SacnHeaderData* header, const uint8_t* pdata);
 
-// UpdateSOurce Data from DMX or sACN packets  Incomplete buffers as well?
-
-// Update universe/priority data -- immediate calc option?
-// For each source on a universe, the application shall keep three buffers up to date:
-// Util for filling/update buffers from SACN data (e.g. per-address & ownership, smaller DMX range & ownership,
-// defaults) Calculate -- RECALCULATE?? WHO OWNS INPUT AND OUTPUT BUFFERS????  Arrays of CIDS? incomplete buffers? -- Use
-// "Don't care in per-address prioirty" *The above data may be updated through API calls that process sACN packets.  The
-//API will also allow the above buffers to be updated more directly in the case of non-sACN data.
+//TODO: Do we need this?
+etcpal_error_t dmx_merger_recalculate(universe_handle_t universe);
 
 #ifdef __cplusplus
 }
