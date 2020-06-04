@@ -131,19 +131,6 @@ void dmx_merger_deinit(void)
 
 
 /*!
- * \brief Initialize an Dmx Merger Universe Config struct to default values.
- *
- * \param[out] config Config struct to initialize.
- */
-void dmx_merger_universe_config_init(DmxMergerUniverseConfig* config);
-{
-  if (config)
-  {
-    memset(config, 0, sizeof(DmxMergerUniverseConfig));
-  }
-}
-
-/*!
  * \brief Create a new sACN receiver to listen for sACN data on a universe.
  *
  * An sACN receiver can listen on one universe at a time, and each universe can only be listened to

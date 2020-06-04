@@ -63,7 +63,7 @@ typedef int sacn_receiver_t;
  * When using dynamic memory, this constant can be passed in when creating a receiver or a merger.
  * It represents an infinite number of sources on that universe.
  */
-#define SACN_RECEIVER_INFINITE_SOURCES -1
+#define SACN_RECEIVER_INFINITE_SOURCES 0
 
 
 /*! An identifier for a version of the sACN standard. */

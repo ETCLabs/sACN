@@ -28,30 +28,14 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../../../incl"
+#include "../../../include/sacn/merge.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*The information for a source on a universe to be merged. */
-typedef struct DmxMergerSource
-{
-  /*TODO: CID, Source ID*/
+//TODO: DO WE NEED THIS FILE??
 
-  /* The DMX data values (0 - 255) */
-  uint8_t values[DMX_MERGER_SLOT_COUNT];
-
-  /* The per-universe priority (0 - 255)*/
-  uint8_t universe_priority;
-
-  /* The per-address priority (1-255, 0 means not sourced)*/
-  uint8_t address_priority[DMX_MERGER_SLOT_COUNT];
-
-  /* If >= 0, this is the current number of channels to compare.
-     Acts as a shortcut so we don't have to process all 512 values.*/
-  int address_count;
-} DmxMergerSource;
 
 #ifdef __cplusplus
 }

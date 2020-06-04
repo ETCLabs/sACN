@@ -32,6 +32,7 @@
 #include <stdint.h>
 #include "etcpal/error.h"
 #include "etcpal/uuid.h"
+#include "receiver.h"
 
 /*!
  * \defgroup dmx_merger DMX Merger
@@ -57,6 +58,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*! Each universe has a handle associated with it.*/
+typedef int universe_handle_t;
 
 /*! The sources on a universe have a short id that is used in the owned values, rather than a UUID.*/
 typedef uint16_t source_id_t;
@@ -85,32 +89,73 @@ typedef struct DmxMergerUniverseConfig
 
 } DmxMergerUniverseConfig;
 
-/*! A default-value initializer for an SacnReceiverConfig struct. */
-#define DMX_MERGER_UNIVERSE_CONFIG_DEFAULT_INIT         \
-  {                                                     \
-    0, NULL, NULL                                       \
+/*!
+ * \brief An initializer for an DmxMergerUniverseConfig struct.
+ *
+ * Usage:
+ * \code
+ * // Create the struct
+ * DmxMergerUniverseConfig universe_config = DMX_MERGER_UNIVERSE_CONFIG_INIT;
+ * // Now fill in the members of the struct
+ * \endcode
+ *
+ */
+#define DMX_MERGER_UNIVERSE_CONFIG_INIT \
+  {                                     \
+    0, NULL, NULL                       \
   }
 
-void dmx_merger_universe_config_init(DmxMergerUniverseConfig* config);
+/*! The current input data for a single source of the merge.
+    This is exposed only for informational purposes, as the
+    application call a variant of *TODO* */
+typedef struct DmxMergerSource
+{
+  /*! The UUID (e.g. sACN CID) of the DMX source. */
+  EtcPalUuid cid;
+
+  /*! The DMX data values (0 - 255). */
+  uint8_t values[DMX_MERGER_SLOT_COUNT];
+
+  /*! Some sources don't send all 512 values, so here's how much of values to use.*/
+  size_t valid_value_count;
+
+  /*! The sACN per-universe priority (0 - 255). */
+  uint8_t universe_priority;
+
+  /*! Whether or not the address_priority buffer is valid. */
+  bool address_priority_valid;
+
+  /*! The sACN per-address (startcode 0xdd) priority (1-255, 0 means not sourced).
+      If the source does not */
+  uint8_t address_priority[DMX_MERGER_SLOT_COUNT];
+
+} DmxMergerSource;
 
 etcpal_error_t dmx_merger_init();
 void dmx_merger_deinit(void);
 
-//ADD .C SO WE CAN START DOCUMENTING>>>
+etcpal_error_t dmx_merger_create_universe(const DmxMergerUniverseConfig* config, universe_handle_t* handle);
+etcpal_error_t dmx_merger_destroy_universe(universe_handle_t handle);
 
-//SHould we copy internally, or should we just use the buffers for update??  Look at existing api again?
-//Add universe -- OR CREATE INSTANCE???  This is still just adding a universe.....
-//Startup
-//Shutdown
-//Source handles, as 512 CIDS would be bad.
-//Update universe/priority data -- immediate calc option?
-//For each source on a universe, the application shall keep three buffers up to date:
-//Util for filling/update buffers from SACN data (e.g. per-address & ownership, smaller DMX range & ownership, defaults)
-//Add source
-//Calculate
-//WHO OWNS INPUT AND OUTPUT BUFFERS????  Arrays of CIDS?
-//incomplete buffers? -- Use "Don't care in per-address prioirty"
-//*The above data may be updated through API calls that process sACN packets.  The API will also allow the above buffers to be updated more directly in the case of non-sACN data.
+etcpal_error_t dmx_merger_add_source(universe_handle_t universe, const EtcPalUuid* source_cid,
+                                     source_id_t* source_handle);
+etcpal_error_t dmx_merger_remove_source(universe_handle_t universe, source_id_t source);
+const DmxMergerSource* dmx_merger_get_source(universe_handle_t universe, source_id_t source);
+etcpal_error_t dmx_merger_update_source_data(universe_handle_t universe, source_id_t source, const uint8_t* new_values,
+                                             size_t new_values_count, uint8_t priority,
+                                             const uint8_t* address_priorities, size_t address_priorities_count);
+//TODO: If Receiver API changes to notify both values and data in the same callback, this should change!!
+etcpal_error_t dmx_merger_update_source_from_sacn(universe_handle_t universe, source_id_t source,
+                                                  const SacnHeaderData* header, const uint8_t* pdata);
+
+// UpdateSOurce Data from DMX or sACN packets  Incomplete buffers as well?
+
+// Update universe/priority data -- immediate calc option?
+// For each source on a universe, the application shall keep three buffers up to date:
+// Util for filling/update buffers from SACN data (e.g. per-address & ownership, smaller DMX range & ownership,
+// defaults) Calculate -- RECALCULATE?? WHO OWNS INPUT AND OUTPUT BUFFERS????  Arrays of CIDS? incomplete buffers? -- Use
+// "Don't care in per-address prioirty" *The above data may be updated through API calls that process sACN packets.  The
+//API will also allow the above buffers to be updated more directly in the case of non-sACN data.
 
 #ifdef __cplusplus
 }
