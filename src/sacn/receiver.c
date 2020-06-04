@@ -56,7 +56,10 @@ static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PR
 #define FREE_RECEIVER(ptr) \
   do                       \
   {                        \
-    free(ptr->netints);    \
+    if (ptr->netints)      \
+    {                      \
+      free(ptr->netints);  \
+    }                      \
     free(ptr);             \
   } while (0)
 #define FREE_TRACKED_SOURCE(ptr) free(ptr)
@@ -533,7 +536,7 @@ etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMca
   if (netints)
   {
 #if SACN_DYNAMIC_MEM
-    const SacnMcastNetintId* calloc_result = calloc(num_netints, sizeof(SacnMcastNetintId));
+    SacnMcastNetintId* calloc_result = calloc(num_netints, sizeof(SacnMcastNetintId));
 
     if (calloc_result)
     {
