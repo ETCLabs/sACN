@@ -27,6 +27,10 @@
 
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef bool (*HandleValueInUseFunction)(int handle_val);
 
 /* Manage generic integer handle values.
@@ -48,5 +52,9 @@ typedef struct IntHandleManager
 
 void init_int_handle_manager(IntHandleManager* manager, HandleValueInUseFunction value_in_use_func);
 int get_next_int_handle(IntHandleManager* manager);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SACN_PRIVATE_UTIL_H_ */

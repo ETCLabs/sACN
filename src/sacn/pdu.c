@@ -110,8 +110,8 @@ bool parse_draft_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderD
 #define SACN_FRAMING_OFFSET 38
 #define SACN_DMP_OFFSET 115
 
-void pack_sacn_data_header(uint8_t* buf, const EtcPalUuid* source_cid, const char* source_name, uint8_t priority,
-                           bool preview, uint16_t universe_id, uint8_t start_code, uint16_t slot_count)
+size_t pack_sacn_data_header(uint8_t* buf, const EtcPalUuid* source_cid, const char* source_name, uint8_t priority,
+                             bool preview, uint16_t universe_id, uint8_t start_code, uint16_t slot_count)
 {
   uint8_t* pcur = buf;
 
@@ -179,4 +179,7 @@ void pack_sacn_data_header(uint8_t* buf, const EtcPalUuid* source_cid, const cha
   etcpal_pack_u16b(pcur, slot_count + 1);
   pcur += 2;
   *pcur = start_code;
+  ++pcur;
+
+  return (size_t)(pcur - buf);
 }

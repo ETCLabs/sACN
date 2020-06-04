@@ -23,6 +23,10 @@
 #include "sacn/private/sockets.h"
 #include "fff.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_init);
 DECLARE_FAKE_VOID_FUNC(sacn_sockets_deinit);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_validate_netint_config, const SacnMcastNetintId*, size_t);
@@ -34,5 +38,9 @@ DECLARE_FAKE_VOID_FUNC(sacn_cleanup_dead_sockets, SacnRecvThreadContext*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_read, SacnRecvThreadContext*, SacnReadResult*);
 
 void sacn_sockets_reset_all_fakes(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SACN_MOCK_PRIVATE_SOCKETS_H_ */
