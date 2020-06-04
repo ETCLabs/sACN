@@ -56,7 +56,10 @@ static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PR
 #define FREE_RECEIVER(ptr) \
   do                       \
   {                        \
-    free(ptr->netints);    \
+    if (ptr->netints)      \
+    {                      \
+      free(ptr->netints);  \
+    }                      \
     free(ptr);             \
   } while (0)
 #define FREE_TRACKED_SOURCE(ptr) free(ptr)
@@ -533,7 +536,7 @@ etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMca
   if (netints)
   {
 #if SACN_DYNAMIC_MEM
-    const SacnMcastNetintId* calloc_result = calloc(num_netints, sizeof(SacnMcastNetintId));
+    SacnMcastNetintId* calloc_result = calloc(num_netints, sizeof(SacnMcastNetintId));
 
     if (calloc_result)
     {
@@ -1182,6 +1185,10 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
                                const SacnHeaderData* header, SourceLimitExceededNotification* source_limit_exceeded,
                                SourcePcpLostNotification* source_pcp_lost, UniverseDataNotification* universe_data)
 {
+#if !SACN_LOGGING_ENABLED
+  ETCPAL_UNUSED_ARG(header);
+#endif
+
   if (source_limit_exceeded->handle != SACN_RECEIVER_INVALID)
   {
     if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))
