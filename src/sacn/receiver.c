@@ -1185,6 +1185,10 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
                                const SacnHeaderData* header, SourceLimitExceededNotification* source_limit_exceeded,
                                SourcePcpLostNotification* source_pcp_lost, UniverseDataNotification* universe_data)
 {
+#if !SACN_LOGGING_ENABLED
+  ETCPAL_UNUSED_ARG(header);
+#endif
+
   if (source_limit_exceeded->handle != SACN_RECEIVER_INVALID)
   {
     if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))

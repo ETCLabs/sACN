@@ -592,6 +592,10 @@ void add_sacn_netint(const SacnMcastNetintId* netint_id, const char* addr_str)
 #if SACN_DYNAMIC_MEM
   ETCPAL_UNUSED_ARG(addr_str);
 #else
+#if !SACN_LOGGING_ENABLED
+  ETCPAL_UNUSED_ARG(addr_str);
+#endif
+
   // We've reached the configured maximum, in which case we have already given the user a stern
   // warning.
   if (num_valid_sys_netints >= SACN_MAX_NETINTS)
