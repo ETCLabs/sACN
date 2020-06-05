@@ -49,6 +49,9 @@ extern "C" {
  */
 #define SACN_SOURCE_NAME_MAX_LEN 64
 
+/*! The number of addresses in DMX universe. */
+#define DMX_ADDRESS_COUNT 512
+
 /*! The data present in the header of an sACN data packet. */
 typedef struct SacnHeaderData
 {

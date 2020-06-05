@@ -32,6 +32,7 @@
 #include <stdint.h>
 #include "etcpal/error.h"
 #include "etcpal/uuid.h"
+#include "sacn/common.h"
 #include "receiver.h"
 
 /*!
@@ -68,9 +69,6 @@ typedef uint16_t source_id_t;
 /*! An invalid source id handle value. */
 #define DMX_MERGER_SOURCE_INVALID -1
 
-/*! The number of addresses in DMX universe. */
-#define DMX_MERGER_SLOT_COUNT 512
-
 /*! A set of configuration information for a universe to be merged. */
 typedef struct DmxMergerUniverseConfig
 {
@@ -79,11 +77,11 @@ typedef struct DmxMergerUniverseConfig
       instead.*/
   size_t source_count_max;
 
-  /*! Buffer of DMX_MERGER_SLOT_COUNT levels that this library keeps up to date as it merges.
+  /*! Buffer of DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
       Memory is owned by the application.*/
   uint8_t* slots;
 
-  /*! Buffer of DMX_MERGER_SLOT_COUNT source IDs that indicate the current winner of the merge for
+  /*! Buffer of DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
       that slot, or DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
       Memory is owned by the application.*/
   source_id_t* slot_owners;
@@ -115,7 +113,7 @@ typedef struct DmxMergerSource
   EtcPalUuid cid;
 
   /*! The DMX data values (0 - 255). */
-  uint8_t values[DMX_MERGER_SLOT_COUNT];
+  uint8_t values[DMX_ADDRESS_COUNT];
 
   /*! Some sources don't send all 512 values, so here's how much of values to use.*/
   size_t valid_value_count;
@@ -128,7 +126,7 @@ typedef struct DmxMergerSource
 
   /*! The sACN per-address (startcode 0xdd) priority (1-255, 0 means not sourced).
       If the source does not */
-  uint8_t address_priority[DMX_MERGER_SLOT_COUNT];
+  uint8_t address_priority[DMX_ADDRESS_COUNT];
 
 } DmxMergerSource;
 
