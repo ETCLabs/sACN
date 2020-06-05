@@ -3,7 +3,7 @@ var group__dmx__merger =
     [ "DmxMergerUniverseConfig", "struct_dmx_merger_universe_config.html", [
       [ "slot_owners", "struct_dmx_merger_universe_config.html#a251f46554b678e4625d47bdf299b57c0", null ],
       [ "slots", "struct_dmx_merger_universe_config.html#a08bc75bcabb0a92022eac3a623f32ff6", null ],
-      [ "source_count_max", "struct_dmx_merger_universe_config.html#aa56795d5b57bff4910ce11baac4003ba", null ]
+      [ "source_count_max", "struct_dmx_merger_universe_config.html#a01b922571194ac4c50ba05afbc0d0939", null ]
     ] ],
     [ "DmxMergerSource", "struct_dmx_merger_source.html", [
       [ "address_priority", "struct_dmx_merger_source.html#ac21d4a690ada3c5db41f60195f83df7e", null ],

@@ -137,9 +137,9 @@ $(document).ready(function(){initNavTree('struct_dmx_merger_universe_config.html
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:aa56795d5b57bff4910ce11baac4003ba"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_dmx_merger_universe_config.html#aa56795d5b57bff4910ce11baac4003ba">source_count_max</a></td></tr>
-<tr class="memdesc:aa56795d5b57bff4910ce11baac4003ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ignored when compiling with static memory support.  <a href="#aa56795d5b57bff4910ce11baac4003ba">More...</a><br /></td></tr>
-<tr class="separator:aa56795d5b57bff4910ce11baac4003ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01b922571194ac4c50ba05afbc0d0939"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_dmx_merger_universe_config.html#a01b922571194ac4c50ba05afbc0d0939">source_count_max</a></td></tr>
+<tr class="memdesc:a01b922571194ac4c50ba05afbc0d0939"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of sources this universe will listen to.  <a href="#a01b922571194ac4c50ba05afbc0d0939">More...</a><br /></td></tr>
+<tr class="separator:a01b922571194ac4c50ba05afbc0d0939"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08bc75bcabb0a92022eac3a623f32ff6"><td class="memItemLeft" align="right" valign="top">uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_dmx_merger_universe_config.html#a08bc75bcabb0a92022eac3a623f32ff6">slots</a></td></tr>
 <tr class="memdesc:a08bc75bcabb0a92022eac3a623f32ff6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Buffer of DMX_MERGER_SLOT_COUNT levels that this library keeps up to date as it merges.  <a href="#a08bc75bcabb0a92022eac3a623f32ff6">More...</a><br /></td></tr>
 <tr class="separator:a08bc75bcabb0a92022eac3a623f32ff6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -184,20 +184,20 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a id="aa56795d5b57bff4910ce11baac4003ba"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa56795d5b57bff4910ce11baac4003ba">&#9670;&nbsp;</a></span>source_count_max</h2>
+<a id="a01b922571194ac4c50ba05afbc0d0939"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a01b922571194ac4c50ba05afbc0d0939">&#9670;&nbsp;</a></span>source_count_max</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int source_count_max</td>
+          <td class="memname">size_t source_count_max</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Ignored when compiling with static memory support. </p>
-<p>This is the maximum number of sources to merge on a universe. May be SACN_RECEIVER_INFINITE_SOURCES. </p>
+<p>The maximum number of sources this universe will listen to. </p>
+<p>May be <a class="el" href="group__sacn__receiver.html#gadb2ea19692692ca852423d0a9de749ea" title="Constant for &quot;infinite&quot; when listening or merging sACN universes. ">SACN_RECEIVER_INFINITE_SOURCES</a>. This parameter is ignored when configured to use static memory &ndash; <a class="el" href="group__dmx__merger.html#ga41854cab7b9b83f5e7a52d082bd67cd3" title="The maximum number of sources that can be merged on each universe. ">DMX_MERGER_MAX_SOURCES_PER_UNIVERSE</a> is used instead. </p>
 
 </div>
 </div>

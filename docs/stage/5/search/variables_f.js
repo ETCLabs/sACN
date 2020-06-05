@@ -9,7 +9,7 @@ var searchData=
   ['slot_5fowners',['slot_owners',['../struct_dmx_merger_universe_config.html#a251f46554b678e4625d47bdf299b57c0',1,'DmxMergerUniverseConfig']]],
   ['slots',['slots',['../struct_dmx_merger_universe_config.html#a08bc75bcabb0a92022eac3a623f32ff6',1,'DmxMergerUniverseConfig']]],
   ['socket',['socket',['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_poll_event.html#ad32899ff82c07979513229c6f83c5f05',1,'EtcPalPollEvent']]],
-  ['source_5fcount_5fmax',['source_count_max',['../struct_dmx_merger_universe_config.html#aa56795d5b57bff4910ce11baac4003ba',1,'DmxMergerUniverseConfig']]],
+  ['source_5fcount_5fmax',['source_count_max',['../struct_dmx_merger_universe_config.html#a01b922571194ac4c50ba05afbc0d0939',1,'DmxMergerUniverseConfig']]],
   ['source_5flimit_5fexceeded',['source_limit_exceeded',['../struct_sacn_recv_callbacks.html#addfb88eea24f335ebbfc61590a5dffd3',1,'SacnRecvCallbacks']]],
   ['source_5fname',['source_name',['../struct_sacn_header_data.html#a176bd2902909dd199b4c4d03c1cae8cd',1,'SacnHeaderData']]],
   ['source_5fpcp_5flost',['source_pcp_lost',['../struct_sacn_recv_callbacks.html#a44a40442d3dcb95913087e6a8bcbb97a',1,'SacnRecvCallbacks']]],

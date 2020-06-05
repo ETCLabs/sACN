@@ -108,7 +108,7 @@ var searchData=
   ['sockaddr_5fos_5fto_5fetcpal',['sockaddr_os_to_etcpal',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__inet.html#ga087efaef8630f32173eb397b4cb1ae7f',1,]]],
   ['socket',['socket',['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_poll_event.html#ad32899ff82c07979513229c6f83c5f05',1,'EtcPalPollEvent']]],
   ['source_2eh',['source.h',['../source_8h.html',1,'']]],
-  ['source_5fcount_5fmax',['source_count_max',['../struct_dmx_merger_universe_config.html#aa56795d5b57bff4910ce11baac4003ba',1,'DmxMergerUniverseConfig']]],
+  ['source_5fcount_5fmax',['source_count_max',['../struct_dmx_merger_universe_config.html#a01b922571194ac4c50ba05afbc0d0939',1,'DmxMergerUniverseConfig']]],
   ['source_5fid_5ft',['source_id_t',['../group__dmx__merger.html#gad152b4a4fe26c34d91ce73befe46e717',1,'merge.h']]],
   ['source_5flimit_5fexceeded',['source_limit_exceeded',['../struct_sacn_recv_callbacks.html#addfb88eea24f335ebbfc61590a5dffd3',1,'SacnRecvCallbacks']]],
   ['source_5fname',['source_name',['../struct_sacn_header_data.html#a176bd2902909dd199b4c4d03c1cae8cd',1,'SacnHeaderData']]],
