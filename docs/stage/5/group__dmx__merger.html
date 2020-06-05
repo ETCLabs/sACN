@@ -217,7 +217,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dmx_merger_deinit</b>
 <p>The DMX Merger API. </p>
 <p>Configuration options for the <a class="el" href="group__dmx__merger.html">DMX Merger</a> module.</p>
 <p>This API provides a software merger for buffers containing DMX512-A start code 0 packets. It also uses buffers containing DMX512-A start code 0xdd packets to support per-address priority.</p>
-<p>When asked to calculate the merge of a universe, the merger shall evaluate the current source buffers and update two result buffers: 512 bytes for the merged data values (i.e. "winning level"). These are calculated by using a Highest-Level-Takes-Precedence(HTP) algorithm for all sources that share the highest per-address priority. 512 source identifiers (i.e. "winning source") to indicate which source was considered the source of the merged data value, or that no source currently owns this address.</p>
+<p>When asked to calculate the merge of a universe, the merger shall evaluate the current source buffers and update two result buffers:</p><ul>
+<li>512 bytes for the merged data values (i.e. "winning level"). These are calculated by using a Highest-Level-Takes-Precedence(HTP) algorithm for all sources that share the highest per-address priority.</li>
+<li>512 source identifiers (i.e. "winning source") to indicate which source was considered the source of the merged data value, or that no source currently owns this address.</li>
+</ul>
 <p>: Add sample usage </p>
 <h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="ga41854cab7b9b83f5e7a52d082bd67cd3"></a>
