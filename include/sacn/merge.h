@@ -25,8 +25,8 @@
  * header.
  */
 
-#ifndef DMX_MERGER_H_
-#define DMX_MERGER_H_
+#ifndef SACN_MERGE_H_
+#define SACN_MERGE_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -45,10 +45,10 @@
  *
  * When asked to calculate the merge of a universe, the merger shall evaluate the current source
  * buffers and update two result buffers:
- *   512 bytes for the merged data values (i.e. "winning level").  These are calculated by using
+ *  - 512 bytes for the merged data values (i.e. "winning level").  These are calculated by using
  *     a Highest-Level-Takes-Precedence(HTP) algorithm for all sources that share the highest
  *     per-address priority.
- *   512 source identifiers (i.e. "winning source") to indicate which source was considered the
+ *  - 512 source identifiers (i.e. "winning source") to indicate which source was considered the
  *     source of the merged data value, or that no source currently owns this address.
  *
  * \TODO: Add sample usage
@@ -159,4 +159,4 @@ etcpal_error_t dmx_merger_recalculate(universe_handle_t universe);
  * @}
  */
 
-#endif /* DMX_MERGER_H_ */
+#endif /* SACN_MERGE_H_ */
