@@ -74,9 +74,10 @@ typedef uint16_t source_id_t;
 /*! A set of configuration information for a universe to be merged. */
 typedef struct DmxMergerUniverseConfig
 {
-  /*! Ignored when compiling with static memory support.
-      This is the maximum number of sources to merge on a universe.  May be SACN_RECEIVER_INFINITE_SOURCES.*/
-  int source_count_max;
+  /*! The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
+      This parameter is ignored when configured to use static memory -- #DMX_MERGER_MAX_SOURCES_PER_UNIVERSE is used
+      instead.*/
+  size_t source_count_max;
 
   /*! Buffer of DMX_MERGER_SLOT_COUNT levels that this library keeps up to date as it merges.
       Memory is owned by the application.*/
