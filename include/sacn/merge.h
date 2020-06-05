@@ -137,18 +137,18 @@ void dmx_merger_deinit(void);
 etcpal_error_t dmx_merger_create_universe(const DmxMergerUniverseConfig* config, universe_handle_t* handle);
 etcpal_error_t dmx_merger_destroy_universe(universe_handle_t handle);
 
-etcpal_error_t dmx_merger_add_source(universe_handle_t universe, const EtcPalUuid* source_cid,
-                                     source_id_t* source_handle);
+etcpal_error_t dmx_merger_add_source(universe_handle_t universe, const EtcPalUuid* source_cid, source_id_t* source_id);
 etcpal_error_t dmx_merger_remove_source(universe_handle_t universe, source_id_t source);
 const DmxMergerSource* dmx_merger_get_source(universe_handle_t universe, source_id_t source);
 etcpal_error_t dmx_merger_update_source_data(universe_handle_t universe, source_id_t source, const uint8_t* new_values,
                                              size_t new_values_count, uint8_t priority,
                                              const uint8_t* address_priorities, size_t address_priorities_count);
-//TODO: If Receiver API changes to notify both values and per-address priority data in the same callback, this should change!!
+// TODO: If Receiver API changes to notify both values and per-address priority data in the same callback, this should
+// change!!
 etcpal_error_t dmx_merger_update_source_from_sacn(universe_handle_t universe, source_id_t source,
                                                   const SacnHeaderData* header, const uint8_t* pdata);
 
-//TODO: Do we need this?
+// TODO: Do we need this?
 etcpal_error_t dmx_merger_recalculate(universe_handle_t universe);
 
 #ifdef __cplusplus

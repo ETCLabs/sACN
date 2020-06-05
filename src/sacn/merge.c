@@ -20,7 +20,7 @@
 #include "sacn/merge.h"
 #include "sacn/private/merge.h"
 
-//TODO: CLEANUP
+// TODO: CLEANUP
 //#include <limits.h>
 //#include <stdint.h>
 //#include <string.h>
@@ -73,12 +73,12 @@ ETCPAL_MEMPOOL_DEFINE(sacnrecv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODE
 
 /*********************** Private function prototypes *************************/
 
-//TODO: Clean up
+// TODO: Clean up
 // Receiver creation and destruction
-//static etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config);
-//static SacnReceiver* create_new_receiver(const SacnReceiverConfig* config);
-//static void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
-                                    //const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr, bool draft);
+// static etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config);
+// static SacnReceiver* create_new_receiver(const SacnReceiverConfig* config);
+// static void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
+// const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr, bool draft);
 
 /*************************** Function definitions ****************************/
 
@@ -89,9 +89,9 @@ ETCPAL_MEMPOOL_DEFINE(sacnrecv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODE
 /* Initialize the sACN Receiver module. Internal function called from sacn_init(). */
 etcpal_error_t dmx_merger_init(void)
 {
-  return kEtcPalNotImpl;
+  return kEtcPalErrNotImpl;
 
-  //TODO: CLEANUP
+  // TODO: CLEANUP
   /*
   etcpal_error_t res = kEtcPalErrOk;
 
@@ -113,7 +113,7 @@ etcpal_error_t dmx_merger_init(void)
   {
     memset(&receiver_state, 0, sizeof receiver_state);
   }
-  
+
   return res;
   */
 }
@@ -129,40 +129,164 @@ void dmx_merger_deinit(void)
   */
 }
 
-
 /*!
- * \brief Create a new sACN receiver to listen for sACN data on a universe.
+ * \brief Create a new merger instance.
  *
- * An sACN receiver can listen on one universe at a time, and each universe can only be listened to
- * by one receiver at at time. The receiver is initially considered to be in a "sampling period"
- * where all data on the universe is reported immediately via the universe_data() callback. Data
- * should be stored but not acted upon until receiving a sampling_ended() callback for this
- * receiver. This prevents level jumps as sources with different priorities are discovered.
+ * Creates a new merger that uses the passed in config data.  The application owns all buffers
+ * in the config, so be sure to call dmx_merger_destroy_universe before destroying the buffers.
  *
- * \param[in] config Configuration parameters for the sACN receiver to be created.
- * \param[out] handle Filled in on success with a handle to the sACN receiver.
- * \return #kEtcPalErrOk: Receiver created successful.
+ * \param[in] config Configuration parameters for the DMX merger to be created.
+ * \param[out] handle Filled in on success with a handle to the merger.
+ * \return #kEtcPalErrOk: Merger created successful.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrExists: A receiver already exists which is listening on the specified universe.
  * \return #kEtcPalErrNoMem: No room to allocate memory for this receiver.
- * \return #kEtcPalErrNoNetints: No network interfaces were found on the system.
- * \return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t dmx_merger_create_universe(const DmxMergerUniverseConfig* config, universe_handle_t* handle);
-etcpal_error_t dmx_merger_destroy_universe(universe_handle_t handle);
+etcpal_error_t dmx_merger_create_universe(const DmxMergerUniverseConfig* config, universe_handle_t* handle)
+{
+  return kEtcPalErrNotImpl;
+}
 
-etcpal_error_t dmx_merger_add_source(universe_handle_t universe, const EtcPalUuid* source_cid,
-                                     source_id_t* source_handle);
-etcpal_error_t dmx_merger_remove_source(universe_handle_t universe, source_id_t source);
-const DmxMergerSource* dmx_merger_get_source(universe_handle_t universe, source_id_t source);
+/*!
+ * \brief Destroy an merger instance.
+ *
+ * Tears down the merger and cleans up its resources.
+ *
+ * \param[in] handle Handle to the merger to destroy.
+ * \return #kEtcPalErrOk: Merger destroyed successfully.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merger.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t dmx_merger_destroy_universe(universe_handle_t handle)
+{
+  return kEtcPalErrNotImpl;
+}
+
+/*!
+ * \brief Adds a new source to the merger.
+ *
+ * Adds a new source to the merger, if the maximum number of sources hasn't been reached.
+ * The filled in source id is used for two purposes:
+ *   - It is the handle for calls that need to access the source data.
+ *   - It is the source identifer that is put into the slot_owners buffer that was passed
+ *     in the DmxMergerUniverseConfig structure when creating the merger.
+ *
+ * \param[in] universe The handle to the merger.
+ * \param[in] source_cid The sACN CID of the source.
+ * \param[out] source_id Filled in on success with the source id.
+ * \return #kEtcPalErrOk: Source added successfully.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNoMem: No room to allocate memory for this receiver, or the max number of sources has been
+ * reached.
+ * \return #kEtcPalErrExists: the source at that cid was already added.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t dmx_merger_add_source(universe_handle_t universe, const EtcPalUuid* source_cid, source_id_t* source_id)
+{
+  return kEtcPalErrNotImpl;
+}
+
+/*!
+ * \brief Removes a source from the merger.
+ *
+ * Removes the source from the merger.  This causes the merger to recalculate the outputs.
+ *
+ * \param[in] universe The handle to the merger.
+ * \param[in] source The id of the source to remove.
+ * \return #kEtcPalErrOk: Source removed successfully.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t dmx_merger_remove_source(universe_handle_t universe, source_id_t source)
+{
+  return kEtcPalErrNotImpl;
+}
+
+/*!
+ * \brief Gets a read-only view of the source data.
+ *
+ * Looks up the source data and returns a pointer to the data or NULL if it doesn't exist.
+ * This pointer is owned by the library, and must not be modified by the application.
+ * The pointer will only be valid until the source or universe is removed.
+ *
+ * \param[in] universe The handle to the merger.
+ * \param[in] source The id of the source to remove.
+ * \return The pointer to the source data, or NULL if the source wasn't found.
+ */
+const DmxMergerSource* dmx_merger_get_source(universe_handle_t universe, source_id_t source)
+{
+  return kEtcPalErrNotImpl;
+}
+
+/*!
+ * \brief Updates the source data and recalculate outputs.
+ *
+ * The direct method to change source data.  This causes the merger to recalculate the outputs.
+ * If you are processing sACN packets, you may prefer dmx_merger_update_source_from_sacn().
+ *
+ * \param[in] universe The handle to the merger.
+ * \param[in] source The id of the source to modify.
+ * \param[in] new_values The new DMX values to be copied in.  Must NOT be NULL.
+ * \param[in] new_values_count The length of new_values.
+ * \param[in] priority The universe-level priority of the source.
+ * \param[in] address_priorities The per-address priority values to be copied in.  This may be NULL if the source is not
+ * sending per-address priorities.
+ * \param[in] address_priorities_count The length of address_priorities.  May be 0 if the source is not sending these
+ * priorities.
+ * \return #kEtcPalErrOk: Source updated and merge completed.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or universe.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
 etcpal_error_t dmx_merger_update_source_data(universe_handle_t universe, source_id_t source, const uint8_t* new_values,
                                              size_t new_values_count, uint8_t priority,
-                                             const uint8_t* address_priorities, size_t address_priorities_count);
-//TODO: If Receiver API changes to notify both values and per-address priority data in the same callback, this should change!!
-etcpal_error_t dmx_merger_update_source_from_sacn(universe_handle_t universe, source_id_t source,
-                                                  const SacnHeaderData* header, const uint8_t* pdata);
+                                             const uint8_t* address_priorities, size_t address_priorities_count)
+{
+  return kEtcPalErrNotImpl;
+}
 
-//TODO: Do we need this?
-etcpal_error_t dmx_merger_recalculate(universe_handle_t universe);
+/*!
+ * \brief Updates the source data from a sACN packet and recalculate outputs.
+ *
+ * Processes data passed from the sACN receiver's SacnUniverseDataCallback handler.  This causes the merger to
+ * recalculate the outputs.
+ *
+ * \param[in] universe The handle to the merger.
+ * \param[in] source The id of the source to modify.
+ * \param[in] header The sACN header.  Must NOT be NULL.
+ * \param[in] pdata The sACN data.
+ * \return #kEtcPalErrOk: Source updated and merge completed.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or universe.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+// TODO: If Receiver API changes to notify both values and per-address priority data in the same callback, this should
+// change!!
+etcpal_error_t dmx_merger_update_source_from_sacn(universe_handle_t universe, source_id_t source,
+                                                  const SacnHeaderData* header, const uint8_t* pdata)
+{
+  return kEtcPalErrNotImpl;
+}
+
+/*!
+ * \brief Fully recalculate outputs.
+ *
+ * Does a full recalculation of the merger outputs.
+ *
+ * \param[in] universe The handle to the merger.
+ * \return #kEtcPalErrOk: Source updated and merge completed.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid universe.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+// TODO: Do we need this?
+etcpal_error_t dmx_merger_recalculate(universe_handle_t universe)
+{
+  return kEtcPalErrNotImpl;
+}
