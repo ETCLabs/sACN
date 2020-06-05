@@ -141,10 +141,10 @@ Data Fields</h2></td></tr>
 <tr class="memdesc:a01b922571194ac4c50ba05afbc0d0939"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of sources this universe will listen to.  <a href="#a01b922571194ac4c50ba05afbc0d0939">More...</a><br /></td></tr>
 <tr class="separator:a01b922571194ac4c50ba05afbc0d0939"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08bc75bcabb0a92022eac3a623f32ff6"><td class="memItemLeft" align="right" valign="top">uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_dmx_merger_universe_config.html#a08bc75bcabb0a92022eac3a623f32ff6">slots</a></td></tr>
-<tr class="memdesc:a08bc75bcabb0a92022eac3a623f32ff6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Buffer of DMX_MERGER_SLOT_COUNT levels that this library keeps up to date as it merges.  <a href="#a08bc75bcabb0a92022eac3a623f32ff6">More...</a><br /></td></tr>
+<tr class="memdesc:a08bc75bcabb0a92022eac3a623f32ff6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Buffer of DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.  <a href="#a08bc75bcabb0a92022eac3a623f32ff6">More...</a><br /></td></tr>
 <tr class="separator:a08bc75bcabb0a92022eac3a623f32ff6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a251f46554b678e4625d47bdf299b57c0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__dmx__merger.html#gad152b4a4fe26c34d91ce73befe46e717">source_id_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_dmx_merger_universe_config.html#a251f46554b678e4625d47bdf299b57c0">slot_owners</a></td></tr>
-<tr class="memdesc:a251f46554b678e4625d47bdf299b57c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Buffer of DMX_MERGER_SLOT_COUNT source IDs that indicate the current winner of the merge for that slot, or DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.  <a href="#a251f46554b678e4625d47bdf299b57c0">More...</a><br /></td></tr>
+<tr class="memdesc:a251f46554b678e4625d47bdf299b57c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Buffer of DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.  <a href="#a251f46554b678e4625d47bdf299b57c0">More...</a><br /></td></tr>
 <tr class="separator:a251f46554b678e4625d47bdf299b57c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -162,7 +162,7 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Buffer of DMX_MERGER_SLOT_COUNT source IDs that indicate the current winner of the merge for that slot, or DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. </p>
+<p>Buffer of DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. </p>
 <p>Memory is owned by the application. </p>
 
 </div>
@@ -179,7 +179,7 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Buffer of DMX_MERGER_SLOT_COUNT levels that this library keeps up to date as it merges. </p>
+<p>Buffer of DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges. </p>
 <p>Memory is owned by the application. </p>
 
 </div>

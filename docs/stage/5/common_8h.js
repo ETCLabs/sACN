@@ -1,5 +1,6 @@
 var common_8h =
 [
+    [ "DMX_ADDRESS_COUNT", "group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb", null ],
     [ "SACN_SOURCE_NAME_MAX_LEN", "group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8", null ],
     [ "SacnHeaderData", "group__s_a_c_n.html#ga2e6652620c783917abe8e5c6b5d9d8b7", null ],
     [ "SacnMcastNetintId", "group__s_a_c_n.html#ga87bc433314cf2b5d423de73a3d4d98cd", null ],

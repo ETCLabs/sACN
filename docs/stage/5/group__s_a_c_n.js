@@ -17,6 +17,7 @@ var group__s_a_c_n =
       [ "index", "struct_sacn_mcast_netint_id.html#a589d64202487f78e3cc30dd2e04c5201", null ],
       [ "ip_type", "struct_sacn_mcast_netint_id.html#a69e98f42b011c7c001d2857cb68bb304", null ]
     ] ],
+    [ "DMX_ADDRESS_COUNT", "group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb", null ],
     [ "SACN_SOURCE_NAME_MAX_LEN", "group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8", null ],
     [ "SACN_VERSION_BUILD", "group__s_a_c_n.html#gab22648c510945c218b806ad28e1e9a86", null ],
     [ "SACN_VERSION_MAJOR", "group__s_a_c_n.html#ga3b04b863e88d1bae02133dfb19667e06", null ],

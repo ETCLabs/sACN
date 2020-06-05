@@ -1,6 +1,5 @@
 var merge_8h =
 [
-    [ "DMX_MERGER_SLOT_COUNT", "group__dmx__merger.html#ga125dbe7234c428285286173b2ef74940", null ],
     [ "DMX_MERGER_SOURCE_INVALID", "group__dmx__merger.html#ga26529cf0ce1cd4424c159713b064b59f", null ],
     [ "DMX_MERGER_UNIVERSE_CONFIG_INIT", "group__dmx__merger.html#ga0fe4d12d697a7bf2fedb1c86e33758ff", null ],
     [ "DmxMergerSource", "group__dmx__merger.html#ga293ca53923dfce39fa57112e726c4ba1", null ],
