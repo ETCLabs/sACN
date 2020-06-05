@@ -19,7 +19,7 @@
 
 /*!
  * \file sacn/merge.h
- * \brief DMX Merge API definitions
+ * \brief SACN/DMX Merger API definitions
  *
  * Functions and definitions for the \ref dmx_merger "DMX Merger API" are contained in this
  * header.
