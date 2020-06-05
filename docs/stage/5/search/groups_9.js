@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['pack_20_28buffer_20packing_20and_20unpacking_29',['pack (Buffer Packing and Unpacking)',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__pack.html',1,'']]]
+  ['rbtree_20_28red_2dblack_20trees_29',['rbtree (Red-Black Trees)',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__rbtree.html',1,'']]],
+  ['read_2dwrite_20locks',['Read-Write Locks',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__rwlock.html',1,'']]]
 ];

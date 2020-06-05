@@ -34,10 +34,8 @@ var menudata={children:[
 {text:"All",url:"globals.html",children:[
 {text:"d",url:"globals.html#index_d"},
 {text:"k",url:"globals.html#index_k"},
-{text:"s",url:"globals.html#index_s"},
-{text:"u",url:"globals.html#index_u"}]},
+{text:"s",url:"globals.html#index_s"}]},
 {text:"Functions",url:"globals_func.html",children:[
-{text:"d",url:"globals_func.html#index_d"},
 {text:"s",url:"globals_func.html#index_s"}]},
 {text:"Typedefs",url:"globals_type.html"},
 {text:"Enumerations",url:"globals_enum.html"},

@@ -1,6 +1,6 @@
 var group__s_a_c_n =
 [
-    [ "DMX Merger", "group__dmx__merger.html", "group__dmx__merger" ],
+    [ "sACN DMX Merger", "group__sacn__dmx__merger.html", "group__sacn__dmx__merger" ],
     [ "sACN Receiver", "group__sacn__receiver.html", "group__sacn__receiver" ],
     [ "sACN Source", "group__sacn__source.html", "group__sacn__source" ],
     [ "sACN Configuration Options", "group__sacnopts.html", "group__sacnopts" ],

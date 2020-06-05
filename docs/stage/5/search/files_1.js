@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['error_2eh',['error.h',['https://etclabs.github.io/EtcPal/docs/head/cpp_2error_8h.html',1,'']]]
+  ['dmx_5fmerger_2eh',['dmx_merger.h',['../dmx__merger_8h.html',1,'']]]
 ];

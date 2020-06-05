@@ -1,7 +1,7 @@
 var annotated_dup =
 [
-    [ "DmxMergerSource", "struct_dmx_merger_source.html", "struct_dmx_merger_source" ],
-    [ "DmxMergerUniverseConfig", "struct_dmx_merger_universe_config.html", "struct_dmx_merger_universe_config" ],
+    [ "SacnDmxMergerConfig", "struct_sacn_dmx_merger_config.html", "struct_sacn_dmx_merger_config" ],
+    [ "SacnDmxMergerSource", "struct_sacn_dmx_merger_source.html", "struct_sacn_dmx_merger_source" ],
     [ "SacnHeaderData", "struct_sacn_header_data.html", "struct_sacn_header_data" ],
     [ "SacnLostSource", "struct_sacn_lost_source.html", "struct_sacn_lost_source" ],
     [ "SacnMcastNetintId", "struct_sacn_mcast_netint_id.html", "struct_sacn_mcast_netint_id" ],

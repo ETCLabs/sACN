@@ -1,8 +1,8 @@
 var opts_8h =
 [
-    [ "DMX_MERGER_MAX_SOURCES_PER_UNIVERSE", "group__dmx__merger.html#ga41854cab7b9b83f5e7a52d082bd67cd3", null ],
-    [ "DMX_MERGER_MAX_UNIVERSES", "group__dmx__merger.html#ga46fa66e32fc6aeeaa1d3e9b78b3b9c46", null ],
     [ "SACN_ASSERT", "group__sacnopts__global.html#gabd4f61db43336221d5947896ef0f2921", null ],
+    [ "SACN_DMX_MERGER_MAX_COUNT", "group__sacn__dmx__merger.html#ga2bd24f4793d5364f730ee146c71a49c7", null ],
+    [ "SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER", "group__sacn__dmx__merger.html#gaaeaa9701ec2b290ddfb3b31d8463dca4", null ],
     [ "SACN_DYNAMIC_MEM", "group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87", null ],
     [ "SACN_ETC_PRIORITY_EXTENSION", "group__sacnopts__global.html#ga59ee3abb2f4eb1554d7be219a9c8028b", null ],
     [ "SACN_LOG_MSG_PREFIX", "group__sacnopts__global.html#ga739093ac67975234540c307629ac8280", null ],
