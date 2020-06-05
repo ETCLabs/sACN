@@ -230,8 +230,9 @@ const DmxMergerSource* dmx_merger_get_source(universe_handle_t universe, source_
  *
  * \param[in] universe The handle to the merger.
  * \param[in] source The id of the source to modify.
- * \param[in] new_values The new DMX values to be copied in.  Must NOT be NULL.
- * \param[in] new_values_count The length of new_values.
+ * \param[in] new_values The new DMX values to be copied in. This may be NULL if the source is only updating per-address
+ * priorities.
+ * \param[in] new_values_count The length of new_values. May be 0 if the source is only updating per-address priorities.
  * \param[in] priority The universe-level priority of the source.
  * \param[in] address_priorities The per-address priority values to be copied in.  This may be NULL if the source is not
  * sending per-address priorities.
@@ -270,6 +271,25 @@ etcpal_error_t dmx_merger_update_source_data(universe_handle_t universe, source_
 // change!!
 etcpal_error_t dmx_merger_update_source_from_sacn(universe_handle_t universe, source_id_t source,
                                                   const SacnHeaderData* header, const uint8_t* pdata)
+{
+  return kEtcPalErrNotImpl;
+}
+
+/*!
+ * \brief Removes the per-address data from the source and recalculate outputs.
+ *
+ * Per-address priority data can time out in sACN just like values.
+ * This is a convenience function to immediately turn off the per-address priority data for a source and recalculate the
+ * outputs.
+ *
+ * \param[in] universe The handle to the merger.
+ * \param[in] source The id of the source to modify.
+ * \return #kEtcPalErrOk: Source updated and merge completed.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or universe.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t dmx_merger_stop_source_per_address_priority(universe_handle_t universe, source_id_t source)
 {
   return kEtcPalErrNotImpl;
 }

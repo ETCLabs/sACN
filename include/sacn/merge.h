@@ -147,6 +147,7 @@ etcpal_error_t dmx_merger_update_source_data(universe_handle_t universe, source_
 // change!!
 etcpal_error_t dmx_merger_update_source_from_sacn(universe_handle_t universe, source_id_t source,
                                                   const SacnHeaderData* header, const uint8_t* pdata);
+etcpal_error_t dmx_merger_stop_source_per_address_priority(universe_handle_t universe, source_id_t source);
 
 // TODO: Do we need this?
 etcpal_error_t dmx_merger_recalculate(universe_handle_t universe);
