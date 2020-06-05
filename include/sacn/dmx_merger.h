@@ -18,15 +18,15 @@
  *****************************************************************************/
 
 /*!
- * \file sacn/merger.h
- * \brief SACN Merger API definitions
+ * \file sacn/dmx_merger.h
+ * \brief sACN DMX Merger API definitions
  *
- * Functions and definitions for the \ref sacn_merger "sACN Merger API" are contained in this
+ * Functions and definitions for the \ref sacn_dmx_merger "sACN DMX Merger API" are contained in this
  * header.
  */
 
-#ifndef SACN_MERGER_H_
-#define SACN_MERGER_H_
+#ifndef SACN_DMX_MERGER_H_
+#define SACN_DMX_MERGER_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -36,9 +36,9 @@
 #include "sacn/receiver.h"
 
 /*!
- * \defgroup sacn_merger sACN Merger
+ * \defgroup sacn_dmx_merger sACN DMX Merger
  * \ingroup sACN
- * \brief The sACN Merger API
+ * \brief The sACN DMX Merger API
  *
  * This API provides a software merger for buffers containing DMX512-A start code 0 packets.
  * It also uses buffers containing DMX512-A start code 0xdd packets to support per-address priority.
@@ -46,7 +46,7 @@
  * While this API is used to easily merge the outputs from the sACN Receiver API, it can also be used
  * to merge your own DMX sources together, even in combination with the sources received via sACN.
  *
- * When asked to calculate the merge of a universe, the merger shall evaluate the current source
+ * When asked to calculate the merge, the merger shall evaluate the current source
  * buffers and update two result buffers:
  *  - 512 bytes for the merged data values (i.e. "winning level").  These are calculated by using
  *     a Highest-Level-Takes-Precedence(HTP) algorithm for all sources that share the highest
@@ -63,20 +63,20 @@
 extern "C" {
 #endif
 
-/*! Each universe has a handle associated with it.*/
-typedef int sacn_merger_t;
+/*! Each merger has a handle associated with it.*/
+typedef int sacn_dmx_merger_t;
 
-/*! The sources on a universe have a short id that is used in the owned values, rather than a UUID.*/
+/*! The sources on a merger have a short id that is used in the owned values, rather than a UUID.*/
 typedef uint16_t source_id_t;
 
 /*! An invalid source id handle value. */
-#define DMX_MERGER_SOURCE_INVALID -1
+#define SACN_DMX_MERGER_SOURCE_INVALID -1
 
-/*! A set of configuration information for a universe to be merged. */
-typedef struct DmxMergerUniverseConfig
+/*! A set of configuration information for a merger instance. */
+typedef struct SacnDmxMergerConfig
 {
-  /*! The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
-      This parameter is ignored when configured to use static memory -- #DMX_MERGER_MAX_SOURCES_PER_UNIVERSE is used
+  /*! The maximum number of sources this merger will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
+      This parameter is ignored when configured to use static memory -- #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used
       instead.*/
   size_t source_count_max;
 
@@ -89,28 +89,28 @@ typedef struct DmxMergerUniverseConfig
       Memory is owned by the application.*/
   source_id_t* slot_owners;
 
-} DmxMergerUniverseConfig;
+} SacnDmxMergerConfig;
 
 /*!
- * \brief An initializer for an DmxMergerUniverseConfig struct.
+ * \brief An initializer for an SacnDmxMergerConfig struct.
  *
  * Usage:
  * \code
  * // Create the struct
- * DmxMergerUniverseConfig universe_config = DMX_MERGER_UNIVERSE_CONFIG_INIT;
+ * SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
  * // Now fill in the members of the struct
  * \endcode
  *
  */
-#define DMX_MERGER_UNIVERSE_CONFIG_INIT \
-  {                                     \
-    0, NULL, NULL                       \
+#define SACN_DMX_MERGER_CONFIG_INIT \
+  {                                 \
+    0, NULL, NULL                   \
   }
 
 /*! The current input data for a single source of the merge.
     This is exposed only for informational purposes, as the
-    application call a variant of *TODO* */
-typedef struct DmxMergerSource
+    application call a variant of sacn_dmx_merger_update_source */
+typedef struct SacnDmxMergerSource
 {
   /*! The UUID (e.g. sACN CID) of the DMX source. */
   EtcPalUuid cid;
@@ -131,28 +131,29 @@ typedef struct DmxMergerSource
       If the source does not */
   uint8_t address_priority[DMX_ADDRESS_COUNT];
 
-} DmxMergerSource;
+} SacnDmxMergerSource;
 
-etcpal_error_t dmx_merger_init();
-void dmx_merger_deinit(void);
+etcpal_error_t sacn_dmx_merger_init();
+void sacn_dmx_merger_deinit(void);
 
-etcpal_error_t dmx_merger_create_universe(const DmxMergerUniverseConfig* config, universe_handle_t* handle);
-etcpal_error_t dmx_merger_destroy_universe(universe_handle_t handle);
+etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle);
+etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle);
 
-etcpal_error_t dmx_merger_add_source(universe_handle_t universe, const EtcPalUuid* source_cid, source_id_t* source_id);
-etcpal_error_t dmx_merger_remove_source(universe_handle_t universe, source_id_t source);
-const DmxMergerSource* dmx_merger_get_source(universe_handle_t universe, source_id_t source);
-etcpal_error_t dmx_merger_update_source_data(universe_handle_t universe, source_id_t source, const uint8_t* new_values,
-                                             size_t new_values_count, uint8_t priority,
-                                             const uint8_t* address_priorities, size_t address_priorities_count);
+etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid,
+                                          source_id_t* source_id);
+etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id_t source);
+const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, source_id_t source);
+etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, source_id_t source,
+                                                  const uint8_t* new_values, size_t new_values_count, uint8_t priority,
+                                                  const uint8_t* address_priorities, size_t address_priorities_count);
 // TODO: If Receiver API changes to notify both values and per-address priority data in the same callback, this should
 // change!!
-etcpal_error_t dmx_merger_update_source_from_sacn(universe_handle_t universe, source_id_t source,
-                                                  const SacnHeaderData* header, const uint8_t* pdata);
-etcpal_error_t dmx_merger_stop_source_per_address_priority(universe_handle_t universe, source_id_t source);
+etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, source_id_t source,
+                                                       const SacnHeaderData* header, const uint8_t* pdata);
+etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, source_id_t source);
 
 // TODO: Do we need this?
-etcpal_error_t dmx_merger_recalculate(universe_handle_t universe);
+etcpal_error_t sacn_dmx_merger_recalculate(sacn_dmx_merger_t merger);
 
 #ifdef __cplusplus
 }
@@ -162,4 +163,4 @@ etcpal_error_t dmx_merger_recalculate(universe_handle_t universe);
  * @}
  */
 
-#endif /* SACN_MERGER_H_ */
+#endif /* SACN_DMX_MERGER_H_ */

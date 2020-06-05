@@ -306,32 +306,32 @@
  * @}
  */
 
-/***************************** DMX Merger Options *****************************/
+/***************************** sACN DMX Merger Options *****************************/
 
 /*!
- * \defgroup dmx_merger DMX Merger Options
+ * \defgroup sacn_dmx_merger sACN DMX Merger Options
  * \ingroup sacnopts
  *
- * Configuration options for the \ref dmx_merger module.
+ * Configuration options for the \ref sacn_dmx_merger module.
  * @{
  */
 
 /*!
- * \brief The maximum number of universes that can be merged.
+ * \brief The maximum number of mergers that can be instanced.
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
-#ifndef DMX_MERGER_MAX_UNIVERSES
-#define DMX_MERGER_MAX_UNIVERSES SACN_RECEIVER_MAX_UNIVERSES
+#ifndef SACN_DMX_MERGER_MAX_COUNT
+#define SACN_DMX_MERGER_MAX_COUNT SACN_RECEIVER_MAX_UNIVERSES
 #endif
 
 /*!
- * \brief The maximum number of sources that can be merged on each universe.
+ * \brief The maximum number of sources that can be merged on each merger instance.
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0. 
  */
-#ifndef DMX_MERGER_MAX_SOURCES_PER_UNIVERSE
-#define DMX_MERGER_MAX_SOURCES_PER_UNIVERSE SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE
+#ifndef SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER
+#define SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE
 #endif
 
 /*!

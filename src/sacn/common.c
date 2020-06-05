@@ -72,6 +72,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     bool data_loss_initted = false;
     bool receiver_initted = false;
     bool source_initted = false;
+    bool merger_initted = false;
 
     // Init the log params early so the other modules can log things on initialization
     if (log_params)
@@ -98,6 +99,8 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
       receiver_initted = ((res = sacn_receiver_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
       source_initted = ((res = sacn_source_init()) == kEtcPalErrOk);
+    if ( res == kEtcPalErrOk)
+      merger_initted = ((res = sacn_dmx_merger_init()) == kEtcPalErrOk);
 
     if (res == kEtcPalErrOk)
     {
@@ -106,6 +109,8 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     else
     {
       // Clean up
+      if (merger_initted)
+        sacn_dmx_merger_deinit();
       if (source_initted)
         sacn_source_deinit();
       if (receiver_initted)
@@ -140,6 +145,7 @@ void sacn_deinit(void)
   {
     sacn_state.initted = false;
 
+    sacn_dmx_merger_deinit();
     sacn_source_deinit();
     sacn_receiver_deinit();
     sacn_data_loss_deinit();

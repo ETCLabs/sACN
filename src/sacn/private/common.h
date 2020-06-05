@@ -35,6 +35,7 @@
 #include "etcpal/socket.h"
 #include "etcpal/timer.h"
 #include "sacn/receiver.h"
+#include "sacn/dmx_merger.h"
 #include "sacn/private/opts.h"
 
 #ifdef __cplusplus
