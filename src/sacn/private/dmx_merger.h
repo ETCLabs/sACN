@@ -18,17 +18,17 @@
  *****************************************************************************/
 
 /*!
- * \file sacn/private/merge.h
+ * \file sacn/private/merger.h
  * \brief Private constants, types, and function declarations for the
- *        \ref dmx_merger "Dmx Merger" module.
+ *        \ref sacn_merger "sACN Merger" module.
  */
 
-#ifndef SACN_PRIVATE_MERGE_H_
-#define SACN_PRIVATE_MERGE_H_
+#ifndef SACN_PRIVATE_MERGER_H_
+#define SACN_PRIVATE_MERGER_H_
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../../../include/sacn/merge.h"
+#include "../../../include/sacn/merger.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,4 +41,4 @@ extern "C" {
 }
 #endif
 
-#endif /* SACN_PRIVATE_MERGE_H_ */
+#endif /* SACN_PRIVATE_MERGER_H_ */

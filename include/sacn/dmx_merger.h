@@ -18,30 +18,33 @@
  *****************************************************************************/
 
 /*!
- * \file sacn/merge.h
- * \brief SACN/DMX Merger API definitions
+ * \file sacn/merger.h
+ * \brief SACN Merger API definitions
  *
- * Functions and definitions for the \ref dmx_merger "DMX Merger API" are contained in this
+ * Functions and definitions for the \ref sacn_merger "sACN Merger API" are contained in this
  * header.
  */
 
-#ifndef SACN_MERGE_H_
-#define SACN_MERGE_H_
+#ifndef SACN_MERGER_H_
+#define SACN_MERGER_H_
 
 #include <stdbool.h>
 #include <stdint.h>
 #include "etcpal/error.h"
 #include "etcpal/uuid.h"
 #include "sacn/common.h"
-#include "receiver.h"
+#include "sacn/receiver.h"
 
 /*!
- * \defgroup dmx_merger DMX Merger
+ * \defgroup sacn_merger sACN Merger
  * \ingroup sACN
- * \brief The DMX Merger API
+ * \brief The sACN Merger API
  *
  * This API provides a software merger for buffers containing DMX512-A start code 0 packets.
  * It also uses buffers containing DMX512-A start code 0xdd packets to support per-address priority.
+ *
+ * While this API is used to easily merge the outputs from the sACN Receiver API, it can also be used
+ * to merge your own DMX sources together, even in combination with the sources received via sACN.
  *
  * When asked to calculate the merge of a universe, the merger shall evaluate the current source
  * buffers and update two result buffers:
@@ -51,7 +54,7 @@
  *  - 512 source identifiers (i.e. "winning source") to indicate which source was considered the
  *     source of the merged data value, or that no source currently owns this address.
  *
- * \TODO: Add sample usage
+ * TODO: Add sample usage
  *
  * @{
  */
@@ -61,7 +64,7 @@ extern "C" {
 #endif
 
 /*! Each universe has a handle associated with it.*/
-typedef int universe_handle_t;
+typedef int sacn_merger_t;
 
 /*! The sources on a universe have a short id that is used in the owned values, rather than a UUID.*/
 typedef uint16_t source_id_t;
@@ -159,4 +162,4 @@ etcpal_error_t dmx_merger_recalculate(universe_handle_t universe);
  * @}
  */
 
-#endif /* SACN_MERGE_H_ */
+#endif /* SACN_MERGER_H_ */
