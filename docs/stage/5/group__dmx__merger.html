@@ -737,11 +737,11 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dmx_merger_deinit</b>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The handle to the merger. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>The id of the source to modify. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">new_values</td><td>The new DMX values to be copied in. This may be NULL if the source is only updating per-address priorities. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">new_values_count</td><td>The length of new_values. May be 0 if the source is only updating per-address priorities. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_values</td><td>The new DMX values to be copied in. This may be NULL if the source is only updating the priority or address_priorities. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_values_count</td><td>The length of new_values. May be 0 if the source is only updating the priority or address_priorities. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">priority</td><td>The universe-level priority of the source. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">address_priorities</td><td>The per-address priority values to be copied in. This may be NULL if the source is not sending per-address priorities. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">address_priorities_count</td><td>The length of address_priorities. May be 0 if the source is not sending these priorities. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">address_priorities</td><td>The per-address priority values to be copied in. This may be NULL if the source is not sending per-address priorities, or is only updating other parameters. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">address_priorities_count</td><td>The length of address_priorities. May be 0 if the source is not sending these priorities, or is only updating other parameters. </td></tr>
   </table>
   </dd>
 </dl>
