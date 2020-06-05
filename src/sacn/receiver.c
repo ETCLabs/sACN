@@ -53,7 +53,15 @@ static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PR
 #if SACN_DYNAMIC_MEM
 #define ALLOC_RECEIVER() malloc(sizeof(SacnReceiver))
 #define ALLOC_TRACKED_SOURCE() malloc(sizeof(SacnTrackedSource))
-#define FREE_RECEIVER(ptr) free(ptr)
+#define FREE_RECEIVER(ptr) \
+  do                       \
+  {                        \
+    if (ptr->netints)      \
+    {                      \
+      free(ptr->netints);  \
+    }                      \
+    free(ptr);             \
+  } while (0)
 #define FREE_TRACKED_SOURCE(ptr) free(ptr)
 #else
 #define ALLOC_RECEIVER() etcpal_mempool_alloc(sacnrecv_receivers)
@@ -84,6 +92,8 @@ static struct SacnRecvState
 
 // Receiver creation and destruction
 static etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config);
+static etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMcastNetintId* netints,
+                                                  size_t num_netints);
 static SacnReceiver* create_new_receiver(const SacnReceiverConfig* config);
 static etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnReceiverConfig* config);
 static etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver);
@@ -324,28 +334,90 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 /*!
  * \brief Change the universe on which an sACN receiver is listening.
  *
- * **NOTE:** This function is not yet implemented. A workaround is to destroy a receiver and create
- * a new one with a different universe.
- *
  * An sACN receiver can only listen on one universe at a time. After this call completes
  * successfully, the receiver is in a sampling period for the new universe where all data on the
  * universe is reported immediately via the universe_data() callback. Data should be stored but not
  * acted upon until receiving a sampling_ended() callback for this receiver. This prevents level
- * jumps as sources with different priorities are discovered.
+ * jumps as sources with different priorities are discovered. If this call fails, the caller must call
+ * sacn_receiver_destroy for the receiver, because the receiver may be in an invalid state.
  *
  * \param[in] handle Handle to the receiver for which to change the universe.
  * \param[in] new_universe_id New universe number that this receiver should listen to.
  * \return #kEtcPalErrOk: Universe changed successfully.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrExists: A receiver already exists which is listening on the specified new universe.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id)
 {
-  // TODO
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(new_universe_id);
-  return kEtcPalErrNotImpl;
+  if (!UNIVERSE_ID_VALID(new_universe_id))
+    return kEtcPalErrInvalid;
+
+  if (!sacn_initialized())
+    return kEtcPalErrNotInit;
+
+  etcpal_error_t res = kEtcPalErrOk;
+  if (sacn_lock())
+  {
+    // First check to see if there is already a receiver listening on this universe.
+    SacnReceiverKeys lookup_keys;
+    lookup_keys.universe = new_universe_id;
+    SacnReceiver* receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers_by_universe, &lookup_keys);
+    if (receiver)
+    {
+      res = kEtcPalErrExists;
+    }
+
+    // Find the receiver to change the universe for.
+    if (res == kEtcPalErrOk)
+    {
+      receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers, &handle);
+      if (!receiver)
+        res = kEtcPalErrNotFound;
+    }
+
+    // Clear termination sets and sources since they only pertain to the old universe.
+    if (res == kEtcPalErrOk)
+    {
+      clear_term_set_list(receiver->term_sets);
+      receiver->term_sets = NULL;
+      res = etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
+    }
+
+    // Update the receiver's socket and subscription.
+    if (res == kEtcPalErrOk)
+    {
+      sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, false);
+      // TODO IPv6
+      res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, new_universe_id, receiver->netints,
+                                     receiver->num_netints, &receiver->socket);
+    }
+
+    // Update receiver key and position in receiver_state.receivers_by_universe.
+    if (res == kEtcPalErrOk)
+    {
+      etcpal_rbtree_remove(&receiver_state.receivers_by_universe, receiver);
+      receiver->keys.universe = new_universe_id;
+      res = etcpal_rbtree_insert(&receiver_state.receivers_by_universe, receiver);
+    }
+
+    // Begin the sampling period.
+    if (res == kEtcPalErrOk)
+    {
+      receiver->sampling = true;
+      etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
+    }
+
+    sacn_unlock();
+  }
+  else
+  {
+    res = kEtcPalErrSys;
+  }
+
+  return res;
 }
 
 /*!
@@ -446,13 +518,59 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
 {
   SACN_ASSERT(config);
 
-  if (config->universe_id == 0 || config->universe_id > 64000 || !config->callbacks.universe_data ||
-      !config->callbacks.sources_lost)
+  if (!UNIVERSE_ID_VALID(config->universe_id) || !config->callbacks.universe_data || !config->callbacks.sources_lost)
   {
     return kEtcPalErrInvalid;
   }
 
   return sacn_validate_netint_config(config->netints, config->num_netints);
+}
+
+/*
+ * Initialize a SacnReceiver's network interface data.
+ */
+etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMcastNetintId* netints, size_t num_netints)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+
+  if (netints)
+  {
+#if SACN_DYNAMIC_MEM
+    SacnMcastNetintId* calloc_result = calloc(num_netints, sizeof(SacnMcastNetintId));
+
+    if (calloc_result)
+    {
+      receiver->netints = calloc_result;
+    }
+    else
+    {
+      result = kEtcPalErrNoMem;
+    }
+#else
+    if (num_netints > SACN_MAX_NETINTS)
+    {
+      result = kEtcPalErrNoMem;
+    }
+#endif
+
+    if (result == kEtcPalErrOk)
+    {
+      memcpy(receiver->netints, netints, num_netints * sizeof(SacnMcastNetintId));
+    }
+  }
+#if SACN_DYNAMIC_MEM
+  else
+  {
+    receiver->netints = NULL;
+  }
+#endif
+
+  if (result == kEtcPalErrOk)
+  {
+    receiver->num_netints = num_netints;
+  }
+
+  return result;
 }
 
 /*
@@ -479,6 +597,12 @@ SacnReceiver* create_new_receiver(const SacnReceiverConfig* config)
   receiver->thread_id = SACN_THREAD_ID_INVALID;
 
   receiver->socket = ETCPAL_SOCKET_INVALID;
+
+  if (initialize_receiver_netints(receiver, config->netints, config->num_netints) != kEtcPalErrOk)
+  {
+    FREE_RECEIVER(receiver);
+    return NULL;
+  }
 
   receiver->sampling = true;
   etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
@@ -592,7 +716,11 @@ void remove_receiver_from_thread(SacnReceiver* receiver, bool close_socket_now)
   SacnRecvThreadContext* context = get_recv_thread_context(receiver->thread_id);
   if (context)
   {
-    sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, close_socket_now);
+    if (receiver->socket != ETCPAL_SOCKET_INVALID)
+    {
+      sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, close_socket_now);
+    }
+
     remove_receiver_from_list(context, receiver);
   }
 }
@@ -1057,6 +1185,10 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
                                const SacnHeaderData* header, SourceLimitExceededNotification* source_limit_exceeded,
                                SourcePcpLostNotification* source_pcp_lost, UniverseDataNotification* universe_data)
 {
+#if !SACN_LOGGING_ENABLED
+  ETCPAL_UNUSED_ARG(header);
+#endif
+
   if (source_limit_exceeded->handle != SACN_RECEIVER_INVALID)
   {
     if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))

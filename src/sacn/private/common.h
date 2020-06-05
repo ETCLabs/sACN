@@ -109,6 +109,8 @@ typedef unsigned int sacn_thread_id_t;
 #define SACN_CAN_LOG(pri) false
 #endif
 
+#define UNIVERSE_ID_VALID(universe_id) ((universe_id != 0) && (universe_id <= 64000))
+
 /******************************************************************************
  * Types used by the data loss module
  *****************************************************************************/
@@ -167,6 +169,15 @@ struct SacnReceiver
 
   // Sockets / network interface info
   etcpal_socket_t socket;
+  /* (optional) array of network interfaces on which to listen to the specified universe. If num_netints = 0,
+   * all available network interfaces will be used. */
+#if SACN_DYNAMIC_MEM
+  SacnMcastNetintId* netints;
+#else
+  SacnMcastNetintId netints[SACN_MAX_NETINTS];
+#endif
+  /* Number of elements in the netints array. */
+  size_t num_netints;
 
   // State tracking
   bool sampling;

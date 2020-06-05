@@ -640,14 +640,22 @@ TEST_F(TestMem, SourceLimitExceededIsReZeroedWithEachGet)
 TEST_F(TestMem, AddReceiverToListWorks)
 {
   SacnRecvThreadContext rtc{};
+#if SACN_DYNAMIC_MEM
   SacnReceiver receiver{};
+#else
+  SacnReceiver receiver{{},{},{},{}};  // Fixes error C3852
+#endif
 
   add_receiver_to_list(&rtc, &receiver);
   ASSERT_EQ(rtc.receivers, &receiver);
   EXPECT_EQ(rtc.receivers->next, nullptr);
   EXPECT_EQ(rtc.num_receivers, 1);
 
+#if SACN_DYNAMIC_MEM
   SacnReceiver receiver2{};
+#else
+  SacnReceiver receiver2{{}, {}, {}, {}};  // Fixes error C3852
+#endif
   add_receiver_to_list(&rtc, &receiver2);
   ASSERT_EQ(rtc.receivers, &receiver);
   ASSERT_EQ(rtc.receivers->next, &receiver2);
@@ -658,9 +666,15 @@ TEST_F(TestMem, AddReceiverToListWorks)
 TEST_F(TestMem, RemoveReceiverFromListWorks)
 {
   SacnRecvThreadContext rtc{};
+#if SACN_DYNAMIC_MEM
   SacnReceiver receiver{};
   SacnReceiver receiver2{};
   SacnReceiver receiver3{};
+#else
+  SacnReceiver receiver{{}, {}, {}, {}};   // Fixes error C3852
+  SacnReceiver receiver2{{}, {}, {}, {}};
+  SacnReceiver receiver3{{}, {}, {}, {}};
+#endif
 
   rtc.receivers = &receiver;
   receiver.next = &receiver2;

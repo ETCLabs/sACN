@@ -31,20 +31,22 @@
 #endif
 
 /*
- * This is a very simple sACN receiver example. It listens on sACN universes 1, 2, and 3 and prints
- * their activity periodically to the command line. This demonstrates use of the sACN Receiver API
- * and how to handle its callbacks.
+ * This is a very simple sACN receiver example. The user can create and destroy receivers or change the universes of
+ * existing receivers. They can also print the network values. This demonstrates use of the sACN Receiver API and how to
+ * handle its callbacks.
  */
 
 /**************************************************************************************************
  * Constants
  *************************************************************************************************/
 
-#define NUM_LISTENERS 3
+#define MAX_LISTENERS 10
 #define NUM_SOURCES_PER_LISTENER 4
 #define NUM_SLOTS_DISPLAYED 10
-
-#define PRINT_STATUS_INTERVAL 10000
+#define BEGIN_BORDER_STRING \
+  ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+#define END_BORDER_STRING \
+  "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n"
 
 /**************************************************************************************************
  * Global Data
@@ -58,6 +60,7 @@ typedef struct SourceData
   char name[SACN_SOURCE_NAME_MAX_LEN];
   uint8_t priority;
   int num_updates;
+  uint32_t update_start_time_ms;
   uint8_t last_update[NUM_SLOTS_DISPLAYED];
 } SourceData;
 
@@ -69,7 +72,7 @@ typedef struct ListeningUniverse
   size_t num_sources;
 } ListeningUniverse;
 
-ListeningUniverse listeners[NUM_LISTENERS];
+ListeningUniverse listeners[MAX_LISTENERS];
 
 etcpal_mutex_t mutex;
 
@@ -94,39 +97,269 @@ static SourceData* find_source_hole(ListeningUniverse* listener)
     if (!source->valid)
       return source;
   }
+
   return NULL;
 }
 
+static void invalidate_listeners()
+{
+  for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
+  {
+    listener->receiver_handle = SACN_RECEIVER_INVALID;
+  }
+}
+
+static void invalidate_sources(ListeningUniverse* listener)
+{
+  if (listener)
+  {
+    for (SourceData* source = listener->sources; source < listener->sources + NUM_SOURCES_PER_LISTENER; ++source)
+    {
+      source->valid = false;
+    }
+
+    listener->num_sources = 0;
+  }
+}
+
+static ListeningUniverse* find_listener_hole()
+{
+  for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
+  {
+    if (listener->receiver_handle == SACN_RECEIVER_INVALID)
+    {
+      return listener;
+    }
+  }
+
+  return NULL;
+}
+
+static ListeningUniverse* find_listener_on_universe(uint16_t universe)
+{
+  for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
+  {
+    if (listener->universe == universe)
+    {
+      return listener;
+    }
+  }
+
+  return NULL;
+}
+
+static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t universe,
+                                      const SacnReceiverCallbacks* callbacks)
+{
+  SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
+  config.callbacks = *callbacks;
+  config.callback_context = listener;
+  config.universe_id = universe;
+
+  printf("Creating a new sACN receiver on universe %u.\n", universe);
+  etcpal_error_t result = sacn_receiver_create(&config, &listener->receiver_handle);
+  if (result == kEtcPalErrOk)
+  {
+    listener->universe = universe;
+    listener->num_sources = 0;
+  }
+  else
+  {
+    printf("Creating sACN receiver failed with error: '%s'\n", etcpal_strerror(result));
+  }
+
+  return result;
+}
+
+static etcpal_error_t destroy_listener(ListeningUniverse* listener)
+{
+  printf("Destroying sACN receiver %d.\n", listener->receiver_handle);
+  etcpal_error_t destroy_res = sacn_receiver_destroy(listener->receiver_handle);
+  if (destroy_res == kEtcPalErrOk)
+  {
+    invalidate_sources(listener);
+    listener->receiver_handle = SACN_RECEIVER_INVALID;
+  }
+  else
+  {
+    printf("Error destroying sACN receiver %d: '%s'!\n", listener->receiver_handle, etcpal_strerror(destroy_res));
+  }
+
+  return destroy_res;
+}
+
+static etcpal_error_t recreate_listener(ListeningUniverse* listener, uint16_t universe,
+                                        const SacnReceiverCallbacks* callbacks)
+{
+  etcpal_error_t recreate_result = destroy_listener(listener);
+  if (recreate_result == kEtcPalErrOk)
+  {
+    recreate_result = create_listener(listener, universe, callbacks);
+  }
+
+  return recreate_result;
+}
+
+static etcpal_error_t update_listener_universe(ListeningUniverse* listener, uint16_t new_universe,
+                                               const SacnReceiverCallbacks* callbacks)
+{
+  etcpal_error_t result_to_return = kEtcPalErrOk;
+
+  printf("Changing sACN receiver %d from universe %u to universe %u.\n", listener->receiver_handle, listener->universe,
+         new_universe);
+  etcpal_error_t change_result = sacn_receiver_change_universe(listener->receiver_handle, new_universe);
+
+  if (change_result == kEtcPalErrOk)
+  {
+    listener->universe = new_universe;
+    invalidate_sources(listener);
+  }
+  else
+  {
+    printf("Changing receiver universe failed with error: '%s'\n", etcpal_strerror(change_result));
+    result_to_return = recreate_listener(listener, listener->universe, callbacks);
+
+    if (result_to_return == kEtcPalErrOk)
+    {
+      printf("Successfully recreated receiver at universe %u.", listener->universe);
+    }
+    else
+    {
+      printf("Recreating receiver at universe %u failed with error: '%s'\n", listener->universe,
+             etcpal_strerror(result_to_return));
+    }
+  }
+
+  return result_to_return;
+}
+
+static void console_print_help()
+{
+  printf(BEGIN_BORDER_STRING);
+  printf("Each input is listed followed by the action:\n");
+  printf("h : Print help.\n");
+  printf("p : Print updates for all receivers.\n");
+  printf("a : Add a new receiver.\n");
+  printf("r : Remove a receiver.\n");
+  printf("c : Change a receiver's universe.\n");
+  printf("ctrl-c : Exit.\n");
+  printf(END_BORDER_STRING);
+}
+
 /* Print a status update for each listening universe about the status of its sources. */
-void print_universe_updates(int interval_ms)
+static void console_print_universe_updates()
 {
   if (etcpal_mutex_lock(&mutex))
   {
-    printf("-------------------------------------------------------------------------------------------------------\n");
-    for (ListeningUniverse* listener = listeners; listener < listeners + NUM_LISTENERS; ++listener)
+    printf(BEGIN_BORDER_STRING);
+    for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
     {
-      printf("Universe %u currently tracking %zu sources:\n", listener->universe, listener->num_sources);
-      for (SourceData* source = listener->sources; source < listener->sources + NUM_SOURCES_PER_LISTENER; ++source)
+      if (listener->receiver_handle != SACN_RECEIVER_INVALID)
       {
-        if (source->valid)
+        printf("Receiver %d on universe %u currently tracking %zu sources:\n", listener->receiver_handle,
+               listener->universe, listener->num_sources);
+        for (SourceData* source = listener->sources; source < listener->sources + NUM_SOURCES_PER_LISTENER; ++source)
         {
-          char cid_str[ETCPAL_UUID_STRING_BYTES];
-          etcpal_uuid_to_string(&source->cid, cid_str);
-          int update_rate = source->num_updates * 1000 / interval_ms;
-          printf("  Source %s\tPriority: %u\tUpdates per second: %d\tLast update: ", cid_str, source->priority,
-                 update_rate);
-          for (size_t i = 0; i < NUM_SLOTS_DISPLAYED; ++i)
+          if (source->valid)
           {
-            printf("%02x ", source->last_update[i]);
+            char cid_str[ETCPAL_UUID_STRING_BYTES];
+            etcpal_uuid_to_string(&source->cid, cid_str);
+            uint32_t interval_ms = etcpal_getms() - source->update_start_time_ms;
+            int update_rate = source->num_updates * 1000 / interval_ms;
+            printf("  Source %s\tPriority: %u\tUpdates per second: %d\tLast update: ", cid_str, source->priority,
+                   update_rate);
+            for (size_t i = 0; i < NUM_SLOTS_DISPLAYED; ++i)
+            {
+              printf("%02x ", source->last_update[i]);
+            }
+            printf("Name: '%s'\n", source->name);
+            source->num_updates = 0;
+            source->update_start_time_ms = etcpal_getms();
           }
-          printf("Name: '%s'\n", source->name);
-          source->num_updates = 0;
         }
       }
     }
-    printf("-------------------------------------------------------------------------------------------------------\n");
+    printf(END_BORDER_STRING);
     etcpal_mutex_unlock(&mutex);
   }
+}
+
+static etcpal_error_t console_add_listening_universe(const SacnReceiverCallbacks* callbacks)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+  ListeningUniverse* new_listener = find_listener_hole();
+
+  printf(BEGIN_BORDER_STRING);
+  if (new_listener)
+  {
+    uint16_t universe = 0;
+    printf("Enter the universe number:\n");
+    scanf("%hu", &universe);
+    result = create_listener(new_listener, universe, callbacks);
+    printf("Result: %s\n", etcpal_strerror(result));
+  }
+  else
+  {
+    printf("Maximum number of receivers has been reached. Please remove a receiver first before adding a new one.\n");
+  }
+
+  printf(END_BORDER_STRING);
+
+  return result;
+}
+
+static etcpal_error_t console_remove_listening_universe()
+{
+  etcpal_error_t result = kEtcPalErrOk;
+
+  uint16_t universe = 0;
+  printf(BEGIN_BORDER_STRING);
+  printf("Enter the universe number:\n");
+  scanf("%hu", &universe);
+
+  ListeningUniverse* listener = find_listener_on_universe(universe);
+  if (listener)
+  {
+    result = destroy_listener(listener);
+    printf("Result: %s\n", etcpal_strerror(result));
+  }
+  else
+  {
+    printf("There are no receivers currently listening to universe %hu.\n", universe);
+  }
+
+  printf(END_BORDER_STRING);
+
+  return result;
+}
+
+static etcpal_error_t console_change_listening_universe(const SacnReceiverCallbacks* callbacks)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+
+  uint16_t current_universe = 0;
+  printf(BEGIN_BORDER_STRING);
+  printf("Enter the current universe number:\n");
+  scanf("%hu", &current_universe);
+
+  ListeningUniverse* listener = find_listener_on_universe(current_universe);
+  if (listener)
+  {
+    uint16_t new_universe = 0;
+    printf("Enter the new universe number:\n");
+    scanf("%hu", &new_universe);
+
+    result = update_listener_universe(listener, new_universe, callbacks);
+    printf("Result: %s\n", etcpal_strerror(result));
+  }
+  else
+  {
+    printf("There are no receivers currently listening to universe %hu.\n", current_universe);
+  }
+
+  printf(END_BORDER_STRING);
+
+  return result;
 }
 
 /**************************************************************************************************
@@ -167,6 +400,7 @@ static void handle_universe_data(sacn_receiver_t handle, const EtcPalSockAddr* f
         strcpy(source->name, header->source_name);
         source->priority = header->priority;
         source->num_updates = 1;
+        source->update_start_time_ms = etcpal_getms();
         memcpy(source->last_update, pdata, NUM_SLOTS_DISPLAYED);
         source->valid = true;
         ++listener->num_sources;
@@ -288,60 +522,77 @@ int main(void)
   log_params.time_fn = NULL;
   log_params.log_mask = ETCPAL_LOG_UPTO(ETCPAL_LOG_DEBUG);
 
-  etcpal_error_t result = sacn_init(&log_params);
-  if (result != kEtcPalErrOk)
+  etcpal_error_t sacn_init_result = sacn_init(&log_params);
+  if (sacn_init_result != kEtcPalErrOk)
   {
-    printf("sACN initialization failed with error: '%s'\n", etcpal_strerror(result));
+    printf("sACN initialization failed with error: '%s'\n", etcpal_strerror(sacn_init_result));
     return 1;
   }
 
-  // Start listening on each universe starting at 1
-  uint16_t universe = 1;
-  for (ListeningUniverse* listener = listeners; listener < listeners + NUM_LISTENERS; ++listener)
-  {
-    SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-    config.callbacks = kSacnCallbacks;
-    config.callback_context = listener;
-    config.universe_id = universe;
-
-    result = sacn_receiver_create(&config, &listener->receiver_handle);
-    if (result == kEtcPalErrOk)
-    {
-      listener->universe = universe++;
-      listener->num_sources = 0;
-    }
-    else
-    {
-      printf("Creating sACN receiver failed with error: '%s'\n", etcpal_strerror(result));
-      sacn_deinit();
-      return 1;
-    }
-  }
+  // Initialize the listener array by making each handle invalid since there are no listeners to start.
+  invalidate_listeners();
 
   // Handle Ctrl+C gracefully and shut down in compatible consoles
   install_keyboard_interrupt_handler(handle_keyboard_interrupt);
 
-  // Print status info periodically until we are told to stop
-  EtcPalTimer timer;
-  etcpal_timer_start(&timer, PRINT_STATUS_INTERVAL);
+  // Handle user input until we are told to stop
+  bool print_prompt = true;
   while (keep_running)
   {
-    etcpal_thread_sleep(50);
-    if (etcpal_timer_is_expired(&timer))
+    if (print_prompt)
     {
-      print_universe_updates(PRINT_STATUS_INTERVAL);
-      etcpal_timer_reset(&timer);
+      printf("Enter input (enter h for help):\n");
+    }
+    else
+    {
+      print_prompt = true;  // Print it next time by default.
+    }
+
+    etcpal_error_t console_result = kEtcPalErrOk;
+
+    int ch = getchar();
+    switch (ch)
+    {
+      case 'h':
+        console_print_help();
+        break;
+      case 'p':
+        console_print_universe_updates();
+        break;
+      case 'a':
+        console_result = console_add_listening_universe(&kSacnCallbacks);
+        break;
+      case 'r':
+        console_result = console_remove_listening_universe();
+        break;
+      case 'c':
+        console_result = console_change_listening_universe(&kSacnCallbacks);
+        break;
+      case '\n':
+        print_prompt = false;  // Otherwise the prompt is printed twice.
+        break;
+      case EOF:  // Ctrl-C
+        keep_running = false;
+        break;
+      default:
+        printf("Invalid input.\n");
+    }
+
+    if (console_result != kEtcPalErrOk)
+    {
+      printf("A critical error has occurred. Press ctrl-c to end this program.\n");
+      while (getchar() != EOF);
+      keep_running = false;  // Shut down on error.
     }
   }
 
   printf("Shutting down sACN...\n");
 
-  for (ListeningUniverse* listener = listeners; listener < listeners + NUM_LISTENERS; ++listener)
+  for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
   {
-    etcpal_error_t destroy_res = sacn_receiver_destroy(listener->receiver_handle);
-    if (destroy_res != kEtcPalErrOk)
+    if (listener->receiver_handle != SACN_RECEIVER_INVALID)
     {
-      printf("Error destroying sACN receiver %d: '%s'!\n", listener->receiver_handle, etcpal_strerror(destroy_res));
+      destroy_listener(listener);
     }
   }
 
