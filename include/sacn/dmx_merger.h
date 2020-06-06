@@ -80,12 +80,12 @@ typedef struct SacnDmxMergerConfig
       instead.*/
   size_t source_count_max;
 
-  /*! Buffer of DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
+  /*! Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
       Memory is owned by the application.*/
   uint8_t* slots;
 
-  /*! Buffer of DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
-      that slot, or DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
+  /*! Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
+      that slot, or #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
       Memory is owned by the application.*/
   source_id_t* slot_owners;
 

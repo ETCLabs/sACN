@@ -267,7 +267,7 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
 /*!
  * \brief Updates the source data from a sACN packet and recalculate outputs.
  *
- * Processes data passed from the sACN receiver's SacnUniverseDataCallback handler.  This causes the merger to
+ * Processes data passed from the sACN receiver's SacnUniverseDataCallback() handler.  This causes the merger to
  * recalculate the outputs.
  *
  * \param[in] merger The handle to the merger.
