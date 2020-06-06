@@ -93,6 +93,27 @@ typedef struct SacnRemoteSource
   char name[SACN_SOURCE_NAME_MAX_LEN];
 } SacnRemoteSource;
 
+/*! Information about a sACN source that was found. */
+typedef struct SacnFoundSource
+{
+  /*! The Component Identifier (CID) of the source. */
+  EtcPalUuid cid;
+  /*! The name of the source. */
+  char name[SACN_SOURCE_NAME_MAX_LEN];
+  /*! The address from which we received these initial packets. */
+  EtcPalSockAddr source_addr;
+  /*! The per-universe priority. */
+  uint8_t priority;
+  /*! The DMX (startcode 0) data. */
+  uint8_t values[DMX_ADDRESS_COUNT];
+  /*! The count of valid values. */
+  size_t values_len;
+  /*! The per-address priority (startcode 0xdd) data, if the source is sending it. */
+  uint8_t per_address[DMX_ADDRESS_COUNT];
+  /*! The count of valid priorities. */
+  size_t per_address_len;
+} SacnFoundSource;
+
 /*! Information about a sACN source that was lost. */
 typedef struct SacnLostSource
 {
@@ -118,10 +139,31 @@ typedef struct SacnLostSource
  */
 
 /*!
+ * \brief Notify that one or more sources have been found.
+ *
+ * New sources have been found that can fit in the current collection.  The DMX data and per-address priorities for each
+ * source may be acted upon immediately, as the library has determined the correct starting values.  Additionally, the
+ * library has waited for a "sampling period" upon startup to make sure the starting set of sources is consistent.
+ *
+ * After this callback returns, packets for this source will be sent to the sACNUniverseDataCallback().
+ *
+ * \param[in] handle Handle to the receiver instance for which sources were found.
+ * \param[in] found_sources Array of structs describing the source or sources that have been found with their current
+ * values.
+ * \param[in] num_sources_found Size of the found_sources array.
+ * \param[in] context Context pointer that was given at the creation of the receiver instance.
+ */
+typedef void (*SacnSourcesFoundCallback)(sacn_receiver_t handle, const SacnFoundSource* found_sources,
+                                         size_t num_found_sources, void* context);
+
+/*!
  * \brief Notify that a data packet has been received.
  *
- * Will be called for every sACN data packet received on a listening universe, unless the
- * Stream_Terminated bit is set.
+ * Will be called for every sACN data packet received on a listening universe for a found source, unless the
+ * Stream_Terminated bit is set or if preview packets are being filtered.
+ *
+ * The callback will only be called for packets whose sources have been found via SacnSourcesFoundCallback(), and have
+ * not been lost via SacnSourcesLostCallback().
  *
  * \param[in] handle Handle to the receiver instance for which universe data was received.
  * \param[in] source_addr The network address from which the sACN packet originated.
@@ -164,17 +206,6 @@ typedef void (*SacnSourcesLostCallback)(sacn_receiver_t handle, const SacnLostSo
 typedef void (*SacnSourcePcpLostCallback)(sacn_receiver_t handle, const SacnRemoteSource* source, void* context);
 
 /*!
- * \brief Notify that the sampling period has ended for a receiver.
- *
- * To prevent level jumps as sources with different priorities are discovered, data received for
- * a newly-created receiver instance should not be acted upon until this callback is received.
- *
- * \param[in] handle Handle to the receiver instance for which the sampling period has ended.
- * \param[in] context Context pointer that was given at the creation of the receiver instance.
- */
-typedef void (*SacnSamplingEndedCallback)(sacn_receiver_t handle, void* context);
-
-/*!
  * \brief Notify that more than #SACN_RECEIVER_TOTAL_MAX_SOURCES sources are currently sending on
  *        universes being listened to.
  *
@@ -194,10 +225,10 @@ typedef void (*SacnSourceLimitExceededCallback)(sacn_receiver_t handle, void* co
 /*! A set of callback functions that the library uses to notify the application about sACN events. */
 typedef struct SacnRecvCallbacks
 {
+  SacnSourcesFoundCallback sources_found;                /*!< Required */
   SacnUniverseDataCallback universe_data;                /*!< Required */
   SacnSourcesLostCallback sources_lost;                  /*!< Required */
   SacnSourcePcpLostCallback source_pcp_lost;             /*!< Optional */
-  SacnSamplingEndedCallback sampling_ended;              /*!< Optional */
   SacnSourceLimitExceededCallback source_limit_exceeded; /*!< Optional */
 } SacnReceiverCallbacks;
 
@@ -213,6 +244,9 @@ typedef struct SacnReceiverConfig
 
   /********* Optional values **********/
 
+  /*! The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
+      This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.*/
+  size_t source_count_max; 
   /*! A set of option flags. See "sACN receiver flags". */
   unsigned int flags;
   /*! Pointer to opaque data passed back with each callback. */
@@ -227,7 +261,7 @@ typedef struct SacnReceiverConfig
 /*! A default-value initializer for an SacnReceiverConfig struct. */
 #define SACN_RECEIVER_CONFIG_DEFAULT_INIT               \
   {                                                     \
-    0, {NULL, NULL, NULL, NULL, NULL}, 0, NULL, NULL, 0 \
+    0, {NULL, NULL, NULL, NULL, NULL}, 0, 0, NULL, NULL, 0 \
   }
 
 void sacn_receiver_config_init(SacnReceiverConfig* config);

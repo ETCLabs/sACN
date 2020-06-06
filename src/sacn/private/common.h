@@ -238,6 +238,16 @@ typedef struct SacnTrackedSource
  * Notifications delivered by the sACN receive module
  *****************************************************************************/
 
+/* Data for the sources_found() callback */
+typedef struct SourcesFoundNotification
+{
+  SacnSourcesFoundCallback callback;
+  sacn_receiver_t handle;
+  SACN_DECLARE_BUF(SacnFoundSource, found_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  size_t num_found_sources;
+  void* context;
+} SourcesFoundNotification;
+
 /* Data for the universe_data() callback */
 typedef struct UniverseDataNotification
 {
@@ -266,14 +276,6 @@ typedef struct SourcePcpLostNotification
   sacn_receiver_t handle;
   void* context;
 } SourcePcpLostNotification;
-
-/* Data for the sampling_ended() callback */
-typedef struct SamplingEndedNotification
-{
-  SacnSamplingEndedCallback callback;
-  sacn_receiver_t handle;
-  void* context;
-} SamplingEndedNotification;
 
 /* Data for the source_limit_exceeded() callback */
 typedef struct SourceLimitExceededNotification

@@ -17,6 +17,16 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
+/*********** BIG 'OL TODO LIST: *************************************
+     Remove sampling notification, add notification for sources found 
+     Rename per-channel/pcp to per-address
+     Make source addition honor source_count_max, even in dynamic mode! Change COmments on callbacks.
+     Change Using sACN Receiver API notes.  Maybe reference the higher layer merger API as well?
+     Do we really want ETC_PRIORITY_EXTENSION?
+     Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet
+     Make sure draft is translated correctly.  Do we still want to disable support for it?
+*/
+
 #include "sacn/receiver.h"
 
 #include <limits.h>
