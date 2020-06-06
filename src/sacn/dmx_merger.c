@@ -140,7 +140,7 @@ void sacn_dmx_merger_deinit(void)
  * \return #kEtcPalErrOk: Merger created successful.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNoMem: No room to allocate memory for this receiver.
+ * \return #kEtcPalErrNoMem: No room to allocate memory for this merger.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle)
@@ -149,7 +149,7 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
 }
 
 /*!
- * \brief Destroy an merger instance.
+ * \brief Destroy a merger instance.
  *
  * Tears down the merger and cleans up its resources.
  *
@@ -179,8 +179,7 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
  * \return #kEtcPalErrOk: Source added successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNoMem: No room to allocate memory for this receiver, or the max number of sources has been
- * reached.
+ * \return #kEtcPalErrNoMem: No room to allocate memory for this source, or the max number of sources has been reached.
  * \return #kEtcPalErrExists: the source at that cid was already added.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
@@ -208,6 +207,18 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id
 }
 
 /*!
+ * \brief Returns the source id for that source cid.
+ *
+ * \param[in] merger The handle to the merger.
+ * \param[in] source_cid The UUID of the source CID.
+ * \return The source ID, or #SACN_DMX_MERGER_SOURCE_INVALID.
+ */
+source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid)
+{
+  return SACN_DMX_MERGER_SOURCE_INVALID;
+}
+
+/*!
  * \brief Gets a read-only view of the source data.
  *
  * Looks up the source data and returns a pointer to the data or NULL if it doesn't exist.
@@ -215,7 +226,7 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id
  * The pointer will only be valid until the source or merger is removed.
  *
  * \param[in] merger The handle to the merger.
- * \param[in] source The id of the source to remove.
+ * \param[in] source The id of the source.
  * \return The pointer to the source data, or NULL if the source wasn't found.
  */
 const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, source_id_t source)
@@ -260,19 +271,19 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
  * recalculate the outputs.
  *
  * \param[in] merger The handle to the merger.
- * \param[in] source The id of the source to modify.
  * \param[in] header The sACN header.  Must NOT be NULL.
  * \param[in] pdata The sACN data.
  * \return #kEtcPalErrOk: Source updated and merge completed.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merger, or source CID in the header doesn't match
+ * a known source.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 // TODO: If Receiver API changes to notify both values and per-address priority data in the same callback, this should
 // change!!
-etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, source_id_t source,
-                                                       const SacnHeaderData* header, const uint8_t* pdata)
+etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, const SacnHeaderData* header,
+                                                       const uint8_t* pdata)
 {
   return kEtcPalErrNotImpl;
 }
@@ -302,7 +313,7 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
  * Does a full recalculation of the merger outputs.
  *
  * \param[in] merger The handle to the merger.
- * \return #kEtcPalErrOk: Source updated and merge completed.
+ * \return #kEtcPalErrOk: Source updated and recalculation completed.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merger.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.

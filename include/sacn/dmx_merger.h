@@ -107,9 +107,8 @@ typedef struct SacnDmxMergerConfig
     0, NULL, NULL                   \
   }
 
-/*! The current input data for a single source of the merge.
-    This is exposed only for informational purposes, as the
-    application call a variant of sacn_dmx_merger_update_source */
+/*! The current input data for a single source of the merge.  This is exposed only for informational purposes, as the
+    application calls a variant of sacn_dmx_merger_update_source to do the actual update. */
 typedef struct SacnDmxMergerSource
 {
   /*! The UUID (e.g. sACN CID) of the DMX source. */
@@ -142,14 +141,15 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle);
 etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid,
                                           source_id_t* source_id);
 etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id_t source);
+source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid);
 const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, source_id_t source);
 etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, source_id_t source,
                                                   const uint8_t* new_values, size_t new_values_count, uint8_t priority,
                                                   const uint8_t* address_priorities, size_t address_priorities_count);
 // TODO: If Receiver API changes to notify both values and per-address priority data in the same callback, this should
 // change!!
-etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, source_id_t source,
-                                                       const SacnHeaderData* header, const uint8_t* pdata);
+etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, const SacnHeaderData* header,
+                                                       const uint8_t* pdata);
 etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, source_id_t source);
 
 // TODO: Do we need this?
