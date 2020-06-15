@@ -18,6 +18,7 @@
  *****************************************************************************/
 
 #include "sacn/dmx_merger.h"
+#include "sacn/private/common.h"
 #include "sacn/private/dmx_merger.h"
 
 // TODO: CLEANUP
@@ -73,12 +74,12 @@ ETCPAL_MEMPOOL_DEFINE(sacnrecv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODE
 
 /*********************** Private function prototypes *************************/
 
-// TODO: Clean up
-// Receiver creation and destruction
-// static etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config);
-// static SacnReceiver* create_new_receiver(const SacnReceiverConfig* config);
-// static void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
-// const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr, bool draft);
+etcpal_error_t update_levels(sacn_dmx_merger_t merger, source_id_t source, const uint8_t* new_values,
+                             size_t new_values_count);
+etcpal_error_t update_per_address_priorities(sacn_dmx_merger_t merger, source_id_t source,
+                                             const uint8_t* address_priorities, size_t address_priorities_count);
+etcpal_error_t update_universe_priority(sacn_dmx_merger_t merger, source_id_t source, uint8_t priority);
+bool merger_exists(sacn_dmx_merger_t handle);
 
 /*************************** Function definitions ****************************/
 
@@ -89,7 +90,7 @@ ETCPAL_MEMPOOL_DEFINE(sacnrecv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODE
 /* Initialize the sACN DMX Merger module. Internal function called from sacn_init(). */
 etcpal_error_t sacn_dmx_merger_init(void)
 {
-  return kEtcPalErrNotImpl;
+  return kEtcPalErrNotImpl;  // TODO: Implement this.
 
   // TODO: CLEANUP
   /*
@@ -121,6 +122,8 @@ etcpal_error_t sacn_dmx_merger_init(void)
 /* Deinitialize the sACN DMX Merger module. Internal function called from sacn_deinit(). */
 void sacn_dmx_merger_deinit(void)
 {
+  // TODO: Implement this.
+
   /*TODO CLEANUP:
   // Clear out the rest of the state tracking
   etcpal_rbtree_clear_with_cb(&receiver_state.receivers, universe_tree_dealloc);
@@ -145,7 +148,7 @@ void sacn_dmx_merger_deinit(void)
  */
 etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle)
 {
-  return kEtcPalErrNotImpl;
+  return kEtcPalErrNotImpl;  // TODO: Implement this.
 }
 
 /*!
@@ -161,7 +164,7 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
  */
 etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
 {
-  return kEtcPalErrNotImpl;
+  return kEtcPalErrNotImpl;  // TODO: Implement this.
 }
 
 /*!
@@ -186,7 +189,7 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
 etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid,
                                           source_id_t* source_id)
 {
-  return kEtcPalErrNotImpl;
+  return kEtcPalErrNotImpl;  // TODO: Implement this.
 }
 
 /*!
@@ -203,7 +206,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
  */
 etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id_t source)
 {
-  return kEtcPalErrNotImpl;
+  return kEtcPalErrNotImpl;  // TODO: Implement this.
 }
 
 /*!
@@ -215,7 +218,7 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id
  */
 source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid)
 {
-  return SACN_DMX_MERGER_SOURCE_INVALID;
+  return SACN_DMX_MERGER_SOURCE_INVALID;  // TODO: Implement this.
 }
 
 /*!
@@ -231,7 +234,7 @@ source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* s
  */
 const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, source_id_t source)
 {
-  return NULL;
+  return NULL;  // TODO: Implement this.
 }
 
 /*!
@@ -261,7 +264,7 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
                                                   const uint8_t* new_values, size_t new_values_count, uint8_t priority,
                                                   const uint8_t* address_priorities, size_t address_priorities_count)
 {
-  return kEtcPalErrNotImpl;
+  return kEtcPalErrNotImpl;  // TODO: Implement this.
 }
 
 /*!
@@ -285,7 +288,62 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
 etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, const SacnHeaderData* header,
                                                        const uint8_t* pdata)
 {
-  return kEtcPalErrNotImpl;
+  source_id_t source = SACN_DMX_MERGER_SOURCE_INVALID;
+  etcpal_error_t result = kEtcPalErrOk;
+
+  // Verify module initialized.
+  if (!sacn_initialized())
+  {
+    return kEtcPalErrNotInit;
+  }
+
+  // Validate header.
+  if (!header || ETCPAL_UUID_IS_NULL(&header->cid) || !UNIVERSE_ID_VALID(header->universe_id) ||
+      !UNIVERSE_PRIORITY_VALID(header->priority))
+  {
+    return kEtcPalErrInvalid;
+  }
+
+  // Validate pdata.
+  if ((header->slot_count > 0) && !pdata)
+  {
+    return kEtcPalErrInvalid;
+  }
+
+  // Check that the merger exists.
+  if (!merger_exists(merger))
+  {
+    return kEtcPalErrNotFound;
+  }
+
+  // Check that the source exists.
+  source = sacn_dmx_merger_get_id(merger, &header->cid);
+  if (source == SACN_DMX_MERGER_SOURCE_INVALID)
+  {
+    return kEtcPalErrNotFound;
+  }
+
+  // If this is level data (start code 0x00):
+  if (header->start_code == 0x00)
+  {
+    // Update this source's level data.
+    result = update_levels(merger, source, pdata, header->slot_count);
+  }
+  // Else if this is per-address-priority data (start code 0xDD):
+  else if (header->start_code == 0xDD)
+  {
+    // Update this source's per-address-priority data.
+    result = update_per_address_priorities(merger, source, pdata, header->slot_count);
+  }
+
+  // Update this source's universe priority.
+  if (result == kEtcPalErrOk)
+  {
+    result = update_universe_priority(merger, source, header->priority);
+  }
+
+  // Return the final etcpal_error_t result.
+  return result;
 }
 
 /*!
@@ -304,7 +362,7 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
  */
 etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, source_id_t source)
 {
-  return kEtcPalErrNotImpl;
+  return kEtcPalErrNotImpl;  // TODO: Implement this.
 }
 
 /*!
@@ -321,5 +379,27 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
 // TODO: Do we need this?
 etcpal_error_t sacn_dmx_merger_recalculate(sacn_dmx_merger_t merger)
 {
-  return kEtcPalErrNotImpl;
+  return kEtcPalErrNotImpl;  // TODO: Implement this.
+}
+
+etcpal_error_t update_levels(sacn_dmx_merger_t merger, source_id_t source, const uint8_t* new_values,
+                             size_t new_values_count)
+{
+  return kEtcPalErrNotImpl;  // TODO: Implement this.
+}
+
+etcpal_error_t update_per_address_priorities(sacn_dmx_merger_t merger, source_id_t source,
+                                             const uint8_t* address_priorities, size_t address_priorities_count)
+{
+  return kEtcPalErrNotImpl;  // TODO: Implement this.
+}
+
+etcpal_error_t update_universe_priority(sacn_dmx_merger_t merger, source_id_t source, uint8_t priority)
+{
+  return kEtcPalErrNotImpl;  // TODO: Implement this.
+}
+
+bool merger_exists(sacn_dmx_merger_t handle)
+{
+  return false;  // TODO: Implement this.
 }

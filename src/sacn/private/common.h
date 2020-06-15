@@ -111,6 +111,7 @@ typedef unsigned int sacn_thread_id_t;
 #endif
 
 #define UNIVERSE_ID_VALID(universe_id) ((universe_id != 0) && (universe_id <= 64000))
+#define UNIVERSE_PRIORITY_VALID(universe_priority) ((universe_priority >= 0) && (universe_priority <= 200))
 
 /******************************************************************************
  * Types used by the data loss module

@@ -32,3 +32,4 @@ endfunction()
 
 add_subdirectory(utils)
 add_subdirectory(receiver)
+add_subdirectory(dmx_merger)
