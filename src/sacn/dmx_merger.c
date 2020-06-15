@@ -79,7 +79,7 @@ etcpal_error_t update_levels(sacn_dmx_merger_t merger, source_id_t source, const
 etcpal_error_t update_per_address_priorities(sacn_dmx_merger_t merger, source_id_t source,
                                              const uint8_t* address_priorities, size_t address_priorities_count);
 etcpal_error_t update_universe_priority(sacn_dmx_merger_t merger, source_id_t source, uint8_t priority);
-bool merger_exists(sacn_dmx_merger_t handle);
+bool merger_is_added(sacn_dmx_merger_t handle);
 
 /*************************** Function definitions ****************************/
 
@@ -264,6 +264,21 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
                                                   const uint8_t* new_values, size_t new_values_count, uint8_t priority,
                                                   const uint8_t* address_priorities, size_t address_priorities_count)
 {
+  // Verify module initialized.
+
+  // Validate source.
+  // Validate new_values.
+  // Validate priority.
+  // Validate address_priorities.
+
+  // Check that the merger is added.
+  // Check that the source is added.
+
+  // Update this source's level data.
+  // Update this source's universe priority.
+  // Update this source's per-address-priority data.
+
+  // Return the final etcpal_error_t result.
   return kEtcPalErrNotImpl;  // TODO: Implement this.
 }
 
@@ -310,13 +325,13 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
     return kEtcPalErrInvalid;
   }
 
-  // Check that the merger exists.
-  if (!merger_exists(merger))
+  // Check that the merger is added.
+  if (!merger_is_added(merger))
   {
     return kEtcPalErrNotFound;
   }
 
-  // Check that the source exists.
+  // Check that the source is added.
   source = sacn_dmx_merger_get_id(merger, &header->cid);
   if (source == SACN_DMX_MERGER_SOURCE_INVALID)
   {
@@ -399,7 +414,7 @@ etcpal_error_t update_universe_priority(sacn_dmx_merger_t merger, source_id_t so
   return kEtcPalErrNotImpl;  // TODO: Implement this.
 }
 
-bool merger_exists(sacn_dmx_merger_t handle)
+bool merger_is_added(sacn_dmx_merger_t handle)
 {
   return false;  // TODO: Implement this.
 }
