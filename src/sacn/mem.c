@@ -106,7 +106,7 @@ static struct SacnMemBufs
   UniverseDataNotification* universe_data;
   SourcesLostNotificationBuf* sources_lost;
   SourcesFoundNotificationBuf* sources_found;
-  SourcePcpLostNotification* source_pcp_lost;
+  SourcePapLostNotification* source_pap_lost;
   SourceLimitExceededNotification* source_limit_exceeded;
 #else
   SacnSourceStatusLists status_lists[SACN_RECEIVER_MAX_THREADS];
@@ -116,7 +116,7 @@ static struct SacnMemBufs
   UniverseDataNotification universe_data[SACN_RECEIVER_MAX_THREADS];
   SourcesLostNotificationBuf sources_lost[SACN_RECEIVER_MAX_THREADS];
   SourcesFoundNotificationBuf sources_found[SACN_RECEIVER_MAX_THREADS];
-  SourcePcpLostNotification source_pcp_lost[SACN_RECEIVER_MAX_THREADS];
+  SourcePapLostNotification source_pap_lost[SACN_RECEIVER_MAX_THREADS];
   SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_THREADS];
 #endif
 } mem_bufs;
@@ -152,7 +152,7 @@ static etcpal_error_t init_sources_found_bufs(unsigned int num_threads);
 static etcpal_error_t init_sources_found_buf(SourcesFoundNotificationBuf* sources_found_buf);
 static etcpal_error_t init_sources_found_array(SourcesFoundNotification* sources_found_arr, size_t size);
 
-static etcpal_error_t init_source_pcp_lost_buf(unsigned int num_threads);
+static etcpal_error_t init_source_pap_lost_buf(unsigned int num_threads);
 
 static etcpal_error_t init_source_limit_exceeded_buf(unsigned int num_threads);
 
@@ -176,7 +176,7 @@ static void deinit_sources_found_bufs(void);
 static void deinit_sources_found_buf(SourcesFoundNotificationBuf* sources_found_buf);
 static void deinit_sources_found_entry(SourcesFoundNotification* sources_found);
 
-static void deinit_source_pcp_lost_buf(void);
+static void deinit_source_pap_lost_buf(void);
 
 static void deinit_source_limit_exceeded_buf(void);
 #endif  // SACN_DYNAMIC_MEM
@@ -209,7 +209,7 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
   if (res == kEtcPalErrOk)
     res = init_sources_found_bufs(num_threads);
   if (res == kEtcPalErrOk)
-    res = init_source_pcp_lost_buf(num_threads);
+    res = init_source_pap_lost_buf(num_threads);
   if (res == kEtcPalErrOk)
     res = init_source_limit_exceeded_buf(num_threads);
 #endif
@@ -228,7 +228,7 @@ void sacn_mem_deinit(void)
 {
 #if SACN_DYNAMIC_MEM
   deinit_source_limit_exceeded_buf();
-  deinit_source_pcp_lost_buf();
+  deinit_source_pap_lost_buf();
   deinit_sources_lost_bufs();
   deinit_sources_found_bufs();
   deinit_universe_data_buf();
@@ -320,17 +320,17 @@ UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id)
 }
 
 /*
- * Get the SourcePcpLostNotification instance for a given thread. The instance will be initialized
+ * Get the SourcePapLostNotification instance for a given thread. The instance will be initialized
  * to default values.
  *
  * Returns the instance or NULL if the thread ID was invalid.
  */
-SourcePcpLostNotification* get_source_pcp_lost(sacn_thread_id_t thread_id)
+SourcePapLostNotification* get_source_pap_lost(sacn_thread_id_t thread_id)
 {
   if (thread_id < mem_bufs.num_threads)
   {
-    SourcePcpLostNotification* to_return = &mem_bufs.source_pcp_lost[thread_id];
-    memset(to_return, 0, sizeof(SourcePcpLostNotification));
+    SourcePapLostNotification* to_return = &mem_bufs.source_pap_lost[thread_id];
+    memset(to_return, 0, sizeof(SourcePapLostNotification));
     to_return->handle = SACN_RECEIVER_INVALID;
     return to_return;
   }
@@ -919,10 +919,10 @@ etcpal_error_t init_sources_found_array(SourcesFoundNotification* sources_found_
 }
 
 
-etcpal_error_t init_source_pcp_lost_buf(unsigned int num_threads)
+etcpal_error_t init_source_pap_lost_buf(unsigned int num_threads)
 {
-  mem_bufs.source_pcp_lost = calloc(num_threads, sizeof(SourcePcpLostNotification));
-  if (!mem_bufs.source_pcp_lost)
+  mem_bufs.source_pap_lost = calloc(num_threads, sizeof(SourcePapLostNotification));
+  if (!mem_bufs.source_pap_lost)
     return kEtcPalErrNoMem;
   return kEtcPalErrOk;
 }
@@ -1076,10 +1076,10 @@ void deinit_sources_found_entry(SourcesFoundNotification* sources_found)
     free(sources_found->found_sources);
 }
 
-void deinit_source_pcp_lost_buf(void)
+void deinit_source_pap_lost_buf(void)
 {
-  if (mem_bufs.source_pcp_lost)
-    free(mem_bufs.source_pcp_lost);
+  if (mem_bufs.source_pap_lost)
+    free(mem_bufs.source_pap_lost);
 }
 
 void deinit_source_limit_exceeded_buf(void)

@@ -198,20 +198,20 @@ typedef void (*SacnSourcesLostCallback)(sacn_receiver_t handle, const SacnLostSo
                                         size_t num_lost_sources, void* context);
 
 /*!
- * \brief Notify that a source has stopped transmission of per-channel priority packets.
+ * \brief Notify that a source has stopped transmission of per-address priority packets.
  *
  * If #SACN_ETC_PRIORITY_EXTENSION was defined to 0 when sACN was compiled, this callback will
  * never be called and may be set to NULL. This is only called due to a timeout condition; a
  * termination bit is treated as the termination of the entire stream and will result in a
  * sources_lost() notification.
  *
- * \param[in] handle Handle to the receiver instance for which a source stopped sending per-channel
+ * \param[in] handle Handle to the receiver instance for which a source stopped sending per-address
  *                   priority.
- * \param[in] source Information about the source that has stopped transmission of per-channel
+ * \param[in] source Information about the source that has stopped transmission of per-address
  *                   priority.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnSourcePcpLostCallback)(sacn_receiver_t handle, const SacnRemoteSource* source, void* context);
+typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t handle, const SacnRemoteSource* source, void* context);
 
 /*!
  * \brief Notify that more than #SACN_RECEIVER_TOTAL_MAX_SOURCES sources are currently sending on
@@ -236,7 +236,7 @@ typedef struct SacnRecvCallbacks
   SacnSourcesFoundCallback sources_found;                /*!< Required */
   SacnUniverseDataCallback universe_data;                /*!< Required */
   SacnSourcesLostCallback sources_lost;                  /*!< Required */
-  SacnSourcePcpLostCallback source_pcp_lost;             /*!< Optional */
+  SacnSourcePapLostCallback source_pap_lost;             /*!< Optional */
   SacnSourceLimitExceededCallback source_limit_exceeded; /*!< Optional */
 } SacnReceiverCallbacks;
 

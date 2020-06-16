@@ -46,7 +46,7 @@ SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id);
 
 // These are processed from the context of receiving data, so there is only one per thread.
 UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id);
-SourcePcpLostNotification* get_source_pcp_lost(sacn_thread_id_t thread_id);
+SourcePapLostNotification* get_source_pap_lost(sacn_thread_id_t thread_id);
 SourceLimitExceededNotification* get_source_limit_exceeded(sacn_thread_id_t thread_id);
 
 // These are processed in the periodic timeout processing, so there are multiple per thread.

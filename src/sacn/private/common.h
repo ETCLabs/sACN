@@ -212,9 +212,9 @@ typedef struct SacnSourceStatusLists
 typedef enum
 {
   kRecvStateWaitingForDmx,
-  kRecvStateWaitingForPcp,
+  kRecvStateWaitingForPap,
   kRecvStateHaveDmxOnly,
-  kRecvStateHaveDmxAndPcp
+  kRecvStateHaveDmxAndPap
 } sacn_recv_state_t;
 #endif
 
@@ -229,8 +229,8 @@ typedef struct SacnTrackedSource
   bool dmx_received_since_last_tick;
 #if SACN_ETC_PRIORITY_EXTENSION
   sacn_recv_state_t recv_state;
-  /* pcp stands for Per-Channel Priority. Why, what did you think it meant? */
-  EtcPalTimer pcp_timer;
+  /* pap stands for Per-Address Priority. */
+  EtcPalTimer pap_timer;
 #endif
 } SacnTrackedSource;
 
@@ -268,14 +268,14 @@ typedef struct SourcesLostNotification
   void* context;
 } SourcesLostNotification;
 
-/* Data for the source_pcp_lost() callback */
-typedef struct SourcePcpLostNotification
+/* Data for the source_pap_lost() callback */
+typedef struct SourcePapLostNotification
 {
-  SacnSourcePcpLostCallback callback;
+  SacnSourcePapLostCallback callback;
   SacnRemoteSource source;
   sacn_receiver_t handle;
   void* context;
-} SourcePcpLostNotification;
+} SourcePapLostNotification;
 
 /* Data for the source_limit_exceeded() callback */
 typedef struct SourceLimitExceededNotification

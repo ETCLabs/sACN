@@ -107,11 +107,11 @@
 #endif
 
 /*!
- * \brief Enable ETC's per-channel priority extension to sACN.
+ * \brief Enable ETC's per-address priority extension to sACN.
  *
  * If defined nonzero, the logic of \ref sacn_receiver "sACN Receiver" changes to handle ETC's
- * per-channel priority sACN extension. An additional callback function is also enabled to be
- * notified that a source has stopped sending per-channel priority.
+ * per-address priority sACN extension. An additional callback function is also enabled to be
+ * notified that a source has stopped sending per-address priority.
  */
 #ifndef SACN_ETC_PRIORITY_EXTENSION
 #define SACN_ETC_PRIORITY_EXTENSION 1
