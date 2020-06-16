@@ -280,8 +280,6 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
  * a known source.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-// TODO: If Receiver API changes to notify both values and per-address priority data in the same callback, this should
-// change!!
 etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, const SacnHeaderData* header,
                                                        const uint8_t* pdata)
 {

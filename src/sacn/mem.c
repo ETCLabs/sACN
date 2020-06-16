@@ -82,10 +82,10 @@ typedef struct SourcesLostNotificationBuf
   SACN_DECLARE_BUF(SourcesLostNotification, buf, SACN_RECEIVER_MAX_UNIVERSES);
 } SourcesLostNotificationBuf;
 
-typedef struct SamplingEndedNotificationBuf
+typedef struct SourcesFoundNotificationBuf
 {
-  SACN_DECLARE_BUF(SamplingEndedNotification, buf, SACN_RECEIVER_MAX_UNIVERSES);
-} SamplingEndedNotificationBuf;
+  SACN_DECLARE_BUF(SourcesFoundNotification, buf, SACN_RECEIVER_MAX_UNIVERSES);
+} SourcesFoundNotificationBuf;
 
 typedef struct ToEraseBuf
 {
@@ -105,8 +105,8 @@ static struct SacnMemBufs
 
   UniverseDataNotification* universe_data;
   SourcesLostNotificationBuf* sources_lost;
+  SourcesFoundNotificationBuf* sources_found;
   SourcePcpLostNotification* source_pcp_lost;
-  SamplingEndedNotificationBuf* sampling_ended;
   SourceLimitExceededNotification* source_limit_exceeded;
 #else
   SacnSourceStatusLists status_lists[SACN_RECEIVER_MAX_THREADS];
@@ -115,8 +115,8 @@ static struct SacnMemBufs
 
   UniverseDataNotification universe_data[SACN_RECEIVER_MAX_THREADS];
   SourcesLostNotificationBuf sources_lost[SACN_RECEIVER_MAX_THREADS];
+  SourcesFoundNotificationBuf sources_found[SACN_RECEIVER_MAX_THREADS];
   SourcePcpLostNotification source_pcp_lost[SACN_RECEIVER_MAX_THREADS];
-  SamplingEndedNotificationBuf sampling_ended[SACN_RECEIVER_MAX_THREADS];
   SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_THREADS];
 #endif
 } mem_bufs;
@@ -125,6 +125,7 @@ static struct SacnMemBufs
 
 static void zero_status_lists(SacnSourceStatusLists* status_lists);
 static void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t size);
+static void zero_sources_found_array(SourcesFoundNotification* sources_found_arr, size_t size);
 
 #if SACN_DYNAMIC_MEM
 static size_t grow_capacity(size_t old_capacity, size_t capacity_requested);
@@ -147,10 +148,11 @@ static etcpal_error_t init_sources_lost_bufs(unsigned int num_threads);
 static etcpal_error_t init_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_buf);
 static etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t size);
 
-static etcpal_error_t init_source_pcp_lost_buf(unsigned int num_threads);
+static etcpal_error_t init_sources_found_bufs(unsigned int num_threads);
+static etcpal_error_t init_sources_found_buf(SourcesFoundNotificationBuf* sources_found_buf);
+static etcpal_error_t init_sources_found_array(SourcesFoundNotification* sources_found_arr, size_t size);
 
-static etcpal_error_t init_sampling_ended_bufs(unsigned int num_threads);
-static etcpal_error_t init_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_ended_buf);
+static etcpal_error_t init_source_pcp_lost_buf(unsigned int num_threads);
 
 static etcpal_error_t init_source_limit_exceeded_buf(unsigned int num_threads);
 
@@ -170,10 +172,11 @@ static void deinit_sources_lost_bufs(void);
 static void deinit_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_buf);
 static void deinit_sources_lost_entry(SourcesLostNotification* sources_lost);
 
-static void deinit_source_pcp_lost_buf(void);
+static void deinit_sources_found_bufs(void);
+static void deinit_sources_found_buf(SourcesFoundNotificationBuf* sources_found_buf);
+static void deinit_sources_found_entry(SourcesFoundNotification* sources_found);
 
-static void deinit_sampling_ended_bufs(void);
-static void deinit_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_ended_buf);
+static void deinit_source_pcp_lost_buf(void);
 
 static void deinit_source_limit_exceeded_buf(void);
 #endif  // SACN_DYNAMIC_MEM
@@ -204,9 +207,9 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
   if (res == kEtcPalErrOk)
     res = init_sources_lost_bufs(num_threads);
   if (res == kEtcPalErrOk)
-    res = init_source_pcp_lost_buf(num_threads);
+    res = init_sources_found_bufs(num_threads);
   if (res == kEtcPalErrOk)
-    res = init_sampling_ended_bufs(num_threads);
+    res = init_source_pcp_lost_buf(num_threads);
   if (res == kEtcPalErrOk)
     res = init_source_limit_exceeded_buf(num_threads);
 #endif
@@ -225,9 +228,9 @@ void sacn_mem_deinit(void)
 {
 #if SACN_DYNAMIC_MEM
   deinit_source_limit_exceeded_buf();
-  deinit_sampling_ended_bufs();
   deinit_source_pcp_lost_buf();
   deinit_sources_lost_bufs();
+  deinit_sources_found_bufs();
   deinit_universe_data_buf();
   deinit_recv_thread_context_buf();
   deinit_to_erase_bufs();
@@ -397,25 +400,45 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
 }
 
 /*
- * Get a buffer of SamplingEndedNotification instances associated with a given thread. All
- * instances in the array will be initialized to default values.
+ * Get a buffer of SourcesFoundNotification instances associated with a given thread. All instances
+ * in the array will be initialized to default values.
  *
  * [in] thread_id Thread ID for which to get the buffer.
  * [in] size Size of the buffer requested.
  * Returns the buffer or NULL if the thread ID was invalid or memory could not be allocated.
  */
-SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id, size_t size)
+SourcesFoundNotification* get_sources_found_buffer(sacn_thread_id_t thread_id, size_t size)
 {
+  //CHRISTIAN TODO TEST THIS!
   if (thread_id < mem_bufs.num_threads)
   {
-    SamplingEndedNotificationBuf* notifications = &mem_bufs.sampling_ended[thread_id];
+    SourcesFoundNotificationBuf* notifications = &mem_bufs.sources_found[thread_id];
 
-    CHECK_CAPACITY(notifications, size, buf, SamplingEndedNotification, SACN_RECEIVER_MAX_UNIVERSES);
+    // This one cannot use CHECK_CAPACITY() because of a special case in the initialization of the
+    // reallocated buffer
+#if SACN_DYNAMIC_MEM
+    if (size > notifications->buf_capacity)
+    {
+      size_t new_capacity = grow_capacity(notifications->buf_capacity, size);
+      SourcesFoundNotification* new_buf =
+          (SourcesFoundNotification*)realloc(notifications->buf, new_capacity * sizeof(SourcesFoundNotification));
+      if (new_buf && init_sources_found_array(&new_buf[notifications->buf_capacity],
+                                             new_capacity - notifications->buf_capacity) == kEtcPalErrOk)
+      {
+        notifications->buf = new_buf;
+        notifications->buf_capacity = new_capacity;
+      }
+      else
+      {
+        return NULL;
+      }
+    }
+#else
+    if (size > SACN_RECEIVER_MAX_UNIVERSES)
+      return NULL;
+#endif
 
-    memset(notifications->buf, 0, size * sizeof(SamplingEndedNotification));
-    for (size_t i = 0; i < size; ++i)
-      notifications->buf[i].handle = SACN_RECEIVER_INVALID;
-
+    zero_sources_found_array(notifications->buf, size);
     return notifications->buf;
   }
   return NULL;
@@ -510,6 +533,21 @@ bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* ci
   sources_lost->lost_sources[sources_lost->num_lost_sources].terminated = terminated;
   ++sources_lost->num_lost_sources;
   return true;
+}
+
+//CHRISTIAN TODO:
+/*
+ * Add a new found source to a SourcesFoundNotification.
+ *
+ * [out] sources_found SourcesFoundNotification instance to which to append the found source.
+ * ????????????
+ * Returns true if the source was successfully added, false if memory could not be allocated.
+ */
+bool add_found_source(SourcesFoundNotification* sources_found /*,  ??????? */)
+{
+  ETCPAL_UNUSED_ARG(sources_found);
+
+  return false;
 }
 
 /*
@@ -649,6 +687,16 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
   }
 }
 
+void zero_sources_found_array(SourcesFoundNotification* sources_found_arr, size_t size)
+{
+  for (SourcesFoundNotification* sources_found = sources_found_arr; sources_found < sources_found_arr + size; ++sources_found)
+  {
+    sources_found->callback = NULL;
+    sources_found->handle = SACN_RECEIVER_INVALID;
+    sources_found->num_found_sources = 0;
+    sources_found->context = NULL;
+  }
+}
 #if SACN_DYNAMIC_MEM
 size_t grow_capacity(size_t old_capacity, size_t capacity_requested)
 {
@@ -828,38 +876,54 @@ etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr
   return kEtcPalErrOk;
 }
 
-etcpal_error_t init_source_pcp_lost_buf(unsigned int num_threads)
+//CHRISTIAN TODO TEST THESE
+etcpal_error_t init_sources_found_bufs(unsigned int num_threads)
 {
-  mem_bufs.source_pcp_lost = calloc(num_threads, sizeof(SourcePcpLostNotification));
-  if (!mem_bufs.source_pcp_lost)
-    return kEtcPalErrNoMem;
-  return kEtcPalErrOk;
-}
-
-etcpal_error_t init_sampling_ended_bufs(unsigned int num_threads)
-{
-  mem_bufs.sampling_ended = calloc(num_threads, sizeof(SamplingEndedNotificationBuf));
-  if (!mem_bufs.sampling_ended)
+  mem_bufs.sources_found = calloc(num_threads, sizeof(SourcesFoundNotificationBuf));
+  if (!mem_bufs.sources_found)
     return kEtcPalErrNoMem;
 
   for (unsigned int i = 0; i < num_threads; ++i)
   {
-    etcpal_error_t res = init_sampling_ended_buf(&mem_bufs.sampling_ended[i]);
+    etcpal_error_t res = init_sources_found_buf(&mem_bufs.sources_found[i]);
     if (res != kEtcPalErrOk)
       return res;
   }
   return kEtcPalErrOk;
 }
 
-etcpal_error_t init_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_ended_buf)
+etcpal_error_t init_sources_found_buf(SourcesFoundNotificationBuf* sources_found_buf)
 {
-  SACN_ASSERT(sampling_ended_buf);
+  SACN_ASSERT(sources_found_buf);
 
-  sampling_ended_buf->buf = calloc(INITIAL_CAPACITY, sizeof(SamplingEndedNotification));
-  if (!sampling_ended_buf->buf)
+  sources_found_buf->buf = calloc(INITIAL_CAPACITY, sizeof(SourcesFoundNotification));
+  if (!sources_found_buf->buf)
     return kEtcPalErrNoMem;
 
-  sampling_ended_buf->buf_capacity = INITIAL_CAPACITY;
+  sources_found_buf->buf_capacity = INITIAL_CAPACITY;
+  return init_sources_found_array(sources_found_buf->buf, INITIAL_CAPACITY);
+}
+
+etcpal_error_t init_sources_found_array(SourcesFoundNotification* sources_found_arr, size_t size)
+{
+  SACN_ASSERT(sources_found_arr);
+
+  for (SourcesFoundNotification* sources_found = sources_found_arr; sources_found < sources_found_arr + size; ++sources_found)
+  {
+    sources_found->found_sources = calloc(INITIAL_CAPACITY, sizeof(SacnFoundSource));
+    if (!sources_found->found_sources)
+      return kEtcPalErrNoMem;
+    sources_found->found_sources_capacity = INITIAL_CAPACITY;
+  }
+  return kEtcPalErrOk;
+}
+
+
+etcpal_error_t init_source_pcp_lost_buf(unsigned int num_threads)
+{
+  mem_bufs.source_pcp_lost = calloc(num_threads, sizeof(SourcePcpLostNotification));
+  if (!mem_bufs.source_pcp_lost)
+    return kEtcPalErrNoMem;
   return kEtcPalErrOk;
 }
 
@@ -979,28 +1043,43 @@ void deinit_sources_lost_entry(SourcesLostNotification* sources_lost)
     free(sources_lost->lost_sources);
 }
 
+//CHRISTIAN TODO TEST!
+void deinit_sources_found_bufs(void)
+{
+  if (mem_bufs.sources_found)
+  {
+    for (unsigned int i = 0; i < mem_bufs.num_threads; ++i)
+      deinit_sources_found_buf(&mem_bufs.sources_found[i]);
+    free(mem_bufs.sources_found);
+  }
+}
+
+void deinit_sources_found_buf(SourcesFoundNotificationBuf* sources_found_buf)
+{
+  SACN_ASSERT(sources_found_buf);
+
+  if (sources_found_buf->buf)
+  {
+    for (size_t i = 0; i < sources_found_buf->buf_capacity; ++i)
+    {
+      deinit_sources_found_entry(&sources_found_buf->buf[i]);
+    }
+    free(sources_found_buf->buf);
+  }
+}
+
+void deinit_sources_found_entry(SourcesFoundNotification* sources_found)
+{
+  SACN_ASSERT(sources_found);
+
+  if (sources_found->found_sources)
+    free(sources_found->found_sources);
+}
+
 void deinit_source_pcp_lost_buf(void)
 {
   if (mem_bufs.source_pcp_lost)
     free(mem_bufs.source_pcp_lost);
-}
-
-void deinit_sampling_ended_bufs(void)
-{
-  if (mem_bufs.sampling_ended)
-  {
-    for (unsigned int i = 0; i < mem_bufs.num_threads; ++i)
-      deinit_sampling_ended_buf(&mem_bufs.sampling_ended[i]);
-    free(mem_bufs.sampling_ended);
-  }
-}
-
-void deinit_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_ended_buf)
-{
-  SACN_ASSERT(sampling_ended_buf);
-
-  if (sampling_ended_buf->buf)
-    free(sampling_ended_buf->buf);
 }
 
 void deinit_source_limit_exceeded_buf(void)

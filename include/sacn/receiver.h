@@ -108,6 +108,8 @@ typedef struct SacnFoundSource
   uint8_t values[DMX_ADDRESS_COUNT];
   /*! The count of valid values. */
   size_t values_len;
+  /*! Whether or not we only saw startcode 0 packets with the preview flag set. */
+  bool values_were_preview;
   /*! The per-address priority (startcode 0xdd) data, if the source is sending it. */
   uint8_t per_address[DMX_ADDRESS_COUNT];
   /*! The count of valid priorities. */
@@ -132,8 +134,13 @@ typedef struct SacnLostSource
  * @{
  */
 /*! Filter preview data. If set, any sACN data with the Preview flag set will be dropped for this
- *  universe and sources sending only Preview data will not be tracked. */
+ *  universe and sources sending only Preview data will trigger a SacnSourcesFoundCallback(). */
 #define SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA 0x1
+/*! Whether or not the receiver will be supporting sACN Sync.  If this is set to true, the SacnUniverseDataCallback()
+ *  will only be called when appropriate for sources that are syncing.
+ *  NOTE: At this time, this library does NOT support sACN Sync.
+ */
+#define SACN_RECEIVER_OPTS_SUPPORT_SYNC 0 
 /*!
  * @}
  */
@@ -163,7 +170,8 @@ typedef void (*SacnSourcesFoundCallback)(sacn_receiver_t handle, const SacnFound
  * Stream_Terminated bit is set or if preview packets are being filtered.
  *
  * The callback will only be called for packets whose sources have been found via SacnSourcesFoundCallback(), and have
- * not been lost via SacnSourcesLostCallback().
+ * not been lost via SacnSourcesLostCallback().  It will be called for all data packets received, even those without
+ * a startcode of 0 or 0xdd.
  *
  * \param[in] handle Handle to the receiver instance for which universe data was received.
  * \param[in] source_addr The network address from which the sACN packet originated.

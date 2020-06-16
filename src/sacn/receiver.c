@@ -17,8 +17,16 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
+/*********** CHRISTIAN's BIG 'OL TODO LIST: *************************************
+ - Add unicast support to sockets.c in the SACN_RECEIVER_SOCKET_PER_UNIVERSE case.
+ - Make sure unicast support works in both socket modes, with one or more receivers created.
+ - Make sure everything works with static & dynamic memory.
+
+*/
 /*********** BIG 'OL TODO LIST: *************************************
-     Remove sampling notification, add notification for sources found 
+     Remove sampling notification, add notification for sources found
+     Update comments for API functions in C code.
+     Make sure minimally compiles!
      Rename per-channel/pcp to per-address
      Make source addition honor source_count_max, even in dynamic mode! Change COmments on callbacks.
      Change Using sACN Receiver API notes.  Maybe reference the higher layer merger API as well?
@@ -140,7 +148,7 @@ static void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* r
 static bool check_source_timeouts(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
 static void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
 static void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost,
-                                       const SamplingEndedNotification* sampling_ended_arr, size_t num_sampling_ended);
+                                       const SourcesFoundNotification* sources_found_arr, size_t num_sources_found);
 
 // Tree node management
 static int tracked_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
@@ -1237,18 +1245,23 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
  */
 void process_receivers(SacnRecvThreadContext* recv_thread_context)
 {
-  SamplingEndedNotification* sampling_ended = NULL;
-  size_t num_sampling_ended = 0;
+  //CHRISTIAN TODO  Remove sampling ended, add sources found?
+
+  //SamplingEndedNotification* sampling_ended = NULL;
+  //size_t num_sampling_ended = 0;
   SourcesLostNotification* sources_lost = NULL;
   size_t num_sources_lost = 0;
+  SourcesFoundNotification* sources_found = NULL;
+  size_t num_sources_found = 0;
 
   if (sacn_lock())
   {
     size_t num_receivers = recv_thread_context->num_receivers;
 
-    sampling_ended = get_sampling_ended_buffer(recv_thread_context->thread_id, num_receivers);
+    //sampling_ended = get_sampling_ended_buffer(recv_thread_context->thread_id, num_receivers);
     sources_lost = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
-    if (!sampling_ended || !sources_lost)
+    sources_found = get_sources_found_buffer(recv_thread_context->thread_id, num_receivers);
+    if (/*!sampling_ended ||*/ !sources_lost || !sources_found)
     {
       sacn_unlock();
       SACN_LOG_ERR("Could not allocate memory to track state data for sACN receivers!");
@@ -1257,6 +1270,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
 
     for (SacnReceiver* receiver = recv_thread_context->receivers; receiver; receiver = receiver->next)
     {
+      /*
       // Check the sample period
       if (receiver->sampling && etcpal_timer_is_expired(&receiver->sample_timer))
       {
@@ -1266,6 +1280,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
         sampling_ended[num_sampling_ended].handle = receiver->keys.handle;
         ++num_sampling_ended;
       }
+      */
 
       process_receiver_sources(recv_thread_context->thread_id, receiver, &sources_lost[num_sources_lost++]);
     }
@@ -1273,7 +1288,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
     sacn_unlock();
   }
 
-  deliver_periodic_callbacks(sources_lost, num_sources_lost, sampling_ended, num_sampling_ended);
+  deliver_periodic_callbacks(sources_lost, num_sources_lost, sources_found, num_sources_found);
 }
 
 void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver, SourcesLostNotification* sources_lost)
@@ -1412,13 +1427,13 @@ void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_
 }
 
 void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost,
-                                const SamplingEndedNotification* sampling_ended_arr, size_t num_sampling_ended)
+                                const SourcesFoundNotification* sources_found_arr, size_t num_sources_found)
 {
-  for (const SamplingEndedNotification* notif = sampling_ended_arr; notif < sampling_ended_arr + num_sampling_ended;
+  for (const SourcesFoundNotification* notif = sources_found_arr; notif < sources_found_arr + num_sources_found;
        ++notif)
   {
     if (notif->callback)
-      notif->callback(notif->handle, notif->context);
+      notif->callback(notif->handle, notif->found_sources, notif->num_found_sources, notif->context);
   }
   for (const SourcesLostNotification* notif = sources_lost_arr; notif < sources_lost_arr + num_sources_lost; ++notif)
   {
