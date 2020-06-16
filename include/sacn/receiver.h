@@ -214,16 +214,19 @@ typedef void (*SacnSourcesLostCallback)(sacn_receiver_t handle, const SacnLostSo
 typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t handle, const SacnRemoteSource* source, void* context);
 
 /*!
- * \brief Notify that more than #SACN_RECEIVER_TOTAL_MAX_SOURCES sources are currently sending on
- *        universes being listened to.
+ * \brief Notify that more than the configured maximum number of sources are currently sending on
+ *        the universe being listened to.
  *
  * If #SACN_DYNAMIC_MEM was defined to 1 when sACN was compiled (the default on non-embedded
- * platforms), this callback will never be called and may be set to NULL.
+ * platforms), and the configuration you pass to sacn_receiver_create() has source_count_max set to
+ * #SACN_RECEIVER_INFINITE_SOURCES, this callback will never be called and may be set to NULL.
+
+ * if #SACNDYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max is ignored and
+ * #SACN_RECIVER_MAX_SOURCES_PER_UNIVERSE is used instead.
  *
  * This callback is rate-limited: it will only be called when the first sACN packet is received
- * from a source beyond the limit specified by #SACN_RECEIVER_TOTAL_MAX_SOURCES. After that, it will
- * not be called again until the number of sources sending drops below that limit and then hits
- * it again.
+ * from a source beyond the limit specified. After that, it will not be called again until the number of sources sending
+ * drops below that limit and then hits it again.
  *
  * \param[in] handle Handle to the receiver instance for which the source limit has been exceeded.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.

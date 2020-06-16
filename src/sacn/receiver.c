@@ -17,17 +17,16 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*********** CHRISTIAN's BIG 'OL TODO LIST: *************************************
+/*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
  - Add unicast support to sockets.c in the SACN_RECEIVER_SOCKET_PER_UNIVERSE case.
  - Make sure unicast support works in both socket modes, with one or more receivers created.
  - Make sure everything works with static & dynamic memory.
+ - Make source addition honors source_count_max, even in dynamic mode.
 
 */
 /*********** BIG 'OL TODO LIST: *************************************
      Make sure minimally compiles!
-     Make source addition honor source_count_max, even in dynamic mode! Change COmments on callbacks.
      Change Using sACN Receiver API notes.  Maybe reference the higher layer merger API as well?
-     Do we really want ETC_PRIORITY_EXTENSION?
      Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet
      Make sure draft is translated correctly.  Do we still want to disable support for it?
 */
@@ -1105,6 +1104,9 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
                              SourceLimitExceededNotification* source_limit_exceeded)
 {
   bool notify = true;
+
+  // CHRISTIAN TODO: This logic is a little faulty, as it assumes you always have room in dynamic mode.  We should check
+  // the configured max as well.  It still could be infinite..
 
   // A new source has appeared!
   SacnTrackedSource* src = ALLOC_TRACKED_SOURCE();
