@@ -73,6 +73,78 @@ protected:
   uint8_t pdata_default[DMX_ADDRESS_COUNT];
 };
 
+TEST_F(TestDmxMerger, UpdateSourceDataErrInvalidWorks)
+{
+  uint8_t foo = 0;
+
+  etcpal_error_t invalid_source_result =
+      sacn_dmx_merger_update_source_data(0, SACN_DMX_MERGER_SOURCE_INVALID, nullptr, 0, VALID_PRIORITY, nullptr, 0);
+  etcpal_error_t invalid_new_values_result =
+      sacn_dmx_merger_update_source_data(0, 0, &foo, 0, VALID_PRIORITY, nullptr, 0);
+  etcpal_error_t invalid_new_values_count_result =
+      sacn_dmx_merger_update_source_data(0, 0, nullptr, 1, VALID_PRIORITY, nullptr, 0);
+  etcpal_error_t invalid_priority_result =
+      sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, INVALID_PRIORITY, nullptr, 0);
+  etcpal_error_t invalid_address_priorities_result =
+      sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, VALID_PRIORITY, &foo, 0);
+  etcpal_error_t invalid_address_priorities_count_result =
+      sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, VALID_PRIORITY, nullptr, 1);
+
+  etcpal_error_t valid_result_1 = sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, VALID_PRIORITY, nullptr, 0);
+  etcpal_error_t valid_result_2 = sacn_dmx_merger_update_source_data(0, 0, &foo, 1, VALID_PRIORITY, nullptr, 0);
+  etcpal_error_t valid_result_3 = sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, VALID_PRIORITY, &foo, 1);
+  etcpal_error_t valid_result_4 = sacn_dmx_merger_update_source_data(0, 0, &foo, 1, VALID_PRIORITY, &foo, 1);
+
+  EXPECT_EQ(invalid_source_result, kEtcPalErrInvalid);
+  EXPECT_EQ(invalid_new_values_result, kEtcPalErrInvalid);
+  EXPECT_EQ(invalid_new_values_count_result, kEtcPalErrInvalid);
+  EXPECT_EQ(invalid_priority_result, kEtcPalErrInvalid);
+  EXPECT_EQ(invalid_address_priorities_result, kEtcPalErrInvalid);
+  EXPECT_EQ(invalid_address_priorities_count_result, kEtcPalErrInvalid);
+
+  EXPECT_NE(valid_result_1, kEtcPalErrInvalid);
+  EXPECT_NE(valid_result_2, kEtcPalErrInvalid);
+  EXPECT_NE(valid_result_3, kEtcPalErrInvalid);
+  EXPECT_NE(valid_result_4, kEtcPalErrInvalid);
+}
+
+TEST_F(TestDmxMerger, UpdateSourceDataErrNotInitWorks)
+{
+  sacn_initialized_fake.return_val = false;
+  etcpal_error_t not_initialized_result = sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, 0, nullptr, 0);
+
+  sacn_initialized_fake.return_val = true;
+  etcpal_error_t initialized_result = sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, 0, nullptr, 0);
+
+  EXPECT_EQ(not_initialized_result, kEtcPalErrNotInit);
+  EXPECT_NE(initialized_result, kEtcPalErrNotInit);
+}
+
+TEST_F(TestDmxMerger, UpdateSourceDataErrNotFoundWorks)
+{
+  sacn_dmx_merger_t merger = 0;
+  source_id_t source = 0;
+
+  etcpal_error_t no_merger_result =
+      sacn_dmx_merger_update_source_data(merger, source, nullptr, 0, VALID_PRIORITY, nullptr, 0);
+
+  SacnDmxMergerConfig config = SACN_DMX_MERGER_CONFIG_INIT;
+  sacn_dmx_merger_create(&config, &merger);
+
+  etcpal_error_t no_source_result =
+      sacn_dmx_merger_update_source_data(merger, source, nullptr, 0, VALID_PRIORITY, nullptr, 0);
+
+  sacn_dmx_merger_add_source(merger, &header_default.cid, &source);
+
+  etcpal_error_t found_result =
+      sacn_dmx_merger_update_source_data(merger, source, nullptr, 0, VALID_PRIORITY, nullptr, 0);
+
+  EXPECT_EQ(no_merger_result, kEtcPalErrNotFound);
+  EXPECT_EQ(no_source_result, kEtcPalErrNotFound);
+
+  EXPECT_NE(found_result, kEtcPalErrNotFound);
+}
+
 TEST_F(TestDmxMerger, UpdateSourceFromSacnErrInvalidWorks)
 {
   SacnHeaderData invalid_cid_header = header_default;
@@ -97,6 +169,7 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnErrInvalidWorks)
   EXPECT_EQ(invalid_universe_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_priority_result, kEtcPalErrInvalid);
   EXPECT_EQ(null_pdata_result, kEtcPalErrInvalid);
+
   EXPECT_NE(valid_result, kEtcPalErrInvalid);
 }
 
@@ -131,5 +204,6 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnErrNotFoundWorks)
 
   EXPECT_EQ(no_merger_result, kEtcPalErrNotFound);
   EXPECT_EQ(no_source_result, kEtcPalErrNotFound);
+
   EXPECT_NE(found_result, kEtcPalErrNotFound);
 }

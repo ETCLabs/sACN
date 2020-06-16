@@ -245,14 +245,14 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
  *
  * \param[in] merger The handle to the merger.
  * \param[in] source The id of the source to modify.
- * \param[in] new_values The new DMX values to be copied in. This may be NULL if the source is only updating the
+ * \param[in] new_values The new DMX values to be copied in. This must be NULL if the source is only updating the
  * priority or address_priorities.
- * \param[in] new_values_count The length of new_values. May be 0 if the source is only updating the priority or
+ * \param[in] new_values_count The length of new_values. Must be 0 if the source is only updating the priority or
  * address_priorities.
  * \param[in] priority The universe-level priority of the source.
- * \param[in] address_priorities The per-address priority values to be copied in.  This may be NULL if the source is not
- * sending per-address priorities, or is only updating other parameters.
- * \param[in] address_priorities_count The length of address_priorities.  May be 0 if the source is not sending these
+ * \param[in] address_priorities The per-address priority values to be copied in.  This must be NULL if the source is
+ * not sending per-address priorities, or is only updating other parameters.
+ * \param[in] address_priorities_count The length of address_priorities.  Must be 0 if the source is not sending these
  * priorities, or is only updating other parameters.
  * \return #kEtcPalErrOk: Source updated and merge completed.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -264,22 +264,68 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
                                                   const uint8_t* new_values, size_t new_values_count, uint8_t priority,
                                                   const uint8_t* address_priorities, size_t address_priorities_count)
 {
+  etcpal_error_t result = kEtcPalErrOk;
+
   // Verify module initialized.
+  if (!sacn_initialized())
+  {
+    return kEtcPalErrNotInit;
+  }
 
   // Validate source.
-  // Validate new_values.
+  if (source == SACN_DMX_MERGER_SOURCE_INVALID)
+  {
+    return kEtcPalErrInvalid;
+  }
+
+  // Validate new_values and new_values_count.
+  if (((new_values != NULL) && (new_values_count == 0)) || ((new_values == NULL) && (new_values_count != 0)))
+  {
+    return kEtcPalErrInvalid;
+  }
+
   // Validate priority.
-  // Validate address_priorities.
+  if (!UNIVERSE_PRIORITY_VALID(priority))
+  {
+    return kEtcPalErrInvalid;
+  }
+
+  // Validate address_priorities and address_priorities_count.
+  if (((address_priorities != NULL) && (address_priorities_count == 0)) ||
+      ((address_priorities == NULL) && (address_priorities_count != 0)))
+  {
+    return kEtcPalErrInvalid;
+  }
 
   // Check that the merger is added.
+  if (!merger_is_added(merger))
+  {
+    return kEtcPalErrNotFound;
+  }
+
   // Check that the source is added.
+  if (sacn_dmx_merger_get_source(merger, source) == NULL)
+  {
+    return kEtcPalErrNotFound;
+  }
 
   // Update this source's level data.
+  result = update_levels(merger, source, new_values, new_values_count);
+
   // Update this source's universe priority.
+  if (result == kEtcPalErrOk)
+  {
+    result = update_universe_priority(merger, source, priority);
+  }
+
   // Update this source's per-address-priority data.
+  if (result == kEtcPalErrOk)
+  {
+    result = update_per_address_priorities(merger, source, address_priorities, address_priorities_count);
+  }
 
   // Return the final etcpal_error_t result.
-  return kEtcPalErrNotImpl;  // TODO: Implement this.
+  return result;
 }
 
 /*!
