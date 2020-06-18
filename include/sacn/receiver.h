@@ -65,7 +65,6 @@ typedef int sacn_receiver_t;
  */
 #define SACN_RECEIVER_INFINITE_SOURCES 0
 
-
 /*! An identifier for a version of the sACN standard. */
 typedef enum
 {
@@ -136,11 +135,6 @@ typedef struct SacnLostSource
 /*! Filter preview data. If set, any sACN data with the Preview flag set will be dropped for this
  *  universe and sources sending only Preview data will trigger a SacnSourcesFoundCallback(). */
 #define SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA 0x1
-/*! Whether or not the receiver will be supporting sACN Sync.  If this is set to true, the SacnUniverseDataCallback()
- *  will only be called when appropriate for sources that are syncing.
- *  NOTE: At this time, this library does NOT support sACN Sync.
- */
-#define SACN_RECEIVER_OPTS_SUPPORT_SYNC 0 
 /*!
  * @}
  */
@@ -172,6 +166,10 @@ typedef void (*SacnSourcesFoundCallback)(sacn_receiver_t handle, const SacnFound
  * The callback will only be called for packets whose sources have been found via SacnSourcesFoundCallback(), and have
  * not been lost via SacnSourcesLostCallback().  It will be called for all data packets received, even those without
  * a startcode of 0 or 0xdd.
+ *
+ * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
+ * if the source forces the packet, or if the source sends a data packet without a sync universe.
+ * NOTE: At this time, sACN Sync is not supported by this library.
  *
  * \param[in] handle Handle to the receiver instance for which universe data was received.
  * \param[in] source_addr The network address from which the sACN packet originated.
@@ -256,8 +254,9 @@ typedef struct SacnReceiverConfig
   /********* Optional values **********/
 
   /*! The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
-      This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.*/
-  size_t source_count_max; 
+      This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used
+     instead.*/
+  size_t source_count_max;
   /*! A set of option flags. See "sACN receiver flags". */
   unsigned int flags;
   /*! Pointer to opaque data passed back with each callback. */
@@ -270,8 +269,8 @@ typedef struct SacnReceiverConfig
 } SacnReceiverConfig;
 
 /*! A default-value initializer for an SacnReceiverConfig struct. */
-#define SACN_RECEIVER_CONFIG_DEFAULT_INIT               \
-  {                                                     \
+#define SACN_RECEIVER_CONFIG_DEFAULT_INIT                  \
+  {                                                        \
     0, {NULL, NULL, NULL, NULL, NULL}, 0, 0, NULL, NULL, 0 \
   }
 

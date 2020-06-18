@@ -151,6 +151,17 @@
  */
 
 /*!
+ * \brief Whether or not the receiver will be supporting IPv6.
+ *
+ * Turns on/off IPv6 support.
+ *
+ * //CHRISTIAN TODO: Add IPV6 support, and we should talk about if this should default to 1...
+ */
+#ifndef SACN_RECEIVER_SUPPORT_IPV6
+#define SACN_RECEIVER_SUPPORT_IPV6 0
+#endif
+
+/*!
  * \brief The priority of each sACN receiver thread.
  *
  * This is usually only meaningful on real-time systems.
@@ -328,7 +339,7 @@
 /*!
  * \brief The maximum number of sources that can be merged on each merger instance.
  *
- * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0. 
+ * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER
 #define SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE

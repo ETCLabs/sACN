@@ -22,13 +22,10 @@
  - Make sure unicast support works in both socket modes, with one or more receivers created.
  - Make sure everything works with static & dynamic memory.
  - Make source addition honors source_count_max, even in dynamic mode.
-
-*/
-/*********** BIG 'OL TODO LIST: *************************************
-     Make sure minimally compiles!
-     Change Using sACN Receiver API notes.  Maybe reference the higher layer merger API as well?
-     Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet
-     Make sure draft is translated correctly.  Do we still want to disable support for it?
+ - Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet!
+ - IPv6 support.  See uses of SACN_RECEIVER_SUPPORT_IPV6 for a starting hint.
+ - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
+ filter out the duplicate packet (just like IPv4 & IPv6).
 */
 
 #include "sacn/receiver.h"
@@ -400,9 +397,11 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
     if (res == kEtcPalErrOk)
     {
       sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, false);
-      // TODO IPv6
       res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, new_universe_id, receiver->netints,
                                      receiver->num_netints, &receiver->socket);
+#if SACN_RECEIVER_SUPPORT_IPV6
+// CHRISTIAN TODO IPv6
+#endif
     }
 
     // Update receiver key and position in receiver_state.receivers_by_universe.
@@ -658,7 +657,7 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
 
   SACN_ASSERT(assigned_thread);
 
-  // TODO IPv6
+  // CHRISTIAN TODO IPv6
   etcpal_error_t res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, config->universe_id,
                                                 config->netints, config->num_netints, &receiver->socket);
   if (res == kEtcPalErrOk && !assigned_thread->running)
@@ -667,6 +666,10 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
     if (res != kEtcPalErrOk)
       sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, true);
   }
+
+#if SACN_RECEIVER_SUPPORT_IPV6
+// CHRISTIAN TODO IPv6
+#endif
 
   if (res == kEtcPalErrOk)
   {
@@ -897,6 +900,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
   )
   {
     // Unknown START Code.
+    // CHRISTIAN TODO: We should be passing this through to the callback now, rather than dropping it!!!
     return;
   }
 
@@ -1240,10 +1244,10 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
  */
 void process_receivers(SacnRecvThreadContext* recv_thread_context)
 {
-  //CHRISTIAN TODO  Remove sampling ended, add sources found?
+  // CHRISTIAN TODO  Remove sampling ended, add sources found?
 
-  //SamplingEndedNotification* sampling_ended = NULL;
-  //size_t num_sampling_ended = 0;
+  // SamplingEndedNotification* sampling_ended = NULL;
+  // size_t num_sampling_ended = 0;
   SourcesLostNotification* sources_lost = NULL;
   size_t num_sources_lost = 0;
   SourcesFoundNotification* sources_found = NULL;
@@ -1253,7 +1257,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
   {
     size_t num_receivers = recv_thread_context->num_receivers;
 
-    //sampling_ended = get_sampling_ended_buffer(recv_thread_context->thread_id, num_receivers);
+    // sampling_ended = get_sampling_ended_buffer(recv_thread_context->thread_id, num_receivers);
     sources_lost = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
     sources_found = get_sources_found_buffer(recv_thread_context->thread_id, num_receivers);
     if (/*!sampling_ended ||*/ !sources_lost || !sources_found)
