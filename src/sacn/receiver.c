@@ -25,7 +25,8 @@
  - Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet!
  - IPv6 support.  See uses of SACN_RECEIVER_SUPPORT_IPV6 for a starting hint.
  - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
- filter out the duplicate packet (just like IPv4 & IPv6).
+   filter out the duplicate packet (just like IPv4 & IPv6).
+ - This entire project should build without warnings!!
 */
 
 #include "sacn/receiver.h"
