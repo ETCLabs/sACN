@@ -27,6 +27,7 @@
  - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
    filter out the duplicate packet (just like IPv4 & IPv6).
  - This entire project should build without warnings!!
+ - Do we need src/private/receiver.h?
 */
 
 #include "sacn/receiver.h"

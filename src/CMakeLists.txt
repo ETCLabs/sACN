@@ -35,6 +35,7 @@ set(SACN_PRIVATE_HEADERS
   ${SACN_SRC}/sacn/private/opts.h
   ${SACN_SRC}/sacn/private/pdu.h
   ${SACN_SRC}/sacn/private/receiver.h
+  ${SACN_SRC}/sacn/private/easy_receiver.h
   ${SACN_SRC}/sacn/private/source.h
   ${SACN_SRC}/sacn/private/util.h
 )

@@ -18,18 +18,11 @@
  *****************************************************************************/
 
 /*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
- - Add unicast support to sockets.c in the SACN_RECEIVER_SOCKET_PER_UNIVERSE case.
- - Make sure unicast support works in both socket modes, with one or more receivers created.
- - Make sure everything works with static & dynamic memory.
- - Make source addition honors source_count_max, even in dynamic mode.
- - Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet!
- - IPv6 support.  See uses of SACN_RECEIVER_SUPPORT_IPV6 for a starting hint.
- - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
-   filter out the duplicate packet (just like IPv4 & IPv6).
  - This entire project should build without warnings!!
+ - Do we need src/private/easy_receiver.h??
 */
 
-#include "sacn/receiver.h"
+#include "sacn/easy_receiver.h"
 
 #include <limits.h>
 #include <stdint.h>
