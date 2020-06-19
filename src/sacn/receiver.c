@@ -301,7 +301,7 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
 }
 
 /*!
- * \brief Destroy an sACN receiver instance.
+ * \brief Destroy a sACN receiver instance.
  *
  * Tears down the receiver and any sources currently being tracked on the receiver's universe.
  * Stops listening for sACN on that universe.

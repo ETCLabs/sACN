@@ -153,7 +153,7 @@
 /*!
  * \brief Whether or not the receiver will be supporting IPv6.
  *
- * Turns on/off IPv6 support.
+ * Turns on/off IPv6 support on the receiver.
  *
  * //CHRISTIAN TODO: Add IPV6 support, and we should talk about if this should default to 1...
  */

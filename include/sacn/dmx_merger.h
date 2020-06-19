@@ -54,7 +54,7 @@
  *  - 512 source identifiers (i.e. "winning source") to indicate which source was considered the
  *     source of the merged data value, or that no source currently owns this address.
  *
- * TODO: Add sample usage
+ * NICK OR CHRISTIAN TODO: Add sample usage
  *
  * @{
  */
@@ -86,6 +86,7 @@ typedef struct SacnDmxMergerConfig
 
   /*! Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
       that slot, or #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
+      You can use SACN_DMX_MERGER_IS_SOURCE_VALID() if you don't want to look at the slot_owners directly.
       Memory is owned by the application.*/
   source_id_t* slot_owners;
 
@@ -106,6 +107,14 @@ typedef struct SacnDmxMergerConfig
   {                                 \
     0, NULL, NULL                   \
   }
+
+/*!
+ * \brief Utility to see if a slot_owner is valid.
+ *
+ * Given a buffer of slot_owners, evaluate to true if the slot is != DMX_MERGER_SOURCE_INVALID.
+ *
+ */
+#define SACN_DMX_MERGER_IS_SOURCE_VALID(source) (source != DMX_MERGER_SOURCE_INVALID)
 
 /*! The current input data for a single source of the merge.  This is exposed only for informational purposes, as the
     application calls a variant of sacn_dmx_merger_update_source to do the actual update. */

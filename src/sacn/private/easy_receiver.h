@@ -34,8 +34,8 @@
 extern "C" {
 #endif
 
-//TODO: DO WE NEED THIS FILE??
-
+etcpal_error_t sacn_easy_receiver_init(void);
+void sacn_easy_receiver_deinit(void);
 
 #ifdef __cplusplus
 }
