@@ -18,24 +18,24 @@
  *****************************************************************************/
 
 /*!
- * \file sacn/easy_receiver.h
- * \brief sACN Easy Receiver API definitions
+ * \file sacn/merge_receiver.h
+ * \brief sACN Merge Receiver API definitions
  *
- * Functions and definitions for the \ref sacn_easy_receiver "sACN Easy Receiver API" are contained in this header.
+ * Functions and definitions for the \ref sacn_merge_receiver "sACN Merge Receiver API" are contained in this header.
  */
 
-#ifndef SACN_EASY_RECEIVER_H_
-#define SACN_EASY_RECEIVER_H_
+#ifndef SACN_MERGE_RECEIVER_H_
+#define SACN_MERGE_RECEIVER_H_
 
 #include <stdbool.h>
 #include <stdint.h>
 
 /*!
- * \defgroup sacn_easy_receiver sACN Easy Receiver
+ * \defgroup sacn_merge_receiver sACN Merge Receiver
  * \ingroup sACN
- * \brief The sACN Easy Receiver API
+ * \brief The sACN Merge Receiver API
  *
- * This API is used to minimally wrap the sACN Receiver and DMX Merger logic together for easy use.
+ * This API is used to minimally wrap the sACN Receiver and DMX Merger logic together.
  * Its implementation can also be used as a sample for how to start integrating the sACN Receiver and DMX Merger APIs
  * into your application.
  *
@@ -46,8 +46,8 @@
 extern "C" {
 #endif
 
-/*! A handle to an sACN Easy Receiver. */
-typedef int sacn_easy_receiver_t;
+/*! A handle to an sACN Merge Receiver. */
+typedef int sacn_merge_receiver_t;
 
 /*!
  * \brief Notify that a new data packet has been received and merged.
@@ -70,8 +70,8 @@ typedef int sacn_easy_receiver_t;
  *            SACN_DMX_MERGER_IS_SOURCE_VALID(slot_owners[index]) to check the slot validity.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnEasyReceiverMergedDataCallback)(uint16_t universe, const uint8_t* slots,
-                                                   const source_id_t* slot_owners, void* context);
+typedef void (*SacnMergeReceiverMergedDataCallback)(uint16_t universe, const uint8_t* slots,
+                                                    const source_id_t* slot_owners, void* context);
 
 /*!
  * \brief Notify that a non-data packet has been received.
@@ -92,8 +92,8 @@ typedef void (*SacnEasyReceiverMergedDataCallback)(uint16_t universe, const uint
  * \param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnEasyReceiverNonDMXCallback)(uint16_t universe, const EtcPalSockAddr* source_addr,
-                                               const SacnHeaderData* header, const uint8_t* pdata, void* context);
+typedef void (*SacnMergeReceiverNonDMXCallback)(uint16_t universe, const EtcPalSockAddr* source_addr,
+                                                const SacnHeaderData* header, const uint8_t* pdata, void* context);
 
 /*!
  * \brief Notify that more than the configured maximum number of sources are currently sending on
@@ -104,25 +104,25 @@ typedef void (*SacnEasyReceiverNonDMXCallback)(uint16_t universe, const EtcPalSo
  * \param[in] handle Handle to the receiver instance for which the source limit has been exceeded.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnEasyReceiverSourceLimitExceededCallback)(uint16_t universe, void* context);
+typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(uint16_t universe, void* context);
 
 /*! A set of callback functions that the library uses to notify the application about sACN events. */
-typedef struct SacnEasyReceiverCallbacks
+typedef struct SacnMergeReceiverCallbacks
 {
-  SacnEasyReceiverMergedDataCallback universe_data;                  /*!< Required */
-  SacnEasyReceiverNonDMXCallback universe_non_dmx;                   /*!< Required */
-  SacnEasyReceiverSourceLimitExceededCallback source_limit_exceeded; /*!< Optional */
-} SacnEasyReceiverCallbacks;
+  SacnMergeReceiverMergedDataCallback universe_data;                  /*!< Required */
+  SacnMergeReceiverNonDMXCallback universe_non_dmx;                   /*!< Required */
+  SacnMergeReceiverSourceLimitExceededCallback source_limit_exceeded; /*!< Optional */
+} SacnMergeReceiverCallbacks;
 
 /*! A set of configuration information for an sACN receiver. */
-typedef struct SacnEasyReceiverConfig
+typedef struct SacnMergeReceiverConfig
 {
   /********* Required values **********/
 
   /*! Universe number on which to listen for sACN. */
   uint16_t universe_id;
   /*! The callbacks this receiver will use to notify the application of events. */
-  SacnEasyReceiverCallbacks callbacks;
+  SacnMergeReceiverCallbacks callbacks;
 
   /********* Optional values **********/
 
@@ -137,19 +137,19 @@ typedef struct SacnEasyReceiverConfig
   const SacnMcastNetintId* netints;
   /*! Number of elements in the netints array. */
   size_t num_netints;
-} SacnEasyReceiverConfig;
+} SacnMergeReceiverConfig;
 
-/*! A default-value initializer for an SacnEasyReceiverConfig struct. */
-#define SACN_EASY_RECEIVER_CONFIG_DEFAULT_INIT \
-  {                                            \
-    0, {NULL, NULL, NULL}, 0, NULL, NULL, 0    \
+/*! A default-value initializer for an SacnMergeReceiverConfig struct. */
+#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT \
+  {                                             \
+    0, {NULL, NULL, NULL}, 0, NULL, NULL, 0     \
   }
 
-void sacn_easy_receiver_config_init(SacnEasyReceiverConfig* config);
+void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
 
-etcpal_error_t sacn_easy_receiver_create(const SacnEasyReceiverConfig* config, sacn_easy_receiver_t* handle);
-etcpal_error_t sacn_easy_receiver_destroy(sacn_easy_receiver_t handle);
-etcpal_error_t sacn_easy_receiver_change_universe(sacn_easy_receiver_t handle, uint16_t new_universe_id);
+etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle);
+etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle);
+etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id);
 
 #ifdef __cplusplus
 }
@@ -159,4 +159,4 @@ etcpal_error_t sacn_easy_receiver_change_universe(sacn_easy_receiver_t handle, u
  * @}
  */
 
-#endif /* SACN_EASY_RECEIVER_H_ */
+#endif /* SACN_MERGE_RECEIVER_H_ */

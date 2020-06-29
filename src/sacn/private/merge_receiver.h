@@ -18,27 +18,27 @@
  *****************************************************************************/
 
 /*!
- * \file sacn/private/easy_receiver.h
+ * \file sacn/private/merge_receiver.h
  * \brief Private constants, types, and function declarations for the
- *        \ref sacn_easy_receiver "sACN Easy Receiver" module.
+ *        \ref sacn_merge_receiver "sACN Merge Receiver" module.
  */
 
-#ifndef SACN_PRIVATE_EASY_RECEIVER_H_
-#define SACN_PRIVATE_EASY_RECEIVER_H_
+#ifndef SACN_PRIVATE_MERGE_RECEIVER_H_
+#define SACN_PRIVATE_MERGE_RECEIVER_H_
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../../../include/sacn/easy_receiver.h"
+#include "../../../include/sacn/merge_receiver.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-etcpal_error_t sacn_easy_receiver_init(void);
-void sacn_easy_receiver_deinit(void);
+etcpal_error_t sacn_merge_receiver_init(void);
+void sacn_merge_receiver_deinit(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SACN_PRIVATE_EASY_RECEIVER_H_ */
+#endif /* SACN_PRIVATE_MERGE_RECEIVER_H_ */

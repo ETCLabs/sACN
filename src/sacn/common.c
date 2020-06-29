@@ -24,8 +24,8 @@
 #include "sacn/private/sockets.h"
 #include "sacn/private/source.h"
 #include "sacn/private/receiver.h"
-#include "sacn/private/easy_receiver.h"
 #include "sacn/private/dmx_merger.h"
+#include "sacn/private/merge_receiver.h"
 
 /*************************** Private constants *******************************/
 
@@ -76,7 +76,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     bool source_initted = false;
     //TODO DRAFT SOURCE
     bool merger_initted = false;
-    bool easy_receiver_initted = false;
+    bool merge_receiver_initted = false;
 
     // Init the log params early so the other modules can log things on initialization
     if (log_params)
@@ -106,7 +106,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     if ( res == kEtcPalErrOk)
       merger_initted = ((res = sacn_dmx_merger_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
-      easy_receiver_initted = ((res = sacn_easy_receiver_init()) == kEtcPalErrOk);
+      merge_receiver_initted = ((res = sacn_merge_receiver_init()) == kEtcPalErrOk);
 
     if (res == kEtcPalErrOk)
     {
@@ -115,8 +115,8 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     else
     {
       // Clean up
-      if (easy_receiver_initted)
-        sacn_easy_receiver_deinit();
+      if (merge_receiver_initted)
+        sacn_merge_receiver_deinit();
       if (merger_initted)
         sacn_dmx_merger_deinit();
       if (source_initted)
@@ -153,7 +153,7 @@ void sacn_deinit(void)
   {
     sacn_state.initted = false;
 
-    sacn_easy_receiver_deinit();
+    sacn_merge_receiver_deinit();
     sacn_dmx_merger_deinit();
     sacn_source_deinit();
     sacn_receiver_deinit();

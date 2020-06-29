@@ -22,7 +22,7 @@ endif()
 set(SACN_PUBLIC_HEADERS
   ${SACN_INCLUDE}/sacn/common.h
   ${SACN_INCLUDE}/sacn/receiver.h
-  ${SACN_INCLUDE}/sacn/easy_receiver.h
+  ${SACN_INCLUDE}/sacn/merge_receiver.h
   ${SACN_INCLUDE}/sacn/source.h
   ${SACN_INCLUDE}/sacn/version.h
   ${SACN_INCLUDE}/sacn/dmx_merger.h
@@ -35,7 +35,7 @@ set(SACN_PRIVATE_HEADERS
   ${SACN_SRC}/sacn/private/opts.h
   ${SACN_SRC}/sacn/private/pdu.h
   ${SACN_SRC}/sacn/private/receiver.h
-  ${SACN_SRC}/sacn/private/easy_receiver.h
+  ${SACN_SRC}/sacn/private/merge_receiver.h
   ${SACN_SRC}/sacn/private/source.h
   ${SACN_SRC}/sacn/private/util.h
 )
@@ -46,7 +46,7 @@ set(SACN_SOURCES
   ${SACN_SRC}/sacn/dmx_merger.c
   ${SACN_SRC}/sacn/pdu.c
   ${SACN_SRC}/sacn/receiver.c
-  ${SACN_SRC}/sacn/easy_receiver.c
+  ${SACN_SRC}/sacn/merge_receiver.c
   ${SACN_SRC}/sacn/sockets.c
   ${SACN_SRC}/sacn/source.c
   ${SACN_SRC}/sacn/util.c

@@ -21,7 +21,6 @@
  - Fill in all the holes I made... :)
  - Make sure everything works with static & dynamic memory.
  - This entire project should build without warnings!!
- - Do we need src/private/easy_receiver.h??
 */
 
 #include <limits.h>
@@ -29,7 +28,7 @@
 #include <string.h>
 #include "sacn/private/mem.h"
 #include "sacn/private/util.h"
-#include "sacn/private/easy_receiver.h"
+#include "sacn/private/merge_receiver.h"
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>
@@ -43,7 +42,7 @@
 
 /* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
 #if SACN_DYNAMIC_MEM
-#define ALLOC_RECEIVER() malloc(sizeof(SacnEasyReceiver))
+#define ALLOC_RECEIVER() malloc(sizeof(SacnMergeReceiver))
 #define FREE_RECEIVER(ptr) \
   do                       \
   {                        \
@@ -54,14 +53,14 @@
     free(ptr);             \
   } while (0)
 #else
-#define ALLOC_RECEIVER() etcpal_mempool_alloc(sacnrecv_easy_receivers)
-#define FREE_RECEIVER(ptr) etcpal_mempool_free(sacnrecv_easy_receivers, ptr)
+#define ALLOC_RECEIVER() etcpal_mempool_alloc(sacnrecv_merge_receivers)
+#define FREE_RECEIVER(ptr) etcpal_mempool_free(sacnrecv_merge_receivers, ptr)
 #endif
 
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM
-ETCPAL_MEMPOOL_DEFINE(sacnrecv_easy_receivers, SacnEasyReceiver, SACN_RECEIVER_MAX_UNIVERSES);
+ETCPAL_MEMPOOL_DEFINE(sacnrecv_merge_receivers, SacnMergeReceiver, SACN_RECEIVER_MAX_UNIVERSES);
 #endif
 
 /*********************** Private function prototypes *************************/
@@ -73,7 +72,7 @@ ETCPAL_MEMPOOL_DEFINE(sacnrecv_easy_receivers, SacnEasyReceiver, SACN_RECEIVER_M
  *************************************************************************************************/
 
 /* Initialize the sACN Receiver module. Internal function called from sacn_init(). */
-etcpal_error_t sacn_easy_receiver_init(void)
+etcpal_error_t sacn_merge_receiver_init(void)
 {
   /*
   //CHRISTIAN TODO CLEANUP
@@ -101,7 +100,7 @@ etcpal_error_t sacn_easy_receiver_init(void)
 }
 
 /* Deinitialize the sACN Receiver module. Internal function called from sacn_deinit(). */
-void sacn_easy_receiver_deinit(void)
+void sacn_merge_receiver_deinit(void)
 {
   /*
   CHRISTIAN TODO CLEANUP
@@ -130,22 +129,22 @@ void sacn_easy_receiver_deinit(void)
  *
  * \param[out] config Config struct to initialize.
  */
-void sacn_easy_receiver_config_init(SacnEasyReceiverConfig* config)
+void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
 {
   if (config)
   {
-    memset(config, 0, sizeof(SacnEasyReceiverConfig));
+    memset(config, 0, sizeof(SacnMergeReceiverConfig));
   }
 }
 
 /*!
- * \brief Create a new sACN Easy Receiver to listen and merge sACN data on a universe.
+ * \brief Create a new sACN Merge Receiver to listen and merge sACN data on a universe.
  *
  * An sACN receiver can listen on one universe at a time, and each universe can only be listened to
  * by one receiver at at time.
  *
- * \param[in] config Configuration parameters for the sACN Easy Receiver to be created.
- * \param[out] handle Filled in on success with a handle to the sACN Easy Receiver.
+ * \param[in] config Configuration parameters for the sACN Merge Receiver to be created.
+ * \param[out] handle Filled in on success with a handle to the sACN Merge Receiver.
  * \return #kEtcPalErrOk: Receiver created successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
@@ -155,9 +154,9 @@ void sacn_easy_receiver_config_init(SacnEasyReceiverConfig* config)
  * \return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_easy_receiver_create(const SacnEasyReceiverConfig* config, sacn_easy_receiver_t* handle)
+etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle)
 {
-  //CHRISTIAN TODO
+  // CHRISTIAN TODO
   if (!config || !handle)
     return kEtcPalErrInvalid;
 
@@ -165,7 +164,7 @@ etcpal_error_t sacn_easy_receiver_create(const SacnEasyReceiverConfig* config, s
 }
 
 /*!
- * \brief Destroy a sACN Easy Receiver instance.
+ * \brief Destroy a sACN Merge Receiver instance.
  *
  * \param[in] handle Handle to the receiver to destroy.
  * \return #kEtcPalErrOk: Receiver destroyed successfully.
@@ -173,19 +172,19 @@ etcpal_error_t sacn_easy_receiver_create(const SacnEasyReceiverConfig* config, s
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_easy_receiver_destroy(sacn_easy_receiver_t handle)
+etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
 {
-  //CHRISTIAN TODO
+  // CHRISTIAN TODO
   ETCPAL_UNUSED_ARG(handle);
   return kEtcPalErrNotImpl;
 }
 
 /*!
- * \brief Change the universe on which a sACN Easy Receiver is listening.
+ * \brief Change the universe on which a sACN Merge Receiver is listening.
  *
  * An sACN receiver can only listen on one universe at a time. After this call completes, underlying updates will
- * generate new calls to SacnEasyReceiverMergedDataCallback(). If this call fails, the caller must call
- * sacn_easy_receiver_destroy for the receiver, because the receiver may be in an invalid state.
+ * generate new calls to SacnMergeReceiverMergedDataCallback(). If this call fails, the caller must call
+ * sacn_merge_receiver_destroy for the receiver, because the receiver may be in an invalid state.
  *
  * \param[in] handle Handle to the receiver for which to change the universe.
  * \param[in] new_universe_id New universe number that this receiver should listen to.
@@ -196,14 +195,12 @@ etcpal_error_t sacn_easy_receiver_destroy(sacn_easy_receiver_t handle)
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_easy_receiver_change_universe(sacn_easy_receiver_t handle, uint16_t new_universe_id)
+etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id)
 {
   if (!UNIVERSE_ID_VALID(new_universe_id))
     return kEtcPalErrInvalid;
 
-  //TODO CHRISTIAN CLEANUP
+  // TODO CHRISTIAN CLEANUP
   ETCPAL_UNUSED_ARG(handle);
   return kEtcPalErrNotImpl;
 }
-
-
