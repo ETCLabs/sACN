@@ -29,14 +29,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-/* TESTING TODO CLEANUP
-#include "etcpal/error.h"
-#include "etcpal/inet.h"
-#include "etcpal/log.h"
-#include "etcpal/netint.h"
-#include "etcpal/uuid.h"
-#include "sacn/common.h"
-*/
 
 /*!
  * \defgroup sacn_easy_receiver sACN Easy Receiver
@@ -92,7 +84,7 @@ typedef void (*SacnEasyReceiverMergedDataCallback)(uint16_t universe, const uint
  *
  * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
  * if the source forces the packet, or if the source sends a data packet without a sync universe.
- * NOTE: At this time, sACN Sync is not supported by this library.
+ * TODO: We still need add support for sACN Sync.
  *
  * \param[in] universe The universe number this receiver is monitoring.
  * \param[in] source_addr The network address from which the sACN packet originated.

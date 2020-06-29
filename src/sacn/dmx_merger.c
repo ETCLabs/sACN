@@ -91,7 +91,7 @@ etcpal_error_t sacn_dmx_merger_init(void)
 {
   return kEtcPalErrNotImpl;
 
-  // TODO: CLEANUP
+  // TODO: CLEANUP  -- Be sure to check SACN_DMX_MERGER_MAX_MERGERS, as it is illegal to declare a 0-size array in C.
   /*
   etcpal_error_t res = kEtcPalErrOk;
 

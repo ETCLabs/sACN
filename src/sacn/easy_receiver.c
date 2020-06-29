@@ -76,7 +76,8 @@ ETCPAL_MEMPOOL_DEFINE(sacnrecv_easy_receivers, SacnEasyReceiver, SACN_RECEIVER_M
 etcpal_error_t sacn_easy_receiver_init(void)
 {
   /*
-  CHRISTIAN TODO CLEANUP
+  //CHRISTIAN TODO CLEANUP
+  // TODO: CLEANUP  -- Be sure to check SACN_RECEIVER_MAX_UNIVERSES, as it is illegal to declare a 0-size array in C.
 
   etcpal_error_t res = kEtcPalErrOk;
 

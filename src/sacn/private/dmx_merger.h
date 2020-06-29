@@ -34,7 +34,8 @@
 extern "C" {
 #endif
 
-//TODO: DO WE NEED THIS FILE??
+etcpal_error_t sacn_dmx_merger_init();
+void sacn_dmx_merger_deinit(void);
 
 
 #ifdef __cplusplus

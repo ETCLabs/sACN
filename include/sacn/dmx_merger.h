@@ -141,9 +141,6 @@ typedef struct SacnDmxMergerSource
 
 } SacnDmxMergerSource;
 
-etcpal_error_t sacn_dmx_merger_init();
-void sacn_dmx_merger_deinit(void);
-
 etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle);
 etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle);
 

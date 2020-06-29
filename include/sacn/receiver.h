@@ -169,7 +169,7 @@ typedef void (*SacnSourcesFoundCallback)(sacn_receiver_t handle, const SacnFound
  *
  * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
  * if the source forces the packet, or if the source sends a data packet without a sync universe.
- * NOTE: At this time, sACN Sync is not supported by this library.
+ * TODO: We still need add support for sACN Sync.
  *
  * \param[in] handle Handle to the receiver instance for which universe data was received.
  * \param[in] source_addr The network address from which the sACN packet originated.

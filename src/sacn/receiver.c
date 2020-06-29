@@ -166,6 +166,8 @@ etcpal_error_t sacn_receiver_init(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
 
+  // TODO: CLEANUP  -- Be sure to check SACN_RECEIVER_MAX_UNIVERSES, as it is illegal to declare a 0-size array in C.
+
 #if !SACN_DYNAMIC_MEM
   res |= etcpal_mempool_init(sacnrecv_receivers);
   res |= etcpal_mempool_init(sacnrecv_tracked_sources);
