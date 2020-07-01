@@ -456,9 +456,9 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
 etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, const SacnMcastNetintId* netints,
                                               size_t num_netints)
 {
-  ETCPAL_UNUSED_ARG(handle)
-  ETCPAL_UNUSED_ARG(netints)
-  ETCPAL_UNUSED_ARG(num_netints)
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(num_netints);
 
   if (!sacn_initialized())
     return kEtcPalErrNotInit;
