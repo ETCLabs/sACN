@@ -204,3 +204,31 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
   ETCPAL_UNUSED_ARG(handle);
   return kEtcPalErrNotImpl;
 }
+
+/*!
+ * \brief Resets the underlying network sockets and packet receipt state for the sACN Merge Receiver..
+ *
+ * This is typically used when the application detects that the list of networking interfaces has changed.
+ *
+ * After this call completes, underlying updates will generate new calls to SacnMergeReceiverMergedDataCallback(). If
+ * this call fails, the caller must call sacn_merge_receiver_destroy for the receiver, because the receiver may be in an invalid state.
+ *
+ * \param[in] handle Handle to the receiver for which to reset the networking.
+ * \param[in] (optional) array of network interfaces on which to listen to the specified universe. If NULL,
+ *  all available network interfaces will be used.
+ * \param[in] Number of elements in the netints array.
+ * \return #kEtcPalErrOk: Universe changed successfully.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_merge_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
+                                           size_t num_netints)
+{
+  // TODO CHRISTIAN CLEANUP
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(num_netints);
+  return kEtcPalErrNotImpl;
+}

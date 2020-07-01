@@ -23,11 +23,12 @@
  - Make sure everything works with static & dynamic memory.
  - Make source addition honors source_count_max, even in dynamic mode.
  - Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet!
+ - Make the example receiver use the new api.
  - IPv6 support.  See uses of SACN_RECEIVER_SUPPORT_IPV6 for a starting hint.
  - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
    filter out the duplicate packet (just like IPv4 & IPv6).
  - This entire project should build without warnings!!
- - Do we need src/private/receiver.h?
+ - Sync support.  Update TODO comments in receiver & merge_receiver that state sync isn't supported.
 */
 
 #include "sacn/receiver.h"
@@ -346,9 +347,8 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 /*!
  * \brief Change the universe on which an sACN receiver is listening.
  *
- * An sACN receiver can only listen on one universe at a time. After this call completes
- * successfully, the receiver is in a sampling period for the new universe and will provide SourcesFound() notifications
- * when appropriate.
+ * An sACN receiver can only listen on one universe at a time. After this call completes successfully, the receiver is
+ * in a sampling period for the new universe and will provide SourcesFound() notifications when appropriate.
  * If this call fails, the caller must call sacn_receiver_destroy for the receiver, because the receiver may be in an
  * invalid state.
  *
@@ -431,6 +431,39 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
   }
 
   return res;
+}
+
+/*!
+ * \brief Resets the underlying network sockets and packet receipt state for the sACN receiver..
+ *
+ * This is typically used when the application detects that the list of networking interfaces has changed.
+ *
+ * After this call completes successfully, the receiver is in a sampling period for the new universe and will provide
+ * SourcesFound() notifications when appropriate.
+ * If this call fails, the caller must call sacn_receiver_destroy for the receiver, because the receiver may be in an
+ * invalid state.
+ *
+ * \param[in] handle Handle to the receiver for which to reset the networking.
+ * \param[in] (optional) array of network interfaces on which to listen to the specified universe. If NULL,
+ *  all available network interfaces will be used.
+ * \param[in] Number of elements in the netints array.
+ * \return #kEtcPalErrOk: Universe changed successfully.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, const SacnMcastNetintId* netints,
+                                              size_t num_netints)
+{
+  ETCPAL_UNUSED_ARG(handle)
+  ETCPAL_UNUSED_ARG(netints)
+  ETCPAL_UNUSED_ARG(num_netints)
+
+  if (!sacn_initialized())
+    return kEtcPalErrNotInit;
+
+  return kEtcPalErrNotImpl;
 }
 
 /*!

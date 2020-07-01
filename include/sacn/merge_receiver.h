@@ -55,7 +55,7 @@ typedef int sacn_merge_receiver_t;
  * This callback will be called in multiple ways:
  * 1. When a new non-preview data packet or per-address priority packet is received from the sACN Receiver module,
  * it is immediately and synchronously passed to the DMX Merger, after which the merged result is immediately and
- * synchronously passed to this callback.
+ * synchronously passed to this callback.  Note that this includes the data received from the SacnSourcesFoundCallback().
  * 2. When a sACN source is no longer sending non-preview data or per-address priority packets, the lost source callback
  * from the sACN Receiver module will be passed to the merger, after which the merged result is immediately and
  * synchronously passed to this callback.
@@ -150,6 +150,8 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
 etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle);
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle);
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id);
+etcpal_error_t sacn_merge_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
+                                           size_t num_netints);
 
 #ifdef __cplusplus
 }
