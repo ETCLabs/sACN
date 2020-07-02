@@ -433,10 +433,10 @@ static void handle_sources_lost(sacn_receiver_t handle, const SacnLostSource* lo
     for (const SacnLostSource* lost_source = lost_sources; lost_source < lost_sources + num_lost_sources; ++lost_source)
     {
       char cid_str[ETCPAL_UUID_STRING_BYTES];
-      etcpal_uuid_to_string(&lost_source->cid, cid_str);
-      printf("%s\t%s\tTerminated: %s\n", cid_str, lost_source->name, lost_source->terminated ? "true" : "false");
+      etcpal_uuid_to_string(&lost_source->info.cid, cid_str);
+      printf("%s\t%s\tTerminated: %s\n", cid_str, lost_source->info.name, lost_source->terminated ? "true" : "false");
 
-      SourceData* source = find_source(listener, &lost_source->cid);
+      SourceData* source = find_source(listener, &lost_source->info.cid);
       if (source)
       {
         source->valid = false;

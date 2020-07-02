@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************
- * This file is a part of RDMnet. For more information, go to:
- * https://github.com/ETCLabs/RDMnet
+ * This file is a part of sACN. For more information, go to:
+ * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include "sacn/receiver.h"
+#include "sacn/cpp/common.h"
+#include "sacn/cpp/receiver.h"
 
 #include <limits>
 #include "etcpal_mock/common.h"

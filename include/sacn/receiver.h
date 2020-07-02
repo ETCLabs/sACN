@@ -95,12 +95,10 @@ typedef struct SacnRemoteSource
 /*! Information about a sACN source that was found. */
 typedef struct SacnFoundSource
 {
-  /*! The Component Identifier (CID) of the source. */
-  EtcPalUuid cid;
-  /*! The name of the source. */
-  char name[SACN_SOURCE_NAME_MAX_LEN];
+  /*! The Source Description. */
+  SacnRemoteSource info;
   /*! The address from which we received these initial packets. */
-  EtcPalSockAddr source_addr;
+  EtcPalSockAddr from_addr;
   /*! The per-universe priority. */
   uint8_t priority;
   /*! The DMX (startcode 0) data. */
@@ -118,10 +116,8 @@ typedef struct SacnFoundSource
 /*! Information about a sACN source that was lost. */
 typedef struct SacnLostSource
 {
-  /*! The Component Identifier (CID) of the source. */
-  EtcPalUuid cid;
-  /*! The name of the source. */
-  char name[SACN_SOURCE_NAME_MAX_LEN];
+  /*! The Source Description. */
+  SacnRemoteSource info;
   /*! Whether the source was determined to be lost due to the Stream_Terminated bit being set in the
    *  sACN data packet. */
   bool terminated;
@@ -133,7 +129,7 @@ typedef struct SacnLostSource
  * @{
  */
 /*! Filter preview data. If set, any sACN data with the Preview flag set will be dropped for this
- *  universe and sources sending only Preview data will trigger a SacnSourcesFoundCallback(). */
+ *  universe but sources sending only Preview data will still trigger a SacnSourcesFoundCallback(). */
 #define SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA 0x1
 /*!
  * @}

@@ -1376,7 +1376,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
     sources_lost->handle = receiver->keys.handle;
     for (size_t i = 0; i < sources_lost->num_lost_sources; ++i)
     {
-      etcpal_rbtree_remove_with_cb(&receiver->sources, &sources_lost->lost_sources[i].cid, source_tree_dealloc);
+      etcpal_rbtree_remove_with_cb(&receiver->sources, &sources_lost->lost_sources[i].info.cid, source_tree_dealloc);
     }
   }
 }

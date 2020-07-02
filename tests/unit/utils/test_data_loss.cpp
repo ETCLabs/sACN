@@ -83,7 +83,7 @@ protected:
     expired_sources.reserve(num_lost_sources);
     std::transform(lost_sources, lost_sources + num_lost_sources, std::back_inserter(expired_sources),
                    [](const SacnLostSource& src) {
-                     return SacnRemoteSourceInternal{src.cid, src.name};
+                     return SacnRemoteSourceInternal{src.info.cid, src.info.name};
                    });
 
     std::sort(expired_sources.begin(), expired_sources.end());
