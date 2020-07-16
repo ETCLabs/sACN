@@ -24,6 +24,7 @@
  - Make source addition honors source_count_max, even in dynamic mode.
  - Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet!
  - Make the example receiver use the new api.
+ - Make an example receiver & testing for the c++ header.
  - IPv6 support.  See uses of SACN_RECEIVER_SUPPORT_IPV6 for a starting hint.
  - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
    filter out the duplicate packet (just like IPv4 & IPv6).
@@ -228,7 +229,7 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
 /*!
  * \brief Create a new sACN receiver to listen for sACN data on a universe.
  *
- * An sACN receiver can listen on one universe at a time, and each universe can only be listened to
+ * A sACN receiver can listen on one universe at a time, and each universe can only be listened to
  * by one receiver at at time.
  *
  * \param[in] config Configuration parameters for the sACN receiver to be created.
@@ -345,6 +346,28 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 }
 
 /*!
+ * \brief Get the universe on which a sACN receiver is currently listening.
+ *
+ * \param[in] handle Handle to the receiver that we want to query.
+ * \param[out] universe_id The retrieved universe.
+ * \return #kEtcPalErrOk: Universe retrieved successfully.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* universe_id)
+{
+  if (!sacn_initialized())
+    return kEtcPalErrNotInit;
+
+  // TODO CHRISTIAN CLEANUP
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe_id);
+  return kEtcPalErrNotImpl;
+}
+
+/*!
  * \brief Change the universe on which an sACN receiver is listening.
  *
  * An sACN receiver can only listen on one universe at a time. After this call completes successfully, the receiver is
@@ -444,9 +467,9 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  * invalid state.
  *
  * \param[in] handle Handle to the receiver for which to reset the networking.
- * \param[in] (optional) array of network interfaces on which to listen to the specified universe. If NULL,
+ * \param[in] netints Optional array of network interfaces on which to listen to the specified universe. If NULL,
  *  all available network interfaces will be used.
- * \param[in] Number of elements in the netints array.
+ * \param[in] num_netints Number of elements in the netints array.
  * \return #kEtcPalErrOk: Universe changed successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
@@ -659,7 +682,6 @@ SacnReceiver* create_new_receiver(const SacnReceiverConfig* config)
   receiver->filter_preview_data = ((config->flags & SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA) != 0);
 
   receiver->callbacks = config->callbacks;
-  receiver->callback_context = config->callback_context;
 
   receiver->next = NULL;
 

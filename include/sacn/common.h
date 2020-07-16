@@ -79,6 +79,7 @@ typedef struct SacnHeaderData
  * primary key for a network interface is simply a combination of the interface index and the IP
  * protocol used.
  */
+//TODO: This is identical to the RdmnetMcastNetintId.  Should they be merged into a single, shared, type?
 typedef struct SacnMcastNetintId
 {
   etcpal_iptype_t ip_type; /*!< The IP protocol used on the network interface. */

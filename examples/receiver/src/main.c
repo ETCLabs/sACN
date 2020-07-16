@@ -153,7 +153,7 @@ static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t univ
 {
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
   config.callbacks = *callbacks;
-  config.callback_context = listener;
+  config.callbacks.context = listener;
   config.universe_id = universe;
 
   printf("Creating a new sACN receiver on universe %u.\n", universe);

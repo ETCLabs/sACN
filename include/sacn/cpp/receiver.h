@@ -102,7 +102,7 @@ public:
 
     /// Create an empty, invalid data structure by default.
     Settings() = default;
-    Settings(uint16_t universe_id);
+    Settings(uint16_t new_universe_id);
 
     bool IsValid() const;
   };
@@ -113,26 +113,24 @@ public:
   Receiver(Receiver&& other) = default;             ///< Move a device instance.
   Receiver& operator=(Receiver&& other) = default;  ///< Move a device instance.
 
-  etcpal::Error Startup(NotifyHandler& notify_handler, const Settings& settings);
+  etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler);
   void Shutdown();
+  etcpal::Expected<uint16_t> GetUniverse() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
   etcpal::Error ResetNetworking(const std::vector<SacnMcastNetintId>& netints);
 
-  // Lesser used functions
-  void SetStandardVersion(sacn_standard_version_t version);
-  sacn_standard_version_t GetStandardVersion() const;
-  void SetExpiredWait(uint32_t wait_ms);
-  uint32_t GetExpiredWait() const;
+  // Lesser used functions.  These apply to all instances of this class.
+  static void SetStandardVersion(sacn_standard_version_t version);
+  static sacn_standard_version_t GetStandardVersion();
+  static void SetExpiredWait(uint32_t wait_ms);
+  static uint32_t GetExpiredWait();
 
   constexpr Handle handle() const;
-  constexpr NotifyHandler* notify_handler() const;
-  etcpal::Expected<uint16_t> universe() const;
 
 private:
   SacnReceiverConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
 
   Handle handle_{kInvalidHandle};
-  NotifyHandler* notify_{nullptr};
 };
 
 /// @cond device_c_callbacks
@@ -187,6 +185,207 @@ extern "C" inline void ReceiverCbSourceLimitExceeded(sacn_receiver_t handle, voi
 
 /// @endcond
 
+/// @brief Create a Receiver Settings instance by passing the required members explicitly.
+///
+/// Optional members can be modified directly in the struct.
+inline Receiver::Settings::Settings(uint16_t new_universe_id)
+    : universe_id(new_universe_id)
+{
+}
+
+/// Determine whether a Reciever Settings instance contains valid data for sACN operation.
+inline bool Receiver::Settings::IsValid() const
+{
+  return (universe_id > 0);
+}
+
+/*!
+ * \brief Start listening for sACN data on a universe.
+ *
+ * An sACN receiver can listen on one universe at a time, and each universe can only be listened to
+ * by one receiver at at time.
+ *
+ * \param[in] settings Configuration parameters for the sACN receiver and this class instance.
+ * \param[in] notify_handler The notification interface to call back to the application.
+ * \return #kEtcPalErrOk: Receiver created successful.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrExists: A receiver already exists which is listening on the specified universe.
+ * \return #kEtcPalErrNoMem: No room to allocate memory for this receiver.
+ * \return #kEtcPalErrNoNetints: No network interfaces were found on the system.
+ * \return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& notify_handler)
+{
+  SacnReceiverConfig config = TranslateConfig(settings, notify_handler);
+  return sacn_receiver_create(&config, &handle_);
+}
+
+/*!
+ * \brief Stop listening for sACN data on a universe.
+ *
+ * Tears down the receiver and any sources currently being tracked on the receiver's universe.
+ * Stops listening for sACN on that universe.
+ */
+inline void Receiver::Shutdown()
+{
+  //We'll be ignoring shutdown errors for now
+  sacn_receiver_destroy(handle_);
+  handle_ = kInvalidHandle;
+}
+
+/*!
+ * \brief Get the universe this class is listening to.
+ *
+ * \return If valid, the value is the universe id.  Otherwise, this is the underlying error the C library call returned.
+ */
+etcpal::Expected<uint16_t> Receiver::GetUniverse() const
+{
+  uint16_t result = 0;
+  etcpal_error_t err = sacn_receiver_get_universe(handle_, &result);
+  if (err == kEtcPalErrOk)
+    return result;
+  else
+    return err;
+}
+
+/*!
+ * \brief Change the universe this class is listening to.
+ *
+ * An sACN receiver can only listen on one universe at a time. After this call completes successfully, the receiver is
+ * in a sampling period for the new universe and will provide HandleSourcesFound() callse when appropriate.
+ * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ *
+ * \param[in] new_universe_id New universe number that this receiver should listen to.
+ * \return #kEtcPalErrOk: Universe changed successfully.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrExists: A receiver already exists which is listening on the specified new universe.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
+{
+  return sacn_receiver_change_universe(handle_, new_universe_id);
+}
+
+/*!
+ * \brief Resets the underlying network sockets and packet receipt state for this class..
+ *
+ * This is typically used when the application detects that the list of networking interfaces has changed.
+ *
+ * After this call completes successfully, the receiver is in a sampling period for the new universe and will provide
+ * HandleSourcesFound() calls when appropriate.
+ * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ *
+ * \param[in] netints Vectorof network interfaces on which to listen to the specified universe. If empty,
+ *  all available network interfaces will be used.
+ * \return #kEtcPalErrOk: Universe changed successfully.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+inline etcpal::Error Receiver::ResetNetworking(const std::vector<SacnMcastNetintId>& netints)
+{
+  if (netints.empty())
+    return sacn_receiver_reset_networking(handle_, nullptr, 0);
+  else
+    return sacn_receiver_reset_networking(handle_, netints.data(), netints.size());
+}
+
+/*!
+ * \brief Set the current version of the sACN standard to which the module is listening.
+ *
+ * This is a global option across all listening receivers.
+ *
+ * \param[in] version Version of sACN to listen to.
+ */
+inline void Receiver::SetStandardVersion(sacn_standard_version_t version)
+{
+  sacn_receiver_set_standard_version(version);
+}
+
+/*!
+ * \brief Get the current version of the sACN standard to which the module is listening.
+ *
+ * This is a global option across all listening receivers.
+ *
+ * \return Version of sACN to which the module is listening, or #kSacnStandardVersionNone if the module is
+ *         not initialized.
+ */
+inline sacn_standard_version_t Receiver::GetStandardVersion()
+{
+  sacn_receiver_get_standard_version();
+}
+
+/*!
+ * \brief Set the expired notification wait time.
+ *
+ * The library will wait at least this long after a data loss condition has been encountered before
+ * calling HandleSourcesLost(). However, the wait may be longer due to the data loss algorithm (see \ref
+ * data_loss_behavior).
+ *
+ * \param[in] wait_ms Wait time in milliseconds.
+ */
+inline void Receiver::SetExpiredWait(uint32_t wait_ms)
+{
+  sacn_receiver_set_expired_wait(wait_ms);
+}
+
+/*!
+ * \brief Get the current value of the expired notification wait time.
+ *
+ * The library will wait at least this long after a data loss condition has been encountered before
+ * calling HandleSourcesLost(). However, the wait may be longer due to the data loss algorithm (see \ref
+ * data_loss_behavior).
+ *
+ * \return Wait time in milliseconds.
+ */
+inline uint32_t Receiver::GetExpiredWait()
+{
+  return sacn_receiver_get_expired_wait();
+}
+
+/*!
+ * \brief Get the current handle to the underlying C sacn_receiver.
+ *
+ * \return The handle or Receiver::kInvalidHandle.
+ */
+inline constexpr Receiver::Handle Receiver::handle() const
+{
+  return handle_;
+}
+
+inline SacnReceiverConfig Receiver::TranslateConfig(const Settings& settings, NotifyHandler& notify_handler)
+{
+  // clang-format off
+  SacnReceiverConfig config = {
+    settings.universe_id,
+    {
+      internal::ReceiverCbSourcesFound,
+      internal::ReceiverCbUniverseData,
+      internal::ReceiverCbSourcesLost,
+      internal::ReceiverCbPapLost,
+      internal::ReceiverCbSourceLimitExceeded,
+      &notify_handler
+    },
+    settings.source_count_max,
+    settings.flags,
+    nullptr, 
+    settings.netints.size()
+  };
+  // clang-format on
+
+  //Now initialize the netints
+  if (config.num_netints > 0)
+  {
+    config.netints = settings.netints.data();
+  }
+
+  return config;
+}
 
 };  // namespace sacn
 

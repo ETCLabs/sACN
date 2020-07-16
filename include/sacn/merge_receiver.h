@@ -149,6 +149,7 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
 
 etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle);
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle);
+etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id);
 etcpal_error_t sacn_merge_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
                                            size_t num_netints);

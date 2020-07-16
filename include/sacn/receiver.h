@@ -235,6 +235,7 @@ typedef struct SacnRecvCallbacks
   SacnSourcesLostCallback sources_lost;                  /*!< Required */
   SacnSourcePapLostCallback source_pap_lost;             /*!< Optional */
   SacnSourceLimitExceededCallback source_limit_exceeded; /*!< Optional */
+  void* context; /*!< (optional) Pointer to opaque data passed back with each callback. */
 } SacnReceiverCallbacks;
 
 /*! A set of configuration information for an sACN receiver. */
@@ -255,8 +256,6 @@ typedef struct SacnReceiverConfig
   size_t source_count_max;
   /*! A set of option flags. See "sACN receiver flags". */
   unsigned int flags;
-  /*! Pointer to opaque data passed back with each callback. */
-  void* callback_context;
   /*! (optional) array of network interfaces on which to listen to the specified universe. If NULL,
    *  all available network interfaces will be used. */
   const SacnMcastNetintId* netints;
@@ -267,13 +266,14 @@ typedef struct SacnReceiverConfig
 /*! A default-value initializer for an SacnReceiverConfig struct. */
 #define SACN_RECEIVER_CONFIG_DEFAULT_INIT                  \
   {                                                        \
-    0, {NULL, NULL, NULL, NULL, NULL}, 0, 0, NULL, NULL, 0 \
+    0, {NULL, NULL, NULL, NULL, NULL, NULL}, 0, 0, NULL, 0 \
   }
 
 void sacn_receiver_config_init(SacnReceiverConfig* config);
 
 etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle);
 etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle);
+etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id);
 etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, const SacnMcastNetintId* netints,
                                               size_t num_netints);

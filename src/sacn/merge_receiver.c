@@ -180,6 +180,25 @@ etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
 }
 
 /*!
+ * \brief Get the universe on which a sACN Merge Receiver is currently listening.
+ *
+ * \param[in] handle Handle to the receiver that we want to query.
+ * \param[out] universe_id The retrieved universe.
+ * \return #kEtcPalErrOk: Universe retrieved successfully.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id)
+{
+  // TODO CHRISTIAN CLEANUP
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe_id);
+  return kEtcPalErrNotImpl;
+}
+
+/*!
  * \brief Change the universe on which a sACN Merge Receiver is listening.
  *
  * An sACN receiver can only listen on one universe at a time. After this call completes, underlying updates will
