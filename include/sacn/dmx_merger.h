@@ -66,11 +66,14 @@ extern "C" {
 /*! Each merger has a handle associated with it.*/
 typedef int sacn_dmx_merger_t;
 
+/*! An invalid sACN receiver handle value. */
+#define SACN_DMX_MERGER_INVALID -1
+
 /*! The sources on a merger have a short id that is used in the owned values, rather than a UUID.*/
 typedef uint16_t source_id_t;
 
 /*! An invalid source id handle value. */
-#define SACN_DMX_MERGER_SOURCE_INVALID -1
+#define SACN_DMX_MERGER_SOURCE_INVALID ((uint16_t) -1)
 
 /*! A set of configuration information for a merger instance. */
 typedef struct SacnDmxMergerConfig
