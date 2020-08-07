@@ -558,11 +558,7 @@ etcpal_error_t update_winner_lookup(MergerState* merger, unsigned int slot_index
     // Make sure to free the previously allocated WinnerLookupKeys as well.
     WinnerLookupKeys* keys_to_free = etcpal_rbtree_find(&merger->winner_lookup[slot_index], current_keys);
 
-    if (keys_to_free == NULL)
-    {
-      result = kEtcPalErrNotFound;
-    }
-    else
+    if (keys_to_free != NULL)
     {
       result = etcpal_rbtree_remove(&merger->winner_lookup[slot_index], keys_to_free);
 
@@ -575,7 +571,7 @@ etcpal_error_t update_winner_lookup(MergerState* merger, unsigned int slot_index
     // If the new keys are valid, then add them to the winner lookup.
     if (new_keys->owner != SACN_DMX_MERGER_SOURCE_INVALID)
     {
-      // Create a heap-allocated copy to use in for the lookup tree.
+      // Create a heap-allocated copy to use for the lookup tree.
       WinnerLookupKeys* allocated_keys = ALLOC_WINNER_LOOKUP_KEYS();
 
       if (allocated_keys == NULL)
