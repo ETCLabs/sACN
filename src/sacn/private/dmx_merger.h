@@ -35,7 +35,14 @@ extern "C" {
 #endif
 
 //TODO: DO WE NEED THIS FILE??
-
+etcpal_error_t update_levels(sacn_dmx_merger_t merger, source_id_t source, const uint8_t* new_values,
+                             size_t new_values_count);
+etcpal_error_t update_level(sacn_dmx_merger_t merger, source_id_t source, unsigned int level_index, uint8_t level);
+etcpal_error_t update_level_count(sacn_dmx_merger_t merger, source_id_t source, size_t new_values_count);
+etcpal_error_t update_per_address_priorities(sacn_dmx_merger_t merger, source_id_t source,
+                                             const uint8_t* address_priorities, size_t address_priorities_count);
+etcpal_error_t update_universe_priority(sacn_dmx_merger_t merger, source_id_t source, uint8_t priority);
+bool merger_is_added(sacn_dmx_merger_t handle);
 
 #ifdef __cplusplus
 }
