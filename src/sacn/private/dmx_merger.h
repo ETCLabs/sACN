@@ -59,14 +59,17 @@ typedef struct MergerState
 EtcPalRbTree mergers;
 
 // TODO: DO WE NEED THIS FILE??
-etcpal_error_t update_levels(MergerState* merger, source_id_t source, const uint8_t* new_values,
+etcpal_error_t update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values,
                              size_t new_values_count);
-etcpal_error_t update_level(MergerState* merger, source_id_t source, unsigned int level_index, uint8_t level);
-etcpal_error_t update_level_count(MergerState* merger, source_id_t source, size_t new_values_count);
-etcpal_error_t update_per_address_priorities(MergerState* merger, source_id_t source, const uint8_t* address_priorities,
-                                             size_t address_priorities_count);
-etcpal_error_t update_universe_priority(MergerState* merger, source_id_t source, uint8_t priority);
+etcpal_error_t update_level(MergerState* merger, SourceState* source, unsigned int level_index, uint8_t level);
+etcpal_error_t update_level_count(MergerState* merger, SourceState* source, size_t new_values_count);
+etcpal_error_t update_per_address_priorities(MergerState* merger, SourceState* source,
+                                             const uint8_t* address_priorities, size_t address_priorities_count);
+etcpal_error_t update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority);
 bool merger_is_added(sacn_dmx_merger_t handle);
+WinnerLookupKeys get_winner_lookup_keys(SourceState* source, unsigned int slot_index);
+etcpal_error_t update_winner_lookup(MergerState* merger, unsigned int slot_index, const WinnerLookupKeys* current_keys,
+                                    const WinnerLookupKeys* new_keys);
 
 #ifdef __cplusplus
 }

@@ -85,7 +85,7 @@ typedef struct SacnDmxMergerConfig
   uint8_t* slots;
 
   /*! Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
-      that slot, or #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
+      that slot, or #SACN_DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
       Memory is owned by the application.*/
   source_id_t* slot_owners;
 
