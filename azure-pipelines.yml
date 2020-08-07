@@ -2,7 +2,7 @@
 
 trigger:
 - develop
-- master
+- stable
 - release/*
 - refs/tags/v*.*.*.*
 
