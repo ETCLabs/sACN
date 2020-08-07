@@ -29,19 +29,43 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "../../../include/sacn/dmx_merger.h"
+#include "etcpal/rbtree.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-//TODO: DO WE NEED THIS FILE??
-etcpal_error_t update_levels(sacn_dmx_merger_t merger, source_id_t source, const uint8_t* new_values,
+typedef struct SourceState
+{
+  source_id_t handle;
+  SacnDmxMergerSource source;
+} SourceState;
+
+typedef struct WinnerLookupKeys
+{
+  source_id_t owner;
+  uint8_t level;
+  uint8_t priority;
+} WinnerLookupKeys;
+
+typedef struct MergerState
+{
+  sacn_dmx_merger_t handle;
+
+  EtcPalRbTree sources;
+  EtcPalRbTree winner_lookup[DMX_ADDRESS_COUNT];
+} MergerState;
+
+EtcPalRbTree mergers;
+
+// TODO: DO WE NEED THIS FILE??
+etcpal_error_t update_levels(MergerState* merger, source_id_t source, const uint8_t* new_values,
                              size_t new_values_count);
-etcpal_error_t update_level(sacn_dmx_merger_t merger, source_id_t source, unsigned int level_index, uint8_t level);
-etcpal_error_t update_level_count(sacn_dmx_merger_t merger, source_id_t source, size_t new_values_count);
-etcpal_error_t update_per_address_priorities(sacn_dmx_merger_t merger, source_id_t source,
-                                             const uint8_t* address_priorities, size_t address_priorities_count);
-etcpal_error_t update_universe_priority(sacn_dmx_merger_t merger, source_id_t source, uint8_t priority);
+etcpal_error_t update_level(MergerState* merger, source_id_t source, unsigned int level_index, uint8_t level);
+etcpal_error_t update_level_count(MergerState* merger, source_id_t source, size_t new_values_count);
+etcpal_error_t update_per_address_priorities(MergerState* merger, source_id_t source, const uint8_t* address_priorities,
+                                             size_t address_priorities_count);
+etcpal_error_t update_universe_priority(MergerState* merger, source_id_t source, uint8_t priority);
 bool merger_is_added(sacn_dmx_merger_t handle);
 
 #ifdef __cplusplus

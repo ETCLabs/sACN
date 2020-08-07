@@ -74,7 +74,7 @@ ETCPAL_MEMPOOL_DEFINE(sacnrecv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODE
 
 /*********************** Private function prototypes *************************/
 
-
+// TODO: Remove this section?
 
 /*************************** Function definitions ****************************/
 
@@ -304,19 +304,27 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
     return kEtcPalErrNotFound;
   }
 
+  // Look up the merger state
+  MergerState* merger_state = etcpal_rbtree_find(&mergers, &merger);
+
+  if (merger_state == NULL)
+  {
+    result = kEtcPalErrNotFound;
+  }
+
   // Update this source's level data.
-  result = update_levels(merger, source, new_values, new_values_count);
+  result = update_levels(merger_state, source, new_values, new_values_count);
 
   // Update this source's universe priority.
   if (result == kEtcPalErrOk)
   {
-    result = update_universe_priority(merger, source, priority);
+    result = update_universe_priority(merger_state, source, priority);
   }
 
   // Update this source's per-address-priority data.
   if (result == kEtcPalErrOk)
   {
-    result = update_per_address_priorities(merger, source, address_priorities, address_priorities_count);
+    result = update_per_address_priorities(merger_state, source, address_priorities, address_priorities_count);
   }
 
   // Return the final etcpal_error_t result.
@@ -379,23 +387,31 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
     return kEtcPalErrNotFound;
   }
 
+  // Look up the merger state
+  MergerState* merger_state = etcpal_rbtree_find(&mergers, &merger);
+
+  if (merger_state == NULL)
+  {
+    result = kEtcPalErrNotFound;
+  }
+
   // If this is level data (start code 0x00):
   if (header->start_code == 0x00)
   {
     // Update this source's level data.
-    result = update_levels(merger, source, pdata, header->slot_count);
+    result = update_levels(merger_state, source, pdata, header->slot_count);
   }
   // Else if this is per-address-priority data (start code 0xDD):
   else if (header->start_code == 0xDD)
   {
     // Update this source's per-address-priority data.
-    result = update_per_address_priorities(merger, source, pdata, header->slot_count);
+    result = update_per_address_priorities(merger_state, source, pdata, header->slot_count);
   }
 
   // Update this source's universe priority.
   if (result == kEtcPalErrOk)
   {
-    result = update_universe_priority(merger, source, header->priority);
+    result = update_universe_priority(merger_state, source, header->priority);
   }
 
   // Return the final etcpal_error_t result.
@@ -441,7 +457,7 @@ etcpal_error_t sacn_dmx_merger_recalculate(sacn_dmx_merger_t merger)
 /*
  * Updates the source levels and recalculates outputs. Assumes all arguments are valid.
  */
-etcpal_error_t update_levels(sacn_dmx_merger_t merger, source_id_t source, const uint8_t* new_values,
+etcpal_error_t update_levels(MergerState* merger, source_id_t source, const uint8_t* new_values,
                              size_t new_values_count)
 {
   etcpal_error_t result = kEtcPalErrOk;
@@ -463,12 +479,12 @@ etcpal_error_t update_levels(sacn_dmx_merger_t merger, source_id_t source, const
   return result;
 }
 
-etcpal_error_t update_level(sacn_dmx_merger_t merger, source_id_t source, unsigned int level_index, uint8_t level)
+etcpal_error_t update_level(MergerState* merger, source_id_t source, unsigned int level_index, uint8_t level)
 {
   return kEtcPalErrNotImpl;  // TODO: Implement this.
 }
 
-etcpal_error_t update_level_count(sacn_dmx_merger_t merger, source_id_t source, size_t new_values_count)
+etcpal_error_t update_level_count(MergerState* merger, source_id_t source, size_t new_values_count)
 {
   return kEtcPalErrNotImpl;  // TODO: Implement this.
 }
@@ -476,7 +492,7 @@ etcpal_error_t update_level_count(sacn_dmx_merger_t merger, source_id_t source, 
 /*
  * Updates the source per-address-priorities and recalculates outputs. Assumes all arguments are valid.
  */
-etcpal_error_t update_per_address_priorities(sacn_dmx_merger_t merger, source_id_t source,
+etcpal_error_t update_per_address_priorities(MergerState* merger, source_id_t source,
                                              const uint8_t* address_priorities, size_t address_priorities_count)
 {
   return kEtcPalErrNotImpl;  // TODO: Implement this.
@@ -485,7 +501,7 @@ etcpal_error_t update_per_address_priorities(sacn_dmx_merger_t merger, source_id
 /*
  * Updates the source universe priority and recalculates outputs if needed. Assumes all arguments are valid.
  */
-etcpal_error_t update_universe_priority(sacn_dmx_merger_t merger, source_id_t source, uint8_t priority)
+etcpal_error_t update_universe_priority(MergerState* merger, source_id_t source, uint8_t priority)
 {
   return kEtcPalErrNotImpl;  // TODO: Implement this.
 }
