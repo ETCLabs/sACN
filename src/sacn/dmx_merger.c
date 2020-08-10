@@ -35,9 +35,13 @@
 #if SACN_DYNAMIC_MEM
 #define ALLOC_WINNER_LOOKUP_KEYS() malloc(sizeof(WinnerLookupKeys))
 #define FREE_WINNER_LOOKUP_KEYS(ptr) free(ptr)
+#define ALLOC_SOURCE_STATE() malloc(sizeof(SourceState))
+#define FREE_SOURCE_STATE(ptr) free(ptr)
 #else
 #define ALLOC_WINNER_LOOKUP_KEYS() etcpal_mempool_alloc(sacnmerge_winner_lookup_keys)
 #define FREE_WINNER_LOOKUP_KEYS(ptr) etcpal_mempool_free(sacnmerge_winner_lookup_keys, ptr)
+#define ALLOC_SOURCE_STATE() etcpal_mempool_alloc(sacnmerge_source_states)
+#define FREE_SOURCE_STATE(ptr) etcpal_mempool_free(sacnmerge_source_states, ptr)
 #endif
 
 /**************************** Private variables ******************************/
@@ -46,6 +50,8 @@
 #if !SACN_DYNAMIC_MEM
 ETCPAL_MEMPOOL_DEFINE(sacnmerge_winner_lookup_keys, WinnerLookupKeys,
                       DMX_ADDRESS_COUNT * SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT);
+ETCPAL_MEMPOOL_DEFINE(sacnmerge_source_states, SourceState,
+                      SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT);
 #endif
 // clang-format on
 
@@ -275,19 +281,7 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
     return kEtcPalErrInvalid;
   }
 
-  // Check that the merger is added.
-  if (!merger_is_added(merger))
-  {
-    return kEtcPalErrNotFound;
-  }
-
-  // Check that the source is added.
-  if (sacn_dmx_merger_get_source(merger, source) == NULL)
-  {
-    return kEtcPalErrNotFound;
-  }
-
-  // Look up the merger state
+  // Look up the merger state.
   MergerState* merger_state = etcpal_rbtree_find(&mergers, &merger);
 
   if (merger_state == NULL)
@@ -295,8 +289,8 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
     return kEtcPalErrNotFound;
   }
 
-  // Look up the source state
-  SourceState* source_state = etcpal_rbtree_find(&merger_state->sources, &source);
+  // Look up the source state.
+  SourceState* source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
 
   if (source_state == NULL)
   {
@@ -304,7 +298,10 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
   }
 
   // Update this source's level data.
-  result = update_levels(merger_state, source_state, new_values, new_values_count);
+  if (new_values != NULL)
+  {
+    result = update_levels(merger_state, source_state, new_values, new_values_count);
+  }
 
   // Update this source's universe priority.
   if (result == kEtcPalErrOk)
@@ -313,7 +310,7 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
   }
 
   // Update this source's per-address-priority data.
-  if (result == kEtcPalErrOk)
+  if ((result == kEtcPalErrOk) && (address_priorities != NULL))
   {
     result = update_per_address_priorities(merger_state, source_state, address_priorities, address_priorities_count);
   }
@@ -371,12 +368,6 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
     return kEtcPalErrInvalid;
   }
 
-  // Check that the merger is added.
-  if (!merger_is_added(merger))
-  {
-    return kEtcPalErrNotFound;
-  }
-
   // Check that the source is added.
   source = sacn_dmx_merger_get_id(merger, &header->cid);
   if (source == SACN_DMX_MERGER_SOURCE_INVALID)
@@ -384,7 +375,7 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
     return kEtcPalErrNotFound;
   }
 
-  // Look up the merger state
+  // Look up the merger state.
   MergerState* merger_state = etcpal_rbtree_find(&mergers, &merger);
 
   if (merger_state == NULL)
@@ -392,25 +383,28 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
     return kEtcPalErrNotFound;
   }
 
-  // Look up the source state
-  SourceState* source_state = etcpal_rbtree_find(&merger_state->sources, &source);
+  // Look up the source state.
+  SourceState* source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
 
   if (source_state == NULL)
   {
     return kEtcPalErrNotFound;
   }
 
-  // If this is level data (start code 0x00):
-  if (header->start_code == 0x00)
+  if (pdata != NULL)
   {
-    // Update this source's level data.
-    result = update_levels(merger_state, source_state, pdata, header->slot_count);
-  }
-  // Else if this is per-address-priority data (start code 0xDD):
-  else if (header->start_code == 0xDD)
-  {
-    // Update this source's per-address-priority data.
-    result = update_per_address_priorities(merger_state, source_state, pdata, header->slot_count);
+    // If this is level data (start code 0x00):
+    if (header->start_code == 0x00)
+    {
+      // Update this source's level data.
+      result = update_levels(merger_state, source_state, pdata, header->slot_count);
+    }
+    // Else if this is per-address-priority data (start code 0xDD):
+    else if (header->start_code == 0xDD)
+    {
+      // Update this source's per-address-priority data.
+      result = update_per_address_priorities(merger_state, source_state, pdata, header->slot_count);
+    }
   }
 
   // Update this source's universe priority.
@@ -439,7 +433,48 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
  */
 etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, source_id_t source)
 {
-  return kEtcPalErrNotImpl;  // TODO: Implement this.
+  etcpal_error_t result = kEtcPalErrOk;
+
+  // Verify module initialized.
+  if (!sacn_initialized())
+  {
+    return kEtcPalErrNotInit;
+  }
+
+  // Validate source.
+  if (source == SACN_DMX_MERGER_SOURCE_INVALID)
+  {
+    return kEtcPalErrInvalid;
+  }
+
+  // Look up the merger state.
+  MergerState* merger_state = etcpal_rbtree_find(&mergers, &merger);
+
+  if (merger_state == NULL)
+  {
+    return kEtcPalErrNotFound;
+  }
+
+  // Look up the source state.
+  SourceState* source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
+
+  if (source_state == NULL)
+  {
+    return kEtcPalErrNotFound;
+  }
+
+  // Update the address_priority_valid flag.
+  source_state->address_priority_valid = false;
+
+  // Reset all priorities to the universe priority.
+  for (unsigned int priority_index = 0; (result == kEtcPalErrOk) && (priority_index < DMX_ADDRESS_COUNT);
+       ++priority_index)
+  {
+    // Update the priority.
+    result = update_priority(merger, source, priority_index, source_state->universe_priority);
+  }
+
+  return result;
 }
 
 /*!
@@ -470,14 +505,15 @@ etcpal_error_t update_levels(MergerState* merger, SourceState* source, const uin
   // For each level:
   for (unsigned int level_index = 0; (result == kEtcPalErrOk) && (level_index < new_values_count); ++level_index)
   {
-    // Update the level and recalculate.
+    // Update the level.
     result = update_level(merger, source, level_index, new_values[level_index]);
   }
 
   // Update the level count
   if (result == kEtcPalErrOk)
   {
-    result = update_level_count(merger, source, new_values_count);
+    // Just update the existing entry, since we're not modifying a key.
+    source->valid_value_count = new_values_count;
   }
 
   // Return the etcpal_error_t result.
@@ -487,23 +523,17 @@ etcpal_error_t update_levels(MergerState* merger, SourceState* source, const uin
 etcpal_error_t update_level(MergerState* merger, SourceState* source, unsigned int level_index, uint8_t level)
 {
   // Get the current winner lookup keys
-  WinnerLookupKeys current_keys = get_winner_lookup_keys(source, level_index);
+  WinnerLookupKeys* current_keys = get_current_keys(merger, source, level_index);
 
-  // Update source state
-  source->source.values[level_index] = level;
-
-  // Get the new winner lookup keys
-  WinnerLookupKeys new_keys = get_winner_lookup_keys(source, level_index);
+  // Create the new keys
+  WinnerLookupKeys new_keys;
+  new_keys.slot_index = level_index;
+  new_keys.owner = source->handle;
+  new_keys.level = level;
+  new_keys.priority = (current_keys == NULL) ? 0 : current_keys->priority;
 
   // Update winner lookup
-  update_winner_lookup(merger, level_index, &current_keys, &new_keys);
-
-  return kEtcPalErrNotImpl;  // TODO: Implement this.
-}
-
-etcpal_error_t update_level_count(MergerState* merger, SourceState* source, size_t new_values_count)
-{
-  return kEtcPalErrNotImpl;  // TODO: Implement this.
+  return update_winner_lookup(merger, level_index, current_keys, &new_keys);
 }
 
 /*
@@ -512,7 +542,37 @@ etcpal_error_t update_level_count(MergerState* merger, SourceState* source, size
 etcpal_error_t update_per_address_priorities(MergerState* merger, SourceState* source,
                                              const uint8_t* address_priorities, size_t address_priorities_count)
 {
-  return kEtcPalErrNotImpl;  // TODO: Implement this.
+  etcpal_error_t result = kEtcPalErrOk;
+
+  // Update the address_priority_valid flag.
+  source->address_priority_valid = true;
+
+  // For each priority:
+  for (unsigned int priority_index = 0; (result == kEtcPalErrOk) && (priority_index < address_priorities_count);
+       ++priority_index)
+  {
+    // Update the priority.
+    result = update_priority(merger, source, priority_index, address_priorities[priority_index]);
+  }
+
+  // Return the etcpal_error_t result.
+  return result;
+}
+
+etcpal_error_t update_priority(MergerState* merger, SourceState* source, unsigned int priority_index, uint8_t priority)
+{
+  // Get the current winner lookup keys
+  WinnerLookupKeys* current_keys = get_current_keys(merger, source, priority_index);
+
+  // Create the new keys
+  WinnerLookupKeys new_keys;
+  new_keys.slot_index = priority_index;
+  new_keys.owner = source->handle;
+  new_keys.level = (current_keys == NULL) ? 0 : current_keys->level;
+  new_keys.priority = priority;
+
+  // Update winner lookup
+  return update_winner_lookup(merger, priority_index, current_keys, &new_keys);
 }
 
 /*
@@ -520,56 +580,90 @@ etcpal_error_t update_per_address_priorities(MergerState* merger, SourceState* s
  */
 etcpal_error_t update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority)
 {
-  return kEtcPalErrNotImpl;  // TODO: Implement this.
-}
+  etcpal_error_t result = kEtcPalErrOk;
 
-bool merger_is_added(sacn_dmx_merger_t handle)
-{
-  return false;  // TODO: Implement this.
-}
+  // Just update the existing entry, since we're not modifying a key.
+  source->universe_priority = priority;
 
-WinnerLookupKeys get_winner_lookup_keys(SourceState* source, unsigned int slot_index)
-{
-  WinnerLookupKeys result;
-
-  result.owner = source->handle;
-  result.level = source->source.values[slot_index];
-
-  if (source->source.address_priority_valid)
+  // Update the actual priorities now if there are no per-address priorities.
+  if (!source->address_priority_valid)
   {
-    result.priority = source->source.address_priority[slot_index];
-  }
-  else
-  {
-    result.priority = source->source.universe_priority;
+    for (unsigned int priority_index = 0; (result == kEtcPalErrOk) && (priority_index < DMX_ADDRESS_COUNT);
+          ++priority_index)
+    {
+      // Update the priority.
+      result = update_priority(merger, source, priority_index, priority);
+    }
   }
 
   return result;
 }
 
-etcpal_error_t update_winner_lookup(MergerState* merger, unsigned int slot_index, const WinnerLookupKeys* current_keys,
-                                    const WinnerLookupKeys* new_keys)
+WinnerLookupKeys get_winner_lookup_source_lower_bound_keys(unsigned int slot_index, SourceState* source)
+{
+  WinnerLookupKeys result;
+
+  result.slot_index = slot_index;
+  result.owner = source->handle;
+  result.level = 0x00;
+  result.priority = 0x00;
+
+  return result;
+}
+
+WinnerLookupKeys get_winner_lookup_source_upper_bound_keys(unsigned int slot_index, SourceState* source)
+{
+  WinnerLookupKeys result;
+
+  result.slot_index = slot_index;
+  result.owner = source->handle;
+  result.level = 0xff;
+  result.priority = 0xff;
+
+  return result;
+}
+
+WinnerLookupKeys get_winner_lookup_slot_lower_bound_keys(unsigned int slot_index)
+{
+  WinnerLookupKeys result;
+
+  result.slot_index = slot_index;
+  result.owner = 0x0000;
+  result.level = 0x00;
+  result.priority = 0x00;
+
+  return result;
+}
+
+WinnerLookupKeys get_winner_lookup_slot_upper_bound_keys(unsigned int slot_index)
+{
+  WinnerLookupKeys result;
+
+  result.slot_index = slot_index;
+  result.owner = 0xffff;
+  result.level = 0xff;
+  result.priority = 0xff;
+
+  return result;
+}
+
+etcpal_error_t update_winner_lookup(MergerState* merger, WinnerLookupKeys* current_keys_to_free,
+                                    const WinnerLookupKeys* new_keys_to_copy)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
-  // If the current keys are valid, then remove them from the winner lookup.
-  if (current_keys->owner != SACN_DMX_MERGER_SOURCE_INVALID)
+  // If the current keys were found, then remove them from the winner lookup and free them.
+  // This is because we are modifying keys, which may change the ordering of the tree.
+  if (current_keys_to_free != NULL)
   {
-    // Make sure to free the previously allocated WinnerLookupKeys as well.
-    WinnerLookupKeys* keys_to_free = etcpal_rbtree_find(&merger->winner_lookup[slot_index], current_keys);
-
-    if (keys_to_free != NULL)
-    {
-      result = etcpal_rbtree_remove(&merger->winner_lookup[slot_index], keys_to_free);
-
-      FREE_WINNER_LOOKUP_KEYS(keys_to_free);
-    }
+    result = etcpal_rbtree_remove(&merger->winner_lookup, current_keys_to_free);
+    FREE_WINNER_LOOKUP_KEYS(current_keys_to_free);
   }
 
   if (result == kEtcPalErrOk)
   {
     // If the new keys are valid, then add them to the winner lookup.
-    if (new_keys->owner != SACN_DMX_MERGER_SOURCE_INVALID)
+    if (keys_valid(new_keys_to_copy))
     {
       // Create a heap-allocated copy to use for the lookup tree.
       WinnerLookupKeys* allocated_keys = ALLOC_WINNER_LOOKUP_KEYS();
@@ -580,12 +674,36 @@ etcpal_error_t update_winner_lookup(MergerState* merger, unsigned int slot_index
       }
       else
       {
-        *allocated_keys = *new_keys;
-
-        result = etcpal_rbtree_insert(&merger->winner_lookup[slot_index], allocated_keys);
+        *allocated_keys = *new_keys_to_copy;
+        result = etcpal_rbtree_insert(&merger->winner_lookup, allocated_keys);
       }
     }
   }
 
   return result;
+}
+
+WinnerLookupKeys* get_current_keys(MergerState* merger, SourceState* source, unsigned int slot_index)
+{
+  WinnerLookupKeys lower_bound_keys = get_winner_lookup_source_lower_bound_keys(slot_index, source);
+
+  EtcPalRbIter tree_iter;
+  etcpal_rbiter_init(&tree_iter);
+
+  WinnerLookupKeys* result = etcpal_rbiter_lower_bound(&tree_iter, &merger->winner_lookup, &lower_bound_keys);
+
+  if (result != NULL)
+  {
+    if ((result->slot_index != slot_index) || (result->owner != source->handle))
+    {
+      result = NULL;
+    }
+  }
+
+  return result;
+}
+
+bool keys_valid(const WinnerLookupKeys* keys)
+{
+  return (keys != NULL) && (keys->owner != SACN_DMX_MERGER_SOURCE_INVALID);
 }

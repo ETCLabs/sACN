@@ -35,25 +35,29 @@
 extern "C" {
 #endif
 
-typedef struct SourceState
-{
-  source_id_t handle;
-  SacnDmxMergerSource source;
-} SourceState;
-
 typedef struct WinnerLookupKeys
 {
+  unsigned int slot_index;
   source_id_t owner;
   uint8_t level;
   uint8_t priority;
 } WinnerLookupKeys;
 
+typedef struct SourceState
+{
+  source_id_t handle;
+
+  size_t valid_value_count;
+  uint8_t universe_priority;
+  bool address_priority_valid;
+} SourceState;
+
 typedef struct MergerState
 {
   sacn_dmx_merger_t handle;
 
-  EtcPalRbTree sources;
-  EtcPalRbTree winner_lookup[DMX_ADDRESS_COUNT];
+  EtcPalRbTree source_state_lookup;
+  EtcPalRbTree winner_lookup;
 } MergerState;
 
 EtcPalRbTree mergers;
@@ -62,14 +66,18 @@ EtcPalRbTree mergers;
 etcpal_error_t update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values,
                              size_t new_values_count);
 etcpal_error_t update_level(MergerState* merger, SourceState* source, unsigned int level_index, uint8_t level);
-etcpal_error_t update_level_count(MergerState* merger, SourceState* source, size_t new_values_count);
 etcpal_error_t update_per_address_priorities(MergerState* merger, SourceState* source,
                                              const uint8_t* address_priorities, size_t address_priorities_count);
+etcpal_error_t update_priority(MergerState* merger, SourceState* source, unsigned int priority_index, uint8_t priority);
 etcpal_error_t update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority);
-bool merger_is_added(sacn_dmx_merger_t handle);
-WinnerLookupKeys get_winner_lookup_keys(SourceState* source, unsigned int slot_index);
-etcpal_error_t update_winner_lookup(MergerState* merger, unsigned int slot_index, const WinnerLookupKeys* current_keys,
-                                    const WinnerLookupKeys* new_keys);
+WinnerLookupKeys get_winner_lookup_source_lower_bound_keys(unsigned int slot_index, SourceState* source);
+WinnerLookupKeys get_winner_lookup_source_upper_bound_keys(unsigned int slot_index, SourceState* source);
+WinnerLookupKeys get_winner_lookup_slot_lower_bound_keys(unsigned int slot_index);
+WinnerLookupKeys get_winner_lookup_slot_upper_bound_keys(unsigned int slot_index);
+etcpal_error_t update_winner_lookup(MergerState* merger, WinnerLookupKeys* current_keys_to_free,
+                                    const WinnerLookupKeys* new_keys_to_copy);
+WinnerLookupKeys* get_current_keys(MergerState* merger, SourceState* source, unsigned int slot_index);
+bool keys_valid(const WinnerLookupKeys* keys);
 
 #ifdef __cplusplus
 }
