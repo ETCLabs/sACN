@@ -533,7 +533,14 @@ etcpal_error_t update_level(MergerState* merger, SourceState* source, unsigned i
   new_keys.priority = (current_keys == NULL) ? 0 : current_keys->priority;
 
   // Update winner lookup
-  return update_winner_lookup(merger, level_index, current_keys, &new_keys);
+  etcpal_error_t result = update_winner_lookup(merger, level_index, current_keys, &new_keys);
+
+  if (result == kEtcPalErrOk)
+  {
+    update_merge(merger, level_index);
+  }
+
+  return result;
 }
 
 /*
@@ -572,7 +579,14 @@ etcpal_error_t update_priority(MergerState* merger, SourceState* source, unsigne
   new_keys.priority = priority;
 
   // Update winner lookup
-  return update_winner_lookup(merger, priority_index, current_keys, &new_keys);
+  etcpal_error_t result = update_winner_lookup(merger, priority_index, current_keys, &new_keys);
+
+  if (result == kEtcPalErrOk)
+  {
+    update_merge(merger, priority_index);
+  }
+
+  return result;
 }
 
 /*
@@ -589,7 +603,7 @@ etcpal_error_t update_universe_priority(MergerState* merger, SourceState* source
   if (!source->address_priority_valid)
   {
     for (unsigned int priority_index = 0; (result == kEtcPalErrOk) && (priority_index < DMX_ADDRESS_COUNT);
-          ++priority_index)
+         ++priority_index)
     {
       // Update the priority.
       result = update_priority(merger, source, priority_index, priority);
@@ -706,4 +720,29 @@ WinnerLookupKeys* get_current_keys(MergerState* merger, SourceState* source, uns
 bool keys_valid(const WinnerLookupKeys* keys)
 {
   return (keys != NULL) && (keys->owner != SACN_DMX_MERGER_SOURCE_INVALID);
+}
+
+void update_merge(MergerState* merger, unsigned int slot_index)
+{
+  // Initialize an iterator.
+  EtcPalRbIter tree_iter;
+  etcpal_rbiter_init(&tree_iter);
+
+  // Point the iterator to immediately after the keys for slot_index (if any).
+  WinnerLookupKeys upper_bound_keys = get_winner_lookup_slot_upper_bound_keys(slot_index);
+  etcpal_rbiter_upper_bound(&tree_iter, &merger->winner_lookup, &upper_bound_keys);
+
+  // If there are any keys for slot_index, then previous will be the highest of them and thus the winner.
+  const WinnerLookupKeys* winner_keys = etcpal_rbiter_prev(&tree_iter);
+
+  // If there is a winner for slot_index, update the slots and slot_owners.
+  if ((winner_keys != NULL) && (winner_keys->slot_index == slot_index))
+  {
+    merger->config->slots[slot_index] = winner_keys->level;
+    merger->config->slot_owners[slot_index] = winner_keys->owner;
+  }
+  else  // Otherwise, slot_owners should indicate that there is no source for this slot.
+  {
+    merger->config->slot_owners[slot_index] = SACN_DMX_MERGER_SOURCE_INVALID;
+  }
 }

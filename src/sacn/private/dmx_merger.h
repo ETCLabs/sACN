@@ -58,6 +58,8 @@ typedef struct MergerState
 
   EtcPalRbTree source_state_lookup;
   EtcPalRbTree winner_lookup;
+
+  SacnDmxMergerConfig* config;
 } MergerState;
 
 EtcPalRbTree mergers;
@@ -78,6 +80,7 @@ etcpal_error_t update_winner_lookup(MergerState* merger, WinnerLookupKeys* curre
                                     const WinnerLookupKeys* new_keys_to_copy);
 WinnerLookupKeys* get_current_keys(MergerState* merger, SourceState* source, unsigned int slot_index);
 bool keys_valid(const WinnerLookupKeys* keys);
+void update_merge(MergerState* merger, unsigned int slot_index);
 
 #ifdef __cplusplus
 }
