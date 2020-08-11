@@ -29,6 +29,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <sacn/receiver.h>
+#include <sacn/dmx_merger.h>
 
 /*!
  * \defgroup sacn_merge_receiver sACN Merge Receiver
@@ -48,6 +50,8 @@ extern "C" {
 
 /*! A handle to an sACN Merge Receiver. */
 typedef int sacn_merge_receiver_t;
+/*! An invalid sACN merge_receiver handle value. */
+#define SACN_MERGE_RECEIVER_INVALID -1
 
 /*!
  * \brief Notify that a new data packet has been received and merged.
@@ -55,7 +59,8 @@ typedef int sacn_merge_receiver_t;
  * This callback will be called in multiple ways:
  * 1. When a new non-preview data packet or per-address priority packet is received from the sACN Receiver module,
  * it is immediately and synchronously passed to the DMX Merger, after which the merged result is immediately and
- * synchronously passed to this callback.  Note that this includes the data received from the SacnSourcesFoundCallback().
+ * synchronously passed to this callback.  Note that this includes the data received from the
+ * SacnSourcesFoundCallback().
  * 2. When a sACN source is no longer sending non-preview data or per-address priority packets, the lost source callback
  * from the sACN Receiver module will be passed to the merger, after which the merged result is immediately and
  * synchronously passed to this callback.
@@ -64,10 +69,12 @@ typedef int sacn_merge_receiver_t;
  * packets on the universe.
  *
  * \param[in] universe The universe number this receiver is monitoring.
- * \param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe.
+ * \param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe. This buffer is
+ * owned by the library.
  * \param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source_ids.  If a value in the buffer is
  *           #DMX_MERGER_SOURCE_INVALID, the corresponding slot is not currently controlled. You can also use
- *            SACN_DMX_MERGER_IS_SOURCE_VALID(slot_owners[index]) to check the slot validity.
+ *            SACN_DMX_MERGER_IS_SOURCE_VALID(slot_owners[index]) to check the slot validity. This buffer is owned by
+ * the library.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.
  */
 typedef void (*SacnMergeReceiverMergedDataCallback)(uint16_t universe, const uint8_t* slots,
@@ -89,7 +96,8 @@ typedef void (*SacnMergeReceiverMergedDataCallback)(uint16_t universe, const uin
  * \param[in] universe The universe number this receiver is monitoring.
  * \param[in] source_addr The network address from which the sACN packet originated.
  * \param[in] header The header data of the sACN packet.
- * \param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count.
+ * \param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count. This buffer is
+ * owned by the library.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.
  */
 typedef void (*SacnMergeReceiverNonDMXCallback)(uint16_t universe, const EtcPalSockAddr* source_addr,
@@ -112,6 +120,7 @@ typedef struct SacnMergeReceiverCallbacks
   SacnMergeReceiverMergedDataCallback universe_data;                  /*!< Required */
   SacnMergeReceiverNonDMXCallback universe_non_dmx;                   /*!< Required */
   SacnMergeReceiverSourceLimitExceededCallback source_limit_exceeded; /*!< Optional */
+  void* callback_context; /*!< (optional) Pointer to opaque data passed back with each callback. */
 } SacnMergeReceiverCallbacks;
 
 /*! A set of configuration information for an sACN receiver. */
@@ -130,8 +139,6 @@ typedef struct SacnMergeReceiverConfig
       This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used
      instead.*/
   size_t source_count_max;
-  /*! Pointer to opaque data passed back with each callback. */
-  void* callback_context;
   /*! (optional) array of network interfaces on which to listen to the specified universe. If NULL,
    *  all available network interfaces will be used. */
   const SacnMcastNetintId* netints;
@@ -151,8 +158,11 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle);
 etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id);
-etcpal_error_t sacn_merge_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
-                                           size_t num_netints);
+etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
+                                                    size_t num_netints);
+source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid);
+etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, source_id_t source_id,
+                                                  EtcPalUuid* source_cid);
 
 #ifdef __cplusplus
 }

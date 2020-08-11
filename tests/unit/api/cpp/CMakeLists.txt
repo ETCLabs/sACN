@@ -3,6 +3,7 @@
 set(TEST_RECEIVER_SOURCES
   test_cpp_receiver.cpp
   test_cpp_merger.cpp
+  test_cpp_merge_receiver.cpp
   main.cpp
 
   ${SACN_API_SOURCES}

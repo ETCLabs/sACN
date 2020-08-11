@@ -19,7 +19,7 @@
 
 /*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
  - Fill in all the holes I made... :)
- - Make sure everything works with static & dynamic memory.
+ - Make sure everything works with static & dynamic memory. C & C++, too..
  - This entire project should build without warnings!!
 */
 
@@ -230,7 +230,8 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
  * After this call completes, underlying updates will generate new calls to SacnMergeReceiverMergedDataCallback(). If
- * this call fails, the caller must call sacn_merge_receiver_destroy for the receiver, because the receiver may be in an invalid state.
+ * this call fails, the caller must call sacn_merge_receiver_destroy for the receiver, because the receiver may be in an
+ * invalid state.
  *
  * \param[in] handle Handle to the receiver for which to reset the networking.
  * \param[in] (optional) array of network interfaces on which to listen to the specified universe. If NULL,
@@ -242,12 +243,47 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_merge_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
-                                           size_t num_netints)
+etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
+                                                    size_t num_netints)
 {
   // TODO CHRISTIAN CLEANUP
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
+  return kEtcPalErrNotImpl;
+}
+
+/*!
+ * \brief Returns the source id for that source cid.
+ *
+ * \param[in] handle The handle to the receiver.
+ * \param[in] source_cid The UUID of the source CID.
+ * \return The source ID, or #SACN_DMX_MERGER_SOURCE_INVALID.
+ */
+source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid)
+{
+  // TODO CHRISTIAN CLEANUP
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(source_cid);
+  return SACN_DMX_MERGER_SOURCE_INVALID;
+}
+
+/*!
+ * \brief fills in the source cid for that source id.
+ *
+ * \param[in] handle The handle to the receiver.
+ * \param[in] source_id The ID of the source.
+ * \param[out] source_cid The UUID of the source CID.
+ * \return #kEtcPalErrOk: Lookup was successful.
+ * \return #kEtcPalErrNotFound: handle does not correspond to a valid receiver, or source_id  does not correspond to a
+ * valid source.
+ */
+etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, source_id_t source_id,
+                                                  EtcPalUuid* source_cid)
+{
+  // TODO CHRISTIAN CLEANUP
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(source_id);
+  ETCPAL_UNUSED_ARG(source_cid);
   return kEtcPalErrNotImpl;
 }

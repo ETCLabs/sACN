@@ -25,6 +25,7 @@
 
 #include "sacn/dmx_merger.h"
 #include "etcpal/cpp/inet.h"
+#include "etcpal/cpp/uuid.h"
 
 /// @defgroup sacn_dmx_merger_cpp sACN DMX Merger API
 /// @ingroup sacn_cpp_api
@@ -81,9 +82,9 @@ public:
   etcpal::Error Startup(const Settings& settings);
   void Shutdown();
 
-  etcpal::Expected<source_id_t> AddSource(const EtcPalUuid& source_cid);
+  etcpal::Expected<source_id_t> AddSource(const etcpal::Uuid& source_cid);
   etcpal::Error RemoveSource(source_id_t source);
-  etcpal::Expected<source_id_t> GetSourceId(const EtcPalUuid& source_cid) const;
+  etcpal::Expected<source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
   const SacnDmxMergerSource* GetSourceInfo(source_id_t source) const;
   etcpal::Error UpdateSourceData(source_id_t source, const uint8_t* new_values, size_t new_values_count,
                                  uint8_t priority, const uint8_t* address_priorities, size_t address_priorities_count);
@@ -168,10 +169,10 @@ inline void DmxMerger::Shutdown()
  * \return #kEtcPalErrExists: the source at that cid was already added.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Expected<source_id_t> DmxMerger::AddSource(const EtcPalUuid& source_cid)
+inline etcpal::Expected<source_id_t> DmxMerger::AddSource(const etcpal::Uuid& source_cid)
 {
   source_id_t result = SACN_DMX_MERGER_SOURCE_INVALID;
-  etcpal_error_t err = sacn_dmx_merger_add_source(handle_, &source_cid, &result);
+  etcpal_error_t err = sacn_dmx_merger_add_source(handle_, &source_cid.get(), &result);
   if (err == kEtcPalErrOk)
     return result;
   else
@@ -200,9 +201,9 @@ inline etcpal::Error DmxMerger::RemoveSource(source_id_t source)
  * \param[in] source_cid The UUID of the source CID.
  * \return On success this will be the source ID, otherwise kEtcPalErrInvalid.
  */
-inline etcpal::Expected<source_id_t> DmxMerger::GetSourceId(const EtcPalUuid& source_cid) const
+inline etcpal::Expected<source_id_t> DmxMerger::GetSourceId(const etcpal::Uuid& source_cid) const
 {
-  source_id_t result = sacn_dmx_merger_get_id(handle_, &source_cid);
+  source_id_t result = sacn_dmx_merger_get_id(handle_, &source_cid.get());
   if (result != SACN_DMX_MERGER_SOURCE_INVALID)
     return result;
   return kEtcPalErrInvalid;

@@ -151,7 +151,7 @@ extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t handle, const EtcP
 {
   if (source_addr && header && context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(handle, etcpal::SockAddr{*source_addr}, *header,
+    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(handle, *source_addr, *header,
                                                                        pdata);
   }
 }
