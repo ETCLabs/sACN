@@ -35,7 +35,7 @@ namespace sacn
 /// @ingroup sacn_receiver_cpp
 /// @brief An instance of sACN Receiver functionality.
 ///
-/// TODO: FILL OUT THIS COMMENT MORE -- DO WE NEED A using_receiver.md???
+/// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE -- DO WE NEED A using_receiver.md???
 class Receiver
 {
 public:

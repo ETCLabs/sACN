@@ -36,7 +36,7 @@ namespace sacn
 /// @ingroup sacn_dmx_merger_cpp
 /// @brief An instance of sACN DMX Merger functionality.
 ///
-/// TODO: FILL OUT THIS COMMENT MORE -- DO WE NEED A using_dmx_merger.md???
+/// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE -- DO WE NEED A using_dmx_merger.md, or one giant using_receiver.md???
 class DmxMerger
 {
 public:

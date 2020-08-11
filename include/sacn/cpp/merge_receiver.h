@@ -36,7 +36,7 @@ namespace sacn
 /// @ingroup sacn_merge_receiver_cpp
 /// @brief An instance of sACN Merge Receiver functionality.
 ///
-/// TODO: FILL OUT THIS COMMENT MORE -- DO WE NEED A using_merge_receiver.md???
+/// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE -- DO WE NEED A using_merge_receiver.md, or one giant using_receiver.md???
 class MergeReceiver
 {
 public:
