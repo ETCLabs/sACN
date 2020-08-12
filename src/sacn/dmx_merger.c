@@ -730,10 +730,17 @@ void update_merge(MergerState* merger, unsigned int slot_index)
 
   // Point the iterator to immediately after the keys for slot_index (if any).
   WinnerLookupKeys upper_bound_keys = get_winner_lookup_slot_upper_bound_keys(slot_index);
-  etcpal_rbiter_upper_bound(&tree_iter, &merger->winner_lookup, &upper_bound_keys);
+  const WinnerLookupKeys* winner_keys = NULL;
 
-  // If there are any keys for slot_index, then previous will be the highest of them and thus the winner.
-  const WinnerLookupKeys* winner_keys = etcpal_rbiter_prev(&tree_iter);
+  // The highest of the keys for slot_index will be immediately before the upper bound.
+  if (etcpal_rbiter_upper_bound(&tree_iter, &merger->winner_lookup, &upper_bound_keys) == NULL)
+  {
+    winner_keys = etcpal_rbiter_last(&tree_iter, &merger->winner_lookup);
+  }
+  else
+  {
+    winner_keys = etcpal_rbiter_prev(&tree_iter);
+  }
 
   // If there is a winner for slot_index, update the slots and slot_owners.
   if ((winner_keys != NULL) && (winner_keys->slot_index == slot_index))
