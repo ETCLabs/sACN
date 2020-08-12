@@ -37,23 +37,34 @@
 #define FREE_WINNER_LOOKUP_KEYS(ptr) free(ptr)
 #define ALLOC_SOURCE_STATE() malloc(sizeof(SourceState))
 #define FREE_SOURCE_STATE(ptr) free(ptr)
+#define ALLOC_MERGER_STATE() malloc(sizeof(MergerState))
+#define FREE_MERGER_STATE(ptr) free(ptr)
+#define ALLOC_DMX_MERGER_RB_NODE() malloc(sizeof(EtcPalRbNode))
+#define FREE_DMX_MERGER_RB_NODE(ptr) free(ptr)
 #else
 #define ALLOC_WINNER_LOOKUP_KEYS() etcpal_mempool_alloc(sacnmerge_winner_lookup_keys)
 #define FREE_WINNER_LOOKUP_KEYS(ptr) etcpal_mempool_free(sacnmerge_winner_lookup_keys, ptr)
 #define ALLOC_SOURCE_STATE() etcpal_mempool_alloc(sacnmerge_source_states)
 #define FREE_SOURCE_STATE(ptr) etcpal_mempool_free(sacnmerge_source_states, ptr)
+#define ALLOC_MERGER_STATE() etcpal_mempool_alloc(sacnmerge_merger_states)
+#define FREE_MERGER_STATE(ptr) etcpal_mempool_free(sacnmerge_merger_states, ptr)
+#define ALLOC_DMX_MERGER_RB_NODE() etcpal_mempool_alloc(sacnmerge_rb_nodes)
+#define FREE_DMX_MERGER_RB_NODE(ptr) etcpal_mempool_free(sacnmerge_rb_nodes, ptr)
 #endif
 
 /**************************** Private variables ******************************/
 
-// clang-format off
 #if !SACN_DYNAMIC_MEM
 ETCPAL_MEMPOOL_DEFINE(sacnmerge_winner_lookup_keys, WinnerLookupKeys,
-                      DMX_ADDRESS_COUNT * SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT);
+                      (DMX_ADDRESS_COUNT * SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT));
 ETCPAL_MEMPOOL_DEFINE(sacnmerge_source_states, SourceState,
-                      SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT);
+                      (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT));
+ETCPAL_MEMPOOL_DEFINE(sacnmerge_merger_states, MergerState, SACN_DMX_MERGER_MAX_COUNT);
+ETCPAL_MEMPOOL_DEFINE(sacnmerge_rb_nodes, EtcPalRbNode,
+                      (DMX_ADDRESS_COUNT * SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT) +
+                          (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT) +
+                          SACN_DMX_MERGER_MAX_COUNT);
 #endif
-// clang-format on
 
 /*************************** Function definitions ****************************/
 
