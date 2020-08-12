@@ -75,33 +75,23 @@ ETCPAL_MEMPOOL_DEFINE(sacnmerge_rb_nodes, EtcPalRbNode,
 /* Initialize the sACN DMX Merger module. Internal function called from sacn_init(). */
 etcpal_error_t sacn_dmx_merger_init(void)
 {
-  return kEtcPalErrNotImpl;  // TODO: Implement this.
-
-  // TODO: CLEANUP
-  /*
   etcpal_error_t res = kEtcPalErrOk;
 
 #if !SACN_DYNAMIC_MEM
-  res |= etcpal_mempool_init(sacnrecv_receivers);
-  res |= etcpal_mempool_init(sacnrecv_tracked_sources);
-  res |= etcpal_mempool_init(sacnrecv_rb_nodes);
+  res |= etcpal_mempool_init(sacnmerge_winner_lookup_keys);
+  res |= etcpal_mempool_init(sacnmerge_source_states);
+  res |= etcpal_mempool_init(sacnmerge_merger_states);
+  res |= etcpal_mempool_init(sacnmerge_rb_nodes);
 #endif
 
   if (res == kEtcPalErrOk)
   {
-    etcpal_rbtree_init(&receiver_state.receivers, receiver_compare, node_alloc, node_dealloc);
-    etcpal_rbtree_init(&receiver_state.receivers_by_universe, receiver_compare_by_universe, node_alloc, node_dealloc);
-    init_int_handle_manager(&receiver_state.handle_mgr, receiver_handle_in_use);
-    receiver_state.version_listening = kSacnStandardVersionAll;
-    receiver_state.expired_wait = SACN_DEFAULT_EXPIRED_WAIT_MS;
-  }
-  else
-  {
-    memset(&receiver_state, 0, sizeof receiver_state);
+    etcpal_rbtree_init(&mergers, merger_state_compare_func, dmx_merger_rb_node_alloc_func,
+                       dmx_merger_rb_node_dealloc_func);
+    init_int_handle_manager(&merger_handle_mgr, merger_handle_in_use);
   }
 
   return res;
-  */
 }
 
 /* Deinitialize the sACN DMX Merger module. Internal function called from sacn_deinit(). */
@@ -503,6 +493,63 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
 etcpal_error_t sacn_dmx_merger_recalculate(sacn_dmx_merger_t merger)
 {
   return kEtcPalErrNotImpl;  // TODO: Implement this.
+}
+
+int merger_state_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
+{
+  const sacn_dmx_merger_t* a = (const sacn_dmx_merger_t*)value_a;
+  const sacn_dmx_merger_t* b = (const sacn_dmx_merger_t*)value_b;
+
+  return (*a > *b) - (*a < *b);  // Just compare the handles.
+}
+
+int source_state_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
+{
+  const source_id_t* a = (const source_id_t*)value_a;
+  const source_id_t* b = (const source_id_t*)value_b;
+
+  return (*a > *b) - (*a < *b);  // Just compare the handles.
+}
+
+int winner_keys_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
+{
+  const WinnerLookupKeys* a = (const WinnerLookupKeys*)value_a;
+  const WinnerLookupKeys* b = (const WinnerLookupKeys*)value_b;
+
+  // Make sure there is a separate ranking for each slot.
+  if (a->slot_index != b->slot_index)
+  {
+    return (a->slot_index > b->slot_index) - (a->slot_index < b->slot_index);
+  }
+
+  // These are the rules for the HTP algorithm. On a given slot, highest priority goes first, followed by highest level.
+  if (a->priority != b->priority)
+  {
+    return (a->priority > b->priority) - (a->priority < b->priority);
+  }
+
+  if (a->level != b->level)
+  {
+    return (a->level > b->level) - (a->level < b->level);
+  }
+
+  // If the priorities AND levels are the same, the handle becomes the tiebreaker.
+  return (a->owner > b->owner) - (a->owner < b->owner);
+}
+
+EtcPalRbNode* dmx_merger_rb_node_alloc_func()
+{
+  return ALLOC_DMX_MERGER_RB_NODE();
+}
+
+void dmx_merger_rb_node_dealloc_func(EtcPalRbNode* node)
+{
+  FREE_DMX_MERGER_RB_NODE(node);
+}
+
+bool merger_handle_in_use(int handle_val)
+{
+  return (etcpal_rbtree_find(&mergers, &handle_val) != NULL);
 }
 
 /*

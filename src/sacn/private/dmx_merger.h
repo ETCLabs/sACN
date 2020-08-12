@@ -29,6 +29,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "../../../include/sacn/dmx_merger.h"
+#include "sacn/private/util.h"
 #include "etcpal/rbtree.h"
 
 #ifdef __cplusplus
@@ -56,15 +57,27 @@ typedef struct MergerState
 {
   sacn_dmx_merger_t handle;
 
+  IntHandleManager source_handle_mgr;
+
   EtcPalRbTree source_state_lookup;
   EtcPalRbTree winner_lookup;
 
   SacnDmxMergerConfig* config;
 } MergerState;
 
+IntHandleManager merger_handle_mgr;
 EtcPalRbTree mergers;
 
 // TODO: DO WE NEED THIS FILE??
+int merger_state_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+int source_state_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+int winner_keys_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+
+EtcPalRbNode* dmx_merger_rb_node_alloc_func();
+void dmx_merger_rb_node_dealloc_func(EtcPalRbNode* node);
+
+bool merger_handle_in_use(int handle_val);
+
 etcpal_error_t update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values,
                              size_t new_values_count);
 etcpal_error_t update_level(MergerState* merger, SourceState* source, unsigned int level_index, uint8_t level);
