@@ -152,7 +152,7 @@ TEST_F(TestDmxMerger, MergerCreateErrNoMemWorks)
   // Add one more merger, which should only fail with static memory.
   etcpal_error_t past_max_result = sacn_dmx_merger_create(&merger_config_, &merger_handle_);
 
-  #if SACN_DYNAMIC_MEM
+#if SACN_DYNAMIC_MEM
   EXPECT_EQ(past_max_result, kEtcPalErrOk);
 #else
   EXPECT_EQ(past_max_result, kEtcPalErrNoMem);
@@ -256,6 +256,28 @@ TEST_F(TestDmxMerger, AddSourceErrExistsWorks)
   memcpy(source_cid_3.data, cid_str_2, ETCPAL_UUID_BYTES);
 
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid_3, &source_handle_3), kEtcPalErrOk);
+}
+
+TEST_F(TestDmxMerger, GetIdWorks)
+{
+  // Initialize a merger.
+  EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+
+  const char* cid_str_1 = "abcdef1234567890";
+  const char* cid_str_2 = "1234567890abcdef";
+  const char* cid_str_3 = "fedcba0987654321";
+
+  source_id_t source_handle;
+
+  EtcPalUuid source_cid_1;
+  EtcPalUuid source_cid_2;
+  EtcPalUuid source_cid_3;
+
+  memcpy(source_cid_1.data, cid_str_1, ETCPAL_UUID_BYTES);
+  memcpy(source_cid_2.data, cid_str_2, ETCPAL_UUID_BYTES);
+  memcpy(source_cid_3.data, cid_str_3, ETCPAL_UUID_BYTES);
+
+  // TODO: Finish this
 }
 
 TEST_F(TestDmxMerger, UpdateSourceDataErrInvalidWorks)

@@ -361,7 +361,26 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id
  */
 source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid)
 {
-  return SACN_DMX_MERGER_SOURCE_INVALID;  // TODO: Implement this.
+  if (source_cid == NULL)
+  {
+    return SACN_DMX_MERGER_SOURCE_INVALID;
+  }
+
+  MergerState* merger_state = etcpal_rbtree_find(&mergers, &merger);
+
+  if (merger_state == NULL)
+  {
+    return SACN_DMX_MERGER_SOURCE_INVALID;
+  }
+
+  CidToSourceHandle* cid_to_handle = etcpal_rbtree_find(&merger_state->source_handle_lookup, source_cid);
+
+  if (cid_to_handle == NULL)
+  {
+    return SACN_DMX_MERGER_SOURCE_INVALID;
+  }
+
+  return cid_to_handle->handle;
 }
 
 /*!
