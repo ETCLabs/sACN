@@ -242,6 +242,21 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
     return kEtcPalErrInvalid;
   }
 
+  // Check if the maximum number of sources has been reached yet.
+#if SACN_DYNAMIC_MEM
+  size_t source_count_max = merger_state->config->source_count_max;
+#else
+  size_t source_count_max = SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER;
+#endif
+
+  if (source_count_max != SACN_RECEIVER_INFINITE_SOURCES)
+  {
+    if (etcpal_rbtree_size(&merger_state->source_state_lookup) >= source_count_max)
+    {
+      return kEtcPalErrNoMem;
+    }
+  }
+
   // Generate a new source handle.
   source_id_t handle = (source_id_t)get_next_int_handle(&merger_state->source_handle_mgr, 0xffff);
 
