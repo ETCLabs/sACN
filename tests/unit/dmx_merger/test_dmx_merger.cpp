@@ -73,6 +73,51 @@ protected:
   uint8_t pdata_default[DMX_ADDRESS_COUNT];
 };
 
+TEST_F(TestDmxMerger, MergerCreateErrInvalidWorks)
+{
+  uint8_t slots[DMX_ADDRESS_COUNT];
+  source_id_t slot_owners[DMX_ADDRESS_COUNT];
+  sacn_dmx_merger_t handle;
+
+  SacnDmxMergerConfig invalidSlotsConfig;
+  invalidSlotsConfig.slots = NULL;
+  invalidSlotsConfig.slot_owners = slot_owners;
+
+  SacnDmxMergerConfig invalidSlotOwnersConfig;
+  invalidSlotOwnersConfig.slots = slots;
+  invalidSlotOwnersConfig.slot_owners = NULL;
+
+  SacnDmxMergerConfig validConfig;
+  validConfig.slots = slots;
+  validConfig.slot_owners = slot_owners;
+
+  etcpal_error_t null_config_result = sacn_dmx_merger_create(NULL, &handle);
+  etcpal_error_t null_handle_result = sacn_dmx_merger_create(&validConfig, NULL);
+  etcpal_error_t null_slots_result = sacn_dmx_merger_create(&invalidSlotsConfig, &handle);
+  etcpal_error_t null_slot_owners_result = sacn_dmx_merger_create(&invalidSlotOwnersConfig, &handle);
+
+  etcpal_error_t valid_result = sacn_dmx_merger_create(&validConfig, &handle);
+
+  EXPECT_EQ(null_config_result, kEtcPalErrInvalid);
+  EXPECT_EQ(null_handle_result, kEtcPalErrInvalid);
+  EXPECT_EQ(null_slots_result, kEtcPalErrInvalid);
+  EXPECT_EQ(null_slot_owners_result, kEtcPalErrInvalid);
+
+  EXPECT_NE(valid_result, kEtcPalErrInvalid);
+}
+
+TEST_F(TestDmxMerger, MergerCreateErrNotInitWorks)
+{
+  sacn_initialized_fake.return_val = false;
+  etcpal_error_t not_initialized_result = sacn_dmx_merger_create(NULL, NULL);
+
+  sacn_initialized_fake.return_val = true;
+  etcpal_error_t initialized_result = sacn_dmx_merger_create(NULL, NULL);
+
+  EXPECT_EQ(not_initialized_result, kEtcPalErrNotInit);
+  EXPECT_NE(initialized_result, kEtcPalErrNotInit);
+}
+
 TEST_F(TestDmxMerger, UpdateSourceDataErrInvalidWorks)
 {
   uint8_t foo = 0;

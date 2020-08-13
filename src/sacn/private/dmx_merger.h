@@ -62,7 +62,7 @@ typedef struct MergerState
   EtcPalRbTree source_state_lookup;
   EtcPalRbTree winner_lookup;
 
-  SacnDmxMergerConfig* config;
+  const SacnDmxMergerConfig* config;
 } MergerState;
 
 IntHandleManager merger_handle_mgr;
@@ -77,6 +77,7 @@ EtcPalRbNode* dmx_merger_rb_node_alloc_func();
 void dmx_merger_rb_node_dealloc_func(EtcPalRbNode* node);
 
 bool merger_handle_in_use(int handle_val, void* cookie);
+bool source_handle_in_use(int handle_val, void* cookie);
 
 etcpal_error_t update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values,
                              size_t new_values_count);
@@ -94,6 +95,7 @@ etcpal_error_t update_winner_lookup(MergerState* merger, WinnerLookupKeys* curre
 WinnerLookupKeys* get_current_keys(MergerState* merger, SourceState* source, unsigned int slot_index);
 bool keys_valid(const WinnerLookupKeys* keys);
 void update_merge(MergerState* merger, unsigned int slot_index);
+void deinit_merger_state(MergerState* state);
 
 #ifdef __cplusplus
 }

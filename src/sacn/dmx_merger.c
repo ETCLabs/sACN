@@ -123,7 +123,56 @@ void sacn_dmx_merger_deinit(void)
  */
 etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle)
 {
-  return kEtcPalErrNotImpl;  // TODO: Implement this.
+  // Verify module initialized.
+  if (!sacn_initialized())
+  {
+    return kEtcPalErrNotInit;
+  }
+
+  // Validate arguments.
+  if ((config == NULL) || (handle == NULL) || (config->slots == NULL) || (config->slot_owners == NULL))
+  {
+    return kEtcPalErrInvalid;
+  }
+
+  // Allocate merger state.
+  MergerState* merger_state = ALLOC_MERGER_STATE();
+
+  // Verify there was enough memory.
+  if (merger_state == NULL)
+  {
+    return kEtcPalErrNoMem;
+  }
+
+  // Initialize merger state.
+  merger_state->handle = get_next_int_handle(&merger_handle_mgr);
+  init_int_handle_manager(&merger_state->source_handle_mgr, source_handle_in_use, merger_state);
+  etcpal_rbtree_init(&merger_state->source_state_lookup, source_state_compare_func, dmx_merger_rb_node_alloc_func,
+                     dmx_merger_rb_node_dealloc_func);
+  etcpal_rbtree_init(&merger_state->winner_lookup, winner_keys_compare_func, dmx_merger_rb_node_alloc_func,
+                     dmx_merger_rb_node_dealloc_func);
+  merger_state->config = config;
+
+  // Add to the merger tree and verify success.
+  etcpal_error_t insert_result = etcpal_rbtree_insert(&mergers, merger_state);
+
+  // Verify successful merger tree insertion.
+  if (insert_result != kEtcPalErrOk)
+  {
+    deinit_merger_state(merger_state);
+
+    if (insert_result == kEtcPalErrNoMem)
+    {
+      return kEtcPalErrNoMem;
+    }
+
+    return kEtcPalErrSys;
+  }
+
+  // Initialize handle.
+  *handle = merger_state->handle;
+
+  return kEtcPalErrOk;
 }
 
 /*!
@@ -554,6 +603,13 @@ bool merger_handle_in_use(int handle_val, void* cookie)
   return (etcpal_rbtree_find(&mergers, &handle_val) != NULL);
 }
 
+bool source_handle_in_use(int handle_val, void* cookie)
+{
+  MergerState* merger_state = (MergerState*)cookie;
+
+  return (etcpal_rbtree_find(&merger_state->source_state_lookup, &handle_val) != NULL);
+}
+
 /*
  * Updates the source levels and recalculates outputs. Assumes all arguments are valid.
  */
@@ -812,4 +868,10 @@ void update_merge(MergerState* merger, unsigned int slot_index)
   {
     merger->config->slot_owners[slot_index] = SACN_DMX_MERGER_SOURCE_INVALID;
   }
+}
+
+void deinit_merger_state(MergerState* state)
+{
+  etcpal_rbtree_clear(&state->source_state_lookup);
+  etcpal_rbtree_clear(&state->winner_lookup);
 }
