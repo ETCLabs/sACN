@@ -125,7 +125,7 @@ void sacn_dmx_merger_deinit(void)
  * \return #kEtcPalErrOk: Merger created successful.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNoMem: No room to allocate memory for this merger.
+ * \return #kEtcPalErrNoMem: No room to allocate memory for this merger, or the max number of mergers has been reached.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle)
@@ -141,6 +141,14 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
   {
     return kEtcPalErrInvalid;
   }
+
+#if !SACN_DYNAMIC_MEM
+  // Check if the maximum number of mergers has been reached.
+  if (etcpal_rbtree_size(&mergers) >= SACN_DMX_MERGER_MAX_COUNT)
+  {
+    return kEtcPalErrNoMem;
+  }
+#endif
 
   // Allocate merger state.
   MergerState* merger_state = ALLOC_MERGER_STATE();

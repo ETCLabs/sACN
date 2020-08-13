@@ -141,6 +141,24 @@ TEST_F(TestDmxMerger, MergerCreateErrNotInitWorks)
   EXPECT_NE(initialized_result, kEtcPalErrNotInit);
 }
 
+TEST_F(TestDmxMerger, MergerCreateErrNoMemWorks)
+{
+  // Add up to the maximum number of mergers.
+  for (int i = 0; i < SACN_DMX_MERGER_MAX_COUNT; ++i)
+  {
+    EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+  }
+
+  // Add one more merger, which should only fail with static memory.
+  etcpal_error_t past_max_result = sacn_dmx_merger_create(&merger_config_, &merger_handle_);
+
+  #if SACN_DYNAMIC_MEM
+  EXPECT_EQ(past_max_result, kEtcPalErrOk);
+#else
+  EXPECT_EQ(past_max_result, kEtcPalErrNoMem);
+#endif
+}
+
 TEST_F(TestDmxMerger, AddSourceErrInvalidWorks)
 {
   // Initialize a merger.
