@@ -76,7 +76,7 @@ int winner_keys_compare_func(const EtcPalRbTree* self, const void* value_a, cons
 EtcPalRbNode* dmx_merger_rb_node_alloc_func();
 void dmx_merger_rb_node_dealloc_func(EtcPalRbNode* node);
 
-bool merger_handle_in_use(int handle_val);
+bool merger_handle_in_use(int handle_val, void* cookie);
 
 etcpal_error_t update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values,
                              size_t new_values_count);

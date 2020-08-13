@@ -31,7 +31,7 @@
 extern "C" {
 #endif
 
-typedef bool (*HandleValueInUseFunction)(int handle_val);
+typedef bool (*HandleValueInUseFunction)(int handle_val, void* cookie);
 
 /* Manage generic integer handle values.
  *
@@ -48,9 +48,11 @@ typedef struct IntHandleManager
   /* Function pointer to determine if a handle value is currently in use. Used only after the handle
    * value has wrapped around once. */
   HandleValueInUseFunction value_in_use;
+  /* A cookie passed to the value in use function. */
+  void* cookie;
 } IntHandleManager;
 
-void init_int_handle_manager(IntHandleManager* manager, HandleValueInUseFunction value_in_use_func);
+void init_int_handle_manager(IntHandleManager* manager, HandleValueInUseFunction value_in_use_func, void* cookie);
 int get_next_int_handle(IntHandleManager* manager);
 
 #ifdef __cplusplus

@@ -88,7 +88,7 @@ etcpal_error_t sacn_dmx_merger_init(void)
   {
     etcpal_rbtree_init(&mergers, merger_state_compare_func, dmx_merger_rb_node_alloc_func,
                        dmx_merger_rb_node_dealloc_func);
-    init_int_handle_manager(&merger_handle_mgr, merger_handle_in_use);
+    init_int_handle_manager(&merger_handle_mgr, merger_handle_in_use, NULL);
   }
 
   return res;
@@ -547,8 +547,10 @@ void dmx_merger_rb_node_dealloc_func(EtcPalRbNode* node)
   FREE_DMX_MERGER_RB_NODE(node);
 }
 
-bool merger_handle_in_use(int handle_val)
+bool merger_handle_in_use(int handle_val, void* cookie)
 {
+  ETCPAL_UNUSED_ARG(cookie);
+
   return (etcpal_rbtree_find(&mergers, &handle_val) != NULL);
 }
 
