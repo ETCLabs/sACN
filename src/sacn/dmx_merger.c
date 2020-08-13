@@ -243,7 +243,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   }
 
   // Generate a new source handle.
-  source_id_t handle = get_next_int_handle(&merger_state->source_handle_mgr, 0xffff);
+  source_id_t handle = (source_id_t)get_next_int_handle(&merger_state->source_handle_mgr, 0xffff);
 
   // Initialize CID to source handle mapping.
   CidToSourceHandle* cid_to_handle = ALLOC_CID_TO_SOURCE_HANDLE();
