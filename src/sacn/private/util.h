@@ -53,7 +53,7 @@ typedef struct IntHandleManager
 } IntHandleManager;
 
 void init_int_handle_manager(IntHandleManager* manager, HandleValueInUseFunction value_in_use_func, void* cookie);
-int get_next_int_handle(IntHandleManager* manager);
+int get_next_int_handle(IntHandleManager* manager, int max);
 
 #ifdef __cplusplus
 }

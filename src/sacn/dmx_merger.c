@@ -41,6 +41,8 @@
 #define FREE_MERGER_STATE(ptr) free(ptr)
 #define ALLOC_DMX_MERGER_RB_NODE() malloc(sizeof(EtcPalRbNode))
 #define FREE_DMX_MERGER_RB_NODE(ptr) free(ptr)
+#define ALLOC_CID_TO_SOURCE_HANDLE() malloc(sizeof(CidToSourceHandle))
+#define FREE_CID_TO_SOURCE_HANDLE(ptr) free(ptr)
 #else
 #define ALLOC_WINNER_LOOKUP_KEYS() etcpal_mempool_alloc(sacnmerge_winner_lookup_keys)
 #define FREE_WINNER_LOOKUP_KEYS(ptr) etcpal_mempool_free(sacnmerge_winner_lookup_keys, ptr)
@@ -50,6 +52,8 @@
 #define FREE_MERGER_STATE(ptr) etcpal_mempool_free(sacnmerge_merger_states, ptr)
 #define ALLOC_DMX_MERGER_RB_NODE() etcpal_mempool_alloc(sacnmerge_rb_nodes)
 #define FREE_DMX_MERGER_RB_NODE(ptr) etcpal_mempool_free(sacnmerge_rb_nodes, ptr)
+#define ALLOC_CID_TO_SOURCE_HANDLE() etcpal_mempool_alloc(sacnmerge_cids_to_source_handles)
+#define FREE_CID_TO_SOURCE_HANDLE(ptr) etcpal_mempool_free(sacnmerge_cids_to_source_handles, ptr)
 #endif
 
 /**************************** Private variables ******************************/
@@ -64,6 +68,8 @@ ETCPAL_MEMPOOL_DEFINE(sacnmerge_rb_nodes, EtcPalRbNode,
                       (DMX_ADDRESS_COUNT * SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT) +
                           (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT) +
                           SACN_DMX_MERGER_MAX_COUNT);
+ETCPAL_MEMPOOL_DEFINE(sacnmerge_cids_to_source_handles, CidToSourceHandle,
+                      (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT));
 #endif
 
 /*************************** Function definitions ****************************/
@@ -82,11 +88,12 @@ etcpal_error_t sacn_dmx_merger_init(void)
   res |= etcpal_mempool_init(sacnmerge_source_states);
   res |= etcpal_mempool_init(sacnmerge_merger_states);
   res |= etcpal_mempool_init(sacnmerge_rb_nodes);
+  res |= etcpal_mempool_init(sacnmerge_cids_to_source_handles);
 #endif
 
   if (res == kEtcPalErrOk)
   {
-    etcpal_rbtree_init(&mergers, merger_state_compare_func, dmx_merger_rb_node_alloc_func,
+    etcpal_rbtree_init(&mergers, merger_state_lookup_compare_func, dmx_merger_rb_node_alloc_func,
                        dmx_merger_rb_node_dealloc_func);
     init_int_handle_manager(&merger_handle_mgr, merger_handle_in_use, NULL);
   }
@@ -145,12 +152,14 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
   }
 
   // Initialize merger state.
-  merger_state->handle = get_next_int_handle(&merger_handle_mgr);
+  merger_state->handle = get_next_int_handle(&merger_handle_mgr, -1);
   init_int_handle_manager(&merger_state->source_handle_mgr, source_handle_in_use, merger_state);
-  etcpal_rbtree_init(&merger_state->source_state_lookup, source_state_compare_func, dmx_merger_rb_node_alloc_func,
+  etcpal_rbtree_init(&merger_state->source_state_lookup, source_state_lookup_compare_func,
+                     dmx_merger_rb_node_alloc_func, dmx_merger_rb_node_dealloc_func);
+  etcpal_rbtree_init(&merger_state->winner_lookup, winner_lookup_compare_func, dmx_merger_rb_node_alloc_func,
                      dmx_merger_rb_node_dealloc_func);
-  etcpal_rbtree_init(&merger_state->winner_lookup, winner_keys_compare_func, dmx_merger_rb_node_alloc_func,
-                     dmx_merger_rb_node_dealloc_func);
+  etcpal_rbtree_init(&merger_state->source_handle_lookup, source_handle_lookup_compare_func,
+                     dmx_merger_rb_node_alloc_func, dmx_merger_rb_node_dealloc_func);
   merger_state->config = config;
 
   // Add to the merger tree and verify success.
@@ -160,6 +169,7 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
   if (insert_result != kEtcPalErrOk)
   {
     deinit_merger_state(merger_state);
+    FREE_MERGER_STATE(merger_state);
 
     if (insert_result == kEtcPalErrNoMem)
     {
@@ -213,7 +223,93 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
 etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid,
                                           source_id_t* source_id)
 {
-  return kEtcPalErrNotImpl;  // TODO: Implement this.
+  // Verify module initialized.
+  if (!sacn_initialized())
+  {
+    return kEtcPalErrNotInit;
+  }
+
+  if ((source_cid == NULL) || (source_id == NULL))
+  {
+    return kEtcPalErrInvalid;
+  }
+
+  // Get the merger state, or return error for invalid handle.
+  MergerState* merger_state = etcpal_rbtree_find(&mergers, &merger);
+
+  if (merger_state == NULL)
+  {
+    return kEtcPalErrInvalid;
+  }
+
+  // Generate a new source handle.
+  source_id_t handle = get_next_int_handle(&merger_state->source_handle_mgr, 0xffff);
+
+  // Initialize CID to source handle mapping.
+  CidToSourceHandle* cid_to_handle = ALLOC_CID_TO_SOURCE_HANDLE();
+
+  if (cid_to_handle == NULL)
+  {
+    return kEtcPalErrNoMem;
+  }
+
+  memcpy(cid_to_handle->cid.data, source_cid->data, ETCPAL_UUID_BYTES);
+  cid_to_handle->handle = handle;
+
+  etcpal_error_t handle_lookup_insert_result = etcpal_rbtree_insert(&merger_state->source_handle_lookup, cid_to_handle);
+
+  if (handle_lookup_insert_result != kEtcPalErrOk)
+  {
+    // Clean up and return the correct error.
+    FREE_CID_TO_SOURCE_HANDLE(cid_to_handle);
+
+    if (handle_lookup_insert_result == kEtcPalErrExists)
+    {
+      return kEtcPalErrExists;
+    }
+    else if (handle_lookup_insert_result == kEtcPalErrNoMem)
+    {
+      return kEtcPalErrNoMem;
+    }
+
+    return kEtcPalErrSys;
+  }
+
+  // Initialize source state.
+  SourceState* source_state = ALLOC_SOURCE_STATE();
+
+  if (source_state == NULL)
+  {
+    // Clean up and return the correct error.
+    etcpal_rbtree_remove(&merger_state->source_handle_lookup, cid_to_handle);
+    FREE_CID_TO_SOURCE_HANDLE(cid_to_handle);
+
+    return kEtcPalErrNoMem;
+  }
+
+  source_state->handle = handle;
+  source_state->valid_value_count = 0;
+  source_state->universe_priority = 0;
+  source_state->address_priority_valid = false;
+
+  etcpal_error_t state_lookup_insert_result = etcpal_rbtree_insert(&merger_state->source_state_lookup, source_state);
+
+  if (state_lookup_insert_result != kEtcPalErrOk)
+  {
+    // Clean up and return the correct error.
+    etcpal_rbtree_remove(&merger_state->source_handle_lookup, cid_to_handle);
+    FREE_CID_TO_SOURCE_HANDLE(cid_to_handle);
+    FREE_SOURCE_STATE(source_state);
+
+    if (state_lookup_insert_result == kEtcPalErrNoMem)
+    {
+      return kEtcPalErrNoMem;
+    }
+
+    return kEtcPalErrSys;
+  }
+
+  return kEtcPalErrOk;
 }
 
 /*!
@@ -544,7 +640,7 @@ etcpal_error_t sacn_dmx_merger_recalculate(sacn_dmx_merger_t merger)
   return kEtcPalErrNotImpl;  // TODO: Implement this.
 }
 
-int merger_state_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
+int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
 {
   const sacn_dmx_merger_t* a = (const sacn_dmx_merger_t*)value_a;
   const sacn_dmx_merger_t* b = (const sacn_dmx_merger_t*)value_b;
@@ -552,7 +648,7 @@ int merger_state_compare_func(const EtcPalRbTree* self, const void* value_a, con
   return (*a > *b) - (*a < *b);  // Just compare the handles.
 }
 
-int source_state_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
+int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
 {
   const source_id_t* a = (const source_id_t*)value_a;
   const source_id_t* b = (const source_id_t*)value_b;
@@ -560,7 +656,7 @@ int source_state_compare_func(const EtcPalRbTree* self, const void* value_a, con
   return (*a > *b) - (*a < *b);  // Just compare the handles.
 }
 
-int winner_keys_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
+int winner_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
 {
   const WinnerLookupKeys* a = (const WinnerLookupKeys*)value_a;
   const WinnerLookupKeys* b = (const WinnerLookupKeys*)value_b;
@@ -584,6 +680,14 @@ int winner_keys_compare_func(const EtcPalRbTree* self, const void* value_a, cons
 
   // If the priorities AND levels are the same, the handle becomes the tiebreaker.
   return (a->owner > b->owner) - (a->owner < b->owner);
+}
+
+int source_handle_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
+{
+  const EtcPalUuid* a = (const EtcPalUuid*)value_a;
+  const EtcPalUuid* b = (const EtcPalUuid*)value_b;
+
+  return memcmp(a->data, b->data, ETCPAL_UUID_BYTES);
 }
 
 EtcPalRbNode* dmx_merger_rb_node_alloc_func()
@@ -874,4 +978,5 @@ void deinit_merger_state(MergerState* state)
 {
   etcpal_rbtree_clear(&state->source_state_lookup);
   etcpal_rbtree_clear(&state->winner_lookup);
+  etcpal_rbtree_clear(&state->source_handle_lookup);
 }

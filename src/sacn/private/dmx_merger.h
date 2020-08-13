@@ -53,6 +53,12 @@ typedef struct SourceState
   bool address_priority_valid;
 } SourceState;
 
+typedef struct CidToSourceHandle
+{
+  EtcPalUuid cid;
+  source_id_t handle;
+} CidToSourceHandle;
+
 typedef struct MergerState
 {
   sacn_dmx_merger_t handle;
@@ -61,6 +67,7 @@ typedef struct MergerState
 
   EtcPalRbTree source_state_lookup;
   EtcPalRbTree winner_lookup;
+  EtcPalRbTree source_handle_lookup;
 
   const SacnDmxMergerConfig* config;
 } MergerState;
@@ -69,9 +76,10 @@ IntHandleManager merger_handle_mgr;
 EtcPalRbTree mergers;
 
 // TODO: DO WE NEED THIS FILE??
-int merger_state_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
-int source_state_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
-int winner_keys_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+int winner_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+int source_handle_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 
 EtcPalRbNode* dmx_merger_rb_node_alloc_func();
 void dmx_merger_rb_node_dealloc_func(EtcPalRbNode* node);

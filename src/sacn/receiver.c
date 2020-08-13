@@ -584,7 +584,7 @@ SacnReceiver* create_new_receiver(const SacnReceiverConfig* config)
 {
   SACN_ASSERT(config);
 
-  sacn_receiver_t new_handle = get_next_int_handle(&receiver_state.handle_mgr);
+  sacn_receiver_t new_handle = get_next_int_handle(&receiver_state.handle_mgr, -1);
   if (new_handle == SACN_RECEIVER_INVALID)
     return NULL;
 

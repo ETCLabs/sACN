@@ -31,14 +31,19 @@ void init_int_handle_manager(IntHandleManager* manager, HandleValueInUseFunction
   manager->cookie = cookie;
 }
 
-int get_next_int_handle(IntHandleManager* manager)
+/* Max determines a custom wrap-around point. If max is negative, it will be ignored. */
+int get_next_int_handle(IntHandleManager* manager, int max)
 {
   int new_handle = manager->next_handle;
-  if (++manager->next_handle < 0)
+
+  ++manager->next_handle;
+
+  if ((manager->next_handle < 0) || ((max >= 0) && (manager->next_handle > max)))
   {
     manager->next_handle = 0;
     manager->handle_has_wrapped_around = true;
   }
+
   // Optimization - keep track of whether the handle counter has wrapped around.
   // If not, we don't need to check if the new handle is in use.
   if (manager->handle_has_wrapped_around)
@@ -54,9 +59,11 @@ int get_next_int_handle(IntHandleManager* manager)
         break;
       }
       new_handle = manager->next_handle;
-      if (++manager->next_handle < 0)
+      ++manager->next_handle;
+      if ((manager->next_handle < 0) || ((max >= 0) && (manager->next_handle > max)))
         manager->next_handle = 0;
     }
   }
+
   return new_handle;
 }
