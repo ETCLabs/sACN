@@ -118,6 +118,89 @@ TEST_F(TestDmxMerger, MergerCreateErrNotInitWorks)
   EXPECT_NE(initialized_result, kEtcPalErrNotInit);
 }
 
+TEST_F(TestDmxMerger, AddSourceErrInvalidWorks)
+{
+  // Initialize a merger.
+  uint8_t slots[DMX_ADDRESS_COUNT];
+  source_id_t slot_owners[DMX_ADDRESS_COUNT];
+  sacn_dmx_merger_t merger_handle;
+  SacnDmxMergerConfig config;
+  config.slots = slots;
+  config.slot_owners = slot_owners;
+
+  EXPECT_EQ(sacn_dmx_merger_create(&config, &merger_handle), kEtcPalErrOk);
+
+  // Run tests.
+  EtcPalUuid source_cid;
+  source_id_t source_handle;
+
+  etcpal_error_t null_cid_result = sacn_dmx_merger_add_source(merger_handle, NULL, &source_handle);
+  etcpal_error_t null_source_handle_result = sacn_dmx_merger_add_source(merger_handle, &source_cid, NULL);
+  etcpal_error_t unknown_merger_handle_result =
+      sacn_dmx_merger_add_source(merger_handle + 1, &source_cid, &source_handle);
+
+  etcpal_error_t valid_result = sacn_dmx_merger_add_source(merger_handle, &source_cid, &source_handle);
+
+  EXPECT_EQ(null_cid_result, kEtcPalErrInvalid);
+  EXPECT_EQ(null_source_handle_result, kEtcPalErrInvalid);
+  EXPECT_EQ(unknown_merger_handle_result, kEtcPalErrInvalid);
+
+  EXPECT_NE(valid_result, kEtcPalErrInvalid);
+}
+
+TEST_F(TestDmxMerger, AddSourceErrNotInitWorks)
+{
+  sacn_initialized_fake.return_val = false;
+  etcpal_error_t not_initialized_result = sacn_dmx_merger_add_source(0, NULL, NULL);
+
+  sacn_initialized_fake.return_val = true;
+  etcpal_error_t initialized_result = sacn_dmx_merger_add_source(0, NULL, NULL);
+
+  EXPECT_EQ(not_initialized_result, kEtcPalErrNotInit);
+  EXPECT_NE(initialized_result, kEtcPalErrNotInit);
+}
+
+TEST_F(TestDmxMerger, AddSourceErrExistsWorks)
+{
+  // Initialize a merger.
+  uint8_t slots[DMX_ADDRESS_COUNT];
+  source_id_t slot_owners[DMX_ADDRESS_COUNT];
+  sacn_dmx_merger_t merger_handle;
+  SacnDmxMergerConfig config;
+  config.slots = slots;
+  config.slot_owners = slot_owners;
+
+  EXPECT_EQ(sacn_dmx_merger_create(&config, &merger_handle), kEtcPalErrOk);
+
+  // Initialize a source.
+  const char* cid_str_1 = "1234567890abcdef";
+
+  EtcPalUuid source_cid_1;
+  source_id_t source_handle_1;
+
+  memcpy(source_cid_1.data, cid_str_1, ETCPAL_UUID_BYTES);
+
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle, &source_cid_1, &source_handle_1), kEtcPalErrOk);
+
+  // Try to add another source with the same CID. 
+  EtcPalUuid source_cid_2;
+  source_id_t source_handle_2;
+
+  memcpy(source_cid_2.data, cid_str_1, ETCPAL_UUID_BYTES);
+
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle, &source_cid_2, &source_handle_2), kEtcPalErrExists);
+
+  // Try to add another source with a different CID.
+  const char* cid_str_2 = "abcdef1234567890";
+
+  EtcPalUuid source_cid_3;
+  source_id_t source_handle_3;
+
+  memcpy(source_cid_3.data, cid_str_2, ETCPAL_UUID_BYTES);
+
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle, &source_cid_3, &source_handle_3), kEtcPalErrOk);
+}
+
 TEST_F(TestDmxMerger, UpdateSourceDataErrInvalidWorks)
 {
   uint8_t foo = 0;
