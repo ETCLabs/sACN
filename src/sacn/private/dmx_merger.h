@@ -47,6 +47,7 @@ typedef struct WinnerLookupKeys
 typedef struct SourceState
 {
   source_id_t handle;
+  // TODO: Keep SacnDmxMergerSource arrays up-to-date.
   SacnDmxMergerSource source;
 } SourceState;
 
