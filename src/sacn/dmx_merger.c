@@ -311,10 +311,12 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   }
 
   source_state->handle = handle;
-  source_state->valid_value_count = 0;
-  source_state->universe_priority = 0;
-  source_state->address_priority_valid = false;
-  memcpy(source_state->cid.data, source_cid->data, ETCPAL_UUID_BYTES);
+  memcpy(source_state->source.cid.data, source_cid->data, ETCPAL_UUID_BYTES);
+  memset(source_state->source.values, 0, DMX_ADDRESS_COUNT);
+  source_state->source.valid_value_count = 0;
+  source_state->source.universe_priority = 0;
+  source_state->source.address_priority_valid = false;
+  memset(source_state->source.address_priority, 0, DMX_ADDRESS_COUNT);
 
   etcpal_error_t state_lookup_insert_result = etcpal_rbtree_insert(&merger_state->source_state_lookup, source_state);
 
@@ -653,14 +655,14 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
   }
 
   // Update the address_priority_valid flag.
-  source_state->address_priority_valid = false;
+  source_state->source.address_priority_valid = false;
 
   // Reset all priorities to the universe priority.
   for (unsigned int priority_index = 0; (result == kEtcPalErrOk) && (priority_index < DMX_ADDRESS_COUNT);
        ++priority_index)
   {
     // Update the priority.
-    result = update_priority(merger, source, priority_index, source_state->universe_priority);
+    result = update_priority(merger, source, priority_index, source_state->source.universe_priority);
   }
 
   return result;
@@ -776,7 +778,7 @@ etcpal_error_t update_levels(MergerState* merger, SourceState* source, const uin
   if (result == kEtcPalErrOk)
   {
     // Just update the existing entry, since we're not modifying a key.
-    source->valid_value_count = new_values_count;
+    source->source.valid_value_count = new_values_count;
   }
 
   // Return the etcpal_error_t result.
@@ -815,7 +817,7 @@ etcpal_error_t update_per_address_priorities(MergerState* merger, SourceState* s
   etcpal_error_t result = kEtcPalErrOk;
 
   // Update the address_priority_valid flag.
-  source->address_priority_valid = true;
+  source->source.address_priority_valid = true;
 
   // For each priority:
   for (unsigned int priority_index = 0; (result == kEtcPalErrOk) && (priority_index < address_priorities_count);
@@ -860,10 +862,10 @@ etcpal_error_t update_universe_priority(MergerState* merger, SourceState* source
   etcpal_error_t result = kEtcPalErrOk;
 
   // Just update the existing entry, since we're not modifying a key.
-  source->universe_priority = priority;
+  source->source.universe_priority = priority;
 
   // Update the actual priorities now if there are no per-address priorities.
-  if (!source->address_priority_valid)
+  if (!source->source.address_priority_valid)
   {
     for (unsigned int priority_index = 0; (result == kEtcPalErrOk) && (priority_index < DMX_ADDRESS_COUNT);
          ++priority_index)

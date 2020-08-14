@@ -47,11 +47,7 @@ typedef struct WinnerLookupKeys
 typedef struct SourceState
 {
   source_id_t handle;
-
-  size_t valid_value_count;
-  uint8_t universe_priority;
-  bool address_priority_valid;
-  EtcPalUuid cid;
+  SacnDmxMergerSource source;
 } SourceState;
 
 typedef struct CidToSourceHandle
