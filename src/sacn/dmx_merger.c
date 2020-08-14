@@ -314,6 +314,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   source_state->valid_value_count = 0;
   source_state->universe_priority = 0;
   source_state->address_priority_valid = false;
+  memcpy(source_state->cid.data, source_cid->data, ETCPAL_UUID_BYTES);
 
   etcpal_error_t state_lookup_insert_result = etcpal_rbtree_insert(&merger_state->source_state_lookup, source_state);
 

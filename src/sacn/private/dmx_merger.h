@@ -51,6 +51,7 @@ typedef struct SourceState
   size_t valid_value_count;
   uint8_t universe_priority;
   bool address_priority_valid;
+  EtcPalUuid cid;
 } SourceState;
 
 typedef struct CidToSourceHandle
