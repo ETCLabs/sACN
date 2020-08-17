@@ -491,7 +491,7 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
   // Update this source's level data.
   if (new_values != NULL)
   {
-    result = update_levels(merger_state, source_state, new_values, new_values_count);
+    result = update_levels(merger_state, source_state, new_values, (uint16_t)new_values_count);
   }
 
   // Update this source's universe priority.
@@ -503,7 +503,8 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
   // Update this source's per-address-priority data.
   if ((result == kEtcPalErrOk) && (address_priorities != NULL))
   {
-    result = update_per_address_priorities(merger_state, source_state, address_priorities, address_priorities_count);
+    result = update_per_address_priorities(merger_state, source_state, address_priorities,
+                                           (uint16_t)address_priorities_count);
   }
 
   // Return the final etcpal_error_t result.
@@ -658,8 +659,7 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
   source_state->source.address_priority_valid = false;
 
   // Reset all priorities to the universe priority.
-  for (unsigned int priority_index = 0; (result == kEtcPalErrOk) && (priority_index < DMX_ADDRESS_COUNT);
-       ++priority_index)
+  for (uint16_t priority_index = 0; (result == kEtcPalErrOk) && (priority_index < DMX_ADDRESS_COUNT); ++priority_index)
   {
     // Update the priority.
     result = update_priority(merger, source, priority_index, source_state->source.universe_priority);
@@ -763,12 +763,12 @@ bool source_handle_in_use(int handle_val, void* cookie)
  * Updates the source levels and recalculates outputs. Assumes all arguments are valid.
  */
 etcpal_error_t update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values,
-                             size_t new_values_count)
+                             uint16_t new_values_count)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
   // For each level:
-  for (unsigned int level_index = 0; (result == kEtcPalErrOk) && (level_index < new_values_count); ++level_index)
+  for (uint16_t level_index = 0; (result == kEtcPalErrOk) && (level_index < new_values_count); ++level_index)
   {
     // Update the level.
     result = update_level(merger, source, level_index, new_values[level_index]);
@@ -785,7 +785,7 @@ etcpal_error_t update_levels(MergerState* merger, SourceState* source, const uin
   return result;
 }
 
-etcpal_error_t update_level(MergerState* merger, SourceState* source, unsigned int level_index, uint8_t level)
+etcpal_error_t update_level(MergerState* merger, SourceState* source, uint16_t level_index, uint8_t level)
 {
   // Get the current winner lookup keys
   WinnerLookupKeys* current_keys = get_current_keys(merger, source, level_index);
@@ -812,7 +812,7 @@ etcpal_error_t update_level(MergerState* merger, SourceState* source, unsigned i
  * Updates the source per-address-priorities and recalculates outputs. Assumes all arguments are valid.
  */
 etcpal_error_t update_per_address_priorities(MergerState* merger, SourceState* source,
-                                             const uint8_t* address_priorities, size_t address_priorities_count)
+                                             const uint8_t* address_priorities, uint16_t address_priorities_count)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
@@ -820,7 +820,7 @@ etcpal_error_t update_per_address_priorities(MergerState* merger, SourceState* s
   source->source.address_priority_valid = true;
 
   // For each priority:
-  for (unsigned int priority_index = 0; (result == kEtcPalErrOk) && (priority_index < address_priorities_count);
+  for (uint16_t priority_index = 0; (result == kEtcPalErrOk) && (priority_index < address_priorities_count);
        ++priority_index)
   {
     // Update the priority.
@@ -831,7 +831,7 @@ etcpal_error_t update_per_address_priorities(MergerState* merger, SourceState* s
   return result;
 }
 
-etcpal_error_t update_priority(MergerState* merger, SourceState* source, unsigned int priority_index, uint8_t priority)
+etcpal_error_t update_priority(MergerState* merger, SourceState* source, uint16_t priority_index, uint8_t priority)
 {
   // Get the current winner lookup keys
   WinnerLookupKeys* current_keys = get_current_keys(merger, source, priority_index);
@@ -867,7 +867,7 @@ etcpal_error_t update_universe_priority(MergerState* merger, SourceState* source
   // Update the actual priorities now if there are no per-address priorities.
   if (!source->source.address_priority_valid)
   {
-    for (unsigned int priority_index = 0; (result == kEtcPalErrOk) && (priority_index < DMX_ADDRESS_COUNT);
+    for (uint16_t priority_index = 0; (result == kEtcPalErrOk) && (priority_index < DMX_ADDRESS_COUNT);
          ++priority_index)
     {
       // Update the priority.
@@ -878,7 +878,7 @@ etcpal_error_t update_universe_priority(MergerState* merger, SourceState* source
   return result;
 }
 
-WinnerLookupKeys get_winner_lookup_source_lower_bound_keys(unsigned int slot_index, SourceState* source)
+WinnerLookupKeys get_winner_lookup_source_lower_bound_keys(uint16_t slot_index, SourceState* source)
 {
   WinnerLookupKeys result;
 
@@ -890,7 +890,7 @@ WinnerLookupKeys get_winner_lookup_source_lower_bound_keys(unsigned int slot_ind
   return result;
 }
 
-WinnerLookupKeys get_winner_lookup_source_upper_bound_keys(unsigned int slot_index, SourceState* source)
+WinnerLookupKeys get_winner_lookup_source_upper_bound_keys(uint16_t slot_index, SourceState* source)
 {
   WinnerLookupKeys result;
 
@@ -902,7 +902,7 @@ WinnerLookupKeys get_winner_lookup_source_upper_bound_keys(unsigned int slot_ind
   return result;
 }
 
-WinnerLookupKeys get_winner_lookup_slot_lower_bound_keys(unsigned int slot_index)
+WinnerLookupKeys get_winner_lookup_slot_lower_bound_keys(uint16_t slot_index)
 {
   WinnerLookupKeys result;
 
@@ -914,7 +914,7 @@ WinnerLookupKeys get_winner_lookup_slot_lower_bound_keys(unsigned int slot_index
   return result;
 }
 
-WinnerLookupKeys get_winner_lookup_slot_upper_bound_keys(unsigned int slot_index)
+WinnerLookupKeys get_winner_lookup_slot_upper_bound_keys(uint16_t slot_index)
 {
   WinnerLookupKeys result;
 
@@ -962,7 +962,7 @@ etcpal_error_t update_winner_lookup(MergerState* merger, WinnerLookupKeys* curre
   return result;
 }
 
-WinnerLookupKeys* get_current_keys(MergerState* merger, SourceState* source, unsigned int slot_index)
+WinnerLookupKeys* get_current_keys(MergerState* merger, SourceState* source, uint16_t slot_index)
 {
   WinnerLookupKeys lower_bound_keys = get_winner_lookup_source_lower_bound_keys(slot_index, source);
 
@@ -987,7 +987,7 @@ bool keys_valid(const WinnerLookupKeys* keys)
   return (keys != NULL) && (keys->owner != SACN_DMX_MERGER_SOURCE_INVALID);
 }
 
-void update_merge(MergerState* merger, unsigned int slot_index)
+void update_merge(MergerState* merger, uint16_t slot_index)
 {
   // Initialize an iterator.
   EtcPalRbIter tree_iter;
