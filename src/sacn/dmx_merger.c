@@ -805,6 +805,9 @@ etcpal_error_t update_level(MergerState* merger, SourceState* source, uint16_t l
     update_merge(merger, level_index);
   }
 
+  // Update the values array in source state as well.
+  source->source.values[level_index] = level;
+
   return result;
 }
 
@@ -850,6 +853,9 @@ etcpal_error_t update_priority(MergerState* merger, SourceState* source, uint16_
   {
     update_merge(merger, priority_index);
   }
+
+  // Update the address_priority array in source state as well.
+  source->source.address_priority[priority_index] = priority;
 
   return result;
 }
