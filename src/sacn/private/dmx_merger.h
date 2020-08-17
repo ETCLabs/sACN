@@ -36,14 +36,6 @@
 extern "C" {
 #endif
 
-typedef struct WinnerLookupKeys
-{
-  uint16_t slot_index;
-  source_id_t owner;
-  uint8_t level;
-  uint8_t priority;
-} WinnerLookupKeys;
-
 typedef struct SourceState
 {
   source_id_t handle;
@@ -63,10 +55,10 @@ typedef struct MergerState
   IntHandleManager source_handle_mgr;
 
   EtcPalRbTree source_state_lookup;
-  EtcPalRbTree winner_lookup;
   EtcPalRbTree source_handle_lookup;
 
   const SacnDmxMergerConfig* config;
+  uint8_t winning_priorities[DMX_ADDRESS_COUNT];
 } MergerState;
 
 IntHandleManager merger_handle_mgr;
@@ -75,7 +67,6 @@ EtcPalRbTree mergers;
 // TODO: DO WE NEED THIS FILE??
 int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
-int winner_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 int source_handle_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 
 EtcPalRbNode* dmx_merger_rb_node_alloc_func();
@@ -84,22 +75,13 @@ void dmx_merger_rb_node_dealloc_func(EtcPalRbNode* node);
 bool merger_handle_in_use(int handle_val, void* cookie);
 bool source_handle_in_use(int handle_val, void* cookie);
 
-etcpal_error_t update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values,
-                             uint16_t new_values_count);
-etcpal_error_t update_level(MergerState* merger, SourceState* source, uint16_t level_index, uint8_t level);
-etcpal_error_t update_per_address_priorities(MergerState* merger, SourceState* source,
-                                             const uint8_t* address_priorities, uint16_t address_priorities_count);
-etcpal_error_t update_priority(MergerState* merger, SourceState* source, uint16_t priority_index, uint8_t priority);
-etcpal_error_t update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority);
-WinnerLookupKeys get_winner_lookup_source_lower_bound_keys(uint16_t slot_index, SourceState* source);
-WinnerLookupKeys get_winner_lookup_source_upper_bound_keys(uint16_t slot_index, SourceState* source);
-WinnerLookupKeys get_winner_lookup_slot_lower_bound_keys(uint16_t slot_index);
-WinnerLookupKeys get_winner_lookup_slot_upper_bound_keys(uint16_t slot_index);
-etcpal_error_t update_winner_lookup(MergerState* merger, WinnerLookupKeys* current_keys_to_free,
-                                    const WinnerLookupKeys* new_keys_to_copy);
-WinnerLookupKeys* get_current_keys(MergerState* merger, SourceState* source, uint16_t slot_index);
-bool keys_valid(const WinnerLookupKeys* keys);
-void update_merge(MergerState* merger, uint16_t slot_index);
+void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values, uint16_t new_values_count);
+void update_level(MergerState* merger, SourceState* source, uint16_t level_index, uint8_t level);
+void update_per_address_priorities(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
+                                   uint16_t address_priorities_count);
+void update_priority(MergerState* merger, SourceState* source, uint16_t priority_index, uint8_t priority);
+void update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority);
+void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index);
 void deinit_merger_state(MergerState* state);
 
 #ifdef __cplusplus
