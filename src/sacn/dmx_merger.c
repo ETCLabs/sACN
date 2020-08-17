@@ -399,7 +399,26 @@ source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* s
  */
 const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, source_id_t source)
 {
-  return NULL;  // TODO: Implement this.
+  if (source == SACN_DMX_MERGER_SOURCE_INVALID)
+  {
+    return NULL;
+  }
+
+  MergerState* merger_state = etcpal_rbtree_find(&mergers, &merger);
+
+  if (merger_state == NULL)
+  {
+    return NULL;
+  }
+
+  SourceState* source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
+
+  if (source_state == NULL)
+  {
+    return NULL;
+  }
+
+  return &source_state->source;
 }
 
 /*!

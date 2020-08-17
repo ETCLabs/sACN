@@ -285,6 +285,38 @@ TEST_F(TestDmxMerger, GetIdWorks)
   EXPECT_EQ(sacn_dmx_merger_get_id(merger_handle_, &source_cid_2), source_handle);
 }
 
+TEST_F(TestDmxMerger, GetSourceWorks)
+{
+  EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+
+  const char* cid_str_1 = "abcdef1234567890";
+  const char* cid_str_2 = "1234567890abcdef";
+
+  EtcPalUuid source_cid_1;
+  EtcPalUuid source_cid_2;
+
+  memcpy(source_cid_1.data, cid_str_1, ETCPAL_UUID_BYTES);
+  memcpy(source_cid_2.data, cid_str_2, ETCPAL_UUID_BYTES);
+
+  source_id_t source_handle_1;
+  source_id_t source_handle_2;
+
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid_1, &source_handle_1), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid_2, &source_handle_2), kEtcPalErrOk);
+
+  EXPECT_EQ(sacn_dmx_merger_get_source(merger_handle_ + 1, source_handle_1), nullptr);
+  EXPECT_EQ(sacn_dmx_merger_get_source(merger_handle_, SACN_DMX_MERGER_SOURCE_INVALID), nullptr);
+
+  const SacnDmxMergerSource* source_1 = sacn_dmx_merger_get_source(merger_handle_, source_handle_1);
+  const SacnDmxMergerSource* source_2 = sacn_dmx_merger_get_source(merger_handle_, source_handle_2);
+
+  ASSERT_NE(source_1, nullptr);
+  ASSERT_NE(source_2, nullptr);
+
+  EXPECT_EQ(memcmp(source_1->cid.data, source_cid_1.data, ETCPAL_UUID_BYTES), 0);
+  EXPECT_EQ(memcmp(source_2->cid.data, source_cid_2.data, ETCPAL_UUID_BYTES), 0);
+}
+
 TEST_F(TestDmxMerger, UpdateSourceDataErrInvalidWorks)
 {
   uint8_t foo = 0;
