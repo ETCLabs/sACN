@@ -232,7 +232,6 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
  */
 inline void MergeReceiver::Shutdown()
 {
-  // We'll be ignoring shutdown errors for now
   sacn_merge_receiver_destroy(handle_);
   handle_ = kInvalidHandle;
 }

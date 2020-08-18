@@ -229,7 +229,6 @@ inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& 
  */
 inline void Receiver::Shutdown()
 {
-  //We'll be ignoring shutdown errors for now
   sacn_receiver_destroy(handle_);
   handle_ = kInvalidHandle;
 }

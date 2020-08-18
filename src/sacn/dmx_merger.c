@@ -242,11 +242,11 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
  *
  * \param[in] merger The handle to the merger.
  * \param[in] source The id of the source to modify.
+ * \param[in] priority The universe-level priority of the source.
  * \param[in] new_values The new DMX values to be copied in. This may be NULL if the source is only updating the
  * priority or address_priorities.
  * \param[in] new_values_count The length of new_values. May be 0 if the source is only updating the priority or
  * address_priorities.
- * \param[in] priority The universe-level priority of the source.
  * \param[in] address_priorities The per-address priority values to be copied in.  This may be NULL if the source is not
  * sending per-address priorities, or is only updating other parameters.
  * \param[in] address_priorities_count The length of address_priorities.  May be 0 if the source is not sending these
@@ -257,8 +257,8 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, source_id_t source,
-                                                  const uint8_t* new_values, size_t new_values_count, uint8_t priority,
+etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, source_id_t source, uint8_t priority,
+                                                  const uint8_t* new_values, size_t new_values_count, 
                                                   const uint8_t* address_priorities, size_t address_priorities_count)
 {
   return kEtcPalErrNotImpl;

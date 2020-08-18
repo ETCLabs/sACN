@@ -42,8 +42,8 @@
 
 /* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
 #if SACN_DYNAMIC_MEM
-#define ALLOC_RECEIVER() malloc(sizeof(SacnMergeReceiver))
-#define FREE_RECEIVER(ptr) \
+#define ALLOC_MERGE_RECEIVER() malloc(sizeof(SacnMergeReceiver))
+#define FREE_MERGE_RECEIVER(ptr) \
   do                       \
   {                        \
     if (ptr->netints)      \
@@ -53,8 +53,8 @@
     free(ptr);             \
   } while (0)
 #else
-#define ALLOC_RECEIVER() etcpal_mempool_alloc(sacnrecv_merge_receivers)
-#define FREE_RECEIVER(ptr) etcpal_mempool_free(sacnrecv_merge_receivers, ptr)
+#define ALLOC_MERGE_RECEIVER() etcpal_mempool_alloc(sacnrecv_merge_receivers)
+#define FREE_MERGE_RECEIVER(ptr) etcpal_mempool_free(sacnrecv_merge_receivers, ptr)
 #endif
 
 /**************************** Private variables ******************************/
