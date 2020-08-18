@@ -749,23 +749,6 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
   return kEtcPalErrOk;
 }
 
-/*!
- * \brief Fully recalculate outputs.
- *
- * Does a full recalculation of the merger outputs.
- *
- * \param[in] merger The handle to the merger.
- * \return #kEtcPalErrOk: Source updated and recalculation completed.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merger.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
- */
-// TODO: Do we need this?
-etcpal_error_t sacn_dmx_merger_recalculate(sacn_dmx_merger_t merger)
-{
-  return kEtcPalErrNotImpl;  // TODO: Implement this.
-}
-
 int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
 {
   const sacn_dmx_merger_t* a = (const sacn_dmx_merger_t*)value_a;

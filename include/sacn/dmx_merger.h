@@ -153,9 +153,6 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
                                                        const uint8_t* pdata);
 etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, source_id_t source);
 
-// TODO: Do we need this?
-etcpal_error_t sacn_dmx_merger_recalculate(sacn_dmx_merger_t merger);
-
 #ifdef __cplusplus
 }
 #endif
