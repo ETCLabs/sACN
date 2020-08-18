@@ -66,7 +66,7 @@ extern "C" {
 /*! Each merger has a handle associated with it.*/
 typedef int sacn_dmx_merger_t;
 
-/*! An invalid sACN receiver handle value. */
+/*! An invalid sACN merger handle value. */
 #define SACN_DMX_MERGER_INVALID -1
 
 /*! The sources on a merger have a short id that is used in the owned values, rather than a UUID.*/
@@ -117,7 +117,7 @@ typedef struct SacnDmxMergerConfig
  * Given a buffer of slot_owners, evaluate to true if the slot is != DMX_MERGER_SOURCE_INVALID.
  *
  */
-#define SACN_DMX_MERGER_IS_SOURCE_VALID(source) (source != DMX_MERGER_SOURCE_INVALID)
+#define SACN_DMX_MERGER_IS_SOURCE_VALID(slot_owners_array, slot_index) (slot_owners_array[slot_index] != DMX_MERGER_SOURCE_INVALID)
 
 /*! The current input data for a single source of the merge.  This is exposed only for informational purposes, as the
     application calls a variant of sacn_dmx_merger_update_source to do the actual update. */

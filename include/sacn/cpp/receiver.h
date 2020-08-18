@@ -70,7 +70,6 @@ public:
     /// @param handle Handle to the receiver instance for which sources were lost.
     /// @param lost_sources Array of structs describing the source or sources that have been lost.
     /// @param num_lost_sources Size of the lost_sources array.
-    /// @param context Context pointer that was given at the creation of the receiver instance.
     virtual void HandleSourcesLost(Handle handle, const SacnLostSource* lost_sources, size_t num_lost_sources) = 0;
 
     /// @brief Notify that a source has stopped transmission of per-address priority packets.
@@ -254,7 +253,7 @@ etcpal::Expected<uint16_t> Receiver::GetUniverse() const
  * \brief Change the universe this class is listening to.
  *
  * An sACN receiver can only listen on one universe at a time. After this call completes successfully, the receiver is
- * in a sampling period for the new universe and will provide HandleSourcesFound() callse when appropriate.
+ * in a sampling period for the new universe and will provide HandleSourcesFound() calls when appropriate.
  * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
  *
  * \param[in] new_universe_id New universe number that this receiver should listen to.
@@ -279,7 +278,7 @@ inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
  * HandleSourcesFound() calls when appropriate.
  * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
  *
- * \param[in] netints Vectorof network interfaces on which to listen to the specified universe. If empty,
+ * \param[in] netints Vector of network interfaces on which to listen to the specified universe. If empty,
  *  all available network interfaces will be used.
  * \return #kEtcPalErrOk: Universe changed successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.

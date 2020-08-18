@@ -71,7 +71,7 @@ ETCPAL_MEMPOOL_DEFINE(sacnrecv_merge_receivers, SacnMergeReceiver, SACN_RECEIVER
  * API functions
  *************************************************************************************************/
 
-/* Initialize the sACN Receiver module. Internal function called from sacn_init(). */
+/* Initialize the sACN Merge Receiver module. Internal function called from sacn_init(). */
 etcpal_error_t sacn_merge_receiver_init(void)
 {
   /*
@@ -99,7 +99,7 @@ etcpal_error_t sacn_merge_receiver_init(void)
   return kEtcPalErrNotImpl;
 }
 
-/* Deinitialize the sACN Receiver module. Internal function called from sacn_deinit(). */
+/* Deinitialize the sACN Merge Receiver module. Internal function called from sacn_deinit(). */
 void sacn_merge_receiver_deinit(void)
 {
   /*
@@ -125,7 +125,7 @@ void sacn_merge_receiver_deinit(void)
 }
 
 /*!
- * \brief Initialize an sACN Receiver Config struct to default values.
+ * \brief Initialize an sACN Merge Receiver Config struct to default values.
  *
  * \param[out] config Config struct to initialize.
  */
@@ -140,16 +140,16 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
 /*!
  * \brief Create a new sACN Merge Receiver to listen and merge sACN data on a universe.
  *
- * An sACN receiver can listen on one universe at a time, and each universe can only be listened to
- * by one receiver at at time.
+ * An sACN merge receiver can listen on one universe at a time, and each universe can only be listened to
+ * by one merge receiver at at time.
  *
  * \param[in] config Configuration parameters for the sACN Merge Receiver to be created.
  * \param[out] handle Filled in on success with a handle to the sACN Merge Receiver.
- * \return #kEtcPalErrOk: Receiver created successfully.
+ * \return #kEtcPalErrOk: Merge Receiver created successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrExists: A receiver already exists which is listening on the specified universe.
- * \return #kEtcPalErrNoMem: No room to allocate memory for this receiver.
+ * \return #kEtcPalErrExists: A merge receiver already exists which is listening on the specified universe.
+ * \return #kEtcPalErrNoMem: No room to allocate memory for this merge receiver, or maximum merge receivers reached.
  * \return #kEtcPalErrNoNetints: No network interfaces were found on the system.
  * \return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
@@ -166,10 +166,10 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
 /*!
  * \brief Destroy a sACN Merge Receiver instance.
  *
- * \param[in] handle Handle to the receiver to destroy.
- * \return #kEtcPalErrOk: Receiver destroyed successfully.
+ * \param[in] handle Handle to the merge receiver to destroy.
+ * \return #kEtcPalErrOk: Merge receiver destroyed successfully.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
@@ -182,12 +182,12 @@ etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
 /*!
  * \brief Get the universe on which a sACN Merge Receiver is currently listening.
  *
- * \param[in] handle Handle to the receiver that we want to query.
+ * \param[in] handle Handle to the merge receiver that we want to query.
  * \param[out] universe_id The retrieved universe.
  * \return #kEtcPalErrOk: Universe retrieved successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id)
@@ -201,17 +201,17 @@ etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, ui
 /*!
  * \brief Change the universe on which a sACN Merge Receiver is listening.
  *
- * An sACN receiver can only listen on one universe at a time. After this call completes, underlying updates will
+ * An sACN merge receiver can only listen on one universe at a time. After this call completes, underlying updates will
  * generate new calls to SacnMergeReceiverMergedDataCallback(). If this call fails, the caller must call
- * sacn_merge_receiver_destroy for the receiver, because the receiver may be in an invalid state.
+ * sacn_merge_receiver_destroy for the merge receiver, because the merge receiver may be in an invalid state.
  *
- * \param[in] handle Handle to the receiver for which to change the universe.
- * \param[in] new_universe_id New universe number that this receiver should listen to.
+ * \param[in] handle Handle to the merge receiver for which to change the universe.
+ * \param[in] new_universe_id New universe number that this merge receiver should listen to.
  * \return #kEtcPalErrOk: Universe changed successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrExists: A receiver already exists which is listening on the specified new universe.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * \return #kEtcPalErrExists: A merge receiver already exists which is listening on the specified new universe.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id)
@@ -230,17 +230,17 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
  * After this call completes, underlying updates will generate new calls to SacnMergeReceiverMergedDataCallback(). If
- * this call fails, the caller must call sacn_merge_receiver_destroy for the receiver, because the receiver may be in an
- * invalid state.
+ * this call fails, the caller must call sacn_merge_receiver_destroy for the merge receiver, because the receiver may be
+ * in an invalid state.
  *
- * \param[in] handle Handle to the receiver for which to reset the networking.
+ * \param[in] handle Handle to the merge receiver for which to reset the networking.
  * \param[in] (optional) array of network interfaces on which to listen to the specified universe. If NULL,
  *  all available network interfaces will be used.
  * \param[in] Number of elements in the netints array.
- * \return #kEtcPalErrOk: Universe changed successfully.
+ * \return #kEtcPalErrOk: Network reset successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
@@ -256,7 +256,7 @@ etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle
 /*!
  * \brief Returns the source id for that source cid.
  *
- * \param[in] handle The handle to the receiver.
+ * \param[in] handle The handle to the merge receiver.
  * \param[in] source_cid The UUID of the source CID.
  * \return The source ID, or #SACN_DMX_MERGER_SOURCE_INVALID.
  */
@@ -271,12 +271,12 @@ source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, cons
 /*!
  * \brief fills in the source cid for that source id.
  *
- * \param[in] handle The handle to the receiver.
+ * \param[in] handle The handle to the merge receiver.
  * \param[in] source_id The ID of the source.
  * \param[out] source_cid The UUID of the source CID.
  * \return #kEtcPalErrOk: Lookup was successful.
- * \return #kEtcPalErrNotFound: handle does not correspond to a valid receiver, or source_id  does not correspond to a
- * valid source.
+ * \return #kEtcPalErrNotFound: handle does not correspond to a valid merge receiver, or source_id  does not correspond
+ * to a valid source.
  */
 etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, source_id_t source_id,
                                                   EtcPalUuid* source_cid)
