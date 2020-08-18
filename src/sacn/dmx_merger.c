@@ -795,7 +795,7 @@ void update_universe_priority(MergerState* merger, SourceState* source, uint8_t 
   {
     for (uint16_t priority_index = 0; priority_index < DMX_ADDRESS_COUNT; ++priority_index)
     {
-      // Update the priority.
+      // Update the priority. The main purpose here is to run the merge.
       update_priority(merger, source, priority_index, priority);
     }
   }
