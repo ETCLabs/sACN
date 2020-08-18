@@ -80,7 +80,10 @@ void update_per_address_priorities(MergerState* merger, SourceState* source, con
                                    uint16_t address_priorities_count);
 void update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority);
 void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index);
-void deinit_merger_state(MergerState* state);
+
+void free_source_state_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node);
+void free_source_handle_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node);
+void free_mergers_node(const EtcPalRbTree* self, EtcPalRbNode* node);
 
 #ifdef __cplusplus
 }
