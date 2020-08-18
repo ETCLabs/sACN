@@ -127,7 +127,8 @@ typedef struct SacnDmxMergerSource
   bool address_priority_valid;
 
   /*! The sACN per-address (startcode 0xdd) priority (1-255, 0 means not sourced).
-      If the source does not */
+      If the source does not have per-addres priority, then address_priority_valid will be false, and this array should
+      be ignored. */
   uint8_t address_priority[DMX_ADDRESS_COUNT];
 
 } SacnDmxMergerSource;

@@ -662,11 +662,10 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
   // Update the address_priority_valid flag.
   source_state->source.address_priority_valid = false;
 
-  // Reset all priorities to the universe priority.
+  // Merge all the slots again. It will use universe priority this time because address_priority_valid was updated.
   for (uint16_t priority_index = 0; priority_index < DMX_ADDRESS_COUNT; ++priority_index)
   {
-    // Update the priority.
-    update_priority(merger, source, priority_index, source_state->source.universe_priority);
+    merge_source(merger, source, priority_index);
   }
 
   return kEtcPalErrOk;
@@ -746,17 +745,12 @@ void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_
   for (uint16_t level_index = 0; level_index < new_values_count; ++level_index)
   {
     // Update the level.
-    update_level(merger, source, level_index, new_values[level_index]);
+    source->source.values[level_index] = new_values[level_index];
+    merge_source(merger, source, level_index);
   }
 
   // Update the level count
   source->source.valid_value_count = new_values_count;
-}
-
-void update_level(MergerState* merger, SourceState* source, uint16_t level_index, uint8_t level)
-{
-  source->source.values[level_index] = level;
-  merge_source(merger, source, level_index);
 }
 
 /*
@@ -772,14 +766,9 @@ void update_per_address_priorities(MergerState* merger, SourceState* source, con
   for (uint16_t priority_index = 0; priority_index < address_priorities_count; ++priority_index)
   {
     // Update the priority.
-    update_priority(merger, source, priority_index, address_priorities[priority_index]);
+    source->source.address_priority[priority_index] = address_priorities[priority_index];
+    merge_source(merger, source, priority_index);
   }
-}
-
-void update_priority(MergerState* merger, SourceState* source, uint16_t priority_index, uint8_t priority)
-{
-  source->source.address_priority[priority_index] = priority;
-  merge_source(merger, source, priority_index);
 }
 
 /*
@@ -790,13 +779,12 @@ void update_universe_priority(MergerState* merger, SourceState* source, uint8_t 
   // Just update the existing entry, since we're not modifying a key.
   source->source.universe_priority = priority;
 
-  // Update the actual priorities now if there are no per-address priorities.
+  // Run the merge now if there are no per-address priorities.
   if (!source->source.address_priority_valid)
   {
     for (uint16_t priority_index = 0; priority_index < DMX_ADDRESS_COUNT; ++priority_index)
     {
-      // Update the priority. The main purpose here is to run the merge.
-      update_priority(merger, source, priority_index, priority);
+      merge_source(merger, source, priority_index);
     }
   }
 }

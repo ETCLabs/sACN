@@ -76,10 +76,8 @@ bool merger_handle_in_use(int handle_val, void* cookie);
 bool source_handle_in_use(int handle_val, void* cookie);
 
 void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values, uint16_t new_values_count);
-void update_level(MergerState* merger, SourceState* source, uint16_t level_index, uint8_t level);
 void update_per_address_priorities(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
                                    uint16_t address_priorities_count);
-void update_priority(MergerState* merger, SourceState* source, uint16_t priority_index, uint8_t priority);
 void update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority);
 void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index);
 void deinit_merger_state(MergerState* state);
