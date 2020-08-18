@@ -30,6 +30,10 @@
 /***************************** Private constants *****************************/
 /****************************** Private macros *******************************/
 
+#define SOURCE_STOPPED_SOURCING(source_state, slot_index)                                                      \
+  (source_state->source.address_priority_valid && (source_state->source.address_priority[slot_index] == 0)) || \
+      (slot_index >= source_state->source.valid_value_count)
+
 /* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
 
 #if SACN_DYNAMIC_MEM
@@ -97,6 +101,7 @@ etcpal_error_t sacn_dmx_merger_init(void)
 void sacn_dmx_merger_deinit(void)
 {
   etcpal_rbtree_clear_with_cb(&mergers, free_mergers_node);
+  // TODO: Unit test?
 }
 
 /*!
@@ -229,6 +234,8 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
   FREE_MERGER_STATE(merger_state);
 
   return kEtcPalErrOk;
+
+  // TODO: Unit test
 }
 
 /*!
@@ -403,9 +410,8 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id
     return kEtcPalErrSys;
   }
 
-  // Feed in per-address-priorities of 0 to remove this source from the merge output.
-  memset(source_state->source.address_priority, 0, DMX_ADDRESS_COUNT);
-  source_state->source.address_priority_valid = true;
+  // Merge the source with valid_value_count = 0 to remove this source from the merge output.
+  source_state->source.valid_value_count = 0;
 
   for (uint16_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
   {
@@ -428,6 +434,8 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id
   FREE_CID_TO_SOURCE_HANDLE(cid_to_handle);
 
   return kEtcPalErrOk;
+
+  // TODO: Unit test
 }
 
 /*!
@@ -855,7 +863,7 @@ void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
   uint8_t source_level = source->source.values[slot_index];
   uint8_t source_priority = source->source.address_priority_valid ? source->source.address_priority[slot_index]
                                                                   : source->source.universe_priority;
-  bool source_stopped_sourcing = (source->source.address_priority_valid && (source_priority == 0));
+  bool source_stopped_sourcing = SOURCE_STOPPED_SOURCING(source, slot_index);
 
   source_id_t winning_source = merger->config->slot_owners[slot_index];
   uint8_t winning_level = merger->config->slots[slot_index];
@@ -894,8 +902,7 @@ void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
         uint8_t potential_winner_priority = potential_winner->source.address_priority_valid
                                                 ? potential_winner->source.address_priority[slot_index]
                                                 : potential_winner->source.universe_priority;
-        bool potential_winner_stopped_sourcing =
-            potential_winner->source.address_priority_valid && (potential_winner_priority == 0);
+        bool potential_winner_stopped_sourcing = SOURCE_STOPPED_SOURCING(potential_winner, slot_index);
 
         // If we have a new best:
         if (!potential_winner_stopped_sourcing &&
