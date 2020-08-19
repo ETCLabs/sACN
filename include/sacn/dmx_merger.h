@@ -70,7 +70,7 @@ typedef int sacn_dmx_merger_t;
 typedef uint16_t source_id_t;
 
 /*! An invalid source id handle value. */
-#define SACN_DMX_MERGER_SOURCE_INVALID -1
+#define SACN_DMX_MERGER_SOURCE_INVALID 0xffff
 
 /*! A set of configuration information for a merger instance. */
 typedef struct SacnDmxMergerConfig

@@ -361,6 +361,8 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
     return kEtcPalErrSys;
   }
 
+  *source_id = handle;
+
   return kEtcPalErrOk;
 }
 
