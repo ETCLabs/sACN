@@ -814,16 +814,17 @@ bool source_handle_in_use(int handle_val, void* cookie)
  */
 void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values, uint16_t new_values_count)
 {
-  // For each level:
-  for (uint16_t level_index = 0; level_index < new_values_count; ++level_index)
-  {
-    // Update the level.
-    source->source.values[level_index] = new_values[level_index];
-    merge_source(merger, source, level_index);
-  }
-
-  // Update the level count
+  // Update the valid value count.
   source->source.valid_value_count = new_values_count;
+
+  // Update the level values.
+  memcpy(source->source.values, new_values, new_values_count);
+
+  // Merge all slots.
+  for (uint16_t slot_index = 0; slot_index < DMX_ADDRESS_COUNT; ++slot_index)
+  {
+    merge_source(merger, source, slot_index);
+  }
 }
 
 /*
@@ -835,12 +836,19 @@ void update_per_address_priorities(MergerState* merger, SourceState* source, con
   // Update the address_priority_valid flag.
   source->source.address_priority_valid = true;
 
-  // For each priority:
-  for (uint16_t priority_index = 0; priority_index < address_priorities_count; ++priority_index)
+  // Update the priority values.
+  memcpy(source->source.address_priority, address_priorities, address_priorities_count);
+
+  // Any remaining unspecified priorities are interpreted as "not sourced".
+  if (address_priorities_count < DMX_ADDRESS_COUNT)
   {
-    // Update the priority.
-    source->source.address_priority[priority_index] = address_priorities[priority_index];
-    merge_source(merger, source, priority_index);
+    memcpy(&source->source.address_priority[address_priorities_count], 0, DMX_ADDRESS_COUNT - address_priorities_count);
+  }
+
+  // Merge all slots.
+  for (uint16_t slot_index = 0; slot_index < DMX_ADDRESS_COUNT; ++slot_index)
+  {
+    merge_source(merger, source, slot_index);
   }
 }
 
@@ -855,9 +863,9 @@ void update_universe_priority(MergerState* merger, SourceState* source, uint8_t 
   // Run the merge now if there are no per-address priorities.
   if (!source->source.address_priority_valid)
   {
-    for (uint16_t priority_index = 0; priority_index < DMX_ADDRESS_COUNT; ++priority_index)
+    for (uint16_t slot_index = 0; slot_index < DMX_ADDRESS_COUNT; ++slot_index)
     {
-      merge_source(merger, source, priority_index);
+      merge_source(merger, source, slot_index);
     }
   }
 }
