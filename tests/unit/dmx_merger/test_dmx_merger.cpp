@@ -748,3 +748,5 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnErrNotFoundWorks)
 
   EXPECT_NE(found_result, kEtcPalErrNotFound);
 }
+
+// TODO: sacn_dmx_merger_stop_source_per_address_priority unit tests (including error conditions)
