@@ -96,6 +96,21 @@ protected:
   EtcPalUuid namespace_uuid_;
 };
 
+TEST_F(TestDmxMerger, DeinitClearsMergers)
+{
+  // Add up to the maximum number of mergers.
+  for (int i = 0; i < SACN_DMX_MERGER_MAX_COUNT; ++i)
+  {
+    EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+  }
+
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), SACN_DMX_MERGER_MAX_COUNT);
+
+  sacn_dmx_merger_deinit();
+
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), 0);
+}
+
 TEST_F(TestDmxMerger, MergerCreateErrInvalidWorks)
 {
   uint8_t slots[DMX_ADDRESS_COUNT];
@@ -157,6 +172,29 @@ TEST_F(TestDmxMerger, MergerCreateErrNoMemWorks)
 #else
   EXPECT_EQ(past_max_result, kEtcPalErrNoMem);
 #endif
+}
+
+TEST_F(TestDmxMerger, MergerDestroyErrNotInitWorks)
+{
+  sacn_initialized_fake.return_val = false;
+  etcpal_error_t not_initialized_result = sacn_dmx_merger_destroy(0);
+
+  sacn_initialized_fake.return_val = true;
+  etcpal_error_t initialized_result = sacn_dmx_merger_destroy(0);
+
+  EXPECT_EQ(not_initialized_result, kEtcPalErrNotInit);
+  EXPECT_NE(initialized_result, kEtcPalErrNotInit);
+}
+
+TEST_F(TestDmxMerger, MergerDestroyErrNotFoundWorks)
+{
+  EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+
+  etcpal_error_t found_result = sacn_dmx_merger_destroy(merger_handle_);
+  etcpal_error_t not_found_result = sacn_dmx_merger_destroy(merger_handle_ + 1);
+
+  EXPECT_EQ(found_result, kEtcPalErrOk);
+  EXPECT_EQ(not_found_result, kEtcPalErrNotFound);
 }
 
 TEST_F(TestDmxMerger, AddSourceErrInvalidWorks)
@@ -256,6 +294,46 @@ TEST_F(TestDmxMerger, AddSourceErrExistsWorks)
   memcpy(source_cid_3.data, cid_str_2, ETCPAL_UUID_BYTES);
 
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid_3, &source_handle_3), kEtcPalErrOk);
+}
+
+TEST_F(TestDmxMerger, RemoveSourceErrInvalidWorks)
+{
+  // Create merger.
+  EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+
+  // Test response to SACN_DMX_MERGER_SOURCE_INVALID.
+  EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, SACN_DMX_MERGER_SOURCE_INVALID), kEtcPalErrInvalid);
+
+  // Add a source.
+  EtcPalUuid source_cid;
+  source_id_t source_handle;
+  memcpy(source_cid.data, "1234567890abcdef", ETCPAL_UUID_BYTES);
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrOk);
+
+  // The first removal should succeed, but the second should fail because the source is no longer there.
+  EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_handle), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_handle), kEtcPalErrInvalid);
+
+  // Add the source again.
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrOk);
+
+  // This time remove the merger.
+  EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
+
+  // Now the source removal should fail because the merger cannot be found.
+  EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_handle), kEtcPalErrInvalid);
+}
+
+TEST_F(TestDmxMerger, RemoveSourceErrNotInitWorks)
+{
+  sacn_initialized_fake.return_val = false;
+  etcpal_error_t not_initialized_result = sacn_dmx_merger_remove_source(0, 0);
+
+  sacn_initialized_fake.return_val = true;
+  etcpal_error_t initialized_result = sacn_dmx_merger_remove_source(0, 0);
+
+  EXPECT_EQ(not_initialized_result, kEtcPalErrNotInit);
+  EXPECT_NE(initialized_result, kEtcPalErrNotInit);
 }
 
 TEST_F(TestDmxMerger, GetIdWorks)

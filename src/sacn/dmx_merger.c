@@ -101,7 +101,6 @@ etcpal_error_t sacn_dmx_merger_init(void)
 void sacn_dmx_merger_deinit(void)
 {
   etcpal_rbtree_clear_with_cb(&mergers, free_mergers_node);
-  // TODO: Unit test?
 }
 
 /*!
@@ -234,8 +233,6 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
   FREE_MERGER_STATE(merger_state);
 
   return kEtcPalErrOk;
-
-  // TODO: Unit test
 }
 
 /*!
@@ -387,6 +384,12 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id
     return kEtcPalErrNotInit;
   }
 
+  // Check if the source handle itself is invalid.
+  if (source == SACN_DMX_MERGER_SOURCE_INVALID)
+  {
+    return kEtcPalErrInvalid;
+  }
+
   // Get the merger, or return invalid if not found.
   MergerState* merger_state = etcpal_rbtree_find(&mergers, &merger);
 
@@ -434,8 +437,6 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id
   FREE_CID_TO_SOURCE_HANDLE(cid_to_handle);
 
   return kEtcPalErrOk;
-
-  // TODO: Unit test
 }
 
 /*!
@@ -802,7 +803,8 @@ bool source_handle_in_use(int handle_val, void* cookie)
 {
   MergerState* merger_state = (MergerState*)cookie;
 
-  return (etcpal_rbtree_find(&merger_state->source_state_lookup, &handle_val) != NULL);
+  return (handle_val == SACN_DMX_MERGER_SOURCE_INVALID) ||
+         (etcpal_rbtree_find(&merger_state->source_state_lookup, &handle_val) != NULL);
 }
 
 /*
