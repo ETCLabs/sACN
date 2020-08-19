@@ -111,7 +111,7 @@ void sacn_dmx_merger_deinit(void)
  *
  * \param[in] config Configuration parameters for the DMX merger to be created.
  * \param[out] handle Filled in on success with a handle to the merger.
- * \return #kEtcPalErrOk: Merger created successful.
+ * \return #kEtcPalErrOk: Merger created successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrNoMem: No room to allocate memory for this merger, or the max number of mergers has been reached.

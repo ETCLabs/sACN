@@ -111,30 +111,55 @@ TEST_F(TestDmxMerger, DeinitClearsMergers)
   EXPECT_EQ(etcpal_rbtree_size(&mergers), 0);
 }
 
+TEST_F(TestDmxMerger, MergerCreateWorks)
+{
+  // Initialize the initial values, and what we expect them to be after sacn_dmx_merger_create.
+  uint8_t expected_slots_priorities[DMX_ADDRESS_COUNT];
+  source_id_t expected_slot_owners[DMX_ADDRESS_COUNT];
+
+  for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+  {
+    slots_[i] = i % 0xff;
+    slot_owners_[i] = i;
+    expected_slots_priorities[i] = 0;
+    expected_slot_owners[i] = SACN_DMX_MERGER_SOURCE_INVALID;
+  }
+
+  // Start with a value that the merger handle will not end up being.
+  sacn_dmx_merger_t initial_handle = 1234567;
+  merger_handle_ = initial_handle;  
+
+  // Call sacn_dmx_merger_create and make sure it indicates success.
+  EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+
+  // Make sure the values changed as expected.
+  EXPECT_NE(merger_handle_, initial_handle);
+  EXPECT_EQ(memcmp(slots_, expected_slots_priorities, DMX_ADDRESS_COUNT), 0);
+  EXPECT_EQ(memcmp(slot_owners_, expected_slot_owners, sizeof(source_id_t) * DMX_ADDRESS_COUNT), 0);
+
+  // Make sure the correct merger state was created.
+  MergerState* merger_state = reinterpret_cast<MergerState*>(etcpal_rbtree_find(&mergers, &merger_handle_));
+  ASSERT_NE(merger_state, nullptr);
+
+  EXPECT_EQ(merger_state->handle, merger_handle_);
+  EXPECT_EQ(merger_state->config, &merger_config_);
+  EXPECT_EQ(memcmp(merger_state->winning_priorities, expected_slots_priorities, DMX_ADDRESS_COUNT), 0);
+}
+
 TEST_F(TestDmxMerger, MergerCreateErrInvalidWorks)
 {
-  uint8_t slots[DMX_ADDRESS_COUNT];
-  source_id_t slot_owners[DMX_ADDRESS_COUNT];
-  sacn_dmx_merger_t handle;
-
-  SacnDmxMergerConfig invalidSlotsConfig;
+  SacnDmxMergerConfig invalidSlotsConfig = merger_config_;
   invalidSlotsConfig.slots = NULL;
-  invalidSlotsConfig.slot_owners = slot_owners;
 
-  SacnDmxMergerConfig invalidSlotOwnersConfig;
-  invalidSlotOwnersConfig.slots = slots;
+  SacnDmxMergerConfig invalidSlotOwnersConfig = merger_config_;
   invalidSlotOwnersConfig.slot_owners = NULL;
 
-  SacnDmxMergerConfig validConfig;
-  validConfig.slots = slots;
-  validConfig.slot_owners = slot_owners;
+  etcpal_error_t null_config_result = sacn_dmx_merger_create(NULL, &merger_handle_);
+  etcpal_error_t null_handle_result = sacn_dmx_merger_create(&merger_config_, NULL);
+  etcpal_error_t null_slots_result = sacn_dmx_merger_create(&invalidSlotsConfig, &merger_handle_);
+  etcpal_error_t null_slot_owners_result = sacn_dmx_merger_create(&invalidSlotOwnersConfig, &merger_handle_);
 
-  etcpal_error_t null_config_result = sacn_dmx_merger_create(NULL, &handle);
-  etcpal_error_t null_handle_result = sacn_dmx_merger_create(&validConfig, NULL);
-  etcpal_error_t null_slots_result = sacn_dmx_merger_create(&invalidSlotsConfig, &handle);
-  etcpal_error_t null_slot_owners_result = sacn_dmx_merger_create(&invalidSlotOwnersConfig, &handle);
-
-  etcpal_error_t valid_result = sacn_dmx_merger_create(&validConfig, &handle);
+  etcpal_error_t valid_result = sacn_dmx_merger_create(&merger_config_, &merger_handle_);
 
   EXPECT_EQ(null_config_result, kEtcPalErrInvalid);
   EXPECT_EQ(null_handle_result, kEtcPalErrInvalid);
