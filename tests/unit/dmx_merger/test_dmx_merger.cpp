@@ -467,6 +467,46 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
   }
 }
 
+TEST_F(TestDmxMerger, RemoveSourceUpdatesInternalState)
+{
+  // Create the merger.
+  EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+
+  // Grab the merger state, which will be used later.
+  MergerState* merger_state = reinterpret_cast<MergerState*>(etcpal_rbtree_find(&mergers, &merger_handle_));
+  ASSERT_NE(merger_state, nullptr);
+
+  // Add a couple of sources.
+  EtcPalUuid source_1_cid;
+  EtcPalUuid source_2_cid;
+  GenV5(0, &source_1_cid);
+  GenV5(1, &source_2_cid);
+
+  source_id_t source_1_handle;
+  source_id_t source_2_handle;
+
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_1_cid, &source_1_handle), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_cid, &source_2_handle), kEtcPalErrOk);
+
+  // Each tree should have a size of 2.
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 2);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 2);
+
+  // Remove source 1 and confirm success.
+  EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_1_handle), kEtcPalErrOk);
+
+  // Each tree should have a size of 1.
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 1);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 1);
+
+  // Remove source 2 and confirm success.
+  EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_2_handle), kEtcPalErrOk);
+
+  // Each tree should have a size of 0.
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 0);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 0);
+}
+
 TEST_F(TestDmxMerger, RemoveSourceErrInvalidWorks)
 {
   // Create merger.
