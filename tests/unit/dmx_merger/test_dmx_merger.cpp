@@ -595,6 +595,7 @@ TEST_F(TestDmxMerger, GetSourceWorks)
 
   EXPECT_EQ(sacn_dmx_merger_get_source(merger_handle_ + 1, source_handle_1), nullptr);
   EXPECT_EQ(sacn_dmx_merger_get_source(merger_handle_, SACN_DMX_MERGER_SOURCE_INVALID), nullptr);
+  EXPECT_EQ(sacn_dmx_merger_get_source(merger_handle_, source_handle_2 + 1), nullptr);
 
   const SacnDmxMergerSource* source_1 = sacn_dmx_merger_get_source(merger_handle_, source_handle_1);
   const SacnDmxMergerSource* source_2 = sacn_dmx_merger_get_source(merger_handle_, source_handle_2);
