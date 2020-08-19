@@ -415,7 +415,7 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
   const uint8_t source_2_priority_1 = 1;    // This should be less than source_1_priority.
   const uint8_t source_2_priority_2 = 255;  // This should be greater than source_1_priority.
 
-  // Feed in data from source 1 with an average universe priority.
+  // Feed in data from source 1 with a universe priority.
   uint8_t priority = source_1_priority;
   uint8_t values[DMX_ADDRESS_COUNT];
   memset(values, source_1_value, DMX_ADDRESS_COUNT);
