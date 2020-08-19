@@ -64,7 +64,6 @@ typedef struct MergerState
 IntHandleManager merger_handle_mgr;
 EtcPalRbTree mergers;
 
-// TODO: DO WE NEED THIS FILE??
 int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 int source_handle_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);

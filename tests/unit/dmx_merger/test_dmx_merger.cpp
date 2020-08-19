@@ -149,6 +149,8 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
   EXPECT_EQ(merger_state->handle, merger_handle_);
   EXPECT_EQ(merger_state->config, &merger_config_);
   EXPECT_EQ(memcmp(merger_state->winning_priorities, expected_slots_priorities, DMX_ADDRESS_COUNT), 0);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 0);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 0);
 }
 
 TEST_F(TestDmxMerger, MergerCreateErrInvalidWorks)
@@ -234,6 +236,56 @@ TEST_F(TestDmxMerger, MergerDestroyErrNotFoundWorks)
 
   EXPECT_EQ(found_result, kEtcPalErrOk);
   EXPECT_EQ(not_found_result, kEtcPalErrNotFound);
+}
+
+TEST_F(TestDmxMerger, AddSourceWorks)
+{
+  // Create the merger.
+  EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+
+  // Add the source, and verify success.
+  EtcPalUuid source_cid;
+  GenV5(0, &source_cid);
+
+  source_id_t source_handle = SACN_DMX_MERGER_SOURCE_INVALID;
+
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrOk);
+
+  // Make sure the handle was updated.
+  EXPECT_NE(source_handle, SACN_DMX_MERGER_SOURCE_INVALID);
+
+  // Grab the merger state.
+  MergerState* merger_state = reinterpret_cast<MergerState*>(etcpal_rbtree_find(&mergers, &merger_handle_));
+  ASSERT_NE(merger_state, nullptr);
+
+  // Check the CID-to-handle mapping first.
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 1);
+
+  CidToSourceHandle* cid_to_handle =
+      reinterpret_cast<CidToSourceHandle*>(etcpal_rbtree_find(&merger_state->source_handle_lookup, &source_cid));
+  ASSERT_NE(cid_to_handle, nullptr);
+
+  EXPECT_EQ(memcmp(cid_to_handle->cid.data, source_cid.data, ETCPAL_UUID_BYTES), 0);
+  EXPECT_EQ(cid_to_handle->handle, source_handle);
+
+  // Now check the source state.
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 1);
+
+  SourceState* source_state =
+      reinterpret_cast<SourceState*>(etcpal_rbtree_find(&merger_state->source_state_lookup, &source_handle));
+  ASSERT_NE(source_state, nullptr);
+
+  EXPECT_EQ(source_state->handle, source_handle);
+  EXPECT_EQ(memcmp(source_state->source.cid.data, source_cid.data, ETCPAL_UUID_BYTES), 0);
+  EXPECT_EQ(source_state->source.valid_value_count, 0);
+  EXPECT_EQ(source_state->source.universe_priority, 0);
+  EXPECT_EQ(source_state->source.address_priority_valid, false);
+
+  uint8_t expected_values_priorities[DMX_ADDRESS_COUNT];
+  memset(expected_values_priorities, 0, DMX_ADDRESS_COUNT);
+
+  EXPECT_EQ(memcmp(source_state->source.values, expected_values_priorities, DMX_ADDRESS_COUNT), 0);
+  EXPECT_EQ(memcmp(source_state->source.address_priority, expected_values_priorities, DMX_ADDRESS_COUNT), 0);
 }
 
 TEST_F(TestDmxMerger, AddSourceErrInvalidWorks)
