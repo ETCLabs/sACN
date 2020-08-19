@@ -127,7 +127,10 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
 
   // Start with a value that the merger handle will not end up being.
   sacn_dmx_merger_t initial_handle = 1234567;
-  merger_handle_ = initial_handle;  
+  merger_handle_ = initial_handle;
+
+  // Expect no merger states initially.
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), 0);
 
   // Call sacn_dmx_merger_create and make sure it indicates success.
   EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
@@ -138,6 +141,8 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
   EXPECT_EQ(memcmp(slot_owners_, expected_slot_owners, sizeof(source_id_t) * DMX_ADDRESS_COUNT), 0);
 
   // Make sure the correct merger state was created.
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), 1);
+
   MergerState* merger_state = reinterpret_cast<MergerState*>(etcpal_rbtree_find(&mergers, &merger_handle_));
   ASSERT_NE(merger_state, nullptr);
 
@@ -197,6 +202,15 @@ TEST_F(TestDmxMerger, MergerCreateErrNoMemWorks)
 #else
   EXPECT_EQ(past_max_result, kEtcPalErrNoMem);
 #endif
+}
+
+TEST_F(TestDmxMerger, MergerDestroyWorks)
+{
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), 0);
+  EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
+  EXPECT_EQ(etcpal_rbtree_find(&mergers, &merger_handle_), nullptr);
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), 0);
 }
 
 TEST_F(TestDmxMerger, MergerDestroyErrNotInitWorks)
