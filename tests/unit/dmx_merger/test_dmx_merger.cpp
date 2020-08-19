@@ -387,6 +387,86 @@ TEST_F(TestDmxMerger, AddSourceErrExistsWorks)
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid_3, &source_handle_3), kEtcPalErrOk);
 }
 
+TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
+{
+  // Create the merger.
+  EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+
+  // Grab the merger state, which will be used later.
+  MergerState* merger_state = reinterpret_cast<MergerState*>(etcpal_rbtree_find(&mergers, &merger_handle_));
+  ASSERT_NE(merger_state, nullptr);
+
+  // Add a couple of sources.
+  EtcPalUuid source_1_cid;
+  EtcPalUuid source_2_cid;
+  GenV5(0, &source_1_cid);
+  GenV5(1, &source_2_cid);
+
+  source_id_t source_1_handle;
+  source_id_t source_2_handle;
+
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_1_cid, &source_1_handle), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_cid, &source_2_handle), kEtcPalErrOk);
+
+  // Make constants for source data about to be fed in.
+  const uint8_t source_1_value = 50;
+  const uint8_t source_2_value = 70;
+  const uint8_t source_1_priority = 128;
+  const uint8_t source_2_priority_1 = 1;    // This should be less than source_1_priority.
+  const uint8_t source_2_priority_2 = 255;  // This should be greater than source_1_priority.
+
+  // Feed in data from source 1 with an average universe priority.
+  uint8_t priority = source_1_priority;
+  uint8_t values[DMX_ADDRESS_COUNT];
+  memset(values, source_1_value, DMX_ADDRESS_COUNT);
+
+  sacn_dmx_merger_update_source_data(merger_handle_, source_1_handle, values, DMX_ADDRESS_COUNT, priority, nullptr, 0);
+
+  // Feed in data from source 2 with per-address-priorities, one half lower and one half higher.
+  uint8_t priorities[DMX_ADDRESS_COUNT];
+  memset(priorities, source_2_priority_1, DMX_ADDRESS_COUNT / 2);
+  memset(&priorities[DMX_ADDRESS_COUNT / 2], source_2_priority_2, DMX_ADDRESS_COUNT / 2);
+
+  memset(values, source_2_value, DMX_ADDRESS_COUNT);
+
+  sacn_dmx_merger_update_source_data(merger_handle_, source_2_handle, values, DMX_ADDRESS_COUNT, 0, priorities,
+                                     DMX_ADDRESS_COUNT);
+
+  // Before removing a source, check the output.
+  for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+  {
+    if (i < (DMX_ADDRESS_COUNT / 2))
+    {
+      EXPECT_EQ(merger_config_.slots[i], source_1_value);
+      EXPECT_EQ(merger_config_.slot_owners[i], source_1_handle);
+    }
+    else
+    {
+      EXPECT_EQ(merger_config_.slots[i], source_2_value);
+      EXPECT_EQ(merger_config_.slot_owners[i], source_2_handle);
+    }
+  }
+
+  // Now remove source 2 and confirm success.
+  EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_2_handle), kEtcPalErrOk);
+
+  // The output should be just source 1 now.
+  for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+  {
+    EXPECT_EQ(merger_config_.slots[i], source_1_value);
+    EXPECT_EQ(merger_config_.slot_owners[i], source_1_handle);
+  }
+
+  // Now remove source 1 and confirm success.
+  EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_1_handle), kEtcPalErrOk);
+
+  // The output should indicate that no slots are being sourced.
+  for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+  {
+    EXPECT_EQ(merger_config_.slot_owners[i], SACN_DMX_MERGER_SOURCE_INVALID);
+  }
+}
+
 TEST_F(TestDmxMerger, RemoveSourceErrInvalidWorks)
 {
   // Create merger.
