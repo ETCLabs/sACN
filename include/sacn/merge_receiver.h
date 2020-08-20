@@ -37,10 +37,9 @@
  * \ingroup sACN
  * \brief The sACN Merge Receiver API
  *
- * This API is used to minimally wrap the sACN Receiver and DMX Merger logic together.
- * Its implementation can also be used as a sample for how to start integrating the sACN Receiver and DMX Merger APIs
- * into your application.
- *
+ * This API is used to minimally wrap the sACN Receiver and DMX Merger logic together so an application can receive and
+ * merge sACN sources in software.
+ * 
  * @{
  */
 
