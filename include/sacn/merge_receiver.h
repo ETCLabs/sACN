@@ -103,7 +103,7 @@ typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle
  * owned by the library.
  * \param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverNonDMXCallback)(sacn_merge_receiver_t handle, uint16_t universe,
+typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t handle, uint16_t universe,
                                                 const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
                                                 const uint8_t* pdata, void* context);
 
@@ -123,7 +123,7 @@ typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(sacn_merge_receiver
 typedef struct SacnMergeReceiverCallbacks
 {
   SacnMergeReceiverMergedDataCallback universe_data;                  /*!< Required */
-  SacnMergeReceiverNonDMXCallback universe_non_dmx;                   /*!< Required */
+  SacnMergeReceiverNonDmxCallback universe_non_dmx;                   /*!< Required */
   SacnMergeReceiverSourceLimitExceededCallback source_limit_exceeded; /*!< Optional */
   void* callback_context; /*!< (optional) Pointer to opaque data passed back with each callback. */
 } SacnMergeReceiverCallbacks;

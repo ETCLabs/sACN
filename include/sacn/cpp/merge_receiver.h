@@ -95,7 +95,7 @@ public:
      * \param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count. This buffer
      *                  is owned by the library.
      */
-    virtual void HandleNonDMXPacket(uint16_t universe, const etcpal::SockAddr& source_addr,
+    virtual void HandleNonDmxData(uint16_t universe, const etcpal::SockAddr& source_addr,
                                     const SacnHeaderData& header, const uint8_t* pdata) = 0;
 
     /*!
@@ -119,10 +119,10 @@ public:
 
     /********* Optional values **********/
 
-    size_t source_count_max{SACN_RECEIVER_INFINITE_SOURCES};  ///< The maximum number of sources this universe will
-                                                              ///< listen to when using dynamic memory.
-    std::vector<SacnMcastNetintId> netints;  ///< If non-empty, the list of network interfaces to listen on.  Otherwise
-                                             ///< all available interfaces are used.
+    /// The maximum number of sources this universe will listen to when using dynamic memory.
+    size_t source_count_max{SACN_RECEIVER_INFINITE_SOURCES};
+    /// If non-empty, the list of network interfaces to listen on.  Otherwise all available interfaces are used.
+    std::vector<SacnMcastNetintId> netints; 
 
     /// Create an empty, invalid data structure by default.
     Settings() = default;
@@ -134,8 +134,8 @@ public:
   MergeReceiver() = default;
   MergeReceiver(const MergeReceiver& other) = delete;
   MergeReceiver& operator=(const MergeReceiver& other) = delete;
-  MergeReceiver(MergeReceiver&& other) = default;             ///< Move a device instance.
-  MergeReceiver& operator=(MergeReceiver&& other) = default;  ///< Move a device instance.
+  MergeReceiver(MergeReceiver&& other) = default;             ///< Move a merge receiver instance.
+  MergeReceiver& operator=(MergeReceiver&& other) = default;  ///< Move a merge receiver instance.
 
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler);
   void Shutdown();
@@ -176,7 +176,7 @@ extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, uint1
 
   if (context && source_addr && header)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDMXPacket(universe, *source_addr, *header, pdata);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(universe, *source_addr, *header, pdata);
   }
 }
 
@@ -215,7 +215,7 @@ inline bool MergeReceiver::Settings::IsValid() const
  *
  * \param[in] settings Configuration parameters for the sACN merge receiver and this class instance.
  * \param[in] notify_handler The notification interface to call back to the application.
- * \return #kEtcPalErrOk: Receiver created successful.
+ * \return #kEtcPalErrOk: Merge Receiver created successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrExists: A merge receiver already exists which is listening on the specified universe.
