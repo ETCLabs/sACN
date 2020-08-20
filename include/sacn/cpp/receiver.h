@@ -52,35 +52,36 @@ public:
     virtual ~NotifyHandler() = default;
 
     /// @brief Notify that one or more sources have been found.
-    /// @param handle Handle to the receiver instance for which sources were found.
+    /// @param universe The universe this receiver is monitoring.
     /// @param found_sources Array of structs describing the source or sources that have been found with their current
     /// values.
     /// @param] num_sources_found Size of the found_sources array.
-    virtual void HandleSourcesFound(Handle handle, const SacnFoundSource* found_sources, size_t num_found_sources) = 0;
+    virtual void HandleSourcesFound(uint16_t universe, const SacnFoundSource* found_sources,
+                                    size_t num_found_sources) = 0;
 
     /// @brief Notify that a data packet has been received.
-    /// @param handle Handle to the receiver instance for which sources were found.
+    /// @param universe The universe this receiver is monitoring.
     /// @param source_addr IP address & port of the packet source.
     /// @param header The sACN header data.
     /// @param pdata The DMX data.  Use header.slot_count to determine the length of this array.
-    virtual void HandleUniverseData(Handle handle, const etcpal::SockAddr& source_addr, const SacnHeaderData& header,
-                              const uint8_t* pdata) = 0;
+    virtual void HandleUniverseData(uint16_t universe, const etcpal::SockAddr& source_addr,
+                                    const SacnHeaderData& header, const uint8_t* pdata) = 0;
 
     /// @brief Notify that one or more sources have entered a data loss state.
-    /// @param handle Handle to the receiver instance for which sources were lost.
+    /// @param universe The universe this receiver is monitoring.
     /// @param lost_sources Array of structs describing the source or sources that have been lost.
     /// @param num_lost_sources Size of the lost_sources array.
-    virtual void HandleSourcesLost(Handle handle, const SacnLostSource* lost_sources, size_t num_lost_sources) = 0;
+    virtual void HandleSourcesLost(uint16_t universe, const SacnLostSource* lost_sources, size_t num_lost_sources) = 0;
 
     /// @brief Notify that a source has stopped transmission of per-address priority packets.
-    /// @param handle Handle to the receiver instance for which a source stopped sending per-address priority.
+    /// @param universe The universe this receiver is monitoring.
     /// @param source Information about the source that has stopped transmission of per-address priority.
-    virtual void HandleSourcePapLost(Handle handle, const SacnRemoteSource& source) = 0;
+    virtual void HandleSourcePapLost(uint16_t universe, const SacnRemoteSource& source) = 0;
 
     /// @brief Notify that more than the configured maximum number of sources are currently sending on the universe
     /// being listened to.
-    /// @param handle Handle to the receiver instance for which the source limit has been exceeded.
-    virtual void HandleSourceLimitExceeded(Handle handle) = 0;
+    /// @param universe The universe this receiver is monitoring.
+    virtual void HandleSourceLimitExceeded(uint16_t universe) = 0;
   };
 
   /// @ingroup sacn_receiver_cpp
@@ -136,47 +137,56 @@ private:
 /// Callbacks from underlying device library to be forwarded
 namespace internal
 {
-extern "C" inline void ReceiverCbSourcesFound(sacn_receiver_t handle, const SacnFoundSource* found_sources,
+extern "C" inline void ReceiverCbSourcesFound(sacn_receiver_t handle, uint16_t universe, const SacnFoundSource* found_sources,
                                               size_t num_found_sources, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+
   if (context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesFound(handle, found_sources, num_found_sources);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesFound(universe, found_sources, num_found_sources);
   }
 }
 
-extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t handle, const EtcPalSockAddr* source_addr,
-                                         const SacnHeaderData* header, const uint8_t* pdata, void* context)
+extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr,
+                                              const SacnHeaderData* header, const uint8_t* pdata, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+
   if (source_addr && header && context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(handle, *source_addr, *header,
-                                                                       pdata);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(universe, *source_addr, *header, pdata);
   }
 }
 
-extern "C" inline void ReceiverCbSourcesLost(sacn_receiver_t handle, const SacnLostSource* lost_sources,
-                                        size_t num_lost_sources, void* context)
+extern "C" inline void ReceiverCbSourcesLost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
+                                             size_t num_lost_sources, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+
   if (context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesLost(handle, lost_sources, num_lost_sources);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesLost(universe, lost_sources, num_lost_sources);
   }
 }
 
-extern "C" inline void ReceiverCbPapLost(sacn_receiver_t handle, const SacnRemoteSource* source, void* context)
+extern "C" inline void ReceiverCbPapLost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+
   if (source && context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcePapLost(handle, *source);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcePapLost(universe, *source);
   }
 }
 
-extern "C" inline void ReceiverCbSourceLimitExceeded(sacn_receiver_t handle, void* context)
+extern "C" inline void ReceiverCbSourceLimitExceeded(sacn_receiver_t handle, uint16_t universe, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+
   if (context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(handle);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(universe);
   }
 }
 
@@ -187,8 +197,7 @@ extern "C" inline void ReceiverCbSourceLimitExceeded(sacn_receiver_t handle, voi
 /// @brief Create a Receiver Settings instance by passing the required members explicitly.
 ///
 /// Optional members can be modified directly in the struct.
-inline Receiver::Settings::Settings(uint16_t new_universe_id)
-    : universe_id(new_universe_id)
+inline Receiver::Settings::Settings(uint16_t new_universe_id) : universe_id(new_universe_id)
 {
 }
 
@@ -376,7 +385,7 @@ inline SacnReceiverConfig Receiver::TranslateConfig(const Settings& settings, No
   };
   // clang-format on
 
-  //Now initialize the netints
+  // Now initialize the netints
   if (config.num_netints > 0)
   {
     config.netints = settings.netints.data();

@@ -18,6 +18,8 @@
  *****************************************************************************/
 
 /*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
+ - I've added the universe to all the callbacks.  Make sure the notification structs are initialized and work correctly for all notifications.
+ - Add full support for the sources found notification.
  - Add unicast support to sockets.c in the SACN_RECEIVER_SOCKET_PER_UNIVERSE case.
  - Make sure unicast support works in both socket modes, with one or more receivers created.
  - Make sure everything works with static & dynamic memory.
@@ -1094,6 +1096,8 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
         source_pap_lost->source.cid = src->cid;
         ETCPAL_MSVC_NO_DEP_WRN strcpy(source_pap_lost->source.name, src->name);
         source_pap_lost->context = receiver->callback_context;
+        source_pap_lost->handle = receiver->keys.handle;
+        source_pap_lost->universe = receiver->keys.universe;
         src->recv_state = kRecvStateHaveDmxOnly;
       }
       break;
@@ -1106,6 +1110,7 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
   {
     universe_data->callback = receiver->callbacks.universe_data;
     universe_data->handle = receiver->keys.handle;
+    universe_data->universe = receiver->keys.universe;
     universe_data->context = receiver->callback_context;
   }
 }
@@ -1145,6 +1150,7 @@ void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, UniverseD
   {
     universe_data->callback = receiver->callbacks.universe_data;
     universe_data->handle = receiver->keys.handle;
+    universe_data->universe = receiver->keys.universe;
     universe_data->context = receiver->callback_context;
   }
 }
@@ -1182,6 +1188,7 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
       source_limit_exceeded->callback = receiver->callbacks.source_limit_exceeded;
       source_limit_exceeded->context = receiver->callback_context;
       source_limit_exceeded->handle = receiver->keys.handle;
+      source_limit_exceeded->universe = receiver->keys.universe;
       return;
     }
     else
@@ -1232,6 +1239,7 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
   {
     universe_data->callback = receiver->callbacks.universe_data;
     universe_data->handle = receiver->keys.handle;
+    universe_data->universe = receiver->keys.universe;
     universe_data->context = receiver->callback_context;
   }
 
@@ -1278,17 +1286,17 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
     }
 
     if (source_limit_exceeded->callback)
-      source_limit_exceeded->callback(source_limit_exceeded->handle, source_limit_exceeded->context);
+      source_limit_exceeded->callback(source_limit_exceeded->handle, source_limit_exceeded->universe, source_limit_exceeded->context);
   }
 
   if (source_pap_lost->handle != SACN_RECEIVER_INVALID && source_pap_lost->callback)
   {
-    source_pap_lost->callback(source_pap_lost->handle, &source_pap_lost->source, source_pap_lost->context);
+    source_pap_lost->callback(source_pap_lost->handle, source_pap_lost->universe, &source_pap_lost->source, source_pap_lost->context);
   }
 
   if (universe_data->handle != SACN_RECEIVER_INVALID && universe_data->callback)
   {
-    universe_data->callback(universe_data->handle, from_addr, &universe_data->header, universe_data->pdata,
+    universe_data->callback(universe_data->handle, universe_data->universe, from_addr, &universe_data->header, universe_data->pdata,
                             universe_data->context);
   }
 }
@@ -1396,6 +1404,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
     sources_lost->callback = receiver->callbacks.sources_lost;
     sources_lost->context = receiver->callback_context;
     sources_lost->handle = receiver->keys.handle;
+    sources_lost->universe = receiver->keys.universe;
     for (size_t i = 0; i < sources_lost->num_lost_sources; ++i)
     {
       etcpal_rbtree_remove_with_cb(&receiver->sources, &sources_lost->lost_sources[i].info.cid, source_tree_dealloc);
@@ -1491,12 +1500,12 @@ void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr,
        ++notif)
   {
     if (notif->callback)
-      notif->callback(notif->handle, notif->found_sources, notif->num_found_sources, notif->context);
+      notif->callback(notif->handle, notif->universe, notif->found_sources, notif->num_found_sources, notif->context);
   }
   for (const SourcesLostNotification* notif = sources_lost_arr; notif < sources_lost_arr + num_sources_lost; ++notif)
   {
     if (notif->callback)
-      notif->callback(notif->handle, notif->lost_sources, notif->num_lost_sources, notif->context);
+      notif->callback(notif->handle, notif->universe, notif->lost_sources, notif->num_lost_sources, notif->context);
   }
 }
 

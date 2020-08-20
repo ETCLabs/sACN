@@ -67,7 +67,7 @@ public:
      * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
      * packets on the universe.
      *
-     * \param[in] universe The universe number this merge receiver is monitoring.
+     * \param[in] universe The universe this merge receiver is monitoring.
      * \param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe.  This buffer
      *                  is owned by the library.
      * \param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source_ids.  If a value in the buffer is
@@ -89,7 +89,7 @@ public:
      * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
      * if the source forces the packet, or if the source sends a data packet without a sync universe.
      *
-     * \param[in] universe The universe number this merge receiver is monitoring.
+     * \param[in] universe The universe this merge receiver is monitoring.
      * \param[in] source_addr The network address from which the sACN packet originated.
      * \param[in] header The header data of the sACN packet.
      * \param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count. This buffer
@@ -104,7 +104,7 @@ public:
      *
      * This is a notification that is directly forwarded from the sACN Receiver module.
      *
-     * \param[in] handle Handle to the merge receiver instance for which the source limit has been exceeded.
+     * \param[in] universe The universe this merge receiver is monitoring.
      */
     virtual void HandleSourceLimitExceeded(uint16_t universe) = 0;
   };

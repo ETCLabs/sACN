@@ -145,13 +145,14 @@ typedef struct SacnLostSource
  * After this callback returns, packets for this source will be sent to the sACNUniverseDataCallback().
  *
  * \param[in] handle Handle to the receiver instance for which sources were found.
+ * \param[in] universe The universe number this receiver is monitoring.
  * \param[in] found_sources Array of structs describing the source or sources that have been found with their current
  * values.
  * \param[in] num_sources_found Size of the found_sources array.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnSourcesFoundCallback)(sacn_receiver_t handle, const SacnFoundSource* found_sources,
-                                         size_t num_found_sources, void* context);
+typedef void (*SacnSourcesFoundCallback)(sacn_receiver_t handle, uint16_t universe,
+                                         const SacnFoundSource* found_sources, size_t num_found_sources, void* context);
 
 /*!
  * \brief Notify that a data packet has been received.
@@ -168,12 +169,13 @@ typedef void (*SacnSourcesFoundCallback)(sacn_receiver_t handle, const SacnFound
  * TODO: We still need add support for sACN Sync.
  *
  * \param[in] handle Handle to the receiver instance for which universe data was received.
+ * \param[in] universe The universe this receiver is monitoring.
  * \param[in] source_addr The network address from which the sACN packet originated.
  * \param[in] header The header data of the sACN packet.
  * \param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnUniverseDataCallback)(sacn_receiver_t handle, const EtcPalSockAddr* source_addr,
+typedef void (*SacnUniverseDataCallback)(sacn_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr,
                                          const SacnHeaderData* header, const uint8_t* pdata, void* context);
 
 /*!
@@ -184,11 +186,12 @@ typedef void (*SacnUniverseDataCallback)(sacn_receiver_t handle, const EtcPalSoc
  * \ref data_loss_behavior for more information.
  *
  * \param[in] handle Handle to the receiver instance for which sources were lost.
+ * \param[in] universe The universe this receiver is monitoring.
  * \param[in] lost_sources Array of structs describing the source or sources that have been lost.
  * \param[in] num_lost_sources Size of the lost_sources array.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnSourcesLostCallback)(sacn_receiver_t handle, const SacnLostSource* lost_sources,
+typedef void (*SacnSourcesLostCallback)(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
                                         size_t num_lost_sources, void* context);
 
 /*!
@@ -201,11 +204,13 @@ typedef void (*SacnSourcesLostCallback)(sacn_receiver_t handle, const SacnLostSo
  *
  * \param[in] handle Handle to the receiver instance for which a source stopped sending per-address
  *                   priority.
+ * \param[in] universe The universe this receiver is monitoring.
  * \param[in] source Information about the source that has stopped transmission of per-address
  *                   priority.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t handle, const SacnRemoteSource* source, void* context);
+typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
+                                          void* context);
 
 /*!
  * \brief Notify that more than the configured maximum number of sources are currently sending on
@@ -223,9 +228,10 @@ typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t handle, const SacnRemo
  * drops below that limit and then hits it again.
  *
  * \param[in] handle Handle to the receiver instance for which the source limit has been exceeded.
+ * \param[in] universe The universe this receiver is monitoring.
  * \param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnSourceLimitExceededCallback)(sacn_receiver_t handle, void* context);
+typedef void (*SacnSourceLimitExceededCallback)(sacn_receiver_t handle, uint16_t universe, void* context);
 
 /*! A set of callback functions that the library uses to notify the application about sACN events. */
 typedef struct SacnRecvCallbacks

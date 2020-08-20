@@ -69,7 +69,7 @@ typedef int sacn_merge_receiver_t;
  * packets on the universe.
  *
  * \param[in] handle The handle to the merge receiver instance.
- * \param[in] universe The universe number this merge receiver is monitoring.
+ * \param[in] universe The universe this merge receiver is monitoring.
  * \param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe. This buffer is
  * owned by the library.
  * \param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source_ids.  If a value in the buffer is
@@ -96,7 +96,7 @@ typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle
  * TODO: We still need add support for sACN Sync.
  *
  * \param[in] handle The handle to the merge receiver instance.
- * \param[in] universe The universe number this merge receiver is monitoring.
+ * \param[in] universe The universe this merge receiver is monitoring.
  * \param[in] source_addr The network address from which the sACN packet originated.
  * \param[in] header The header data of the sACN packet.
  * \param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count. This buffer is
@@ -114,7 +114,7 @@ typedef void (*SacnMergeReceiverNonDMXCallback)(sacn_merge_receiver_t handle, ui
  * This is a notification that is directly forwarded from the sACN Receiver module.
  *
  * \param[in] handle Handle to the merge receiver instance for which the source limit has been exceeded.
- * \param[in] universe The universe number this merge receiver is monitoring.
+ * \param[in] universe The universe this merge receiver is monitoring.
  * \param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
 typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(sacn_merge_receiver_t handle, uint16_t universe, void* context);

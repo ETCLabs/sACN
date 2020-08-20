@@ -243,6 +243,7 @@ typedef struct SourcesFoundNotification
 {
   SacnSourcesFoundCallback callback;
   sacn_receiver_t handle;
+  uint16_t universe; 
   SACN_DECLARE_BUF(SacnFoundSource, found_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_found_sources;
   void* context;
@@ -253,6 +254,7 @@ typedef struct UniverseDataNotification
 {
   SacnUniverseDataCallback callback;
   sacn_receiver_t handle;
+  uint16_t universe; 
   SacnHeaderData header;
   const uint8_t* pdata;
   void* context;
@@ -263,6 +265,7 @@ typedef struct SourcesLostNotification
 {
   SacnSourcesLostCallback callback;
   sacn_receiver_t handle;
+  uint16_t universe; 
   SACN_DECLARE_BUF(SacnLostSource, lost_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_lost_sources;
   void* context;
@@ -274,6 +277,7 @@ typedef struct SourcePapLostNotification
   SacnSourcePapLostCallback callback;
   SacnRemoteSource source;
   sacn_receiver_t handle;
+  uint16_t universe; 
   void* context;
 } SourcePapLostNotification;
 
@@ -282,6 +286,7 @@ typedef struct SourceLimitExceededNotification
 {
   SacnSourceLimitExceededCallback callback;
   sacn_receiver_t handle;
+  uint16_t universe; 
   void* context;
 } SourceLimitExceededNotification;
 
