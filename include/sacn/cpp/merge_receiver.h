@@ -86,9 +86,6 @@ public:
      * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
      * packets on the universe.
      *
-     * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
-     * if the source forces the packet, or if the source sends a data packet without a sync universe.
-     *
      * \param[in] universe The universe this merge receiver is monitoring.
      * \param[in] source_addr The network address from which the sACN packet originated.
      * \param[in] header The header data of the sACN packet.

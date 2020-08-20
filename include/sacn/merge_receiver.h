@@ -92,7 +92,7 @@ typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle
  *
  * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
  * if the source forces the packet, or if the source sends a data packet without a sync universe.
- * TODO: We still need add support for sACN Sync.
+ * TODO: this version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
  *
  * \param[in] handle The handle to the merge receiver instance.
  * \param[in] universe The universe this merge receiver is monitoring.

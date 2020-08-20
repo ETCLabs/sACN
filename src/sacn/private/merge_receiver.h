@@ -28,7 +28,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../../../include/sacn/merge_receiver.h"
+#include "sacn/merge_receiver.h"
 
 #ifdef __cplusplus
 extern "C" {

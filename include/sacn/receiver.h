@@ -142,7 +142,7 @@ typedef struct SacnLostSource
  * source may be acted upon immediately, as the library has determined the correct starting values.  Additionally, the
  * library has waited for a "sampling period" upon startup to make sure the starting set of sources is consistent.
  *
- * After this callback returns, packets for this source will be sent to the sACNUniverseDataCallback().
+ * After this callback returns, packets for this source will be sent to the SacnUniverseDataCallback().
  *
  * \param[in] handle Handle to the receiver instance for which sources were found.
  * \param[in] universe The universe number this receiver is monitoring.
@@ -166,7 +166,7 @@ typedef void (*SacnSourcesFoundCallback)(sacn_receiver_t handle, uint16_t univer
  *
  * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
  * if the source forces the packet, or if the source sends a data packet without a sync universe.
- * TODO: We still need add support for sACN Sync.
+ * TODO: this version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
  *
  * \param[in] handle Handle to the receiver instance for which universe data was received.
  * \param[in] universe The universe this receiver is monitoring.
