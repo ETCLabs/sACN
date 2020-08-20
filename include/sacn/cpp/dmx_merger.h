@@ -57,7 +57,7 @@ public:
 
     /*! Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
         that slot, or #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
-        You can use SACN_DMX_MERGER_IS_SOURCE_VALID(slot_owners, slot_index) if you don't want to look at the
+        You can use SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, slot_index) if you don't want to look at the
         slot_owners directly.
         Memory is owned by the application.*/
     sacn_source_id_t* slot_owners{nullptr};

@@ -73,7 +73,7 @@ typedef int sacn_dmx_merger_t;
 typedef uint16_t sacn_source_id_t;
 
 /*! An invalid source id handle value. */
-#define SACN_DMX_MERGER_SOURCE_INVALID ((uint16_t) -1)
+#define SACN_DMX_MERGER_SOURCE_INVALID ((sacn_source_id_t) -1)
 
 /*! A set of configuration information for a merger instance. */
 typedef struct SacnDmxMergerConfig
@@ -89,7 +89,7 @@ typedef struct SacnDmxMergerConfig
 
   /*! Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
       that slot, or #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
-      You can use SACN_DMX_MERGER_IS_SOURCE_VALID() if you don't want to look at the slot_owners directly.
+      You can use SACN_DMX_MERGER_SOURCE_IS_VALID() if you don't want to look at the slot_owners directly.
       Memory is owned by the application.*/
   sacn_source_id_t* slot_owners;
 
@@ -117,7 +117,7 @@ typedef struct SacnDmxMergerConfig
  * Given a buffer of slot_owners, evaluate to true if the slot is != DMX_MERGER_SOURCE_INVALID.
  *
  */
-#define SACN_DMX_MERGER_IS_SOURCE_VALID(slot_owners_array, slot_index) (slot_owners_array[slot_index] != DMX_MERGER_SOURCE_INVALID)
+#define SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, slot_index) (slot_owners_array[slot_index] != DMX_MERGER_SOURCE_INVALID)
 
 /*! The current input data for a single source of the merge.  This is exposed only for informational purposes, as the
     application calls a variant of sacn_dmx_merger_update_source to do the actual update. */

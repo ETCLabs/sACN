@@ -72,7 +72,7 @@ public:
      *                  is owned by the library.
      * \param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source_ids.  If a value in the buffer is
      *           #DMX_MERGER_SOURCE_INVALID, the corresponding slot is not currently controlled. You can also use
-     *            SACN_DMX_MERGER_IS_SOURCE_VALID(slot_owners, index) to check the slot validity. This buffer is owned
+     *            SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, index) to check the slot validity. This buffer is owned
      *            by the library.
      */
     virtual void HandleMergedData(uint16_t universe, const uint8_t* slots, const sacn_source_id_t* slot_owners) = 0;
