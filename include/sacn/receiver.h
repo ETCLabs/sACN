@@ -106,7 +106,7 @@ typedef struct SacnFoundSource
   /*! The count of valid values. */
   size_t values_len;
   /*! Whether or not we only saw startcode 0 packets with the preview flag set. */
-  bool values_were_preview;
+  bool preview;
   /*! The per-address priority (startcode 0xdd) data, if the source is sending it. */
   uint8_t per_address[DMX_ADDRESS_COUNT];
   /*! The count of valid priorities. */
@@ -144,7 +144,7 @@ typedef struct SacnLostSource
  *
  * After this callback returns, packets for this source will be sent to the SacnUniverseDataCallback().
  * In the rare case where the source is only sending preview packets and SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA is set,
- * this callback will be be called with a SacnFoundSource structure with 'values_len' set to 0 and 'values_were_preview' set to true.
+ * this callback will be be called with a SacnFoundSource structure with 'values_len' set to 0 and 'preview' set to true.
  *
  * \param[in] handle Handle to the receiver instance for which sources were found.
  * \param[in] universe The universe number this receiver is monitoring.
