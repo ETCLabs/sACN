@@ -68,6 +68,7 @@ typedef int sacn_merge_receiver_t;
  * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
  * packets on the universe.
  *
+ * \param[in] handle The handle to the merge receiver instance.
  * \param[in] universe The universe number this merge receiver is monitoring.
  * \param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe. This buffer is
  * owned by the library.
@@ -77,8 +78,9 @@ typedef int sacn_merge_receiver_t;
  * the library.
  * \param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverMergedDataCallback)(uint16_t universe, const uint8_t* slots,
-                                                    const source_id_t* slot_owners, void* context);
+typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle, uint16_t universe,
+                                                    const uint8_t* slots, const source_id_t* slot_owners,
+                                                    void* context);
 
 /*!
  * \brief Notify that a non-data packet has been received.
@@ -93,6 +95,7 @@ typedef void (*SacnMergeReceiverMergedDataCallback)(uint16_t universe, const uin
  * if the source forces the packet, or if the source sends a data packet without a sync universe.
  * TODO: We still need add support for sACN Sync.
  *
+ * \param[in] handle The handle to the merge receiver instance.
  * \param[in] universe The universe number this merge receiver is monitoring.
  * \param[in] source_addr The network address from which the sACN packet originated.
  * \param[in] header The header data of the sACN packet.
@@ -100,8 +103,9 @@ typedef void (*SacnMergeReceiverMergedDataCallback)(uint16_t universe, const uin
  * owned by the library.
  * \param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverNonDMXCallback)(uint16_t universe, const EtcPalSockAddr* source_addr,
-                                                const SacnHeaderData* header, const uint8_t* pdata, void* context);
+typedef void (*SacnMergeReceiverNonDMXCallback)(sacn_merge_receiver_t handle, uint16_t universe,
+                                                const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
+                                                const uint8_t* pdata, void* context);
 
 /*!
  * \brief Notify that more than the configured maximum number of sources are currently sending on
@@ -110,9 +114,10 @@ typedef void (*SacnMergeReceiverNonDMXCallback)(uint16_t universe, const EtcPalS
  * This is a notification that is directly forwarded from the sACN Receiver module.
  *
  * \param[in] handle Handle to the merge receiver instance for which the source limit has been exceeded.
+ * \param[in] universe The universe number this merge receiver is monitoring.
  * \param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(uint16_t universe, void* context);
+typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(sacn_merge_receiver_t handle, uint16_t universe, void* context);
 
 /*! A set of callback functions that the library uses to notify the application about sACN events. */
 typedef struct SacnMergeReceiverCallbacks

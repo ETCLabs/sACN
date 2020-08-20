@@ -158,26 +158,32 @@ private:
 /// Callbacks from underlying device library to be forwarded
 namespace internal
 {
-extern "C" inline void MergeReceiverCbMergedData(uint16_t universe, const uint8_t* slots,
+extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, uint16_t universe, const uint8_t* slots,
                                                  const source_id_t* slot_owners, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+
   if (context)
   {
     static_cast<MergeReceiver::NotifyHandler*>(context)->HandleMergedData(universe, slots, slot_owners);
   }
 }
 
-extern "C" inline void MergeReceiverCbNonDmx(uint16_t universe, const EtcPalSockAddr* source_addr,
+extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr,
                                              const SacnHeaderData* header, const uint8_t* pdata, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+
   if (context && source_addr && header)
   {
     static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDMXPacket(universe, *source_addr, *header, pdata);
   }
 }
 
-extern "C" inline void MergeReceiverCbSourceLimitExceeded(uint16_t universe, void* context)
+extern "C" inline void MergeReceiverCbSourceLimitExceeded(sacn_merge_receiver_t handle, uint16_t universe, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+
   if (context)
   {
     static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(universe);
