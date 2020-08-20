@@ -151,17 +151,6 @@
  */
 
 /*!
- * \brief Whether or not the receiver will be supporting IPv6.
- *
- * Turns on/off IPv6 support on the receiver.
- *
- * //CHRISTIAN TODO: Add IPV6 support, and we should talk about if this should default to 1...
- */
-#ifndef SACN_RECEIVER_SUPPORT_IPV6
-#define SACN_RECEIVER_SUPPORT_IPV6 0
-#endif
-
-/*!
  * \brief The priority of each sACN receiver thread.
  *
  * This is usually only meaningful on real-time systems.

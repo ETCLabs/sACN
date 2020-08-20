@@ -18,6 +18,7 @@
  *****************************************************************************/
 
 /*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
+ - Add EtcPalMcastNetintId to EtcPal, and remove struct SacnMcastNetintId and RdmnetMcastNetintId
  - I've added the universe to all the callbacks.  Make sure the notification structs are initialized and work correctly for all notifications.
  - Add full support for the sources found notification. Packets aren't forwarded to the application until the source list is stable.
  - Add unicast support to sockets.c in the SACN_RECEIVER_SOCKET_PER_UNIVERSE case.
@@ -27,7 +28,7 @@
  - Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet!
  - Make the example receiver use the new api.
  - Make an example receiver & testing for the c++ header.
- - IPv6 support.  See uses of SACN_RECEIVER_SUPPORT_IPV6 for a starting hint.
+ - IPv6 support.  See the CHRISTIAN TODO IPV6 comments for some hints on where to change.
  - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
    filter out the duplicate packet (just like IPv4 & IPv6).
  - This entire project should build without warnings!!
@@ -428,9 +429,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
       sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, false);
       res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, new_universe_id, receiver->netints,
                                      receiver->num_netints, &receiver->socket);
-#if SACN_RECEIVER_SUPPORT_IPV6
 // CHRISTIAN TODO IPv6
-#endif
     }
 
     // Update receiver key and position in receiver_state.receivers_by_universe.
@@ -727,10 +726,6 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
     if (res != kEtcPalErrOk)
       sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, true);
   }
-
-#if SACN_RECEIVER_SUPPORT_IPV6
-// CHRISTIAN TODO IPv6
-#endif
 
   if (res == kEtcPalErrOk)
   {
