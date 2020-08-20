@@ -607,6 +607,41 @@ TEST_F(TestDmxMerger, GetSourceWorks)
   EXPECT_EQ(memcmp(source_2->cid.data, source_cid_2.data, ETCPAL_UUID_BYTES), 0);
 }
 
+TEST_F(TestDmxMerger, UpdateSourceDataMergesLevels)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, UpdateSourceDataMergesPaps)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, UpdateSourceDataMergesUps)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, UpdateSourceDataMergesPapsWithUps)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, UpdateSourceDataMergesUpsWithPaps)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, UpdateSourceDataHandlesValidValueCount)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, UpdateSourceDataHandlesLessPaps)
+{
+  // TODO: Implement this
+}
+
 TEST_F(TestDmxMerger, UpdateSourceDataErrInvalidWorks)
 {
   uint8_t foo = 0;
@@ -683,6 +718,41 @@ TEST_F(TestDmxMerger, UpdateSourceDataErrNotFoundWorks)
   EXPECT_NE(found_result, kEtcPalErrNotFound);
 }
 
+TEST_F(TestDmxMerger, UpdateSourceFromSacnMergesLevels)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, UpdateSourceFromSacnMergesPaps)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, UpdateSourceFromSacnMergesUps)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, UpdateSourceFromSacnMergesPapsWithUps)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, UpdateSourceFromSacnMergesUpsWithPaps)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, UpdateSourceFromSacnHandlesValidValueCount)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, UpdateSourceFromSacnHandlesLessPaps)
+{
+  // TODO: Implement this
+}
+
 TEST_F(TestDmxMerger, UpdateSourceFromSacnErrInvalidWorks)
 {
   SacnHeaderData invalid_cid_header = header_default_;
@@ -749,5 +819,19 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnErrNotFoundWorks)
   EXPECT_NE(found_result, kEtcPalErrNotFound);
 }
 
-// TODO: sacn_dmx_merger_stop_source_per_address_priority unit tests (including error conditions)
-// TODO: Update source merging unit tests
+TEST_F(TestDmxMerger, StopSourcePapWorks)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, StopSourcePapErrNotFoundWorks)
+{
+  // TODO: Implement this
+}
+
+TEST_F(TestDmxMerger, StopSourcePapErrNotInitWorks)
+{
+  // TODO: Implement this
+}
+
+// TODO: Bring back recalculate function and add option to calculate later.
