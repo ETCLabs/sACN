@@ -260,7 +260,7 @@ etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle
  * \param[in] source_cid The UUID of the source CID.
  * \return The source ID, or #SACN_DMX_MERGER_SOURCE_INVALID.
  */
-source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid)
+sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid)
 {
   // TODO CHRISTIAN CLEANUP
   ETCPAL_UNUSED_ARG(handle);
@@ -278,7 +278,7 @@ source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, cons
  * \return #kEtcPalErrNotFound: handle does not correspond to a valid merge receiver, or source_id  does not correspond
  * to a valid source.
  */
-etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, source_id_t source_id,
+etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, sacn_source_id_t source_id,
                                                   EtcPalUuid* source_cid)
 {
   // TODO CHRISTIAN CLEANUP

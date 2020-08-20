@@ -184,7 +184,7 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid,
-                                          source_id_t* source_id)
+                                          sacn_source_id_t* source_id)
 {
   return kEtcPalErrNotImpl;
 }
@@ -201,7 +201,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id_t source)
+etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_source_id_t source)
 {
   return kEtcPalErrNotImpl;
 }
@@ -213,7 +213,7 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id
  * \param[in] source_cid The UUID of the source CID.
  * \return The source ID, or #SACN_DMX_MERGER_SOURCE_INVALID.
  */
-source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid)
+sacn_source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid)
 {
   return SACN_DMX_MERGER_SOURCE_INVALID;
 }
@@ -229,7 +229,7 @@ source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* s
  * \param[in] source The id of the source.
  * \return The pointer to the source data, or NULL if the source wasn't found.
  */
-const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, source_id_t source)
+const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_source_id_t source)
 {
   return NULL;
 }
@@ -257,7 +257,7 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, source_id_t source, uint8_t priority,
+etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn_source_id_t source, uint8_t priority,
                                                   const uint8_t* new_values, size_t new_values_count, 
                                                   const uint8_t* address_priorities, size_t address_priorities_count)
 {
@@ -300,7 +300,7 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, source_id_t source)
+etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, sacn_source_id_t source)
 {
   return kEtcPalErrNotImpl;
 }

@@ -75,7 +75,7 @@ public:
      *            SACN_DMX_MERGER_IS_SOURCE_VALID(slot_owners, index) to check the slot validity. This buffer is owned
      *            by the library.
      */
-    virtual void HandleMergedData(uint16_t universe, const uint8_t* slots, const source_id_t* slot_owners) = 0;
+    virtual void HandleMergedData(uint16_t universe, const uint8_t* slots, const sacn_source_id_t* slot_owners) = 0;
 
     /*!
      * \brief Notify that a non-data packet has been received.
@@ -143,8 +143,8 @@ public:
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
   etcpal::Error ResetNetworking(const std::vector<SacnMcastNetintId>& netints);
 
-  etcpal::Expected<source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
-  etcpal::Expected<etcpal::Uuid> GetSourceCid(source_id_t source) const;
+  etcpal::Expected<sacn_source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
+  etcpal::Expected<etcpal::Uuid> GetSourceCid(sacn_source_id_t source) const;
 
   constexpr Handle handle() const;
 
@@ -159,7 +159,7 @@ private:
 namespace internal
 {
 extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, uint16_t universe, const uint8_t* slots,
-                                                 const source_id_t* slot_owners, void* context)
+                                                 const sacn_source_id_t* slot_owners, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
 
@@ -308,9 +308,9 @@ inline etcpal::Error MergeReceiver::ResetNetworking(const std::vector<SacnMcastN
  * \param[in] source_cid The UUID of the source CID.
  * \return On success this will be the source ID, otherwise kEtcPalErrInvalid.
  */
-inline etcpal::Expected<source_id_t> MergeReceiver::GetSourceId(const etcpal::Uuid& source_cid) const
+inline etcpal::Expected<sacn_source_id_t> MergeReceiver::GetSourceId(const etcpal::Uuid& source_cid) const
 {
-  source_id_t result = sacn_merge_receiver_get_source_id(handle_, &source_cid.get());
+  sacn_source_id_t result = sacn_merge_receiver_get_source_id(handle_, &source_cid.get());
   if (result != SACN_DMX_MERGER_SOURCE_INVALID)
     return result;
   return kEtcPalErrInvalid;
@@ -322,7 +322,7 @@ inline etcpal::Expected<source_id_t> MergeReceiver::GetSourceId(const etcpal::Uu
  * \param[in] source_id The id of the source.
  * \return On success this will be the source CID, otherwise kEtcPalErrInvalid.
  */
-inline etcpal::Expected<etcpal::Uuid> MergeReceiver::GetSourceCid(source_id_t source_id) const
+inline etcpal::Expected<etcpal::Uuid> MergeReceiver::GetSourceCid(sacn_source_id_t source_id) const
 {
   EtcPalUuid result;
   if (kEtcPalErrOk == sacn_merge_receiver_get_source_cid(handle_, source_id, &result))

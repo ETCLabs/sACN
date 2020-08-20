@@ -19,7 +19,7 @@
 
 /*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
  - I've added the universe to all the callbacks.  Make sure the notification structs are initialized and work correctly for all notifications.
- - Add full support for the sources found notification.
+ - Add full support for the sources found notification. Packets aren't forwarded to the application until the source list is stable.
  - Add unicast support to sockets.c in the SACN_RECEIVER_SOCKET_PER_UNIVERSE case.
  - Make sure unicast support works in both socket modes, with one or more receivers created.
  - Make sure everything works with static & dynamic memory.

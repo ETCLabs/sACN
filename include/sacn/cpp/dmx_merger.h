@@ -60,7 +60,7 @@ public:
         You can use SACN_DMX_MERGER_IS_SOURCE_VALID(slot_owners, slot_index) if you don't want to look at the
         slot_owners directly.
         Memory is owned by the application.*/
-    source_id_t* slot_owners{nullptr};
+    sacn_source_id_t* slot_owners{nullptr};
 
     /********* Optional values **********/
 
@@ -69,7 +69,7 @@ public:
 
     /// Create an empty, invalid data structure by default.
     Settings() = default;
-    Settings(uint8_t* slots_ptr, source_id_t* slot_owners_ptr);
+    Settings(uint8_t* slots_ptr, sacn_source_id_t* slot_owners_ptr);
 
     bool IsValid() const;
   };
@@ -83,15 +83,15 @@ public:
   etcpal::Error Startup(const Settings& settings);
   void Shutdown();
 
-  etcpal::Expected<source_id_t> AddSource(const etcpal::Uuid& source_cid);
-  etcpal::Error RemoveSource(source_id_t source);
-  etcpal::Expected<source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
-  const SacnDmxMergerSource* GetSourceInfo(source_id_t source) const;
-  etcpal::Error UpdateSourceData(source_id_t source, uint8_t priority, const uint8_t* new_values,
+  etcpal::Expected<sacn_source_id_t> AddSource(const etcpal::Uuid& source_cid);
+  etcpal::Error RemoveSource(sacn_source_id_t source);
+  etcpal::Expected<sacn_source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
+  const SacnDmxMergerSource* GetSourceInfo(sacn_source_id_t source) const;
+  etcpal::Error UpdateSourceData(sacn_source_id_t source, uint8_t priority, const uint8_t* new_values,
                                  size_t new_values_count, const uint8_t* address_priorities = nullptr,
                                  size_t address_priorities_count = 0);
   etcpal::Error UpdateSourceDataFromSacn(const SacnHeaderData& header, const uint8_t* pdata);
-  etcpal::Error StopSourcePerAddressPriority(source_id_t source);
+  etcpal::Error StopSourcePerAddressPriority(sacn_source_id_t source);
 
   // TODO: Do we need this?
   etcpal::Error Recalculate();
@@ -107,7 +107,7 @@ private:
 /// @brief Create a DmxMerger Settings instance by passing the required members explicitly.
 ///
 /// Optional members can be modified directly in the struct.
-inline DmxMerger::Settings::Settings(uint8_t* slots_ptr, source_id_t* slot_owners_ptr)
+inline DmxMerger::Settings::Settings(uint8_t* slots_ptr, sacn_source_id_t* slot_owners_ptr)
     : slots(slots_ptr), slot_owners(slot_owners_ptr)
 {
 }
@@ -170,9 +170,9 @@ inline void DmxMerger::Shutdown()
  * \return #kEtcPalErrExists: the source at that cid was already added.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Expected<source_id_t> DmxMerger::AddSource(const etcpal::Uuid& source_cid)
+inline etcpal::Expected<sacn_source_id_t> DmxMerger::AddSource(const etcpal::Uuid& source_cid)
 {
-  source_id_t result = SACN_DMX_MERGER_SOURCE_INVALID;
+  sacn_source_id_t result = SACN_DMX_MERGER_SOURCE_INVALID;
   etcpal_error_t err = sacn_dmx_merger_add_source(handle_, &source_cid.get(), &result);
   if (err == kEtcPalErrOk)
     return result;
@@ -191,7 +191,7 @@ inline etcpal::Expected<source_id_t> DmxMerger::AddSource(const etcpal::Uuid& so
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error DmxMerger::RemoveSource(source_id_t source)
+inline etcpal::Error DmxMerger::RemoveSource(sacn_source_id_t source)
 {
   return sacn_dmx_merger_remove_source(handle_, source);
 }
@@ -202,9 +202,9 @@ inline etcpal::Error DmxMerger::RemoveSource(source_id_t source)
  * \param[in] source_cid The UUID of the source CID.
  * \return On success this will be the source ID, otherwise kEtcPalErrInvalid.
  */
-inline etcpal::Expected<source_id_t> DmxMerger::GetSourceId(const etcpal::Uuid& source_cid) const
+inline etcpal::Expected<sacn_source_id_t> DmxMerger::GetSourceId(const etcpal::Uuid& source_cid) const
 {
-  source_id_t result = sacn_dmx_merger_get_id(handle_, &source_cid.get());
+  sacn_source_id_t result = sacn_dmx_merger_get_id(handle_, &source_cid.get());
   if (result != SACN_DMX_MERGER_SOURCE_INVALID)
     return result;
   return kEtcPalErrInvalid;
@@ -220,7 +220,7 @@ inline etcpal::Expected<source_id_t> DmxMerger::GetSourceId(const etcpal::Uuid& 
  * \param[in] source The id of the source.
  * \return The reference to the source data, otherwise kEtcPalErrInvalid.
  */
-inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(source_id_t source) const
+inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_source_id_t source) const
 {
   return sacn_dmx_merger_get_source(handle_, source);
 }
@@ -247,7 +247,7 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(source_id_t source) c
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error DmxMerger::UpdateSourceData(source_id_t source, uint8_t priority, const uint8_t* new_values,
+inline etcpal::Error DmxMerger::UpdateSourceData(sacn_source_id_t source, uint8_t priority, const uint8_t* new_values,
                                                  size_t new_values_count, const uint8_t* address_priorities,
                                                  size_t address_priorities_count)
 {
@@ -288,7 +288,7 @@ inline etcpal::Error DmxMerger::UpdateSourceDataFromSacn(const SacnHeaderData& h
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error DmxMerger::StopSourcePerAddressPriority(source_id_t source)
+inline etcpal::Error DmxMerger::StopSourcePerAddressPriority(sacn_source_id_t source)
 {
   return sacn_dmx_merger_stop_source_per_address_priority(handle_, source);
 }

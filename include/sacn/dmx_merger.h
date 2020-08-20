@@ -70,7 +70,7 @@ typedef int sacn_dmx_merger_t;
 #define SACN_DMX_MERGER_INVALID -1
 
 /*! The sources on a merger have a short id that is used in the owned values, rather than a UUID.*/
-typedef uint16_t source_id_t;
+typedef uint16_t sacn_source_id_t;
 
 /*! An invalid source id handle value. */
 #define SACN_DMX_MERGER_SOURCE_INVALID ((uint16_t) -1)
@@ -91,7 +91,7 @@ typedef struct SacnDmxMergerConfig
       that slot, or #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
       You can use SACN_DMX_MERGER_IS_SOURCE_VALID() if you don't want to look at the slot_owners directly.
       Memory is owned by the application.*/
-  source_id_t* slot_owners;
+  sacn_source_id_t* slot_owners;
 
 } SacnDmxMergerConfig;
 
@@ -148,16 +148,16 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
 etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle);
 
 etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid,
-                                          source_id_t* source_id);
-etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id_t source);
-source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid);
-const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, source_id_t source);
-etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, source_id_t source, uint8_t priority,
+                                          sacn_source_id_t* source_id);
+etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_source_id_t source);
+sacn_source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid);
+const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_source_id_t source);
+etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn_source_id_t source, uint8_t priority,
                                                   const uint8_t* new_values, size_t new_values_count,
                                                   const uint8_t* address_priorities, size_t address_priorities_count);
 etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, const SacnHeaderData* header,
                                                        const uint8_t* pdata);
-etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, source_id_t source);
+etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, sacn_source_id_t source);
 
 // TODO: Do we need this?
 etcpal_error_t sacn_dmx_merger_recalculate(sacn_dmx_merger_t merger);
