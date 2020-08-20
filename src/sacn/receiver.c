@@ -26,6 +26,7 @@
  - Make sure everything works with static & dynamic memory.
  - Make source addition honors source_count_max, even in dynamic mode.
  - Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet!
+ - refactor common.c's init & deinit functions to be more similar to https://github.com/ETCLabs/RDMnet/blob/develop/src/rdmnet/core/common.c#L141's functions, as Sam put in the review. 
  - Make the example receiver use the new api.
  - Make an example receiver & testing for the c++ header.
  - IPv6 support.  See the CHRISTIAN TODO IPV6 comments for some hints on where to change.

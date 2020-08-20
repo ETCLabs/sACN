@@ -143,6 +143,8 @@ typedef struct SacnLostSource
  * library has waited for a "sampling period" upon startup to make sure the starting set of sources is consistent.
  *
  * After this callback returns, packets for this source will be sent to the SacnUniverseDataCallback().
+ * In the rare case where the source is only sending preview packets and SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA is set,
+ * this callback will be be called with a SacnFoundSource structure with 'values_len' set to 0 and 'values_were_preview' set to true.
  *
  * \param[in] handle Handle to the receiver instance for which sources were found.
  * \param[in] universe The universe number this receiver is monitoring.
