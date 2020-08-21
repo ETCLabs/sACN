@@ -528,8 +528,8 @@ bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* ci
 
   CHECK_ROOM_FOR_ONE_MORE(sources_lost, lost_sources, SacnLostSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
 
-  sources_lost->lost_sources[sources_lost->num_lost_sources].info.cid = *cid;
-  ETCPAL_MSVC_NO_DEP_WRN strcpy(sources_lost->lost_sources[sources_lost->num_lost_sources].info.name, name);
+  sources_lost->lost_sources[sources_lost->num_lost_sources].cid = *cid;
+  ETCPAL_MSVC_NO_DEP_WRN strcpy(sources_lost->lost_sources[sources_lost->num_lost_sources].name, name);
   sources_lost->lost_sources[sources_lost->num_lost_sources].terminated = terminated;
   ++sources_lost->num_lost_sources;
   return true;

@@ -477,8 +477,8 @@ TEST_F(TestMem, AddLostSourceWorks)
       std::string test_name = "test name " + std::to_string(i);
       ASSERT_TRUE(add_lost_source(sources_lost, &cid_to_add.get(), test_name.c_str(), true));
       EXPECT_EQ(sources_lost->num_lost_sources, i + 1);
-      EXPECT_EQ(sources_lost->lost_sources[i].info.cid, cid_to_add);
-      EXPECT_STREQ(sources_lost->lost_sources[i].info.name, test_name.c_str());
+      EXPECT_EQ(sources_lost->lost_sources[i].cid, cid_to_add);
+      EXPECT_STREQ(sources_lost->lost_sources[i].name, test_name.c_str());
       EXPECT_EQ(sources_lost->lost_sources[i].terminated, true);
     }
 #else
@@ -489,8 +489,8 @@ TEST_F(TestMem, AddLostSourceWorks)
       std::string test_name = "test name " + std::to_string(i);
       ASSERT_TRUE(add_lost_source(sources_lost, &cid_to_add.get(), test_name.c_str(), true));
       EXPECT_EQ(sources_lost->num_lost_sources, i + 1);
-      EXPECT_EQ(sources_lost->lost_sources[i].info.cid, cid_to_add);
-      EXPECT_STREQ(sources_lost->lost_sources[i].info.name, test_name.c_str());
+      EXPECT_EQ(sources_lost->lost_sources[i].cid, cid_to_add);
+      EXPECT_STREQ(sources_lost->lost_sources[i].name, test_name.c_str());
       EXPECT_EQ(sources_lost->lost_sources[i].terminated, true);
     }
     // And make sure we can't add another

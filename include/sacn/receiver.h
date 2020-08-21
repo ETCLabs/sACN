@@ -95,20 +95,24 @@ typedef struct SacnRemoteSource
 /*! Information about a sACN source that was found. */
 typedef struct SacnFoundSource
 {
-  /*! The Source Description. */
-  SacnRemoteSource info;
+  /*! The Component Identifier (CID) of the source. */
+  EtcPalUuid cid;
+  /*! The name of the source. */
+  char name[SACN_SOURCE_NAME_MAX_LEN];
   /*! The address from which we received these initial packets. */
   EtcPalSockAddr from_addr;
   /*! The per-universe priority. */
   uint8_t priority;
-  /*! The DMX (startcode 0) data. */
-  uint8_t values[DMX_ADDRESS_COUNT];
+  /*! The DMX (startcode 0) data. The library owns this data, and the memory is only guaranteed to be valid for the
+   * length of the SacnSourcesFound callback. */
+  const uint8_t* values;
   /*! The count of valid values. */
   size_t values_len;
   /*! Whether or not we only saw startcode 0 packets with the preview flag set. */
   bool preview;
-  /*! The per-address priority (startcode 0xdd) data, if the source is sending it. */
-  uint8_t per_address[DMX_ADDRESS_COUNT];
+  /*! The per-address priority (startcode 0xdd) data, if the source is sending it. The library owns this data, and the
+   * memory is only guaranteed to be valid for the length of the SacnSourcesFound callback.  */
+  const uint8_t* per_addres;
   /*! The count of valid priorities. */
   size_t per_address_len;
 } SacnFoundSource;
@@ -116,8 +120,10 @@ typedef struct SacnFoundSource
 /*! Information about a sACN source that was lost. */
 typedef struct SacnLostSource
 {
-  /*! The Source Description. */
-  SacnRemoteSource info;
+  /*! The Component Identifier (CID) of the source. */
+  EtcPalUuid cid;
+  /*! The name of the source. */
+  char name[SACN_SOURCE_NAME_MAX_LEN];
   /*! Whether the source was determined to be lost due to the Stream_Terminated bit being set in the
    *  sACN data packet. */
   bool terminated;

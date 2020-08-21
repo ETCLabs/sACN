@@ -26,6 +26,7 @@
  - Make sure everything works with static & dynamic memory.
  - Make source addition honors source_count_max, even in dynamic mode.
  - Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet!
+ - Get usage/API documentation in place and cleaned up so we can have a larger review.
  - refactor common.c's init & deinit functions to be more similar to https://github.com/ETCLabs/RDMnet/blob/develop/src/rdmnet/core/common.c#L141's functions, as Sam put in the review. 
  - Make the example receiver use the new api.
  - Make an example receiver & testing for the c++ header.
@@ -1403,7 +1404,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
     sources_lost->universe = receiver->keys.universe;
     for (size_t i = 0; i < sources_lost->num_lost_sources; ++i)
     {
-      etcpal_rbtree_remove_with_cb(&receiver->sources, &sources_lost->lost_sources[i].info.cid, source_tree_dealloc);
+      etcpal_rbtree_remove_with_cb(&receiver->sources, &sources_lost->lost_sources[i].cid, source_tree_dealloc);
     }
   }
 }
