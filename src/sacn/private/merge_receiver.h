@@ -18,28 +18,38 @@
  *****************************************************************************/
 
 /*!
- * \file sacn/private/dmx_merger.h
+ * \file sacn/private/merge_receiver.h
  * \brief Private constants, types, and function declarations for the
- *        \ref sacn_dmx_merger "sACN DMX Merger" module.
+ *        \ref sacn_merge_receiver "sACN Merge Receiver" module.
  */
 
-#ifndef SACN_PRIVATE_DMX_MERGER_H_
-#define SACN_PRIVATE_DMX_MERGER_H_
+#ifndef SACN_PRIVATE_MERGE_RECEIVER_H_
+#define SACN_PRIVATE_MERGE_RECEIVER_H_
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../../../include/sacn/dmx_merger.h"
+#include "sacn/merge_receiver.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-etcpal_error_t sacn_dmx_merger_init();
-void sacn_dmx_merger_deinit(void);
+//TODO: I put this here so the tests will build.  FLESH THIS OUT..
+/* The internal state/glue needed to map a sacn_receiver_t to a sacn_dmx_merger_t, etc. */
+typedef struct SacnMergeReceiver
+{
+  // Configured callbacks
+  SacnMergeReceiverCallbacks callbacks;
+  void* callback_context;
 
+  struct SacnMergeReceiver* next;
+} SacnMergeReceiver;
+
+etcpal_error_t sacn_merge_receiver_init(void);
+void sacn_merge_receiver_deinit(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SACN_PRIVATE_DMX_MERGER_H_ */
+#endif /* SACN_PRIVATE_MERGE_RECEIVER_H_ */

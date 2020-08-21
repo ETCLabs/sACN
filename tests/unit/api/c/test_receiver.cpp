@@ -97,9 +97,9 @@ TEST_F(TestReceiver, SetExpiredWaitWorks)
 TEST_F(TestReceiver, ChangeUniverseWorks)
 {
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+  config.callbacks.universe_data = [](sacn_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
                                       void*) {};
-  config.callbacks.sources_lost = [](sacn_receiver_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
   config.universe_id = CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE;
 
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t, const SacnMcastNetintId*,
@@ -175,9 +175,9 @@ TEST_F(TestReceiver, ChangeUniverseErrNotInitWorks)
 TEST_F(TestReceiver, ChangeUniverseErrExistsWorks)
 {
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+  config.callbacks.universe_data = [](sacn_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
                                       void*) {};
-  config.callbacks.sources_lost = [](sacn_receiver_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
 
   config.universe_id = CHANGE_UNIVERSE_RECEIVER_EXISTS_UNIVERSE;
 
@@ -205,9 +205,9 @@ TEST_F(TestReceiver, ChangeUniverseErrNotFoundWorks)
   EXPECT_EQ(change_universe_not_found_result, kEtcPalErrNotFound);
 
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+  config.callbacks.universe_data = [](sacn_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
                                       void*) {};
-  config.callbacks.sources_lost = [](sacn_receiver_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
   config.universe_id = CHANGE_UNIVERSE_VALID_UNIVERSE_1;
 
   sacn_receiver_t handle;

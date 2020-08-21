@@ -17,29 +17,19 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/dmx_merger.h
- * \brief Private constants, types, and function declarations for the
- *        \ref sacn_dmx_merger "sACN DMX Merger" module.
- */
+#include "gtest/gtest.h"
+#include "fff.h"
 
-#ifndef SACN_PRIVATE_DMX_MERGER_H_
-#define SACN_PRIVATE_DMX_MERGER_H_
+DEFINE_FFF_GLOBALS;
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "../../../include/sacn/dmx_merger.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-etcpal_error_t sacn_dmx_merger_init();
-void sacn_dmx_merger_deinit(void);
-
-
-#ifdef __cplusplus
+extern "C" void SacnTestingAssertHandler(const char* expression, const char* file, unsigned int line)
+{
+  FAIL() << "Assertion failure from inside sACN library. Expression: " << expression << " File: " << file
+         << " Line: " << line;
 }
-#endif
 
-#endif /* SACN_PRIVATE_DMX_MERGER_H_ */
+int main(int argc, char* argv[])
+{
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

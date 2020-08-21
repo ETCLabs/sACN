@@ -521,89 +521,35 @@ TEST_F(TestMem, SourcesLostIsReZeroedWithEachGet)
   EXPECT_EQ(sources_lost->context, nullptr);
 }
 
-TEST_F(TestMem, ValidInitializedSourcePcpLost)
+TEST_F(TestMem, ValidInitializedSourcePapLost)
 {
   DoForEachThread([](sacn_thread_id_t thread) {
-    SourcePcpLostNotification* source_pcp_lost = get_source_pcp_lost(thread);
-    ASSERT_NE(source_pcp_lost, nullptr);
+    SourcePapLostNotification* source_pap_lost = get_source_pap_lost(thread);
+    ASSERT_NE(source_pap_lost, nullptr);
 
-    EXPECT_EQ(source_pcp_lost->callback, nullptr);
-    EXPECT_EQ(source_pcp_lost->handle, SACN_RECEIVER_INVALID);
-    EXPECT_EQ(source_pcp_lost->context, nullptr);
+    EXPECT_EQ(source_pap_lost->callback, nullptr);
+    EXPECT_EQ(source_pap_lost->handle, SACN_RECEIVER_INVALID);
+    EXPECT_EQ(source_pap_lost->context, nullptr);
   });
 }
 
-TEST_F(TestMem, SourcePcpLostIsReZeroedWithEachGet)
+TEST_F(TestMem, SourcePapLostIsReZeroedWithEachGet)
 {
-  SourcePcpLostNotification* source_pcp_lost = get_source_pcp_lost(0);
-  ASSERT_NE(source_pcp_lost, nullptr);
+  SourcePapLostNotification* source_pap_lost = get_source_pap_lost(0);
+  ASSERT_NE(source_pap_lost, nullptr);
 
   // Modify some elements
-  source_pcp_lost->handle = 2;
-  source_pcp_lost->callback = reinterpret_cast<SacnSourcePcpLostCallback>(kMagicPointerValue);
-  source_pcp_lost->context = reinterpret_cast<void*>(kMagicPointerValue);
+  source_pap_lost->handle = 2;
+  source_pap_lost->callback = reinterpret_cast<SacnSourcePapLostCallback>(kMagicPointerValue);
+  source_pap_lost->context = reinterpret_cast<void*>(kMagicPointerValue);
 
   // Now get again and make sure they are re-zeroed
-  source_pcp_lost = get_source_pcp_lost(0);
-  ASSERT_NE(source_pcp_lost, nullptr);
+  source_pap_lost = get_source_pap_lost(0);
+  ASSERT_NE(source_pap_lost, nullptr);
 
-  EXPECT_EQ(source_pcp_lost->callback, nullptr);
-  EXPECT_EQ(source_pcp_lost->handle, SACN_RECEIVER_INVALID);
-  EXPECT_EQ(source_pcp_lost->context, nullptr);
-}
-
-TEST_F(TestMem, ValidInitializedSamplingEndedBuf)
-{
-  DoForEachThread([](sacn_thread_id_t thread) {
-#if SACN_DYNAMIC_MEM
-    // Just test some arbitrary number for the buffer size
-    SamplingEndedNotification* sampling_ended_buf = get_sampling_ended_buffer(thread, 20);
-    ASSERT_NE(sampling_ended_buf, nullptr);
-
-    for (int i = 0; i < 20; ++i)
-    {
-      auto sampling_ended = &sampling_ended_buf[i];
-      EXPECT_EQ(sampling_ended->callback, nullptr);
-      EXPECT_EQ(sampling_ended->handle, SACN_RECEIVER_INVALID);
-      EXPECT_EQ(sampling_ended->context, nullptr);
-    }
-#else
-    SamplingEndedNotification* sampling_ended_buf = get_sampling_ended_buffer(thread, SACN_RECEIVER_MAX_UNIVERSES);
-    ASSERT_NE(sampling_ended_buf, nullptr);
-
-    // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_THREADS; ++i)
-    {
-      auto sampling_ended = &sampling_ended_buf[i];
-      EXPECT_EQ(sampling_ended->callback, nullptr);
-      EXPECT_EQ(sampling_ended->handle, SACN_RECEIVER_INVALID);
-      EXPECT_EQ(sampling_ended->context, nullptr);
-    }
-
-    // Trying to get more than the max capacity should not work
-    sampling_ended_buf = get_sampling_ended_buffer(thread, SACN_RECEIVER_MAX_UNIVERSES + 1);
-    EXPECT_EQ(sampling_ended_buf, nullptr);
-#endif
-  });
-}
-
-TEST_F(TestMem, SamplingEndedIsReZeroedWithEachGet)
-{
-  SamplingEndedNotification* sampling_ended = get_sampling_ended_buffer(0, 1);
-  ASSERT_NE(sampling_ended, nullptr);
-
-  // Modify some elements
-  sampling_ended->handle = 2;
-  sampling_ended->callback = reinterpret_cast<SacnSamplingEndedCallback>(kMagicPointerValue);
-  sampling_ended->context = reinterpret_cast<void*>(kMagicPointerValue);
-
-  // Now get again and make sure they are re-zeroed
-  sampling_ended = get_sampling_ended_buffer(0, 1);
-  ASSERT_NE(sampling_ended, nullptr);
-
-  EXPECT_EQ(sampling_ended->callback, nullptr);
-  EXPECT_EQ(sampling_ended->handle, SACN_RECEIVER_INVALID);
-  EXPECT_EQ(sampling_ended->context, nullptr);
+  EXPECT_EQ(source_pap_lost->callback, nullptr);
+  EXPECT_EQ(source_pap_lost->handle, SACN_RECEIVER_INVALID);
+  EXPECT_EQ(source_pap_lost->context, nullptr);
 }
 
 TEST_F(TestMem, ValidInitializedSourceLimitExceeded)

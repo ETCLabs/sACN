@@ -107,11 +107,11 @@
 #endif
 
 /*!
- * \brief Enable ETC's per-channel priority extension to sACN.
+ * \brief Enable ETC's per-address priority extension to sACN.
  *
  * If defined nonzero, the logic of \ref sacn_receiver "sACN Receiver" changes to handle ETC's
- * per-channel priority sACN extension. An additional callback function is also enabled to be
- * notified that a source has stopped sending per-channel priority.
+ * per-address priority sACN extension. An additional callback function is also enabled to be
+ * notified that a source has stopped sending per-address priority.
  */
 #ifndef SACN_ETC_PRIORITY_EXTENSION
 #define SACN_ETC_PRIORITY_EXTENSION 1
@@ -321,14 +321,14 @@
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
-#ifndef SACN_DMX_MERGER_MAX_COUNT
-#define SACN_DMX_MERGER_MAX_COUNT SACN_RECEIVER_MAX_UNIVERSES
+#ifndef SACN_DMX_MERGER_MAX_MERGERS
+#define SACN_DMX_MERGER_MAX_MERGERS SACN_RECEIVER_MAX_UNIVERSES
 #endif
 
 /*!
  * \brief The maximum number of sources that can be merged on each merger instance.
  *
- * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0. 
+ * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER
 #define SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE

@@ -17,29 +17,46 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/dmx_merger.h
- * \brief Private constants, types, and function declarations for the
- *        \ref sacn_dmx_merger "sACN DMX Merger" module.
- */
+#include "sacn/cpp/common.h"
+#include "sacn/cpp/dmx_merger.h"
 
-#ifndef SACN_PRIVATE_DMX_MERGER_H_
-#define SACN_PRIVATE_DMX_MERGER_H_
+#include <limits>
+#include "etcpal_mock/common.h"
+#include "sacn_mock/private/common.h"
+#include "sacn_mock/private/data_loss.h"
+#include "sacn_mock/private/sockets.h"
+#include "sacn/private/mem.h"
+#include "sacn/private/opts.h"
+#include "sacn/private/dmx_merger.h"
+#include "gtest/gtest.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "../../../include/sacn/dmx_merger.h"
-
-#ifdef __cplusplus
-extern "C" {
+#if SACN_DYNAMIC_MEM
+#define TestMerger TestCppMergerDynamic
+#else
+#define TestMerger TestCppMergerStatic
 #endif
 
-etcpal_error_t sacn_dmx_merger_init();
-void sacn_dmx_merger_deinit(void);
 
+class TestMerger : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    etcpal_reset_all_fakes();
+    sacn_reset_all_fakes();
 
-#ifdef __cplusplus
+    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_dmx_merger_init(), kEtcPalErrOk);
+  }
+
+  void TearDown() override
+  {
+    sacn_dmx_merger_deinit();
+    sacn_mem_deinit();
+  }
+};
+
+TEST_F(TestMerger, SetStandardVersionWorks)
+{
+  //CHRISTIAN TODO: CLEAN UP TESTING
 }
-#endif
-
-#endif /* SACN_PRIVATE_DMX_MERGER_H_ */
