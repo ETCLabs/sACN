@@ -60,13 +60,13 @@
 
 #if !SACN_DYNAMIC_MEM
 ETCPAL_MEMPOOL_DEFINE(sacnmerge_source_states, SourceState,
-                      (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT));
-ETCPAL_MEMPOOL_DEFINE(sacnmerge_merger_states, MergerState, SACN_DMX_MERGER_MAX_COUNT);
+                      (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_MERGERS));
+ETCPAL_MEMPOOL_DEFINE(sacnmerge_merger_states, MergerState, SACN_DMX_MERGER_MAX_MERGERS);
 ETCPAL_MEMPOOL_DEFINE(sacnmerge_rb_nodes, EtcPalRbNode,
-                      (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT * 2) +
-                          SACN_DMX_MERGER_MAX_COUNT);
+                      (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_MERGERS * 2) +
+                          SACN_DMX_MERGER_MAX_MERGERS);
 ETCPAL_MEMPOOL_DEFINE(sacnmerge_cids_to_source_handles, CidToSourceHandle,
-                      (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_COUNT));
+                      (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_MERGERS));
 #endif
 
 /*************************** Function definitions ****************************/
@@ -135,7 +135,7 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
 
 #if !SACN_DYNAMIC_MEM
   // Check if the maximum number of mergers has been reached.
-  if (etcpal_rbtree_size(&mergers) >= SACN_DMX_MERGER_MAX_COUNT)
+  if (etcpal_rbtree_size(&mergers) >= SACN_DMX_MERGER_MAX_MERGERS)
   {
     return kEtcPalErrNoMem;
   }
@@ -294,7 +294,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   }
 
   // Generate a new source handle.
-  source_id_t handle = (source_id_t)get_next_int_handle(&merger_state->source_handle_mgr, 0xffff);
+  sacn_source_id_t handle = (sacn_source_id_t)get_next_int_handle(&merger_state->source_handle_mgr, 0xffff);
 
   // Initialize CID to source handle mapping.
   CidToSourceHandle* cid_to_handle = ALLOC_CID_TO_SOURCE_HANDLE();
@@ -631,7 +631,7 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn
 etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, const SacnHeaderData* header,
                                                        const uint8_t* pdata)
 {
-  source_id_t source = SACN_DMX_MERGER_SOURCE_INVALID;
+  sacn_source_id_t source = SACN_DMX_MERGER_SOURCE_INVALID;
 
   // Verify module initialized.
   if (!sacn_initialized())
@@ -770,8 +770,8 @@ int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value
 
 int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
 {
-  const source_id_t* a = (const source_id_t*)value_a;
-  const source_id_t* b = (const source_id_t*)value_b;
+  const sacn_source_id_t* a = (const sacn_source_id_t*)value_a;
+  const sacn_source_id_t* b = (const sacn_source_id_t*)value_b;
 
   return (*a > *b) - (*a < *b);  // Just compare the handles.
 }
@@ -877,7 +877,7 @@ void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
                                                                   : source->source.universe_priority;
   bool source_stopped_sourcing = SOURCE_STOPPED_SOURCING(source, slot_index);
 
-  source_id_t winning_source = merger->config->slot_owners[slot_index];
+  sacn_source_id_t winning_source = merger->config->slot_owners[slot_index];
   uint8_t winning_level = merger->config->slots[slot_index];
   uint8_t winning_priority = merger->winning_priorities[slot_index];
 

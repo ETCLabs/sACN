@@ -38,14 +38,14 @@ extern "C" {
 
 typedef struct SourceState
 {
-  source_id_t handle;
+  sacn_source_id_t handle;
   SacnDmxMergerSource source;
 } SourceState;
 
 typedef struct CidToSourceHandle
 {
   EtcPalUuid cid;
-  source_id_t handle;
+  sacn_source_id_t handle;
 } CidToSourceHandle;
 
 typedef struct MergerState

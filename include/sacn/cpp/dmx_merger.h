@@ -93,9 +93,6 @@ public:
   etcpal::Error UpdateSourceDataFromSacn(const SacnHeaderData& header, const uint8_t* pdata);
   etcpal::Error StopSourcePerAddressPriority(sacn_source_id_t source);
 
-  // TODO: Do we need this?
-  etcpal::Error Recalculate();
-
   constexpr Handle handle() const;
 
 private:
@@ -291,22 +288,6 @@ inline etcpal::Error DmxMerger::UpdateSourceDataFromSacn(const SacnHeaderData& h
 inline etcpal::Error DmxMerger::StopSourcePerAddressPriority(sacn_source_id_t source)
 {
   return sacn_dmx_merger_stop_source_per_address_priority(handle_, source);
-}
-
-/*!
- * \brief Fully recalculate outputs.
- *
- * Does a full recalculation of the merger outputs.
- *
- * \return #kEtcPalErrOk: Source updated and recalculation completed.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merger.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
- */
-// TODO: Do we need this?
-inline etcpal::Error DmxMerger::Recalculate()
-{
-  return sacn_dmx_merger_recalculate(handle_);
 }
 
 /*!
