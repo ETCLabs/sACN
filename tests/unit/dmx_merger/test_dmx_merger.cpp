@@ -833,5 +833,3 @@ TEST_F(TestDmxMerger, StopSourcePapErrNotInitWorks)
 {
   // TODO: Implement this
 }
-
-// TODO: Bring back recalculate function and add option to calculate later.
