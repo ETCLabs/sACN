@@ -132,7 +132,7 @@ typedef struct SacnDmxMergerSource
   /*! Some sources don't send all 512 values, so here's how much of values to use.*/
   size_t valid_value_count;
 
-  /*! The sACN per-universe priority (0 - 255). */
+  /*! The sACN per-universe priority (0 - 200). */
   uint8_t universe_priority;
 
   /*! Whether or not the address_priority buffer is valid. */

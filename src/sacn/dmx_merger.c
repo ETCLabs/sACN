@@ -860,7 +860,7 @@ void update_per_address_priorities(MergerState* merger, SourceState* source, con
   // Any remaining unspecified priorities are interpreted as "not sourced".
   if (address_priorities_count < DMX_ADDRESS_COUNT)
   {
-    memcpy(&source->source.address_priority[address_priorities_count], 0, DMX_ADDRESS_COUNT - address_priorities_count);
+    memset(&source->source.address_priority[address_priorities_count], 0, DMX_ADDRESS_COUNT - address_priorities_count);
   }
 
   // Merge all slots.
