@@ -46,18 +46,20 @@ SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id);
 
 // These are processed from the context of receiving data, so there is only one per thread.
 UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id);
-SourcePcpLostNotification* get_source_pcp_lost(sacn_thread_id_t thread_id);
+SourcePapLostNotification* get_source_pap_lost(sacn_thread_id_t thread_id);
 SourceLimitExceededNotification* get_source_limit_exceeded(sacn_thread_id_t thread_id);
 
 // These are processed in the periodic timeout processing, so there are multiple per thread.
 SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, size_t size);
-SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id, size_t size);
+SourcesFoundNotification* get_sources_found_buffer(sacn_thread_id_t thread_id, size_t size);
 
 bool add_offline_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name, bool terminated);
 bool add_online_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name);
 bool add_unknown_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name);
 
 bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* cid, const char* name, bool terminated);
+//CHRISTIAN TODO:
+bool add_found_source(SourcesFoundNotification* sources_found /*, ??????*/);
 
 bool add_dead_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket);
 #if SACN_RECEIVER_SOCKET_PER_UNIVERSE

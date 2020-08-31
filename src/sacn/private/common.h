@@ -213,9 +213,9 @@ typedef struct SacnSourceStatusLists
 typedef enum
 {
   kRecvStateWaitingForDmx,
-  kRecvStateWaitingForPcp,
+  kRecvStateWaitingForPap,
   kRecvStateHaveDmxOnly,
-  kRecvStateHaveDmxAndPcp
+  kRecvStateHaveDmxAndPap
 } sacn_recv_state_t;
 #endif
 
@@ -230,8 +230,8 @@ typedef struct SacnTrackedSource
   bool dmx_received_since_last_tick;
 #if SACN_ETC_PRIORITY_EXTENSION
   sacn_recv_state_t recv_state;
-  /* pcp stands for Per-Channel Priority. Why, what did you think it meant? */
-  EtcPalTimer pcp_timer;
+  /* pap stands for Per-Address Priority. */
+  EtcPalTimer pap_timer;
 #endif
 } SacnTrackedSource;
 
@@ -239,11 +239,23 @@ typedef struct SacnTrackedSource
  * Notifications delivered by the sACN receive module
  *****************************************************************************/
 
+/* Data for the sources_found() callback */
+typedef struct SourcesFoundNotification
+{
+  SacnSourcesFoundCallback callback;
+  sacn_receiver_t handle;
+  uint16_t universe; 
+  SACN_DECLARE_BUF(SacnFoundSource, found_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  size_t num_found_sources;
+  void* context;
+} SourcesFoundNotification;
+
 /* Data for the universe_data() callback */
 typedef struct UniverseDataNotification
 {
   SacnUniverseDataCallback callback;
   sacn_receiver_t handle;
+  uint16_t universe; 
   SacnHeaderData header;
   const uint8_t* pdata;
   void* context;
@@ -254,33 +266,28 @@ typedef struct SourcesLostNotification
 {
   SacnSourcesLostCallback callback;
   sacn_receiver_t handle;
+  uint16_t universe; 
   SACN_DECLARE_BUF(SacnLostSource, lost_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_lost_sources;
   void* context;
 } SourcesLostNotification;
 
-/* Data for the source_pcp_lost() callback */
-typedef struct SourcePcpLostNotification
+/* Data for the source_pap_lost() callback */
+typedef struct SourcePapLostNotification
 {
-  SacnSourcePcpLostCallback callback;
+  SacnSourcePapLostCallback callback;
   SacnRemoteSource source;
   sacn_receiver_t handle;
+  uint16_t universe; 
   void* context;
-} SourcePcpLostNotification;
-
-/* Data for the sampling_ended() callback */
-typedef struct SamplingEndedNotification
-{
-  SacnSamplingEndedCallback callback;
-  sacn_receiver_t handle;
-  void* context;
-} SamplingEndedNotification;
+} SourcePapLostNotification;
 
 /* Data for the source_limit_exceeded() callback */
 typedef struct SourceLimitExceededNotification
 {
   SacnSourceLimitExceededCallback callback;
   sacn_receiver_t handle;
+  uint16_t universe; 
   void* context;
 } SourceLimitExceededNotification;
 

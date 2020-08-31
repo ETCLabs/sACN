@@ -267,6 +267,8 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
   universe_mcast_addr.port = SACN_PORT;
 
 #if SACN_RECEIVER_SOCKET_PER_UNIVERSE
+  //If we haven't created a socket for receiving unicast sACN yet, do so.
+  //CHRISTIAN TODO!
 
   // Create a new socket and bind it to the multicast address.
   res = create_receiver_socket(ip_type, &universe_mcast_addr, &new_socket);

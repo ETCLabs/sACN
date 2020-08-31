@@ -64,6 +64,9 @@ typedef struct MergerState
 IntHandleManager merger_handle_mgr;
 EtcPalRbTree mergers;
 
+etcpal_error_t sacn_dmx_merger_init();
+void sacn_dmx_merger_deinit(void);
+
 int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 int source_handle_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);

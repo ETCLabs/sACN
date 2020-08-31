@@ -78,6 +78,8 @@ ETCPAL_MEMPOOL_DEFINE(sacnmerge_cids_to_source_handles, CidToSourceHandle,
 /* Initialize the sACN DMX Merger module. Internal function called from sacn_init(). */
 etcpal_error_t sacn_dmx_merger_init(void)
 {
+  // TODO: CLEANUP  -- Be sure to check SACN_DMX_MERGER_MAX_MERGERS, as it is illegal to declare a 0-size array in C.
+  
   etcpal_error_t res = kEtcPalErrOk;
 
 #if !SACN_DYNAMIC_MEM
@@ -114,7 +116,7 @@ void sacn_dmx_merger_deinit(void)
  * \return #kEtcPalErrOk: Merger created successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNoMem: No room to allocate memory for this merger, or the max number of mergers has been reached.
+ * \return #kEtcPalErrNoMem: No room to allocate memory for this merger, or maximum number of mergers has been reached.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle)
@@ -255,7 +257,7 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid,
-                                          source_id_t* source_id)
+                                          sacn_source_id_t* source_id)
 {
   // Verify module initialized.
   if (!sacn_initialized())
@@ -378,7 +380,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id_t source)
+etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_source_id_t source)
 {
   // Verify module initialized.
   if (!sacn_initialized())
@@ -448,7 +450,7 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, source_id
  * \param[in] source_cid The UUID of the source CID.
  * \return The source ID, or #SACN_DMX_MERGER_SOURCE_INVALID.
  */
-source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid)
+sacn_source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid)
 {
   if (source_cid == NULL)
   {
@@ -483,7 +485,7 @@ source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* s
  * \param[in] source The id of the source.
  * \return The pointer to the source data, or NULL if the source wasn't found.
  */
-const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, source_id_t source)
+const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_source_id_t source)
 {
   if (source == SACN_DMX_MERGER_SOURCE_INVALID)
   {
@@ -515,13 +517,13 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
  *
  * \param[in] merger The handle to the merger.
  * \param[in] source The id of the source to modify.
+ * \param[in] priority The universe-level priority of the source.
  * \param[in] new_values The new DMX values to be copied in. This must be NULL if the source is only updating the
  * priority or address_priorities.
  * \param[in] new_values_count The length of new_values. Must be 0 if the source is only updating the priority or
  * address_priorities.
- * \param[in] priority The universe-level priority of the source.
- * \param[in] address_priorities The per-address priority values to be copied in.  This must be NULL if the source is
- * not sending per-address priorities, or is only updating other parameters.
+ * \param[in] address_priorities The per-address priority values to be copied in.  This must be NULL if the source is not
+ * sending per-address priorities, or is only updating other parameters.
  * \param[in] address_priorities_count The length of address_priorities.  Must be 0 if the source is not sending these
  * priorities, or is only updating other parameters.
  * \return #kEtcPalErrOk: Source updated and merge completed.
@@ -530,8 +532,8 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, source_id_t source,
-                                                  const uint8_t* new_values, size_t new_values_count, uint8_t priority,
+etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn_source_id_t source, uint8_t priority,
+                                                  const uint8_t* new_values, size_t new_values_count, 
                                                   const uint8_t* address_priorities, size_t address_priorities_count)
 {
   // Verify module initialized.
@@ -626,8 +628,6 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sour
  * a known source.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-// TODO: If Receiver API changes to notify both values and per-address priority data in the same callback, this should
-// change!!
 etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, const SacnHeaderData* header,
                                                        const uint8_t* pdata)
 {
@@ -718,7 +718,7 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, source_id_t source)
+etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, sacn_source_id_t source)
 {
   // Verify module initialized.
   if (!sacn_initialized())

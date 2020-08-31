@@ -1,5 +1,7 @@
 include(GoogleTest)
 
+set(UNIT_TEST_DIR ${CMAKE_CURRENT_LIST_DIR})
+
 function(sacn_add_dynamic_test test_name)
   set(target_name ${test_name}_dynamic)
   add_executable(${target_name} ${ARGN})
@@ -31,5 +33,4 @@ function(sacn_add_static_test test_name)
 endfunction()
 
 add_subdirectory(utils)
-add_subdirectory(receiver)
-add_subdirectory(dmx_merger)
+add_subdirectory(api)
