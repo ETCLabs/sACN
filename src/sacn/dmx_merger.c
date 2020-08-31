@@ -78,15 +78,33 @@ ETCPAL_MEMPOOL_DEFINE(sacnmerge_cids_to_source_handles, CidToSourceHandle,
 /* Initialize the sACN DMX Merger module. Internal function called from sacn_init(). */
 etcpal_error_t sacn_dmx_merger_init(void)
 {
-  // TODO: CLEANUP  -- Be sure to check SACN_DMX_MERGER_MAX_MERGERS, as it is illegal to declare a 0-size array in C.
-  
   etcpal_error_t res = kEtcPalErrOk;
 
+  if ((SACN_DMX_MERGER_MAX_MERGERS <= 0) || (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER <= 0))
+  {
+    res = kEtcPalErrInvalid;
+  }
+
 #if !SACN_DYNAMIC_MEM
-  res |= etcpal_mempool_init(sacnmerge_source_states);
-  res |= etcpal_mempool_init(sacnmerge_merger_states);
-  res |= etcpal_mempool_init(sacnmerge_rb_nodes);
-  res |= etcpal_mempool_init(sacnmerge_cids_to_source_handles);
+  if (res == kEtcPalErrOk)
+  {
+    res = etcpal_mempool_init(sacnmerge_source_states);
+  }
+
+  if (res == kEtcPalErrOk)
+  {
+    res = etcpal_mempool_init(sacnmerge_merger_states);
+  }
+
+  if (res == kEtcPalErrOk)
+  {
+    res = etcpal_mempool_init(sacnmerge_rb_nodes);
+  }
+
+  if (res == kEtcPalErrOk)
+  {
+    res = etcpal_mempool_init(sacnmerge_cids_to_source_handles);
+  }
 #endif
 
   if (res == kEtcPalErrOk)
@@ -522,8 +540,8 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
  * priority or address_priorities.
  * \param[in] new_values_count The length of new_values. Must be 0 if the source is only updating the priority or
  * address_priorities.
- * \param[in] address_priorities The per-address priority values to be copied in.  This must be NULL if the source is not
- * sending per-address priorities, or is only updating other parameters.
+ * \param[in] address_priorities The per-address priority values to be copied in.  This must be NULL if the source is
+ * not sending per-address priorities, or is only updating other parameters.
  * \param[in] address_priorities_count The length of address_priorities.  Must be 0 if the source is not sending these
  * priorities, or is only updating other parameters.
  * \return #kEtcPalErrOk: Source updated and merge completed.
@@ -533,7 +551,7 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn_source_id_t source, uint8_t priority,
-                                                  const uint8_t* new_values, size_t new_values_count, 
+                                                  const uint8_t* new_values, size_t new_values_count,
                                                   const uint8_t* address_priorities, size_t address_priorities_count)
 {
   // Verify module initialized.
