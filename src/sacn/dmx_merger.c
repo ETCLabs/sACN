@@ -747,7 +747,7 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
   // Validate source.
   if (source == SACN_DMX_MERGER_SOURCE_INVALID)
   {
-    return kEtcPalErrInvalid;
+    return kEtcPalErrNotFound;
   }
 
   // Look up the merger state.
@@ -772,7 +772,7 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
   // Merge all the slots again. It will use universe priority this time because address_priority_valid was updated.
   for (uint16_t priority_index = 0; priority_index < DMX_ADDRESS_COUNT; ++priority_index)
   {
-    merge_source(merger, source, priority_index);
+    merge_source(merger_state, source_state, priority_index);
   }
 
   return kEtcPalErrOk;

@@ -826,10 +826,37 @@ TEST_F(TestDmxMerger, StopSourcePapWorks)
 
 TEST_F(TestDmxMerger, StopSourcePapErrNotFoundWorks)
 {
-  // TODO: Implement this
+  sacn_source_id_t source = SACN_DMX_MERGER_SOURCE_INVALID;
+
+  etcpal_error_t invalid_source_result = sacn_dmx_merger_stop_source_per_address_priority(merger_handle_, source);
+
+  source = 1;
+
+  etcpal_error_t no_merger_result = sacn_dmx_merger_stop_source_per_address_priority(merger_handle_, source);
+
+  sacn_dmx_merger_create(&merger_config_, &merger_handle_);
+
+  etcpal_error_t no_source_result = sacn_dmx_merger_stop_source_per_address_priority(merger_handle_, source);
+
+  sacn_dmx_merger_add_source(merger_handle_, &header_default_.cid, &source);
+
+  etcpal_error_t found_result = sacn_dmx_merger_stop_source_per_address_priority(merger_handle_, source);
+
+  EXPECT_EQ(invalid_source_result, kEtcPalErrNotFound);
+  EXPECT_EQ(no_merger_result, kEtcPalErrNotFound);
+  EXPECT_EQ(no_source_result, kEtcPalErrNotFound);
+
+  EXPECT_NE(found_result, kEtcPalErrNotFound);
 }
 
 TEST_F(TestDmxMerger, StopSourcePapErrNotInitWorks)
 {
-  // TODO: Implement this
+  sacn_initialized_fake.return_val = false;
+  etcpal_error_t not_initialized_result = sacn_dmx_merger_stop_source_per_address_priority(0, 0);
+
+  sacn_initialized_fake.return_val = true;
+  etcpal_error_t initialized_result = sacn_dmx_merger_stop_source_per_address_priority(0, 0);
+
+  EXPECT_EQ(not_initialized_result, kEtcPalErrNotInit);
+  EXPECT_NE(initialized_result, kEtcPalErrNotInit);
 }
