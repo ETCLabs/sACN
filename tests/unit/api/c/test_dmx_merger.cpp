@@ -89,7 +89,7 @@ protected:
   uint8_t pdata_default_[DMX_ADDRESS_COUNT];
 
   uint8_t slots_[DMX_ADDRESS_COUNT];
-  source_id_t slot_owners_[DMX_ADDRESS_COUNT];
+  sacn_source_id_t slot_owners_[DMX_ADDRESS_COUNT];
   sacn_dmx_merger_t merger_handle_;
   SacnDmxMergerConfig merger_config_;
 
@@ -99,12 +99,12 @@ protected:
 TEST_F(TestDmxMerger, DeinitClearsMergers)
 {
   // Add up to the maximum number of mergers.
-  for (int i = 0; i < SACN_DMX_MERGER_MAX_COUNT; ++i)
+  for (int i = 0; i < SACN_DMX_MERGER_MAX_MERGERS; ++i)
   {
     EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
   }
 
-  EXPECT_EQ(etcpal_rbtree_size(&mergers), SACN_DMX_MERGER_MAX_COUNT);
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), SACN_DMX_MERGER_MAX_MERGERS);
 
   sacn_dmx_merger_deinit();
 
@@ -115,7 +115,7 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
 {
   // Initialize the initial values, and what we expect them to be after sacn_dmx_merger_create.
   uint8_t expected_slots_priorities[DMX_ADDRESS_COUNT];
-  source_id_t expected_slot_owners[DMX_ADDRESS_COUNT];
+  sacn_source_id_t expected_slot_owners[DMX_ADDRESS_COUNT];
 
   for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
   {
@@ -138,7 +138,7 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
   // Make sure the values changed as expected.
   EXPECT_NE(merger_handle_, initial_handle);
   EXPECT_EQ(memcmp(slots_, expected_slots_priorities, DMX_ADDRESS_COUNT), 0);
-  EXPECT_EQ(memcmp(slot_owners_, expected_slot_owners, sizeof(source_id_t) * DMX_ADDRESS_COUNT), 0);
+  EXPECT_EQ(memcmp(slot_owners_, expected_slot_owners, sizeof(sacn_source_id_t) * DMX_ADDRESS_COUNT), 0);
 
   // Make sure the correct merger state was created.
   EXPECT_EQ(etcpal_rbtree_size(&mergers), 1);
@@ -191,7 +191,7 @@ TEST_F(TestDmxMerger, MergerCreateErrNotInitWorks)
 TEST_F(TestDmxMerger, MergerCreateErrNoMemWorks)
 {
   // Add up to the maximum number of mergers.
-  for (int i = 0; i < SACN_DMX_MERGER_MAX_COUNT; ++i)
+  for (int i = 0; i < SACN_DMX_MERGER_MAX_MERGERS; ++i)
   {
     EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
   }
@@ -247,7 +247,7 @@ TEST_F(TestDmxMerger, AddSourceWorks)
   EtcPalUuid source_cid;
   GenV5(0, &source_cid);
 
-  source_id_t source_handle = SACN_DMX_MERGER_SOURCE_INVALID;
+  sacn_source_id_t source_handle = SACN_DMX_MERGER_SOURCE_INVALID;
 
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrOk);
 
@@ -295,7 +295,7 @@ TEST_F(TestDmxMerger, AddSourceErrInvalidWorks)
 
   // Run tests.
   EtcPalUuid source_cid;
-  source_id_t source_handle;
+  sacn_source_id_t source_handle;
 
   etcpal_error_t null_cid_result = sacn_dmx_merger_add_source(merger_handle_, NULL, &source_handle);
   etcpal_error_t null_source_handle_result = sacn_dmx_merger_add_source(merger_handle_, &source_cid, NULL);
@@ -331,7 +331,7 @@ TEST_F(TestDmxMerger, AddSourceErrNoMemWorks)
 
   // Add up to the maximum number of sources.
   EtcPalUuid source_cid;
-  source_id_t source_handle;
+  sacn_source_id_t source_handle;
 
   for (int i = 0; i < SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER; ++i)
   {
@@ -362,7 +362,7 @@ TEST_F(TestDmxMerger, AddSourceErrExistsWorks)
   const char* cid_str_1 = "1234567890abcdef";
 
   EtcPalUuid source_cid_1;
-  source_id_t source_handle_1;
+  sacn_source_id_t source_handle_1;
 
   memcpy(source_cid_1.data, cid_str_1, ETCPAL_UUID_BYTES);
 
@@ -370,7 +370,7 @@ TEST_F(TestDmxMerger, AddSourceErrExistsWorks)
 
   // Try to add another source with the same CID.
   EtcPalUuid source_cid_2;
-  source_id_t source_handle_2;
+  sacn_source_id_t source_handle_2;
 
   memcpy(source_cid_2.data, cid_str_1, ETCPAL_UUID_BYTES);
 
@@ -380,7 +380,7 @@ TEST_F(TestDmxMerger, AddSourceErrExistsWorks)
   const char* cid_str_2 = "abcdef1234567890";
 
   EtcPalUuid source_cid_3;
-  source_id_t source_handle_3;
+  sacn_source_id_t source_handle_3;
 
   memcpy(source_cid_3.data, cid_str_2, ETCPAL_UUID_BYTES);
 
@@ -402,8 +402,8 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
   GenV5(0, &source_1_cid);
   GenV5(1, &source_2_cid);
 
-  source_id_t source_1_handle;
-  source_id_t source_2_handle;
+  sacn_source_id_t source_1_handle;
+  sacn_source_id_t source_2_handle;
 
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_1_cid, &source_1_handle), kEtcPalErrOk);
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_cid, &source_2_handle), kEtcPalErrOk);
@@ -420,7 +420,7 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
   uint8_t values[DMX_ADDRESS_COUNT];
   memset(values, source_1_value, DMX_ADDRESS_COUNT);
 
-  sacn_dmx_merger_update_source_data(merger_handle_, source_1_handle, values, DMX_ADDRESS_COUNT, priority, nullptr, 0);
+  sacn_dmx_merger_update_source_data(merger_handle_, source_1_handle, priority, values, DMX_ADDRESS_COUNT, nullptr, 0);
 
   // Feed in data from source 2 with per-address-priorities, one half lower and one half higher.
   uint8_t priorities[DMX_ADDRESS_COUNT];
@@ -429,7 +429,7 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
 
   memset(values, source_2_value, DMX_ADDRESS_COUNT);
 
-  sacn_dmx_merger_update_source_data(merger_handle_, source_2_handle, values, DMX_ADDRESS_COUNT, 0, priorities,
+  sacn_dmx_merger_update_source_data(merger_handle_, source_2_handle, 0, values, DMX_ADDRESS_COUNT, priorities,
                                      DMX_ADDRESS_COUNT);
 
   // Before removing a source, check the output.
@@ -482,8 +482,8 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesInternalState)
   GenV5(0, &source_1_cid);
   GenV5(1, &source_2_cid);
 
-  source_id_t source_1_handle;
-  source_id_t source_2_handle;
+  sacn_source_id_t source_1_handle;
+  sacn_source_id_t source_2_handle;
 
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_1_cid, &source_1_handle), kEtcPalErrOk);
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_cid, &source_2_handle), kEtcPalErrOk);
@@ -517,7 +517,7 @@ TEST_F(TestDmxMerger, RemoveSourceErrInvalidWorks)
 
   // Add a source.
   EtcPalUuid source_cid;
-  source_id_t source_handle;
+  sacn_source_id_t source_handle;
   memcpy(source_cid.data, "1234567890abcdef", ETCPAL_UUID_BYTES);
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrOk);
 
@@ -554,7 +554,7 @@ TEST_F(TestDmxMerger, GetIdWorks)
   const char* cid_str_1 = "abcdef1234567890";
   const char* cid_str_2 = "1234567890abcdef";
 
-  source_id_t source_handle;
+  sacn_source_id_t source_handle;
 
   EtcPalUuid source_cid_1;
   EtcPalUuid source_cid_2;
@@ -587,8 +587,8 @@ TEST_F(TestDmxMerger, GetSourceWorks)
   memcpy(source_cid_1.data, cid_str_1, ETCPAL_UUID_BYTES);
   memcpy(source_cid_2.data, cid_str_2, ETCPAL_UUID_BYTES);
 
-  source_id_t source_handle_1;
-  source_id_t source_handle_2;
+  sacn_source_id_t source_handle_1;
+  sacn_source_id_t source_handle_2;
 
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid_1, &source_handle_1), kEtcPalErrOk);
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid_2, &source_handle_2), kEtcPalErrOk);
@@ -647,26 +647,26 @@ TEST_F(TestDmxMerger, UpdateSourceDataErrInvalidWorks)
   uint8_t foo = 0;
 
   etcpal_error_t invalid_source_result =
-      sacn_dmx_merger_update_source_data(0, SACN_DMX_MERGER_SOURCE_INVALID, nullptr, 0, VALID_PRIORITY, nullptr, 0);
+      sacn_dmx_merger_update_source_data(0, SACN_DMX_MERGER_SOURCE_INVALID, VALID_PRIORITY, nullptr, 0, nullptr, 0);
   etcpal_error_t invalid_new_values_result =
-      sacn_dmx_merger_update_source_data(0, 0, &foo, 0, VALID_PRIORITY, nullptr, 0);
+      sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, &foo, 0, nullptr, 0);
   etcpal_error_t invalid_new_values_count_result_1 =
-      sacn_dmx_merger_update_source_data(0, 0, nullptr, 1, VALID_PRIORITY, nullptr, 0);
+      sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, nullptr, 1, nullptr, 0);
   etcpal_error_t invalid_new_values_count_result_2 =
-      sacn_dmx_merger_update_source_data(0, 0, &foo, DMX_ADDRESS_COUNT + 1, VALID_PRIORITY, nullptr, 0);
+      sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, &foo, DMX_ADDRESS_COUNT + 1, nullptr, 0);
   etcpal_error_t invalid_priority_result =
-      sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, INVALID_PRIORITY, nullptr, 0);
+      sacn_dmx_merger_update_source_data(0, 0, INVALID_PRIORITY, nullptr, 0, nullptr, 0);
   etcpal_error_t invalid_address_priorities_result =
-      sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, VALID_PRIORITY, &foo, 0);
+      sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, nullptr, 0, &foo, 0);
   etcpal_error_t invalid_address_priorities_count_result_1 =
-      sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, VALID_PRIORITY, nullptr, 1);
+      sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, nullptr, 0, nullptr, 1);
   etcpal_error_t invalid_address_priorities_count_result_2 =
-      sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, VALID_PRIORITY, &foo, DMX_ADDRESS_COUNT + 1);
+      sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, nullptr, 0, &foo, DMX_ADDRESS_COUNT + 1);
 
-  etcpal_error_t valid_result_1 = sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, VALID_PRIORITY, nullptr, 0);
-  etcpal_error_t valid_result_2 = sacn_dmx_merger_update_source_data(0, 0, &foo, 1, VALID_PRIORITY, nullptr, 0);
-  etcpal_error_t valid_result_3 = sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, VALID_PRIORITY, &foo, 1);
-  etcpal_error_t valid_result_4 = sacn_dmx_merger_update_source_data(0, 0, &foo, 1, VALID_PRIORITY, &foo, 1);
+  etcpal_error_t valid_result_1 = sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, nullptr, 0, nullptr, 0);
+  etcpal_error_t valid_result_2 = sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, &foo, 1, nullptr, 0);
+  etcpal_error_t valid_result_3 = sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, nullptr, 0, &foo, 1);
+  etcpal_error_t valid_result_4 = sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, &foo, 1, &foo, 1);
 
   EXPECT_EQ(invalid_source_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_new_values_result, kEtcPalErrInvalid);
@@ -686,10 +686,10 @@ TEST_F(TestDmxMerger, UpdateSourceDataErrInvalidWorks)
 TEST_F(TestDmxMerger, UpdateSourceDataErrNotInitWorks)
 {
   sacn_initialized_fake.return_val = false;
-  etcpal_error_t not_initialized_result = sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, 0, nullptr, 0);
+  etcpal_error_t not_initialized_result = sacn_dmx_merger_update_source_data(0, 0, 0, nullptr, 0, nullptr, 0);
 
   sacn_initialized_fake.return_val = true;
-  etcpal_error_t initialized_result = sacn_dmx_merger_update_source_data(0, 0, nullptr, 0, 0, nullptr, 0);
+  etcpal_error_t initialized_result = sacn_dmx_merger_update_source_data(0, 0, 0, nullptr, 0, nullptr, 0);
 
   EXPECT_EQ(not_initialized_result, kEtcPalErrNotInit);
   EXPECT_NE(initialized_result, kEtcPalErrNotInit);
@@ -697,20 +697,20 @@ TEST_F(TestDmxMerger, UpdateSourceDataErrNotInitWorks)
 
 TEST_F(TestDmxMerger, UpdateSourceDataErrNotFoundWorks)
 {
-  source_id_t source = 0;
+  sacn_source_id_t source = 0;
 
   etcpal_error_t no_merger_result =
-      sacn_dmx_merger_update_source_data(merger_handle_, source, nullptr, 0, VALID_PRIORITY, nullptr, 0);
+      sacn_dmx_merger_update_source_data(merger_handle_, source, VALID_PRIORITY, nullptr, 0, nullptr, 0);
 
   sacn_dmx_merger_create(&merger_config_, &merger_handle_);
 
   etcpal_error_t no_source_result =
-      sacn_dmx_merger_update_source_data(merger_handle_, source, nullptr, 0, VALID_PRIORITY, nullptr, 0);
+      sacn_dmx_merger_update_source_data(merger_handle_, source, VALID_PRIORITY, nullptr, 0, nullptr, 0);
 
   sacn_dmx_merger_add_source(merger_handle_, &header_default_.cid, &source);
 
   etcpal_error_t found_result =
-      sacn_dmx_merger_update_source_data(merger_handle_, source, nullptr, 0, VALID_PRIORITY, nullptr, 0);
+      sacn_dmx_merger_update_source_data(merger_handle_, source, VALID_PRIORITY, nullptr, 0, nullptr, 0);
 
   EXPECT_EQ(no_merger_result, kEtcPalErrNotFound);
   EXPECT_EQ(no_source_result, kEtcPalErrNotFound);
@@ -800,7 +800,7 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnErrNotInitWorks)
 
 TEST_F(TestDmxMerger, UpdateSourceFromSacnErrNotFoundWorks)
 {
-  source_id_t source;
+  sacn_source_id_t source;
   SacnHeaderData header = header_default_;
 
   etcpal_error_t no_merger_result = sacn_dmx_merger_update_source_from_sacn(merger_handle_, &header, pdata_default_);
