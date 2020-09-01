@@ -99,7 +99,7 @@ protected:
   }
 
   // This determines what kind of merge test TestMerge does.
-  enum class MergeType
+  enum class MergeTestType
   {
     kUpdateSourceData,      // Merge using sacn_dmx_merger_update_source_data.
     kUpdateSourceFromSacn,  // Merge using sacn_dmx_merger_update_source_from_sacn.
@@ -110,7 +110,7 @@ protected:
   void TestMerge(uint8_t priority_1, const uint8_t* values_1, size_t values_1_count,
                  const uint8_t* address_priorities_1, size_t address_priorities_1_count, uint8_t priority_2,
                  const uint8_t* values_2, size_t values_2_count, const uint8_t* address_priorities_2,
-                 size_t address_priorities_2_count, MergeType merge_type)
+                 size_t address_priorities_2_count, MergeTestType merge_type)
   {
     // Initialize the merger and sources.
     sacn_source_id_t source_1;
@@ -129,15 +129,15 @@ protected:
       bool source_1_is_sourced = (i < values_1_count) &&
                                  !((i < address_priorities_1_count) && (address_priorities_1[i] == 0)) &&
                                  !((i >= address_priorities_1_count) && (address_priorities_1_count > 0));
-      bool source_2_is_sourced = (i < values_2_count) &&
-                                 ((merge_type == MergeType::kStopSourcePap) ||  // kStopSourcePap means exclude PAPs.
-                                  (!((i < address_priorities_2_count) && (address_priorities_2[i] == 0)) &&
-                                   !((i >= address_priorities_2_count) && (address_priorities_2_count > 0))));
+      bool source_2_is_sourced =
+          (i < values_2_count) && ((merge_type == MergeTestType::kStopSourcePap) ||  // If kStopSourcePap, exclude PAPs.
+                                   (!((i < address_priorities_2_count) && (address_priorities_2[i] == 0)) &&
+                                    !((i >= address_priorities_2_count) && (address_priorities_2_count > 0))));
 
       // These priorities and values are only valid if the corresponding source is sourcing at i.
       int current_priority_1 = (i < address_priorities_1_count) ? address_priorities_1[i] : priority_1;
       // If kStopSourcePap is used, then filter out the PAPs of the second source.
-      int current_priority_2 = ((i < address_priorities_2_count) && (merge_type != MergeType::kStopSourcePap))
+      int current_priority_2 = ((i < address_priorities_2_count) && (merge_type != MergeTestType::kStopSourcePap))
                                    ? address_priorities_2[i]
                                    : priority_2;
       int current_value_1 = (i < values_1_count) ? values_1[i] : -1;
@@ -161,7 +161,7 @@ protected:
     }
 
     // Make the merge calls.
-    if (merge_type == MergeType::kUpdateSourceFromSacn)
+    if (merge_type == MergeTestType::kUpdateSourceFromSacn)
     {
       SacnHeaderData header_1 = header_default_;
       GenV5(1, &header_1.cid);
@@ -201,7 +201,7 @@ protected:
                   kEtcPalErrOk);
       }
     }
-    else if ((merge_type == MergeType::kUpdateSourceData) || (merge_type == MergeType::kStopSourcePap))
+    else if ((merge_type == MergeTestType::kUpdateSourceData) || (merge_type == MergeTestType::kStopSourcePap))
     {
       EXPECT_EQ(sacn_dmx_merger_update_source_data(merger_handle_, source_1, priority_1, values_1, values_1_count,
                                                    address_priorities_1, address_priorities_1_count),
@@ -212,7 +212,7 @@ protected:
     }
 
     // Execute stop_source_per_address_priority if needed.
-    if (merge_type == MergeType::kStopSourcePap)
+    if (merge_type == MergeTestType::kStopSourcePap)
     {
       EXPECT_EQ(sacn_dmx_merger_stop_source_per_address_priority(merger_handle_, source_2), kEtcPalErrOk);
     }
@@ -235,7 +235,7 @@ protected:
   }
 
   void TestMerge(uint8_t priority_1, const uint8_t* values_1, const uint8_t* address_priorities_1, uint8_t priority_2,
-                 const uint8_t* values_2, const uint8_t* address_priorities_2, MergeType merge_type)
+                 const uint8_t* values_2, const uint8_t* address_priorities_2, MergeTestType merge_type)
   {
     TestMerge(priority_1, values_1, (values_1 == nullptr) ? 0 : DMX_ADDRESS_COUNT, address_priorities_1,
               (address_priorities_1 == nullptr) ? 0 : DMX_ADDRESS_COUNT, priority_2, values_2,
@@ -770,32 +770,35 @@ TEST_F(TestDmxMerger, GetSourceWorks)
 
 TEST_F(TestDmxMerger, UpdateSourceDataMergesLevels)
 {
-  TestMerge(100, test_values_ascending_, nullptr, 100, test_values_descending_, nullptr, MergeType::kUpdateSourceData);
+  TestMerge(100, test_values_ascending_, nullptr, 100, test_values_descending_, nullptr,
+            MergeTestType::kUpdateSourceData);
 }
 
 TEST_F(TestDmxMerger, UpdateSourceDataMergesPaps)
 {
   TestMerge(100, test_values_ascending_, test_values_descending_, 100, test_values_descending_, test_values_ascending_,
-            MergeType::kUpdateSourceData);
+            MergeTestType::kUpdateSourceData);
 }
 
 TEST_F(TestDmxMerger, UpdateSourceDataMergesUps)
 {
-  TestMerge(0, test_values_ascending_, nullptr, 0, test_values_descending_, nullptr, MergeType::kUpdateSourceData);
-  TestMerge(0, test_values_ascending_, nullptr, 200, test_values_descending_, nullptr, MergeType::kUpdateSourceData);
-  TestMerge(200, test_values_ascending_, nullptr, 0, test_values_descending_, nullptr, MergeType::kUpdateSourceData);
+  TestMerge(0, test_values_ascending_, nullptr, 0, test_values_descending_, nullptr, MergeTestType::kUpdateSourceData);
+  TestMerge(0, test_values_ascending_, nullptr, 200, test_values_descending_, nullptr,
+            MergeTestType::kUpdateSourceData);
+  TestMerge(200, test_values_ascending_, nullptr, 0, test_values_descending_, nullptr,
+            MergeTestType::kUpdateSourceData);
 }
 
 TEST_F(TestDmxMerger, UpdateSourceDataMergesPapsWithUps)
 {
   TestMerge(100, test_values_ascending_, test_values_descending_, 100, test_values_descending_, nullptr,
-            MergeType::kUpdateSourceData);
+            MergeTestType::kUpdateSourceData);
 }
 
 TEST_F(TestDmxMerger, UpdateSourceDataMergesUpsWithPaps)
 {
   TestMerge(100, test_values_ascending_, nullptr, 100, test_values_descending_, test_values_ascending_,
-            MergeType::kUpdateSourceData);
+            MergeTestType::kUpdateSourceData);
 }
 
 TEST_F(TestDmxMerger, UpdateSourceDataHandlesValidValueCount)
@@ -803,7 +806,7 @@ TEST_F(TestDmxMerger, UpdateSourceDataHandlesValidValueCount)
   for (int i = 1; i <= DMX_ADDRESS_COUNT; ++i)
   {
     TestMerge(100, test_values_ascending_, DMX_ADDRESS_COUNT, nullptr, 0, 100, test_values_descending_, i, nullptr, 0,
-              MergeType::kUpdateSourceData);
+              MergeTestType::kUpdateSourceData);
   }
 }
 
@@ -812,7 +815,7 @@ TEST_F(TestDmxMerger, UpdateSourceDataHandlesLessPaps)
   for (int i = 1; i < DMX_ADDRESS_COUNT; ++i)
   {
     TestMerge(100, test_values_ascending_, DMX_ADDRESS_COUNT, test_values_descending_, DMX_ADDRESS_COUNT, 100,
-              test_values_descending_, DMX_ADDRESS_COUNT, test_values_ascending_, i, MergeType::kUpdateSourceData);
+              test_values_descending_, DMX_ADDRESS_COUNT, test_values_ascending_, i, MergeTestType::kUpdateSourceData);
   }
 }
 
@@ -895,34 +898,35 @@ TEST_F(TestDmxMerger, UpdateSourceDataErrNotFoundWorks)
 TEST_F(TestDmxMerger, UpdateSourceFromSacnMergesLevels)
 {
   TestMerge(100, test_values_ascending_, nullptr, 100, test_values_descending_, nullptr,
-            MergeType::kUpdateSourceFromSacn);
+            MergeTestType::kUpdateSourceFromSacn);
 }
 
 TEST_F(TestDmxMerger, UpdateSourceFromSacnMergesPaps)
 {
   TestMerge(100, test_values_ascending_, test_values_descending_, 100, test_values_descending_, test_values_ascending_,
-            MergeType::kUpdateSourceFromSacn);
+            MergeTestType::kUpdateSourceFromSacn);
 }
 
 TEST_F(TestDmxMerger, UpdateSourceFromSacnMergesUps)
 {
-  TestMerge(0, test_values_ascending_, nullptr, 0, test_values_descending_, nullptr, MergeType::kUpdateSourceFromSacn);
+  TestMerge(0, test_values_ascending_, nullptr, 0, test_values_descending_, nullptr,
+            MergeTestType::kUpdateSourceFromSacn);
   TestMerge(0, test_values_ascending_, nullptr, 200, test_values_descending_, nullptr,
-            MergeType::kUpdateSourceFromSacn);
+            MergeTestType::kUpdateSourceFromSacn);
   TestMerge(200, test_values_ascending_, nullptr, 0, test_values_descending_, nullptr,
-            MergeType::kUpdateSourceFromSacn);
+            MergeTestType::kUpdateSourceFromSacn);
 }
 
 TEST_F(TestDmxMerger, UpdateSourceFromSacnMergesPapsWithUps)
 {
   TestMerge(100, test_values_ascending_, test_values_descending_, 100, test_values_descending_, nullptr,
-            MergeType::kUpdateSourceFromSacn);
+            MergeTestType::kUpdateSourceFromSacn);
 }
 
 TEST_F(TestDmxMerger, UpdateSourceFromSacnMergesUpsWithPaps)
 {
   TestMerge(100, test_values_ascending_, nullptr, 100, test_values_descending_, test_values_ascending_,
-            MergeType::kUpdateSourceFromSacn);
+            MergeTestType::kUpdateSourceFromSacn);
 }
 
 TEST_F(TestDmxMerger, UpdateSourceFromSacnHandlesValidValueCount)
@@ -930,7 +934,7 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnHandlesValidValueCount)
   for (int i = 1; i <= DMX_ADDRESS_COUNT; ++i)
   {
     TestMerge(100, test_values_ascending_, DMX_ADDRESS_COUNT, nullptr, 0, 100, test_values_descending_, i, nullptr, 0,
-              MergeType::kUpdateSourceFromSacn);
+              MergeTestType::kUpdateSourceFromSacn);
   }
 }
 
@@ -939,7 +943,8 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnHandlesLessPaps)
   for (int i = 1; i < DMX_ADDRESS_COUNT; ++i)
   {
     TestMerge(100, test_values_ascending_, DMX_ADDRESS_COUNT, test_values_descending_, DMX_ADDRESS_COUNT, 100,
-              test_values_descending_, DMX_ADDRESS_COUNT, test_values_ascending_, i, MergeType::kUpdateSourceFromSacn);
+              test_values_descending_, DMX_ADDRESS_COUNT, test_values_ascending_, i,
+              MergeTestType::kUpdateSourceFromSacn);
   }
 }
 
@@ -1012,7 +1017,7 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnErrNotFoundWorks)
 TEST_F(TestDmxMerger, StopSourcePapWorks)
 {
   TestMerge(100, test_values_ascending_, test_values_descending_, 200, test_values_descending_, test_values_ascending_,
-            MergeType::kStopSourcePap);
+            MergeTestType::kStopSourcePap);
 }
 
 TEST_F(TestDmxMerger, StopSourcePapErrNotFoundWorks)
