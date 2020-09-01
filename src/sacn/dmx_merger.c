@@ -225,6 +225,12 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
     return kEtcPalErrNotInit;
   }
 
+  // Validate handle.
+  if (handle == SACN_DMX_MERGER_INVALID)
+  {
+    return kEtcPalErrNotFound;
+  }
+
   // Try to find the merger's state.
   MergerState* merger_state = etcpal_rbtree_find(&mergers, &handle);
 
@@ -284,6 +290,11 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   }
 
   if ((source_cid == NULL) || (source_id == NULL))
+  {
+    return kEtcPalErrInvalid;
+  }
+
+  if (merger == SACN_DMX_MERGER_INVALID)
   {
     return kEtcPalErrInvalid;
   }
@@ -406,7 +417,12 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_sour
     return kEtcPalErrNotInit;
   }
 
-  // Check if the source handle itself is invalid.
+  // Check if the handles are invalid.
+  if (merger == SACN_DMX_MERGER_INVALID)
+  {
+    return kEtcPalErrInvalid;
+  }
+
   if (source == SACN_DMX_MERGER_SOURCE_INVALID)
   {
     return kEtcPalErrInvalid;
@@ -475,6 +491,11 @@ sacn_source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUu
     return SACN_DMX_MERGER_SOURCE_INVALID;
   }
 
+  if (merger == SACN_DMX_MERGER_INVALID)
+  {
+    return SACN_DMX_MERGER_SOURCE_INVALID;
+  }
+
   MergerState* merger_state = etcpal_rbtree_find(&mergers, &merger);
 
   if (merger_state == NULL)
@@ -505,6 +526,11 @@ sacn_source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUu
  */
 const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_source_id_t source)
 {
+  if (merger == SACN_DMX_MERGER_INVALID)
+  {
+    return NULL;
+  }
+
   if (source == SACN_DMX_MERGER_SOURCE_INVALID)
   {
     return NULL;
@@ -558,6 +584,12 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn
   if (!sacn_initialized())
   {
     return kEtcPalErrNotInit;
+  }
+
+  // Validate merger.
+  if (merger == SACN_DMX_MERGER_INVALID)
+  {
+    return kEtcPalErrInvalid;
   }
 
   // Validate source.
@@ -657,6 +689,12 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
     return kEtcPalErrNotInit;
   }
 
+  // Validate merger.
+  if (merger == SACN_DMX_MERGER_INVALID)
+  {
+    return kEtcPalErrInvalid;
+  }
+
   // Validate header.
   if (!header || ETCPAL_UUID_IS_NULL(&header->cid) || !UNIVERSE_ID_VALID(header->universe_id) ||
       !UNIVERSE_PRIORITY_VALID(header->priority))
@@ -744,6 +782,12 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
     return kEtcPalErrNotInit;
   }
 
+  // Validate merger.
+  if (merger == SACN_DMX_MERGER_INVALID)
+  {
+    return kEtcPalErrNotFound;
+  }
+
   // Validate source.
   if (source == SACN_DMX_MERGER_SOURCE_INVALID)
   {
@@ -816,7 +860,7 @@ bool merger_handle_in_use(int handle_val, void* cookie)
 {
   ETCPAL_UNUSED_ARG(cookie);
 
-  return (etcpal_rbtree_find(&mergers, &handle_val) != NULL);
+  return (handle_val == SACN_DMX_MERGER_INVALID) || (etcpal_rbtree_find(&mergers, &handle_val) != NULL);
 }
 
 bool source_handle_in_use(int handle_val, void* cookie)

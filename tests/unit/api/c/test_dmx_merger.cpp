@@ -392,11 +392,9 @@ TEST_F(TestDmxMerger, MergerDestroyErrNotFoundWorks)
 {
   EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
 
-  etcpal_error_t found_result = sacn_dmx_merger_destroy(merger_handle_);
-  etcpal_error_t not_found_result = sacn_dmx_merger_destroy(merger_handle_ + 1);
-
-  EXPECT_EQ(found_result, kEtcPalErrOk);
-  EXPECT_EQ(not_found_result, kEtcPalErrNotFound);
+  EXPECT_EQ(sacn_dmx_merger_destroy(SACN_DMX_MERGER_INVALID), kEtcPalErrNotFound);
+  EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrNotFound);
 }
 
 TEST_F(TestDmxMerger, AddSourceWorks)
@@ -462,12 +460,15 @@ TEST_F(TestDmxMerger, AddSourceErrInvalidWorks)
   etcpal_error_t null_source_handle_result = sacn_dmx_merger_add_source(merger_handle_, &source_cid, NULL);
   etcpal_error_t unknown_merger_handle_result =
       sacn_dmx_merger_add_source(merger_handle_ + 1, &source_cid, &source_handle);
+  etcpal_error_t invalid_merger_handle_result =
+      sacn_dmx_merger_add_source(SACN_DMX_MERGER_INVALID, &source_cid, &source_handle);
 
   etcpal_error_t valid_result = sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle);
 
   EXPECT_EQ(null_cid_result, kEtcPalErrInvalid);
   EXPECT_EQ(null_source_handle_result, kEtcPalErrInvalid);
   EXPECT_EQ(unknown_merger_handle_result, kEtcPalErrInvalid);
+  EXPECT_EQ(invalid_merger_handle_result, kEtcPalErrInvalid);
 
   EXPECT_NE(valid_result, kEtcPalErrInvalid);
 }
@@ -682,6 +683,9 @@ TEST_F(TestDmxMerger, RemoveSourceErrInvalidWorks)
   memcpy(source_cid.data, "1234567890abcdef", ETCPAL_UUID_BYTES);
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrOk);
 
+  // Test response to SACN_DMX_MERGER_INVALID.
+  EXPECT_EQ(sacn_dmx_merger_remove_source(SACN_DMX_MERGER_INVALID, source_handle), kEtcPalErrInvalid);
+
   // The first removal should succeed, but the second should fail because the source is no longer there.
   EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_handle), kEtcPalErrOk);
   EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_handle), kEtcPalErrInvalid);
@@ -726,6 +730,7 @@ TEST_F(TestDmxMerger, GetIdWorks)
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid_1, &source_handle), kEtcPalErrOk);
 
   EXPECT_EQ(sacn_dmx_merger_get_id(merger_handle_, NULL), SACN_DMX_MERGER_SOURCE_INVALID);
+  EXPECT_EQ(sacn_dmx_merger_get_id(SACN_DMX_MERGER_INVALID, &source_cid_1), SACN_DMX_MERGER_SOURCE_INVALID);
   EXPECT_EQ(sacn_dmx_merger_get_id(merger_handle_ + 1, &source_cid_1), SACN_DMX_MERGER_SOURCE_INVALID);
   EXPECT_EQ(sacn_dmx_merger_get_id(merger_handle_, &source_cid_2), SACN_DMX_MERGER_SOURCE_INVALID);
   EXPECT_EQ(sacn_dmx_merger_get_id(merger_handle_, &source_cid_1), source_handle);
@@ -754,6 +759,7 @@ TEST_F(TestDmxMerger, GetSourceWorks)
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid_1, &source_handle_1), kEtcPalErrOk);
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid_2, &source_handle_2), kEtcPalErrOk);
 
+  EXPECT_EQ(sacn_dmx_merger_get_source(SACN_DMX_MERGER_INVALID, source_handle_1), nullptr);
   EXPECT_EQ(sacn_dmx_merger_get_source(merger_handle_ + 1, source_handle_1), nullptr);
   EXPECT_EQ(sacn_dmx_merger_get_source(merger_handle_, SACN_DMX_MERGER_SOURCE_INVALID), nullptr);
   EXPECT_EQ(sacn_dmx_merger_get_source(merger_handle_, source_handle_2 + 1), nullptr);
@@ -823,6 +829,8 @@ TEST_F(TestDmxMerger, UpdateSourceDataErrInvalidWorks)
 {
   uint8_t foo = 0;
 
+  etcpal_error_t invalid_merger_result =
+      sacn_dmx_merger_update_source_data(SACN_DMX_MERGER_INVALID, 0, VALID_PRIORITY, nullptr, 0, nullptr, 0);
   etcpal_error_t invalid_source_result =
       sacn_dmx_merger_update_source_data(0, SACN_DMX_MERGER_SOURCE_INVALID, VALID_PRIORITY, nullptr, 0, nullptr, 0);
   etcpal_error_t invalid_new_values_result =
@@ -845,6 +853,7 @@ TEST_F(TestDmxMerger, UpdateSourceDataErrInvalidWorks)
   etcpal_error_t valid_result_3 = sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, nullptr, 0, &foo, 1);
   etcpal_error_t valid_result_4 = sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, &foo, 1, &foo, 1);
 
+  EXPECT_EQ(invalid_merger_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_source_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_new_values_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_new_values_count_result_1, kEtcPalErrInvalid);
@@ -960,6 +969,8 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnErrInvalidWorks)
   invalid_priority_header.priority = INVALID_PRIORITY;
   invalid_slot_count_header.slot_count = DMX_ADDRESS_COUNT + 1;
 
+  etcpal_error_t invalid_merger_result =
+      sacn_dmx_merger_update_source_from_sacn(SACN_DMX_MERGER_INVALID, &header_default_, pdata_default_);
   etcpal_error_t null_header_result = sacn_dmx_merger_update_source_from_sacn(0, nullptr, pdata_default_);
   etcpal_error_t invalid_cid_result = sacn_dmx_merger_update_source_from_sacn(0, &invalid_cid_header, pdata_default_);
   etcpal_error_t invalid_universe_result =
@@ -971,6 +982,7 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnErrInvalidWorks)
   etcpal_error_t null_pdata_result = sacn_dmx_merger_update_source_from_sacn(0, &header_default_, nullptr);
   etcpal_error_t valid_result = sacn_dmx_merger_update_source_from_sacn(0, &header_default_, pdata_default_);
 
+  EXPECT_EQ(invalid_merger_result, kEtcPalErrInvalid);
   EXPECT_EQ(null_header_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_cid_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_universe_result, kEtcPalErrInvalid);
@@ -1029,6 +1041,8 @@ TEST_F(TestDmxMerger, StopSourcePapErrNotFoundWorks)
   source = 1;
 
   etcpal_error_t no_merger_result = sacn_dmx_merger_stop_source_per_address_priority(merger_handle_, source);
+  etcpal_error_t invalid_merger_result =
+      sacn_dmx_merger_stop_source_per_address_priority(SACN_DMX_MERGER_INVALID, source);
 
   sacn_dmx_merger_create(&merger_config_, &merger_handle_);
 
@@ -1040,6 +1054,7 @@ TEST_F(TestDmxMerger, StopSourcePapErrNotFoundWorks)
 
   EXPECT_EQ(invalid_source_result, kEtcPalErrNotFound);
   EXPECT_EQ(no_merger_result, kEtcPalErrNotFound);
+  EXPECT_EQ(invalid_merger_result, kEtcPalErrNotFound);
   EXPECT_EQ(no_source_result, kEtcPalErrNotFound);
 
   EXPECT_NE(found_result, kEtcPalErrNotFound);
