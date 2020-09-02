@@ -17,32 +17,19 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include "sacn_mock/private/common.h"
+#include "gtest/gtest.h"
+#include "fff.h"
 
-#include "sacn_mock/private/data_loss.h"
-#include "sacn_mock/private/sockets.h"
+DEFINE_FFF_GLOBALS;
 
-DEFINE_FAKE_VALUE_FUNC(bool, sacn_initialized);
-DEFINE_FAKE_VALUE_FUNC(bool, sacn_lock);
-DEFINE_FAKE_VOID_FUNC(sacn_unlock);
-
-void sacn_common_reset_all_fakes(void)
+extern "C" void SacnTestingAssertHandler(const char* expression, const char* file, unsigned int line)
 {
-  RESET_FAKE(sacn_initialized);
-  RESET_FAKE(sacn_lock);
-  RESET_FAKE(sacn_unlock);
-
-  sacn_initialized_fake.return_val = true;
-  sacn_lock_fake.return_val = true;
+  FAIL() << "Assertion failure from inside sACN library. Expression: " << expression << " File: " << file
+         << " Line: " << line;
 }
 
-void sacn_reset_all_fakes(void)
+int main(int argc, char* argv[])
 {
-  sacn_common_reset_all_fakes();
-  sacn_data_loss_reset_all_fakes();
-  sacn_sockets_reset_all_fakes();
-
-#ifdef TESTING_CPP_MERGER
-  sacn_dmx_merger_reset_all_fakes();
-#endif
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
