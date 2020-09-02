@@ -48,4 +48,15 @@ void sacn_dmx_merger_reset_all_fakes(void)
   RESET_FAKE(sacn_dmx_merger_update_source_data);
   RESET_FAKE(sacn_dmx_merger_update_source_from_sacn);
   RESET_FAKE(sacn_dmx_merger_stop_source_per_address_priority);
+
+  sacn_dmx_merger_init_fake.return_val = kEtcPalErrOk;
+  sacn_dmx_merger_create_fake.return_val = kEtcPalErrOk;
+  sacn_dmx_merger_destroy_fake.return_val = kEtcPalErrOk;
+  sacn_dmx_merger_add_source_fake.return_val = kEtcPalErrOk;
+  sacn_dmx_merger_remove_source_fake.return_val = kEtcPalErrOk;
+  sacn_dmx_merger_get_id_fake.return_val = SACN_DMX_MERGER_SOURCE_INVALID;
+  sacn_dmx_merger_get_source_fake.return_val = NULL;
+  sacn_dmx_merger_update_source_data_fake.return_val = kEtcPalErrOk;
+  sacn_dmx_merger_update_source_from_sacn_fake.return_val = kEtcPalErrOk;
+  sacn_dmx_merger_stop_source_per_address_priority_fake.return_val = kEtcPalErrOk;
 }
