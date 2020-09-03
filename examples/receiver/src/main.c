@@ -517,7 +517,7 @@ int main(void)
 
   // Initialize the sACN library, allowing it to log messages through our callback
   EtcPalLogParams log_params;
-  log_params.action = ETCPAL_LOG_CREATE_HUMAN_READABLE;
+  log_params.action = kEtcPalLogCreateHumanReadable;
   log_params.log_fn = log_callback;
   log_params.time_fn = NULL;
   log_params.log_mask = ETCPAL_LOG_UPTO(ETCPAL_LOG_DEBUG);

@@ -165,8 +165,8 @@ etcpal_error_t create_send_socket(const SacnMcastNetintId* netint_id, etcpal_soc
   int sockopt_ip_level = (netint_id->ip_type == kEtcPalIpTypeV6 ? ETCPAL_IPPROTO_IPV6 : ETCPAL_IPPROTO_IP);
 
   etcpal_socket_t new_sock = ETCPAL_SOCKET_INVALID;
-  etcpal_error_t res = etcpal_socket(netint_id->ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET,
-                                     ETCPAL_SOCK_DGRAM, &new_sock);
+  etcpal_error_t res =
+      etcpal_socket(netint_id->ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET, ETCPAL_DGRAM, &new_sock);
 
   if (res == kEtcPalErrOk)
   {
@@ -201,7 +201,7 @@ etcpal_error_t create_receiver_socket(etcpal_iptype_t ip_type, const EtcPalSockA
 {
   etcpal_socket_t new_sock;
   etcpal_error_t res =
-      etcpal_socket(ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET, ETCPAL_SOCK_DGRAM, &new_sock);
+      etcpal_socket(ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET, ETCPAL_DGRAM, &new_sock);
   if (res != kEtcPalErrOk)
     return res;
 
