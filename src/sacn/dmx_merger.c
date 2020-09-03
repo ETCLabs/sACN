@@ -313,7 +313,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   size_t source_count_max = SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER;
 #endif
 
-  if (source_count_max != SACN_RECEIVER_INFINITE_SOURCES)
+  if ((source_count_max != SACN_RECEIVER_INFINITE_SOURCES) || !SACN_DYNAMIC_MEM)
   {
     if (etcpal_rbtree_size(&merger_state->source_state_lookup) >= source_count_max)
     {

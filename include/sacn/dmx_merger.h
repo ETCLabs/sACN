@@ -191,7 +191,8 @@ typedef struct SacnDmxMergerConfig
  * Given a buffer of slot_owners, evaluate to true if the slot is != DMX_MERGER_SOURCE_INVALID.
  *
  */
-#define SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, slot_index) (slot_owners_array[slot_index] != DMX_MERGER_SOURCE_INVALID)
+#define SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, slot_index) \
+  (slot_owners_array[slot_index] != SACN_DMX_MERGER_SOURCE_INVALID)
 
 /*! The current input data for a single source of the merge.  This is exposed only for informational purposes, as the
     application calls a variant of sacn_dmx_merger_update_source to do the actual update. */

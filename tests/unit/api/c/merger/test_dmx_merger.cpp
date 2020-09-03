@@ -1073,3 +1073,14 @@ TEST_F(TestDmxMerger, StopSourcePapErrNotInitWorks)
   EXPECT_EQ(not_initialized_result, kEtcPalErrNotInit);
   EXPECT_NE(initialized_result, kEtcPalErrNotInit);
 }
+
+TEST_F(TestDmxMerger, SourceIsValidWorks)
+{
+  sacn_source_id_t slot_owners_array[DMX_ADDRESS_COUNT];
+  memset(slot_owners_array, 1u, DMX_ADDRESS_COUNT);  // Fill with non-zero values.
+  slot_owners_array[1] = SACN_DMX_MERGER_SOURCE_INVALID;  // Set one of them to invalid.
+
+  EXPECT_EQ(SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, 0), true);
+  EXPECT_EQ(SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, 1), false);
+  EXPECT_EQ(SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, 2), true);
+}

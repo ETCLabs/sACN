@@ -114,13 +114,13 @@ namespace sacn
 class DmxMerger
 {
 public:
-  /// A handle type used by the sACN library to identify receiver instances.
+  /// A handle type used by the sACN library to identify merger instances.
   using Handle = sacn_dmx_merger_t;
   /// An invalid Handle value.
   static constexpr Handle kInvalidHandle = SACN_DMX_MERGER_INVALID;
 
   /// @ingroup sacn_dmx_merger_cpp
-  /// @brief A set of configuration settings that a receiver needs to initialize.
+  /// @brief A set of configuration settings that a merger needs to initialize.
   struct Settings
   {
     /********* Required values **********/
