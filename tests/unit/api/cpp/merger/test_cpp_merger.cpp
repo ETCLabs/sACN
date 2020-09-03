@@ -72,8 +72,8 @@ protected:
   static const uint8_t kTestPriority = 123;
   static const uint8_t kTestNewValues[DMX_ADDRESS_COUNT];
   static const uint8_t kTestAddressPriorities[DMX_ADDRESS_COUNT];
-  static const size_t kTestNewValuesCount = DMX_ADDRESS_COUNT;
-  static const size_t kTestAddressPrioritiesCount = DMX_ADDRESS_COUNT;
+  static const size_t kTestNewValuesCount = 123;
+  static const size_t kTestAddressPrioritiesCount = 456;
   static const SacnHeaderData kTestHeader;
   static const uint8_t kTestPdata[DMX_ADDRESS_COUNT];
 
@@ -87,16 +87,16 @@ protected:
 };
 
 const SacnDmxMergerSource TestMerger::kTestSource;
-const uint8_t TestMerger::kTestNewValues[] = {0};
-const uint8_t TestMerger::kTestAddressPriorities[] = {0};
+const uint8_t TestMerger::kTestNewValues[] = {};
+const uint8_t TestMerger::kTestAddressPriorities[] = {};
 const SacnHeaderData TestMerger::kTestHeader;
-const uint8_t TestMerger::kTestPdata[] = {0};
+const uint8_t TestMerger::kTestPdata[] = {};
 
 etcpal_error_t TestMerger::test_return_value_;
 sacn_source_id_t TestMerger::test_source_handle_;
 etcpal::Uuid TestMerger::test_source_cid_;
-uint8_t TestMerger::slots_[];
-sacn_source_id_t TestMerger::slot_owners_[];
+uint8_t TestMerger::slots_[] = {};
+sacn_source_id_t TestMerger::slot_owners_[] = {};
 sacn::DmxMerger::Settings TestMerger::settings_default_(nullptr, nullptr);
 
 TEST_F(TestMerger, SettingsConstructorWorks)
