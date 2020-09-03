@@ -106,7 +106,7 @@
  * // Or, if this is within a sACN receiver callback, use sacn_dmx_merger_update_source_from_sacn:
  * SacnHeaderData header;
  * uint8_t pdata[DMX_ADDRESS_COUNT];
- * // Assuming header and pdata is initialized.
+ * // Assuming header and pdata are initialized.
  *
  * sacn_dmx_merger_update_source_from_sacn(merger_handle, &header, pdata);
  *
