@@ -88,7 +88,7 @@ namespace sacn
 /// // Or together in one call:
 /// merger.UpdateSourceData(source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT, paps, DMX_ADDRESS_COUNT);
 /// 
-/// // Or, if this is within a sACN receiver callback, use sacn_dmx_merger_update_source_from_sacn:
+/// // Or, if this is within a sACN receiver callback, use UpdateSourceDataFromSacn:
 /// SacnHeaderData header;
 /// uint8_t pdata[DMX_ADDRESS_COUNT];
 /// // Assuming header and pdata are initialized.
