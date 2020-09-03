@@ -78,12 +78,11 @@ ETCPAL_MEMPOOL_DEFINE(sacnmerge_cids_to_source_handles, CidToSourceHandle,
 /* Initialize the sACN DMX Merger module. Internal function called from sacn_init(). */
 etcpal_error_t sacn_dmx_merger_init(void)
 {
+#if ((SACN_DMX_MERGER_MAX_MERGERS <= 0) || (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER <= 0))
+  etcpal_error_t res = kEtcPalErrInvalid;
+#else
   etcpal_error_t res = kEtcPalErrOk;
-
-  if ((SACN_DMX_MERGER_MAX_MERGERS <= 0) || (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER <= 0))
-  {
-    res = kEtcPalErrInvalid;
-  }
+#endif
 
 #if !SACN_DYNAMIC_MEM
   if (res == kEtcPalErrOk)
@@ -824,6 +823,8 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
 
 int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
 {
+  ETCPAL_UNUSED_ARG(self);
+
   const sacn_dmx_merger_t* a = (const sacn_dmx_merger_t*)value_a;
   const sacn_dmx_merger_t* b = (const sacn_dmx_merger_t*)value_b;
 
@@ -832,6 +833,8 @@ int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value
 
 int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
 {
+  ETCPAL_UNUSED_ARG(self);
+
   const sacn_source_id_t* a = (const sacn_source_id_t*)value_a;
   const sacn_source_id_t* b = (const sacn_source_id_t*)value_b;
 
@@ -840,13 +843,15 @@ int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value
 
 int source_handle_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
 {
+  ETCPAL_UNUSED_ARG(self);
+
   const EtcPalUuid* a = (const EtcPalUuid*)value_a;
   const EtcPalUuid* b = (const EtcPalUuid*)value_b;
 
   return memcmp(a->data, b->data, ETCPAL_UUID_BYTES);
 }
 
-EtcPalRbNode* dmx_merger_rb_node_alloc_func()
+EtcPalRbNode* dmx_merger_rb_node_alloc_func(void)
 {
   return ALLOC_DMX_MERGER_RB_NODE();
 }
@@ -1011,18 +1016,24 @@ void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
 
 void free_source_state_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
+  ETCPAL_UNUSED_ARG(self);
+
   FREE_SOURCE_STATE(node->value);
   FREE_DMX_MERGER_RB_NODE(node);
 }
 
 void free_source_handle_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
+  ETCPAL_UNUSED_ARG(self);
+
   FREE_CID_TO_SOURCE_HANDLE(node->value);
   FREE_DMX_MERGER_RB_NODE(node);
 }
 
 void free_mergers_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
+  ETCPAL_UNUSED_ARG(self);
+
   MergerState* merger_state = (MergerState*)node->value;
 
   // Clear the trees within merger state, using callbacks to free memory.

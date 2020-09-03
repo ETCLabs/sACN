@@ -271,7 +271,7 @@ TEST_F(TestDmxMerger, DeinitClearsMergers)
 
   sacn_dmx_merger_deinit();
 
-  EXPECT_EQ(etcpal_rbtree_size(&mergers), 0);
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), 0u);
 }
 
 TEST_F(TestDmxMerger, MergerCreateWorks)
@@ -293,7 +293,7 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
   merger_handle_ = initial_handle;
 
   // Expect no merger states initially.
-  EXPECT_EQ(etcpal_rbtree_size(&mergers), 0);
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), 0u);
 
   // Call sacn_dmx_merger_create and make sure it indicates success.
   EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
@@ -304,7 +304,7 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
   EXPECT_EQ(memcmp(slot_owners_, expected_slot_owners, sizeof(sacn_source_id_t) * DMX_ADDRESS_COUNT), 0);
 
   // Make sure the correct merger state was created.
-  EXPECT_EQ(etcpal_rbtree_size(&mergers), 1);
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), 1u);
 
   MergerState* merger_state = reinterpret_cast<MergerState*>(etcpal_rbtree_find(&mergers, &merger_handle_));
   ASSERT_NE(merger_state, nullptr);
@@ -312,8 +312,8 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
   EXPECT_EQ(merger_state->handle, merger_handle_);
   EXPECT_EQ(merger_state->config, &merger_config_);
   EXPECT_EQ(memcmp(merger_state->winning_priorities, expected_slots_priorities, DMX_ADDRESS_COUNT), 0);
-  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 0);
-  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 0);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 0u);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 0u);
 }
 
 TEST_F(TestDmxMerger, MergerCreateErrInvalidWorks)
@@ -371,11 +371,11 @@ TEST_F(TestDmxMerger, MergerCreateErrNoMemWorks)
 
 TEST_F(TestDmxMerger, MergerDestroyWorks)
 {
-  EXPECT_EQ(etcpal_rbtree_size(&mergers), 0);
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), 0u);
   EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
   EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
   EXPECT_EQ(etcpal_rbtree_find(&mergers, &merger_handle_), nullptr);
-  EXPECT_EQ(etcpal_rbtree_size(&mergers), 0);
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), 0u);
 }
 
 TEST_F(TestDmxMerger, MergerDestroyErrNotInitWorks)
@@ -420,7 +420,7 @@ TEST_F(TestDmxMerger, AddSourceWorks)
   ASSERT_NE(merger_state, nullptr);
 
   // Check the CID-to-handle mapping first.
-  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 1);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 1u);
 
   CidToSourceHandle* cid_to_handle =
       reinterpret_cast<CidToSourceHandle*>(etcpal_rbtree_find(&merger_state->source_handle_lookup, &source_cid));
@@ -430,7 +430,7 @@ TEST_F(TestDmxMerger, AddSourceWorks)
   EXPECT_EQ(cid_to_handle->handle, source_handle);
 
   // Now check the source state.
-  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 1);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 1u);
 
   SourceState* source_state =
       reinterpret_cast<SourceState*>(etcpal_rbtree_find(&merger_state->source_state_lookup, &source_handle));
@@ -438,8 +438,8 @@ TEST_F(TestDmxMerger, AddSourceWorks)
 
   EXPECT_EQ(source_state->handle, source_handle);
   EXPECT_EQ(memcmp(source_state->source.cid.data, source_cid.data, ETCPAL_UUID_BYTES), 0);
-  EXPECT_EQ(source_state->source.valid_value_count, 0);
-  EXPECT_EQ(source_state->source.universe_priority, 0);
+  EXPECT_EQ(source_state->source.valid_value_count, 0u);
+  EXPECT_EQ(source_state->source.universe_priority, 0u);
   EXPECT_EQ(source_state->source.address_priority_valid, false);
 
   uint8_t expected_values_priorities[DMX_ADDRESS_COUNT];
@@ -653,22 +653,22 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesInternalState)
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_cid, &source_2_handle), kEtcPalErrOk);
 
   // Each tree should have a size of 2.
-  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 2);
-  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 2);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 2u);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 2u);
 
   // Remove source 1 and confirm success.
   EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_1_handle), kEtcPalErrOk);
 
   // Each tree should have a size of 1.
-  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 1);
-  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 1);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 1u);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 1u);
 
   // Remove source 2 and confirm success.
   EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_2_handle), kEtcPalErrOk);
 
   // Each tree should have a size of 0.
-  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 0);
-  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 0);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 0u);
+  EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 0u);
 }
 
 TEST_F(TestDmxMerger, RemoveSourceErrInvalidWorks)

@@ -21,6 +21,7 @@
 
 #include "sacn_mock/private/data_loss.h"
 #include "sacn_mock/private/sockets.h"
+#include "sacn_mock/private/dmx_merger.h"
 
 DEFINE_FAKE_VALUE_FUNC(bool, sacn_initialized);
 DEFINE_FAKE_VALUE_FUNC(bool, sacn_lock);

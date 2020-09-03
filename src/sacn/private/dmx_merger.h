@@ -71,7 +71,7 @@ int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value
 int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 int source_handle_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 
-EtcPalRbNode* dmx_merger_rb_node_alloc_func();
+EtcPalRbNode* dmx_merger_rb_node_alloc_func(void);
 void dmx_merger_rb_node_dealloc_func(EtcPalRbNode* node);
 
 bool merger_handle_in_use(int handle_val, void* cookie);
