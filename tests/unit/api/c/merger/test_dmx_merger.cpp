@@ -86,7 +86,7 @@ protected:
   void GenV5(int iteration, EtcPalUuid* uuid)
   {
     char name[80];
-    sprintf(name, "%d", iteration);
+    sprintf_s(name, "%d", iteration);
 
     etcpal_generate_v5_uuid(&namespace_uuid_, name, 80, uuid);
   }
@@ -107,24 +107,26 @@ protected:
                             // sacn_dmx_merger_stop_source_per_address_priority on the second source.
   };
 
-  void TestMerge(uint8_t priority_1, const uint8_t* values_1, size_t values_1_count,
-                 const uint8_t* address_priorities_1, size_t address_priorities_1_count, uint8_t priority_2,
-                 const uint8_t* values_2, size_t values_2_count, const uint8_t* address_priorities_2,
-                 size_t address_priorities_2_count, MergeTestType merge_type)
+  void TestMerge(uint8_t priority_1, const uint8_t* values_1, uint16_t values_1_count,
+                 const uint8_t* address_priorities_1, uint16_t address_priorities_1_count, uint8_t priority_2,
+                 const uint8_t* values_2, uint16_t values_2_count, const uint8_t* address_priorities_2,
+                 uint16_t address_priorities_2_count, MergeTestType merge_type)
   {
     // Initialize the merger and sources.
     sacn_source_id_t source_1;
     sacn_source_id_t source_2;
+    EtcPalUuid source_1_cid = GenV5(1);
+    EtcPalUuid source_2_cid = GenV5(2);
 
     EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &GenV5(1), &source_1), kEtcPalErrOk);
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &GenV5(2), &source_2), kEtcPalErrOk);
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_1_cid, &source_1), kEtcPalErrOk);
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_cid, &source_2), kEtcPalErrOk);
 
     // Define the expected merge results.
     uint8_t expected_winning_values[DMX_ADDRESS_COUNT];
     sacn_source_id_t expected_winning_sources[DMX_ADDRESS_COUNT];
 
-    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    for (unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
     {
       bool source_1_is_sourced = (i < values_1_count) &&
                                  !((i < address_priorities_1_count) && (address_priorities_1[i] == 0)) &&
@@ -265,7 +267,7 @@ TEST_F(TestDmxMerger, DeinitClearsMergers)
     EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
   }
 
-  EXPECT_EQ(etcpal_rbtree_size(&mergers), SACN_DMX_MERGER_MAX_MERGERS);
+  EXPECT_EQ(etcpal_rbtree_size(&mergers), static_cast<size_t>(SACN_DMX_MERGER_MAX_MERGERS));
 
   sacn_dmx_merger_deinit();
 
@@ -278,7 +280,7 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
   uint8_t expected_slots_priorities[DMX_ADDRESS_COUNT];
   sacn_source_id_t expected_slot_owners[DMX_ADDRESS_COUNT];
 
-  for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+  for (uint16_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
   {
     slots_[i] = i % 0xff;
     slot_owners_[i] = i;
@@ -809,7 +811,7 @@ TEST_F(TestDmxMerger, UpdateSourceDataMergesUpsWithPaps)
 
 TEST_F(TestDmxMerger, UpdateSourceDataHandlesValidValueCount)
 {
-  for (int i = 1; i <= DMX_ADDRESS_COUNT; ++i)
+  for (uint16_t i = 1; i <= DMX_ADDRESS_COUNT; ++i)
   {
     TestMerge(100, test_values_ascending_, DMX_ADDRESS_COUNT, nullptr, 0, 100, test_values_descending_, i, nullptr, 0,
               MergeTestType::kUpdateSourceData);
@@ -818,7 +820,7 @@ TEST_F(TestDmxMerger, UpdateSourceDataHandlesValidValueCount)
 
 TEST_F(TestDmxMerger, UpdateSourceDataHandlesLessPaps)
 {
-  for (int i = 1; i < DMX_ADDRESS_COUNT; ++i)
+  for (uint16_t i = 1; i < DMX_ADDRESS_COUNT; ++i)
   {
     TestMerge(100, test_values_ascending_, DMX_ADDRESS_COUNT, test_values_descending_, DMX_ADDRESS_COUNT, 100,
               test_values_descending_, DMX_ADDRESS_COUNT, test_values_ascending_, i, MergeTestType::kUpdateSourceData);
@@ -940,7 +942,7 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnMergesUpsWithPaps)
 
 TEST_F(TestDmxMerger, UpdateSourceFromSacnHandlesValidValueCount)
 {
-  for (int i = 1; i <= DMX_ADDRESS_COUNT; ++i)
+  for (uint16_t i = 1; i <= DMX_ADDRESS_COUNT; ++i)
   {
     TestMerge(100, test_values_ascending_, DMX_ADDRESS_COUNT, nullptr, 0, 100, test_values_descending_, i, nullptr, 0,
               MergeTestType::kUpdateSourceFromSacn);
@@ -949,7 +951,7 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnHandlesValidValueCount)
 
 TEST_F(TestDmxMerger, UpdateSourceFromSacnHandlesLessPaps)
 {
-  for (int i = 1; i < DMX_ADDRESS_COUNT; ++i)
+  for (uint16_t i = 1; i < DMX_ADDRESS_COUNT; ++i)
   {
     TestMerge(100, test_values_ascending_, DMX_ADDRESS_COUNT, test_values_descending_, DMX_ADDRESS_COUNT, 100,
               test_values_descending_, DMX_ADDRESS_COUNT, test_values_ascending_, i,
