@@ -230,11 +230,11 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_source_id_t sour
  *
  * \param[in] source The id of the source to modify.
  * \param[in] priority The universe-level priority of the source.
- * \param[in] new_values The new DMX values to be copied in. This may be nullptr if the source is only updating the
+ * \param[in] new_values The new DMX values to be copied in. This must be nullptr if the source is only updating the
  * priority or address_priorities.
  * \param[in] new_values_count The length of new_values. May be 0 if the source is only updating the priority or
  * address_priorities.
- * \param[in] address_priorities The per-address priority values to be copied in.  This may be nullptr if the source is
+ * \param[in] address_priorities The per-address priority values to be copied in.  This must be nullptr if the source is
  * not sending per-address priorities, or is only updating other parameters.
  * \param[in] address_priorities_count The length of address_priorities.  May be 0 if the source is not sending these
  * priorities, or is only updating other parameters.
