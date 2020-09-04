@@ -18,7 +18,7 @@
  *****************************************************************************/
 
 /*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
- - Add EtcPalMcastNetintId to EtcPal, and remove struct SacnMcastNetintId and RdmnetMcastNetintId
+ - Add EtcPalMcastNetintId to EtcPal, and remove struct EtcPalMcastNetintId and RdmnetMcastNetintId
  - I've added the universe to all the callbacks.  Make sure the notification structs are initialized and work correctly for all notifications.
  - Add full support for the sources found notification. Packets aren't forwarded to the application until the source list is stable.
  - Add unicast support to sockets.c in the SACN_RECEIVER_SOCKET_PER_UNIVERSE case.
@@ -112,7 +112,7 @@ static struct SacnRecvState
 
 // Receiver creation and destruction
 static etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config);
-static etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMcastNetintId* netints,
+static etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const EtcPalMcastNetintId* netints,
                                                   size_t num_netints);
 static SacnReceiver* create_new_receiver(const SacnReceiverConfig* config);
 static etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnReceiverConfig* config);
@@ -479,7 +479,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, const SacnMcastNetintId* netints,
+etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, const EtcPalMcastNetintId* netints,
                                               size_t num_netints)
 {
   ETCPAL_UNUSED_ARG(handle);
@@ -601,14 +601,14 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
 /*
  * Initialize a SacnReceiver's network interface data.
  */
-etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMcastNetintId* netints, size_t num_netints)
+etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const EtcPalMcastNetintId* netints, size_t num_netints)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
   if (netints)
   {
 #if SACN_DYNAMIC_MEM
-    SacnMcastNetintId* calloc_result = calloc(num_netints, sizeof(SacnMcastNetintId));
+    EtcPalMcastNetintId* calloc_result = calloc(num_netints, sizeof(EtcPalMcastNetintId));
 
     if (calloc_result)
     {
@@ -627,7 +627,7 @@ etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMca
 
     if (result == kEtcPalErrOk)
     {
-      memcpy(receiver->netints, netints, num_netints * sizeof(SacnMcastNetintId));
+      memcpy(receiver->netints, netints, num_netints * sizeof(EtcPalMcastNetintId));
     }
   }
 #if SACN_DYNAMIC_MEM

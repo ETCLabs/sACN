@@ -243,7 +243,7 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
+etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, const EtcPalMcastNetintId* netints,
                                                     size_t num_netints)
 {
   // TODO CHRISTIAN CLEANUP

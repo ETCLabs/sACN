@@ -97,7 +97,7 @@ public:
     size_t source_count_max{SACN_RECEIVER_INFINITE_SOURCES};  ///< The maximum number of sources this universe will
                                                               ///< listen to when using dynamic memory.
     unsigned int flags{0};                   ///< A set of option flags. See the C API's "sACN receiver flags".
-    std::vector<SacnMcastNetintId> netints;  ///< If non-empty, the list of network interfaces to listen on.  Otherwise
+    std::vector<EtcPalMcastNetintId> netints;  ///< If non-empty, the list of network interfaces to listen on.  Otherwise
                                              ///< all available interfaces are used.
 
     /// Create an empty, invalid data structure by default.
@@ -117,7 +117,7 @@ public:
   void Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
-  etcpal::Error ResetNetworking(const std::vector<SacnMcastNetintId>& netints);
+  etcpal::Error ResetNetworking(const std::vector<EtcPalMcastNetintId>& netints);
 
   // Lesser used functions.  These apply to all instances of this class.
   static void SetStandardVersion(sacn_standard_version_t version);
@@ -294,7 +294,7 @@ inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Receiver::ResetNetworking(const std::vector<SacnMcastNetintId>& netints)
+inline etcpal::Error Receiver::ResetNetworking(const std::vector<EtcPalMcastNetintId>& netints)
 {
   if (netints.empty())
     return sacn_receiver_reset_networking(handle_, nullptr, 0);

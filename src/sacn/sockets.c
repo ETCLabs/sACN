@@ -41,25 +41,25 @@ typedef struct McastSendSocket
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
-static SacnMcastNetintId* valid_sys_netints;
+static EtcPalMcastNetintId* valid_sys_netints;
 static McastSendSocket* send_sockets;
 #else
-static SacnMcastNetintId valid_sys_netints[SACN_MAX_NETINTS];
+static EtcPalMcastNetintId valid_sys_netints[SACN_MAX_NETINTS];
 static McastSendSocket send_sockets[SACN_MAX_NETINTS];
 #endif
 static size_t num_valid_sys_netints;
 
 /*********************** Private function prototypes *************************/
 
-static void test_sacn_netint(const SacnMcastNetintId* netint_id, const char* addr_str);
-static void add_sacn_netint(const SacnMcastNetintId* netint_id, const char* addr_str);
-static int netint_id_index_in_array(const SacnMcastNetintId* id, const SacnMcastNetintId* array, size_t array_size);
+static void test_sacn_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str);
+static void add_sacn_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str);
+static int netint_id_index_in_array(const EtcPalMcastNetintId* id, const EtcPalMcastNetintId* array, size_t array_size);
 
-static etcpal_error_t create_send_socket(const SacnMcastNetintId* netint_id, etcpal_socket_t* socket);
+static etcpal_error_t create_send_socket(const EtcPalMcastNetintId* netint_id, etcpal_socket_t* socket);
 static etcpal_error_t create_receiver_socket(etcpal_iptype_t ip_type, const EtcPalSockAddr* bind_addr,
                                              etcpal_socket_t* socket);
 static etcpal_error_t subscribe_receiver_socket(etcpal_socket_t sock, const EtcPalIpAddr* group,
-                                                const SacnMcastNetintId* netints, size_t num_netints);
+                                                const EtcPalMcastNetintId* netints, size_t num_netints);
 static etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
 static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket, bool close_now);
 
@@ -77,7 +77,7 @@ etcpal_error_t sacn_sockets_init(void)
   send_sockets = calloc(num_sys_netints, sizeof(McastSendSocket));
   if (!send_sockets)
     return kEtcPalErrNoMem;
-  valid_sys_netints = calloc(num_sys_netints, sizeof(SacnMcastNetintId));
+  valid_sys_netints = calloc(num_sys_netints, sizeof(EtcPalMcastNetintId));
   if (!valid_sys_netints)
   {
     free(send_sockets);
@@ -98,7 +98,7 @@ etcpal_error_t sacn_sockets_init(void)
 
     // Create a test send and receive socket on each network interface. If either one fails, we
     // remove that interface from the final set.
-    SacnMcastNetintId netint_id;
+    EtcPalMcastNetintId netint_id;
     netint_id.index = netint->index;
     netint_id.ip_type = netint->addr.type;
 
@@ -160,7 +160,7 @@ static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_so
  * [out] new_sock Filled in with new socket descriptor.
  * Returns kEtcPalErrOk (success) or a relevant error code on failure.
  */
-etcpal_error_t create_send_socket(const SacnMcastNetintId* netint_id, etcpal_socket_t* socket)
+etcpal_error_t create_send_socket(const EtcPalMcastNetintId* netint_id, etcpal_socket_t* socket)
 {
   int sockopt_ip_level = (netint_id->ip_type == kEtcPalIpTypeV6 ? ETCPAL_IPPROTO_IPV6 : ETCPAL_IPPROTO_IP);
 
@@ -251,7 +251,7 @@ void get_sacn_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAdd
  * Returns kEtcPalErrOk on success, or error code.
  */
 etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
-                                        const SacnMcastNetintId* netints, size_t num_netints, etcpal_socket_t* socket)
+                                        const EtcPalMcastNetintId* netints, size_t num_netints, etcpal_socket_t* socket)
 {
   SACN_ASSERT(ip_type == kEtcPalIpTypeV4 || ip_type == kEtcPalIpTypeV6);
   SACN_ASSERT(universe >= 1 && universe <= 63999);
@@ -381,7 +381,7 @@ etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalG
  * Returns kEtcPalErrOk if the subscribe was done successfully, error code otherwise.
  */
 etcpal_error_t subscribe_receiver_socket(etcpal_socket_t sock, const EtcPalIpAddr* group,
-                                         const SacnMcastNetintId* netints, size_t num_netints)
+                                         const EtcPalMcastNetintId* netints, size_t num_netints)
 {
   SACN_ASSERT(sock != ETCPAL_SOCKET_INVALID);
   SACN_ASSERT(group);
@@ -394,7 +394,7 @@ etcpal_error_t subscribe_receiver_socket(etcpal_socket_t sock, const EtcPalIpAdd
   if (!netints)
   {
     res = kEtcPalErrNoNetints;
-    for (SacnMcastNetintId* netint = valid_sys_netints; netint < valid_sys_netints + num_valid_sys_netints; ++netint)
+    for (EtcPalMcastNetintId* netint = valid_sys_netints; netint < valid_sys_netints + num_valid_sys_netints; ++netint)
     {
       if (netint->ip_type == group->type)
       {
@@ -409,7 +409,7 @@ etcpal_error_t subscribe_receiver_socket(etcpal_socket_t sock, const EtcPalIpAdd
   {
     SACN_ASSERT(num_netints > 0);
 
-    for (const SacnMcastNetintId* netint = netints; netint < netints + num_netints; ++netint)
+    for (const EtcPalMcastNetintId* netint = netints; netint < netints + num_netints; ++netint)
     {
       if (netint->ip_type == group->type)
       {
@@ -517,7 +517,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
   return poll_res;
 }
 
-etcpal_error_t sacn_validate_netint_config(const SacnMcastNetintId* netints, size_t num_netints)
+etcpal_error_t sacn_validate_netint_config(const EtcPalMcastNetintId* netints, size_t num_netints)
 {
   if (netints && num_netints > 0)
   {
@@ -526,7 +526,7 @@ etcpal_error_t sacn_validate_netint_config(const SacnMcastNetintId* netints, siz
       return kEtcPalErrNoMem;
 #endif
 
-    for (const SacnMcastNetintId* netint = netints; netint < netints + num_netints; ++netint)
+    for (const EtcPalMcastNetintId* netint = netints; netint < netints + num_netints; ++netint)
     {
       if (netint->index == 0 || (netint->ip_type != kEtcPalIpTypeV4 && netint->ip_type != kEtcPalIpTypeV6))
         return kEtcPalErrInvalid;
@@ -544,7 +544,7 @@ etcpal_error_t sacn_validate_netint_config(const SacnMcastNetintId* netints, siz
   }
 }
 
-void test_sacn_netint(const SacnMcastNetintId* netint_id, const char* addr_str)
+void test_sacn_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str)
 {
   // create_send_socket() also tests setting the relevant send socket options and the
   // MULTICAST_IF on the relevant interface.
@@ -589,7 +589,7 @@ void test_sacn_netint(const SacnMcastNetintId* netint_id, const char* addr_str)
   }
 }
 
-void add_sacn_netint(const SacnMcastNetintId* netint_id, const char* addr_str)
+void add_sacn_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str)
 {
 #if SACN_DYNAMIC_MEM
   ETCPAL_UNUSED_ARG(addr_str);
@@ -622,7 +622,7 @@ void add_sacn_netint(const SacnMcastNetintId* netint_id, const char* addr_str)
   // Else already added - don't add it again
 }
 
-int netint_id_index_in_array(const SacnMcastNetintId* id, const SacnMcastNetintId* array, size_t array_size)
+int netint_id_index_in_array(const EtcPalMcastNetintId* id, const EtcPalMcastNetintId* array, size_t array_size)
 {
   for (size_t i = 0; i < array_size; ++i)
   {

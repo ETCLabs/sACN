@@ -71,7 +71,7 @@ typedef struct SacnSourceConfig
 
   /* Optional configuration data */
   uint8_t priority;
-  const SacnMcastNetintId* netints;
+  const EtcPalMcastNetintId* netints;
   size_t num_netints;
   bool preview;
   char name[SACN_SOURCE_NAME_MAX_LEN];

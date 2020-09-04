@@ -145,7 +145,7 @@ typedef struct SacnMergeReceiverConfig
   size_t source_count_max;
   /*! (optional) array of network interfaces on which to listen to the specified universe. If NULL,
    *  all available network interfaces will be used. */
-  const SacnMcastNetintId* netints;
+  const EtcPalMcastNetintId* netints;
   /*! Number of elements in the netints array. */
   size_t num_netints;
 } SacnMergeReceiverConfig;
@@ -162,7 +162,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle);
 etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id);
-etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
+etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, const EtcPalMcastNetintId* netints,
                                                     size_t num_netints);
 sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid);
 etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, sacn_source_id_t source_id,

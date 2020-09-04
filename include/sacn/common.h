@@ -80,11 +80,11 @@ typedef struct SacnHeaderData
  * protocol used.
  */
 //TODO CHRISTIAN : This is identical to the RdmnetMcastNetintId.  They need to be merged into ETCPal as EtcPalMcastNetintId.
-typedef struct SacnMcastNetintId
+typedef struct EtcPalMcastNetintId
 {
   etcpal_iptype_t ip_type; /*!< The IP protocol used on the network interface. */
   unsigned int index;      /*!< The OS index of the network interface. */
-} SacnMcastNetintId;
+} EtcPalMcastNetintId;
 
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params);
 void sacn_deinit(void);

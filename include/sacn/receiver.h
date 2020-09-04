@@ -272,7 +272,7 @@ typedef struct SacnReceiverConfig
   unsigned int flags;
   /*! (optional) array of network interfaces on which to listen to the specified universe. If NULL,
    *  all available network interfaces will be used. */
-  const SacnMcastNetintId* netints;
+  const EtcPalMcastNetintId* netints;
   /*! Number of elements in the netints array. */
   size_t num_netints;
 } SacnReceiverConfig;
@@ -289,7 +289,7 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
 etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle);
 etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id);
-etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, const SacnMcastNetintId* netints,
+etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, const EtcPalMcastNetintId* netints,
                                               size_t num_netints);
 
 void sacn_receiver_set_standard_version(sacn_standard_version_t version);

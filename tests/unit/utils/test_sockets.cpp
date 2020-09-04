@@ -94,7 +94,7 @@ protected:
 
 TEST_F(TestSockets, GoodNetintConfigValidated)
 {
-  std::vector<SacnMcastNetintId> netints;
+  std::vector<EtcPalMcastNetintId> netints;
   netints.push_back({kEtcPalIpTypeV4, 1});
   netints.push_back({kEtcPalIpTypeV6, 30});
   netints.push_back({kEtcPalIpTypeV4, 1000});

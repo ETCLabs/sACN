@@ -174,9 +174,9 @@ struct SacnReceiver
   /* (optional) array of network interfaces on which to listen to the specified universe. If num_netints = 0,
    * all available network interfaces will be used. */
 #if SACN_DYNAMIC_MEM
-  SacnMcastNetintId* netints;
+  EtcPalMcastNetintId* netints;
 #else
-  SacnMcastNetintId netints[SACN_MAX_NETINTS];
+  EtcPalMcastNetintId netints[SACN_MAX_NETINTS];
 #endif
   /* Number of elements in the netints array. */
   size_t num_netints;

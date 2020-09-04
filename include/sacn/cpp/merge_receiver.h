@@ -119,7 +119,7 @@ public:
     /// The maximum number of sources this universe will listen to when using dynamic memory.
     size_t source_count_max{SACN_RECEIVER_INFINITE_SOURCES};
     /// If non-empty, the list of network interfaces to listen on.  Otherwise all available interfaces are used.
-    std::vector<SacnMcastNetintId> netints; 
+    std::vector<EtcPalMcastNetintId> netints; 
 
     /// Create an empty, invalid data structure by default.
     Settings() = default;
@@ -138,7 +138,7 @@ public:
   void Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
-  etcpal::Error ResetNetworking(const std::vector<SacnMcastNetintId>& netints);
+  etcpal::Error ResetNetworking(const std::vector<EtcPalMcastNetintId>& netints);
 
   etcpal::Expected<sacn_source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
   etcpal::Expected<etcpal::Uuid> GetSourceCid(sacn_source_id_t source) const;
@@ -291,7 +291,7 @@ inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error MergeReceiver::ResetNetworking(const std::vector<SacnMcastNetintId>& netints)
+inline etcpal::Error MergeReceiver::ResetNetworking(const std::vector<EtcPalMcastNetintId>& netints)
 {
   if (netints.empty())
     return sacn_merge_receiver_reset_networking(handle_, nullptr, 0);
