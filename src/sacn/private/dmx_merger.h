@@ -57,7 +57,10 @@ typedef struct MergerState
   EtcPalRbTree source_state_lookup;
   EtcPalRbTree source_handle_lookup;
 
-  const SacnDmxMergerConfig* config;
+  size_t source_count_max;
+  uint8_t* slots;
+  sacn_source_id_t* slot_owners;
+
   uint8_t winning_priorities[DMX_ADDRESS_COUNT];
 } MergerState;
 

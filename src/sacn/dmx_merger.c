@@ -174,13 +174,15 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
                      dmx_merger_rb_node_alloc_func, dmx_merger_rb_node_dealloc_func);
   etcpal_rbtree_init(&merger_state->source_handle_lookup, source_handle_lookup_compare_func,
                      dmx_merger_rb_node_alloc_func, dmx_merger_rb_node_dealloc_func);
-  merger_state->config = config;
+  merger_state->source_count_max = config->source_count_max;
+  merger_state->slots = config->slots;
+  merger_state->slot_owners = config->slot_owners;
   memset(merger_state->winning_priorities, 0, DMX_ADDRESS_COUNT);
-  memset(merger_state->config->slots, 0, DMX_ADDRESS_COUNT);
+  memset(merger_state->slots, 0, DMX_ADDRESS_COUNT);
 
   for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
   {
-    merger_state->config->slot_owners[i] = SACN_DMX_MERGER_SOURCE_INVALID;
+    merger_state->slot_owners[i] = SACN_DMX_MERGER_SOURCE_INVALID;
   }
 
   // Add to the merger tree and verify success.
@@ -308,7 +310,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
 
   // Check if the maximum number of sources has been reached yet.
 #if SACN_DYNAMIC_MEM
-  size_t source_count_max = merger_state->config->source_count_max;
+  size_t source_count_max = merger_state->source_count_max;
 #else
   size_t source_count_max = SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER;
 #endif
@@ -944,8 +946,8 @@ void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
                                                                   : source->source.universe_priority;
   bool source_stopped_sourcing = SOURCE_STOPPED_SOURCING(source, slot_index);
 
-  sacn_source_id_t winning_source = merger->config->slot_owners[slot_index];
-  uint8_t winning_level = merger->config->slots[slot_index];
+  sacn_source_id_t winning_source = merger->slot_owners[slot_index];
+  uint8_t winning_level = merger->slots[slot_index];
   uint8_t winning_priority = merger->winning_priorities[slot_index];
 
   // If this source beats the currently winning source:
@@ -954,8 +956,8 @@ void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
        ((source_priority == winning_priority) && (source_level > winning_level))))
   {
     // Replace with this source's data.
-    merger->config->slot_owners[slot_index] = source->handle;
-    merger->config->slots[slot_index] = source_level;
+    merger->slot_owners[slot_index] = source->handle;
+    merger->slots[slot_index] = source_level;
     merger->winning_priorities[slot_index] = source_priority;
   }
   // Otherwise, if this is the winning source, and it may have lost precedence:
@@ -1001,14 +1003,14 @@ void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
     if (winner_stopped_sourcing)
     {
       // Indicate that there is no source:
-      merger->config->slot_owners[slot_index] = SACN_DMX_MERGER_SOURCE_INVALID;
-      merger->config->slots[slot_index] = 0;
+      merger->slot_owners[slot_index] = SACN_DMX_MERGER_SOURCE_INVALID;
+      merger->slots[slot_index] = 0;
       merger->winning_priorities[slot_index] = 0;
     }
     else  // Otherwise, save the final winning values.
     {
-      merger->config->slot_owners[slot_index] = winning_source;
-      merger->config->slots[slot_index] = winning_level;
+      merger->slot_owners[slot_index] = winning_source;
+      merger->slots[slot_index] = winning_level;
       merger->winning_priorities[slot_index] = winning_priority;
     }
   }

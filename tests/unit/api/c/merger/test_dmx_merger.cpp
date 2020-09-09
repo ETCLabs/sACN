@@ -245,6 +245,36 @@ protected:
               (address_priorities_2 == nullptr) ? 0 : DMX_ADDRESS_COUNT, merge_type);
   }
 
+  void TestAddSourceMemLimit(bool infinite)
+  {
+    // Initialize a merger.
+    merger_config_.source_count_max =
+        infinite ? SACN_RECEIVER_INFINITE_SOURCES : SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER;
+    EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+
+    // Add up to the maximum number of sources.
+    EtcPalUuid source_cid;
+    sacn_source_id_t source_handle;
+
+    for (int i = 0; i < SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER; ++i)
+    {
+      GenV5(i, &source_cid);
+      EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrOk);
+    }
+
+    // Now add one more source.
+    GenV5(SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER, &source_cid);
+
+#if SACN_DYNAMIC_MEM
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle),
+              infinite ? kEtcPalErrOk : kEtcPalErrNoMem);
+#else
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrNoMem);
+#endif
+
+    EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
+  }
+
   SacnHeaderData header_default_;
   uint8_t pdata_default_[DMX_ADDRESS_COUNT];
 
@@ -310,7 +340,9 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
   ASSERT_NE(merger_state, nullptr);
 
   EXPECT_EQ(merger_state->handle, merger_handle_);
-  EXPECT_EQ(merger_state->config, &merger_config_);
+  EXPECT_EQ(merger_state->source_count_max, merger_config_.source_count_max);
+  EXPECT_EQ(merger_state->slots, merger_config_.slots);
+  EXPECT_EQ(merger_state->slot_owners, merger_config_.slot_owners);
   EXPECT_EQ(memcmp(merger_state->winning_priorities, expected_slots_priorities, DMX_ADDRESS_COUNT), 0);
   EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 0u);
   EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 0u);
@@ -489,32 +521,8 @@ TEST_F(TestDmxMerger, AddSourceErrNotInitWorks)
 
 TEST_F(TestDmxMerger, AddSourceErrNoMemWorks)
 {
-  // Initialize a merger.
-  merger_config_.source_count_max = SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER;
-  EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
-
-  // Add up to the maximum number of sources.
-  EtcPalUuid source_cid;
-  sacn_source_id_t source_handle;
-
-  for (int i = 0; i < SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER; ++i)
-  {
-    GenV5(i, &source_cid);
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrOk);
-  }
-
-  // Now add one more source and make sure it fails.
-  GenV5(SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER, &source_cid);
-  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrNoMem);
-
-  // Set source_count_max to infinite, which should allow it to work, but only with dynamic memory.
-  merger_config_.source_count_max = SACN_RECEIVER_INFINITE_SOURCES;
-
-#if SACN_DYNAMIC_MEM
-  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrOk);
-#else
-  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrNoMem);
-#endif
+  TestAddSourceMemLimit(false);
+  TestAddSourceMemLimit(true);
 }
 
 TEST_F(TestDmxMerger, AddSourceErrExistsWorks)
@@ -1077,7 +1085,7 @@ TEST_F(TestDmxMerger, StopSourcePapErrNotInitWorks)
 TEST_F(TestDmxMerger, SourceIsValidWorks)
 {
   sacn_source_id_t slot_owners_array[DMX_ADDRESS_COUNT];
-  memset(slot_owners_array, 1u, DMX_ADDRESS_COUNT);  // Fill with non-zero values.
+  memset(slot_owners_array, 1u, DMX_ADDRESS_COUNT);       // Fill with non-zero values.
   slot_owners_array[1] = SACN_DMX_MERGER_SOURCE_INVALID;  // Set one of them to invalid.
 
   EXPECT_EQ(SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, 0), true);
