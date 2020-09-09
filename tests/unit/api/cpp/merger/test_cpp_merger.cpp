@@ -46,9 +46,7 @@ protected:
 
     sacn_dmx_merger_create_fake.custom_fake = [](const SacnDmxMergerConfig* /*config*/, sacn_dmx_merger_t* handle) {
       if (handle)
-      {
         *handle = kTestMergerHandle;
-      }
 
       return kEtcPalErrOk;
     };
@@ -134,9 +132,7 @@ TEST_F(TestMerger, StartupWorks)
     }
 
     if (handle)
-    {
       *handle = kTestMergerHandle;
-    }
 
     return test_return_value_;
   };
@@ -176,14 +172,10 @@ TEST_F(TestMerger, AddSourceWorks)
     EXPECT_EQ(merger, kTestMergerHandle);
 
     if (source_cid)
-    {
       EXPECT_EQ(memcmp(source_cid->data, test_source_cid_.data(), ETCPAL_UUID_BYTES), 0);
-    }
 
     if (source_id)
-    {
       *source_id = test_source_handle_;
-    }
 
     return test_return_value_;
   };
@@ -232,9 +224,7 @@ TEST_F(TestMerger, GetSourceIdWorks)
     EXPECT_EQ(merger, kTestMergerHandle);
 
     if (source_cid)
-    {
       EXPECT_EQ(memcmp(source_cid->data, test_source_cid_.data(), ETCPAL_UUID_BYTES), 0);
-    }
 
     return test_source_handle_;
   };

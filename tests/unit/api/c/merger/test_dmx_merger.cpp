@@ -225,9 +225,7 @@ protected:
       EXPECT_EQ(merger_config_.slot_owners[i], expected_winning_sources[i]) << "Test failed on iteration " << i << ".";
 
       if (expected_winning_sources[i] != SACN_DMX_MERGER_SOURCE_INVALID)
-      {
         EXPECT_EQ(merger_config_.slots[i], expected_winning_values[i]) << "Test failed on iteration " << i << ".";
-      }
     }
 
     // Deinitialize the sources and merger.
@@ -239,10 +237,9 @@ protected:
   void TestMerge(uint8_t priority_1, const uint8_t* values_1, const uint8_t* address_priorities_1, uint8_t priority_2,
                  const uint8_t* values_2, const uint8_t* address_priorities_2, MergeTestType merge_type)
   {
-    TestMerge(priority_1, values_1, (values_1 == nullptr) ? 0 : DMX_ADDRESS_COUNT, address_priorities_1,
-              (address_priorities_1 == nullptr) ? 0 : DMX_ADDRESS_COUNT, priority_2, values_2,
-              (values_2 == nullptr) ? 0 : DMX_ADDRESS_COUNT, address_priorities_2,
-              (address_priorities_2 == nullptr) ? 0 : DMX_ADDRESS_COUNT, merge_type);
+    TestMerge(priority_1, values_1, values_1 ? DMX_ADDRESS_COUNT : 0, address_priorities_1,
+              address_priorities_1 ? DMX_ADDRESS_COUNT : 0, priority_2, values_2, values_2 ? DMX_ADDRESS_COUNT : 0,
+              address_priorities_2, address_priorities_2 ? DMX_ADDRESS_COUNT : 0, merge_type);
   }
 
   void TestAddSourceMemLimit(bool infinite)
@@ -293,9 +290,7 @@ TEST_F(TestDmxMerger, DeinitClearsMergers)
 {
   // Add up to the maximum number of mergers.
   for (int i = 0; i < SACN_DMX_MERGER_MAX_MERGERS; ++i)
-  {
     EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
-  }
 
   EXPECT_EQ(etcpal_rbtree_size(&mergers), static_cast<size_t>(SACN_DMX_MERGER_MAX_MERGERS));
 
@@ -387,9 +382,7 @@ TEST_F(TestDmxMerger, MergerCreateErrNoMemWorks)
 {
   // Add up to the maximum number of mergers.
   for (int i = 0; i < SACN_DMX_MERGER_MAX_MERGERS; ++i)
-  {
     EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
-  }
 
   // Add one more merger, which should only fail with static memory.
   etcpal_error_t past_max_result = sacn_dmx_merger_create(&merger_config_, &merger_handle_);
@@ -634,9 +627,7 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
 
   // The output should indicate that no slots are being sourced.
   for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
-  {
     EXPECT_EQ(merger_config_.slot_owners[i], SACN_DMX_MERGER_SOURCE_INVALID);
-  }
 }
 
 TEST_F(TestDmxMerger, RemoveSourceUpdatesInternalState)
