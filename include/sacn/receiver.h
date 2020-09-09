@@ -112,7 +112,7 @@ typedef struct SacnFoundSource
   bool preview;
   /*! The per-address priority (startcode 0xdd) data, if the source is sending it. The library owns this data, and the
    * memory is only guaranteed to be valid for the length of the SacnSourcesFound callback.  */
-  const uint8_t* per_addres;
+  const uint8_t* per_address;
   /*! The count of valid priorities. */
   size_t per_address_len;
 } SacnFoundSource;
