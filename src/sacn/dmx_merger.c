@@ -611,30 +611,30 @@ int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value
 {
   ETCPAL_UNUSED_ARG(self);
 
-  const sacn_dmx_merger_t* a = (const sacn_dmx_merger_t*)value_a;
-  const sacn_dmx_merger_t* b = (const sacn_dmx_merger_t*)value_b;
+  const MergerState* a = (const MergerState*)value_a;
+  const MergerState* b = (const MergerState*)value_b;
 
-  return (*a > *b) - (*a < *b);  // Just compare the handles.
+  return (a->handle > b->handle) - (a->handle < b->handle);  // Just compare the handles.
 }
 
 int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
 {
   ETCPAL_UNUSED_ARG(self);
 
-  const sacn_source_id_t* a = (const sacn_source_id_t*)value_a;
-  const sacn_source_id_t* b = (const sacn_source_id_t*)value_b;
+  const SourceState* a = (const SourceState*)value_a;
+  const SourceState* b = (const SourceState*)value_b;
 
-  return (*a > *b) - (*a < *b);  // Just compare the handles.
+  return (a->handle > b->handle) - (a->handle < b->handle);  // Just compare the handles.
 }
 
 int source_handle_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
 {
   ETCPAL_UNUSED_ARG(self);
 
-  const EtcPalUuid* a = (const EtcPalUuid*)value_a;
-  const EtcPalUuid* b = (const EtcPalUuid*)value_b;
+  const CidHandleMapping* a = (const CidHandleMapping*)value_a;
+  const CidHandleMapping* b = (const CidHandleMapping*)value_b;
 
-  return memcmp(a->data, b->data, ETCPAL_UUID_BYTES);
+  return memcmp(a->cid.data, b->cid.data, ETCPAL_UUID_BYTES);
 }
 
 EtcPalRbNode* dmx_merger_rb_node_alloc_func(void)

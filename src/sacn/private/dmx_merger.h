@@ -38,19 +38,19 @@ extern "C" {
 
 typedef struct SourceState
 {
-  sacn_source_id_t handle;
+  sacn_source_id_t handle;  // This must be the first struct member.
   SacnDmxMergerSource source;
 } SourceState;
 
 typedef struct CidHandleMapping
 {
-  EtcPalUuid cid;
+  EtcPalUuid cid;  // This must be the first struct member.
   sacn_source_id_t handle;
 } CidHandleMapping;
 
 typedef struct MergerState
 {
-  sacn_dmx_merger_t handle;
+  sacn_dmx_merger_t handle;  // This must be the first struct member.
 
   IntHandleManager source_handle_mgr;
 
