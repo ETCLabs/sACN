@@ -42,7 +42,7 @@ namespace sacn
 /// While this class is used to easily merge the outputs from the sACN Receiver API, it can also be used
 /// to merge your own DMX sources together, even in combination with the sources received via sACN.
 /// 
-/// When asked to calculate the merge, the merger shall evaluate the current source
+/// When asked to calculate the merge, the merger will evaluate the current source
 /// buffers and update two result buffers:
 ///  - 512 bytes for the merged data values (i.e. "winning level").  These are calculated by using
 ///     a Highest-Level-Takes-Precedence(HTP) algorithm for all sources that share the highest
@@ -70,10 +70,8 @@ namespace sacn
 /// merger.Startup(settings);
 /// 
 /// // Make sure to check/handle error cases (this is omitted in this example).
-/// auto add_source_result = merger.AddSource(source_1_cid);
-/// source_1_handle = add_source_result.value();
-/// add_source_result = merger.AddSource(source_2_cid);
-/// source_2_handle = add_source_result.value();
+/// source_1_handle = merger.AddSource(source_1_cid).value();
+/// source_2_handle = merger.AddSource(source_2_cid).value();
 /// 
 /// // Input data for merging:
 /// uint8_t levels[DMX_ADDRESS_COUNT];
@@ -82,8 +80,8 @@ namespace sacn
 /// // Initialize levels, paps, and universe_priority here...
 /// 
 /// // Levels and PAPs can be merged separately:
-/// merger.UpdateSourceData(source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT, NULL, 0);
-/// merger.UpdateSourceData(source_1_handle, universe_priority, NULL, 0, paps, DMX_ADDRESS_COUNT);
+/// merger.UpdateSourceData(source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT);
+/// merger.UpdateSourceData(source_1_handle, universe_priority, nullptr, 0, paps, DMX_ADDRESS_COUNT);
 /// 
 /// // Or together in one call:
 /// merger.UpdateSourceData(source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT, paps, DMX_ADDRESS_COUNT);
@@ -99,8 +97,8 @@ namespace sacn
 /// merger.StopSourcePerAddressPriority(source_1_handle);
 /// 
 /// // The read-only state of each source can be obtained as well.
-/// const SacnDmxMergerSource* source_1_state =  merger.GetSourceInfo(source_1_handle);
-/// const SacnDmxMergerSource* source_2_state =  merger.GetSourceInfo(source_2_handle);
+/// const SacnDmxMergerSource* source_1_state = merger.GetSourceInfo(source_1_handle);
+/// const SacnDmxMergerSource* source_2_state = merger.GetSourceInfo(source_2_handle);
 /// 
 /// // Do something with the merge results (slots and slot_owners)...
 /// 
@@ -304,14 +302,13 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_source_id_t sour
  *
  * \param[in] source The id of the source to modify.
  * \param[in] priority The universe-level priority of the source.
- * \param[in] new_values The new DMX values to be copied in. This must be nullptr if the source is only updating the
- * priority or address_priorities.
- * \param[in] new_values_count The length of new_values. May be 0 if the source is only updating the priority or
- * address_priorities.
+ * \param[in] new_values The new DMX values to be copied in. This must be nullptr if the source is not updating DMX
+ * data.
+ * \param[in] new_values_count The length of new_values. Must be 0 if the source is not updating DMX data.
  * \param[in] address_priorities The per-address priority values to be copied in.  This must be nullptr if the source is
- * not sending per-address priorities, or is only updating other parameters.
- * \param[in] address_priorities_count The length of address_priorities.  May be 0 if the source is not sending these
- * priorities, or is only updating other parameters.
+ * not updating per-address priority data.
+ * \param[in] address_priorities_count The length of address_priorities.  Must be 0 if the source is not updating
+ * per-address priority data.
  * \return #kEtcPalErrOk: Source updated and merge completed.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.

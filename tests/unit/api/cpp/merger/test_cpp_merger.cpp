@@ -42,13 +42,14 @@ protected:
   void SetUp() override
   {
     etcpal_reset_all_fakes();
-    sacn_reset_all_fakes();
+    sacn_common_reset_all_fakes();
+    sacn_data_loss_reset_all_fakes();
+    sacn_sockets_reset_all_fakes();
+    sacn_dmx_merger_reset_all_fakes();
 
     sacn_dmx_merger_create_fake.custom_fake = [](const SacnDmxMergerConfig* /*config*/, sacn_dmx_merger_t* handle) {
       if (handle)
-      {
         *handle = kTestMergerHandle;
-      }
 
       return kEtcPalErrOk;
     };
@@ -67,13 +68,14 @@ protected:
     sacn_mem_deinit();
   }
 
-  static const sacn::DmxMerger::Handle kTestMergerHandle = 123;
+  static constexpr sacn::DmxMerger::Handle kTestMergerHandle = 123;
+  static constexpr uint8_t kTestPriority = 123;
+  static constexpr size_t kTestNewValuesCount = 123;
+  static constexpr size_t kTestAddressPrioritiesCount = 456;
+
   static const SacnDmxMergerSource kTestSource;
-  static const uint8_t kTestPriority = 123;
   static const uint8_t kTestNewValues[DMX_ADDRESS_COUNT];
   static const uint8_t kTestAddressPriorities[DMX_ADDRESS_COUNT];
-  static const size_t kTestNewValuesCount = 123;
-  static const size_t kTestAddressPrioritiesCount = 456;
   static const SacnHeaderData kTestHeader;
   static const uint8_t kTestPdata[DMX_ADDRESS_COUNT];
 
@@ -134,9 +136,7 @@ TEST_F(TestMerger, StartupWorks)
     }
 
     if (handle)
-    {
       *handle = kTestMergerHandle;
-    }
 
     return test_return_value_;
   };
@@ -176,14 +176,10 @@ TEST_F(TestMerger, AddSourceWorks)
     EXPECT_EQ(merger, kTestMergerHandle);
 
     if (source_cid)
-    {
       EXPECT_EQ(memcmp(source_cid->data, test_source_cid_.data(), ETCPAL_UUID_BYTES), 0);
-    }
 
     if (source_id)
-    {
       *source_id = test_source_handle_;
-    }
 
     return test_return_value_;
   };
@@ -232,9 +228,7 @@ TEST_F(TestMerger, GetSourceIdWorks)
     EXPECT_EQ(merger, kTestMergerHandle);
 
     if (source_cid)
-    {
       EXPECT_EQ(memcmp(source_cid->data, test_source_cid_.data(), ETCPAL_UUID_BYTES), 0);
-    }
 
     return test_source_handle_;
   };

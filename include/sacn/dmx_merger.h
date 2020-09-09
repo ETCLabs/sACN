@@ -46,7 +46,7 @@
  * While this API is used to easily merge the outputs from the sACN Receiver API, it can also be used
  * to merge your own DMX sources together, even in combination with the sources received via sACN.
  *
- * When asked to calculate the merge, the merger shall evaluate the current source
+ * When asked to calculate the merge, the merger will evaluate the current source
  * buffers and update two result buffers:
  *  - 512 bytes for the merged data values (i.e. "winning level").  These are calculated by using
  *     a Highest-Level-Takes-Precedence(HTP) algorithm for all sources that share the highest
@@ -214,7 +214,7 @@ typedef struct SacnDmxMergerSource
   bool address_priority_valid;
 
   /*! The sACN per-address (startcode 0xdd) priority (1-255, 0 means not sourced).
-      If the source does not have per-addres priority, then address_priority_valid will be false, and this array should
+      If the source does not have per-address priority, then address_priority_valid will be false, and this array should
       be ignored. */
   uint8_t address_priority[DMX_ADDRESS_COUNT];
 

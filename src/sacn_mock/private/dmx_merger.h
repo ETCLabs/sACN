@@ -22,8 +22,6 @@
 
 #include "sacn/private/dmx_merger.h"
 
-#ifdef TESTING_CPP_MERGER
-
 #include "fff.h"
 
 #ifdef __cplusplus
@@ -51,7 +49,5 @@ void sacn_dmx_merger_reset_all_fakes(void);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* TESTING_CPP_MERGER */
 
 #endif /* SACN_MOCK_PRIVATE_DMX_MERGER_H_ */
