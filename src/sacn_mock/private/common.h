@@ -32,7 +32,6 @@ DECLARE_FAKE_VALUE_FUNC(bool, sacn_lock);
 DECLARE_FAKE_VOID_FUNC(sacn_unlock);
 
 void sacn_common_reset_all_fakes(void);
-void sacn_reset_all_fakes(void);
 
 #ifdef __cplusplus
 }

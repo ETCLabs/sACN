@@ -42,7 +42,10 @@ protected:
   void SetUp() override
   {
     etcpal_reset_all_fakes();
-    sacn_reset_all_fakes();
+    sacn_common_reset_all_fakes();
+    sacn_data_loss_reset_all_fakes();
+    sacn_sockets_reset_all_fakes();
+    sacn_dmx_merger_reset_all_fakes();
 
     sacn_dmx_merger_create_fake.custom_fake = [](const SacnDmxMergerConfig* /*config*/, sacn_dmx_merger_t* handle) {
       if (handle)
