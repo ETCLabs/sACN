@@ -563,14 +563,12 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
  * \param[in] merger The handle to the merger.
  * \param[in] source The id of the source to modify.
  * \param[in] priority The universe-level priority of the source.
- * \param[in] new_values The new DMX values to be copied in. This must be NULL if the source is only updating the
- * priority or address_priorities.
- * \param[in] new_values_count The length of new_values. Must be 0 if the source is only updating the priority or
- * address_priorities.
+ * \param[in] new_values The new DMX values to be copied in. this must be NULL if the source is not updating DMX data.
+ * \param[in] new_values_count The length of new_values. Must be 0 if the source is not updating DMX data.
  * \param[in] address_priorities The per-address priority values to be copied in.  This must be NULL if the source is
- * not sending per-address priorities, or is only updating other parameters.
- * \param[in] address_priorities_count The length of address_priorities.  Must be 0 if the source is not sending these
- * priorities, or is only updating other parameters.
+ * not updating per-address priority data.
+ * \param[in] address_priorities_count The length of address_priorities.  Must be 0 if the source is not updating
+ * per-address priority data.
  * \return #kEtcPalErrOk: Source updated and merge completed.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
