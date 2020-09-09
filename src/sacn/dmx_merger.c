@@ -136,27 +136,11 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
     return kEtcPalErrInvalid;
 
   // Allocate merger state.
-  MergerState* merger_state = ALLOC_MERGER_STATE();
+  MergerState* merger_state = construct_merger_state(get_next_int_handle(&merger_handle_mgr, -1), config);
 
   // Verify there was enough memory.
   if (!merger_state)
     return kEtcPalErrNoMem;
-
-  // Initialize merger state.
-  merger_state->handle = get_next_int_handle(&merger_handle_mgr, -1);
-  init_int_handle_manager(&merger_state->source_handle_mgr, source_handle_in_use, merger_state);
-  etcpal_rbtree_init(&merger_state->source_state_lookup, source_state_lookup_compare_func,
-                     dmx_merger_rb_node_alloc_func, dmx_merger_rb_node_dealloc_func);
-  etcpal_rbtree_init(&merger_state->source_handle_lookup, source_handle_lookup_compare_func,
-                     dmx_merger_rb_node_alloc_func, dmx_merger_rb_node_dealloc_func);
-  merger_state->source_count_max = config->source_count_max;
-  merger_state->slots = config->slots;
-  merger_state->slot_owners = config->slot_owners;
-  memset(merger_state->winning_priorities, 0, DMX_ADDRESS_COUNT);
-  memset(merger_state->slots, 0, DMX_ADDRESS_COUNT);
-
-  for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
-    merger_state->slot_owners[i] = SACN_DMX_MERGER_SOURCE_INVALID;
 
   // Add to the merger tree and verify success.
   etcpal_error_t insert_result = etcpal_rbtree_insert(&mergers, merger_state);
@@ -255,7 +239,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   if (!merger_state)
     return kEtcPalErrInvalid;
 
-  // Check if the maximum number of sources has been reached yet.
+    // Check if the maximum number of sources has been reached yet.
 #if SACN_DYNAMIC_MEM
   size_t source_count_max = merger_state->source_count_max;
 #else
@@ -272,13 +256,10 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   sacn_source_id_t handle = (sacn_source_id_t)get_next_int_handle(&merger_state->source_handle_mgr, 0xffff);
 
   // Initialize CID to source handle mapping.
-  CidToSourceHandle* cid_to_handle = ALLOC_CID_TO_SOURCE_HANDLE();
+  CidToSourceHandle* cid_to_handle = construct_cid_handle_mapping(handle, source_cid);
 
   if (!cid_to_handle)
     return kEtcPalErrNoMem;
-
-  memcpy(cid_to_handle->cid.data, source_cid->data, ETCPAL_UUID_BYTES);
-  cid_to_handle->handle = handle;
 
   etcpal_error_t handle_lookup_insert_result = etcpal_rbtree_insert(&merger_state->source_handle_lookup, cid_to_handle);
 
@@ -294,7 +275,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   }
 
   // Initialize source state.
-  SourceState* source_state = ALLOC_SOURCE_STATE();
+  SourceState* source_state = construct_source_state(handle, source_cid);
 
   if (!source_state)
   {
@@ -304,14 +285,6 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
 
     return kEtcPalErrNoMem;
   }
-
-  source_state->handle = handle;
-  memcpy(source_state->source.cid.data, source_cid->data, ETCPAL_UUID_BYTES);
-  memset(source_state->source.values, 0, DMX_ADDRESS_COUNT);
-  source_state->source.valid_value_count = 0;
-  source_state->source.universe_priority = 0;
-  source_state->source.address_priority_valid = false;
-  memset(source_state->source.address_priority, 0, DMX_ADDRESS_COUNT);
 
   etcpal_error_t state_lookup_insert_result = etcpal_rbtree_insert(&merger_state->source_state_lookup, source_state);
 
@@ -848,4 +821,61 @@ void free_mergers_node(const EtcPalRbTree* self, EtcPalRbNode* node)
   // Now free the memory for the merger state and node.
   FREE_MERGER_STATE(merger_state);
   FREE_DMX_MERGER_RB_NODE(node);
+}
+
+SourceState* construct_source_state(sacn_source_id_t handle, const EtcPalUuid* cid)
+{
+  SourceState* source_state = ALLOC_SOURCE_STATE();
+
+  if (source_state)
+  {
+    source_state->handle = handle;
+    memcpy(source_state->source.cid.data, cid->data, ETCPAL_UUID_BYTES);
+    memset(source_state->source.values, 0, DMX_ADDRESS_COUNT);
+    source_state->source.valid_value_count = 0;
+    source_state->source.universe_priority = 0;
+    source_state->source.address_priority_valid = false;
+    memset(source_state->source.address_priority, 0, DMX_ADDRESS_COUNT);
+  }
+
+  return source_state;
+}
+
+MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMergerConfig* config)
+{
+  MergerState* merger_state = ALLOC_MERGER_STATE();
+
+  if (merger_state)
+  {
+    // Initialize merger state.
+    merger_state->handle = handle;
+    init_int_handle_manager(&merger_state->source_handle_mgr, source_handle_in_use, merger_state);
+    etcpal_rbtree_init(&merger_state->source_state_lookup, source_state_lookup_compare_func,
+                       dmx_merger_rb_node_alloc_func, dmx_merger_rb_node_dealloc_func);
+    etcpal_rbtree_init(&merger_state->source_handle_lookup, source_handle_lookup_compare_func,
+                       dmx_merger_rb_node_alloc_func, dmx_merger_rb_node_dealloc_func);
+    merger_state->source_count_max = config->source_count_max;
+    merger_state->slots = config->slots;
+    merger_state->slot_owners = config->slot_owners;
+    memset(merger_state->winning_priorities, 0, DMX_ADDRESS_COUNT);
+    memset(merger_state->slots, 0, DMX_ADDRESS_COUNT);
+
+    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+      merger_state->slot_owners[i] = SACN_DMX_MERGER_SOURCE_INVALID;
+  }
+
+  return merger_state;
+}
+
+CidToSourceHandle* construct_cid_handle_mapping(sacn_source_id_t handle, const EtcPalUuid* cid)
+{
+  CidToSourceHandle* mapping = ALLOC_CID_TO_SOURCE_HANDLE();
+
+  if (mapping)
+  {
+    memcpy(mapping->cid.data, cid->data, ETCPAL_UUID_BYTES);
+    mapping->handle = handle;
+  }
+
+  return mapping;
 }
