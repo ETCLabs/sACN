@@ -68,13 +68,14 @@ protected:
     sacn_mem_deinit();
   }
 
-  static const sacn::DmxMerger::Handle kTestMergerHandle = 123;
+  static constexpr sacn::DmxMerger::Handle kTestMergerHandle = 123;
+  static constexpr uint8_t kTestPriority = 123;
+  static constexpr size_t kTestNewValuesCount = 123;
+  static constexpr size_t kTestAddressPrioritiesCount = 456;
+
   static const SacnDmxMergerSource kTestSource;
-  static const uint8_t kTestPriority = 123;
   static const uint8_t kTestNewValues[DMX_ADDRESS_COUNT];
   static const uint8_t kTestAddressPriorities[DMX_ADDRESS_COUNT];
-  static const size_t kTestNewValuesCount = 123;
-  static const size_t kTestAddressPrioritiesCount = 456;
   static const SacnHeaderData kTestHeader;
   static const uint8_t kTestPdata[DMX_ADDRESS_COUNT];
 
