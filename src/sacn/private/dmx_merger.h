@@ -42,11 +42,11 @@ typedef struct SourceState
   SacnDmxMergerSource source;
 } SourceState;
 
-typedef struct CidToSourceHandle
+typedef struct CidHandleMapping
 {
   EtcPalUuid cid;
   sacn_source_id_t handle;
-} CidToSourceHandle;
+} CidHandleMapping;
 
 typedef struct MergerState
 {
@@ -92,7 +92,7 @@ void free_mergers_node(const EtcPalRbTree* self, EtcPalRbNode* node);
 
 SourceState* construct_source_state(sacn_source_id_t handle, const EtcPalUuid* cid);
 MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMergerConfig* config);
-CidToSourceHandle* construct_cid_handle_mapping(sacn_source_id_t handle, const EtcPalUuid* cid);
+CidHandleMapping* construct_cid_handle_mapping(sacn_source_id_t handle, const EtcPalUuid* cid);
 
 #ifdef __cplusplus
 }

@@ -447,12 +447,12 @@ TEST_F(TestDmxMerger, AddSourceWorks)
   // Check the CID-to-handle mapping first.
   EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 1u);
 
-  CidToSourceHandle* cid_to_handle =
-      reinterpret_cast<CidToSourceHandle*>(etcpal_rbtree_find(&merger_state->source_handle_lookup, &source_cid));
-  ASSERT_NE(cid_to_handle, nullptr);
+  CidHandleMapping* cid_handle_mapping =
+      reinterpret_cast<CidHandleMapping*>(etcpal_rbtree_find(&merger_state->source_handle_lookup, &source_cid));
+  ASSERT_NE(cid_handle_mapping, nullptr);
 
-  EXPECT_EQ(memcmp(cid_to_handle->cid.data, source_cid.data, ETCPAL_UUID_BYTES), 0);
-  EXPECT_EQ(cid_to_handle->handle, source_handle);
+  EXPECT_EQ(memcmp(cid_handle_mapping->cid.data, source_cid.data, ETCPAL_UUID_BYTES), 0);
+  EXPECT_EQ(cid_handle_mapping->handle, source_handle);
 
   // Now check the source state.
   EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 1u);

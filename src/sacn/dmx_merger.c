@@ -43,7 +43,7 @@
 #define FREE_MERGER_STATE(ptr) free(ptr)
 #define ALLOC_DMX_MERGER_RB_NODE() malloc(sizeof(EtcPalRbNode))
 #define FREE_DMX_MERGER_RB_NODE(ptr) free(ptr)
-#define ALLOC_CID_TO_SOURCE_HANDLE() malloc(sizeof(CidToSourceHandle))
+#define ALLOC_CID_TO_SOURCE_HANDLE() malloc(sizeof(CidHandleMapping))
 #define FREE_CID_TO_SOURCE_HANDLE(ptr) free(ptr)
 #else
 #define ALLOC_SOURCE_STATE() etcpal_mempool_alloc(sacnmerge_source_states)
@@ -65,7 +65,7 @@ ETCPAL_MEMPOOL_DEFINE(sacnmerge_merger_states, MergerState, SACN_DMX_MERGER_MAX_
 ETCPAL_MEMPOOL_DEFINE(sacnmerge_rb_nodes, EtcPalRbNode,
                       (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_MERGERS * 2) +
                           SACN_DMX_MERGER_MAX_MERGERS);
-ETCPAL_MEMPOOL_DEFINE(sacnmerge_cids_to_source_handles, CidToSourceHandle,
+ETCPAL_MEMPOOL_DEFINE(sacnmerge_cids_to_source_handles, CidHandleMapping,
                       (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_MERGERS));
 #endif
 
@@ -256,17 +256,17 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   sacn_source_id_t handle = (sacn_source_id_t)get_next_int_handle(&merger_state->source_handle_mgr, 0xffff);
 
   // Initialize CID to source handle mapping.
-  CidToSourceHandle* cid_to_handle = construct_cid_handle_mapping(handle, source_cid);
+  CidHandleMapping* cid_handle_mapping = construct_cid_handle_mapping(handle, source_cid);
 
-  if (!cid_to_handle)
+  if (!cid_handle_mapping)
     return kEtcPalErrNoMem;
 
-  etcpal_error_t handle_lookup_insert_result = etcpal_rbtree_insert(&merger_state->source_handle_lookup, cid_to_handle);
+  etcpal_error_t handle_lookup_insert_result = etcpal_rbtree_insert(&merger_state->source_handle_lookup, cid_handle_mapping);
 
   if (handle_lookup_insert_result != kEtcPalErrOk)
   {
     // Clean up and return the correct error.
-    FREE_CID_TO_SOURCE_HANDLE(cid_to_handle);
+    FREE_CID_TO_SOURCE_HANDLE(cid_handle_mapping);
 
     if ((handle_lookup_insert_result == kEtcPalErrExists) || (handle_lookup_insert_result == kEtcPalErrNoMem))
       return handle_lookup_insert_result;
@@ -280,8 +280,8 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   if (!source_state)
   {
     // Clean up and return the correct error.
-    etcpal_rbtree_remove(&merger_state->source_handle_lookup, cid_to_handle);
-    FREE_CID_TO_SOURCE_HANDLE(cid_to_handle);
+    etcpal_rbtree_remove(&merger_state->source_handle_lookup, cid_handle_mapping);
+    FREE_CID_TO_SOURCE_HANDLE(cid_handle_mapping);
 
     return kEtcPalErrNoMem;
   }
@@ -291,8 +291,8 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   if (state_lookup_insert_result != kEtcPalErrOk)
   {
     // Clean up and return the correct error.
-    etcpal_rbtree_remove(&merger_state->source_handle_lookup, cid_to_handle);
-    FREE_CID_TO_SOURCE_HANDLE(cid_to_handle);
+    etcpal_rbtree_remove(&merger_state->source_handle_lookup, cid_handle_mapping);
+    FREE_CID_TO_SOURCE_HANDLE(cid_handle_mapping);
     FREE_SOURCE_STATE(source_state);
 
     if (state_lookup_insert_result == kEtcPalErrNoMem)
@@ -340,9 +340,9 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_sour
   if (!source_state)
     return kEtcPalErrInvalid;
 
-  CidToSourceHandle* cid_to_handle = etcpal_rbtree_find(&merger_state->source_handle_lookup, &source_state->source.cid);
+  CidHandleMapping* cid_handle_mapping = etcpal_rbtree_find(&merger_state->source_handle_lookup, &source_state->source.cid);
 
-  if (!cid_to_handle)
+  if (!cid_handle_mapping)
     return kEtcPalErrSys;
 
   // Merge the source with valid_value_count = 0 to remove this source from the merge output.
@@ -357,10 +357,10 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_sour
 
   FREE_SOURCE_STATE(source_state);
 
-  if (etcpal_rbtree_remove(&merger_state->source_handle_lookup, cid_to_handle) != kEtcPalErrOk)
+  if (etcpal_rbtree_remove(&merger_state->source_handle_lookup, cid_handle_mapping) != kEtcPalErrOk)
     return kEtcPalErrSys;
 
-  FREE_CID_TO_SOURCE_HANDLE(cid_to_handle);
+  FREE_CID_TO_SOURCE_HANDLE(cid_handle_mapping);
 
   return kEtcPalErrOk;
 }
@@ -382,12 +382,12 @@ sacn_source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUu
   if (!merger_state)
     return SACN_DMX_MERGER_SOURCE_INVALID;
 
-  CidToSourceHandle* cid_to_handle = etcpal_rbtree_find(&merger_state->source_handle_lookup, source_cid);
+  CidHandleMapping* cid_handle_mapping = etcpal_rbtree_find(&merger_state->source_handle_lookup, source_cid);
 
-  if (!cid_to_handle)
+  if (!cid_handle_mapping)
     return SACN_DMX_MERGER_SOURCE_INVALID;
 
-  return cid_to_handle->handle;
+  return cid_handle_mapping->handle;
 }
 
 /*!
@@ -867,9 +867,9 @@ MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMerge
   return merger_state;
 }
 
-CidToSourceHandle* construct_cid_handle_mapping(sacn_source_id_t handle, const EtcPalUuid* cid)
+CidHandleMapping* construct_cid_handle_mapping(sacn_source_id_t handle, const EtcPalUuid* cid)
 {
-  CidToSourceHandle* mapping = ALLOC_CID_TO_SOURCE_HANDLE();
+  CidHandleMapping* mapping = ALLOC_CID_TO_SOURCE_HANDLE();
 
   if (mapping)
   {
