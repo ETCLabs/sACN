@@ -28,7 +28,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../../../include/sacn/dmx_merger.h"
+#include "sacn/dmx_merger.h"
 #include "sacn/private/util.h"
 #include "etcpal/rbtree.h"
 
@@ -64,35 +64,11 @@ typedef struct MergerState
   uint8_t winning_priorities[DMX_ADDRESS_COUNT];
 } MergerState;
 
-IntHandleManager merger_handle_mgr;
-EtcPalRbTree mergers;
-
 etcpal_error_t sacn_dmx_merger_init();
 void sacn_dmx_merger_deinit(void);
 
-int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
-int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
-int source_handle_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
-
-EtcPalRbNode* dmx_merger_rb_node_alloc_func(void);
-void dmx_merger_rb_node_dealloc_func(EtcPalRbNode* node);
-
-bool merger_handle_in_use(int handle_val, void* cookie);
-bool source_handle_in_use(int handle_val, void* cookie);
-
-void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values, uint16_t new_values_count);
-void update_per_address_priorities(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
-                                   uint16_t address_priorities_count);
-void update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority);
-void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index);
-
-void free_source_state_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node);
-void free_source_handle_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node);
-void free_mergers_node(const EtcPalRbTree* self, EtcPalRbNode* node);
-
-SourceState* construct_source_state(sacn_source_id_t handle, const EtcPalUuid* cid);
-MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMergerConfig* config);
-CidHandleMapping* construct_cid_handle_mapping(sacn_source_id_t handle, const EtcPalUuid* cid);
+MergerState* find_merger_state(sacn_dmx_merger_t handle);
+size_t get_number_of_mergers();
 
 #ifdef __cplusplus
 }

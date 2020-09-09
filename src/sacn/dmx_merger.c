@@ -69,6 +69,36 @@ ETCPAL_MEMPOOL_DEFINE(sacnmerge_cids_to_source_handles, CidHandleMapping,
                       (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_MERGERS));
 #endif
 
+static IntHandleManager merger_handle_mgr;
+static EtcPalRbTree mergers;
+
+/**************************** Private function declarations ******************************/
+
+static int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+static int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+static int source_handle_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+
+static EtcPalRbNode* dmx_merger_rb_node_alloc_func(void);
+static void dmx_merger_rb_node_dealloc_func(EtcPalRbNode* node);
+
+static bool merger_handle_in_use(int handle_val, void* cookie);
+static bool source_handle_in_use(int handle_val, void* cookie);
+
+static void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values,
+                          uint16_t new_values_count);
+static void update_per_address_priorities(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
+                                          uint16_t address_priorities_count);
+static void update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority);
+static void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index);
+
+static void free_source_state_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node);
+static void free_source_handle_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node);
+static void free_mergers_node(const EtcPalRbTree* self, EtcPalRbNode* node);
+
+static SourceState* construct_source_state(sacn_source_id_t handle, const EtcPalUuid* cid);
+static MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMergerConfig* config);
+static CidHandleMapping* construct_cid_handle_mapping(sacn_source_id_t handle, const EtcPalUuid* cid);
+
 /*************************** Function definitions ****************************/
 
 /**************************************************************************************************
@@ -878,4 +908,14 @@ CidHandleMapping* construct_cid_handle_mapping(sacn_source_id_t handle, const Et
   }
 
   return mapping;
+}
+
+MergerState* find_merger_state(sacn_dmx_merger_t handle)
+{
+  return (MergerState*)etcpal_rbtree_find(&mergers, &handle);
+}
+
+size_t get_number_of_mergers()
+{
+  return etcpal_rbtree_size(&mergers);
 }
