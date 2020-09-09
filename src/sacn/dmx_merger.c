@@ -135,12 +135,6 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
   if (!config || !handle || !config->slots || !config->slot_owners)
     return kEtcPalErrInvalid;
 
-#if !SACN_DYNAMIC_MEM
-  // Check if the maximum number of mergers has been reached.
-  if (etcpal_rbtree_size(&mergers) >= SACN_DMX_MERGER_MAX_MERGERS)
-    return kEtcPalErrNoMem;
-#endif
-
   // Allocate merger state.
   MergerState* merger_state = ALLOC_MERGER_STATE();
 
