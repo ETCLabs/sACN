@@ -664,7 +664,7 @@ int source_handle_lookup_compare_func(const EtcPalRbTree* self, const void* valu
   const CidHandleMapping* a = (const CidHandleMapping*)value_a;
   const CidHandleMapping* b = (const CidHandleMapping*)value_b;
 
-  return memcmp(a->cid.data, b->cid.data, ETCPAL_UUID_BYTES);
+  return ETCPAL_UUID_CMP(&a->cid, &b->cid);
 }
 
 EtcPalRbNode* dmx_merger_rb_node_alloc_func(void)
