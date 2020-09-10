@@ -589,7 +589,8 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
 {
   SACN_ASSERT(config);
 
-  if (!UNIVERSE_ID_VALID(config->universe_id) || !config->callbacks.universe_data || !config->callbacks.sources_lost)
+  if (!UNIVERSE_ID_VALID(config->universe_id) || !config->callbacks.sources_found || !config->callbacks.universe_data ||
+      !config->callbacks.sources_lost)
   {
     return kEtcPalErrInvalid;
   }
