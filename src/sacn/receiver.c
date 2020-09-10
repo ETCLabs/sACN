@@ -780,7 +780,7 @@ etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
  *
  * [in,out] receiver Receiver to remove.
  * [in] close_socket_now Whether to close the socket immediately (e.g. on full library shutdown).
- * Returns error code indicating the result of the thread start operation.
+ * Returns error code indicating the result of the removal operation.
  */
 void remove_receiver_from_thread(SacnReceiver* receiver, bool close_socket_now)
 {
@@ -1458,7 +1458,7 @@ void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_
       char cid_str[ETCPAL_UUID_BYTES];
       etcpal_uuid_to_string(&src->cid, cid_str);
       SACN_LOG_ERR(
-          "Couldn't allocate memory to add online source %s to status list. This could be a bug or resource "
+          "Couldn't allocate memory to add offline source %s to status list. This could be a bug or resource "
           "exhaustion issue.",
           cid_str);
     }
