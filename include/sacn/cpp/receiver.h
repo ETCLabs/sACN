@@ -288,7 +288,7 @@ inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
  *
  * \param[in] netints Vector of network interfaces on which to listen to the specified universe. If empty,
  *  all available network interfaces will be used.
- * \return #kEtcPalErrOk: Universe changed successfully.
+ * \return #kEtcPalErrOk: Networking reset successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.

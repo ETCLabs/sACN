@@ -472,7 +472,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  * \param[in] netints Optional array of network interfaces on which to listen to the specified universe. If NULL,
  *  all available network interfaces will be used.
  * \param[in] num_netints Number of elements in the netints array.
- * \return #kEtcPalErrOk: Universe changed successfully.
+ * \return #kEtcPalErrOk: Networking reset successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
