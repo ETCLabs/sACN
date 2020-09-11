@@ -411,6 +411,7 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
 SourcesFoundNotification* get_sources_found_buffer(sacn_thread_id_t thread_id, size_t size)
 {
   //CHRISTIAN TODO TEST THIS!
+  //CHRISTIAN TODO: Look into duplicate code here.
   if (thread_id < mem_bufs.num_threads)
   {
     SourcesFoundNotificationBuf* notifications = &mem_bufs.sources_found[thread_id];
