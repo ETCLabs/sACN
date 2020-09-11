@@ -54,6 +54,8 @@
  *  - 512 source identifiers (i.e. "winning source") to indicate which source was considered the
  *     source of the merged data value, or that no source currently owns this address.
  *
+ * This API is thread-safe.
+ *
  * Usage:
  * \code
  * // Initialize sACN.
