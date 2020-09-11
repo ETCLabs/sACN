@@ -37,6 +37,7 @@
 
 #if SACN_DYNAMIC_MEM
 
+// TODO CHRISTIAN: Find a better way to handle the failure case, instead of returning false.
 #define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static)                              \
   do                                                                                                            \
   {                                                                                                             \
