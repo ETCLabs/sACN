@@ -84,21 +84,6 @@ protected:
     sacn_mem_deinit();
   }
 
-  void GenV5(int iteration, EtcPalUuid* uuid)
-  {
-    char name[80];
-    sprintf_s(name, "%d", iteration);
-
-    etcpal_generate_v5_uuid(&namespace_uuid_, name, 80, uuid);
-  }
-
-  EtcPalUuid GenV5(int iteration)
-  {
-    EtcPalUuid result;
-    GenV5(iteration, &result);
-    return result;
-  }
-
   // This determines what kind of merge test TestMerge does.
   enum class MergeTestType
   {
@@ -116,12 +101,12 @@ protected:
     // Initialize the merger and sources.
     sacn_source_id_t source_1;
     sacn_source_id_t source_2;
-    EtcPalUuid source_1_cid = GenV5(1);
-    EtcPalUuid source_2_cid = GenV5(2);
+    etcpal::Uuid source_1_cid = etcpal::Uuid::V5(namespace_uuid_, std::to_string(1));
+    etcpal::Uuid source_2_cid = etcpal::Uuid::V5(namespace_uuid_, std::to_string(2));
 
     EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_1_cid, &source_1), kEtcPalErrOk);
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_cid, &source_2), kEtcPalErrOk);
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_1_cid.get(), &source_1), kEtcPalErrOk);
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_cid.get(), &source_2), kEtcPalErrOk);
 
     // Define the expected merge results.
     uint8_t expected_winning_values[DMX_ADDRESS_COUNT];
@@ -167,7 +152,7 @@ protected:
     if (merge_type == MergeTestType::kUpdateSourceFromSacn)
     {
       SacnHeaderData header_1 = header_default_;
-      GenV5(1, &header_1.cid);
+      header_1.cid = etcpal::Uuid::V5(namespace_uuid_, std::to_string(1)).get();
       header_1.priority = priority_1;
 
       if (values_1_count)
@@ -186,7 +171,7 @@ protected:
       }
 
       SacnHeaderData header_2 = header_default_;
-      GenV5(2, &header_2.cid);
+      header_2.cid = etcpal::Uuid::V5(namespace_uuid_, std::to_string(2)).get();
       header_2.priority = priority_2;
 
       if (values_2_count)
@@ -251,23 +236,23 @@ protected:
     EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
 
     // Add up to the maximum number of sources.
-    EtcPalUuid source_cid;
+    etcpal::Uuid source_cid;
     sacn_source_id_t source_handle;
 
     for (int i = 0; i < SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER; ++i)
     {
-      GenV5(i, &source_cid);
-      EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrOk);
+      source_cid = etcpal::Uuid::V5(namespace_uuid_, std::to_string(i));
+      EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid.get(), &source_handle), kEtcPalErrOk);
     }
 
     // Now add one more source.
-    GenV5(SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER, &source_cid);
+    source_cid = etcpal::Uuid::V5(namespace_uuid_, std::to_string(SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER));
 
 #if SACN_DYNAMIC_MEM
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle),
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid.get(), &source_handle),
               infinite ? kEtcPalErrOk : kEtcPalErrNoMem);
 #else
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrNoMem);
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid.get(), &source_handle), kEtcPalErrNoMem);
 #endif
 
     EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
@@ -431,12 +416,11 @@ TEST_F(TestDmxMerger, AddSourceWorks)
   EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
 
   // Add the source, and verify success.
-  EtcPalUuid source_cid;
-  GenV5(0, &source_cid);
+  auto source_cid = etcpal::Uuid::V5(namespace_uuid_, std::to_string(0));
 
   sacn_source_id_t source_handle = SACN_DMX_MERGER_SOURCE_INVALID;
 
-  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid, &source_handle), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_cid.get(), &source_handle), kEtcPalErrOk);
 
   // Make sure the handle was updated.
   EXPECT_NE(source_handle, SACN_DMX_MERGER_SOURCE_INVALID);
@@ -449,10 +433,10 @@ TEST_F(TestDmxMerger, AddSourceWorks)
   EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 1u);
 
   CidHandleMapping* cid_handle_mapping =
-      reinterpret_cast<CidHandleMapping*>(etcpal_rbtree_find(&merger_state->source_handle_lookup, &source_cid));
+      reinterpret_cast<CidHandleMapping*>(etcpal_rbtree_find(&merger_state->source_handle_lookup, &source_cid.get()));
   ASSERT_NE(cid_handle_mapping, nullptr);
 
-  EXPECT_EQ(memcmp(cid_handle_mapping->cid.data, source_cid.data, ETCPAL_UUID_BYTES), 0);
+  EXPECT_EQ(memcmp(cid_handle_mapping->cid.data, source_cid.data(), ETCPAL_UUID_BYTES), 0);
   EXPECT_EQ(cid_handle_mapping->handle, source_handle);
 
   // Now check the source state.
@@ -463,7 +447,7 @@ TEST_F(TestDmxMerger, AddSourceWorks)
   ASSERT_NE(source_state, nullptr);
 
   EXPECT_EQ(source_state->handle, source_handle);
-  EXPECT_EQ(memcmp(source_state->source.cid.data, source_cid.data, ETCPAL_UUID_BYTES), 0);
+  EXPECT_EQ(memcmp(source_state->source.cid.data, source_cid.data(), ETCPAL_UUID_BYTES), 0);
   EXPECT_EQ(source_state->source.valid_value_count, 0u);
   EXPECT_EQ(source_state->source.universe_priority, 0u);
   EXPECT_EQ(source_state->source.address_priority_valid, false);
@@ -563,16 +547,14 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
   ASSERT_NE(merger_state, nullptr);
 
   // Add a couple of sources.
-  EtcPalUuid source_1_cid;
-  EtcPalUuid source_2_cid;
-  GenV5(0, &source_1_cid);
-  GenV5(1, &source_2_cid);
+  etcpal::Uuid source_1_cid = etcpal::Uuid::V5(namespace_uuid_, std::to_string(0));
+  etcpal::Uuid source_2_cid = etcpal::Uuid::V5(namespace_uuid_, std::to_string(1));
 
   sacn_source_id_t source_1_handle;
   sacn_source_id_t source_2_handle;
 
-  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_1_cid, &source_1_handle), kEtcPalErrOk);
-  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_cid, &source_2_handle), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_1_cid.get(), &source_1_handle), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_cid.get(), &source_2_handle), kEtcPalErrOk);
 
   // Make constants for source data about to be fed in.
   const uint8_t source_1_value = 50;
@@ -641,16 +623,14 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesInternalState)
   ASSERT_NE(merger_state, nullptr);
 
   // Add a couple of sources.
-  EtcPalUuid source_1_cid;
-  EtcPalUuid source_2_cid;
-  GenV5(0, &source_1_cid);
-  GenV5(1, &source_2_cid);
+  etcpal::Uuid source_1_cid = etcpal::Uuid::V5(namespace_uuid_, std::to_string(0));
+  etcpal::Uuid source_2_cid = etcpal::Uuid::V5(namespace_uuid_, std::to_string(1));
 
   sacn_source_id_t source_1_handle;
   sacn_source_id_t source_2_handle;
 
-  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_1_cid, &source_1_handle), kEtcPalErrOk);
-  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_cid, &source_2_handle), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_1_cid.get(), &source_1_handle), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_cid.get(), &source_2_handle), kEtcPalErrOk);
 
   // Each tree should have a size of 2.
   EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_handle_lookup), 2u);
