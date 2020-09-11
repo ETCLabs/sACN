@@ -555,18 +555,15 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
 {
   const SacnDmxMergerSource* result = NULL;
 
-  MergerState* merger_state = NULL;
-  SourceState* source_state = NULL;
-
   if ((merger != SACN_DMX_MERGER_INVALID) && (source != SACN_DMX_MERGER_SOURCE_INVALID))
   {
     if (sacn_lock())
     {
-      merger_state = etcpal_rbtree_find(&mergers, &merger);
+      MergerState* merger_state = etcpal_rbtree_find(&mergers, &merger);
 
       if (merger_state)
       {
-        source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
+        SourceState* source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
 
         if (source_state)
           result = &source_state->source;
@@ -695,7 +692,6 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
                                                        const uint8_t* pdata)
 {
   etcpal_error_t result = kEtcPalErrOk;
-  sacn_source_id_t source = SACN_DMX_MERGER_SOURCE_INVALID;
 
   // Verify module initialized.
   if (!sacn_initialized())
@@ -719,6 +715,7 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
 
   if (sacn_lock())
   {
+    sacn_source_id_t source = SACN_DMX_MERGER_SOURCE_INVALID;
     MergerState* merger_state = NULL;
     SourceState* source_state = NULL;
 
@@ -895,6 +892,8 @@ bool source_handle_in_use(int handle_val, void* cookie)
 
 /*
  * Updates the source levels and recalculates outputs. Assumes all arguments are valid.
+ *
+ * This requires sacn_lock to be taken before calling.
  */
 void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values, uint16_t new_values_count)
 {
@@ -910,6 +909,8 @@ void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_
 
 /*
  * Updates the source per-address-priorities and recalculates outputs. Assumes all arguments are valid.
+ *
+ * This requires sacn_lock to be taken before calling.
  */
 void update_per_address_priorities(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
                                    uint16_t address_priorities_count)
@@ -930,6 +931,8 @@ void update_per_address_priorities(MergerState* merger, SourceState* source, con
 
 /*
  * Updates the source universe priority and recalculates outputs if needed. Assumes all arguments are valid.
+ *
+ * This requires sacn_lock to be taken before calling.
  */
 void update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority)
 {
@@ -943,6 +946,11 @@ void update_universe_priority(MergerState* merger, SourceState* source, uint8_t 
   }
 }
 
+/*
+ * Merge a source on a specific slot.
+ *
+ * This requires sacn_lock to be taken before calling.
+ */
 void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
 {
   uint8_t source_level = source->source.values[slot_index];
@@ -1020,6 +1028,11 @@ void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
   }
 }
 
+/*
+ * Merge a source on all slots.
+ *
+ * This requires sacn_lock to be taken before calling.
+ */
 void merge_source_on_all_slots(MergerState* merger, SourceState* source)
 {
   for (uint16_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
@@ -1114,6 +1127,11 @@ CidHandleMapping* construct_cid_handle_mapping(sacn_source_id_t handle, const Et
   return mapping;
 }
 
+/*
+ * Obtain the handle of the source with the given CID.
+ *
+ * This requires sacn_lock to be taken before calling.
+ */
 sacn_source_id_t get_source_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid)
 {
   if (!source_cid || (merger == SACN_DMX_MERGER_INVALID))
