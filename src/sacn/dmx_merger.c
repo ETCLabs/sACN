@@ -615,8 +615,6 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn
   {
     if ((merger == SACN_DMX_MERGER_INVALID) || (source == SACN_DMX_MERGER_SOURCE_INVALID))
       result = kEtcPalErrInvalid;
-    if (!UNIVERSE_PRIORITY_VALID(priority))
-      result = kEtcPalErrInvalid;
     if (new_values_count > DMX_ADDRESS_COUNT)
       result = kEtcPalErrInvalid;
     if ((new_values && (new_values_count == 0)) || (!new_values && (new_values_count != 0)))
@@ -713,7 +711,7 @@ etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger,
   if (result == kEtcPalErrOk)
   {
     if (ETCPAL_UUID_IS_NULL(&header->cid) || !UNIVERSE_ID_VALID(header->universe_id) ||
-        !UNIVERSE_PRIORITY_VALID(header->priority) || (header->slot_count > DMX_ADDRESS_COUNT))
+        (header->slot_count > DMX_ADDRESS_COUNT))
     {
       result = kEtcPalErrInvalid;
     }

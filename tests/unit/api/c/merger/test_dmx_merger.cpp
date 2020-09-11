@@ -40,7 +40,6 @@
 constexpr uint16_t VALID_UNIVERSE_ID = 1;
 constexpr uint16_t INVALID_UNIVERSE_ID = 0;
 constexpr uint8_t VALID_PRIORITY = 100;
-constexpr uint8_t INVALID_PRIORITY = 201;
 
 class TestDmxMerger : public ::testing::Test
 {
@@ -842,8 +841,6 @@ TEST_F(TestDmxMerger, UpdateSourceDataErrInvalidWorks)
       sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, nullptr, 1, nullptr, 0);
   etcpal_error_t invalid_new_values_count_result_2 =
       sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, &foo, DMX_ADDRESS_COUNT + 1, nullptr, 0);
-  etcpal_error_t invalid_priority_result =
-      sacn_dmx_merger_update_source_data(0, 0, INVALID_PRIORITY, nullptr, 0, nullptr, 0);
   etcpal_error_t invalid_address_priorities_result =
       sacn_dmx_merger_update_source_data(0, 0, VALID_PRIORITY, nullptr, 0, &foo, 0);
   etcpal_error_t invalid_address_priorities_count_result_1 =
@@ -861,7 +858,6 @@ TEST_F(TestDmxMerger, UpdateSourceDataErrInvalidWorks)
   EXPECT_EQ(invalid_new_values_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_new_values_count_result_1, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_new_values_count_result_2, kEtcPalErrInvalid);
-  EXPECT_EQ(invalid_priority_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_address_priorities_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_address_priorities_count_result_1, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_address_priorities_count_result_2, kEtcPalErrInvalid);
@@ -964,12 +960,10 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnErrInvalidWorks)
 {
   SacnHeaderData invalid_cid_header = header_default_;
   SacnHeaderData invalid_universe_header = header_default_;
-  SacnHeaderData invalid_priority_header = header_default_;
   SacnHeaderData invalid_slot_count_header = header_default_;
 
   invalid_cid_header.cid = kEtcPalNullUuid;
   invalid_universe_header.universe_id = INVALID_UNIVERSE_ID;
-  invalid_priority_header.priority = INVALID_PRIORITY;
   invalid_slot_count_header.slot_count = DMX_ADDRESS_COUNT + 1;
 
   etcpal_error_t invalid_merger_result =
@@ -978,8 +972,6 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnErrInvalidWorks)
   etcpal_error_t invalid_cid_result = sacn_dmx_merger_update_source_from_sacn(0, &invalid_cid_header, pdata_default_);
   etcpal_error_t invalid_universe_result =
       sacn_dmx_merger_update_source_from_sacn(0, &invalid_universe_header, pdata_default_);
-  etcpal_error_t invalid_priority_result =
-      sacn_dmx_merger_update_source_from_sacn(0, &invalid_priority_header, pdata_default_);
   etcpal_error_t invalid_slot_count_result =
       sacn_dmx_merger_update_source_from_sacn(0, &invalid_slot_count_header, pdata_default_);
   etcpal_error_t null_pdata_result = sacn_dmx_merger_update_source_from_sacn(0, &header_default_, nullptr);
@@ -989,7 +981,6 @@ TEST_F(TestDmxMerger, UpdateSourceFromSacnErrInvalidWorks)
   EXPECT_EQ(null_header_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_cid_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_universe_result, kEtcPalErrInvalid);
-  EXPECT_EQ(invalid_priority_result, kEtcPalErrInvalid);
   EXPECT_EQ(invalid_slot_count_result, kEtcPalErrInvalid);
   EXPECT_EQ(null_pdata_result, kEtcPalErrInvalid);
 
