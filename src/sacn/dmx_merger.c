@@ -90,6 +90,7 @@ static void update_per_address_priorities(MergerState* merger, SourceState* sour
                                           uint16_t address_priorities_count);
 static void update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority);
 static void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index);
+static void merge_source_on_all_slots(MergerState* merger, SourceState* source);
 
 static void free_source_state_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void free_source_handle_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node);
@@ -494,9 +495,7 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_sour
     {
       // Merge the source with valid_value_count = 0 to remove this source from the merge output.
       source_state->source.valid_value_count = 0;
-
-      for (uint16_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
-        merge_source(merger_state, source_state, i);
+      merge_source_on_all_slots(merger_state, source_state);
 
       // Now that the output no longer refers to this source, remove the source from the lookup trees and free its
       // memory.
@@ -832,8 +831,7 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
       source_state->source.address_priority_valid = false;
 
       // Merge all the slots again. It will use universe priority this time because address_priority_valid was updated.
-      for (uint16_t priority_index = 0; priority_index < DMX_ADDRESS_COUNT; ++priority_index)
-        merge_source(merger_state, source_state, priority_index);
+      merge_source_on_all_slots(merger_state, source_state);
     }
 
     sacn_unlock();
@@ -909,8 +907,7 @@ void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_
   memcpy(source->source.values, new_values, new_values_count);
 
   // Merge all slots.
-  for (uint16_t slot_index = 0; slot_index < DMX_ADDRESS_COUNT; ++slot_index)
-    merge_source(merger, source, slot_index);
+  merge_source_on_all_slots(merger, source);
 }
 
 /*
@@ -930,8 +927,7 @@ void update_per_address_priorities(MergerState* merger, SourceState* source, con
     memset(&source->source.address_priority[address_priorities_count], 0, DMX_ADDRESS_COUNT - address_priorities_count);
 
   // Merge all slots.
-  for (uint16_t slot_index = 0; slot_index < DMX_ADDRESS_COUNT; ++slot_index)
-    merge_source(merger, source, slot_index);
+  merge_source_on_all_slots(merger, source);
 }
 
 /*
@@ -945,8 +941,7 @@ void update_universe_priority(MergerState* merger, SourceState* source, uint8_t 
   // Run the merge now if there are no per-address priorities.
   if (!source->source.address_priority_valid)
   {
-    for (uint16_t slot_index = 0; slot_index < DMX_ADDRESS_COUNT; ++slot_index)
-      merge_source(merger, source, slot_index);
+    merge_source_on_all_slots(merger, source);
   }
 }
 
@@ -1025,6 +1020,12 @@ void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
       merger->winning_priorities[slot_index] = winning_priority;
     }
   }
+}
+
+void merge_source_on_all_slots(MergerState* merger, SourceState* source)
+{
+  for (uint16_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    merge_source(merger, source, i);
 }
 
 void free_source_state_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node)
