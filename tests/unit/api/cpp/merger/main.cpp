@@ -17,46 +17,19 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include "sacn/cpp/common.h"
-#include "sacn/cpp/dmx_merger.h"
-
-#include <limits>
-#include "etcpal_mock/common.h"
-#include "sacn_mock/private/common.h"
-#include "sacn_mock/private/data_loss.h"
-#include "sacn_mock/private/sockets.h"
-#include "sacn/private/mem.h"
-#include "sacn/private/opts.h"
-#include "sacn/private/dmx_merger.h"
 #include "gtest/gtest.h"
+#include "fff.h"
 
-#if SACN_DYNAMIC_MEM
-#define TestMerger TestCppMergerDynamic
-#else
-#define TestMerger TestCppMergerStatic
-#endif
+DEFINE_FFF_GLOBALS;
 
-
-class TestMerger : public ::testing::Test
+extern "C" void SacnTestingAssertHandler(const char* expression, const char* file, unsigned int line)
 {
-protected:
-  void SetUp() override
-  {
-    etcpal_reset_all_fakes();
-    sacn_reset_all_fakes();
+  FAIL() << "Assertion failure from inside sACN library. Expression: " << expression << " File: " << file
+         << " Line: " << line;
+}
 
-    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
-    ASSERT_EQ(sacn_dmx_merger_init(), kEtcPalErrOk);
-  }
-
-  void TearDown() override
-  {
-    sacn_dmx_merger_deinit();
-    sacn_mem_deinit();
-  }
-};
-
-TEST_F(TestMerger, SetStandardVersionWorks)
+int main(int argc, char* argv[])
 {
-  //CHRISTIAN TODO: CLEAN UP TESTING
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

@@ -160,7 +160,7 @@ static EtcPalRbNode* node_alloc(void);
 static void node_dealloc(EtcPalRbNode* node);
 static void source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
-static bool receiver_handle_in_use(int handle_val);
+static bool receiver_handle_in_use(int handle_val, void* cookie);
 
 /*************************** Function definitions ****************************/
 
@@ -185,7 +185,7 @@ etcpal_error_t sacn_receiver_init(void)
   {
     etcpal_rbtree_init(&receiver_state.receivers, receiver_compare, node_alloc, node_dealloc);
     etcpal_rbtree_init(&receiver_state.receivers_by_universe, receiver_compare_by_universe, node_alloc, node_dealloc);
-    init_int_handle_manager(&receiver_state.handle_mgr, receiver_handle_in_use);
+    init_int_handle_manager(&receiver_state.handle_mgr, receiver_handle_in_use, NULL);
     receiver_state.version_listening = kSacnStandardVersionAll;
     receiver_state.expired_wait = SACN_DEFAULT_EXPIRED_WAIT_MS;
   }
@@ -656,7 +656,7 @@ SacnReceiver* create_new_receiver(const SacnReceiverConfig* config)
 {
   SACN_ASSERT(config);
 
-  sacn_receiver_t new_handle = get_next_int_handle(&receiver_state.handle_mgr);
+  sacn_receiver_t new_handle = get_next_int_handle(&receiver_state.handle_mgr, -1);
   if (new_handle == SACN_RECEIVER_INVALID)
     return NULL;
 
@@ -1575,7 +1575,9 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
   node_dealloc(node);
 }
 
-bool receiver_handle_in_use(int handle_val)
+bool receiver_handle_in_use(int handle_val, void* cookie)
 {
+  ETCPAL_UNUSED_ARG(cookie);
+
   return (etcpal_rbtree_find(&receiver_state.receivers, &handle_val) != NULL);
 }

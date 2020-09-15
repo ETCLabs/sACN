@@ -15,4 +15,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 1.0.0 - 2018-10-18
 - Previous existing sACN library - not available on GitHub.
 
-[Unreleased]: https://github.com/ETCLabs/sACN/compare/master...develop
+[Unreleased]: https://github.com/ETCLabs/sACN/compare/stable...develop

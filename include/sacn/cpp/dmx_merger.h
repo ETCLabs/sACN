@@ -35,18 +35,90 @@ namespace sacn
 {
 /// @ingroup sacn_dmx_merger_cpp
 /// @brief An instance of sACN DMX Merger functionality.
+/// 
+/// This class instantiates software mergers for buffers containing DMX512-A start code 0 packets.
+/// It also uses buffers containing DMX512-A start code 0xdd packets to support per-address priority.
+/// 
+/// While this class is used to easily merge the outputs from the sACN Receiver API, it can also be used
+/// to merge your own DMX sources together, even in combination with the sources received via sACN.
+/// 
+/// When asked to calculate the merge, the merger will evaluate the current source
+/// buffers and update two result buffers:
+///  - 512 bytes for the merged data values (i.e. "winning level").  These are calculated by using
+///     a Highest-Level-Takes-Precedence(HTP) algorithm for all sources that share the highest
+///     per-address priority.
+///  - 512 source identifiers (i.e. "winning source") to indicate which source was considered the
+///     source of the merged data value, or that no source currently owns this address.
+/// 
+/// Usage:
+/// @code
+/// // These buffers are updated on each merger call with the merge results.
+/// // They must be valid as long as the merger is using them.
+/// uint8_t slots[DMX_ADDRESS_COUNT];
+/// sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
+/// 
+/// // Merger configuration used for the initialization of each merger:
+/// sacn::DmxMerger::Settings settings(slots_, slot_owners_);
+/// 
+/// // A merger provides a handle for each of its sources. Source CIDs are tracked as well.
+/// sacn_source_id_t source_1_handle, source_2_handle;
+/// etcpal::Uuid source_1_cid, source_2_cid;
+/// // Initialize CIDs here...
+/// 
+/// // Initialize a merger and two sources, getting the source handles in return.
+/// sacn::DmxMerger merger;
+/// merger.Startup(settings);
+/// 
+/// // Make sure to check/handle error cases (this is omitted in this example).
+/// source_1_handle = merger.AddSource(source_1_cid).value();
+/// source_2_handle = merger.AddSource(source_2_cid).value();
+/// 
+/// // Input data for merging:
+/// uint8_t levels[DMX_ADDRESS_COUNT];
+/// uint8_t paps[DMX_ADDRESS_COUNT];
+/// uint8_t universe_priority;
+/// // Initialize levels, paps, and universe_priority here...
+/// 
+/// // Levels and PAPs can be merged separately:
+/// merger.UpdateSourceData(source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT);
+/// merger.UpdateSourceData(source_1_handle, universe_priority, nullptr, 0, paps, DMX_ADDRESS_COUNT);
+/// 
+/// // Or together in one call:
+/// merger.UpdateSourceData(source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT, paps, DMX_ADDRESS_COUNT);
+/// 
+/// // Or, if this is within a sACN receiver callback, use UpdateSourceDataFromSacn:
+/// SacnHeaderData header;
+/// uint8_t pdata[DMX_ADDRESS_COUNT];
+/// // Assuming header and pdata are initialized.
 ///
-/// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE -- DO WE NEED A using_dmx_merger.md, or one giant using_receiver.md???
+/// merger.UpdateSourceDataFromSacn(header, pdata);
+/// 
+/// // PAP can also be removed. Here, source 1 reverts to universe_priority:
+/// merger.StopSourcePerAddressPriority(source_1_handle);
+/// 
+/// // The read-only state of each source can be obtained as well.
+/// const SacnDmxMergerSource* source_1_state = merger.GetSourceInfo(source_1_handle);
+/// const SacnDmxMergerSource* source_2_state = merger.GetSourceInfo(source_2_handle);
+/// 
+/// // Do something with the merge results (slots and slot_owners)...
+/// 
+/// // Sources can be removed individually:
+/// merger.RemoveSource(source_1_handle);
+/// merger.RemoveSource(source_2_handle);
+/// 
+/// // However, when each merger is shut down, all of its sources are removed along with it:
+/// merger.Shutdown();
+/// @endcode
 class DmxMerger
 {
 public:
-  /// A handle type used by the sACN library to identify receiver instances.
+  /// A handle type used by the sACN library to identify merger instances.
   using Handle = sacn_dmx_merger_t;
   /// An invalid Handle value.
   static constexpr Handle kInvalidHandle = SACN_DMX_MERGER_INVALID;
 
   /// @ingroup sacn_dmx_merger_cpp
-  /// @brief A set of configuration settings that a receiver needs to initialize.
+  /// @brief A set of configuration settings that a merger needs to initialize.
   struct Settings
   {
     /********* Required values **********/
@@ -92,9 +164,6 @@ public:
                                  size_t address_priorities_count = 0);
   etcpal::Error UpdateSourceDataFromSacn(const SacnHeaderData& header, const uint8_t* pdata);
   etcpal::Error StopSourcePerAddressPriority(sacn_source_id_t source);
-
-  // TODO: Do we need this?
-  etcpal::Error Recalculate();
 
   constexpr Handle handle() const;
 
@@ -233,14 +302,13 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_source_id_t sour
  *
  * \param[in] source The id of the source to modify.
  * \param[in] priority The universe-level priority of the source.
- * \param[in] new_values The new DMX values to be copied in. This may be nullptr if the source is only updating the
- * priority or address_priorities.
- * \param[in] new_values_count The length of new_values. May be 0 if the source is only updating the priority or
- * address_priorities.
- * \param[in] address_priorities The per-address priority values to be copied in.  This may be nullptr if the source is
- * not sending per-address priorities, or is only updating other parameters.
- * \param[in] address_priorities_count The length of address_priorities.  May be 0 if the source is not sending these
- * priorities, or is only updating other parameters.
+ * \param[in] new_values The new DMX values to be copied in. This must be nullptr if the source is not updating DMX
+ * data.
+ * \param[in] new_values_count The length of new_values. Must be 0 if the source is not updating DMX data.
+ * \param[in] address_priorities The per-address priority values to be copied in.  This must be nullptr if the source is
+ * not updating per-address priority data.
+ * \param[in] address_priorities_count The length of address_priorities.  Must be 0 if the source is not updating
+ * per-address priority data.
  * \return #kEtcPalErrOk: Source updated and merge completed.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
@@ -291,22 +359,6 @@ inline etcpal::Error DmxMerger::UpdateSourceDataFromSacn(const SacnHeaderData& h
 inline etcpal::Error DmxMerger::StopSourcePerAddressPriority(sacn_source_id_t source)
 {
   return sacn_dmx_merger_stop_source_per_address_priority(handle_, source);
-}
-
-/*!
- * \brief Fully recalculate outputs.
- *
- * Does a full recalculation of the merger outputs.
- *
- * \return #kEtcPalErrOk: Source updated and recalculation completed.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merger.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
- */
-// TODO: Do we need this?
-inline etcpal::Error DmxMerger::Recalculate()
-{
-  return sacn_dmx_merger_recalculate(handle_);
 }
 
 /*!

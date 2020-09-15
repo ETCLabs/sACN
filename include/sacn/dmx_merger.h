@@ -46,7 +46,7 @@
  * While this API is used to easily merge the outputs from the sACN Receiver API, it can also be used
  * to merge your own DMX sources together, even in combination with the sources received via sACN.
  *
- * When asked to calculate the merge, the merger shall evaluate the current source
+ * When asked to calculate the merge, the merger will evaluate the current source
  * buffers and update two result buffers:
  *  - 512 bytes for the merged data values (i.e. "winning level").  These are calculated by using
  *     a Highest-Level-Takes-Precedence(HTP) algorithm for all sources that share the highest
@@ -54,7 +54,83 @@
  *  - 512 source identifiers (i.e. "winning source") to indicate which source was considered the
  *     source of the merged data value, or that no source currently owns this address.
  *
- * NICK OR CHRISTIAN TODO: Add sample usage
+ * This API is thread-safe.
+ *
+ * Usage:
+ * \code
+ * // Initialize sACN.
+ * EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
+ * // Init log params here...
+ *
+ * sacn_init(&log_params);
+ *
+ * // These buffers are updated on each merger call with the merge results.
+ * // They must be valid as long as the merger is using them.
+ * uint8_t slots[DMX_ADDRESS_COUNT];
+ * sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
+ *
+ * // Merger configuration used for the initialization of each merger:
+ * SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
+ * merger_config.slots = slots;
+ * merger_config.slot_owners = slot_owners;
+ * merger_config.source_count_max = SACN_RECEIVER_INFINITE_SOURCES;
+ *
+ * // A merger has a handle, as do each of its sources. Source CIDs are tracked as well.
+ * sacn_dmx_merger_t merger_handle;
+ * sacn_source_id_t source_1_handle, source_2_handle;
+ * EtcPalUuid source_1_cid, source_2_cid;
+ * // Initialize CIDs here...
+ *
+ * // Make sure to check/handle the etcpal_error_t return values (this is omitted in this example).
+ *
+ * // Initialize a merger and two sources, getting their handles in return.
+ * sacn_dmx_merger_create(&merger_config, &merger_handle);
+ *
+ * sacn_dmx_merger_add_source(merger_handle, &source_1_cid, &source_1_handle);
+ * sacn_dmx_merger_add_source(merger_handle, &source_2_cid, &source_2_handle);
+ *
+ * // Input data for merging:
+ * uint8_t levels[DMX_ADDRESS_COUNT];
+ * uint8_t paps[DMX_ADDRESS_COUNT];
+ * uint8_t universe_priority;
+ * // Initialize levels, paps, and universe_priority here...
+ *
+ * // Levels and PAPs can be merged separately:
+ * sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT,
+ *                                    NULL, 0);
+ * sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, NULL, 0, paps,
+ *                                    DMX_ADDRESS_COUNT);
+ *
+ * // Or together in one call:
+ * sacn_dmx_merger_update_source_data(merger_handle, source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT,
+ *                                    paps, DMX_ADDRESS_COUNT);
+ *
+ * // Or, if this is within a sACN receiver callback, use sacn_dmx_merger_update_source_from_sacn:
+ * SacnHeaderData header;
+ * uint8_t pdata[DMX_ADDRESS_COUNT];
+ * // Assuming header and pdata are initialized.
+ *
+ * sacn_dmx_merger_update_source_from_sacn(merger_handle, &header, pdata);
+ *
+ * // PAP can also be removed. Here, source 1 reverts to universe_priority:
+ * sacn_dmx_merger_stop_source_per_address_priority(merger_handle, source_1_handle);
+ *
+ * // The read-only state of each source can be obtained as well.
+ * const SacnDmxMergerSource* source_1_state = sacn_dmx_merger_get_source(merger_handle, source_1_handle);
+ * const SacnDmxMergerSource* source_2_state = sacn_dmx_merger_get_source(merger_handle, source_2_handle);
+ *
+ * // Do something with the merge results (slots and slot_owners)...
+ *
+ * // Sources can be removed individually:
+ * sacn_dmx_merger_remove_source(merger_handle, source_1_handle);
+ * sacn_dmx_merger_remove_source(merger_handle, source_2_handle);
+ *
+ * // However, when each merger is destroyed, all of its sources are removed along with it:
+ * sacn_dmx_merger_destroy(merger_handle);
+ *
+ * // Or, if sACN is deinitialized, all of the mergers are destroyed automatically:
+ * sacn_deinit();
+ * \endcode
  *
  * @{
  */
@@ -117,7 +193,8 @@ typedef struct SacnDmxMergerConfig
  * Given a buffer of slot_owners, evaluate to true if the slot is != DMX_MERGER_SOURCE_INVALID.
  *
  */
-#define SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, slot_index) (slot_owners_array[slot_index] != DMX_MERGER_SOURCE_INVALID)
+#define SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, slot_index) \
+  (slot_owners_array[slot_index] != SACN_DMX_MERGER_SOURCE_INVALID)
 
 /*! The current input data for a single source of the merge.  This is exposed only for informational purposes, as the
     application calls a variant of sacn_dmx_merger_update_source to do the actual update. */
@@ -132,14 +209,15 @@ typedef struct SacnDmxMergerSource
   /*! Some sources don't send all 512 values, so here's how much of values to use.*/
   size_t valid_value_count;
 
-  /*! The sACN per-universe priority (0 - 255). */
+  /*! The sACN per-universe priority (0 - 200). */
   uint8_t universe_priority;
 
   /*! Whether or not the address_priority buffer is valid. */
   bool address_priority_valid;
 
   /*! The sACN per-address (startcode 0xdd) priority (1-255, 0 means not sourced).
-      If the source does not */
+      If the source does not have per-address priority, then address_priority_valid will be false, and this array should
+      be ignored. */
   uint8_t address_priority[DMX_ADDRESS_COUNT];
 
 } SacnDmxMergerSource;
@@ -158,9 +236,6 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn
 etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, const SacnHeaderData* header,
                                                        const uint8_t* pdata);
 etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, sacn_source_id_t source);
-
-// TODO: Do we need this?
-etcpal_error_t sacn_dmx_merger_recalculate(sacn_dmx_merger_t merger);
 
 #ifdef __cplusplus
 }

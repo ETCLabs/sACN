@@ -17,21 +17,48 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include "sacn_mock/private/common.h"
+#include "sacn/cpp/common.h"
+#include "sacn/cpp/merge_receiver.h"
 
+#include <limits>
+#include "etcpal_mock/common.h"
+#include "sacn_mock/private/common.h"
 #include "sacn_mock/private/data_loss.h"
 #include "sacn_mock/private/sockets.h"
+#include "sacn/private/mem.h"
+#include "sacn/private/opts.h"
+#include "sacn/private/merge_receiver.h"
+#include "gtest/gtest.h"
 
-DEFINE_FAKE_VALUE_FUNC(bool, sacn_initialized);
-DEFINE_FAKE_VALUE_FUNC(bool, sacn_lock);
-DEFINE_FAKE_VOID_FUNC(sacn_unlock);
+#if SACN_DYNAMIC_MEM
+#define TestMergeReceiver TestCppMergeReceiverDynamic
+#else
+#define TestMergeReceiver TestCppMergeReceiverStatic
+#endif
 
-void sacn_common_reset_all_fakes(void)
+
+class TestMergeReceiver : public ::testing::Test
 {
-  RESET_FAKE(sacn_initialized);
-  RESET_FAKE(sacn_lock);
-  RESET_FAKE(sacn_unlock);
+protected:
+  void SetUp() override
+  {
+    etcpal_reset_all_fakes();
+    sacn_common_reset_all_fakes();
+    sacn_data_loss_reset_all_fakes();
+    sacn_sockets_reset_all_fakes();
 
-  sacn_initialized_fake.return_val = true;
-  sacn_lock_fake.return_val = true;
+    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_merge_receiver_init(), kEtcPalErrOk);
+  }
+
+  void TearDown() override
+  {
+    sacn_merge_receiver_deinit();
+    sacn_mem_deinit();
+  }
+};
+
+TEST_F(TestMergeReceiver, SetStandardVersionWorks)
+{
+  //CHRISTIAN TODO: CLEAN UP TESTING
 }
