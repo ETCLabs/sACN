@@ -218,6 +218,24 @@ typedef enum
 } sacn_recv_state_t;
 #endif
 
+typedef struct SourceDataBuffer
+{
+  /* The address from which we received this data. */
+  EtcPalSockAddr from_addr;
+  /* The priority of the sACN data. Valid range is 0-200, inclusive. */
+  uint8_t priority;
+  /* Whether the Preview_Data bit is set for the sACN data. From E1.31: "Indicates that the data in
+   * this packet is intended for use in visualization or media server preview applications and
+   * shall not be used to generate live output." */
+  bool preview;
+  /* The start code of the DMX data. */
+  uint8_t start_code;
+  /* The number of slots in the DMX data. */
+  uint16_t slot_count;
+  /* The DMX data. */
+  uint8_t data[DMX_ADDRESS_COUNT];
+} SourceDataBuffer;
+
 /* An sACN source that is being tracked on a given universe. */
 typedef struct SacnTrackedSource
 {
@@ -227,10 +245,17 @@ typedef struct SacnTrackedSource
   uint8_t seq;
   bool terminated;
   bool dmx_received_since_last_tick;
+
 #if SACN_ETC_PRIORITY_EXTENSION
   sacn_recv_state_t recv_state;
   /* pap stands for Per-Address Priority. */
   EtcPalTimer pap_timer;
+#endif
+
+  /* This is where incoming data is saved for later processing. */
+  SourceDataBuffer null_start_code_buffer;
+#if SACN_ETC_PRIORITY_EXTENSION
+  SourceDataBuffer pap_buffer;
 #endif
 } SacnTrackedSource;
 
@@ -243,7 +268,7 @@ typedef struct SourcesFoundNotification
 {
   SacnSourcesFoundCallback callback;
   sacn_receiver_t handle;
-  uint16_t universe; 
+  uint16_t universe;
   SACN_DECLARE_BUF(SacnFoundSource, found_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_found_sources;
   void* context;
@@ -254,7 +279,7 @@ typedef struct UniverseDataNotification
 {
   SacnUniverseDataCallback callback;
   sacn_receiver_t handle;
-  uint16_t universe; 
+  uint16_t universe;
   SacnHeaderData header;
   const uint8_t* pdata;
   void* context;
@@ -265,7 +290,7 @@ typedef struct SourcesLostNotification
 {
   SacnSourcesLostCallback callback;
   sacn_receiver_t handle;
-  uint16_t universe; 
+  uint16_t universe;
   SACN_DECLARE_BUF(SacnLostSource, lost_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_lost_sources;
   void* context;
@@ -277,7 +302,7 @@ typedef struct SourcePapLostNotification
   SacnSourcePapLostCallback callback;
   SacnRemoteSource source;
   sacn_receiver_t handle;
-  uint16_t universe; 
+  uint16_t universe;
   void* context;
 } SourcePapLostNotification;
 
@@ -286,7 +311,7 @@ typedef struct SourceLimitExceededNotification
 {
   SacnSourceLimitExceededCallback callback;
   sacn_receiver_t handle;
-  uint16_t universe; 
+  uint16_t universe;
   void* context;
 } SourceLimitExceededNotification;
 
