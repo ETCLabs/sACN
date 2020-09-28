@@ -1,8 +1,10 @@
 # Using the sACN Receiver API                                                     {#using_receiver}
 
 The sACN Receiver API provides a method for applications to receive and process sACN data on one or
-more universes. Currently only NULL START code data (DMX) and ETC's Per-Channel Priority extension
-are processed by the receiver API.
+more universes. This API exposes both a C and C++ language interface. The C++ interface is a 
+header-only wrapper around the C interface.
+
+<!-- LANGUAGE_SELECTOR -->
 
 ## Initialization and Destruction
 
@@ -12,48 +14,61 @@ API to configure what happens when the sACN library logs messages. Optionally pa
 EtcPalLogParams structure to use this functionality. This structure can be shared across different
 ETC library modules.
 
+<!-- CODE_BLOCK_START -->
 ```c
 #include "sacn/receiver.h"
 
-// Called at startup
-void startup_sacn(void)
-{
-  EtcPalLogParams log_params;
-  // Initialize log_params...
+// During startup:
+EtcPalLogParams log_params;
+// Initialize log_params...
 
-  etcpal_error_t init_result = sacn_init(&log_params);
-  // Or, to init without worrying about logs from the sACN library...
-  etcpal_error_t init_result = sacn_init(NULL);
-}
+etcpal_error_t init_result = sacn_init(&log_params);
+// Or, to init without worrying about logs from the sACN library...
+etcpal_error_t init_result = sacn_init(NULL);
 
-// Called at shutdown
-void shutdown_sacn(void)
-{
-  sacn_deinit();
-}
+// During shutdown:
+sacn_deinit();
 ```
+<!-- CODE_BLOCK_MID -->
+```cpp
+#include "sacn/cpp/receiver.h"
 
-To create an sACN receiver instance, use the sacn_receiver_create() function. An sACN receiver
-instance can listen on one universe at a time, but the universe it listens on can be changed at any
-time.
+// During startup:
+EtcPalLogParams log_params;
+// Initialize log_params...
+
+etcpal::Error init_result = sacn_init(&log_params);
+// Or, to init without worrying about logs from the sACN library...
+etcpal::Error init_result = sacn_init(NULL);
+
+// During shutdown:
+sacn_deinit();
+```
+<!-- CODE_BLOCK_END -->
+
+To create an sACN receiver instance, use the sacn_receiver_create() function in C, or instantiate an 
+sacn::Receiver and call its Startup() function in C++. An sACN receiver instance can listen on one 
+universe at a time, but the universe it listens on can be changed at any time.
 
 The sACN Receiver API is an asynchronous, callback-oriented API. Part of the initial configuration
-for a receiver instance is a set of function pointers for the library to use as callbacks.
-Callbacks are dispatched from a background thread which is started when the first receiver instance
-is created.
+for a receiver instance is to specify the callbacks for the library to use. In C, these are specified 
+as a set of function pointers. In C++, these are specified as an instance of a class that implements 
+sacn::Receiver::NotifyHandler. Callbacks are dispatched from a background thread which is started when 
+the first receiver instance is created.
 
+<!-- CODE_BLOCK_START -->
 ```c
 SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
 // Or, to initialize default values at runtime:
 sacn_receiver_config_init(&config);
 
-config.universe = 1; // Listen on universe 1
+config.universe_id = 1; // Listen on universe 1
 
 // Set the callback functions - defined elsewhere
+config.callbacks.sources_found = my_sources_found_callback;
 config.callbacks.universe_data = my_universe_data_callback;
 config.callbacks.sources_lost = my_sources_lost_callback;
-config.callbacks.source_pcp_lost = my_source_pcp_lost_callback; // optional, can be NULL
-config.callbacks.sampling_ended = my_sampling_ended_callback;
+config.callbacks.source_pap_lost = my_source_pap_lost_callback; // optional, can be NULL
 config.callbacks.source_limit_exceeded = my_source_limit_exceeded_callback; // optional, can be NULL
 
 sacn_receiver_t my_receiver_handle;
@@ -67,12 +82,34 @@ else
   // Some error occurred, handle is not valid.
 }
 ```
+<!-- CODE_BLOCK_MID -->
+```cpp
+sacn::Receiver::Settings config(1); // Instantiate config & listen on universe 1
+sacn::Receiver receiver; // Instantiate a receiver
+
+// You implement the callbacks by implementing the sacn::Receiver::NotifyHandler interface.
+// The NotifyHandler-derived instance, referred to here as my_notify_handler, must be passed in to Startup:
+etcpal::Error startup_result = receiver.Startup(config, my_notify_handler);
+// Or do this if Startup is being called within the NotifyHandler-derived class:
+etcpal::Error startup_result = receiver.Startup(config, *this);
+
+if (startup_result)
+{
+  // The receiver is initialized and can now be used.
+}
+else
+{
+  // Some error occurred, the receiver is not valid.
+}
+```
+<!-- CODE_BLOCK_END -->
 
 ## Receiving sACN Data
 
 Each time sACN data is received on a universe that is being listened to, it will be forwarded via
 the corresponding `universe_data()` callback.
 
+<!-- CODE_BLOCK_START -->
 ```c
 void my_universe_data_callback(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
                                const uint8_t* pdata, void* context)
@@ -99,6 +136,10 @@ void my_universe_data_callback(sacn_receiver_t handle, const EtcPalSockAddr* sou
   }
 }
 ```
+<!-- CODE_BLOCK_MID -->
+```cpp
+```
+<!-- CODE_BLOCK_END -->
 
 ## The Sampling Period
 
@@ -119,6 +160,7 @@ The library provides a sampling_ended callback which is fired from a timer when 
 ends. This callback is just for convenience; you can implement your own timer if you want. The
 current sampling time is 1.5 seconds.
 
+<!-- CODE_BLOCK_START -->
 ```c
 void my_sampling_ended_callback(sacn_receiver_t handle, void* context)
 {
@@ -127,6 +169,10 @@ void my_sampling_ended_callback(sacn_receiver_t handle, void* context)
   // Then, start acting upon any stored data from this universe.
 }
 ```
+<!-- CODE_BLOCK_MID -->
+```cpp
+```
+<!-- CODE_BLOCK_END -->
 
 ## Tracking Sources
 
@@ -160,6 +206,7 @@ When implementing the per-slot priority extension, the `source_pcp_lost()` callb
 implemented to handle the condition where a source that was previously sending `0xdd` packets stops
 sending them:
 
+<!-- CODE_BLOCK_START -->
 ```c
 void my_source_pcp_lost_callback(sacn_receiver_t handle, const SacnRemoteSource* source, void* context)
 {
@@ -168,6 +215,10 @@ void my_source_pcp_lost_callback(sacn_receiver_t handle, const SacnRemoteSource*
   // Revert to using the per-packet priority value to resolve priorities for this universe.
 }
 ```
+<!-- CODE_BLOCK_MID -->
+```cpp
+```
+<!-- CODE_BLOCK_END -->
 
 ### Merging
 
@@ -185,6 +236,7 @@ information on this algorithm.
 After the data-loss algorithm runs, the library will deliver a `sources_lost()` callback to
 indicate that some number of sources have gone offline.
 
+<!-- CODE_BLOCK_START -->
 ```c
 void my_sources_lost_callback(sacn_receiver_t handle, const SacnLostSource* lost_sources, size_t num_lost_sources,
                               void* context)
@@ -204,6 +256,10 @@ void my_sources_lost_callback(sacn_receiver_t handle, const SacnLostSource* lost
   }
 }
 ```
+<!-- CODE_BLOCK_MID -->
+```cpp
+```
+<!-- CODE_BLOCK_END -->
 
 ## Source Limit Exceeded Conditions
 
@@ -221,6 +277,7 @@ library will track as many sources as it is able to dynamically allocate memory 
 callback will not be called in normal program operation (and can be set to NULL in the config
 struct).
 
+<!-- CODE_BLOCK_START -->
 ```c
 void my_source_limit_exceeded_callback(sacn_receiver_t handle, void* context)
 {
@@ -229,3 +286,7 @@ void my_source_limit_exceeded_callback(sacn_receiver_t handle, void* context)
   // Handle the condition in an application-defined way. Maybe log it?
 }
 ```
+<!-- CODE_BLOCK_MID -->
+```cpp
+```
+<!-- CODE_BLOCK_END -->
