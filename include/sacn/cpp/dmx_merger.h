@@ -58,7 +58,7 @@ namespace sacn
 /// sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
 /// 
 /// // Merger configuration used for the initialization of each merger:
-/// sacn::DmxMerger::Settings settings(slots_, slot_owners_);
+/// sacn::DmxMerger::Settings settings(slots, slot_owners);
 /// 
 /// // A merger provides a handle for each of its sources. Source CIDs are tracked as well.
 /// sacn_source_id_t source_1_handle, source_2_handle;

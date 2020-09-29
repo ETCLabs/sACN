@@ -19,7 +19,7 @@ ETC library modules.
 #include "sacn/receiver.h"
 
 // During startup:
-EtcPalLogParams log_params;
+EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
 // Initialize log_params...
 
 etcpal_error_t init_result = sacn_init(&log_params);
@@ -34,7 +34,7 @@ sacn_deinit();
 #include "sacn/cpp/receiver.h"
 
 // During startup:
-EtcPalLogParams log_params;
+EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
 // Initialize log_params...
 
 etcpal::Error init_result = sacn_init(&log_params);
@@ -129,7 +129,7 @@ uint16_t current_universe;
 auto result = receiver.GetUniverse();
 
 if(result)
-  current_universe = result;
+  current_universe = *result;
 
 // Change the universe to listen to
 uint16_t new_universe = current_universe + 1;
