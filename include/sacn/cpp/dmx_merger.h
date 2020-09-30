@@ -52,6 +52,13 @@ namespace sacn
 /// 
 /// Usage:
 /// @code
+/// EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
+/// // Initialize log_params...
+///
+/// etcpal::Error init_result = sacn_init(&log_params);
+/// // Or, to init without worrying about logs from the sACN library...
+/// etcpal::Error init_result = sacn_init(NULL);
+///
 /// // These buffers are updated on each merger call with the merge results.
 /// // They must be valid as long as the merger is using them.
 /// uint8_t slots[DMX_ADDRESS_COUNT];
@@ -106,8 +113,11 @@ namespace sacn
 /// merger.RemoveSource(source_1_handle);
 /// merger.RemoveSource(source_2_handle);
 /// 
-/// // However, when each merger is shut down, all of its sources are removed along with it:
+/// // Mergers can also be removed individually:
 /// merger.Shutdown();
+///
+/// // Or, if sACN is deinitialized, all of the mergers are destroyed automatically:
+/// sacn_deinit();
 /// @endcode
 class DmxMerger
 {

@@ -73,7 +73,6 @@
  * SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
  * merger_config.slots = slots;
  * merger_config.slot_owners = slot_owners;
- * merger_config.source_count_max = SACN_RECEIVER_INFINITE_SOURCES;
  *
  * // A merger has a handle, as do each of its sources. Source CIDs are tracked as well.
  * sacn_dmx_merger_t merger_handle;
@@ -125,7 +124,7 @@
  * sacn_dmx_merger_remove_source(merger_handle, source_1_handle);
  * sacn_dmx_merger_remove_source(merger_handle, source_2_handle);
  *
- * // However, when each merger is destroyed, all of its sources are removed along with it:
+ * // Mergers can also be removed individually:
  * sacn_dmx_merger_destroy(merger_handle);
  *
  * // Or, if sACN is deinitialized, all of the mergers are destroyed automatically:
@@ -182,9 +181,9 @@ typedef struct SacnDmxMergerConfig
  * \endcode
  *
  */
-#define SACN_DMX_MERGER_CONFIG_INIT \
-  {                                 \
-    0, NULL, NULL                   \
+#define SACN_DMX_MERGER_CONFIG_INIT            \
+  {                                            \
+    SACN_RECEIVER_INFINITE_SOURCES, NULL, NULL \
   }
 
 /*!
