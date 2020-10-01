@@ -311,9 +311,9 @@ numerically highest value for each slot from any source is the one that is acted
 
 The sACN library provides a couple of APIs to facilitate merging. The first, the DMX merger API,
 provides a software merger that takes start code 0 and PAP data as input and outputs the merged
-levels, along with source IDs for each level. For more information, see \subpage using_dmx_merger.
+levels, along with source IDs for each level. For more information, see \ref using_dmx_merger.
 The second, the merge receiver API, combines the receiver and DMX merger APIs to offer a simplified
-solution for receiver functionality with merging built in. See \subpage using_merge_receiver for
+solution for receiver functionality with merging built in. See \ref using_merge_receiver for
 more information.
 
 ## Sources Lost Conditions
