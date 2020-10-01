@@ -93,7 +93,7 @@ public:
      *                  is owned by the library.
      */
     virtual void HandleNonDmxData(uint16_t universe, const etcpal::SockAddr& source_addr,
-                                    const SacnHeaderData& header, const uint8_t* pdata) = 0;
+                                  const SacnHeaderData& header, const uint8_t* pdata) = 0;
 
     /*!
      * \brief Notify that more than the configured maximum number of sources are currently sending on

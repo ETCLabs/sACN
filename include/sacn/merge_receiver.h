@@ -151,9 +151,9 @@ typedef struct SacnMergeReceiverConfig
 } SacnMergeReceiverConfig;
 
 /*! A default-value initializer for an SacnMergeReceiverConfig struct. */
-#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT \
-  {                                             \
-    0, {NULL, NULL, NULL}, 0, NULL, NULL, 0     \
+#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                    \
+  {                                                                \
+    0, {NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, NULL, 0 \
   }
 
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);

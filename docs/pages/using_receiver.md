@@ -48,8 +48,8 @@ sacn_deinit();
 
 An sACN receiver instance can listen on one universe at a time, but the universe it listens on can
 be changed at any time. A receiver begins listening when it is created. To create an sACN receiver
-instance, use the sacn_receiver_create() function in C, or instantiate an sacn::Receiver and call
-its Startup() function in C++.
+instance, use the `sacn_receiver_create()` function in C, or instantiate an sacn::Receiver and call
+its `Startup()` function in C++.
 
 The sACN Receiver API is an asynchronous, callback-oriented API. Part of the initial configuration
 for a receiver instance is to specify the callbacks for the library to use. In C, these are
@@ -381,7 +381,8 @@ If sACN was compiled with #SACN_DYNAMIC_MEM set to 1 (the default on non-embedde
 library will check against the `source_count_max` value from the receiver config/settings, instead
 of #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE. The `source_count_max` value may be set to
 #SACN_RECEIVER_INFINITE_SOURCES, in which case the library will track as many sources as it is able
-to dynamically allocate memory for, and this callback will not be called in normal program operation (and can be set to NULL in the config struct in C).
+to dynamically allocate memory for, and this callback will not be called in normal program
+operation (and can be set to NULL in the config struct in C).
 
 <!-- CODE_BLOCK_START -->
 ```c
