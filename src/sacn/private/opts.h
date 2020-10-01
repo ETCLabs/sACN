@@ -277,29 +277,15 @@
 #ifndef SACN_SOURCE_MULTICAST_TTL
 #define SACN_SOURCE_MULTICAST_TTL 64
 #endif
-
-/* TODO investigate. */
-#ifndef SACN_SOURCE_UNICAST_TTL
-#define SACN_SOURCE_UNICAST_TTL 64
-#endif
 /*! \endcond */
 
 /*!
- * \brief The maximum number of universes that can be sent on simultaneously.
+ * \brief The maximum number of universes that a source can send to simultaneously.
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_SOURCE_MAX_UNIVERSES
 #define SACN_SOURCE_MAX_UNIVERSES 4
-#endif
-
-/*!
- * \brief The maximum number of start codes that can be added to each sending universe.
- *
- * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
- */
-#ifndef SACN_SOURCE_MAX_STARTCODES_PER_UNIVERSE
-#define SACN_SOURCE_MAX_STARTCODES_PER_UNIVERSE 2
 #endif
 
 /*!

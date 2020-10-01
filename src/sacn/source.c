@@ -17,6 +17,28 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
+/*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
+ - Get usage/API documentation in place and cleaned up so we can have a larger review.
+ - Make sure everything works with static & dynamic memory.
+ --------------NICK CLEAN UP
+ - Add EtcPalMcastNetintId to EtcPal, and remove struct SacnMcastNetintId and RdmnetMcastNetintId
+ - I've added the universe to all the callbacks.  Make sure the notification structs are initialized and work correctly for all notifications.
+ - Add full support for the sources found notification. Packets aren't forwarded to the application until the source list is stable.
+ - Add unicast support to sockets.c in the SACN_RECEIVER_SOCKET_PER_UNIVERSE case.
+ - Make sure unicast support works in both socket modes, with one or more receivers created.
+ - Make sure everything works with static & dynamic memory.
+ - Make source addition honors source_count_max, even in dynamic mode.
+ - Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet!
+ - refactor common.c's init & deinit functions to be more similar to https://github.com/ETCLabs/RDMnet/blob/develop/src/rdmnet/core/common.c#L141's functions, as Sam put in the review. 
+ - Make the example receiver use the new api.
+ - Make an example receiver & testing for the c++ header.
+ - IPv6 support.  See the CHRISTIAN TODO IPV6 comments for some hints on where to change.
+ - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
+   filter out the duplicate packet (just like IPv4 & IPv6).
+ - This entire project should build without warnings!!
+ - Sync support.  Update TODO comments in receiver & merge_receiver that state sync isn't supported.
+*/
+
 #include "sacn/source.h"
 
 /****************************** Private macros *******************************/
