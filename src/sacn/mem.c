@@ -410,8 +410,8 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
  */
 SourcesFoundNotification* get_sources_found_buffer(sacn_thread_id_t thread_id, size_t size)
 {
-  //CHRISTIAN TODO TEST THIS!
-  //CHRISTIAN TODO: Look into duplicate code here.
+  // CHRISTIAN TODO TEST THIS!
+  // CHRISTIAN TODO: Look into duplicate code here.
   if (thread_id < mem_bufs.num_threads)
   {
     SourcesFoundNotificationBuf* notifications = &mem_bufs.sources_found[thread_id];
@@ -425,7 +425,7 @@ SourcesFoundNotification* get_sources_found_buffer(sacn_thread_id_t thread_id, s
       SourcesFoundNotification* new_buf =
           (SourcesFoundNotification*)realloc(notifications->buf, new_capacity * sizeof(SourcesFoundNotification));
       if (new_buf && init_sources_found_array(&new_buf[notifications->buf_capacity],
-                                             new_capacity - notifications->buf_capacity) == kEtcPalErrOk)
+                                              new_capacity - notifications->buf_capacity) == kEtcPalErrOk)
       {
         notifications->buf = new_buf;
         notifications->buf_capacity = new_capacity;
@@ -537,7 +537,7 @@ bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* ci
   return true;
 }
 
-//CHRISTIAN TODO:
+// CHRISTIAN TODO:
 /*
  * Add a new found source to a SourcesFoundNotification.
  *
@@ -691,7 +691,8 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
 
 void zero_sources_found_array(SourcesFoundNotification* sources_found_arr, size_t size)
 {
-  for (SourcesFoundNotification* sources_found = sources_found_arr; sources_found < sources_found_arr + size; ++sources_found)
+  for (SourcesFoundNotification* sources_found = sources_found_arr; sources_found < sources_found_arr + size;
+       ++sources_found)
   {
     sources_found->callback = NULL;
     sources_found->handle = SACN_RECEIVER_INVALID;
@@ -878,7 +879,7 @@ etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr
   return kEtcPalErrOk;
 }
 
-//CHRISTIAN TODO TEST THESE
+// CHRISTIAN TODO TEST THESE
 etcpal_error_t init_sources_found_bufs(unsigned int num_threads)
 {
   mem_bufs.sources_found = calloc(num_threads, sizeof(SourcesFoundNotificationBuf));
@@ -910,7 +911,8 @@ etcpal_error_t init_sources_found_array(SourcesFoundNotification* sources_found_
 {
   SACN_ASSERT(sources_found_arr);
 
-  for (SourcesFoundNotification* sources_found = sources_found_arr; sources_found < sources_found_arr + size; ++sources_found)
+  for (SourcesFoundNotification* sources_found = sources_found_arr; sources_found < sources_found_arr + size;
+       ++sources_found)
   {
     sources_found->found_sources = calloc(INITIAL_CAPACITY, sizeof(SacnFoundSource));
     if (!sources_found->found_sources)
@@ -919,7 +921,6 @@ etcpal_error_t init_sources_found_array(SourcesFoundNotification* sources_found_
   }
   return kEtcPalErrOk;
 }
-
 
 etcpal_error_t init_source_pap_lost_buf(unsigned int num_threads)
 {
@@ -1045,7 +1046,7 @@ void deinit_sources_lost_entry(SourcesLostNotification* sources_lost)
     free(sources_lost->lost_sources);
 }
 
-//CHRISTIAN TODO TEST!
+// CHRISTIAN TODO TEST!
 void deinit_sources_found_bufs(void)
 {
   if (mem_bufs.sources_found)

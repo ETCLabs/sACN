@@ -160,6 +160,45 @@ typedef struct SacnReceiverKeys
   uint16_t universe;
 } SacnReceiverKeys;
 
+/* Information tracked for each source discovered in the sampling period. */
+typedef struct SamplingPeriodSource
+{
+  /* The Component Identifier (CID) of the source. Must be the first member. */
+  EtcPalUuid cid;
+  /* The name of the source. */
+  char name[SACN_SOURCE_NAME_MAX_LEN];
+  /* The address from which we received these initial packets. */
+  EtcPalSockAddr from_addr;
+  /* The per-universe priority. */
+  uint8_t priority;
+  /* The DMX (startcode 0) data. */
+#if SACN_DYNAMIC_MEM
+  uint8_t* values;
+#else
+  uint8_t values[DMX_ADDRESS_COUNT];
+#endif
+  /* The count of valid values. */
+  size_t values_len;
+  /* Whether or not we only saw startcode 0 packets with the preview flag set. */
+  bool preview;
+  /* The per-address priority (startcode 0xdd) data, if the source is sending it. */
+#if SACN_DYNAMIC_MEM
+  uint8_t* per_address;
+#else
+  uint8_t per_address[DMX_ADDRESS_COUNT];
+#endif
+  /* The count of valid priorities. */
+  size_t per_address_len;
+} SamplingPeriodSource;
+
+/* A receiver's sampling period state. */
+typedef struct SamplingPeriodState
+{
+  bool sampling;
+  EtcPalTimer timer;
+  EtcPalRbTree found_sources;
+} SamplingPeriodState;
+
 /* An sACN universe to which we are currently listening. */
 typedef struct SacnReceiver SacnReceiver;
 struct SacnReceiver
@@ -181,8 +220,7 @@ struct SacnReceiver
   size_t num_netints;
 
   // State tracking
-  bool sampling;
-  EtcPalTimer sample_timer;
+  SamplingPeriodState sampling_period_state;
   bool suppress_limit_exceeded_notification;
   EtcPalRbTree sources;       // The sources being tracked on this universe.
   TerminationSet* term_sets;  // Data loss tracking

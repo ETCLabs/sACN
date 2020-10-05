@@ -152,6 +152,7 @@ static void deliver_periodic_callbacks(const SourcesLostNotification* sources_lo
 
 // Tree node management
 static int tracked_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+static int found_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static int receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static int receiver_compare_by_universe(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static EtcPalRbNode* node_alloc(void);
@@ -331,6 +332,7 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
     if (receiver)
     {
       remove_receiver_from_thread(receiver, false);
+      etcpal_rbtree_clear(&receiver->sampling_period_state.found_sources);  // TODO - with cb?
       etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
       remove_receiver_from_maps(receiver);
       FREE_RECEIVER(receiver);
@@ -443,8 +445,9 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
     // Begin the sampling period.
     if (res == kEtcPalErrOk)
     {
-      receiver->sampling = true;
-      etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
+      etcpal_rbtree_clear(&receiver->sampling_period_state.found_sources);  // TODO - with callback?
+      receiver->sampling_period_state.sampling = true;
+      etcpal_timer_start(&receiver->sampling_period_state.timer, SAMPLE_TIME);
     }
 
     sacn_unlock();
@@ -675,8 +678,9 @@ SacnReceiver* create_new_receiver(const SacnReceiverConfig* config)
     return NULL;
   }
 
-  receiver->sampling = true;
-  etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
+  etcpal_rbtree_init(&receiver->sampling_period_state.found_sources, found_source_compare, node_alloc, node_dealloc);
+  receiver->sampling_period_state.sampling = true;
+  etcpal_timer_start(&receiver->sampling_period_state.timer, SAMPLE_TIME);
   receiver->suppress_limit_exceeded_notification = false;
   etcpal_rbtree_init(&receiver->sources, tracked_source_compare, node_alloc, node_dealloc);
   receiver->term_sets = NULL;
@@ -1054,7 +1058,7 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
   {
     case kRecvStateWaitingForDmx:
       // We had previously received PAP, were waiting for DMX and got it.
-      if (receiver->sampling)
+      if (receiver->sampling_period_state.sampling)
       {
         // We are in the sample period - notify immediately.
         src->recv_state = kRecvStateHaveDmxAndPap;
@@ -1202,7 +1206,7 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
 
 #if SACN_ETC_PRIORITY_EXTENSION
   // If we are in the sampling period, the wait period for PAP is not necessary.
-  if (receiver->sampling)
+  if (receiver->sampling_period_state.sampling)
   {
     if (header->start_code == SACN_STARTCODE_PRIORITY)
     {
@@ -1536,6 +1540,15 @@ int tracked_source_compare(const EtcPalRbTree* tree, const void* value_a, const 
   return ETCPAL_UUID_CMP(&a->cid, &b->cid);
 }
 
+int found_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
+{
+  ETCPAL_UNUSED_ARG(tree);
+
+  const SamplingPeriodSource* a = (const SamplingPeriodSource*)value_a;
+  const SamplingPeriodSource* b = (const SamplingPeriodSource*)value_b;
+  return ETCPAL_UUID_CMP(&a->cid, &b->cid);
+}
+
 EtcPalRbNode* node_alloc(void)
 {
 #if SACN_DYNAMIC_MEM
@@ -1568,6 +1581,7 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
   ETCPAL_UNUSED_ARG(self);
 
   SacnReceiver* receiver = (SacnReceiver*)node->value;
+  etcpal_rbtree_clear(&receiver->sampling_period_state.found_sources);  // TODO - with cb?
   etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
   sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, true);
   FREE_RECEIVER(receiver);
