@@ -1,8 +1,9 @@
 # Using the sACN DMX Merger API                                                 {#using_dmx_merger}
 
-The sACN DMX Merger API provides a software merger that takes start code 0 and PAP data as input
-and outputs the merged levels, along with source IDs for each level. This API exposes both a C and
-C++ language interface. The C++ interface is a header-only wrapper around the C interface.
+The sACN DMX Merger API provides a software merger that takes start code 0 and per-address priority
+(PAP) data as input and outputs the merged levels, along with source IDs for each level. This API
+exposes both a C and C++ language interface. The C++ interface is a header-only wrapper around the
+C interface.
 
 <!-- LANGUAGE_SELECTOR -->
 
