@@ -96,7 +96,8 @@ etcpal_error_t sacn_merge_receiver_init(void)
 
   return res;
   */
-  return kEtcPalErrNotImpl;
+  // TODO
+  return kEtcPalErrOk;
 }
 
 /* Deinitialize the sACN Merge Receiver module. Internal function called from sacn_deinit(). */
