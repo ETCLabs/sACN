@@ -21,7 +21,6 @@
  - Get usage/API documentation in place and cleaned up so we can have a larger review.
  - Make sure everything works with static & dynamic memory.
  --------------NICK CLEAN UP
- - Add EtcPalMcastNetintId to EtcPal, and remove struct SacnMcastNetintId and RdmnetMcastNetintId
  - I've added the universe to all the callbacks.  Make sure the notification structs are initialized and work correctly for all notifications.
  - Add full support for the sources found notification. Packets aren't forwarded to the application until the source list is stable.
  - Add unicast support to sockets.c in the SACN_RECEIVER_SOCKET_PER_UNIVERSE case.
@@ -41,6 +40,12 @@
 
 #include "sacn/source.h"
 
+#if SACN_DYNAMIC_MEM
+#include <stdlib.h>
+#else
+#include "etcpal/mempool.h"
+#endif
+
 /****************************** Private macros *******************************/
 
 /****************************** Private types ********************************/
@@ -51,22 +56,51 @@
 
 /*************************** Function definitions ****************************/
 
+/* Initialize the sACN Source module. Internal function called from sacn_init().
+   This also starts up the module-provided Tick thread. */
 etcpal_error_t sacn_source_init(void)
 {
-  // TODO
+  // TODO CHRISTIAN
   return kEtcPalErrOk;
 }
 
 void sacn_source_deinit(void)
 {
-  // TODO
+  // TODO CHRISTIAN
+  //Shut down the Tick thread...
 }
 
 /*!
- * \brief Create a new sACN source to send data on an sACN universe.
+ * \brief Initialize an sACN Source Config struct to default values.
  *
- * No sending will be done on a universe until at least one start code is added using
- * sacn_source_add_start_code() and marked dirty with sacn_source_set_dirty().
+ * \param[out] config Config struct to initialize.
+ * \param[in] cid The CID to assign. Must not be NULL.
+ * \param[in] name The source name to assign. Will be truncated to fit #SACN_SOURCE_NAME_MAX_LEN bytes.
+ */
+void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, const char* name)
+{
+  //TODO CHRISTIAN
+}
+
+/*!
+ * \brief Initialize an sACN Source Universe Config struct to default values.
+ *
+ * \param[out] config Config struct to initialize.
+ * \param[in] universe_id The universe number to create.
+ * \param[in] values_buffer The DMX values buffer, may not be NULL.
+ * \param[in] values_len The length of values_buffer.
+ * \param[in] priorities_buffer If non-NULL, holds the per-address priority buffer.
+ */
+void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe_id,
+                                      const uint8_t* values_buffer, size_t values_len, const uint8_t* priority_buffer)
+{
+  // TODO CHRISTIAN
+}
+
+/*!
+ * \brief Create a new sACN source to send sACN data.
+ *
+ * This creates the instance of the source, but no data is sent until sacn_source_add_universe() is called.
  *
  * \param[in] config Configuration parameters for the sACN source to be created.
  * \param[out] handle Filled in on success with a handle to the sACN source.
@@ -79,60 +113,85 @@ void sacn_source_deinit(void)
  */
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle)
 {
+  // TODO CHRISTIAN
+  //If the Tick thread hasn't been started yet, start it if the config isn't manual.
+
   ETCPAL_UNUSED_ARG(config);
   ETCPAL_UNUSED_ARG(handle);
-  // TODO
   return kEtcPalErrNotImpl;
 }
 
 /*!
  * \brief Destroy an sACN source instance.
  *
- * Stops sending all start codes for this source. The destruction is queued, and actually occurs
+ * Stops sending all universes for this source. The destruction is queued, and actually occurs
  * on a call to sacn_process_sources() after three packets have been sent with the
- * "Stream_Terminated" option set. After calling this function, any buffers provided by calls to
- * sacn_source_add_start_code() for this universe should be considered invalid.
+ * "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.
  *
  * \param[in] handle Handle to the source to destroy.
- * \return #kEtcPalErrOk: Source destroyed successfully.
+ * \return #kEtcPalErrOk: Source destruction successfully queued.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_destroy(sacn_source_t handle)
 {
+  //TODO CHRISTIAN
+
   ETCPAL_UNUSED_ARG(handle);
-  // TODO
   return kEtcPalErrNotImpl;
 }
 
 /*!
- * \brief Add a start code to an sACN source.
+ * \brief Add a universe to an sACN source.
  *
- * Provides a pointer to a buffer for the slot data for this start code; note that this slot data
- * doesn't include the start code itself. The library retains ownership of this buffer and it is
- * invalidated on sacn_source_remove_start_code() or sacn_source_destroy(). No data is sent until
- * the start code data is marked as dirty using sacn_source_set_dirty() or passed in the
- * dirty_handles parameter to sacn_process_sources().
- *
- * \param[in] handle Handle to the source to which to add a start code.
- * \param[in] sc_config Configuration parameters for the start code to be added.
+ * Adds a universe to a source. If dirty_now is true, the source will start sending values on the
+ * next call to sacn_process_sources(). If dirty_now is false, the applicaton must call sacn_source_set_dirty() to mark
+ * it ready for processing.
+ * Regardless of whether or not the universe is marked dirty, the source will add the universe to its sACN Universe
+ * Discovery packets.
+
+ * \param[in] handle Handle to the source to which to add a universe.
+ * \param[in] config Configuration parameters for the universe to be added.
+ * \param[in] dirty_now Whether or not to immediately mark the universe as dirty.
  * \return #kEtcPalErrOk: Start code successfully added.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrExists: Start code given was already added to this universe.
+ * \return #kEtcPalErrExists: Universe given was already added to this source.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
- * \return #kEtcPalErrNoMem: No room to allocate additional start code.
+ * \return #kEtcPalErrNoMem: No room to allocate additional universe.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_add_start_code(sacn_source_t handle, const SacnStartCodeConfig* sc_config)
+etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config, bool dirty_now)
 {
+  // TODO CHRISTIAN
+
   ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(sc_config);
-  // TODO
+  ETCPAL_UNUSED_ARG(config);
+  ETCPAL_UNUSED_ARG(dirty_now);
   return kEtcPalErrNotImpl;
 }
 
+
+/*!
+ * \brief Remove a universe from a source.
+ *
+ * If this is not the only start code being sent for this source, simply stops sending data for
+ * this start code immediately. Otherwise, if this is the last start code remaining on the
+ * source, flags the source for termination; data will stop after three packets are sent from
+ * sacn_process_sources() with the "Stream_Terminated" option sent. Either way, the buffer provided
+ * for this start code by sacn_source_add_start_code() should be considered invalid after calling
+ * this function.
+ *
+ * \param[in] handle Handle to the source from which to remove the start code.
+ * \param[in] start_code Start code to remove.
+ * \return #kEtcPalErrOk: Start code removed successfully.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the start code was
+ *                              not previously added to this source.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_source_remove_universe(sacn_source_t handle, uint16_t universe_id);  // Gracefully shutds down universe (sending values properly), stops universe discovery.
 /*!
  * \brief Remove a start code from a universe.
  *
@@ -158,6 +217,14 @@ etcpal_error_t sacn_source_remove_start_code(sacn_source_t handle, uint8_t start
   // TODO
   return kEtcPalErrNotImpl;
 }
+
+/* SEND NOW NOTES
+ * Provides a pointer to a buffer for the slot data for this start code; note that this slot data
+ * doesn't include the start code itself. The library retains ownership of this buffer and it is
+ * invalidated on sacn_source_remove_start_code() or sacn_source_destroy(). No data is sent until
+ * the start code data is marked as dirty using sacn_source_set_dirty() or passed in the
+ * dirty_handles parameter to sacn_process_sources().
+ */
 
 /*!
  * \brief Change the priority of an sACN source.
@@ -312,3 +379,4 @@ size_t sacn_process_sources(void)
   // TODO
   return 0;
 }
+

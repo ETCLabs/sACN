@@ -67,7 +67,10 @@ typedef int sacn_source_t;
 typedef struct SacnSourceConfig
 {
   /********* Required values **********/
+
+  /*! The source's CID. */
   EtcPalUuid cid;
+  /*! The source's name, a UTF-8 encoded string. */
   char name[SACN_SOURCE_NAME_MAX_LEN];
 
   /********* Optional values **********/
@@ -75,62 +78,99 @@ typedef struct SacnSourceConfig
   /*! The maximum number of sources this universe will send to.  May be #SACN_SOURCE_INFINITE_UNIVERSES.
       This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES is used
      instead.*/
-  size_t source_count_max;
+  size_t universe_count_max;
   /*! (optional) array of network interfaces on which to listen to the specified universe. If NULL,
    *  all available network interfaces will be used. */
   const SacnMcastNetintId* netints;
   /*! Number of elements in the netints array. */
   size_t num_netints;
+
+  /*! If false (default), this module starts a thread that calls sacn_process_sources() every 23 ms.
+      If true, no thread is started and the application must call sacn_process_sources() at its DMX rate,
+      usually 23 ms. */
+  bool manual_process;
+
 } SacnSourceConfig;
+
+/*! A default-value initializer for an SacnSourceConfig struct. */
+#define SACN_SOURCE_CONFIG_DEFAULT_INIT \
+  {                                     \
+    kEtcPalNullUuid, "", 0, NULL, 0, 0  \
+  }
+
+void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, const char* name);
 
 typedef struct SacnSourceUniverseConfig
 {
   /********* Required values **********/
+
+  /*! The universe number, At this time, only values from 1 - 63999 are accepted.
+      You cannot have a source send more than one stream of values to a single universe. */
   uint16_t universe_id;
-  uint8_t* slot_buffer;  //Values??
-  size_t num_slots;
+  /*! The buffer of up to 512 dmx values that will be sent each tick.
+      This pointer may not be NULL. The memory is owned by the application, and should not
+      be destroyed until after the universe is deleted on this source. */
+  const uint8_t* values_buffer;
+  /*! The size of values_buffer. */
+  size_t num_values;
 
   /********* Optional values **********/
+
+  /*! The sACN priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100. */
   uint8_t priority;
-  uint8_t* priority_buffer;  //Priority buffer will always be checked first., then priority, then slots processed
-  size_t num_priorities;  //???
+  /*! The (optional) buffer of up to 512 per-address priorities that will be sent each tick.
+      If this is NULL, only the priority will be used.
+      If non-NULL, this buffer is evaluated each tick.  Changes to and from 0 ("don't care") cause appropriate
+      sacn packets over time to take and give control of those DMX values as defined in the per-address priority
+     specification. The memory is owned by the application, and should not be destroyed until after the universe is
+     deleted on this source. The size of this buffer must match the size of values_buffer.  */
+  const uint8_t* priority_buffer;  // Priority buffer will always be checked first., then priority, then slots processed
 
-  /*! A set of option flags. See "sACN receiver flags". */
-  unsigned int flags; //PREVIEW??
-
+  /*! If true, this sACN source is sending preview data. Defaults to false. */
+  bool sending_preview;
 } SacnSourceUniverseConfig;
 
-void sacn_source_config_set_defaults(SacnSourceConfig* config);
-void sacn_source_universe_config_set_defaults(SacnSourceUniverseConfig* config);
+/*! A default-value initializer for an SacnSourceUniverseConfig struct. */
+#define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT \
+  {                                              \
+    0, NULL, 0, 100, NULL, 0                     \
+  }
+
+void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe_id,
+                                      const uint8_t* values_buffer, size_t values_len, const uint8_t* priority_buffer);
 
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle);
 etcpal_error_t sacn_source_destroy(sacn_source_t handle);
 
-sacn_source_add_universe; //Starts universe discovery, starts data/priority/per-address
-sacn_source_remove_universe;  //Gracefully shutds down universe (sending values properly), stops universe discovery.
+etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config, bool dirty_now);
+etcpal_error_t sacn_source_remove_universe(sacn_source_t handle, uint16_t universe_id);
 
-sacn_source_send_non_dmx;  //alternate start code stuff
+sacn_source_send_non_dmx;  // alternate start code stuff
 
+Tick;
 
-//Instead of adding start codes, have a data/priority section for a handle, and allow sending of other start codes manually?
+// Instead of adding start codes, have a data/priority section for a handle, and allow sending of other start codes
+// manually?
 etcpal_error_t sacn_source_add_start_code(sacn_source_t handle, const SacnStartCodeConfig* sc_config);
 etcpal_error_t sacn_source_remove_start_code(sacn_source_t handle, uint8_t start_code);
 
-//NOT SURE WE NEED THESE, or changing priority/per-addresssssss.. Maybe so..
+// NOT SURE WE NEED THESE, or changing priority/per-addresssssss.. Maybe so..
 etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint8_t new_priority);
 etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, bool new_preview_flag);
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name);
 
+//WE NEED THESE YET
 void sacn_source_set_dirty(sacn_source_t handle, uint8_t start_code);
 void sacn_sources_set_dirty(const SacnSourceStartCodePair* start_codes, size_t num_start_codes);
 void sacn_source_send_now(sacn_source_t handle, uint8_t start_code);
 void sacn_sources_send_now(const SacnSourceStartCodePair* start_codes, size_t num_start_codes);
 
+// TODO HANS --- And we need a "Reset all" case that doesn't take a handle!
 etcpal_error_t sacn_source_reset_networking(sacn_receiver_t handle, const SacnMcastNetintId* netints,
-                                              size_t num_netints);
-//What about multiple sources for same universe??
-
+                                            size_t num_netints);
+//THIS IS THE TICK REPLACEMENT
 size_t sacn_process_sources(void);
+sacn_process_source
 
 #ifdef __cplusplus
 }
