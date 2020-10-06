@@ -122,8 +122,8 @@ typedef struct SacnSourceUniverseConfig
       If this is NULL, only the priority will be used.
       If non-NULL, this buffer is evaluated each tick.  Changes to and from 0 ("don't care") cause appropriate
       sacn packets over time to take and give control of those DMX values as defined in the per-address priority
-     specification. The memory is owned by the application, and should not be destroyed until after the universe is
-     deleted on this source. The size of this buffer must match the size of values_buffer.  */
+      specification. The memory is owned by the application, and should not be destroyed until after the universe is
+      deleted on this source. The size of this buffer must match the size of values_buffer.  */
   const uint8_t* priority_buffer;  // Priority buffer will always be checked first., then priority, then slots processed
 
   /*! If true, this sACN source is sending preview data. Defaults to false. */
@@ -131,12 +131,16 @@ typedef struct SacnSourceUniverseConfig
 
   /*! If true, this sACN source is sending unicast traffic only on this universe. Defaults to false. */
   bool send_unicast_only;
+
+  /*! If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
+  uint16_t sync_universe;
+
 } SacnSourceUniverseConfig;
 
 /*! A default-value initializer for an SacnSourceUniverseConfig struct. */
 #define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT \
   {                                              \
-    0, NULL, 0, 100, NULL, 0, 0                   \
+    0, NULL, 0, 100, NULL, 0, 0, 0               \
   }
 
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe, const uint8_t* values_buffer,
@@ -151,23 +155,26 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
 etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config, bool dirty_now);
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe);
 
-etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest, bool dirty_now);
+etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest,
+                                                   bool dirty_now);
 void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest);
 
 etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t universe, uint8_t new_priority);
 etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t universe, bool new_preview_flag);
+etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle, uint16_t universe,
+                                                           uint16_t new_sync_universe);
 
 etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uint8_t start_code, const uint8_t* buffer,
                                     size_t buflen);
+etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t universe);
 
 void sacn_source_set_dirty(sacn_source_t handle, uint8_t universe);
 void sacn_source_set_list_dirty(sacn_source_t handle, uint8_t* universes, size_t num_universes);
+void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint8_t universe);
 
 size_t sacn_source_process_sources(void);
 
 etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, const SacnMcastNetintId* netints, size_t num_netints);
-
-// NB-W TESTING TODO DRAFT????
 
 #ifdef __cplusplus
 }

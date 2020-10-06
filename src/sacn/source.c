@@ -26,11 +26,9 @@
  - Make an example source that uses the new api.
  - Make an example source & testing for the c++ header.
  - IPv6 support.
+ - Sync support.  Update TODO comments in source.h & .c that state sync isn't supported.
  --------------NICK CLEAN UP
- - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
-   filter out the duplicate packet (just like IPv4 & IPv6).
- - Sync support.  Update TODO comments in receiver & merge_receiver that state sync isn't supported.
- - HANS reset networking & network creation errors?
+ - HANS reset networking & network creation errors!  Also change in reciever APIs!
  - DRAFT SUPPORT can this just be a flag (send draft in addition to ratified?) Check requirements!!
  - C++ headers & initial test framework
  - Any TODOS for me
@@ -175,7 +173,7 @@ void sacn_source_destroy(sacn_source_t handle)
  * Adds a universe to a source. If dirty_now is true, the source will start sending values on the
  * next call to sacn_source_process_sources(). If dirty_now is false, the applicaton must call sacn_source_set_dirty()
  * to mark it ready for processing.
- * 
+ *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
  * Discovery packets.
 
@@ -236,7 +234,8 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest, bool dirty_now)
+etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest,
+                                                   bool dirty_now)
 {
   // TODO CHRISTIAN
 
@@ -256,7 +255,8 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
  *
  * \param[in] handle Handle to the source to change.
  * \param[in] universe Universe to change.
- * \param[in] dest The destination IP.  May not be NULL, and must match the address passed to sacn_source_add_unicast_destination().
+ * \param[in] dest The destination IP.  May not be NULL, and must match the address passed to
+ * sacn_source_add_unicast_destination().
  */
 void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)
 {
@@ -282,10 +282,11 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
  */
 etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t universe, uint8_t new_priority)
 {
+  // TODO CHRISTIAN
+
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(new_priority);
-  // TODO
   return kEtcPalErrNotImpl;
 }
 
@@ -306,10 +307,39 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
  */
 etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t universe, bool new_preview_flag)
 {
+  // TODO CHRISTIAN
+
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(new_preview_flag);
+  return kEtcPalErrNotImpl;
+}
+
+/*!
+ * \brief Changes the synchronize uinverse for a universe of a sACN source.
+ *
+ * This will change the synchronization universe used by a sACN universe on the source.
+ * If this value is 0, synchronization is turned off for that universe.
+ *
+ * TODO: At this time, synchronization is not supported by this library.
+ *
+ * \param[in] handle Handle to the source to change.
+ * \param[in] universe The universe to change.
+ * \param[in] new_sync_universe The new synchronization universe to set.
+ * \return #kEtcPalErrOk: sync_universe set successfully.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle, uint16_t universe,
+                                                           uint16_t new_sync_universe)
+{
   // TODO
+
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(new_sync_universe);
   return kEtcPalErrNotImpl;
 }
 
@@ -346,6 +376,32 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
 }
 
 /*!
+ * \brief Immediately sends a synchronization packet for the universe on a source.
+ *
+ * This will cause an immediate transmission of a synchronization packet for the source/universe.
+ * If the universe does not have a synchronization universe configured, this call is ignored.
+ *
+ * TODO: At this time, synchronization is not supported by this library.
+ *
+ * \param[in] handle Handle to the source.
+ * \param[in] universe Universe to send on.
+ * \return #kEtcPalErrOk: Message successfully sent.
+ * \return #kEtcPalErrInvalid: Invalid parameter provided.
+ * \return #kEtcPalErrNotInit: Module not initialized.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
+ *                              source.
+ * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t universe)
+{
+  // TODO
+
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  return kEtcPalErrNotImpl;
+}
+
+/*!
  * \brief Indicate that the data in the buffer for this source and universe has changed and
  *        should be sent on the next call to sacn_source_process_sources().
  *
@@ -354,7 +410,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
  */
 void sacn_source_set_dirty(sacn_source_t handle, uint8_t universe)
 {
-  //TODO CHRISTIAN
+  // TODO CHRISTIAN
 
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
@@ -375,6 +431,28 @@ void sacn_source_set_list_dirty(sacn_source_t handle, uint8_t* universes, size_t
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universes);
   ETCPAL_UNUSED_ARG(num_universes);
+}
+
+/*!
+ * \brief Like sacn_source_set_dirty, but also sets the force_sync flag on the packet.
+ *
+ * This function indicates that the data in the buffer for this source and universe has changed,
+ * and should be sent on the next call to sacn_source_process_sources().  Additionally, the packet
+ * to be sent will have its force_synchronization option flag set.
+ *
+ * If no synchronization universe is configured, this function acts like a direct call to sacn_source_set_dirty().
+ *
+ * TODO: At this time, synchronization is not supported by this library.
+ *
+ * \param[in] handle Handle to the source to mark as dirty.
+ * \param[in] universe Universe to mark as dirty.
+ */
+void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint8_t universe)
+{
+  // TODO
+
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
 }
 
 /*!
@@ -419,10 +497,9 @@ size_t sacn_source_process_sources(void)
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, const SacnMcastNetintId* netints,
-                                              size_t num_netints)
+etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, const SacnMcastNetintId* netints, size_t num_netints)
 {
-  //TODO CHRISTIAN
+  // TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
