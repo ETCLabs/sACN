@@ -28,7 +28,7 @@
  - IPv6 support.
  - Sync support.  Update TODO comments in source.h & .c that state sync isn't supported.
  --------------NICK CLEAN UP
- - HANS reset networking & network creation errors!  Also change in reciever APIs!
+ - ***** HANS reset networking & network creation errors!  Also change in reciever APIs!
  - DRAFT SUPPORT can this just be a flag (send draft in addition to ratified?) Check requirements!!
  - C++ headers & initial test framework
  - Any TODOS for me
@@ -458,7 +458,7 @@ void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint8_t universe
 /*!
  * \brief Process created sources and do the actual sending of sACN data on all universes.
  *
- * Note: Unless you created the source with manual_process set to true, this will be automatically
+ * Note: Unless you created the source with manually_process_source set to true, this will be automatically
  * called by an internal thread of the module. Otherwise, this must be called at the maximum rate
  * at which the application will send sACN.
  *

@@ -79,7 +79,7 @@ typedef struct SacnSourceConfig
       This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES is used
      instead.*/
   size_t universe_count_max;
-  /*! (optional) array of network interfaces on which to listen to the specified universe. If NULL,
+  /*! (optional) array of network interfaces on which to send to the specified universe. If NULL,
    *  all available network interfaces will be used. */
   const SacnMcastNetintId* netints;
   /*! Number of elements in the netints array. */
@@ -88,7 +88,7 @@ typedef struct SacnSourceConfig
   /*! If false (default), this module starts a thread that calls sacn_source_process_sources() every 23 ms.
       If true, no thread is started and the application must call sacn_source_process_sources() at its DMX rate,
       usually 23 ms. */
-  bool manual_process;
+  bool manually_process_source;
 
 } SacnSourceConfig;
 
