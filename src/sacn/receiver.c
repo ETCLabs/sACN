@@ -1088,6 +1088,13 @@ void process_source_data_buffer(SacnTrackedSource* src, const EtcPalSockAddr* fr
     source_data_buffer->slot_count = header->slot_count;
     memcpy(source_data_buffer->data, pdata, header->slot_count);
   }
+
+#if SACN_ETC_PRIORITY_EXTENSION
+  if (etcpal_timer_is_expired(&src->pap_timer) && (src->pap_buffer.slot_count > 0))
+  {
+    memset(&src->pap_buffer, 0, sizeof(SourceDataBuffer));
+  }
+#endif
 }
 
 /*
@@ -1278,6 +1285,11 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
     *notify = false;
     etcpal_timer_start(&src->pap_timer, WAIT_FOR_PRIORITY);
   }
+#endif
+
+  memset(&src->null_start_code_buffer, 0, sizeof(SourceDataBuffer));
+#if SACN_ETC_PRIORITY_EXTENSION
+  memset(&src->pap_buffer, 0, sizeof(SourceDataBuffer));
 #endif
 
   etcpal_rbtree_insert(&receiver->sources, src);
