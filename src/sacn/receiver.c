@@ -1372,10 +1372,6 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
  */
 void process_receivers(SacnRecvThreadContext* recv_thread_context)
 {
-  // CHRISTIAN TODO  Remove sampling ended, add sources found?
-
-  // SamplingEndedNotification* sampling_ended = NULL;
-  // size_t num_sampling_ended = 0;
   SourcesLostNotification* sources_lost = NULL;
   size_t num_sources_lost = 0;
   SourcesFoundNotification* sources_found = NULL;
@@ -1388,7 +1384,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
     // sampling_ended = get_sampling_ended_buffer(recv_thread_context->thread_id, num_receivers);
     sources_lost = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
     sources_found = get_sources_found_buffer(recv_thread_context->thread_id, num_receivers);
-    if (/*!sampling_ended ||*/ !sources_lost || !sources_found)
+    if (!sources_lost || !sources_found)
     {
       sacn_unlock();
       SACN_LOG_ERR("Could not allocate memory to track state data for sACN receivers!");
@@ -1397,17 +1393,52 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
 
     for (SacnReceiver* receiver = recv_thread_context->receivers; receiver; receiver = receiver->next)
     {
-      /*
       // Check the sample period
       if (receiver->sampling && etcpal_timer_is_expired(&receiver->sample_timer))
       {
         receiver->sampling = false;
-        sampling_ended[num_sampling_ended].callback = receiver->callbacks.sampling_ended;
-        sampling_ended[num_sampling_ended].context = receiver->callback_context;
-        sampling_ended[num_sampling_ended].handle = receiver->keys.handle;
-        ++num_sampling_ended;
+
+        // Attempt to construct a notification with all the sources found during the sampling period.
+        // TODO: Should this be moved to a separate function (perhaps process_receiver_sources)?
+        // TODO: Locking? Look into this.
+        bool all_sources_added = true;
+
+        EtcPalRbIter src_iter;
+        etcpal_rbiter_init(&src_iter);
+        for (SacnTrackedSource* src = etcpal_rbiter_first(&src_iter, &receiver->sources); all_sources_added && src;
+             src = etcpal_rbiter_next(&src_iter))
+        {
+          all_sources_added =
+              all_sources_added &&
+              add_found_source(&sources_found[num_sources_found], &src->cid, src->name,
+                               &src->null_start_code_buffer.from_addr, src->null_start_code_buffer.priority,
+                               src->null_start_code_buffer.data, src->null_start_code_buffer.slot_count,
+                               src->null_start_code_buffer.preview, src->pap_buffer.data, src->pap_buffer.slot_count);
+        }
+
+        if (all_sources_added && (sources_found[num_sources_found].num_found_sources > 0))
+        {
+          // Mark all the sources as found
+          etcpal_rbiter_init(&src_iter);
+          for (SacnTrackedSource* src = etcpal_rbiter_first(&src_iter, &receiver->sources); src;
+               src = etcpal_rbiter_next(&src_iter))
+          {
+            src->found = true;
+          }
+
+          // Finish initializing notification
+          sources_found[num_sources_found].callback = receiver->callbacks.sources_found;
+          sources_found[num_sources_found].handle = receiver->keys.handle;
+          sources_found[num_sources_found].universe = receiver->keys.universe;
+          sources_found[num_sources_found].context = receiver->callback_context;
+
+          ++num_sources_found;
+        }
+        else
+        {
+          sources_found[num_sources_found].num_found_sources = 0;
+        }
       }
-      */
 
       process_receiver_sources(recv_thread_context->thread_id, receiver, &sources_lost[num_sources_lost++]);
     }
