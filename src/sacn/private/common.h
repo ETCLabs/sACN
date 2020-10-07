@@ -243,6 +243,7 @@ typedef struct SacnTrackedSource
   char name[SACN_SOURCE_NAME_MAX_LEN];
   EtcPalTimer packet_timer;
   uint8_t seq;
+  bool found;
   bool terminated;
   bool dmx_received_since_last_tick;
 
