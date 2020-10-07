@@ -18,7 +18,8 @@
  *****************************************************************************/
 
 /*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
- - Add full support for the sources found notification. Packets aren't forwarded to the application until the source list is stable.
+ - Add full support for the sources found notification. Packets aren't forwarded to the application until the source
+ list is stable.
  - Sync support.  Update TODO comments in receiver & merge_receiver that state sync isn't supported.
  - Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet!
  - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
@@ -29,7 +30,8 @@
  - Make sure everything works with static & dynamic memory.
  - Make source addition honors source_count_max, even in dynamic mode.
  - Get usage/API documentation in place and cleaned up so we can have a larger review.
- - refactor common.c's init & deinit functions to be more similar to https://github.com/ETCLabs/RDMnet/blob/develop/src/rdmnet/core/common.c#L141's functions, as Sam put in the review. 
+ - refactor common.c's init & deinit functions to be more similar to
+ https://github.com/ETCLabs/RDMnet/blob/develop/src/rdmnet/core/common.c#L141's functions, as Sam put in the review.
  - Make the example receiver use the new api.
  - Make an example receiver & testing for the c++ header.
  - This entire project should build without warnings!!
@@ -127,12 +129,15 @@ static void handle_incoming(sacn_thread_id_t thread_id, const uint8_t* data, siz
                             const EtcPalSockAddr* from_addr);
 static void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
                                     const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr, bool draft);
+static void process_source_data_buffer(SacnTrackedSource* src, const EtcPalSockAddr* from_addr,
+                                       const SacnHeaderData* header, const uint8_t* pdata);
 static void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
                                     UniverseDataNotification* universe_data,
                                     SourcePapLostNotification* source_pap_lost);
 static void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, UniverseDataNotification* universe_data);
 static void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_cid, const SacnHeaderData* header,
-                                    uint8_t seq, UniverseDataNotification* universe_data,
+                                    uint8_t seq, SacnTrackedSource** new_source,
+                                    UniverseDataNotification* universe_data,
                                     SourceLimitExceededNotification* source_limit_exceeded);
 static bool check_sequence(int8_t new_seq, int8_t old_seq);
 static void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid* sender_cid,
@@ -429,7 +434,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
       sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, false);
       res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, new_universe_id, receiver->netints,
                                      receiver->num_netints, &receiver->socket);
-// CHRISTIAN TODO IPv6
+      // CHRISTIAN TODO IPv6
     }
 
     // Update receiver key and position in receiver_state.receivers_by_universe.
@@ -600,7 +605,8 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
 /*
  * Initialize a SacnReceiver's network interface data.
  */
-etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const EtcPalMcastNetintId* netints, size_t num_netints)
+etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const EtcPalMcastNetintId* netints,
+                                           size_t num_netints)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
@@ -914,6 +920,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
                              const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr, bool draft)
 {
   UniverseDataNotification* universe_data = get_universe_data(thread_id);
+  SourcesFoundNotification* sources_found = get_sources_found_buffer(thread_id, 1);
   SourceLimitExceededNotification* source_limit_exceeded = get_source_limit_exceeded(thread_id);
   SourcePapLostNotification* source_pap_lost = get_source_pap_lost(thread_id);
   if (!universe_data || !source_limit_exceeded || !source_pap_lost)
@@ -1019,15 +1026,46 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     }
     else if (!is_termination_packet)
     {
-      process_new_source_data(receiver, sender_cid, header, seq, universe_data, source_limit_exceeded);
+      process_new_source_data(receiver, sender_cid, header, seq, &src, universe_data, source_limit_exceeded);
     }
     // Else we weren't tracking this source before and it is a termination packet. Ignore.
+
+    if (src)
+    {
+      process_source_data_buffer(src, from_addr, header, universe_data->pdata);
+    }
 
     sacn_unlock();
   }
 
   // Deliver callbacks if applicable.
   deliver_receive_callbacks(from_addr, sender_cid, header, source_limit_exceeded, source_pap_lost, universe_data);
+}
+
+void process_source_data_buffer(SacnTrackedSource* src, const EtcPalSockAddr* from_addr, const SacnHeaderData* header,
+                                const uint8_t* pdata)
+{
+  SourceDataBuffer* source_data_buffer = NULL;
+  if (header->start_code == SACN_STARTCODE_DMX)
+  {
+    source_data_buffer = &src->null_start_code_buffer;
+  }
+#if SACN_ETC_PRIORITY_EXTENSION
+  else if (header->start_code == SACN_STARTCODE_PRIORITY)
+  {
+    source_data_buffer = &src->pap_buffer;
+  }
+#endif
+
+  if (source_data_buffer)
+  {
+    source_data_buffer->from_addr = *from_addr;
+    source_data_buffer->priority = header->priority;
+    source_data_buffer->preview = header->preview;
+    source_data_buffer->start_code = header->start_code;
+    source_data_buffer->slot_count = header->slot_count;
+    memcpy(source_data_buffer->data, pdata, header->slot_count);
+  }
 }
 
 /*
@@ -1165,7 +1203,7 @@ void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, UniverseD
  *                             should be forwarded to the app.
  */
 void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_cid, const SacnHeaderData* header,
-                             uint8_t seq, UniverseDataNotification* universe_data,
+                             uint8_t seq, SacnTrackedSource** new_source, UniverseDataNotification* universe_data,
                              SourceLimitExceededNotification* source_limit_exceeded)
 {
   bool notify = true;
@@ -1230,6 +1268,7 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
 #endif
 
   etcpal_rbtree_insert(&receiver->sources, src);
+  *new_source = src;
 
   if (notify)
   {
@@ -1282,18 +1321,20 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
     }
 
     if (source_limit_exceeded->callback)
-      source_limit_exceeded->callback(source_limit_exceeded->handle, source_limit_exceeded->universe, source_limit_exceeded->context);
+      source_limit_exceeded->callback(source_limit_exceeded->handle, source_limit_exceeded->universe,
+                                      source_limit_exceeded->context);
   }
 
   if (source_pap_lost->handle != SACN_RECEIVER_INVALID && source_pap_lost->callback)
   {
-    source_pap_lost->callback(source_pap_lost->handle, source_pap_lost->universe, &source_pap_lost->source, source_pap_lost->context);
+    source_pap_lost->callback(source_pap_lost->handle, source_pap_lost->universe, &source_pap_lost->source,
+                              source_pap_lost->context);
   }
 
   if (universe_data->handle != SACN_RECEIVER_INVALID && universe_data->callback)
   {
-    universe_data->callback(universe_data->handle, universe_data->universe, from_addr, &universe_data->header, universe_data->pdata,
-                            universe_data->context);
+    universe_data->callback(universe_data->handle, universe_data->universe, from_addr, &universe_data->header,
+                            universe_data->pdata, universe_data->context);
   }
 }
 
