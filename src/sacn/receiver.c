@@ -1439,8 +1439,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
         SACN_LOG_DEBUG("Removing internally tracked source %s", cid_str);
       }
     }
-
-    if (sampling_period_just_ended)
+    else if (sampling_period_just_ended)
     {
       // Attempt to construct a notification with all the sources found during the sampling period.
       src->found = add_found_source(sources_found, &src->cid, src->name, &src->null_start_code_buffer.from_addr,
