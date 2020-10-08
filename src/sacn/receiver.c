@@ -979,13 +979,6 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
       return;
     }
 
-    if (header->preview && receiver->filter_preview_data)
-    {
-      // This universe is filtering preview data.
-      sacn_unlock();
-      return;
-    }
-
     bool notify = false;
     SacnTrackedSource* src = (SacnTrackedSource*)etcpal_rbtree_find(&receiver->sources, sender_cid);
     if (src)
