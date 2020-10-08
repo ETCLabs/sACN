@@ -143,19 +143,29 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
  * An sACN merge receiver can listen on one universe at a time, and each universe can only be listened to
  * by one merge receiver at at time.
  *
+ * Note that a merge receiver is considered as successfully created if it is able to successfully use any of the
+ * network interfaces listed in the passed in configuration.  This will only return #kEtcPalErrNoNetints
+ * if none of the interfaces work.
+ *
  * \param[in] config Configuration parameters for the sACN Merge Receiver to be created.
  * \param[out] handle Filled in on success with a handle to the sACN Merge Receiver.
+ * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Merge Receiver created successfully.
+ * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrExists: A merge receiver already exists which is listening on the specified universe.
  * \return #kEtcPalErrNoMem: No room to allocate memory for this merge receiver, or maximum merge receivers reached.
- * \return #kEtcPalErrNoNetints: No network interfaces were found on the system.
  * \return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle)
+etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle,
+                                          SacnNetworkChangeResult* good_interfaces)
 {
+  //TODO CHRISTIAN
+  ETCPAL_UNUSED_ARG(good_interfaces);
+
   // CHRISTIAN TODO
   if (!config || !handle)
     return kEtcPalErrInvalid;
@@ -233,23 +243,30 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
  * this call fails, the caller must call sacn_merge_receiver_destroy for the merge receiver, because the receiver may be
  * in an invalid state.
  *
+ * Note that the networking reset is considered successful if it is able to successfully use any of the
+ * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
  * \param[in] handle Handle to the merge receiver for which to reset the networking.
  * \param[in] (optional) array of network interfaces on which to listen to the specified universe. If NULL,
  *  all available network interfaces will be used.
  * \param[in] Number of elements in the netints array.
+ * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Network reset successfully.
+ * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
-                                                    size_t num_netints)
+                                                    size_t num_netints, SacnNetworkChangeResult* good_interfaces)
 {
   // TODO CHRISTIAN CLEANUP
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
+  ETCPAL_UNUSED_ARG(good_interfaces);
   return kEtcPalErrNotImpl;
 }
 

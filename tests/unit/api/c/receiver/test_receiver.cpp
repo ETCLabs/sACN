@@ -111,7 +111,7 @@ TEST_F(TestReceiver, ChangeUniverseWorks)
   };
 
   sacn_receiver_t handle;
-  sacn_receiver_create(&config, &handle);
+  sacn_receiver_create(&config, &handle, nullptr);
 
   clear_term_set_list_fake.custom_fake = [](TerminationSet* list) { EXPECT_EQ(list, nullptr); };
   sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t socket, bool) {
@@ -184,12 +184,12 @@ TEST_F(TestReceiver, ChangeUniverseErrExistsWorks)
   config.universe_id = CHANGE_UNIVERSE_RECEIVER_EXISTS_UNIVERSE;
 
   sacn_receiver_t handle_existing_receiver;
-  sacn_receiver_create(&config, &handle_existing_receiver);
+  sacn_receiver_create(&config, &handle_existing_receiver, nullptr);
 
   config.universe_id = CHANGE_UNIVERSE_NO_RECEIVER_UNIVERSE_1;
 
   sacn_receiver_t handle_changing_receiver;
-  sacn_receiver_create(&config, &handle_changing_receiver);
+  sacn_receiver_create(&config, &handle_changing_receiver, nullptr);
 
   etcpal_error_t change_universe_no_err_exists_result =
       sacn_receiver_change_universe(handle_changing_receiver, CHANGE_UNIVERSE_NO_RECEIVER_UNIVERSE_2);
@@ -213,7 +213,7 @@ TEST_F(TestReceiver, ChangeUniverseErrNotFoundWorks)
   config.universe_id = CHANGE_UNIVERSE_VALID_UNIVERSE_1;
 
   sacn_receiver_t handle;
-  sacn_receiver_create(&config, &handle);
+  sacn_receiver_create(&config, &handle, nullptr);
 
   etcpal_error_t change_universe_found_result =
       sacn_receiver_change_universe(handle, CHANGE_UNIVERSE_VALID_UNIVERSE_2);

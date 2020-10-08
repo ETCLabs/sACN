@@ -79,12 +79,29 @@ typedef struct SacnHeaderData
  * primary key for a network interface is simply a combination of the interface index and the IP
  * protocol used.
  */
-//TODO CHRISTIAN : This is identical to the RdmnetMcastNetintId.  They need to be merged into ETCPal as EtcPalMcastNetintId.
+// TODO CHRISTIAN : This is identical to the RdmnetMcastNetintId.  They need to be merged into ETCPal as
+// EtcPalMcastNetintId.
 typedef struct SacnMcastNetintId
 {
   etcpal_iptype_t ip_type; /*!< The IP protocol used on the network interface. */
   unsigned int index;      /*!< The OS index of the network interface. */
 } SacnMcastNetintId;
+
+/*! The functions on the source and receiver that involve creation and networking change
+ *   use this structure to indicate what interfaces were successfully created.
+ * */
+typedef struct SacnNetworkChangeResult
+{
+  /*! This array is owned by the application.  The library will fill in
+   *   the array with the list of successfully added network interfaces (only up to
+   *   the maximum size of the array).
+   */
+  SacnMcastNetintId* successful_interfaces;
+  /*! On input, this is the maximum size of successful_interfaces.
+   *   On output, this is the number of successful interfaces added by the library.  In the event that
+   *   successful_interfaces is too small for the entire list, this count is bounded by the passed in max. */
+  size_t successful_interfaces_count;
+} SacnNetworkChangeResult;
 
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params);
 void sacn_deinit(void);

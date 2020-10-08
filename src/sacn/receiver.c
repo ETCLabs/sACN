@@ -34,6 +34,7 @@
  - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
    filter out the duplicate packet (just like IPv4 & IPv6).
  - This entire project should build without warnings!!
+ - Make sure the new functionality for receiver/merge_receiver create & reset_networking work with and without good_interfaces, in all combinations (nill, small array, large array, etc).
  - Sync support.  Update TODO comments in receiver & merge_receiver that state sync isn't supported.
 */
 
@@ -237,19 +238,28 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
  * A sACN receiver can listen on one universe at a time, and each universe can only be listened to
  * by one receiver at at time.
  *
+ * Note that a receiver is considered as successfully created if it is able to successfully use any of the
+ * network interfaces listed in the passed in configuration.  This will only return #kEtcPalErrNoNetints
+ * if none of the interfaces work.
+ *
  * \param[in] config Configuration parameters for the sACN receiver to be created.
  * \param[out] handle Filled in on success with a handle to the sACN receiver.
- * \return #kEtcPalErrOk: Receiver created successful.
+ * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * interfaces that were succesfully used.
+ * \return #kEtcPalErrOk: Receiver created successfully.
+ * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrExists: A receiver already exists which is listening on the specified universe.
  * \return #kEtcPalErrNoMem: No room to allocate memory for this receiver.
- * \return #kEtcPalErrNoNetints: No network interfaces were found on the system.
  * \return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle)
+etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle, SacnNetworkChangeResult* good_interfaces)
 {
+  //TODO CHRISTIAN
+  ETCPAL_UNUSED_ARG(good_interfaces);
+
   if (!config || !handle)
     return kEtcPalErrInvalid;
 
@@ -469,22 +479,30 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  * If this call fails, the caller must call sacn_receiver_destroy for the receiver, because the receiver may be in an
  * invalid state.
  *
+ * Note that the networking reset is considered successful if it is able to successfully use any of the
+ * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
  * \param[in] handle Handle to the receiver for which to reset the networking.
  * \param[in] netints Optional array of network interfaces on which to listen to the specified universe. If NULL,
  *  all available network interfaces will be used.
  * \param[in] num_netints Number of elements in the netints array.
+ * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Universe changed successfully.
+ * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, const SacnMcastNetintId* netints,
-                                              size_t num_netints)
+                                              size_t num_netints, SacnNetworkChangeResult* good_interfaces)
 {
+  //TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
+  ETCPAL_UNUSED_ARG(good_interfaces);
 
   if (!sacn_initialized())
     return kEtcPalErrNotInit;

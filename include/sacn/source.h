@@ -146,7 +146,7 @@ typedef struct SacnSourceUniverseConfig
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe, const uint8_t* values_buffer,
                                       size_t values_len, const uint8_t* priority_buffer);
 
-etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle);
+etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle, SacnNetworkChangeResult* good_interfaces);
 void sacn_source_destroy(sacn_source_t handle);
 
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name);
@@ -174,7 +174,7 @@ void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint8_t universe
 
 size_t sacn_source_process_sources(void);
 
-etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, const SacnMcastNetintId* netints, size_t num_netints);
+etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, const SacnMcastNetintId* netints, size_t num_netints, SacnNetworkChangeResult* good_interfaces);
 
 #ifdef __cplusplus
 }

@@ -39,7 +39,7 @@
  *
  * This API is used to minimally wrap the sACN Receiver and DMX Merger logic together so an application can receive and
  * merge sACN sources in software.
- * 
+ *
  * @{
  */
 
@@ -116,7 +116,8 @@ typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t handle, ui
  * \param[in] universe The universe this merge receiver is monitoring.
  * \param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(sacn_merge_receiver_t handle, uint16_t universe, void* context);
+typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(sacn_merge_receiver_t handle, uint16_t universe,
+                                                             void* context);
 
 /*! A set of callback functions that the library uses to notify the application about sACN events. */
 typedef struct SacnMergeReceiverCallbacks
@@ -158,12 +159,13 @@ typedef struct SacnMergeReceiverConfig
 
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
 
-etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle);
+etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle,
+                                          SacnNetworkChangeResult* good_interfaces);
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle);
 etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id);
 etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
-                                                    size_t num_netints);
+                                                    size_t num_netints, SacnNetworkChangeResult* good_interfaces);
 sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid);
 etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, sacn_source_id_t source_id,
                                                   EtcPalUuid* source_cid);

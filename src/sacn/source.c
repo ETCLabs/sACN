@@ -19,7 +19,9 @@
 
 /*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
  - Make sure I didn't miss any requirements or details from the protocol.
- - A whole lotta implementation.  You should be able to base some this on the earlier C++ library.
+ - A whole lotta implementation.  You should be able to base some this on the earlier C++ library, but also look at the
+ spec for 0xdd, since the old library didn't handle intermixing 0x00 & 0xdd on take-control and release-control.  Ray
+ can help there, too.
  - Get usage/API documentation in place and cleaned up so we can have a larger review.
  - Make sure everything works with static & dynamic memory.
  - This entire project should build without warnings!!
@@ -28,9 +30,9 @@
  - IPv6 support.
  - Sync support.  Update TODO comments in source.h & .c that state sync isn't supported.
  --------------NICK CLEAN UP
- - ***** HANS reset networking & network creation errors!  Also change in reciever APIs!
  - DRAFT SUPPORT can this just be a flag (send draft in addition to ratified?) Check requirements!!
  - C++ headers & initial test framework
+ - The C++ headers should return the working interfaces on Create and Reset!!!!
  - Any TODOS for me
 */
 
@@ -106,22 +108,31 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t
  *
  * This creates the instance of the source, but no data is sent until sacn_source_add_universe() is called.
  *
+ * Note that a source is considered as successfully created if it is able to successfully use any of the
+ * network interfaces listed in the passed in configuration.  This will only return #kEtcPalErrNoNetints
+ * if none of the interfaces work.
+ *
  * \param[in] config Configuration parameters for the sACN source to be created.
  * \param[out] handle Filled in on success with a handle to the sACN source.
+ * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Source successfully created.
+ * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNoMem: No room to allocate additional source.
+ * \return #kEtcPalErrNoMem: No room to allocate an additional source.
  * \return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle)
+etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle,
+                                  SacnNetworkChangeResult* good_interfaces)
 {
   // TODO CHRISTIAN
   // If the Tick thread hasn't been started yet, start it if the config isn't manual.
 
   ETCPAL_UNUSED_ARG(config);
   ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(good_interfaces);
   return kEtcPalErrNotImpl;
 }
 
@@ -487,22 +498,30 @@ size_t sacn_source_process_sources(void)
  * If this call fails, the caller must call sacn_source_destroy(), because the source may be in an
  * invalid state.
  *
+ * Note that the networking reset is considered successful if it is able to successfully use any of the
+ * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
  * \param[in] handle Handle to the source for which to reset the networking.
  * \param[in] netints Optional array of network interfaces on which to listen to the specified universe. If NULL,
  *  all available network interfaces will be used.
  * \param[in] num_netints Number of elements in the netints array.
+ * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Source changed successfully.
+ * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, const SacnMcastNetintId* netints, size_t num_netints)
+etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, const SacnMcastNetintId* netints, size_t num_netints,
+                                            SacnNetworkChangeResult* good_interfaces)
 {
   // TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
+  ETCPAL_UNUSED_ARG(good_interfaces);
 
   return kEtcPalErrNotImpl;
 }

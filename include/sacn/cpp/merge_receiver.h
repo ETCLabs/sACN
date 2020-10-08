@@ -134,11 +134,13 @@ public:
   MergeReceiver(MergeReceiver&& other) = default;             ///< Move a merge receiver instance.
   MergeReceiver& operator=(MergeReceiver&& other) = default;  ///< Move a merge receiver instance.
 
-  etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler);
+  etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
+                        SacnNetworkChangeResult* good_interfaces = nullptr);
   void Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
-  etcpal::Error ResetNetworking(const std::vector<SacnMcastNetintId>& netints);
+  etcpal::Error ResetNetworking(const std::vector<SacnMcastNetintId>& netints,
+                                SacnNetworkChangeResult* good_interfaces = nullptr);
 
   etcpal::Expected<sacn_source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
   etcpal::Expected<etcpal::Uuid> GetSourceCid(sacn_source_id_t source) const;
@@ -210,21 +212,28 @@ inline bool MergeReceiver::Settings::IsValid() const
  * An sACN merge receiver can listen on one universe at a time, and each universe can only be listened to
  * by one merge receiver at at time.
  *
+ * Note that a merge receiver is considered as successfully created if it is able to successfully use any of the
+ * network interfaces listed in the passed in configuration.  This will only return #kEtcPalErrNoNetints
+ * if none of the interfaces work.
+ *
  * \param[in] settings Configuration parameters for the sACN merge receiver and this class instance.
  * \param[in] notify_handler The notification interface to call back to the application.
+ * \param[in, out] good_interfaces Optional. If non-nil, good_interfaces is filled in with the list of network
+ * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Merge Receiver created successfully.
+ * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrExists: A merge receiver already exists which is listening on the specified universe.
  * \return #kEtcPalErrNoMem: No room to allocate memory for this merge receiver, or maximum merge receivers reached.
- * \return #kEtcPalErrNoNetints: No network interfaces were found on the system.
  * \return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHandler& notify_handler)
+inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHandler& notify_handler,
+                                            SacnNetworkChangeResult* good_interfaces)
 {
   SacnMergeReceiverConfig config = TranslateConfig(settings, notify_handler);
-  return sacn_merge_receiver_create(&config, &handle_);
+  return sacn_merge_receiver_create(&config, &handle_, good_interfaces);
 }
 
 /*!
@@ -283,20 +292,27 @@ inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
  * HandleSourcesFound() calls when appropriate.
  * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
  *
+ * Note that the networking reset is considered successful if it is able to successfully use any of the
+ * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
  * \param[in] netints Vector of network interfaces on which to listen to the specified universe. If empty,
  *  all available network interfaces will be used.
+ * \param[in, out] good_interfaces Optional. If non-nil, good_interfaces is filled in with the list of network
+ * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Universe changed successfully.
+ * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error MergeReceiver::ResetNetworking(const std::vector<SacnMcastNetintId>& netints)
+inline etcpal::Error MergeReceiver::ResetNetworking(const std::vector<SacnMcastNetintId>& netints,
+                                                    SacnNetworkChangeResult* good_interfaces)
 {
   if (netints.empty())
-    return sacn_merge_receiver_reset_networking(handle_, nullptr, 0);
+    return sacn_merge_receiver_reset_networking(handle_, nullptr, 0, good_interfaces);
   else
-    return sacn_merge_receiver_reset_networking(handle_, netints.data(), netints.size());
+    return sacn_merge_receiver_reset_networking(handle_, netints.data(), netints.size(), good_interfaces);
 }
 
 /*!
