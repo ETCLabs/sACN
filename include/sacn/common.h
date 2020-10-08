@@ -98,8 +98,9 @@ typedef struct SacnNetworkChangeResult
    */
   SacnMcastNetintId* successful_interfaces;
   /*! On input, this is the maximum size of successful_interfaces.
-   *   On output, this is the number of successful interfaces added by the library.  In the event that
-   *   successful_interfaces is too small for the entire list, this count is bounded by the passed in max. */
+   *  On output, this is the number of successful interfaces added by the library.  In the event that
+   *  successful_interfaces is too small for the entire list, this count is bounded by the passed in max.
+   */
   size_t successful_interfaces_count;
 } SacnNetworkChangeResult;
 
