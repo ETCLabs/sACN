@@ -219,6 +219,8 @@ typedef enum
 
 typedef struct SourceDataBuffer
 {
+  /* Whether this buffer has been written to yet. */
+  bool written;
   /* The address from which we received this data. */
   EtcPalSockAddr from_addr;
   /* The priority of the sACN data. Valid range is 0-200, inclusive. */

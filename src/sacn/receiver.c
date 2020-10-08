@@ -129,8 +129,9 @@ static void handle_incoming(sacn_thread_id_t thread_id, const uint8_t* data, siz
                             const EtcPalSockAddr* from_addr);
 static void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
                                     const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr, bool draft);
-static void process_source_data_buffer(SacnTrackedSource* src, const EtcPalSockAddr* from_addr,
-                                       const SacnHeaderData* header, const uint8_t* pdata);
+static void process_source_data_buffers(SacnTrackedSource* src, const EtcPalSockAddr* from_addr,
+                                        const SacnHeaderData* header, const uint8_t* pdata, bool filter_preview_data,
+                                        bool* notify);
 static void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
                                     SourcePapLostNotification* source_pap_lost, bool* notify);
 static void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* notify);
@@ -1031,28 +1032,28 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 
     if (src)
     {
-      process_source_data_buffer(src, from_addr, header, universe_data->pdata);
-    }
+      process_source_data_buffers(src, from_addr, header, universe_data->pdata, receiver->filter_preview_data, &notify);
 
-    if (notify)
-    {
-      if (src->found)
+      if (notify)
       {
-        universe_data->callback = receiver->callbacks.universe_data;
-        universe_data->handle = receiver->keys.handle;
-        universe_data->universe = receiver->keys.universe;
-        universe_data->context = receiver->callbacks.context;
-      }
-      else if (add_found_source(source_found, &header->cid, header->source_name, from_addr, header->priority,
-                                src->null_start_code_buffer.data, src->null_start_code_buffer.slot_count,
-                                header->preview, src->pap_buffer.data, src->pap_buffer.slot_count))
-      {
-        source_found->callback = receiver->callbacks.sources_found;
-        source_found->handle = receiver->keys.handle;
-        source_found->universe = receiver->keys.universe;
-        source_found->context = receiver->callbacks.context;
+        if (src->found)
+        {
+          universe_data->callback = receiver->callbacks.universe_data;
+          universe_data->handle = receiver->keys.handle;
+          universe_data->universe = receiver->keys.universe;
+          universe_data->context = receiver->callbacks.context;
+        }
+        else if (add_found_source(source_found, &header->cid, header->source_name, from_addr, header->priority,
+                                  src->null_start_code_buffer.data, src->null_start_code_buffer.slot_count,
+                                  header->preview, src->pap_buffer.data, src->pap_buffer.slot_count))
+        {
+          source_found->callback = receiver->callbacks.sources_found;
+          source_found->handle = receiver->keys.handle;
+          source_found->universe = receiver->keys.universe;
+          source_found->context = receiver->callbacks.context;
 
-        src->found = true;
+          src->found = true;
+        }
       }
     }
 
@@ -1064,29 +1065,56 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
                             source_found);
 }
 
-void process_source_data_buffer(SacnTrackedSource* src, const EtcPalSockAddr* from_addr, const SacnHeaderData* header,
-                                const uint8_t* pdata)
+void process_source_data_buffers(SacnTrackedSource* src, const EtcPalSockAddr* from_addr, const SacnHeaderData* header,
+                                 const uint8_t* pdata, bool filter_preview_data, bool* notify)
 {
-  SourceDataBuffer* source_data_buffer = NULL;
-  if (header->start_code == SACN_STARTCODE_DMX)
+  if (header->preview && filter_preview_data && src->found)
   {
-    source_data_buffer = &src->null_start_code_buffer;
+    // Discard preview data if the sources found notification already happened.
+    *notify = false;
   }
+  else
+  {
+    SourceDataBuffer* source_data_buffer = NULL;
+    if (header->start_code == SACN_STARTCODE_DMX)
+    {
+      source_data_buffer = &src->null_start_code_buffer;
+    }
 #if SACN_ETC_PRIORITY_EXTENSION
-  else if (header->start_code == SACN_STARTCODE_PRIORITY)
-  {
-    source_data_buffer = &src->pap_buffer;
-  }
+    else if (header->start_code == SACN_STARTCODE_PRIORITY)
+    {
+      source_data_buffer = &src->pap_buffer;
+    }
 #endif
 
-  if (source_data_buffer)
-  {
-    source_data_buffer->from_addr = *from_addr;
-    source_data_buffer->priority = header->priority;
-    source_data_buffer->preview = header->preview;
-    source_data_buffer->start_code = header->start_code;
-    source_data_buffer->slot_count = header->slot_count;
-    memcpy(source_data_buffer->data, pdata, header->slot_count);
+    if (source_data_buffer)
+    {
+      if (header->preview && filter_preview_data && source_data_buffer->written && !source_data_buffer->preview)
+      {
+        // Discard preview data if we already have non-preview data.
+        *notify = false;
+      }
+      else
+      {
+        source_data_buffer->written = true;
+        source_data_buffer->from_addr = *from_addr;
+        source_data_buffer->priority = header->priority;
+        source_data_buffer->preview = header->preview;
+        source_data_buffer->start_code = header->start_code;
+
+        if (header->preview && filter_preview_data)
+        {
+          source_data_buffer->slot_count = 0;
+          memset(source_data_buffer->data, 0, DMX_ADDRESS_COUNT);
+        }
+        else
+        {
+          source_data_buffer->slot_count = header->slot_count;
+          memcpy(source_data_buffer->data, pdata, header->slot_count);
+          memset(source_data_buffer->data + header->slot_count, 0, DMX_ADDRESS_COUNT - header->slot_count);
+        }
+      }
+    }
   }
 
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -1443,7 +1471,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
         SACN_LOG_DEBUG("Removing internally tracked source %s", cid_str);
       }
     }
-    else if (sampling_period_just_ended)
+    else if (sampling_period_just_ended && !src->found)
     {
       // Attempt to construct a notification with all the sources found during the sampling period.
       src->found = add_found_source(sources_found, &src->cid, src->name, &src->null_start_code_buffer.from_addr,
