@@ -124,7 +124,7 @@ typedef struct SacnMergeReceiverCallbacks
   SacnMergeReceiverMergedDataCallback universe_data;                  /*!< Required */
   SacnMergeReceiverNonDmxCallback universe_non_dmx;                   /*!< Required */
   SacnMergeReceiverSourceLimitExceededCallback source_limit_exceeded; /*!< Optional */
-  void* callback_context; /*!< (optional) Pointer to opaque data passed back with each callback. */
+  void* context; /*!< (optional) Pointer to opaque data passed back with each callback. */
 } SacnMergeReceiverCallbacks;
 
 /*! A set of configuration information for an sACN merge receiver. */

@@ -192,7 +192,6 @@ struct SacnReceiver
 
   // Configured callbacks
   SacnReceiverCallbacks callbacks;
-  void* callback_context;
 
   SacnReceiver* next;
 };

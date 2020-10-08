@@ -1041,7 +1041,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
         universe_data->callback = receiver->callbacks.universe_data;
         universe_data->handle = receiver->keys.handle;
         universe_data->universe = receiver->keys.universe;
-        universe_data->context = receiver->callback_context;
+        universe_data->context = receiver->callbacks.context;
       }
       else if (add_found_source(source_found, &header->cid, header->source_name, from_addr, header->priority,
                                 src->null_start_code_buffer.data, src->null_start_code_buffer.slot_count,
@@ -1050,7 +1050,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
         source_found->callback = receiver->callbacks.sources_found;
         source_found->handle = receiver->keys.handle;
         source_found->universe = receiver->keys.universe;
-        source_found->context = receiver->callback_context;
+        source_found->context = receiver->callbacks.context;
 
         src->found = true;
       }
@@ -1159,7 +1159,7 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
           source_pap_lost->callback = receiver->callbacks.source_pap_lost;
           source_pap_lost->source.cid = src->cid;
           ETCPAL_MSVC_NO_DEP_WRN strcpy(source_pap_lost->source.name, src->name);
-          source_pap_lost->context = receiver->callback_context;
+          source_pap_lost->context = receiver->callbacks.context;
           source_pap_lost->handle = receiver->keys.handle;
           source_pap_lost->universe = receiver->keys.universe;
         }
@@ -1245,7 +1245,7 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
     {
       receiver->suppress_limit_exceeded_notification = true;
       source_limit_exceeded->callback = receiver->callbacks.source_limit_exceeded;
-      source_limit_exceeded->context = receiver->callback_context;
+      source_limit_exceeded->context = receiver->callbacks.context;
       source_limit_exceeded->handle = receiver->keys.handle;
       source_limit_exceeded->universe = receiver->keys.universe;
       return;
@@ -1469,7 +1469,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
   if (sources_lost->num_lost_sources > 0)
   {
     sources_lost->callback = receiver->callbacks.sources_lost;
-    sources_lost->context = receiver->callback_context;
+    sources_lost->context = receiver->callbacks.context;
     sources_lost->handle = receiver->keys.handle;
     sources_lost->universe = receiver->keys.universe;
     for (size_t i = 0; i < sources_lost->num_lost_sources; ++i)
@@ -1481,7 +1481,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
   if (sources_found->num_found_sources > 0)
   {
     sources_found->callback = receiver->callbacks.sources_found;
-    sources_found->context = receiver->callback_context;
+    sources_found->context = receiver->callbacks.context;
     sources_found->handle = receiver->keys.handle;
     sources_found->universe = receiver->keys.universe;
   }
