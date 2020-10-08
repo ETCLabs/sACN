@@ -129,7 +129,7 @@ typedef struct SacnSourceUniverseConfig
   /*! If true, this sACN source is sending preview data. Defaults to false. */
   bool sending_preview;
 
-  /*! If true, this sACN source is sending unicast traffic only on this universe. Defaults to false. */
+  /*! If true, this sACN source is only sending unicast traffic on this universe. Defaults to false. */
   bool send_unicast_only;
 
   /*! If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
@@ -151,7 +151,6 @@ void sacn_source_destroy(sacn_source_t handle);
 
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name);
 
-// NB-W TESTING TODO: Interface failure??
 etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config, bool dirty_now);
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe);
 
