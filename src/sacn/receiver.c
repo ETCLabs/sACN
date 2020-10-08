@@ -147,7 +147,7 @@ static void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const Etc
 // Process periodic timeout functionality
 static void process_receivers(SacnRecvThreadContext* recv_thread_context);
 static void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver,
-                                     SourcesLostNotification* sources_lost);
+                                     SourcesLostNotification* sources_lost, SourcesFoundNotification* sources_found);
 static bool check_source_timeouts(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
 static void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
 static void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost,
@@ -1381,7 +1381,6 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
   {
     size_t num_receivers = recv_thread_context->num_receivers;
 
-    // sampling_ended = get_sampling_ended_buffer(recv_thread_context->thread_id, num_receivers);
     sources_lost = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
     sources_found = get_sources_found_buffer(recv_thread_context->thread_id, num_receivers);
     if (!sources_lost || !sources_found)
@@ -1393,54 +1392,8 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
 
     for (SacnReceiver* receiver = recv_thread_context->receivers; receiver; receiver = receiver->next)
     {
-      // Check the sample period
-      if (receiver->sampling && etcpal_timer_is_expired(&receiver->sample_timer))
-      {
-        receiver->sampling = false;
-
-        // Attempt to construct a notification with all the sources found during the sampling period.
-        // TODO: Should this be moved to a separate function (perhaps process_receiver_sources)?
-        // TODO: Locking? Look into this.
-        bool all_sources_added = true;
-
-        EtcPalRbIter src_iter;
-        etcpal_rbiter_init(&src_iter);
-        for (SacnTrackedSource* src = etcpal_rbiter_first(&src_iter, &receiver->sources); all_sources_added && src;
-             src = etcpal_rbiter_next(&src_iter))
-        {
-          all_sources_added =
-              all_sources_added &&
-              add_found_source(&sources_found[num_sources_found], &src->cid, src->name,
-                               &src->null_start_code_buffer.from_addr, src->null_start_code_buffer.priority,
-                               src->null_start_code_buffer.data, src->null_start_code_buffer.slot_count,
-                               src->null_start_code_buffer.preview, src->pap_buffer.data, src->pap_buffer.slot_count);
-        }
-
-        if (all_sources_added && (sources_found[num_sources_found].num_found_sources > 0))
-        {
-          // Mark all the sources as found
-          etcpal_rbiter_init(&src_iter);
-          for (SacnTrackedSource* src = etcpal_rbiter_first(&src_iter, &receiver->sources); src;
-               src = etcpal_rbiter_next(&src_iter))
-          {
-            src->found = true;
-          }
-
-          // Finish initializing notification
-          sources_found[num_sources_found].callback = receiver->callbacks.sources_found;
-          sources_found[num_sources_found].handle = receiver->keys.handle;
-          sources_found[num_sources_found].universe = receiver->keys.universe;
-          sources_found[num_sources_found].context = receiver->callback_context;
-
-          ++num_sources_found;
-        }
-        else
-        {
-          sources_found[num_sources_found].num_found_sources = 0;
-        }
-      }
-
-      process_receiver_sources(recv_thread_context->thread_id, receiver, &sources_lost[num_sources_lost++]);
+      process_receiver_sources(recv_thread_context->thread_id, receiver, &sources_lost[num_sources_lost++],
+                               &sources_found[num_sources_found++]);
     }
 
     sacn_unlock();
@@ -1449,7 +1402,8 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
   deliver_periodic_callbacks(sources_lost, num_sources_lost, sources_found, num_sources_found);
 }
 
-void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver, SourcesLostNotification* sources_lost)
+void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver, SourcesLostNotification* sources_lost,
+                              SourcesFoundNotification* sources_found)
 {
   SacnSourceStatusLists* status_lists = get_status_lists(thread_id);
   SacnTrackedSource** to_erase = get_to_erase_buffer(thread_id, etcpal_rbtree_size(&receiver->sources));
@@ -1460,6 +1414,14 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
     return;
   }
   size_t num_to_erase = 0;
+
+  // Check the sample period
+  bool sampling_period_just_ended = false;
+  if (receiver->sampling && etcpal_timer_is_expired(&receiver->sample_timer))
+  {
+    receiver->sampling = false;
+    sampling_period_just_ended = true;
+  }
 
   // And iterate through the sources on each universe
   EtcPalRbIter src_it;
@@ -1478,6 +1440,15 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
       }
     }
 
+    if (sampling_period_just_ended)
+    {
+      // Attempt to construct a notification with all the sources found during the sampling period.
+      src->found = add_found_source(sources_found, &src->cid, src->name, &src->null_start_code_buffer.from_addr,
+                                    src->null_start_code_buffer.priority, src->null_start_code_buffer.data,
+                                    src->null_start_code_buffer.slot_count, src->null_start_code_buffer.preview,
+                                    src->pap_buffer.data, src->pap_buffer.slot_count);
+    }
+
     src = etcpal_rbiter_next(&src_it);
   }
 
@@ -1491,6 +1462,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
     etcpal_rbtree_remove(&receiver->sources, to_erase[i]);
     FREE_TRACKED_SOURCE(to_erase[i]);
   }
+
   if (sources_lost->num_lost_sources > 0)
   {
     sources_lost->callback = receiver->callbacks.sources_lost;
@@ -1501,6 +1473,14 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
     {
       etcpal_rbtree_remove_with_cb(&receiver->sources, &sources_lost->lost_sources[i].cid, source_tree_dealloc);
     }
+  }
+
+  if (sources_found->num_found_sources > 0)
+  {
+    sources_found->callback = receiver->callbacks.sources_found;
+    sources_found->context = receiver->callback_context;
+    sources_found->handle = receiver->keys.handle;
+    sources_found->universe = receiver->keys.universe;
   }
 }
 
