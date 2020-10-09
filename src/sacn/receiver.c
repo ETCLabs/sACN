@@ -32,7 +32,9 @@
  - Make an example receiver & testing for the c++ header.
  - IPv6 support.  See the CHRISTIAN TODO IPV6 comments for some hints on where to change.
  - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
-   filter out the duplicate packet (just like IPv4 & IPv6).
+   filter out the duplicate packet (just like IPv4 & IPv6).  THIS WILL NOT BE TRUE!!!! because the draft library is now a separate module with different sequencing, etc.
+   So Draft will most likely be treated like a different source...  Should we assume that both won't be sent, or do some checks to ignore draft if we're currently seeing
+   ratified??
  - This entire project should build without warnings!!
  - Make sure the new functionality for receiver/merge_receiver create & reset_networking work with and without good_interfaces, in all combinations (nill, small array, large array, etc).
  - Sync support.  Update TODO comments in receiver & merge_receiver that state sync isn't supported.
