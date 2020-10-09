@@ -283,7 +283,7 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
  * \brief Change the priority of a universe on a sACN source.
  *
  * \param[in] handle Handle to the source for which to set the priority.
- * \param[in] universe Unviverse to change.
+ * \param[in] universe Universe to change.
  * \param[in] new_priority New priority of the data sent from this source. Valid range is 0 to 200,
  *                         inclusive.
  * \return #kEtcPalErrOk: Priority set successfully.
@@ -420,7 +420,7 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t u
  * \param[in] handle Handle to the source to mark as dirty.
  * \param[in] universe Universe to mark as dirty.
  */
-void sacn_source_set_dirty(sacn_source_t handle, uint8_t universe)
+void sacn_source_set_dirty(sacn_source_t handle, uint16_t universe)
 {
   // TODO CHRISTIAN
 
@@ -436,7 +436,7 @@ void sacn_source_set_dirty(sacn_source_t handle, uint8_t universe)
  * \param[in] universes Array of universes to mark as dirty. Must not be NULL.
  * \param[in] num_universes Size of the universes array.
  */
-void sacn_source_set_list_dirty(sacn_source_t handle, uint8_t* universes, size_t num_universes)
+void sacn_source_set_list_dirty(sacn_source_t handle, const uint16_t* universes, size_t num_universes)
 {
   // TODO CHRISTIAN
 
@@ -459,7 +459,7 @@ void sacn_source_set_list_dirty(sacn_source_t handle, uint8_t* universes, size_t
  * \param[in] handle Handle to the source to mark as dirty.
  * \param[in] universe Universe to mark as dirty.
  */
-void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint8_t universe)
+void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t universe)
 {
   // TODO
 
@@ -503,7 +503,7 @@ size_t sacn_source_process_sources(void)
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * \param[in] handle Handle to the source for which to reset the networking.
- * \param[in] netints Optional array of network interfaces on which to listen to the specified universe. If NULL,
+ * \param[in] netints Optional array of network interfaces on which to send to the specified universe. If NULL,
  *  all available network interfaces will be used.
  * \param[in] num_netints Number of elements in the netints array.
  * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network

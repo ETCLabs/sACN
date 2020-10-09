@@ -75,7 +75,7 @@ typedef struct SacnSourceConfig
 
   /********* Optional values **********/
 
-  /*! The maximum number of sources this universe will send to.  May be #SACN_SOURCE_INFINITE_UNIVERSES.
+  /*! The maximum number of universes this source will send to.  May be #SACN_SOURCE_INFINITE_UNIVERSES.
       This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES is used
      instead.*/
   size_t universe_count_max;
@@ -167,9 +167,9 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
                                     size_t buflen);
 etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t universe);
 
-void sacn_source_set_dirty(sacn_source_t handle, uint8_t universe);
-void sacn_source_set_list_dirty(sacn_source_t handle, uint8_t* universes, size_t num_universes);
-void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint8_t universe);
+void sacn_source_set_dirty(sacn_source_t handle, uint16_t universe);
+void sacn_source_set_list_dirty(sacn_source_t handle, const uint16_t* universes, size_t num_universes);
+void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t universe);
 
 size_t sacn_source_process_sources(void);
 
