@@ -74,7 +74,6 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     bool data_loss_initted = false;
     bool receiver_initted = false;
     bool source_initted = false;
-    //TODO DRAFT SOURCE
     bool merger_initted = false;
     bool merge_receiver_initted = false;
 

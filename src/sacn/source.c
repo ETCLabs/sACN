@@ -27,13 +27,9 @@
  - This entire project should build without warnings!!
  - Make an example source that uses the new api.
  - Make an example source & testing for the c++ header.
+ - Don't forget the Draft library!!!
  - IPv6 support.
  - Sync support.  Update TODO comments in source.h & .c that state sync isn't supported.
- --------------NICK CLEAN UP
- - RE-EXAMINE!!!!! -- The C++ headers should return the working interfaces on Create and Reset!!!!
- - Flesh out Draft API, and make C++ interface that can encompass both draft & ratified!!!
- - DRAFT SUPPORT can this just be a flag (send draft in addition to ratified?) Check requirements!!
- - Any TODOS for me
 */
 
 #include "sacn/source.h"
