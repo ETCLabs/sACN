@@ -30,7 +30,6 @@
  - IPv6 support.
  - Sync support.  Update TODO comments in source.h & .c that state sync isn't supported.
  --------------NICK CLEAN UP
- - C++ headers & initial test framework
  - RE-EXAMINE!!!!! -- The C++ headers should return the working interfaces on Create and Reset!!!!
  - Flesh out Draft API, and make C++ interface that can encompass both draft & ratified!!!
  - DRAFT SUPPORT can this just be a flag (send draft in addition to ratified?) Check requirements!!
@@ -115,7 +114,7 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t
  *
  * \param[in] config Configuration parameters for the sACN source to be created.
  * \param[out] handle Filled in on success with a handle to the sACN source.
- * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
  * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Source successfully created.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -506,7 +505,7 @@ size_t sacn_source_process_sources(void)
  * \param[in] netints Optional array of network interfaces on which to send to the specified universe. If NULL,
  *  all available network interfaces will be used.
  * \param[in] num_netints Number of elements in the netints array.
- * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
  * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Source changed successfully.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.

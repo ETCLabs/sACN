@@ -142,7 +142,7 @@ inline bool Source::Settings::IsValid() const
  * if none of the interfaces work.
  *
  * \param[in] settings Configuration parameters for the sACN source to be created.
- * \param[in, out] good_interfaces Optional. If non-nil, good_interfaces is filled in with the list of network
+ * \param[out] good_interfaces Optional. If non-nil, good_interfaces is filled in with the list of network
  * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Source successfully created.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -445,7 +445,7 @@ inline size_t Source::ProcessSources()
  *
  * \param[in] netints Optional array of network interfaces on which to send to the specified universe. If empty,
  *  all available network interfaces will be used.
- * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
  * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Source changed successfully.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.

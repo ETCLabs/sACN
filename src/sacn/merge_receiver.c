@@ -149,7 +149,7 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
  *
  * \param[in] config Configuration parameters for the sACN Merge Receiver to be created.
  * \param[out] handle Filled in on success with a handle to the sACN Merge Receiver.
- * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
  * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Merge Receiver created successfully.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -250,7 +250,7 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
  * \param[in] (optional) array of network interfaces on which to listen to the specified universe. If NULL,
  *  all available network interfaces will be used.
  * \param[in] Number of elements in the netints array.
- * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * \param[in] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
  * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Network reset successfully.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.

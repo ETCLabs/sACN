@@ -52,6 +52,15 @@ extern "C" {
 /*! The number of addresses in a DMX universe. */
 #define DMX_ADDRESS_COUNT 512
 
+/*!
+ * \brief The maximum number of network interfaces that can reported by the various create & reset_networking calls with
+ * a SacnNetworkChangeResult.
+ */
+#ifndef SACN_MAX_SUCCESSFUL_INTERFACES
+#define SACN_MAX_SUCCESSFUL_INTERFACES 20
+#endif
+
+
 /*! The data present in the header of an sACN data packet. */
 typedef struct SacnHeaderData
 {
@@ -92,14 +101,11 @@ typedef struct SacnMcastNetintId
  * */
 typedef struct SacnNetworkChangeResult
 {
-  /*! This array is owned by the application.  The library will fill in
-   *   the array with the list of successfully added network interfaces (only up to
-   *   the maximum size of the array).
+  /*! The library will fill in the array with the list of successfully added network interfaces (only up to
+   *  #SACN_MAX_SUCCESSFUL_INTERFACES).
    */
-  SacnMcastNetintId* successful_interfaces;
-  /*! On input, this is the maximum size of successful_interfaces.
-   *  On output, this is the number of successful interfaces added by the library.  In the event that
-   *  successful_interfaces is too small for the entire list, this count is bounded by the passed in max.
+  SacnMcastNetintId successful_interfaces [SACN_MAX_SUCCESSFUL_INTERFACES];
+  /*! On output, this is the number of successful interfaces added by the library, up to #SACN_MAX_SUCCESSFUL_INTERFACES.
    */
   size_t successful_interfaces_count;
 } SacnNetworkChangeResult;

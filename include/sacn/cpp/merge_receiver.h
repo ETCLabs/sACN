@@ -218,7 +218,7 @@ inline bool MergeReceiver::Settings::IsValid() const
  *
  * \param[in] settings Configuration parameters for the sACN merge receiver and this class instance.
  * \param[in] notify_handler The notification interface to call back to the application.
- * \param[in, out] good_interfaces Optional. If non-nil, good_interfaces is filled in with the list of network
+ * \param[out] good_interfaces Optional. If non-nil, good_interfaces is filled in with the list of network
  * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Merge Receiver created successfully.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -297,7 +297,7 @@ inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
  *
  * \param[in] netints Vector of network interfaces on which to listen to the specified universe. If empty,
  *  all available network interfaces will be used.
- * \param[in, out] good_interfaces Optional. If non-nil, good_interfaces is filled in with the list of network
+ * \param[ out] good_interfaces Optional. If non-nil, good_interfaces is filled in with the list of network
  * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Universe changed successfully.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.

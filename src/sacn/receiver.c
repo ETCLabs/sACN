@@ -244,7 +244,7 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
  *
  * \param[in] config Configuration parameters for the sACN receiver to be created.
  * \param[out] handle Filled in on success with a handle to the sACN receiver.
- * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
  * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Receiver created successfully.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -486,7 +486,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  * \param[in] netints Optional array of network interfaces on which to listen to the specified universe. If NULL,
  *  all available network interfaces will be used.
  * \param[in] num_netints Number of elements in the netints array.
- * \param[in, out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
+ * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
  * interfaces that were succesfully used.
  * \return #kEtcPalErrOk: Universe changed successfully.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
