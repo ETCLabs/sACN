@@ -956,17 +956,6 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     return;
   }
 
-  if (header->start_code != SACN_STARTCODE_DMX
-#if SACN_ETC_PRIORITY_EXTENSION
-      && header->start_code != SACN_STARTCODE_PRIORITY
-#endif
-  )
-  {
-    // Unknown START Code.
-    // CHRISTIAN TODO: We should be passing this through to the callback now, rather than dropping it!!!
-    return;
-  }
-
   if (sacn_lock())
   {
     SacnReceiverKeys lookup_keys;
@@ -1016,6 +1005,11 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
         process_pap(receiver, src, &notify);
       }
 #endif
+      else if (header->start_code != SACN_STARTCODE_PRIORITY)
+      {
+        // Other start codes should only go to universe_data, after the sampling period.
+        notify = src->found;
+      }
     }
     else if (!is_termination_packet)
     {
