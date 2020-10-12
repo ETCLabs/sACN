@@ -65,8 +65,8 @@ public:
     /*! If non-empty, the list of network interfaces to transmit on.  Otherwise, all available interfaces are used. */
     std::vector<SacnMcastNetintId> netints;
 
-    /*! If false (default), this module starts a thread that calls sacn_source_process_sources() every 23 ms.
-        If true, no thread is started and the application must call sacn_source_process_sources() at its DMX rate,
+    /*! If false (default), this module starts a thread that calls ProcessSources() every 23 ms.
+        If true, no thread is started and the application must call ProcessSources() at its DMX rate,
         usually 23 ms. */
     bool manually_process_source{false};
 
