@@ -21,7 +21,7 @@
  - Make sure I didn't miss any requirements or details from the protocol.
  - A whole lotta implementation.  You should be able to base some this on the earlier C++ library, but also look at the
  spec for 0xdd, since the old library didn't handle intermixing 0x00 & 0xdd on take-control and release-control.  Ray
- can help there, too.
+ can help there, too. This will probably be the largest portion of testing..
  - Get usage/API documentation in place and cleaned up so we can have a larger review.
  - Make sure everything works with static & dynamic memory.
  - This entire project should build without warnings!!
