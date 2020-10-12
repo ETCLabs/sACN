@@ -124,7 +124,7 @@ typedef struct SacnSourceUniverseConfig
       sacn packets over time to take and give control of those DMX values as defined in the per-address priority
       specification. The memory is owned by the application, and should not be destroyed until after the universe is
       deleted on this source. The size of this buffer must match the size of values_buffer.  */
-  const uint8_t* priority_buffer;  // Priority buffer will always be checked first., then priority, then slots processed
+  const uint8_t* priorities_buffer;  // Priorities buffer will always be checked first., then priority, then slots processed
 
   /*! If true, this sACN source is sending preview data. Defaults to false. */
   bool sending_preview;
@@ -144,7 +144,7 @@ typedef struct SacnSourceUniverseConfig
   }
 
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe, const uint8_t* values_buffer,
-                                      size_t values_len, const uint8_t* priority_buffer);
+                                      size_t values_len, const uint8_t* priorities_buffer);
 
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle, SacnNetworkChangeResult* good_interfaces);
 void sacn_source_destroy(sacn_source_t handle);

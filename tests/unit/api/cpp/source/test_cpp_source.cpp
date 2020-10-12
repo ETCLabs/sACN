@@ -31,13 +31,13 @@
 #include "gtest/gtest.h"
 
 #if SACN_DYNAMIC_MEM
-#define TestReceiver TestCppReceiverDynamic
+#define TestSource TestCppSourceDynamic
 #else
-#define TestReceiver TestCppReceiverStatic
+#define TestSource TestCppSourceStatic
 #endif
 
 
-class TestReceiver : public ::testing::Test
+class TestSource : public ::testing::Test
 {
 protected:
   void SetUp() override
@@ -58,7 +58,7 @@ protected:
   }
 };
 
-TEST_F(TestReceiver, SetStandardVersionWorks)
+TEST_F(TestSource, SetStandardVersionWorks)
 {
   //CHRISTIAN TODO: CLEAN UP TESTING
 }

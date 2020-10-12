@@ -165,7 +165,7 @@ inline etcpal::Error Source::Startup(const Settings& settings, SacnNetworkChange
  * on a call to ProcessSources() after an additional three packets have been sent with the
  * "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.
  *
- * Even though the destruction is queued, after this call the library will no longer use the priority_buffer
+ * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
  * or values_buffer you passed in on your call to AddUniverse().
  */
 inline void Source::Shutdown()
@@ -227,7 +227,7 @@ inline etcpal::Error Source::AddUniverse(const SacnSourceUniverseConfig& config,
  *
  * The source will also stop transmitting sACN universe discovery packets for that universe.
  *
- * Even though the destruction is queued, after this call the library will no longer use the priority_buffer
+ * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
  * or values_buffer you passed in on your call to AddUniverse().
  *
  * \param[in] universe Universe to remove.
@@ -393,7 +393,7 @@ inline void Source::SetListDirty(const std::vector<uint16_t>& universes)
 }
 
 /*!
- * \brief Like sacn_source_set_dirty, but also sets the force_sync flag on the packet.
+ * \brief Like Source::SetDirty, but also sets the force_sync flag on the packet.
  *
  * This function indicates that the data in the buffer for this source and universe has changed,
  * and should be sent on the next call to ProcessSources().  Additionally, the packet
@@ -417,12 +417,12 @@ inline void Source::SetDirtyAndForceSync(uint16_t universe)
  * called by an internal thread of the module. Otherwise, this must be called at the maximum rate
  * at which the application will send sACN.
  *
- * Sends data for universes which have been marked dirty, and sends keep-alive data for universes which are
+ * Sends data for universes which have been marked dirty, and sends keep-alive data for universes which 
  * haven't changed. Also destroys sources & universes that have been marked for termination after sending the required
  * three terminated packets.
  *
  * \return Current number of sources tracked by the library. This can be useful on shutdown to
- *         track when destroyed sources have finished sending the terminated packets and actually
+ *         track when destroyed sources have finished sending the terminated packets and have actually
  *         been destroyed.
  */
 inline size_t Source::ProcessSources()
@@ -443,7 +443,7 @@ inline size_t Source::ProcessSources()
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * \param[in] netints Optional array of network interfaces on which to send to the specified universe. If empty,
+ * \param[in] netints Optional array of network interfaces on which to send to the specified universe(s). If empty,
  *  all available network interfaces will be used.
  * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
  * interfaces that were succesfully used.
@@ -451,7 +451,7 @@ inline size_t Source::ProcessSources()
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error Source::ResetNetworking(const std::vector<SacnMcastNetintId>& netints,

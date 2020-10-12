@@ -89,14 +89,14 @@ void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, co
  * \param[in] priorities_buffer If non-NULL, holds the per-address priority buffer.
  */
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe, const uint8_t* values_buffer,
-                                      size_t values_len, const uint8_t* priority_buffer)
+                                      size_t values_len, const uint8_t* priorities_buffer)
 {
   // TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(config);
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(values_buffer);
   ETCPAL_UNUSED_ARG(values_len);
-  ETCPAL_UNUSED_ARG(priority_buffer);
+  ETCPAL_UNUSED_ARG(priorities_buffer);
 }
 
 /*!
@@ -162,7 +162,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
  * on a call to sacn_source_process_sources() after an additional three packets have been sent with the
  * "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.
  *
- * Even though the destruction is queued, after this call the library will no longer use the priority_buffer
+ * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
  * or values_buffer you passed in on your call to sacn_source_add_universe().
  *
  * \param[in] handle Handle to the source to destroy.
@@ -214,10 +214,10 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
  *
  * The source will also stop transmitting sACN universe discovery packets for that universe.
  *
- * Even though the destruction is queued, after this call the library will no longer use the priority_buffer
+ * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
  * or values_buffer you passed in on your call to sacn_source_add_universe().
  *
- * \param[in] handle Handle to the source from which to remove the start code.
+ * \param[in] handle Handle to the source from which to remove the universe.
  * \param[in] universe Universe to remove.
  */
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
@@ -469,7 +469,7 @@ void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t univers
  * called by an internal thread of the module. Otherwise, this must be called at the maximum rate
  * at which the application will send sACN.
  *
- * Sends data for universes which have been marked dirty, and sends keep-alive data for universes which are
+ * Sends data for universes which have been marked dirty, and sends keep-alive data for universes which 
  * haven't changed. Also destroys sources & universes that have been marked for termination after sending the required
  * three terminated packets.
  *
@@ -498,7 +498,7 @@ size_t sacn_source_process_sources(void)
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * \param[in] handle Handle to the source for which to reset the networking.
- * \param[in] netints Optional array of network interfaces on which to send to the specified universe. If NULL,
+ * \param[in] netints Optional array of network interfaces on which to send to the specified universe(s). If NULL,
  *  all available network interfaces will be used.
  * \param[in] num_netints Number of elements in the netints array.
  * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
@@ -507,7 +507,7 @@ size_t sacn_source_process_sources(void)
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, const SacnMcastNetintId* netints, size_t num_netints,
