@@ -177,16 +177,14 @@ void sacn_source_destroy(sacn_source_t handle)
 /*!
  * \brief Add a universe to an sACN source.
  *
- * Adds a universe to a source. If dirty_now is true, the source will start sending values on the
- * next call to sacn_source_process_sources(). If dirty_now is false, the applicaton must call sacn_source_set_dirty()
- * to mark it ready for processing.
+ * Adds a universe to a source.
+ * After this call completes, the applicaton must call sacn_source_set_dirty() to mark it ready for processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
  * Discovery packets.
 
  * \param[in] handle Handle to the source to which to add a universe.
  * \param[in] config Configuration parameters for the universe to be added.
- * \param[in] dirty_now Whether or not to immediately mark the universe as dirty.
  * \return #kEtcPalErrOk: Universe successfully added.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
@@ -195,13 +193,12 @@ void sacn_source_destroy(sacn_source_t handle)
  * \return #kEtcPalErrNoMem: No room to allocate additional universe.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config, bool dirty_now)
+etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config)
 {
   // TODO CHRISTIAN
 
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(config);
-  ETCPAL_UNUSED_ARG(dirty_now);
   return kEtcPalErrNotImpl;
 }
 
@@ -231,25 +228,25 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 /*!
  * \brief Add a unicast destination for a source's universe.
  *
+ * Adds a unicast destination for a source's universe.
+ * After this call completes, the applicaton must call sacn_source_set_dirty() to mark it ready for processing.
+ *
  * \param[in] handle Handle to the source to change.
  * \param[in] universe Universe to change.
  * \param[in] dest The destination IP.  May not be NULL.
- * \param[in] dirty_now Whether or not to mark it dirty for the next sacn_source_process_sources() call.
  * \return #kEtcPalErrOk: Address added successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest,
-                                                   bool dirty_now)
+etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)
 {
   // TODO CHRISTIAN
 
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(dest);
-  ETCPAL_UNUSED_ARG(dirty_now);
   return kEtcPalErrNotImpl;
 }
 

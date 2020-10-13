@@ -88,10 +88,10 @@ public:
 
   etcpal::Error ChangeName(const std::string& new_name);
 
-  etcpal::Error AddUniverse(const SacnSourceUniverseConfig& config, bool dirty_now);
+  etcpal::Error AddUniverse(const SacnSourceUniverseConfig& config);
   void RemoveUniverse(uint16_t universe);
 
-  etcpal::Error AddUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest, bool dirty_now);
+  etcpal::Error AddUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest);
   void RemoveUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest);
 
   etcpal::Error ChangePriority(uint16_t universe, uint8_t new_priority);
@@ -196,15 +196,13 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
 /*!
  * \brief Add a universe to an sACN source.
  *
- * Adds a universe to a source. If dirty_now is true, the source will start sending values on the
- * next call to ProcessSources(). If dirty_now is false, the applicaton must call SetDirty()
- * to mark it ready for processing.
+ * Adds a universe to a source.
+ * After this call completes, the applicaton must call SetDirty() to mark it ready for processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
  * Discovery packets.
 
  * \param[in] config Configuration parameters for the universe to be added.
- * \param[in] dirty_now Whether or not to immediately mark the universe as dirty.
  * \return #kEtcPalErrOk: Universe successfully added.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
@@ -213,9 +211,9 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
  * \return #kEtcPalErrNoMem: No room to allocate additional universe.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::AddUniverse(const SacnSourceUniverseConfig& config, bool dirty_now)
+inline etcpal::Error Source::AddUniverse(const SacnSourceUniverseConfig& config)
 {
-  return sacn_source_add_universe(handle_, &config, dirty_now);
+  return sacn_source_add_universe(handle_, &config);
 }
 
 /*!
@@ -240,18 +238,20 @@ inline void Source::RemoveUniverse(uint16_t universe)
 /*!
  * \brief Add a unicast destination for a source's universe.
  *
+ * Adds a unicast destination for a source's universe.
+ * After this call completes, the applicaton must call SetDirty() to mark it ready for processing.
+
  * \param[in] universe Universe to change.
  * \param[in] dest The destination IP.
- * \param[in] dirty_now Whether or not to mark it dirty for the next ProcessSources() call.
  * \return #kEtcPalErrOk: Address added successfully.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
  * \return #kEtcPalErrNotInit: Module not initialized.
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::AddUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest, bool dirty_now)
+inline etcpal::Error Source::AddUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest)
 {
-  return sacn_source_add_unicast_destination(handle_, universe, &dest.get(), dirty_now);
+  return sacn_source_add_unicast_destination(handle_, universe, &dest.get());
 }
 
 /*!
