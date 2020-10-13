@@ -594,7 +594,7 @@ bool add_dead_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t
 {
   SACN_ASSERT(recv_thread_context);
 
-  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, dead_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES);
+  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, dead_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2);
 
   recv_thread_context->dead_sockets[recv_thread_context->num_dead_sockets++] = socket;
   return true;
@@ -613,7 +613,7 @@ bool add_pending_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socke
 {
   SACN_ASSERT(recv_thread_context);
 
-  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, pending_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES);
+  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, pending_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2);
 
   recv_thread_context->pending_sockets[recv_thread_context->num_pending_sockets++] = socket;
   return true;

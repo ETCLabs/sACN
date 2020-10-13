@@ -430,10 +430,16 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
     // Update the receiver's socket and subscription.
     if (res == kEtcPalErrOk)
     {
-      sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, false);
+      sacn_remove_receiver_socket(receiver->thread_id, receiver->ipv4_socket, false);
+      sacn_remove_receiver_socket(receiver->thread_id, receiver->ipv6_socket, false);
       res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, new_universe_id, receiver->netints,
-                                     receiver->num_netints, &receiver->socket);
-      // CHRISTIAN TODO IPv6
+                                     receiver->num_netints, &receiver->ipv4_socket);
+    }
+
+    if (res == kEtcPalErrOk)
+    {
+      res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, new_universe_id, receiver->netints,
+                                     receiver->num_netints, &receiver->ipv6_socket);
     }
 
     // Update receiver key and position in receiver_state.receivers_by_universe.
@@ -672,7 +678,8 @@ SacnReceiver* create_new_receiver(const SacnReceiverConfig* config)
   receiver->keys.universe = config->universe_id;
   receiver->thread_id = SACN_THREAD_ID_INVALID;
 
-  receiver->socket = ETCPAL_SOCKET_INVALID;
+  receiver->ipv4_socket = ETCPAL_SOCKET_INVALID;
+  receiver->ipv6_socket = ETCPAL_SOCKET_INVALID;
 
   if (initialize_receiver_netints(receiver, config->netints, config->num_netints) != kEtcPalErrOk)
   {
@@ -723,14 +730,22 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
 
   SACN_ASSERT(assigned_thread);
 
-  // CHRISTIAN TODO IPv6
   etcpal_error_t res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, config->universe_id,
-                                                config->netints, config->num_netints, &receiver->socket);
+                                                config->netints, config->num_netints, &receiver->ipv4_socket);
+  if (res == kEtcPalErrOk)
+  {
+    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, config->universe_id, config->netints,
+                                   config->num_netints, &receiver->ipv6_socket);
+  }
+
   if (res == kEtcPalErrOk && !assigned_thread->running)
   {
     res = start_receiver_thread(assigned_thread);
     if (res != kEtcPalErrOk)
-      sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, true);
+    {
+      sacn_remove_receiver_socket(receiver->thread_id, receiver->ipv4_socket, true);
+      sacn_remove_receiver_socket(receiver->thread_id, receiver->ipv6_socket, true);
+    }
   }
 
   if (res == kEtcPalErrOk)
@@ -791,10 +806,10 @@ void remove_receiver_from_thread(SacnReceiver* receiver, bool close_socket_now)
   SacnRecvThreadContext* context = get_recv_thread_context(receiver->thread_id);
   if (context)
   {
-    if (receiver->socket != ETCPAL_SOCKET_INVALID)
-    {
-      sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, close_socket_now);
-    }
+    if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
+      sacn_remove_receiver_socket(receiver->thread_id, receiver->ipv4_socket, close_socket_now);
+    if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
+      sacn_remove_receiver_socket(receiver->thread_id, receiver->ipv6_socket, close_socket_now);
 
     remove_receiver_from_list(context, receiver);
   }
@@ -1663,7 +1678,8 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
 
   SacnReceiver* receiver = (SacnReceiver*)node->value;
   etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
-  sacn_remove_receiver_socket(receiver->thread_id, receiver->socket, true);
+  sacn_remove_receiver_socket(receiver->thread_id, receiver->ipv4_socket, true);
+  sacn_remove_receiver_socket(receiver->thread_id, receiver->ipv6_socket, true);
   FREE_RECEIVER(receiver);
   node_dealloc(node);
 }

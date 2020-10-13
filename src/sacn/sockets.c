@@ -289,7 +289,9 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
   // Find a shared socket that has room for another subscription.
   for (SocketRef* entry = context->socket_refs; entry < context->socket_refs + context->num_socket_refs; ++entry)
   {
-    if (entry->refcount < SACN_RECEIVER_MAX_SUBS_PER_SOCKET)
+    EtcPalSockAddr bound_addr;
+    if ((etcpal_getsockname(entry->sock, &bound_addr) == kEtcPalErrOk) && (bound_addr.ip.type == ip_type) &&
+        (entry->refcount < SACN_RECEIVER_MAX_SUBS_PER_SOCKET))
     {
       new_socket = entry->sock;
       ++entry->refcount;

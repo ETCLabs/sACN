@@ -49,7 +49,8 @@ extern "C" {
 #define SACN_MTU 1472
 #define SACN_PORT 5568
 
-#define SACN_RECEIVER_MAX_SOCKET_REFS (((SACN_RECEIVER_MAX_UNIVERSES - 1) / SACN_RECEIVER_MAX_SUBS_PER_SOCKET) + 1)
+#define SACN_RECEIVER_MAX_SOCKET_REFS \
+  ((((SACN_RECEIVER_MAX_UNIVERSES - 1) / SACN_RECEIVER_MAX_SUBS_PER_SOCKET) + 1) * 2)
 
 typedef unsigned int sacn_thread_id_t;
 #define SACN_THREAD_ID_INVALID UINT_MAX
@@ -169,7 +170,8 @@ struct SacnReceiver
   sacn_thread_id_t thread_id;
 
   // Sockets / network interface info
-  etcpal_socket_t socket;
+  etcpal_socket_t ipv4_socket;
+  etcpal_socket_t ipv6_socket;
   /* (optional) array of network interfaces on which to listen to the specified universe. If num_netints = 0,
    * all available network interfaces will be used. */
 #if SACN_DYNAMIC_MEM
@@ -339,11 +341,11 @@ typedef struct SacnRecvThreadContext
   // We do most interactions with sockets from the same thread that we receive from them, to avoid
   // thread safety foibles on some platforms. So, sockets to add and remove from the thread's
   // polling context are queued to be acted on from the thread.
-  SACN_DECLARE_BUF(etcpal_socket_t, dead_sockets, SACN_RECEIVER_MAX_UNIVERSES);
+  SACN_DECLARE_BUF(etcpal_socket_t, dead_sockets, SACN_RECEIVER_MAX_UNIVERSES * 2);
   size_t num_dead_sockets;
 
 #if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-  SACN_DECLARE_BUF(etcpal_socket_t, pending_sockets, SACN_RECEIVER_MAX_UNIVERSES);
+  SACN_DECLARE_BUF(etcpal_socket_t, pending_sockets, SACN_RECEIVER_MAX_UNIVERSES * 2);
   size_t num_pending_sockets;
 #else
   SACN_DECLARE_BUF(SocketRef, socket_refs, SACN_RECEIVER_MAX_SOCKET_REFS);
