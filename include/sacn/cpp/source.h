@@ -80,8 +80,8 @@ public:
   Source() = default;
   Source(const Source& other) = delete;
   Source& operator=(const Source& other) = delete;
-  Source(Source&& other) = default;             ///< Move a device instance.
-  Source& operator=(Source&& other) = default;  ///< Move a device instance.
+  Source(Source&& other) = default;             ///< Move a source instance.
+  Source& operator=(Source&& other) = default;  ///< Move a source instance.
 
   etcpal::Error Startup(const Settings& settings, SacnNetworkChangeResult* good_interfaces = nullptr);
   void Shutdown();

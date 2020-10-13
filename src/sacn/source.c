@@ -484,11 +484,11 @@ size_t sacn_source_process_sources(void)
 }
 
 /*!
- * \brief Resets the underlying network sockets for the sACN source..
+ * \brief Resets the underlying network sockets for the sACN source.
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, the all universes on a source are considered new & dirty by the
+ * After this call completes successfully, all universes on a source are considered new & dirty by the
  * per-address priority logic in sacn_source_process_sources.
  *
  * If this call fails, the caller must call sacn_source_destroy(), because the source may be in an
