@@ -98,7 +98,7 @@ typedef struct SacnSourceUniverseConfig
 {
   /********* Required values **********/
 
-  /** The universe number, At this time, only values from 1 - 63999 are accepted.
+  /** The universe number. At this time, only values from 1 - 63999 are accepted.
       You cannot have a source send more than one stream of values to a single universe. */
   uint16_t universe;
   /** The buffer of up to 512 dmx values that will be sent each tick.

@@ -81,6 +81,54 @@ public:
     bool IsValid() const;
   };
 
+  /**
+   * @ingroup sacn_source_cpp
+   * @brief A set of configuration settings for a new universe on a source.
+   */
+  struct UniverseSettings
+  {
+    /********* Required values **********/
+
+    /** The universe number. At this time, only values from 1 - 63999 are accepted.
+        You cannot have a source send more than one stream of values to a single universe. */
+    uint16_t universe{0};
+    /** The buffer of up to 512 dmx values that will be sent each tick.
+        This pointer may not be NULL. The memory is owned by the application, and should not
+        be destroyed until after the universe is deleted on this source. */
+    const uint8_t* values_buffer{nullptr};
+    /** The size of values_buffer. */
+    size_t num_values{0};
+
+    /********* Optional values **********/
+
+    /** The sACN priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100. */
+    uint8_t priority{100};
+    /** The (optional) buffer of up to 512 per-address priorities that will be sent each tick.
+        If this is nil, only the priority will be used.
+        If non-nil, this buffer is evaluated each tick.  Changes to and from 0 ("don't care") cause appropriate
+        sacn packets over time to take and give control of those DMX values as defined in the per-address priority
+        specification.
+        The memory is owned by the application, and should not be destroyed until after the universe is
+        deleted on this source. The size of this buffer must match the size of values_buffer.  */
+    const uint8_t* priorities_buffer{nullptr};
+
+    /** If true, this sACN source will send preview data. Defaults to false. */
+    bool send_preview{false};
+
+    /** If true, this sACN source will only send unicast traffic on this universe. Defaults to false. */
+    bool send_unicast_only{false};
+
+    /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
+    uint16_t sync_universe{0};
+
+    /** Create an empty, invalid data structure by default. */
+    UniverseSettings() = default;
+    UniverseSettings(uint16_t universe_id, const uint8_t* new_values_buffer, size_t new_values_size);
+
+    bool IsValid() const;
+  };
+
+
   Source() = default;
   Source(const Source& other) = delete;
   Source& operator=(const Source& other) = delete;
@@ -92,7 +140,7 @@ public:
 
   etcpal::Error ChangeName(const std::string& new_name);
 
-  etcpal::Error AddUniverse(const SacnSourceUniverseConfig& config);
+  etcpal::Error AddUniverse(const UniverseSettings& settings);
   void RemoveUniverse(uint16_t universe);
 
   etcpal::Error AddUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest);
@@ -117,6 +165,7 @@ public:
 
 private:
   SacnSourceConfig TranslateConfig(const Settings& settings);
+  SacnSourceUniverseConfig TranslateUniverseConfig(const UniverseSettings& settings);
 
   Handle handle_{kInvalidHandle};
 };
@@ -137,6 +186,25 @@ inline Source::Settings::Settings(const etcpal::Uuid& new_cid, const std::string
 inline bool Source::Settings::IsValid() const
 {
   return !cid.IsNull();
+}
+
+/**
+ * @brief Create a Universe Settings instance by passing the required members explicitly.
+ *
+ * Optional members can be modified directly in the struct.
+ */
+inline Source::UniverseSettings::UniverseSettings(uint16_t universe_id, const uint8_t* new_values_buffer,
+                                                    size_t new_values_size)
+    : universe(universe_id), values_buffer(new_values_buffer), num_values(new_values_size)
+{
+}
+
+/**
+ * Determine whether a Universe Settings instance contains valid data for sACN operation.
+ */
+inline bool Source::UniverseSettings::IsValid() const
+{
+  return (universe > 0) && values_buffer && (num_values > 0);
 }
 
 /**
@@ -222,8 +290,9 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
  * @return #kEtcPalErrNoMem: No room to allocate additional universe.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::AddUniverse(const SacnSourceUniverseConfig& config)
+inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings)
 {
+  SacnSourceUniverseConfig config = TranslateUniverseConfig(settings);
   return sacn_source_add_universe(handle_, &config);
 }
 
@@ -499,6 +568,24 @@ inline SacnSourceConfig Source::TranslateConfig(const Settings& settings)
   config.name[SACN_SOURCE_NAME_MAX_LEN - 1] = 0;
 
   ETCPAL_MSVC_END_NO_DEP_WARNINGS();
+
+  return config;
+}
+
+inline SacnSourceUniverseConfig Source::TranslateUniverseConfig(const UniverseSettings& settings)
+{
+  // clang-format off
+  SacnSourceUniverseConfig config = {
+    settings.universe, 
+    settings.values_buffer,
+    settings.num_values,
+    settings.priority,
+    settings.priorities_buffer,
+    settings.send_preview,
+    settings.send_unicast_only,
+    settings.sync_universe
+  };
+  // clang-format on
 
   return config;
 }
