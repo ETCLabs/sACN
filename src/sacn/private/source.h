@@ -17,9 +17,9 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/source.h
- * \brief Private constants, types, and function declarations for the \ref sacn_source
+/**
+ * @file sacn/private/source.h
+ * @brief Private constants, types, and function declarations for the @ref sacn_source
  *       "sACN Source" module.
  */
 

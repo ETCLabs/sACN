@@ -17,10 +17,10 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/dmx_merger.h
- * \brief Private constants, types, and function declarations for the
- *        \ref sacn_dmx_merger "sACN DMX Merger" module.
+/**
+ * @file sacn/private/dmx_merger.h
+ * @brief Private constants, types, and function declarations for the
+ *        @ref sacn_dmx_merger "sACN DMX Merger" module.
  */
 
 #ifndef SACN_PRIVATE_DMX_MERGER_H_

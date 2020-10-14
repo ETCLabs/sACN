@@ -64,12 +64,12 @@ void sacn_source_deinit(void)
   // Shut down the Tick thread...
 }
 
-/*!
- * \brief Initialize an sACN Source Config struct to default values.
+/**
+ * @brief Initialize an sACN Source Config struct to default values.
  *
- * \param[out] config Config struct to initialize.
- * \param[in] cid The CID to assign. Must not be NULL.
- * \param[in] name The source name to assign. Will be truncated to fit #SACN_SOURCE_NAME_MAX_LEN bytes.
+ * @param[out] config Config struct to initialize.
+ * @param[in] cid The CID to assign. Must not be NULL.
+ * @param[in] name The source name to assign. Will be truncated to fit #SACN_SOURCE_NAME_MAX_LEN bytes.
  */
 void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, const char* name)
 {
@@ -79,14 +79,14 @@ void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, co
   ETCPAL_UNUSED_ARG(name);
 }
 
-/*!
- * \brief Initialize an sACN Source Universe Config struct to default values.
+/**
+ * @brief Initialize an sACN Source Universe Config struct to default values.
  *
- * \param[out] config Config struct to initialize.
- * \param[in] universe The universe number to create.
- * \param[in] values_buffer The DMX values buffer, may not be NULL.
- * \param[in] values_len The length of values_buffer.
- * \param[in] priorities_buffer If non-NULL, holds the per-address priority buffer.
+ * @param[out] config Config struct to initialize.
+ * @param[in] universe The universe number to create.
+ * @param[in] values_buffer The DMX values buffer, may not be NULL.
+ * @param[in] values_len The length of values_buffer.
+ * @param[in] priorities_buffer If non-NULL, holds the per-address priority buffer.
  */
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe, const uint8_t* values_buffer,
                                       size_t values_len, const uint8_t* priorities_buffer)
@@ -99,8 +99,8 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t
   ETCPAL_UNUSED_ARG(priorities_buffer);
 }
 
-/*!
- * \brief Create a new sACN source to send sACN data.
+/**
+ * @brief Create a new sACN source to send sACN data.
  *
  * This creates the instance of the source, but no data is sent until sacn_source_add_universe() and
  * sacn_source_set_dirty() is called.
@@ -108,18 +108,18 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t
  * Note that a source is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * \param[in] config Configuration parameters for the sACN source to be created.
- * \param[out] handle Filled in on success with a handle to the sACN source.
- * \param[in, out] ifaces Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
+ * @param[in] config Configuration parameters for the sACN source to be created.
+ * @param[out] handle Filled in on success with a handle to the sACN source.
+ * @param[in, out] ifaces Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
  * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
- * \param[in, out] ifaces_count Optional. The size of ifaces, or 0 if ifaces is NULL.
- * \return #kEtcPalErrOk: Source successfully created.
- * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNoMem: No room to allocate an additional source.
- * \return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @param[in, out] ifaces_count Optional. The size of ifaces, or 0 if ifaces is NULL.
+ * @return #kEtcPalErrOk: Source successfully created.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNoMem: No room to allocate an additional source.
+ * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle,
                                   SacnMcastInterfaceToUse* ifaces, size_t ifaces_count)
@@ -134,20 +134,20 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
   return kEtcPalErrNotImpl;
 }
 
-/*!
- * \brief Change the name of an sACN source.
+/**
+ * @brief Change the name of an sACN source.
  *
  * The name is a UTF-8 string representing "a user-assigned name provided by the source of the
  * packet for use in displaying the identity of a source to a user." Only up to
  * #SACN_SOURCE_NAME_MAX_LEN characters will be used.
  *
- * \param[in] handle Handle to the source to change.
- * \param[in] new_name New name to use for this universe.
- * \return #kEtcPalErrOk: Name set successfully.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @param[in] handle Handle to the source to change.
+ * @param[in] new_name New name to use for this universe.
+ * @return #kEtcPalErrOk: Name set successfully.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name)
 {
@@ -157,8 +157,8 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
   return kEtcPalErrNotImpl;
 }
 
-/*!
- * \brief Destroy an sACN source instance.
+/**
+ * @brief Destroy an sACN source instance.
  *
  * Stops sending all universes for this source. The destruction is queued, and actually occurs
  * on a call to sacn_source_process_sources() after an additional three packets have been sent with the
@@ -167,7 +167,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
  * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
  * or values_buffer you passed in on your call to sacn_source_add_universe().
  *
- * \param[in] handle Handle to the source to destroy.
+ * @param[in] handle Handle to the source to destroy.
  */
 void sacn_source_destroy(sacn_source_t handle)
 {
@@ -176,8 +176,8 @@ void sacn_source_destroy(sacn_source_t handle)
   ETCPAL_UNUSED_ARG(handle);
 }
 
-/*!
- * \brief Add a universe to an sACN source.
+/**
+ * @brief Add a universe to an sACN source.
  *
  * Adds a universe to a source.
  * After this call completes, the applicaton must call sacn_source_set_dirty() to mark it ready for processing.
@@ -185,15 +185,15 @@ void sacn_source_destroy(sacn_source_t handle)
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
  * Discovery packets.
 
- * \param[in] handle Handle to the source to which to add a universe.
- * \param[in] config Configuration parameters for the universe to be added.
- * \return #kEtcPalErrOk: Universe successfully added.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrExists: Universe given was already added to this source.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
- * \return #kEtcPalErrNoMem: No room to allocate additional universe.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @param[in] handle Handle to the source to which to add a universe.
+ * @param[in] config Configuration parameters for the universe to be added.
+ * @return #kEtcPalErrOk: Universe successfully added.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrExists: Universe given was already added to this source.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
+ * @return #kEtcPalErrNoMem: No room to allocate additional universe.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config)
 {
@@ -204,8 +204,8 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
   return kEtcPalErrNotImpl;
 }
 
-/*!
- * \brief Remove a universe from a source.
+/**
+ * @brief Remove a universe from a source.
  *
  * This queues the source for removal. The destruction actually occurs
  * on a call to sacn_source_process_sources() after an additional three packets have been sent with the
@@ -216,8 +216,8 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
  * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
  * or values_buffer you passed in on your call to sacn_source_add_universe().
  *
- * \param[in] handle Handle to the source from which to remove the universe.
- * \param[in] universe Universe to remove.
+ * @param[in] handle Handle to the source from which to remove the universe.
+ * @param[in] universe Universe to remove.
  */
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 {
@@ -227,20 +227,20 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
   ETCPAL_UNUSED_ARG(universe);
 }
 
-/*!
- * \brief Add a unicast destination for a source's universe.
+/**
+ * @brief Add a unicast destination for a source's universe.
  *
  * Adds a unicast destination for a source's universe.
  * After this call completes, the applicaton must call sacn_source_set_dirty() to mark it ready for processing.
  *
- * \param[in] handle Handle to the source to change.
- * \param[in] universe Universe to change.
- * \param[in] dest The destination IP.  May not be NULL.
- * \return #kEtcPalErrOk: Address added successfully.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @param[in] handle Handle to the source to change.
+ * @param[in] universe Universe to change.
+ * @param[in] dest The destination IP.  May not be NULL.
+ * @return #kEtcPalErrOk: Address added successfully.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)
 {
@@ -252,16 +252,16 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
   return kEtcPalErrNotImpl;
 }
 
-/*!
- * \brief Remove a unicast destination on a source's universe.
+/**
+ * @brief Remove a unicast destination on a source's universe.
  *
  * This queues the address for removal. The removal actually occurs
  * on a call to sacn_source_process_sources() after an additional three packets have been sent with the
  * "Stream_Terminated" option set.
  *
- * \param[in] handle Handle to the source to change.
- * \param[in] universe Universe to change.
- * \param[in] dest The destination IP.  May not be NULL, and must match the address passed to
+ * @param[in] handle Handle to the source to change.
+ * @param[in] universe Universe to change.
+ * @param[in] dest The destination IP.  May not be NULL, and must match the address passed to
  * sacn_source_add_unicast_destination().
  */
 void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)
@@ -273,18 +273,18 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
   ETCPAL_UNUSED_ARG(dest);
 }
 
-/*!
- * \brief Change the priority of a universe on a sACN source.
+/**
+ * @brief Change the priority of a universe on a sACN source.
  *
- * \param[in] handle Handle to the source for which to set the priority.
- * \param[in] universe Universe to change.
- * \param[in] new_priority New priority of the data sent from this source. Valid range is 0 to 200,
+ * @param[in] handle Handle to the source for which to set the priority.
+ * @param[in] universe Universe to change.
+ * @param[in] new_priority New priority of the data sent from this source. Valid range is 0 to 200,
  *                         inclusive.
- * \return #kEtcPalErrOk: Priority set successfully.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @return #kEtcPalErrOk: Priority set successfully.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t universe, uint8_t new_priority)
 {
@@ -296,20 +296,20 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
   return kEtcPalErrNotImpl;
 }
 
-/*!
- * \brief Change the sending_preview option on a universe of a sACN source.
+/**
+ * @brief Change the sending_preview option on a universe of a sACN source.
  *
  * Sets the state of a flag in the outgoing sACN packets that indicates that the data is (from
  * E1.31) "intended for use in visualization or media server preview applications and shall not be
  * used to generate live output."
  *
- * \param[in] handle Handle to the source for which to set the Preview_Data option.
- * \param[in] new_preview_flag The new sending_preview option.
- * \return #kEtcPalErrOk: sending_preview option set successfully.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @param[in] handle Handle to the source for which to set the Preview_Data option.
+ * @param[in] new_preview_flag The new sending_preview option.
+ * @return #kEtcPalErrOk: sending_preview option set successfully.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t universe, bool new_preview_flag)
 {
@@ -321,22 +321,22 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
   return kEtcPalErrNotImpl;
 }
 
-/*!
- * \brief Changes the synchronize uinverse for a universe of a sACN source.
+/**
+ * @brief Changes the synchronize uinverse for a universe of a sACN source.
  *
  * This will change the synchronization universe used by a sACN universe on the source.
  * If this value is 0, synchronization is turned off for that universe.
  *
  * TODO: At this time, synchronization is not supported by this library.
  *
- * \param[in] handle Handle to the source to change.
- * \param[in] universe The universe to change.
- * \param[in] new_sync_universe The new synchronization universe to set.
- * \return #kEtcPalErrOk: sync_universe set successfully.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @param[in] handle Handle to the source to change.
+ * @param[in] universe The universe to change.
+ * @param[in] new_sync_universe The new synchronization universe to set.
+ * @return #kEtcPalErrOk: sync_universe set successfully.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle, uint16_t universe,
                                                            uint16_t new_sync_universe)
@@ -349,24 +349,24 @@ etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
   return kEtcPalErrNotImpl;
 }
 
-/*!
- * \brief Immediately sends the provided sACN start code & data.
+/**
+ * @brief Immediately sends the provided sACN start code & data.
  *
  * Immediately sends a sACN packet with the provided start code and data.
  * This function is intended for sACN packets that have a startcode other than 0 or 0xdd, since those
  * start codes are taken care of by sacn_source_process_sources().
  *
- * \param[in] handle Handle to the source.
- * \param[in] universe Universe to send on.
- * \param[in] start_code The start code to send.
- * \param[in] buffer The buffer to send.  Must not be NULL.
- * \param[in] buflen The size of buffer.
- * \return #kEtcPalErrOk: Message successfully sent.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
+ * @param[in] handle Handle to the source.
+ * @param[in] universe Universe to send on.
+ * @param[in] start_code The start code to send.
+ * @param[in] buffer The buffer to send.  Must not be NULL.
+ * @param[in] buflen The size of buffer.
+ * @return #kEtcPalErrOk: Message successfully sent.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
  *                              source.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uint8_t start_code, const uint8_t* buffer,
                                     size_t buflen)
@@ -381,22 +381,22 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
   return kEtcPalErrNotImpl;
 }
 
-/*!
- * \brief Immediately sends a synchronization packet for the universe on a source.
+/**
+ * @brief Immediately sends a synchronization packet for the universe on a source.
  *
  * This will cause an immediate transmission of a synchronization packet for the source/universe.
  * If the universe does not have a synchronization universe configured, this call is ignored.
  *
  * TODO: At this time, synchronization is not supported by this library.
  *
- * \param[in] handle Handle to the source.
- * \param[in] universe Universe to send on.
- * \return #kEtcPalErrOk: Message successfully sent.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
+ * @param[in] handle Handle to the source.
+ * @param[in] universe Universe to send on.
+ * @return #kEtcPalErrOk: Message successfully sent.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
  *                              source.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t universe)
 {
@@ -407,12 +407,12 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t u
   return kEtcPalErrNotImpl;
 }
 
-/*!
- * \brief Indicate that the data in the buffer for this source and universe has changed and
+/**
+ * @brief Indicate that the data in the buffer for this source and universe has changed and
  *        should be sent on the next call to sacn_source_process_sources().
  *
- * \param[in] handle Handle to the source to mark as dirty.
- * \param[in] universe Universe to mark as dirty.
+ * @param[in] handle Handle to the source to mark as dirty.
+ * @param[in] universe Universe to mark as dirty.
  */
 void sacn_source_set_dirty(sacn_source_t handle, uint16_t universe)
 {
@@ -422,13 +422,13 @@ void sacn_source_set_dirty(sacn_source_t handle, uint16_t universe)
   ETCPAL_UNUSED_ARG(universe);
 }
 
-/*!
- * \brief Indicate that the data in the buffers for a list of universes on a source  has
+/**
+ * @brief Indicate that the data in the buffers for a list of universes on a source  has
  *        changed and should be sent on the next call to sacn_source_process_sources().
  *
- * \param[in] handle Handle to the source.
- * \param[in] universes Array of universes to mark as dirty. Must not be NULL.
- * \param[in] num_universes Size of the universes array.
+ * @param[in] handle Handle to the source.
+ * @param[in] universes Array of universes to mark as dirty. Must not be NULL.
+ * @param[in] num_universes Size of the universes array.
  */
 void sacn_source_set_list_dirty(sacn_source_t handle, const uint16_t* universes, size_t num_universes)
 {
@@ -439,8 +439,8 @@ void sacn_source_set_list_dirty(sacn_source_t handle, const uint16_t* universes,
   ETCPAL_UNUSED_ARG(num_universes);
 }
 
-/*!
- * \brief Like sacn_source_set_dirty, but also sets the force_sync flag on the packet.
+/*@
+ * @brief Like sacn_source_set_dirty, but also sets the force_sync flag on the packet.
  *
  * This function indicates that the data in the buffer for this source and universe has changed,
  * and should be sent on the next call to sacn_source_process_sources().  Additionally, the packet
@@ -450,8 +450,8 @@ void sacn_source_set_list_dirty(sacn_source_t handle, const uint16_t* universes,
  *
  * TODO: At this time, synchronization is not supported by this library.
  *
- * \param[in] handle Handle to the source to mark as dirty.
- * \param[in] universe Universe to mark as dirty.
+ * @param[in] handle Handle to the source to mark as dirty.
+ * @param[in] universe Universe to mark as dirty.
  */
 void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t universe)
 {
@@ -461,8 +461,8 @@ void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t univers
   ETCPAL_UNUSED_ARG(universe);
 }
 
-/*!
- * \brief Process created sources and do the actual sending of sACN data on all universes.
+/**
+ * @brief Process created sources and do the actual sending of sACN data on all universes.
  *
  * Note: Unless you created the source with manually_process_source set to true, this will be automatically
  * called by an internal thread of the module. Otherwise, this must be called at the maximum rate
@@ -472,7 +472,7 @@ void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t univers
  * haven't changed. Also destroys sources & universes that have been marked for termination after sending the required
  * three terminated packets.
  *
- * \return Current number of sources tracked by the library. This can be useful on shutdown to
+ * @return Current number of sources tracked by the library. This can be useful on shutdown to
  *         track when destroyed sources have finished sending the terminated packets and actually
  *         been destroyed.
  */
@@ -482,8 +482,8 @@ size_t sacn_source_process_sources(void)
   return 0;
 }
 
-/*!
- * \brief Resets the underlying network sockets for the sACN source.
+/**
+ * @brief Resets the underlying network sockets for the sACN source.
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
@@ -496,16 +496,16 @@ size_t sacn_source_process_sources(void)
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * \param[in] handle Handle to the source for which to reset the networking.
- * \param[in, out] ifaces Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
+ * @param[in] handle Handle to the source for which to reset the networking.
+ * @param[in, out] ifaces Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
  * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
- * \param[in, out] ifaces_count Optional. The size of ifaces, or 0 if ifaces is NULL.
- * \return #kEtcPalErrOk: Source changed successfully.
- * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @param[in, out] ifaces_count Optional. The size of ifaces, or 0 if ifaces is NULL.
+ * @return #kEtcPalErrOk: Source changed successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, SacnMcastInterfaceToUse* ifaces, size_t ifaces_count)
 {

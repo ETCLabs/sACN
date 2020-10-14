@@ -17,9 +17,9 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/version.h
- * \brief Provides the current version of the sACN library.
+/**
+ * @file sacn/version.h
+ * @brief Provides the current version of the sACN library.
  *
  * This file is provided for application use; the values defined in this file are not used
  * internally by the library.
@@ -30,36 +30,36 @@
 
 /* clang-format off */
 
-/*!
- * \addtogroup sACN
+/**
+ * @addtogroup sACN
  * @{
  */
 
-/*!
- * \name sACN version numbers
+/**
+ * @name sACN version numbers
  * @{
  */
-#define SACN_VERSION_MAJOR @SACN_VERSION_MAJOR@ /*!< The major version. */
-#define SACN_VERSION_MINOR @SACN_VERSION_MINOR@ /*!< The minor version. */
-#define SACN_VERSION_PATCH @SACN_VERSION_PATCH@ /*!< The patch version. */
-#define SACN_VERSION_BUILD @SACN_VERSION_BUILD@ /*!< The build number. */
-/*!
+#define SACN_VERSION_MAJOR @SACN_VERSION_MAJOR@ /**< The major version. */
+#define SACN_VERSION_MINOR @SACN_VERSION_MINOR@ /**< The minor version. */
+#define SACN_VERSION_PATCH @SACN_VERSION_PATCH@ /**< The patch version. */
+#define SACN_VERSION_BUILD @SACN_VERSION_BUILD@ /**< The build number. */
+/**
  * @}
  */
 
-/*!
- * \name sACN version strings
+/**
+ * @name sACN version strings
  * @{
  */
 #define SACN_VERSION_STRING      "@SACN_VERSION_STRING@"
 #define SACN_VERSION_DATESTR     "@SACN_VERSION_DATESTR@"
 #define SACN_VERSION_COPYRIGHT   "@SACN_VERSION_COPYRIGHT@"
 #define SACN_VERSION_PRODUCTNAME "sACN"
-/*!
+/**
  * @}
  */
 
-/*!
+/**
  * @}
  */
 

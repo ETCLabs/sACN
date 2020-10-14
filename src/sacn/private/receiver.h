@@ -17,10 +17,10 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/receiver.h
- * \brief Private constants, types, and function declarations for the
- *        \ref sacn_receiver "sACN Receiver" module.
+/**
+ * @file sacn/private/receiver.h
+ * @brief Private constants, types, and function declarations for the
+ *        @ref sacn_receiver "sACN Receiver" module.
  */
 
 #ifndef SACN_PRIVATE_RECEIVER_H_

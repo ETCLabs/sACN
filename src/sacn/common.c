@@ -48,16 +48,16 @@ static etcpal_mutex_t sacn_mutex;
 
 /*************************** Function definitions ****************************/
 
-/*!
- * \brief Initialize the sACN library.
+/**
+ * @brief Initialize the sACN library.
  *
  * Do all necessary initialization before other sACN API functions can be called.
  *
- * \param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
+ * @param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
  *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
- * \return #kEtcPalErrOk: Initialization successful.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @return #kEtcPalErrOk: Initialization successful.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
 {
@@ -140,8 +140,8 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
   return res;
 }
 
-/*!
- * \brief Deinitialize the sACN library.
+/**
+ * @brief Deinitialize the sACN library.
  *
  * Set the sACN library back to an uninitialized state. Calls to other sACN API functions will fail
  * until sacn_init() is called again.

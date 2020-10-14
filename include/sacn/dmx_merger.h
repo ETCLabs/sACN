@@ -17,11 +17,11 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/dmx_merger.h
- * \brief sACN DMX Merger API definitions
+/**
+ * @file sacn/dmx_merger.h
+ * @brief sACN DMX Merger API definitions
  *
- * Functions and definitions for the \ref sacn_dmx_merger "sACN DMX Merger API" are contained in this
+ * Functions and definitions for the @ref sacn_dmx_merger "sACN DMX Merger API" are contained in this
  * header.
  */
 
@@ -35,10 +35,10 @@
 #include "sacn/common.h"
 #include "sacn/receiver.h"
 
-/*!
- * \defgroup sacn_dmx_merger sACN DMX Merger
- * \ingroup sACN
- * \brief The sACN DMX Merger API
+/**
+ * @defgroup sacn_dmx_merger sACN DMX Merger
+ * @ingroup sACN
+ * @brief The sACN DMX Merger API
  *
  * This API provides a software merger for buffers containing DMX512-A start code 0 packets.
  * It also uses buffers containing DMX512-A start code 0xdd packets to support per-address priority.
@@ -57,7 +57,7 @@
  * This API is thread-safe.
  *
  * Usage:
- * \code
+ * @code
  * // Initialize sACN.
  * EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
  * // Init log params here...
@@ -130,7 +130,7 @@
  *
  * // Or, if sACN is deinitialized, all of the mergers are destroyed automatically:
  * sacn_deinit();
- * \endcode
+ * @endcode
  *
  * @{
  */
@@ -139,31 +139,31 @@
 extern "C" {
 #endif
 
-/*! Each merger has a handle associated with it.*/
+/** Each merger has a handle associated with it.*/
 typedef int sacn_dmx_merger_t;
 
-/*! An invalid sACN merger handle value. */
+/** An invalid sACN merger handle value. */
 #define SACN_DMX_MERGER_INVALID -1
 
-/*! The sources on a merger have a short id that is used in the owned values, rather than a UUID.*/
+/** The sources on a merger have a short id that is used in the owned values, rather than a UUID.*/
 typedef uint16_t sacn_source_id_t;
 
-/*! An invalid source id handle value. */
+/** An invalid source id handle value. */
 #define SACN_DMX_MERGER_SOURCE_INVALID ((sacn_source_id_t) -1)
 
-/*! A set of configuration information for a merger instance. */
+/** A set of configuration information for a merger instance. */
 typedef struct SacnDmxMergerConfig
 {
-  /*! The maximum number of sources this merger will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
+  /** The maximum number of sources this merger will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
       This parameter is ignored when configured to use static memory -- #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used
       instead.*/
   size_t source_count_max;
 
-  /*! Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
+  /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
       Memory is owned by the application.*/
   uint8_t* slots;
 
-  /*! Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
+  /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
       that slot, or #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
       You can use SACN_DMX_MERGER_SOURCE_IS_VALID() if you don't want to look at the slot_owners directly.
       Memory is owned by the application.*/
@@ -171,15 +171,15 @@ typedef struct SacnDmxMergerConfig
 
 } SacnDmxMergerConfig;
 
-/*!
- * \brief An initializer for an SacnDmxMergerConfig struct.
+/**
+ * @brief An initializer for an SacnDmxMergerConfig struct.
  *
  * Usage:
- * \code
+ * @code
  * // Create the struct
  * SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
  * // Now fill in the members of the struct
- * \endcode
+ * @endcode
  *
  */
 #define SACN_DMX_MERGER_CONFIG_INIT \
@@ -187,8 +187,8 @@ typedef struct SacnDmxMergerConfig
     0, NULL, NULL                   \
   }
 
-/*!
- * \brief Utility to see if a slot_owner is valid.
+/**
+ * @brief Utility to see if a slot_owner is valid.
  *
  * Given a buffer of slot_owners, evaluate to true if the slot is != DMX_MERGER_SOURCE_INVALID.
  *
@@ -196,26 +196,26 @@ typedef struct SacnDmxMergerConfig
 #define SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, slot_index) \
   (slot_owners_array[slot_index] != SACN_DMX_MERGER_SOURCE_INVALID)
 
-/*! The current input data for a single source of the merge.  This is exposed only for informational purposes, as the
+/** The current input data for a single source of the merge.  This is exposed only for informational purposes, as the
     application calls a variant of sacn_dmx_merger_update_source to do the actual update. */
 typedef struct SacnDmxMergerSource
 {
-  /*! The UUID (e.g. sACN CID) of the DMX source. */
+  /** The UUID (e.g. sACN CID) of the DMX source. */
   EtcPalUuid cid;
 
-  /*! The DMX data values (0 - 255). */
+  /** The DMX data values (0 - 255). */
   uint8_t values[DMX_ADDRESS_COUNT];
 
-  /*! Some sources don't send all 512 values, so here's how much of values to use.*/
+  /** Some sources don't send all 512 values, so here's how much of values to use.*/
   size_t valid_value_count;
 
-  /*! The sACN per-universe priority (0 - 200). */
+  /** The sACN per-universe priority (0 - 200). */
   uint8_t universe_priority;
 
-  /*! Whether or not the address_priority buffer is valid. */
+  /** Whether or not the address_priority buffer is valid. */
   bool address_priority_valid;
 
-  /*! The sACN per-address (startcode 0xdd) priority (1-255, 0 means not sourced).
+  /** The sACN per-address (startcode 0xdd) priority (1-255, 0 means not sourced).
       If the source does not have per-address priority, then address_priority_valid will be false, and this array should
       be ignored. */
   uint8_t address_priority[DMX_ADDRESS_COUNT];
@@ -241,7 +241,7 @@ etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_
 }
 #endif
 
-/*!
+/**
  * @}
  */
 
