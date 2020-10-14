@@ -117,8 +117,11 @@ static struct SacnRecvState
 static etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config);
 static etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMcastNetintId* netints,
                                                   size_t num_netints);
+//TODO CHRISTIAN CLEANUP & TEST new way of doing interfaces
+#if 0
 static SacnReceiver* create_new_receiver(const SacnReceiverConfig* config);
 static etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnReceiverConfig* config);
+#endif
 static etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver);
 static etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context);
 
@@ -241,13 +244,13 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
  * by one receiver at at time.
  *
  * Note that a receiver is considered as successfully created if it is able to successfully use any of the
- * network interfaces listed in the passed in configuration.  This will only return #kEtcPalErrNoNetints
- * if none of the interfaces work.
+ * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * \param[in] config Configuration parameters for the sACN receiver to be created.
  * \param[out] handle Filled in on success with a handle to the sACN receiver.
- * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
- * interfaces that were succesfully used.
+ * \param[in, out] ifaces Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * \param[in, out] ifaces_count Optional. The size of ifaces, or 0 if ifaces is NULL.
  * \return #kEtcPalErrOk: Receiver created successfully.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -257,11 +260,17 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
  * \return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle, SacnNetworkChangeResult* good_interfaces)
+etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle,
+                                    SacnMcastInterfaceToUse* ifaces, size_t ifaces_count)
 {
   //TODO CHRISTIAN
-  ETCPAL_UNUSED_ARG(good_interfaces);
+  ETCPAL_UNUSED_ARG(config);
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(ifaces);
+  ETCPAL_UNUSED_ARG(ifaces_count);
+  return kEtcPalErrNotImpl;
 
+#if 0
   if (!config || !handle)
     return kEtcPalErrInvalid;
 
@@ -319,6 +328,7 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
   }
 
   return res;
+#endif
 }
 
 /*!
@@ -485,11 +495,9 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * \param[in] handle Handle to the receiver for which to reset the networking.
- * \param[in] netints Optional array of network interfaces on which to listen to the specified universe. If NULL,
- *  all available network interfaces will be used.
- * \param[in] num_netints Number of elements in the netints array.
- * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
- * interfaces that were succesfully used.
+ * \param[in, out] ifaces Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * \param[in, out] ifaces_count Optional. The size of ifaces, or 0 if ifaces is NULL.
  * \return #kEtcPalErrOk: Universe changed successfully.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -497,14 +505,13 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, const SacnMcastNetintId* netints,
-                                              size_t num_netints, SacnNetworkChangeResult* good_interfaces)
+etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastInterfaceToUse* ifaces,
+                                              size_t ifaces_count)
 {
   //TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(num_netints);
-  ETCPAL_UNUSED_ARG(good_interfaces);
+  ETCPAL_UNUSED_ARG(ifaces);
+  ETCPAL_UNUSED_ARG(ifaces_count);
 
   if (!sacn_initialized())
     return kEtcPalErrNotInit;
@@ -615,7 +622,7 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
     return kEtcPalErrInvalid;
   }
 
-  return sacn_validate_netint_config(config->netints, config->num_netints);
+  return kEtcPalErrOk;
 }
 
 /*
@@ -623,7 +630,9 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
  */
 etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMcastNetintId* netints, size_t num_netints)
 {
-  etcpal_error_t result = kEtcPalErrOk;
+  etcpal_error_t result = sacn_validate_netint_config(netints, num_netints);
+  if (result != kEtcPalErrOk)
+    return result;
 
   if (netints)
   {
@@ -665,6 +674,8 @@ etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMca
   return result;
 }
 
+//TODO CHRISTIAN CLEANUP & TEST new way of doing interfaces
+#if 0
 /*
  * Allocate a new receiver instances and do essential first initialization, in preparation for
  * creating the sockets and subscriptions.
@@ -756,6 +767,7 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
   }
   return res;
 }
+#endif
 
 /*
  * Add a receiver to the maps that are used to track receivers globally.

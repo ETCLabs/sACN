@@ -270,27 +270,23 @@ typedef struct SacnReceiverConfig
   size_t source_count_max;
   /*! A set of option flags. See "sACN receiver flags". */
   unsigned int flags;
-  /*! (optional) array of network interfaces on which to listen to the specified universe. If NULL,
-   *  all available network interfaces will be used. */
-  const SacnMcastNetintId* netints;
-  /*! Number of elements in the netints array. */
-  size_t num_netints;
 } SacnReceiverConfig;
 
 /*! A default-value initializer for an SacnReceiverConfig struct. */
 #define SACN_RECEIVER_CONFIG_DEFAULT_INIT                  \
   {                                                        \
-    0, {NULL, NULL, NULL, NULL, NULL, NULL}, 0, 0, NULL, 0 \
+    0, {NULL, NULL, NULL, NULL, NULL, NULL}, 0, 0,         \
   }
 
 void sacn_receiver_config_init(SacnReceiverConfig* config);
 
-etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle, SacnNetworkChangeResult* good_interfaces);
+etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle,
+                                    SacnMcastInterfaceToUse* ifaces, size_t ifaces_count);
 etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle);
 etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id);
-etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, const SacnMcastNetintId* netints,
-                                              size_t num_netints, SacnNetworkChangeResult* good_interfaces);
+etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastInterfaceToUse* ifaces,
+                                              size_t ifaces_count);
 
 void sacn_receiver_set_standard_version(sacn_standard_version_t version);
 sacn_standard_version_t sacn_receiver_get_standard_version();

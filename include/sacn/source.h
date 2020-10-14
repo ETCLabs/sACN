@@ -79,11 +79,6 @@ typedef struct SacnSourceConfig
       This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES is used
      instead.*/
   size_t universe_count_max;
-  /*! (optional) array of network interfaces on which to send to the specified universe. If NULL,
-   *  all available network interfaces will be used. */
-  const SacnMcastNetintId* netints;
-  /*! Number of elements in the netints array. */
-  size_t num_netints;
 
   /*! If false (default), this module starts a thread that calls sacn_source_process_sources() every 23 ms.
       If true, no thread is started and the application must call sacn_source_process_sources() at its DMX rate,
@@ -95,7 +90,7 @@ typedef struct SacnSourceConfig
 /*! A default-value initializer for an SacnSourceConfig struct. */
 #define SACN_SOURCE_CONFIG_DEFAULT_INIT \
   {                                     \
-    kEtcPalNullUuid, "", 0, NULL, 0, 0  \
+    kEtcPalNullUuid, "", 0, 0           \
   }
 
 void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, const char* name);
@@ -122,9 +117,10 @@ typedef struct SacnSourceUniverseConfig
       If this is NULL, only the priority will be used.
       If non-NULL, this buffer is evaluated each tick.  Changes to and from 0 ("don't care") cause appropriate
       sacn packets over time to take and give control of those DMX values as defined in the per-address priority
-      specification. The memory is owned by the application, and should not be destroyed until after the universe is
+      specification.
+      The memory is owned by the application, and should not be destroyed until after the universe is
       deleted on this source. The size of this buffer must match the size of values_buffer.  */
-  const uint8_t* priorities_buffer;  // Priorities buffer will always be checked first., then priority, then slots processed
+  const uint8_t* priorities_buffer; 
 
   /*! If true, this sACN source is sending preview data. Defaults to false. */
   bool sending_preview;
@@ -146,7 +142,8 @@ typedef struct SacnSourceUniverseConfig
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe, const uint8_t* values_buffer,
                                       size_t values_len, const uint8_t* priorities_buffer);
 
-etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle, SacnNetworkChangeResult* good_interfaces);
+etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle,
+                                  SacnMcastInterfaceToUse* ifaces, size_t ifaces_count);
 void sacn_source_destroy(sacn_source_t handle);
 
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name);
@@ -172,7 +169,7 @@ void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t univers
 
 size_t sacn_source_process_sources(void);
 
-etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, const SacnMcastNetintId* netints, size_t num_netints, SacnNetworkChangeResult* good_interfaces);
+etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, SacnMcastInterfaceToUse* ifaces, size_t ifaces_count);
 
 #ifdef __cplusplus
 }

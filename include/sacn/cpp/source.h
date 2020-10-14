@@ -62,9 +62,6 @@ public:
     /*! The maximum number of universes this source will send to when using dynamic memory. */
     size_t universe_count_max{SACN_SOURCE_INFINITE_UNIVERSES};
 
-    /*! If non-empty, the list of network interfaces to transmit on.  Otherwise, all available interfaces are used. */
-    std::vector<SacnMcastNetintId> netints;
-
     /*! If false (default), this module starts a thread that calls ProcessSources() every 23 ms.
         If true, no thread is started and the application must call ProcessSources() at its DMX rate,
         usually 23 ms. */
@@ -83,7 +80,7 @@ public:
   Source(Source&& other) = default;             ///< Move a source instance.
   Source& operator=(Source&& other) = default;  ///< Move a source instance.
 
-  etcpal::Error Startup(const Settings& settings, SacnNetworkChangeResult* good_interfaces = nullptr);
+  etcpal::Error Startup(const Settings& settings, std::vector<SacnMcastInterfaceToUse>& ifaces);
   void Shutdown();
 
   etcpal::Error ChangeName(const std::string& new_name);
@@ -105,8 +102,7 @@ public:
   void SetListDirty(const std::vector<uint16_t>& universes);
   void SetDirtyAndForceSync(uint16_t universe);
 
-  etcpal::Error ResetNetworking(const std::vector<SacnMcastNetintId>& netints,
-                                SacnNetworkChangeResult* good_interfaces = nullptr);
+  etcpal::Error ResetNetworking(std::vector<SacnMcastInterfaceToUse>& ifaces);
 
   constexpr Handle handle() const;
 
@@ -135,15 +131,15 @@ inline bool Source::Settings::IsValid() const
 /*!
  * \brief Create a new sACN source to send sACN data.
  *
- * This creates the instance of the source, but no data is sent until AddUniverse() is called.
+ * This creates the instance of the source, but no data is sent until AddUniverse() and SetDirty() is called.
  *
  * Note that a source is considered as successfully created if it is able to successfully use any of the
  * network interfaces listed in the passed in configuration.  This will only return #kEtcPalErrNoNetints
  * if none of the interfaces work.
  *
  * \param[in] settings Configuration parameters for the sACN source to be created.
- * \param[out] good_interfaces Optional. If non-nil, good_interfaces is filled in with the list of network
- * interfaces that were succesfully used.
+ * \param[in, out] ifaces Optional. If !empty, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * \return #kEtcPalErrOk: Source successfully created.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -152,10 +148,14 @@ inline bool Source::Settings::IsValid() const
  * \return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::Startup(const Settings& settings, SacnNetworkChangeResult* good_interfaces)
+inline etcpal::Error Source::Startup(const Settings& settings, std::vector<SacnMcastInterfaceToUse>& ifaces)
 {
   SacnSourceConfig config = TranslateConfig(settings);
-  return sacn_source_create(&config, &handle_, good_interfaces);
+
+  if (ifaces.empty())
+    return sacn_source_create(&config, &handle_, NULL, 0);
+
+  return sacn_source_create(&config, &handle_, ifaces.data(), ifaces.size());
 }
 
 /*!
@@ -435,18 +435,16 @@ inline size_t Source::ProcessSources()
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, the all universes on a source are considered new & dirty by the
- * per-address priority logic in ProcessSources.
+ * After this call completes successfully, all universes on a source are considered to be dirty and have
+ * new values and priorities. It's as if the source just started sending values on that universe.
  *
  * If this call fails, the caller must call Shutdown(), because the source may be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * \param[in] netints Optional array of network interfaces on which to send to the specified universe(s). If empty,
- *  all available network interfaces will be used.
- * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
- * interfaces that were succesfully used.
+ * \param[in, out] ifaces Optional. If !empty, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * \return #kEtcPalErrOk: Source changed successfully.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -454,13 +452,12 @@ inline size_t Source::ProcessSources()
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking(const std::vector<SacnMcastNetintId>& netints,
-                                             SacnNetworkChangeResult* good_interfaces)
+inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterfaceToUse>& ifaces)
 {
-  if (netints.empty())
-    return sacn_source_reset_networking(handle_, nullptr, 0, good_interfaces);
-  else
-    return sacn_source_reset_networking(handle_, netints.data(), netints.size(), good_interfaces);
+  if (ifaces.empty())
+    return sacn_source_reset_networking(handle_, nullptr, 0);
+
+  return sacn_source_reset_networking(handle_, ifaces.data(), ifaces.size());
 }
 
 /*!
@@ -480,8 +477,6 @@ inline SacnSourceConfig Source::TranslateConfig(const Settings& settings)
     settings.cid.get(),
     "",
     settings.universe_count_max,
-    nullptr,
-    settings.netints.size(),
     settings.manually_process_source,
   };
   // clang-format on
@@ -493,12 +488,6 @@ inline SacnSourceConfig Source::TranslateConfig(const Settings& settings)
   config.name[SACN_SOURCE_NAME_MAX_LEN - 1] = 0;
 
   ETCPAL_MSVC_END_NO_DEP_WARNINGS();
-
-  // And the interfaces
-  if (config.num_netints > 0)
-  {
-    config.netints = settings.netints.data();
-  }
 
   return config;
 }

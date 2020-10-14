@@ -102,16 +102,17 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t
 /*!
  * \brief Create a new sACN source to send sACN data.
  *
- * This creates the instance of the source, but no data is sent until sacn_source_add_universe() is called.
+ * This creates the instance of the source, but no data is sent until sacn_source_add_universe() and
+ * sacn_source_set_dirty() is called.
  *
  * Note that a source is considered as successfully created if it is able to successfully use any of the
- * network interfaces listed in the passed in configuration.  This will only return #kEtcPalErrNoNetints
- * if none of the interfaces work.
+ * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * \param[in] config Configuration parameters for the sACN source to be created.
  * \param[out] handle Filled in on success with a handle to the sACN source.
- * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
- * interfaces that were succesfully used.
+ * \param[in, out] ifaces Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * \param[in, out] ifaces_count Optional. The size of ifaces, or 0 if ifaces is NULL.
  * \return #kEtcPalErrOk: Source successfully created.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -121,14 +122,15 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle,
-                                  SacnNetworkChangeResult* good_interfaces)
+                                  SacnMcastInterfaceToUse* ifaces, size_t ifaces_count)
 {
   // TODO CHRISTIAN
   // If the Tick thread hasn't been started yet, start it if the config isn't manual.
 
   ETCPAL_UNUSED_ARG(config);
   ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(good_interfaces);
+  ETCPAL_UNUSED_ARG(ifaces);
+  ETCPAL_UNUSED_ARG(ifaces_count);
   return kEtcPalErrNotImpl;
 }
 
@@ -466,7 +468,7 @@ void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t univers
  * called by an internal thread of the module. Otherwise, this must be called at the maximum rate
  * at which the application will send sACN.
  *
- * Sends data for universes which have been marked dirty, and sends keep-alive data for universes which 
+ * Sends data for universes which have been marked dirty, and sends keep-alive data for universes which
  * haven't changed. Also destroys sources & universes that have been marked for termination after sending the required
  * three terminated packets.
  *
@@ -485,8 +487,8 @@ size_t sacn_source_process_sources(void)
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, all universes on a source are considered new & dirty by the
- * per-address priority logic in sacn_source_process_sources.
+ * After this call completes successfully, all universes on a source are considered to be dirty and have
+ * new values and priorities. It's as if the source just started sending values on that universe.
  *
  * If this call fails, the caller must call sacn_source_destroy(), because the source may be in an
  * invalid state.
@@ -495,11 +497,9 @@ size_t sacn_source_process_sources(void)
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * \param[in] handle Handle to the source for which to reset the networking.
- * \param[in] netints Optional array of network interfaces on which to send to the specified universe(s). If NULL,
- *  all available network interfaces will be used.
- * \param[in] num_netints Number of elements in the netints array.
- * \param[out] good_interfaces Optional. If non-NULL, good_interfaces is filled in with the list of network
- * interfaces that were succesfully used.
+ * \param[in, out] ifaces Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * \param[in, out] ifaces_count Optional. The size of ifaces, or 0 if ifaces is NULL.
  * \return #kEtcPalErrOk: Source changed successfully.
  * \return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * \return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -507,14 +507,12 @@ size_t sacn_source_process_sources(void)
  * \return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
  * \return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, const SacnMcastNetintId* netints, size_t num_netints,
-                                            SacnNetworkChangeResult* good_interfaces)
+etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, SacnMcastInterfaceToUse* ifaces, size_t ifaces_count)
 {
   // TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(num_netints);
-  ETCPAL_UNUSED_ARG(good_interfaces);
+  ETCPAL_UNUSED_ARG(ifaces);
+  ETCPAL_UNUSED_ARG(ifaces_count);
 
   return kEtcPalErrNotImpl;
 }

@@ -144,28 +144,23 @@ typedef struct SacnMergeReceiverConfig
       This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used
      instead.*/
   size_t source_count_max;
-  /*! (optional) array of network interfaces on which to listen to the specified universe. If NULL,
-   *  all available network interfaces will be used. */
-  const SacnMcastNetintId* netints;
-  /*! Number of elements in the netints array. */
-  size_t num_netints;
 } SacnMergeReceiverConfig;
 
 /*! A default-value initializer for an SacnMergeReceiverConfig struct. */
 #define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT \
   {                                             \
-    0, {NULL, NULL, NULL}, 0, NULL, NULL, 0     \
+    0, {NULL, NULL, NULL}, 0                    \
   }
 
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
 
 etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle,
-                                          SacnNetworkChangeResult* good_interfaces);
+                                          SacnMcastInterfaceToUse* ifaces, size_t ifaces_count);
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle);
 etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id);
-etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, const SacnMcastNetintId* netints,
-                                                    size_t num_netints, SacnNetworkChangeResult* good_interfaces);
+etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, SacnMcastInterfaceToUse* ifaces,
+                                                    size_t ifaces_count);
 sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid);
 etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, sacn_source_id_t source_id,
                                                   EtcPalUuid* source_cid);
