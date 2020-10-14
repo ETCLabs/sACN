@@ -69,8 +69,8 @@ public:
     /** The maximum number of universes this source will send to when using dynamic memory. */
     size_t universe_count_max{SACN_SOURCE_INFINITE_UNIVERSES};
 
-    /** If false (default), this module starts a thread that calls ProcessSources() every 23 ms.
-        If true, no thread is started and the application must call ProcessSources() at its DMX rate,
+    /** If false (default), this module starts a shared thread that calls ProcessAll() every 23 ms.
+        If true, no thread is started and the application must call ProcessAll() at its DMX rate,
         usually 23 ms. */
     bool manually_process_source{false};
 
@@ -106,14 +106,14 @@ public:
   etcpal::Error SendSynchronization(uint16_t universe);
 
   void SetDirty(uint16_t universe);
-  void SetListDirty(const std::vector<uint16_t>& universes);
+  void SetDirty(const std::vector<uint16_t>& universes);
   void SetDirtyAndForceSync(uint16_t universe);
 
   etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
 
   constexpr Handle handle() const;
 
-  static size_t ProcessSources();
+  static size_t ProcessAll();
 
 private:
   SacnSourceConfig TranslateConfig(const Settings& settings);
@@ -173,7 +173,7 @@ inline etcpal::Error Source::Startup(const Settings& settings, std::vector<SacnM
  * @brief Destroy an sACN source instance.
  *
  * Stops sending all universes for this source. The destruction is queued, and actually occurs
- * on a call to ProcessSources() after an additional three packets have been sent with the
+ * on a call to ProcessAll() after an additional three packets have been sent with the
  * "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.
  *
  * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
@@ -231,7 +231,7 @@ inline etcpal::Error Source::AddUniverse(const SacnSourceUniverseConfig& config)
  * @brief Remove a universe from a source.
  *
  * This queues the source for removal. The destruction actually occurs
- * on a call to ProcessSources() after an additional three packets have been sent with the
+ * on a call to ProcessAll() after an additional three packets have been sent with the
  * "Stream_Terminated" option set.
  *
  * The source will also stop transmitting sACN universe discovery packets for that universe.
@@ -269,7 +269,7 @@ inline etcpal::Error Source::AddUnicastDestination(uint16_t universe, const etcp
  * @brief Remove a unicast destination on a source's universe.
  *
  * This queues the address for removal. The removal actually occurs
- * on a call to ProcessSources() after an additional three packets have been sent with the
+ * on a call to ProcessAll() after an additional three packets have been sent with the
  * "Stream_Terminated" option set.
  *
  * @param[in] universe Universe to change.
@@ -298,14 +298,14 @@ inline etcpal::Error Source::ChangePriority(uint16_t universe, uint8_t new_prior
 }
 
 /**
- * @brief Change the sending_preview option on a universe of a sACN source.
+ * @brief Change the send_preview option on a universe of a sACN source.
  *
  * Sets the state of a flag in the outgoing sACN packets that indicates that the data is (from
  * E1.31) "intended for use in visualization or media server preview applications and shall not be
  * used to generate live output."
  *
- * @param[in] new_preview_flag The new sending_preview option.
- * @return #kEtcPalErrOk: sending_preview option set successfully.
+ * @param[in] new_preview_flag The new send_preview option.
+ * @return #kEtcPalErrOk: send_preview option set successfully.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
@@ -342,7 +342,7 @@ inline etcpal::Error Source::ChangeSynchronizationUniverse(uint16_t universe, ui
  *
  * Immediately sends a sACN packet with the provided start code and data.
  * This function is intended for sACN packets that have a startcode other than 0 or 0xdd, since those
- * start codes are taken care of by ProcessSources().
+ * start codes are taken care of by ProcessAll().
  *
  * @param[in] universe Universe to send on.
  * @param[in] start_code The start code to send.
@@ -383,7 +383,7 @@ inline etcpal::Error Source::SendSynchronization(uint16_t universe)
 
 /**
  * @brief Indicate that the data in the buffer for this source and universe has changed and
- *        should be sent on the next call to ProcessSources().
+ *        should be sent on the next call to ProcessAll().
  *
  * @param[in] universe Universe to mark as dirty.
  */
@@ -394,11 +394,11 @@ inline void Source::SetDirty(uint16_t universe)
 
 /**
  * @brief Indicate that the data in the buffers for a list of universes on a source  has
- *        changed and should be sent on the next call to ProcessSources().
+ *        changed and should be sent on the next call to ProcessAll().
  *
  * @param[in] universes Vector of universes to mark as dirty.
  */
-inline void Source::SetListDirty(const std::vector<uint16_t>& universes)
+inline void Source::SetDirty(const std::vector<uint16_t>& universes)
 {
   sacn_source_set_list_dirty(handle_, universes.data(), universes.size());
 }
@@ -407,7 +407,7 @@ inline void Source::SetListDirty(const std::vector<uint16_t>& universes)
  * @brief Like Source::SetDirty, but also sets the force_sync flag on the packet.
  *
  * This function indicates that the data in the buffer for this source and universe has changed,
- * and should be sent on the next call to ProcessSources().  Additionally, the packet
+ * and should be sent on the next call to ProcessAll().  Additionally, the packet
  * to be sent will have its force_synchronization option flag set.
  *
  * If no synchronization universe is configured, this function acts like a direct call to SetDirty().
@@ -436,9 +436,9 @@ inline void Source::SetDirtyAndForceSync(uint16_t universe)
  *         track when destroyed sources have finished sending the terminated packets and have actually
  *         been destroyed.
  */
-inline size_t Source::ProcessSources()
+inline size_t Source::ProcessAll()
 {
-  return sacn_source_process_sources();
+  return sacn_source_process_all();
 }
 
 /**

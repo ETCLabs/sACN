@@ -161,7 +161,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
  * @brief Destroy an sACN source instance.
  *
  * Stops sending all universes for this source. The destruction is queued, and actually occurs
- * on a call to sacn_source_process_sources() after an additional three packets have been sent with the
+ * on a call to sacn_source_process_all() after an additional three packets have been sent with the
  * "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.
  *
  * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
@@ -208,7 +208,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
  * @brief Remove a universe from a source.
  *
  * This queues the source for removal. The destruction actually occurs
- * on a call to sacn_source_process_sources() after an additional three packets have been sent with the
+ * on a call to sacn_source_process_all() after an additional three packets have been sent with the
  * "Stream_Terminated" option set.
  *
  * The source will also stop transmitting sACN universe discovery packets for that universe.
@@ -256,7 +256,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
  * @brief Remove a unicast destination on a source's universe.
  *
  * This queues the address for removal. The removal actually occurs
- * on a call to sacn_source_process_sources() after an additional three packets have been sent with the
+ * on a call to sacn_source_process_all() after an additional three packets have been sent with the
  * "Stream_Terminated" option set.
  *
  * @param[in] handle Handle to the source to change.
@@ -297,15 +297,15 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
 }
 
 /**
- * @brief Change the sending_preview option on a universe of a sACN source.
+ * @brief Change the send_preview option on a universe of a sACN source.
  *
  * Sets the state of a flag in the outgoing sACN packets that indicates that the data is (from
  * E1.31) "intended for use in visualization or media server preview applications and shall not be
  * used to generate live output."
  *
  * @param[in] handle Handle to the source for which to set the Preview_Data option.
- * @param[in] new_preview_flag The new sending_preview option.
- * @return #kEtcPalErrOk: sending_preview option set successfully.
+ * @param[in] new_preview_flag The new send_preview option.
+ * @return #kEtcPalErrOk: send_preview option set successfully.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
@@ -354,7 +354,7 @@ etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
  *
  * Immediately sends a sACN packet with the provided start code and data.
  * This function is intended for sACN packets that have a startcode other than 0 or 0xdd, since those
- * start codes are taken care of by sacn_source_process_sources().
+ * start codes are taken care of by sacn_source_process_all().
  *
  * @param[in] handle Handle to the source.
  * @param[in] universe Universe to send on.
@@ -409,7 +409,7 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t u
 
 /**
  * @brief Indicate that the data in the buffer for this source and universe has changed and
- *        should be sent on the next call to sacn_source_process_sources().
+ *        should be sent on the next call to sacn_source_process_all().
  *
  * @param[in] handle Handle to the source to mark as dirty.
  * @param[in] universe Universe to mark as dirty.
@@ -424,7 +424,7 @@ void sacn_source_set_dirty(sacn_source_t handle, uint16_t universe)
 
 /**
  * @brief Indicate that the data in the buffers for a list of universes on a source  has
- *        changed and should be sent on the next call to sacn_source_process_sources().
+ *        changed and should be sent on the next call to sacn_source_process_all().
  *
  * @param[in] handle Handle to the source.
  * @param[in] universes Array of universes to mark as dirty. Must not be NULL.
@@ -443,7 +443,7 @@ void sacn_source_set_list_dirty(sacn_source_t handle, const uint16_t* universes,
  * @brief Like sacn_source_set_dirty, but also sets the force_sync flag on the packet.
  *
  * This function indicates that the data in the buffer for this source and universe has changed,
- * and should be sent on the next call to sacn_source_process_sources().  Additionally, the packet
+ * and should be sent on the next call to sacn_source_process_all().  Additionally, the packet
  * to be sent will have its force_synchronization option flag set.
  *
  * If no synchronization universe is configured, this function acts like a direct call to sacn_source_set_dirty().
@@ -476,7 +476,7 @@ void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t univers
  *         track when destroyed sources have finished sending the terminated packets and actually
  *         been destroyed.
  */
-size_t sacn_source_process_sources(void)
+size_t sacn_source_process_all(void)
 {
   // TODO CHRISTIAN
   return 0;

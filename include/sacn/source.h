@@ -79,8 +79,8 @@ typedef struct SacnSourceConfig
       This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES is used instead.*/
   size_t universe_count_max;
 
-  /** If false (default), this module starts a thread that calls sacn_source_process_sources() every 23 ms.
-      If true, no thread is started and the application must call sacn_source_process_sources() at its DMX rate,
+  /** If false (default), this module starts a shared thread that calls sacn_source_process_all() every 23 ms.
+      If true, no thread is started and the application must call sacn_source_process_all() at its DMX rate,
       usually 23 ms. */
   bool manually_process_source;
 
@@ -89,7 +89,7 @@ typedef struct SacnSourceConfig
 /** A default-value initializer for an SacnSourceConfig struct. */
 #define SACN_SOURCE_CONFIG_DEFAULT_INIT \
   {                                     \
-    kEtcPalNullUuid, "", 0, 0           \
+    kEtcPalNullUuid, "", 0, false       \
   }
 
 void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, const char* name);
@@ -121,10 +121,10 @@ typedef struct SacnSourceUniverseConfig
       deleted on this source. The size of this buffer must match the size of values_buffer.  */
   const uint8_t* priorities_buffer; 
 
-  /** If true, this sACN source is sending preview data. Defaults to false. */
-  bool sending_preview;
+  /** If true, this sACN source will send preview data. Defaults to false. */
+  bool send_preview;
 
-  /** If true, this sACN source is only sending unicast traffic on this universe. Defaults to false. */
+  /** If true, this sACN source will only send unicast traffic on this universe. Defaults to false. */
   bool send_unicast_only;
 
   /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
@@ -135,7 +135,7 @@ typedef struct SacnSourceUniverseConfig
 /** A default-value initializer for an SacnSourceUniverseConfig struct. */
 #define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT \
   {                                              \
-    0, NULL, 0, 100, NULL, 0, 0, 0               \
+    0, NULL, 0, 100, NULL, false, false, 0       \
   }
 
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe, const uint8_t* values_buffer,
@@ -166,7 +166,7 @@ void sacn_source_set_dirty(sacn_source_t handle, uint16_t universe);
 void sacn_source_set_list_dirty(sacn_source_t handle, const uint16_t* universes, size_t num_universes);
 void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t universe);
 
-size_t sacn_source_process_sources(void);
+size_t sacn_source_process_all(void);
 
 etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, SacnMcastInterface* netints, size_t num_netints);
 
