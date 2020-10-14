@@ -281,12 +281,12 @@ typedef struct SacnReceiverConfig
 void sacn_receiver_config_init(SacnReceiverConfig* config);
 
 etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle,
-                                    SacnMcastInterfaceToUse* ifaces, size_t ifaces_count);
+                                    SacnMcastInterface* netints, size_t num_netints);
 etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle);
 etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id);
-etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastInterfaceToUse* ifaces,
-                                              size_t ifaces_count);
+etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastInterface* netints,
+                                              size_t num_netints);
 
 void sacn_receiver_set_standard_version(sacn_standard_version_t version);
 sacn_standard_version_t sacn_receiver_get_standard_version();

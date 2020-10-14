@@ -109,11 +109,11 @@ typedef struct SacnMcastNetintId
 * On input, this structure is used to indicate a network interface to use.
 * On output, this structure indicates whether or not the operation was a success.
 */
-typedef struct SacnMcastInterfaceToUse
+typedef struct SacnMcastInterface
 {
   SacnMcastNetintId iface;
   bool operation_succeeded;
-} SacnMcastInterfaceToUse;
+} SacnMcastInterface;
 
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params);
 void sacn_deinit(void);

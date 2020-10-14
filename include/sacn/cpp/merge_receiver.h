@@ -143,11 +143,11 @@ public:
   MergeReceiver& operator=(MergeReceiver&& other) = default;  /**< Move a merge receiver instance. */
 
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
-                        std::vector<SacnMcastInterfaceToUse>& ifaces);
+                        std::vector<SacnMcastInterface>& netints);
   void Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
-  etcpal::Error ResetNetworking(std::vector<SacnMcastInterfaceToUse>& ifaces);
+  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
 
   etcpal::Expected<sacn_source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
   etcpal::Expected<etcpal::Uuid> GetSourceCid(sacn_source_id_t source) const;
@@ -230,7 +230,7 @@ inline bool MergeReceiver::Settings::IsValid() const
  *
  * @param[in] settings Configuration parameters for the sACN merge receiver and this class instance.
  * @param[in] notify_handler The notification interface to call back to the application.
- * @param[in, out] ifaces Optional. If !empty, this is the list of interfaces the application wants to use, and the
+ * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Merge Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -242,14 +242,14 @@ inline bool MergeReceiver::Settings::IsValid() const
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHandler& notify_handler,
-                                            std::vector<SacnMcastInterfaceToUse>& ifaces)
+                                            std::vector<SacnMcastInterface>& netints)
 {
   SacnMergeReceiverConfig config = TranslateConfig(settings, notify_handler);
 
-  if(ifaces.empty())
+  if(netints.empty())
     return sacn_merge_receiver_create(&config, &handle_, NULL, 0);
   
-  return sacn_merge_receiver_create(&config, &handle_, ifaces.data(), ifaces.size());
+  return sacn_merge_receiver_create(&config, &handle_, netints.data(), netints.size());
 }
 
 /**
@@ -311,7 +311,7 @@ inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in, out] ifaces Optional. If !empty, this is the list of interfaces the application wants to use, and the
+ * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Universe changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -320,12 +320,12 @@ inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterfaceToUse>& ifaces)
+inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterface>& netints)
 {
-  if (ifaces.empty())
+  if (netints.empty())
     return sacn_merge_receiver_reset_networking(handle_, nullptr, 0);
 
-  return sacn_merge_receiver_reset_networking(handle_, ifaces.data(), ifaces.size());
+  return sacn_merge_receiver_reset_networking(handle_, netints.data(), netints.size());
 }
 
 /**

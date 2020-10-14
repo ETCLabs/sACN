@@ -87,7 +87,7 @@ public:
   Source(Source&& other) = default;             /**< Move a source instance. */
   Source& operator=(Source&& other) = default;  /**< Move a source instance. */
 
-  etcpal::Error Startup(const Settings& settings, std::vector<SacnMcastInterfaceToUse>& ifaces);
+  etcpal::Error Startup(const Settings& settings, std::vector<SacnMcastInterface>& netints);
   void Shutdown();
 
   etcpal::Error ChangeName(const std::string& new_name);
@@ -109,7 +109,7 @@ public:
   void SetListDirty(const std::vector<uint16_t>& universes);
   void SetDirtyAndForceSync(uint16_t universe);
 
-  etcpal::Error ResetNetworking(std::vector<SacnMcastInterfaceToUse>& ifaces);
+  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
 
   constexpr Handle handle() const;
 
@@ -149,7 +149,7 @@ inline bool Source::Settings::IsValid() const
  * if none of the interfaces work.
  *
  * @param[in] settings Configuration parameters for the sACN source to be created.
- * @param[in, out] ifaces Optional. If !empty, this is the list of interfaces the application wants to use, and the
+ * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Source successfully created.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -159,14 +159,14 @@ inline bool Source::Settings::IsValid() const
  * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::Startup(const Settings& settings, std::vector<SacnMcastInterfaceToUse>& ifaces)
+inline etcpal::Error Source::Startup(const Settings& settings, std::vector<SacnMcastInterface>& netints)
 {
   SacnSourceConfig config = TranslateConfig(settings);
 
-  if (ifaces.empty())
+  if (netints.empty())
     return sacn_source_create(&config, &handle_, NULL, 0);
 
-  return sacn_source_create(&config, &handle_, ifaces.data(), ifaces.size());
+  return sacn_source_create(&config, &handle_, netints.data(), netints.size());
 }
 
 /**
@@ -454,7 +454,7 @@ inline size_t Source::ProcessSources()
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in, out] ifaces Optional. If !empty, this is the list of interfaces the application wants to use, and the
+ * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Source changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -463,12 +463,12 @@ inline size_t Source::ProcessSources()
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterfaceToUse>& ifaces)
+inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& netints)
 {
-  if (ifaces.empty())
+  if (netints.empty())
     return sacn_source_reset_networking(handle_, nullptr, 0);
 
-  return sacn_source_reset_networking(handle_, ifaces.data(), ifaces.size());
+  return sacn_source_reset_networking(handle_, netints.data(), netints.size());
 }
 
 /**

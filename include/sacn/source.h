@@ -142,7 +142,7 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t
                                       size_t values_len, const uint8_t* priorities_buffer);
 
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle,
-                                  SacnMcastInterfaceToUse* ifaces, size_t ifaces_count);
+                                  SacnMcastInterface* netints, size_t num_netints);
 void sacn_source_destroy(sacn_source_t handle);
 
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name);
@@ -168,7 +168,7 @@ void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t univers
 
 size_t sacn_source_process_sources(void);
 
-etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, SacnMcastInterfaceToUse* ifaces, size_t ifaces_count);
+etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, SacnMcastInterface* netints, size_t num_netints);
 
 #ifdef __cplusplus
 }
