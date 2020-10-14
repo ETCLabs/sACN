@@ -110,10 +110,10 @@ typedef struct SacnSourceUniverseConfig
 
   /********* Optional values **********/
 
-  /** The sACN priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100. */
+  /** The sACN universe priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100. */
   uint8_t priority;
   /** The (optional) buffer of up to 512 per-address priorities that will be sent each tick.
-      If this is NULL, only the priority will be used.
+      If this is NULL, only the universe priority will be used.
       If non-NULL, this buffer is evaluated each tick.  Changes to and from 0 ("don't care") cause appropriate
       sacn packets over time to take and give control of those DMX values as defined in the per-address priority
       specification.
@@ -166,7 +166,7 @@ void sacn_source_set_dirty(sacn_source_t handle, uint16_t universe);
 void sacn_source_set_list_dirty(sacn_source_t handle, const uint16_t* universes, size_t num_universes);
 void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t universe);
 
-size_t sacn_source_process_all(void);
+int sacn_source_process_all(void);
 
 etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, SacnMcastInterface* netints, size_t num_netints);
 

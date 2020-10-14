@@ -101,10 +101,10 @@ public:
 
     /********* Optional values **********/
 
-    /** The sACN priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100. */
+    /** The sACN universe priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100. */
     uint8_t priority{100};
     /** The (optional) buffer of up to 512 per-address priorities that will be sent each tick.
-        If this is nil, only the priority will be used.
+        If this is nil, only the universe priority will be used.
         If non-nil, this buffer is evaluated each tick.  Changes to and from 0 ("don't care") cause appropriate
         sacn packets over time to take and give control of those DMX values as defined in the per-address priority
         specification.
@@ -161,7 +161,7 @@ public:
 
   constexpr Handle handle() const;
 
-  static size_t ProcessAll();
+  static int ProcessAll();
 
 private:
   SacnSourceConfig TranslateConfig(const Settings& settings);
@@ -505,7 +505,7 @@ inline void Source::SetDirtyAndForceSync(uint16_t universe)
  *         track when destroyed sources have finished sending the terminated packets and have actually
  *         been destroyed.
  */
-inline size_t Source::ProcessAll()
+inline int Source::ProcessAll()
 {
   return sacn_source_process_all();
 }

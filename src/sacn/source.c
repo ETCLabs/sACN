@@ -476,7 +476,7 @@ void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t univers
  *         track when destroyed sources have finished sending the terminated packets and actually
  *         been destroyed.
  */
-size_t sacn_source_process_all(void)
+int sacn_source_process_all(void)
 {
   // TODO CHRISTIAN
   return 0;
