@@ -110,7 +110,7 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t
  *
  * @param[in] config Configuration parameters for the sACN source to be created.
  * @param[out] handle Filled in on success with a handle to the sACN source.
- * @param[in, out] num_netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and
+ * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and
  * the operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Source successfully created.
