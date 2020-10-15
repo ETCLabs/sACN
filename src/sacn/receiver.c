@@ -1075,7 +1075,7 @@ void process_source_data_buffers(SacnTrackedSource* src, const EtcPalSockAddr* f
     // Discard preview data if the sources found notification already happened.
     *notify = false;
   }
-  else
+  else if (!src->found)  // These buffers are only needed for the SourcesFound notification.
   {
     SourceDataBuffer* source_data_buffer = NULL;
     if (header->start_code == SACN_STARTCODE_DMX)
@@ -1120,7 +1120,7 @@ void process_source_data_buffers(SacnTrackedSource* src, const EtcPalSockAddr* f
   }
 
 #if SACN_ETC_PRIORITY_EXTENSION
-  if (etcpal_timer_is_expired(&src->pap_timer) && (src->pap_buffer.slot_count > 0))
+  if (!src->found && etcpal_timer_is_expired(&src->pap_timer) && (src->pap_buffer.slot_count > 0))
   {
     memset(&src->pap_buffer, 0, sizeof(SourceDataBuffer));
   }
