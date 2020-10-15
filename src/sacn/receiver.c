@@ -32,8 +32,11 @@
  - Make an example receiver & testing for the c++ header.
  - IPv6 support.  See the CHRISTIAN TODO IPV6 comments for some hints on where to change.
  - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
-   filter out the duplicate packet (just like IPv4 & IPv6).
+   filter out the duplicate packet (just like IPv4 & IPv6).  THIS WILL NOT BE TRUE!!!! because the draft library is now a separate module with different sequencing, etc.
+   So Draft will most likely be treated like a different source...  Should we assume that both won't be sent, or do some checks to ignore draft if we're currently seeing
+   ratified??
  - This entire project should build without warnings!!
+ - Make sure the new functionality for receiver/merge_receiver create & reset_networking work with and without good_interfaces, in all combinations (nill, small array, large array, etc).
  - Sync support.  Update TODO comments in receiver & merge_receiver that state sync isn't supported.
 */
 
@@ -114,8 +117,11 @@ static struct SacnRecvState
 static etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config);
 static etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMcastNetintId* netints,
                                                   size_t num_netints);
+//TODO CHRISTIAN CLEANUP & TEST new way of doing interfaces
+#if 0
 static SacnReceiver* create_new_receiver(const SacnReceiverConfig* config);
 static etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnReceiverConfig* config);
+#endif
 static etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver);
 static etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context);
 
@@ -218,10 +224,10 @@ void sacn_receiver_deinit(void)
   memset(&receiver_state, 0, sizeof receiver_state);
 }
 
-/*!
- * \brief Initialize an sACN Receiver Config struct to default values.
+/**
+ * @brief Initialize an sACN Receiver Config struct to default values.
  *
- * \param[out] config Config struct to initialize.
+ * @param[out] config Config struct to initialize.
  */
 void sacn_receiver_config_init(SacnReceiverConfig* config)
 {
@@ -231,25 +237,40 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
   }
 }
 
-/*!
- * \brief Create a new sACN receiver to listen for sACN data on a universe.
+/**
+ * @brief Create a new sACN receiver to listen for sACN data on a universe.
  *
  * A sACN receiver can listen on one universe at a time, and each universe can only be listened to
  * by one receiver at at time.
  *
- * \param[in] config Configuration parameters for the sACN receiver to be created.
- * \param[out] handle Filled in on success with a handle to the sACN receiver.
- * \return #kEtcPalErrOk: Receiver created successful.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrExists: A receiver already exists which is listening on the specified universe.
- * \return #kEtcPalErrNoMem: No room to allocate memory for this receiver.
- * \return #kEtcPalErrNoNetints: No network interfaces were found on the system.
- * \return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * Note that a receiver is considered as successfully created if it is able to successfully use any of the
+ * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
+ * @param[in] config Configuration parameters for the sACN receiver to be created.
+ * @param[out] handle Filled in on success with a handle to the sACN receiver.
+ * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
+ * @return #kEtcPalErrOk: Receiver created successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrExists: A receiver already exists which is listening on the specified universe.
+ * @return #kEtcPalErrNoMem: No room to allocate memory for this receiver.
+ * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle)
+etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle,
+                                    SacnMcastInterface* netints, size_t num_netints)
 {
+  //TODO CHRISTIAN
+  ETCPAL_UNUSED_ARG(config);
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(num_netints);
+  return kEtcPalErrNotImpl;
+
+#if 0
   if (!config || !handle)
     return kEtcPalErrInvalid;
 
@@ -307,19 +328,20 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
   }
 
   return res;
+#endif
 }
 
-/*!
- * \brief Destroy a sACN receiver instance.
+/**
+ * @brief Destroy a sACN receiver instance.
  *
  * Tears down the receiver and any sources currently being tracked on the receiver's universe.
  * Stops listening for sACN on that universe.
  *
- * \param[in] handle Handle to the receiver to destroy.
- * \return #kEtcPalErrOk: Receiver destroyed successfully.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @param[in] handle Handle to the receiver to destroy.
+ * @return #kEtcPalErrOk: Receiver destroyed successfully.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 {
@@ -350,16 +372,16 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
   return res;
 }
 
-/*!
- * \brief Get the universe on which a sACN receiver is currently listening.
+/**
+ * @brief Get the universe on which a sACN receiver is currently listening.
  *
- * \param[in] handle Handle to the receiver that we want to query.
- * \param[out] universe_id The retrieved universe.
- * \return #kEtcPalErrOk: Universe retrieved successfully.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @param[in] handle Handle to the receiver that we want to query.
+ * @param[out] universe_id The retrieved universe.
+ * @return #kEtcPalErrOk: Universe retrieved successfully.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* universe_id)
 {
@@ -372,22 +394,22 @@ etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* univ
   return kEtcPalErrNotImpl;
 }
 
-/*!
- * \brief Change the universe on which an sACN receiver is listening.
+/**
+ * @brief Change the universe on which an sACN receiver is listening.
  *
  * An sACN receiver can only listen on one universe at a time. After this call completes successfully, the receiver is
  * in a sampling period for the new universe and will provide SourcesFound() notifications when appropriate.
  * If this call fails, the caller must call sacn_receiver_destroy for the receiver, because the receiver may be in an
  * invalid state.
  *
- * \param[in] handle Handle to the receiver for which to change the universe.
- * \param[in] new_universe_id New universe number that this receiver should listen to.
- * \return #kEtcPalErrOk: Universe changed successfully.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrExists: A receiver already exists which is listening on the specified new universe.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @param[in] handle Handle to the receiver for which to change the universe.
+ * @param[in] new_universe_id New universe number that this receiver should listen to.
+ * @return #kEtcPalErrOk: Universe changed successfully.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrExists: A receiver already exists which is listening on the specified new universe.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id)
 {
@@ -459,8 +481,8 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
   return res;
 }
 
-/*!
- * \brief Resets the underlying network sockets and packet receipt state for the sACN receiver..
+/**
+ * @brief Resets the underlying network sockets and packet receipt state for the sACN receiver..
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
@@ -469,19 +491,24 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  * If this call fails, the caller must call sacn_receiver_destroy for the receiver, because the receiver may be in an
  * invalid state.
  *
- * \param[in] handle Handle to the receiver for which to reset the networking.
- * \param[in] netints Optional array of network interfaces on which to listen to the specified universe. If NULL,
- *  all available network interfaces will be used.
- * \param[in] num_netints Number of elements in the netints array.
- * \return #kEtcPalErrOk: Universe changed successfully.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrNotInit: Module not initialized.
- * \return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * Note that the networking reset is considered successful if it is able to successfully use any of the
+ * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
+ * @param[in] handle Handle to the receiver for which to reset the networking.
+ * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
+ * @return #kEtcPalErrOk: Universe changed successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, const SacnMcastNetintId* netints,
+etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastInterface* netints,
                                               size_t num_netints)
 {
+  //TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
@@ -492,12 +519,12 @@ etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, const Sacn
   return kEtcPalErrNotImpl;
 }
 
-/*!
- * \brief Set the current version of the sACN standard to which the module is listening.
+/**
+ * @brief Set the current version of the sACN standard to which the module is listening.
  *
  * This is a global option across all listening receivers.
  *
- * \param[in] version Version of sACN to listen to.
+ * @param[in] version Version of sACN to listen to.
  */
 void sacn_receiver_set_standard_version(sacn_standard_version_t version)
 {
@@ -511,12 +538,12 @@ void sacn_receiver_set_standard_version(sacn_standard_version_t version)
   }
 }
 
-/*!
- * \brief Get the current version of the sACN standard to which the module is listening.
+/**
+ * @brief Get the current version of the sACN standard to which the module is listening.
  *
  * This is a global option across all listening receivers.
  *
- * \return Version of sACN to which the module is listening, or #kSacnStandardVersionNone if the module is
+ * @return Version of sACN to which the module is listening, or #kSacnStandardVersionNone if the module is
  *         not initialized.
  */
 sacn_standard_version_t sacn_receiver_get_standard_version()
@@ -534,14 +561,14 @@ sacn_standard_version_t sacn_receiver_get_standard_version()
   return res;
 }
 
-/*!
- * \brief Set the expired notification wait time.
+/**
+ * @brief Set the expired notification wait time.
  *
  * The library will wait at least this long after a data loss condition has been encountered before
- * sending a \ref SacnSourcesLostCallback "sources_lost()" notification. However, the wait may be
- * longer due to the data loss algorithm (see \ref data_loss_behavior).
+ * sending a @ref SacnSourcesLostCallback "sources_lost()" notification. However, the wait may be
+ * longer due to the data loss algorithm (see @ref data_loss_behavior).
  *
- * \param[in] wait_ms Wait time in milliseconds.
+ * @param[in] wait_ms Wait time in milliseconds.
  */
 void sacn_receiver_set_expired_wait(uint32_t wait_ms)
 {
@@ -555,14 +582,14 @@ void sacn_receiver_set_expired_wait(uint32_t wait_ms)
   }
 }
 
-/*!
- * \brief Get the current value of the expired notification wait time.
+/**
+ * @brief Get the current value of the expired notification wait time.
  *
  * The library will wait at least this long after a data loss condition has been encountered before
- * sending a \ref SacnSourcesLostCallback "sources_lost()" notification. However, the wait may be
- * longer due to the data loss algorithm (see \ref data_loss_behavior).
+ * sending a @ref SacnSourcesLostCallback "sources_lost()" notification. However, the wait may be
+ * longer due to the data loss algorithm (see @ref data_loss_behavior).
  *
- * \return Wait time in milliseconds.
+ * @return Wait time in milliseconds.
  */
 uint32_t sacn_receiver_get_expired_wait()
 {
@@ -595,7 +622,7 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
     return kEtcPalErrInvalid;
   }
 
-  return sacn_validate_netint_config(config->netints, config->num_netints);
+  return kEtcPalErrOk;
 }
 
 /*
@@ -603,7 +630,9 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
  */
 etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMcastNetintId* netints, size_t num_netints)
 {
-  etcpal_error_t result = kEtcPalErrOk;
+  etcpal_error_t result = sacn_validate_netint_config(netints, num_netints);
+  if (result != kEtcPalErrOk)
+    return result;
 
   if (netints)
   {
@@ -645,6 +674,8 @@ etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const SacnMca
   return result;
 }
 
+//TODO CHRISTIAN CLEANUP & TEST new way of doing interfaces
+#if 0
 /*
  * Allocate a new receiver instances and do essential first initialization, in preparation for
  * creating the sockets and subscriptions.
@@ -736,6 +767,7 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
   }
   return res;
 }
+#endif
 
 /*
  * Add a receiver to the maps that are used to track receivers globally.
@@ -1324,7 +1356,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
     // sampling_ended = get_sampling_ended_buffer(recv_thread_context->thread_id, num_receivers);
     sources_lost = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
     sources_found = get_sources_found_buffer(recv_thread_context->thread_id, num_receivers);
-    if (/*!sampling_ended ||*/ !sources_lost || !sources_found)
+    if (/* !sampling_ended || */ !sources_lost || !sources_found)
     {
       sacn_unlock();
       SACN_LOG_ERR("Could not allocate memory to track state data for sACN receivers!");

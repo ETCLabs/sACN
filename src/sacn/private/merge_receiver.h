@@ -17,10 +17,10 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/merge_receiver.h
- * \brief Private constants, types, and function declarations for the
- *        \ref sacn_merge_receiver "sACN Merge Receiver" module.
+/**
+ * @file sacn/private/merge_receiver.h
+ * @brief Private constants, types, and function declarations for the
+ *        @ref sacn_merge_receiver "sACN Merge Receiver" module.
  */
 
 #ifndef SACN_PRIVATE_MERGE_RECEIVER_H_
