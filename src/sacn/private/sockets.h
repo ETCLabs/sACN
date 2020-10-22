@@ -41,7 +41,7 @@ typedef struct SacnReadResult
 etcpal_error_t sacn_sockets_init(void);
 void sacn_sockets_deinit(void);
 
-etcpal_error_t sacn_validate_netint_config(const EtcPalMcastNetintId* netints, size_t num_netints);
+etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t num_netints, size_t *num_valid_netints);
 
 etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
                                         const EtcPalMcastNetintId* netints, size_t num_netints, etcpal_socket_t* socket);

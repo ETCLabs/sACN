@@ -119,13 +119,11 @@ static struct SacnRecvState
 
 // Receiver creation and destruction
 static etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config);
-static etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const EtcPalMcastNetintId* netints,
+static etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, SacnMcastInterface* netints,
                                                   size_t num_netints);
-//TODO CHRISTIAN CLEANUP & TEST new way of doing interfaces
-#if 0
-static SacnReceiver* create_new_receiver(const SacnReceiverConfig* config);
+static etcpal_error_t create_new_receiver(const SacnReceiverConfig* config, SacnMcastInterface* netints,
+                                          size_t num_netints, SacnReceiver** new_receiver);
 static etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnReceiverConfig* config);
-#endif
 static etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver);
 static etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context);
 
@@ -269,14 +267,6 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
 etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle,
                                     SacnMcastInterface* netints, size_t num_netints)
 {
-  //TODO CHRISTIAN
-  ETCPAL_UNUSED_ARG(config);
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(num_netints);
-  return kEtcPalErrNotImpl;
-
-#if 0
   if (!config || !handle)
     return kEtcPalErrInvalid;
 
@@ -300,11 +290,7 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
     }
 
     if (res == kEtcPalErrOk)
-    {
-      receiver = create_new_receiver(config);
-      if (!receiver)
-        res = kEtcPalErrNoMem;
-    }
+      res = create_new_receiver(config, netints, num_netints, &receiver);
 
     if (res == kEtcPalErrOk)
       res = assign_receiver_to_thread(receiver, config);
@@ -334,7 +320,6 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
   }
 
   return res;
-#endif
 }
 
 /**
@@ -641,10 +626,11 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
 /*
  * Initialize a SacnReceiver's network interface data.
  */
-etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const EtcPalMcastNetintId* netints,
+etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, SacnMcastInterface* netints,
                                            size_t num_netints)
 {
-  etcpal_error_t result = sacn_validate_netint_config(netints, num_netints);
+  size_t num_valid_netints = 0u;
+  etcpal_error_t result = sacn_validate_netint_config(netints, num_netints, &num_valid_netints);
   if (result != kEtcPalErrOk)
     return result;
 
@@ -670,7 +656,14 @@ etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const EtcPalM
 
     if (result == kEtcPalErrOk)
     {
-      memcpy(receiver->netints, netints, num_netints * sizeof(EtcPalMcastNetintId));
+      for (size_t read_index = 0u, write_index = 0u; read_index < num_netints; ++read_index)
+      {
+        if (netints[read_index].operation_succeeded)
+        {
+          memcpy(&receiver->netints[write_index], &netints[read_index].iface, sizeof(EtcPalMcastNetintId));
+          ++write_index;
+        }
+      }
     }
   }
 #if SACN_DYNAMIC_MEM
@@ -682,14 +675,12 @@ etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const EtcPalM
 
   if (result == kEtcPalErrOk)
   {
-    receiver->num_netints = num_netints;
+    receiver->num_netints = num_valid_netints;
   }
 
   return result;
 }
 
-//TODO CHRISTIAN CLEANUP & TEST new way of doing interfaces
-#if 0
 /*
  * Allocate a new receiver instances and do essential first initialization, in preparation for
  * creating the sockets and subscriptions.
@@ -697,17 +688,18 @@ etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, const EtcPalM
  * [in] config Receiver configuration data.
  * Returns the new initialized receiver instance, or NULL if out of memory.
  */
-SacnReceiver* create_new_receiver(const SacnReceiverConfig* config)
+etcpal_error_t create_new_receiver(const SacnReceiverConfig* config, SacnMcastInterface* netints, size_t num_netints,
+                                   SacnReceiver** new_receiver)
 {
   SACN_ASSERT(config);
 
   sacn_receiver_t new_handle = get_next_int_handle(&receiver_state.handle_mgr, -1);
   if (new_handle == SACN_RECEIVER_INVALID)
-    return NULL;
+    return kEtcPalErrNoMem;
 
   SacnReceiver* receiver = ALLOC_RECEIVER();
   if (!receiver)
-    return NULL;
+    return kEtcPalErrNoMem;
 
   receiver->keys.handle = new_handle;
   receiver->keys.universe = config->universe_id;
@@ -716,10 +708,11 @@ SacnReceiver* create_new_receiver(const SacnReceiverConfig* config)
   receiver->ipv4_socket = ETCPAL_SOCKET_INVALID;
   receiver->ipv6_socket = ETCPAL_SOCKET_INVALID;
 
-  if (initialize_receiver_netints(receiver, config->netints, config->num_netints) != kEtcPalErrOk)
+  etcpal_error_t initialize_receiver_netints_result = initialize_receiver_netints(receiver, netints, num_netints);
+  if (initialize_receiver_netints_result != kEtcPalErrOk)
   {
     FREE_RECEIVER(receiver);
-    return NULL;
+    return initialize_receiver_netints_result;
   }
 
   receiver->sampling = true;
@@ -734,7 +727,9 @@ SacnReceiver* create_new_receiver(const SacnReceiverConfig* config)
 
   receiver->next = NULL;
 
-  return receiver;
+  *new_receiver = receiver;
+
+  return kEtcPalErrOk;
 }
 
 /*
@@ -766,11 +761,11 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
   SACN_ASSERT(assigned_thread);
 
   etcpal_error_t res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, config->universe_id,
-                                                config->netints, config->num_netints, &receiver->ipv4_socket);
+                                                receiver->netints, receiver->num_netints, &receiver->ipv4_socket);
   if (res == kEtcPalErrOk)
   {
-    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, config->universe_id, config->netints,
-                                   config->num_netints, &receiver->ipv6_socket);
+    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, config->universe_id, receiver->netints,
+                                   receiver->num_netints, &receiver->ipv6_socket);
   }
 
   if (res == kEtcPalErrOk && !assigned_thread->running)
@@ -790,7 +785,6 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
   }
   return res;
 }
-#endif
 
 /*
  * Add a receiver to the maps that are used to track receivers globally.
