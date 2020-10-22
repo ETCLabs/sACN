@@ -17,9 +17,9 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/util.h
- * \brief Utilities used internally by the sACN library
+/**
+ * @file sacn/private/util.h
+ * @brief Utilities used internally by the sACN library
  */
 
 #ifndef SACN_PRIVATE_UTIL_H_

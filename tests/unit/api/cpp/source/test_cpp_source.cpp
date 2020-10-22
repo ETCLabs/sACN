@@ -17,39 +17,48 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/**
- * @file sacn/private/receiver.h
- * @brief Private constants, types, and function declarations for the
- *        @ref sacn_receiver "sACN Receiver" module.
- */
+#include "sacn/cpp/common.h"
+#include "sacn/cpp/source.h"
 
-#ifndef SACN_PRIVATE_RECEIVER_H_
-#define SACN_PRIVATE_RECEIVER_H_
-
-#include <stdbool.h>
-#include <stdint.h>
-#include "sacn/receiver.h"
-#include "sacn/private/common.h"
+#include <limits>
+#include "etcpal_mock/common.h"
+#include "sacn_mock/private/common.h"
+#include "sacn_mock/private/data_loss.h"
+#include "sacn_mock/private/sockets.h"
+#include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
+#include "sacn/private/source.h"
+#include "gtest/gtest.h"
 
-#ifdef __cplusplus
-extern "C" {
+#if SACN_DYNAMIC_MEM
+#define TestSource TestCppSourceDynamic
+#else
+#define TestSource TestCppSourceStatic
 #endif
 
-#define SACN_RECEIVER_MAX_RB_NODES ((SACN_RECEIVER_MAX_UNIVERSES * 2) + SACN_RECEIVER_TOTAL_MAX_SOURCES)
 
-/* The data-loss timeout, as defined in E1.31 */
-#define DATA_LOSS_TIMEOUT 2500
-/* How long to wait for a 0xdd packet once a new source is discovered */
-#define WAIT_FOR_PRIORITY 1500
-/* Length of the sampling period for a new universe */
-#define SAMPLE_TIME 1500
+class TestSource : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    etcpal_reset_all_fakes();
+    sacn_common_reset_all_fakes();
+    sacn_data_loss_reset_all_fakes();
+    sacn_sockets_reset_all_fakes();
 
-etcpal_error_t sacn_receiver_init(void);
-void sacn_receiver_deinit(void);
+    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_source_init(), kEtcPalErrOk);
+  }
 
-#ifdef __cplusplus
+  void TearDown() override
+  {
+    sacn_source_deinit();
+    sacn_mem_deinit();
+  }
+};
+
+TEST_F(TestSource, SetStandardVersionWorks)
+{
+  //CHRISTIAN TODO: CLEAN UP TESTING
 }
-#endif
-
-#endif /* SACN_PRIVATE_RECEIVER_H_ */

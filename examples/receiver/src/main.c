@@ -157,7 +157,8 @@ static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t univ
   config.universe_id = universe;
 
   printf("Creating a new sACN receiver on universe %u.\n", universe);
-  etcpal_error_t result = sacn_receiver_create(&config, &listener->receiver_handle);
+  //CHRISTIAN TODO: Checking interfaces?
+  etcpal_error_t result = sacn_receiver_create(&config, &listener->receiver_handle, NULL, 0);
   if (result == kEtcPalErrOk)
   {
     listener->universe = universe;

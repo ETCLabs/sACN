@@ -3,3 +3,4 @@
 add_subdirectory(merge_receiver)
 add_subdirectory(merger)
 add_subdirectory(receiver)
+add_subdirectory(source)
