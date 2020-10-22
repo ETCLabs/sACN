@@ -324,4 +324,37 @@
  * @}
  */
 
+/***************************** sACN Universe Discovery Options *****************************/
+
+/**
+ * @defgroup sacn_universe_discovery sACN Universe Discovery Options
+ * @ingroup sacnopts
+ *
+ * Configuration options for the @ref sacn_universe_discovery module.
+ * @{
+ */
+
+/**
+ * @brief The maximum number of sACN sources that can be monitored.
+ *
+ * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
+ */
+#ifndef SACN_UNIVERSE_DISCOVERY_MAX_SOURCES
+#define SACN_UNIVERSE_DISCOVERY_MAX_SOURCES 10
+#endif
+
+/**
+ * @brief The maximum number of sACN universes that can be tracked on each source.
+ *
+ * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
+ */
+#ifndef SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE
+#define SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE 20
+#endif
+
+
+/**
+ * @}
+ */
+
 #endif /* SACN_PRIVATE_OPTS_H_ */
