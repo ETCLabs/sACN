@@ -336,20 +336,26 @@
 
 /**
  * @brief The maximum number of sACN sources that can be monitored.
- *
+ * 
+ * This number is intentionally set on the small side.  This module
+ * is more likely to be needed by applications that use dynamic memory.
+ * 
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_UNIVERSE_DISCOVERY_MAX_SOURCES
-#define SACN_UNIVERSE_DISCOVERY_MAX_SOURCES 10
+#define SACN_UNIVERSE_DISCOVERY_MAX_SOURCES 5
 #endif
 
 /**
  * @brief The maximum number of sACN universes that can be tracked on each source.
  *
+ * This number is intentionally set on the small side.  This module
+ * is more likely to be needed by applications that use dynamic memory.
+ * 
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE
-#define SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE 20
+#define SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE 5
 #endif
 
 

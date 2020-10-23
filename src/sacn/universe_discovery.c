@@ -39,6 +39,22 @@
  - Make sure the new functionality for receiver/merge_receiver create & reset_networking work with and without good_interfaces, in all combinations (nill, small array, large array, etc).
  - Sync support.  Update TODO comments in receiver & merge_receiver that state sync isn't supported.
 */
+/*
+Universe DIscovery notes
+Callback for out of mem, source changed/discovered (host order uint16_t, paging???), source disappeared.
+
+//OR DO I JUST LET THE APP HANDLE THIS???  Storing this info will add more memory...
+Query for cids/names on a universe, or cid->name and cids on a universe.
+Query for universes on a cid.
+query for list of cids
+query for list of universes.
+
+infinite recommended
+
+create starts a thread that does all the receive & processing work for packets.
+
+*/
+////////////////////////////////////////////
 
 #include "sacn/receiver.h"
 
