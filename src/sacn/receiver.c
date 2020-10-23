@@ -36,11 +36,12 @@
  - Make an example receiver & testing for the c++ header.
  - IPv6 support.  See the CHRISTIAN TODO IPV6 comments for some hints on where to change.
  - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
-   filter out the duplicate packet (just like IPv4 & IPv6).  THIS WILL NOT BE TRUE!!!! because the draft library is now a separate module with different sequencing, etc.
-   So Draft will most likely be treated like a different source...  Should we assume that both won't be sent, or do some checks to ignore draft if we're currently seeing
-   ratified??
+   filter out the duplicate packet (just like IPv4 & IPv6).  THIS WILL NOT BE TRUE!!!! because the draft library is now
+ a separate module with different sequencing, etc. So Draft will most likely be treated like a different source...
+ Should we assume that both won't be sent, or do some checks to ignore draft if we're currently seeing ratified??
  - This entire project should build without warnings!!
- - Make sure the new functionality for receiver/merge_receiver create & reset_networking work with and without good_interfaces, in all combinations (nill, small array, large array, etc).
+ - Make sure the new functionality for receiver/merge_receiver create & reset_networking work with and without
+ good_interfaces, in all combinations (nill, small array, large array, etc).
  - Sync support.  Update TODO comments in receiver & merge_receiver that state sync isn't supported.
 */
 
@@ -445,6 +446,8 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
       sacn_remove_receiver_socket(receiver->thread_id, receiver->ipv6_socket, false);
       res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, new_universe_id, receiver->netints,
                                      receiver->num_netints, &receiver->ipv4_socket);
+      if (res == kEtcPalErrNoNetints)
+        res = kEtcPalErrOk;  // Try IPv6.
     }
 
     if (res == kEtcPalErrOk)
@@ -502,10 +505,9 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastInterface* netints,
-                                              size_t num_netints)
+etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastInterface* netints, size_t num_netints)
 {
-  //TODO CHRISTIAN
+  // TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
@@ -626,8 +628,7 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
 /*
  * Initialize a SacnReceiver's network interface data.
  */
-etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, SacnMcastInterface* netints,
-                                           size_t num_netints)
+etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, SacnMcastInterface* netints, size_t num_netints)
 {
   size_t num_valid_netints = 0u;
   etcpal_error_t result = sacn_validate_netint_config(netints, num_netints, &num_valid_netints);
@@ -762,6 +763,9 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
 
   etcpal_error_t res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, config->universe_id,
                                                 receiver->netints, receiver->num_netints, &receiver->ipv4_socket);
+  if (res == kEtcPalErrNoNetints)
+    res = kEtcPalErrOk;  // Try IPv6.
+
   if (res == kEtcPalErrOk)
   {
     res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, config->universe_id, receiver->netints,

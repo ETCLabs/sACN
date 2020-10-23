@@ -525,7 +525,7 @@ etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t n
   if (num_valid_netints)
     *num_valid_netints = 0u;
 
-  if (netints && num_netints > 0u)
+  if (netints && (num_netints > 0u))
   {
 #if !SACN_DYNAMIC_MEM
     if (num_netints > SACN_MAX_NETINTS)
@@ -534,27 +534,19 @@ etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t n
 
     bool all_interfaces_invalid = true;
 
-    for (SacnMcastInterface* netint = netints; netint < netints + num_netints; ++netint)
+    for (SacnMcastInterface* netint = netints; netint < (netints + num_netints); ++netint)
     {
       netint->operation_succeeded = false;
 
-      if (netint->iface.index != 0 &&
-          (netint->iface.ip_type == kEtcPalIpTypeV4 || netint->iface.ip_type == kEtcPalIpTypeV6))
+      if ((netint->iface.index != 0) &&
+          ((netint->iface.ip_type == kEtcPalIpTypeV4) || (netint->iface.ip_type == kEtcPalIpTypeV6)) &&
+          (netint_id_index_in_array(&netint->iface, valid_sys_netints, num_valid_sys_netints) != -1))
       {
-        bool match_found = false;
-        for (const EtcPalMcastNetintId* valid_sys_netint = valid_sys_netints;
-             !match_found && (valid_sys_netint < (valid_sys_netints + num_valid_sys_netints)); ++valid_sys_netint)
-        {
-          if ((netint->iface.index == valid_sys_netint->index) && (netint->iface.ip_type == valid_sys_netint->ip_type))
-          {
-            netint->operation_succeeded = true;
-            all_interfaces_invalid = false;
-            match_found = true;
+        netint->operation_succeeded = true;
+        all_interfaces_invalid = false;
 
-            if (num_valid_netints)
-              ++(*num_valid_netints);
-          }
-        }
+        if (num_valid_netints)
+          ++(*num_valid_netints);
       }
     }
 
