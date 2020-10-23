@@ -638,7 +638,7 @@ etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, SacnMcastInte
   if (netints)
   {
 #if SACN_DYNAMIC_MEM
-    EtcPalMcastNetintId* calloc_result = calloc(num_netints, sizeof(EtcPalMcastNetintId));
+    EtcPalMcastNetintId* calloc_result = calloc(num_valid_netints, sizeof(EtcPalMcastNetintId));
 
     if (calloc_result)
     {

@@ -157,8 +157,23 @@ static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t univ
   config.universe_id = universe;
 
   printf("Creating a new sACN receiver on universe %u.\n", universe);
-  //CHRISTIAN TODO: Checking interfaces?
-  etcpal_error_t result = sacn_receiver_create(&config, &listener->receiver_handle, NULL, 0);
+
+  // Normally passing in NULL and 0 for netints and length would achieve the same result, this is just for
+  // demonstration.
+  size_t num_sys_netints = etcpal_netint_get_num_interfaces();
+  const EtcPalNetintInfo* netint_list = etcpal_netint_get_interfaces();
+#define MAX_LISTENER_NETINTS 100
+  SacnMcastInterface netints[MAX_LISTENER_NETINTS];
+
+  for (size_t i = 0; (i < num_sys_netints) && (i < MAX_LISTENER_NETINTS); ++i)
+  {
+    netints[i].iface.index = netint_list[i].index;
+    netints[i].iface.ip_type = netint_list[i].addr.type;
+  }
+
+  etcpal_error_t result =
+      sacn_receiver_create(&config, &listener->receiver_handle, netints,
+                           (num_sys_netints < MAX_LISTENER_NETINTS) ? num_sys_netints : MAX_LISTENER_NETINTS);
   if (result == kEtcPalErrOk)
   {
     listener->universe = universe;
