@@ -17,41 +17,42 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#ifndef SACN_CPP_RECEIVER_H_
-#define SACN_CPP_RECEIVER_H_
+#ifndef SACN_CPP_UNIVERSE_DISCOVERY_H_
+#define SACN_CPP_UNIVERSE_DISCOVERY_H_
 
 /**
- * @file sacn/cpp/receiver.h
- * @brief C++ wrapper for the sACN Receiver API
+ * @file sacn/cpp/universe_discovery.h
+ * @brief C++ wrapper for the sACN Universe Discovery API
  */
 
-#include "sacn/receiver.h"
+#include "sacn/universe_discovery.h"
 #include "etcpal/cpp/inet.h"
+#include "etcpal/cpp/uuid.h"
 
 /**
-* @defgroup sacn_receiver_cpp sACN Receiver API
+* @defgroup sacn_universe_discovery_cpp sACN Universe Discovery API
 * @ingroup sacn_cpp_api
-* @brief A C++ wrapper for the sACN Receiver API
+* @brief A C++ wrapper for the sACN Universe Discovery API
 */
 
 namespace sacn
 {
 /**
- *@ingroup sacn_receiver_cpp
- *@brief An instance of sACN Receiver functionality.
+ *@ingroup sacn_universe_discovery_cpp
+ *@brief An instance of sACN Universe Discovery functionality.
  */
-// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE -- DO WE NEED A using_receiver.md???
-class Receiver
+// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE 
+class UniverseDiscovery
 {
 public:
-  /** A handle type used by the sACN library to identify receiver instances. */
-  using Handle = sacn_receiver_t;
+  /** A handle type used by the sACN library to identify Universe Discovery listener instances. */
+  using Handle = sacn_universe_discovery_t;
   /** An invalid Handle value. */
-  static constexpr Handle kInvalidHandle = SACN_RECEIVER_INVALID;
+  static constexpr Handle kInvalidHandle = SACN_UNIVERSE_DISCOVERY_INVALID;
 
   /**
-  * @ingroup sacn_receiver_cpp
-  * @brief A base class for a class that receives notification callbacks from a sACN receiver.
+  * @ingroup sacn_universe_discovery_cpp
+  * @brief A base class for a class that receives notification callbacks from a sACN Universe Discovery listener.
   */
   class NotifyHandler
   {
@@ -59,46 +60,47 @@ public:
     virtual ~NotifyHandler() = default;
 
     /**
-    * @brief Notify that one or more sources have been found.
-    * @param universe The universe this receiver is monitoring.
-    * @param found_sources Array of structs describing the source or sources that have been found with their current
-    * values.
-    * @param num_sources_found Size of the found_sources array.
-    */
-    virtual void HandleSourcesFound(uint16_t universe, const SacnFoundSource* found_sources,
-                                    size_t num_found_sources) = 0;
-
-    /**
-    * @brief Notify that a data packet has been received.
-    * @param universe The universe this receiver is monitoring.
-    * @param source_addr IP address & port of the packet source.
-    * @param header The sACN header data.
-    * @param pdata The DMX data.  Use header.slot_count to determine the length of this array.
-    */
-    virtual void HandleUniverseData(uint16_t universe, const etcpal::SockAddr& source_addr,
-                                    const SacnHeaderData& header, const uint8_t* pdata) = 0;
-
-    /**
-     * @brief Notify that one or more sources have entered a data loss state.
-     * @param universe The universe this receiver is monitoring.
-     * @param lost_sources Array of structs describing the source or sources that have been lost.
-     * @param num_lost_sources Size of the lost_sources array.
+     * @brief Notify that a source is new or has changed.
+     *
+     * This passes the source's current universe list, but you will only get this callback when the module detects
+     * that the source is new or the list has somehow changed.
+     *
+     * The list of sourced universes is guaranteed by the protocol to be numerically sorted.
+     *
+     * @param[in] cid The CID of the source.
+     * @param[in] name The UTF-8 name string.
+     * @param[in] sourced_universes Numerically sorted array of the currently sourced universes.  Will be NULL if the
+     * source is not currently transmitting any universes.
+     * @param[in] num_sourced_universe Size of the sourced_universes array.  Will be 0 if the source is not currently
+     * transmitting any universes.
      */
-    virtual void HandleSourcesLost(uint16_t universe, const SacnLostSource* lost_sources, size_t num_lost_sources) = 0;
+    virtual void HandleUpdateSource(const etcpal::Uuid& cid, const std::string& name, const uint16_t* sourced_universes,
+                                    size_t num_sourced_sources) = 0;
 
     /**
-     * @brief Notify that a source has stopped transmission of per-address priority packets.
-     * @param universe The universe this receiver is monitoring.
-     * @param source Information about the source that has stopped transmission of per-address priority.
+     * @brief Notify that a source is no longer transmitting Universe Discovery messages.
+     *
+     * @param[in] cid The CID of the source.
+     * @param[in] name The UTF-8 name string.
      */
-    virtual void HandleSourcePapLost(uint16_t universe, const SacnRemoteSource& source) = 0;
+    virtual void HandleSourceExpired(const etcpal::Uuid& cid, const std::string& name) = 0;
 
-    /**
-     * @brief Notify that more than the configured maximum number of sources are currently sending on the universe
-     * being listened to.
-     * @param universe The universe this receiver is monitoring.
+/**
+     * @brief Notify that the module has run out of memory to track universes or sources
+     *
+     * If #SACN_DYNAMIC_MEM was defined to 1 when sACN was compiled (the default on non-embedded
+     * platforms), and the configuration you pass to sacn_universe_discovery_create() has source_count_max and
+     * universes_per_source_max set to #SACN_UNIVERSE_DISCOVERY_INFINITE, this callback will never be called and may be
+     * set to NULL.
+     *
+     * if #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max is ignored and
+     * #SACN_UNIVERSE_DISCOVERY_MAX_SOURCES and #SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE are used instead.
+     *
+     * This callback is rate-limited: it will only be called when the first universe discovery packet is received that
+     * takes the module beyond a memory limit.  After that, it will not be called until the number of sources or
+     * universes has dropped below the limit and hits it again.
      */
-    virtual void HandleSourceLimitExceeded(uint16_t universe) = 0;
+    virtual void HandleMemoryLimitExceeded() = 0;
   };
 
   /**
@@ -431,4 +433,4 @@ inline SacnReceiverConfig Receiver::TranslateConfig(const Settings& settings, No
 
 };  // namespace sacn
 
-#endif  // SACN_CPP_RECEIVER_H_
+#endif  // SACN_CPP_UNIVERSE_DISCOVERY_H_

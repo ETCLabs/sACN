@@ -42,7 +42,8 @@
  * @ingroup sACN
  * @brief The sACN Universe Discovery API
  *
- * sACN sources often periodically send Universe Discovery packets to announce what universes they are sourcing. Use this API to monitor such traffic.
+ * sACN sources often periodically send Universe Discovery packets to announce what universes they are sourcing.
+ * Use this API to monitor such traffic for your own needs.
  *
  * @{
  */
@@ -101,7 +102,7 @@ typedef void (*SacnUniverseDiscoverySourceExpiredCallback)(sacn_universe_discove
  * @brief Notify that the module has run out of memory to track universes or sources
  *
  * If #SACN_DYNAMIC_MEM was defined to 1 when sACN was compiled (the default on non-embedded
- * platforms), and the configuration you pass to sacn_receiver_create() has source_count_max and
+ * platforms), and the configuration you pass to sacn_universe_discovery_create() has source_count_max and
  * universes_per_source_max set to #SACN_UNIVERSE_DISCOVERY_INFINITE, this callback will never be called and may be set
  * to NULL.
  *
@@ -110,7 +111,7 @@ typedef void (*SacnUniverseDiscoverySourceExpiredCallback)(sacn_universe_discove
  *
  * This callback is rate-limited: it will only be called when the first universe discovery packet is received that takes
  * the module beyond a memory limit.  After that, it will not be called until the number of sources or universes has
- * dropped below the limit and hits one again.
+ * dropped below the limit and hits it again.
  *
  * @param[in] handle Handle to the listening universe discovery instance.
  * @param[in] context Context pointer that was given at the creation of the universe discovery instance.
@@ -157,8 +158,6 @@ void sacn_universe_discovery_config_init(SacnUniverseDiscoveryConfig* config);
 etcpal_error_t sacn_universe_discovery_create(const SacnUniverseDiscoveryConfig* config, sacn_universe_discovery_t* handle,
                                     SacnMcastInterface* netints, size_t num_netints);
 etcpal_error_t sacn_universe_discovery_destroy(sacn_universe_discovery_t handle);
-
-etcpal_error_t sacn_universe_discovery_(sacn_universe_discovery_t handle);
 
 etcpal_error_t sacn_universe_discovery_reset_networking(sacn_universe_discovery_t handle, SacnMcastInterface* netints,
                                               size_t num_netints);

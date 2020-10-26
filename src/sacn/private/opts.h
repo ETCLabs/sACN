@@ -335,6 +335,40 @@
  */
 
 /**
+ * @brief The priority of the sACN universe discovery thread.
+ *
+ * This is usually only meaningful on real-time systems.
+ */
+#ifndef SACN_UNIVERSE_DISCOVERY_THREAD_PRIORITY
+#define SACN_UNIVERSE_DISCOVERY_THREAD_PRIORITY ETCPAL_THREAD_DEFAULT_PRIORITY
+#endif
+
+/**
+ * @brief The stack size of each sACN universe discovery thread.
+ *
+ * It's usually only necessary to worry about this on real-time or embedded systems.
+ */
+#ifndef SACN_UNIVERSE_DISCOVERY_THREAD_STACK
+#define SACN_UNIVERSE_DISCOVERY_THREAD_STACK ETCPAL_THREAD_DEFAULT_STACK
+#endif
+
+/* Infinite read blocks are not supported due to the potential for hangs on shutdown. */
+#if defined(SACN_UNIVERSE_DISCOVERY_READ_TIMEOUT_MS) && SACN_UNIVERSE_DISCOVERY_READ_TIMEOUT_MS < 0
+#undef SACN_UNIVERSE_DISCOVERY_READ_TIMEOUT_MS /* It will get the default value below */
+#endif
+
+//TODO CHRISTIAN change sacnrecv_read to whatever you need, or remove the constant.
+/**
+ * @brief The maximum amount of time that a call to sacnrecv_read() will block waiting for data, in
+ *        milliseconds.
+ *
+ * It is recommended to keep this time short to avoid delays on shutdown.
+ */
+#ifndef SACN_UNIVERSE_DISCOVERY_READ_TIMEOUT_MS
+#define SACN_UNIVERSE_DISCOVERY_READ_TIMEOUT_MS 100
+#endif
+
+/**
  * @brief The maximum number of sACN sources that can be monitored.
  * 
  * This number is intentionally set on the small side.  This module
