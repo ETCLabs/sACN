@@ -18,7 +18,7 @@
  *****************************************************************************/
 
 /*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
- - Implement this & get documentation in place
+ - Implement this & get documentation in place, including the overal C & C++ "how to use" comments.
  - Clean up any constants for this API in opts.h.  For example, any of the universe discovery thread priorities or
  receive timeouts.
  - Test c & c++

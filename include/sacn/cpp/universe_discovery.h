@@ -41,7 +41,8 @@ namespace sacn
  *@ingroup sacn_universe_discovery_cpp
  *@brief An instance of sACN Universe Discovery functionality.
  */
-// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE 
+// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE WITH SAMPLE CODE.
+
 class UniverseDiscovery
 {
 public:
@@ -51,9 +52,9 @@ public:
   static constexpr Handle kInvalidHandle = SACN_UNIVERSE_DISCOVERY_INVALID;
 
   /**
-  * @ingroup sacn_universe_discovery_cpp
-  * @brief A base class for a class that receives notification callbacks from a sACN Universe Discovery listener.
-  */
+   * @ingroup sacn_universe_discovery_cpp
+   * @brief A base class for a class that receives notification callbacks from a sACN Universe Discovery listener.
+   */
   class NotifyHandler
   {
   public:
@@ -85,7 +86,7 @@ public:
      */
     virtual void HandleSourceExpired(const etcpal::Uuid& cid, const std::string& name) = 0;
 
-/**
+    /**
      * @brief Notify that the module has run out of memory to track universes or sources
      *
      * If #SACN_DYNAMIC_MEM was defined to 1 when sACN was compiled (the default on non-embedded
@@ -130,14 +131,13 @@ public:
   UniverseDiscovery() = default;
   UniverseDiscovery(const UniverseDiscovery& other) = delete;
   UniverseDiscovery& operator=(const UniverseDiscovery& other) = delete;
-  UniverseDiscovery(UniverseDiscovery&& other) = default;             /**< Move a device instance. */
-  UniverseDiscovery& operator=(UniverseDiscovery&& other) = default;  /**< Move a device instance. */
+  UniverseDiscovery(UniverseDiscovery&& other) = default;            /**< Move a listener instance. */
+  UniverseDiscovery& operator=(UniverseDiscovery&& other) = default; /**< Move a listener instance. */
 
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
                         std::vector<SacnMcastInterface>& netints);
 
-  etcpal::Error Startup(NotifyHandler& notify_handler,
-                        std::vector<SacnMcastInterface>& netints);
+  etcpal::Error Startup(NotifyHandler& notify_handler, std::vector<SacnMcastInterface>& netints);
   void Shutdown();
   etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
 
@@ -156,19 +156,20 @@ private:
 namespace internal
 {
 extern "C" inline void UniverseDiscoveryCbUpdateSource(sacn_universe_discovery_t handle, const EtcPalUuid* cid,
-                                                          const char* name, const uint16_t* sourced_universes,
-                                                          size_t num_sourced_universes, void* context)
+                                                       const char* name, const uint16_t* sourced_universes,
+                                                       size_t num_sourced_universes, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
 
   if (context)
   {
-    static_cast<UniverseDiscovery::NotifyHandler*>(context)->HandleUpdateSource(*cid, name, sourced_universes, num_sourced_universes);
+    static_cast<UniverseDiscovery::NotifyHandler*>(context)->HandleUpdateSource(*cid, name, sourced_universes,
+                                                                                num_sourced_universes);
   }
 }
 
 extern "C" inline void UniverseDiscoveryCbSourceExpired(sacn_universe_discovery_t handle, const EtcPalUuid* cid,
-                                                           const char* name, void* context)
+                                                        const char* name, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
 
@@ -195,92 +196,115 @@ extern "C" inline void UniverseDiscoveryCbMemoryLimitExceeded(sacn_universe_disc
  */
 
 /**
- * @brief Start listening for sACN data on a universe.
+ * @brief Start a new sACN Universe Discovery listener.
  *
- * An sACN receiver can listen on one universe at a time, and each universe can only be listened to
- * by one receiver at at time.
- *
- * Note that a receiver is considered as successfully created if it is able to successfully use any of the
+ * Note that a listener is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in] settings Configuration parameters for the sACN receiver and this class instance.
- * @param[in] notify_handler The notification interface to call back to the application.
- * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
- * @return #kEtcPalErrOk: Receiver created successfully.
+ * @param[in] Settings Configuration parameters for the sACN Universe Discovery listener to be created.
+ * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * @return #kEtcPalErrOk: Listener created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrExists: A receiver already exists which is listening on the specified universe.
- * @return #kEtcPalErrNoMem: No room to allocate memory for this receiver.
+ * @return #kEtcPalErrNoMem: No room to allocate memory for this listener.
  * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& notify_handler,
-                                       std::vector<SacnMcastInterface>& netints)
+inline etcpal::Error UniverseDiscovery::Startup(const Settings& settings, NotifyHandler& notify_handler,
+                                                std::vector<SacnMcastInterface>& netints)
 {
-  SacnReceiverConfig config = TranslateConfig(settings, notify_handler);
+  SacnUniverseDiscoveryConfig config = TranslateConfig(settings, notify_handler);
 
   if (netints.empty())
-    return sacn_receiver_create(&config, &handle_, NULL, 0);
+    return sacn_universe_discovery_create(&config, &handle_, NULL, 0);
 
-  return sacn_receiver_create(&config, &handle_, netints.data(), netints.size());
+  return sacn_universe_discovery_create(&config, &handle_, netints.data(), netints.size());
 }
 
 /**
- * @brief Stop listening for sACN data on a universe.
+ * @brief Start a new sACN Universe Discovery listener with default settings.
  *
- * Tears down the receiver and any sources currently being tracked on the receiver's universe.
- * Stops listening for sACN on that universe.
+ * This is an override of Startup that doesn't require a Settings parameter, since the fields in that
+ * structure are completely optional.
+ *
+ * Note that a listener is considered as successfully created if it is able to successfully use any of the
+ * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
+ * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
+ * modified.
+ * @return #kEtcPalErrOk: Listener created successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNoMem: No room to allocate memory for this listener.
+ * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline void Receiver::Shutdown()
+inline etcpal::Error UniverseDiscovery::Startup(NotifyHandler& notify_handler, std::vector<SacnMcastInterface>& netints)
 {
-  sacn_receiver_destroy(handle_);
+  return Startup(Settings(), notify_handler, netints);
+}
+
+/**
+ * @brief Destroy a sACN Universe Discovery listener instance.
+ *
+ * @return #kEtcPalErrOk: Listener destroyed successfully.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Internal handle does not correspond to a valid listener.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+inline void UniverseDiscovery::Shutdown()
+{
+  sacn_universe_discovery_destroy(handle_);
   handle_ = kInvalidHandle;
 }
 
-
 /**
- * @brief Resets the underlying network sockets and packet receipt state for this class..
+ * @brief Resets the underlying network sockets and packet receipt state for the sACN Universe Discovery listener.
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, the receiver is in a sampling period for the new universe and will provide
- * HandleSourcesFound() calls when appropriate.
- * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ * After this call completes successfully, the listener will continue as if nothing had changed. New sources could be
+ * discovered, or old sources could expire.
+ * If this call fails, the caller must call Shutdown() for this class instance, because it may
+ * be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
- * @return #kEtcPalErrOk: Universe changed successfully.
+ * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
+ * @return #kEtcPalErrOk: Network changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * @return #kEtcPalErrNotFound: Internal handle does not correspond to a valid listener.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Receiver::ResetNetworking(std::vector<SacnMcastInterface>& netints)
+inline etcpal::Error UniverseDiscovery::ResetNetworking(std::vector<SacnMcastInterface>& netints)
 {
   if (netints.empty())
-    return sacn_receiver_reset_networking(handle_, nullptr, 0);
+    return sacn_universe_discovery_reset_networking(handle_, nullptr, 0);
   else
-    return sacn_receiver_reset_networking(handle_, netints.data(), netints.size());
+    return sacn_universe_discovery_reset_networking(handle_, netints.data(), netints.size());
 }
 
-
 /**
- * @brief Get the current handle to the underlying C sacn_receiver.
+ * @brief Get the current handle to the underlying C universe discovery listener.
  *
- * @return The handle or Receiver::kInvalidHandle.
+ * @return The handle or UniverseDiscovery::kInvalidHandle.
  */
 inline constexpr UniverseDiscovery::Handle UniverseDiscovery::handle() const
 {
   return handle_;
 }
 
-inline SacnUniverseDiscoveryConfig UniverseDiscovery::TranslateConfig(const Settings& settings, NotifyHandler& notify_handler)
+inline SacnUniverseDiscoveryConfig UniverseDiscovery::TranslateConfig(const Settings& settings,
+                                                                      NotifyHandler& notify_handler)
 {
   // clang-format off
   SacnUniverseDiscoveryConfig config = {

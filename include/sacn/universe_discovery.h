@@ -47,6 +47,7 @@
  *
  * @{
  */
+// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE WITH SAMPLE CODE.
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,7 +65,6 @@ typedef int sacn_universe_discovery_t;
  * It represents an infinite number of sources or universes on a source.
  */
 #define SACN_UNIVERSE_DISCOVERY_INFINITE 0
-
 
 /**
  * @brief Notify that a source is new or has changed.
@@ -118,7 +118,6 @@ typedef void (*SacnUniverseDiscoverySourceExpiredCallback)(sacn_universe_discove
  */
 typedef void (*SacnUniverseDiscoveryLimitExceededCallback)(sacn_universe_discovery_t handle, void* context);
 
-
 /** A set of callback functions that the library uses to notify the application about universe discovery events. */
 typedef struct SacnUniverseDiscoveryCallbacks
 {
@@ -148,19 +147,20 @@ typedef struct SacnUniverseDiscoveryConfig
 } SacnUniverseDiscoveryConfig;
 
 /** A default-value initializer for an SacnUniverseDiscoveryConfig struct. */
-#define SACN_UNIVERSE_DISCOVERY_CONFIG_DEFAULT_INIT                                                  \
-  {                                                                                                  \
-    {NULL, NULL, NULL, NULL}, SACN_UNIVERSE_DISCOVERY_INFINITE, SACN_UNIVERSE_DISCOVERY_INFINITE,    \
+#define SACN_UNIVERSE_DISCOVERY_CONFIG_DEFAULT_INIT                                               \
+  {                                                                                               \
+    {NULL, NULL, NULL, NULL}, SACN_UNIVERSE_DISCOVERY_INFINITE, SACN_UNIVERSE_DISCOVERY_INFINITE, \
   }
 
 void sacn_universe_discovery_config_init(SacnUniverseDiscoveryConfig* config);
 
-etcpal_error_t sacn_universe_discovery_create(const SacnUniverseDiscoveryConfig* config, sacn_universe_discovery_t* handle,
-                                    SacnMcastInterface* netints, size_t num_netints);
+etcpal_error_t sacn_universe_discovery_create(const SacnUniverseDiscoveryConfig* config,
+                                              sacn_universe_discovery_t* handle, SacnMcastInterface* netints,
+                                              size_t num_netints);
 etcpal_error_t sacn_universe_discovery_destroy(sacn_universe_discovery_t handle);
 
 etcpal_error_t sacn_universe_discovery_reset_networking(sacn_universe_discovery_t handle, SacnMcastInterface* netints,
-                                              size_t num_netints);
+                                                        size_t num_netints);
 
 #ifdef __cplusplus
 }
