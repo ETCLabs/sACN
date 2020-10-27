@@ -161,7 +161,7 @@ extern "C" inline void UniverseDiscoveryCbUpdateSource(sacn_universe_discovery_t
 {
   ETCPAL_UNUSED_ARG(handle);
 
-  if (context)
+  if (context && cid && name)
   {
     static_cast<UniverseDiscovery::NotifyHandler*>(context)->HandleUpdateSource(*cid, name, sourced_universes,
                                                                                 num_sourced_universes);
@@ -173,7 +173,7 @@ extern "C" inline void UniverseDiscoveryCbSourceExpired(sacn_universe_discovery_
 {
   ETCPAL_UNUSED_ARG(handle);
 
-  if (context)
+  if (context && cid && name)
   {
     static_cast<UniverseDiscovery::NotifyHandler*>(context)->HandleSourceExpired(*cid, name);
   }
