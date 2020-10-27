@@ -79,13 +79,13 @@ typedef int sacn_universe_discovery_t;
  * @param[in] name The null-terminated UTF-8 string.
  * @param[in] sourced_universes Numerically sorted array of the currently sourced universes.  Will be NULL if the source
  * is not currently transmitting any universes.
- * @param[in] num_sourced_universe Size of the sourced_universes array.  Will be 0 if the source is not currently
+ * @param[in] num_sourced_universes Size of the sourced_universes array.  Will be 0 if the source is not currently
  * transmitting any universes.
  * @param[in] context Context pointer that was given at the creation of the universe discovery instance.
  */
 typedef void (*SacnUniverseDiscoveryUpdateSourceCallback)(sacn_universe_discovery_t handle, const EtcPalUuid* cid,
                                                           const char* name, const uint16_t* sourced_universes,
-                                                          size_t num_sourced_sources, void* context);
+                                                          size_t num_sourced_universes, void* context);
 
 /**
  * @brief Notify that a source is no longer transmitting Universe Discovery messages.

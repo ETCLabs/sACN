@@ -104,51 +104,47 @@ public:
   };
 
   /**
-   * @ingroup sacn_receiver_cpp
-   * @brief A set of configuration settings that a receiver needs to initialize.
+   * @ingroup sacn_universe_discovery_cpp
+   * @brief A set of configuration settings that a universe discovery listener needs to initialize.
    */
   struct Settings
   {
     /********* Required values **********/
 
-    uint16_t universe_id{0};  /**< The sACN universe number the receiver is listening to. */
-
     /********* Optional values **********/
 
-    size_t source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
-                                                                listen to when using dynamic memory. */
-    unsigned int flags{0};                   /**< A set of option flags. See the C API's "sACN receiver flags". */
+    /** The maximum number of sources this listener will record.  It is recommended that applications using dynamic
+       memory use #SACN_UNIVERSE_DISCOVERY_INFINITE for this value. This parameter is ignored when configured to use
+       static memory -- #SACN_UNIVERSE_DISCOVERY_MAX_SOURCES is used instead.*/
+    size_t source_count_max{SACN_UNIVERSE_DISCOVERY_INFINITE};
 
-    /** Create an empty, invalid data structure by default. */
+    /** The maximum number of universes this listener will record for a source.  It is recommended that applications
+       using dynamic memory use #SACN_UNIVERSE_DISCOVERY_INFINITE for this value. This parameter is ignored when
+       configured to use static memory -- #SACN_UNIVERSE_DISCOVERY_MAX_SOURCES is used instead.*/
+    size_t universes_per_source_max{SACN_UNIVERSE_DISCOVERY_INFINITE};
+
+    /** Create default data structure. */
     Settings() = default;
-    Settings(uint16_t new_universe_id);
-
-    bool IsValid() const;
   };
 
-  Receiver() = default;
-  Receiver(const Receiver& other) = delete;
-  Receiver& operator=(const Receiver& other) = delete;
-  Receiver(Receiver&& other) = default;             /**< Move a device instance. */
-  Receiver& operator=(Receiver&& other) = default;  /**< Move a device instance. */
+  UniverseDiscovery() = default;
+  UniverseDiscovery(const UniverseDiscovery& other) = delete;
+  UniverseDiscovery& operator=(const UniverseDiscovery& other) = delete;
+  UniverseDiscovery(UniverseDiscovery&& other) = default;             /**< Move a device instance. */
+  UniverseDiscovery& operator=(UniverseDiscovery&& other) = default;  /**< Move a device instance. */
 
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
                         std::vector<SacnMcastInterface>& netints);
-  void Shutdown();
-  etcpal::Expected<uint16_t> GetUniverse() const;
-  etcpal::Error ChangeUniverse(uint16_t new_universe_id);
-  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
 
-  // Lesser used functions.  These apply to all instances of this class.
-  static void SetStandardVersion(sacn_standard_version_t version);
-  static sacn_standard_version_t GetStandardVersion();
-  static void SetExpiredWait(uint32_t wait_ms);
-  static uint32_t GetExpiredWait();
+  etcpal::Error Startup(NotifyHandler& notify_handler,
+                        std::vector<SacnMcastInterface>& netints);
+  void Shutdown();
+  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
 
   constexpr Handle handle() const;
 
 private:
-  SacnReceiverConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
+  SacnUniverseDiscoveryConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
 
   Handle handle_{kInvalidHandle};
 };
@@ -159,59 +155,36 @@ private:
  */
 namespace internal
 {
-extern "C" inline void ReceiverCbSourcesFound(sacn_receiver_t handle, uint16_t universe,
-                                              const SacnFoundSource* found_sources, size_t num_found_sources,
-                                              void* context)
+extern "C" inline void UniverseDiscoveryCbUpdateSource(sacn_universe_discovery_t handle, const EtcPalUuid* cid,
+                                                          const char* name, const uint16_t* sourced_universes,
+                                                          size_t num_sourced_universes, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
 
   if (context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesFound(universe, found_sources, num_found_sources);
+    static_cast<UniverseDiscovery::NotifyHandler*>(context)->HandleUpdateSource(*cid, name, sourced_universes, num_sourced_universes);
   }
 }
 
-extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t handle, uint16_t universe,
-                                              const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
-                                              const uint8_t* pdata, void* context)
-{
-  ETCPAL_UNUSED_ARG(handle);
-
-  if (source_addr && header && context)
-  {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(universe, *source_addr, *header, pdata);
-  }
-}
-
-extern "C" inline void ReceiverCbSourcesLost(sacn_receiver_t handle, uint16_t universe,
-                                             const SacnLostSource* lost_sources, size_t num_lost_sources, void* context)
+extern "C" inline void UniverseDiscoveryCbSourceExpired(sacn_universe_discovery_t handle, const EtcPalUuid* cid,
+                                                           const char* name, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
 
   if (context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesLost(universe, lost_sources, num_lost_sources);
+    static_cast<UniverseDiscovery::NotifyHandler*>(context)->HandleSourceExpired(*cid, name);
   }
 }
 
-extern "C" inline void ReceiverCbPapLost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
-                                         void* context)
-{
-  ETCPAL_UNUSED_ARG(handle);
-
-  if (source && context)
-  {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcePapLost(universe, *source);
-  }
-}
-
-extern "C" inline void ReceiverCbSourceLimitExceeded(sacn_receiver_t handle, uint16_t universe, void* context)
+extern "C" inline void UniverseDiscoveryCbMemoryLimitExceeded(sacn_universe_discovery_t handle, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
 
   if (context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(universe);
+    static_cast<UniverseDiscovery::NotifyHandler*>(context)->HandleMemoryLimitExceeded();
   }
 }
 
@@ -220,23 +193,6 @@ extern "C" inline void ReceiverCbSourceLimitExceeded(sacn_receiver_t handle, uin
 /**
  * @endcond
  */
-
-/**
- * @brief Create a Receiver Settings instance by passing the required members explicitly.
- *
- * Optional members can be modified directly in the struct.
- */
-inline Receiver::Settings::Settings(uint16_t new_universe_id) : universe_id(new_universe_id)
-{
-}
-
-/**
- * Determine whether a Reciever Settings instance contains valid data for sACN operation.
- */
-inline bool Receiver::Settings::IsValid() const
-{
-  return (universe_id > 0);
-}
 
 /**
  * @brief Start listening for sACN data on a universe.
@@ -283,40 +239,6 @@ inline void Receiver::Shutdown()
   handle_ = kInvalidHandle;
 }
 
-/**
- * @brief Get the universe this class is listening to.
- *
- * @return If valid, the value is the universe id.  Otherwise, this is the underlying error the C library call returned.
- */
-etcpal::Expected<uint16_t> Receiver::GetUniverse() const
-{
-  uint16_t result = 0;
-  etcpal_error_t err = sacn_receiver_get_universe(handle_, &result);
-  if (err == kEtcPalErrOk)
-    return result;
-  else
-    return err;
-}
-
-/**
- * @brief Change the universe this class is listening to.
- *
- * An sACN receiver can only listen on one universe at a time. After this call completes successfully, the receiver is
- * in a sampling period for the new universe and will provide HandleSourcesFound() calls when appropriate.
- * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
- *
- * @param[in] new_universe_id New universe number that this receiver should listen to.
- * @return #kEtcPalErrOk: Universe changed successfully.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
- * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrExists: A receiver already exists which is listening on the specified new universe.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
- */
-inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
-{
-  return sacn_receiver_change_universe(handle_, new_universe_id);
-}
 
 /**
  * @brief Resets the underlying network sockets and packet receipt state for this class..
@@ -347,84 +269,29 @@ inline etcpal::Error Receiver::ResetNetworking(std::vector<SacnMcastInterface>& 
     return sacn_receiver_reset_networking(handle_, netints.data(), netints.size());
 }
 
-/**
- * @brief Set the current version of the sACN standard to which the module is listening.
- *
- * This is a global option across all listening receivers.
- *
- * @param[in] version Version of sACN to listen to.
- */
-inline void Receiver::SetStandardVersion(sacn_standard_version_t version)
-{
-  sacn_receiver_set_standard_version(version);
-}
-
-/**
- * @brief Get the current version of the sACN standard to which the module is listening.
- *
- * This is a global option across all listening receivers.
- *
- * @return Version of sACN to which the module is listening, or #kSacnStandardVersionNone if the module is
- *         not initialized.
- */
-inline sacn_standard_version_t Receiver::GetStandardVersion()
-{
-  sacn_receiver_get_standard_version();
-}
-
-/**
- * @brief Set the expired notification wait time.
- *
- * The library will wait at least this long after a data loss condition has been encountered before
- * calling HandleSourcesLost(). However, the wait may be longer due to the data loss algorithm (see \ref
- * data_loss_behavior).
- *
- * @param[in] wait_ms Wait time in milliseconds.
- */
-inline void Receiver::SetExpiredWait(uint32_t wait_ms)
-{
-  sacn_receiver_set_expired_wait(wait_ms);
-}
-
-/**
- * @brief Get the current value of the expired notification wait time.
- *
- * The library will wait at least this long after a data loss condition has been encountered before
- * calling HandleSourcesLost(). However, the wait may be longer due to the data loss algorithm (see \ref
- * data_loss_behavior).
- *
- * @return Wait time in milliseconds.
- */
-inline uint32_t Receiver::GetExpiredWait()
-{
-  return sacn_receiver_get_expired_wait();
-}
 
 /**
  * @brief Get the current handle to the underlying C sacn_receiver.
  *
  * @return The handle or Receiver::kInvalidHandle.
  */
-inline constexpr Receiver::Handle Receiver::handle() const
+inline constexpr UniverseDiscovery::Handle UniverseDiscovery::handle() const
 {
   return handle_;
 }
 
-inline SacnReceiverConfig Receiver::TranslateConfig(const Settings& settings, NotifyHandler& notify_handler)
+inline SacnUniverseDiscoveryConfig UniverseDiscovery::TranslateConfig(const Settings& settings, NotifyHandler& notify_handler)
 {
   // clang-format off
-  SacnReceiverConfig config = {
-    settings.universe_id,
+  SacnUniverseDiscoveryConfig config = {
     {
-      internal::ReceiverCbSourcesFound,
-      internal::ReceiverCbUniverseData,
-      internal::ReceiverCbSourcesLost,
-      internal::ReceiverCbPapLost,
-      internal::ReceiverCbSourceLimitExceeded,
+      internal::UniverseDiscoveryCbUpdateSource,
+      internal::UniverseDiscoveryCbSourceExpired,
+      internal::UniverseDiscoveryCbMemoryLimitExceeded,
       &notify_handler
     },
     settings.source_count_max,
-    settings.flags,
+    settings.universes_per_source_max
   };
   // clang-format on
 
