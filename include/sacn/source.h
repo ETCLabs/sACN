@@ -42,8 +42,97 @@
  * @brief The sACN Source API.
  *
  * Components that send sACN are referred to as sACN Sources. Use this API to act as an sACN Source.
+ * 
+ * Usage:
+ * @code
+ * #include "sacn/source.h"
+ * 
+ * EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
+ * // Initialize log_params...
+ * 
+ * etcpal_error_t init_result = sacn_init(&log_params);
+ * // Or, to init without worrying about logs from the sACN library...
+ * etcpal_error_t init_result = sacn_init(NULL);
+ * 
+ * EtcPalUuid my_cid;
+ * char my_name[SACN_SOURCE_NAME_MAX_LEN];
+ * // Assuming my_cid and my_name are initialized by the application...
+ * 
+ * SacnSourceConfig my_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+ * sacn_source_config_init(&my_config, &my_cid, my_name);
+ * 
+ * SacnMcastInterface my_netints[NUM_MY_NETINTS];
+ * // Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
+ * 
+ * sacn_source_t my_handle;
+ * 
+ * // If you want to specify specific network interfaces to use:
+ * sacn_source_create(&my_config, &my_handle, my_netints, NUM_MY_NETINTS);
+ * // Or, if you just want to use all network interfaces:
+ * sacn_source_create(&my_config, &my_handle, NULL, 0);
+ * 
+ * uint8_t my_values_buffer[DMX_ADDRESS_COUNT];
+ * uint8_t my_priorities_buffer[DMX_ADDRESS_COUNT];
+ * 
+ * uint16_t my_universe = 1;  // Using universe 1 as an example.
+ * 
+ * SacnSourceUniverseConfig my_universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+ * sacn_source_universe_config_init(&my_universe_config, my_universe, my_values_buffer, DMX_ADDRESS_COUNT,
+ *                                  my_priorities_buffer);
+ * // Or, if you don't want to send per-address priorities:
+ * sacn_source_universe_config_init(&my_universe_config, my_universe, my_values_buffer, DMX_ADDRESS_COUNT, NULL);
+ * my_universe_config.priority = 123;
+ * 
+ * sacn_source_add_universe(my_handle, &my_universe_config);
+ * // You can add additional universes as well, in the same way.
+ * 
+ * // Initialize my_values_buffer and (possibly) my_priorities_buffer with the values you want to send...
+ * 
+ * // Now set the universe to dirty. Then the source thread will handle transmitting the data (unless you set
+ * // manually_process_source to true in the SacnSourceConfig).
+ * sacn_source_set_dirty(my_handle, my_universe);
+ * 
+ * // Unicast can be sent to one or more addresses, in addition to multicast.
+ * EtcPalIpAddr custom_destination;  // Application initializes custom_destination...
+ * sacn_source_add_unicast_destination(my_handle, my_universe, &custom_destination);
+ * sacn_source_set_dirty(my_handle, my_universe); // Indicate the data should be sent on multicast and unicast (or just
+ *                                                // unicast if send_unicast_only is enabled in SacnSourceUniverseConfig).
+ * 
+ * // Custom start code data can also be sent immediately:
+ * uint8_t my_custom_start_code;
+ * uint8_t my_custom_start_code_data[DMX_ADDRESS_COUNT];
+ * // Initialize start code and data...
+ * sacn_source_send_now(my_handle, my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);
+ * 
+ * // You can also set up a synchronization universe for a universe.
+ * // Receivers should hang on to the data and wait for a sync message.
+ * uint16_t my_sync_universe = 123;  // Let's say the sync universe is 123, for example.
+ * sacn_source_change_synchronization_universe(my_handle, my_universe, my_sync_universe);
+ * 
+ * // Whenever you want the data to be applied, you can immediately send a sync message for your universe.
+ * sacn_source_send_synchronization(my_handle, my_universe);
+ * 
+ * // The preview flag, priority, and name can also be changed at any time:
+ * const char* new_name = "Hello World";
+ * sacn_source_change_name(my_handle, new_name)
+ * uint8_t new_priority = 50;
+ * sacn_source_change_priority(my_handle, my_universe, new_priority);
+ * bool new_preview_flag = true;
+ * sacn_source_change_preview_flag(my_handle, my_universe, new_preview_flag);
+ * sacn_source_set_dirty(my_handle, my_universe);  // Indicate new data should be transmitted.
+ * 
+ * // You can remove a unicast destination previously added:
+ * sacn_source_remove_unicast_destination(my_handle, my_universe, &custom_destination);
+ * // Or remove a universe from your source:
+ * sacn_source_remove_universe(my_handle, my_universe);
+ * // Or destroy the source altogether:
+ * sacn_source_destroy(my_handle);
+ * 
+ * // During application shutdown, everything can be cleaned up by calling sacn_deinit.
+ * sacn_deinit();
+ * @endcode
  *
- *  @{
+ * @{
  */
 
 #ifdef __cplusplus

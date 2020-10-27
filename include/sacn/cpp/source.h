@@ -41,8 +41,97 @@ namespace sacn
 /**
  * @ingroup sacn_source_cpp
  * @brief An instance of sACN Source functionality.
+ *
+ * Components that send sACN are referred to as sACN Sources. Use this API to act as an sACN Source.
+ * 
+ * Usage:
+ * @code
+ * #include "sacn/cpp/source.h"
+ *
+ * // During startup:
+ * EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
+ * // Initialize log_params...
+ *
+ * etcpal::Error init_result = sacn_init(&log_params);
+ * // Or, to init without worrying about logs from the sACN library...
+ * etcpal::Error init_result = sacn_init(NULL);
+ *
+ * etcpal::Uuid my_cid;
+ * std::string my_name;
+ * // Assuming my_cid and my_name are initialized by the application...
+ *
+ * Settings my_config(my_cid, my_name);
+ *
+ * std::vector<SacnMcastInterface> my_netints;
+ * // Assuming my_netints is initialized by the application...
+ *
+ * Source my_source;
+ *
+ * // If you want to specify specific network interfaces to use:
+ * my_source.Startup(my_config, my_netints);
+ * // Or, if you just want to use all network interfaces:
+ * my_source.Startup(my_config, std::vector<SacnMcastInterface>());
+ *
+ * uint8_t my_values_buffer[DMX_ADDRESS_COUNT];
+ * uint8_t my_priorities_buffer[DMX_ADDRESS_COUNT];
+ *
+ * uint16_t my_universe = 1;  // Using universe 1 as an example.
+ *
+ * UniverseSettings my_universe_config(my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
+ * // If you want per-address priorities:
+ * my_universe_config.priorities_buffer = my_priorities_buffer;
+ * // Otherwise, specify a universe priority:
+ * my_universe_config.priority = 123;
+ *
+ * my_source.AddUniverse(my_universe_config);
+ * // You can add additional universes as well, in the same way.
+ *
+ * // Initialize my_values_buffer and (possibly) my_priorities_buffer with the values you want to send...
+ *
+ * // Now set the universe to dirty. Then the source thread will handle transmitting the data (unless you set
+ * // manually_process_source to true in the Source::Settings).
+ * my_source.SetDirty(my_universe);
+ *
+ * // Unicast can be sent to one or more addresses, in addition to multicast.
+ * etcpal::IpAddr custom_destination;  // Application initializes custom_destination...
+ * my_source.AddUnicastDestination(my_universe, custom_destination);
+ * my_source.SetDirty(my_universe); // Indicate the data should be sent on multicast and unicast (or just unicast if
+ *                                  // send_unicast_only is enabled in Source::UniverseSettings).
+ *
+ * // Custom start code data can also be sent immediately:
+ * uint8_t my_custom_start_code;
+ * uint8_t my_custom_start_code_data[DMX_ADDRESS_COUNT];
+ * // Initialize start code and data...
+ * my_source.SendNow(my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);
+ *
+ * // You can also set up a synchronization universe for a universe.
+ * // Receivers should hang on to the data and wait for a sync message.
+ * uint16_t my_sync_universe = 123;  // Let's say the sync universe is 123, for example.
+ * my_source.ChangeSynchronizationUniverse(my_universe, my_sync_universe);
+ *
+ * // Whenever you want the data to be applied, you can immediately send a sync message for your universe.
+ * my_source.SendSynchronization(my_universe);
+ *
+ * // The preview flag, priority, and name can also be changed at any time:
+ * std::string new_name("Hello World");
+ * my_source.ChangeName(new_name)
+ * uint8_t new_priority = 50;
+ * my_source.ChangePriority(my_universe, new_priority);
+ * bool new_preview_flag = true;
+ * my_source.ChangePreviewFlag(my_universe, new_preview_flag);
+ * my_source.SetDirty(my_universe);  // Indicate new data should be transmitted.
+ *
+ * // You can remove a unicast destination previously added:
+ * my_source.RemoveUnicastDestination(my_universe, custom_destination);
+ * // Or remove a universe from your source:
+ * my_source.RemoveUniverse(my_universe);
+ * // Or destroy the source altogether:
+ * my_source.Shutdown();
+ *
+ * // During application shutdown, everything can be cleaned up by calling sacn_deinit.
+ * sacn_deinit();
+ * @endcode
  */
-// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE -- DO WE NEED A using_source.md???
 class Source
 {
 public:
