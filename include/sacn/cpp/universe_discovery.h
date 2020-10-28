@@ -51,9 +51,9 @@ namespace sacn
  * EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
  * // Initialize log_params...
  *
- * etcpal::Error init_result = sacn_init(&log_params);
+ * etcpal::Error init_result = sacn::Init(&log_params);
  * // Or, to init without worrying about logs from the sACN library...
- * etcpal::Error init_result = sacn_init(NULL);
+ * etcpal::Error init_result = sacn::Init();
  * 
  * std::vector<SacnMcastInterface> my_netints;
  * // Assuming my_netints is initialized by the application...
@@ -76,8 +76,8 @@ namespace sacn
  * // To destroy a universe discovery listener, call this:
  * my_universe_discovery.Shutdown();
  * 
- * // During application shutdown, everything can be cleaned up by calling sacn_deinit.
- * sacn_deinit();
+ * // During application shutdown, everything can be cleaned up by calling sacn::Deinit.
+ * sacn::Deinit();
  * @endcode
  *
  * Callback demonstrations:
