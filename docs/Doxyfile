@@ -792,6 +792,7 @@ WARN_LOGFILE           =
 
 INPUT                  = ./GeneratedFiles \
                          ../include/sacn \
+                         ../include/sacn/cpp \
                          ../src/sacn \
                          ../src/sacn/private/opts.h
 
