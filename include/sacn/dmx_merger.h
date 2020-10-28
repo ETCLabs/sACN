@@ -38,7 +38,7 @@
 /**
  * @defgroup sacn_dmx_merger sACN DMX Merger
  * @ingroup sACN
- * @brief The sACN DMX Merger API
+ * @brief The sACN DMX Merger API; see @ref using_dmx_merger.
  *
  * This API provides a software merger for buffers containing DMX512-A start code 0 packets.
  * It also uses buffers containing DMX512-A start code 0xdd packets to support per-address priority.
@@ -56,80 +56,7 @@
  *
  * This API is thread-safe.
  *
- * Usage:
- * @code
- * // Initialize sACN.
- * EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
- * // Init log params here...
- *
- * sacn_init(&log_params);
- *
- * // These buffers are updated on each merger call with the merge results.
- * // They must be valid as long as the merger is using them.
- * uint8_t slots[DMX_ADDRESS_COUNT];
- * sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
- *
- * // Merger configuration used for the initialization of each merger:
- * SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
- * merger_config.slots = slots;
- * merger_config.slot_owners = slot_owners;
- *
- * // A merger has a handle, as do each of its sources. Source CIDs are tracked as well.
- * sacn_dmx_merger_t merger_handle;
- * sacn_source_id_t source_1_handle, source_2_handle;
- * EtcPalUuid source_1_cid, source_2_cid;
- * // Initialize CIDs here...
- *
- * // Make sure to check/handle the etcpal_error_t return values (this is omitted in this example).
- *
- * // Initialize a merger and two sources, getting their handles in return.
- * sacn_dmx_merger_create(&merger_config, &merger_handle);
- *
- * sacn_dmx_merger_add_source(merger_handle, &source_1_cid, &source_1_handle);
- * sacn_dmx_merger_add_source(merger_handle, &source_2_cid, &source_2_handle);
- *
- * // Input data for merging:
- * uint8_t levels[DMX_ADDRESS_COUNT];
- * uint8_t paps[DMX_ADDRESS_COUNT];
- * uint8_t universe_priority;
- * // Initialize levels, paps, and universe_priority here...
- *
- * // Levels and PAPs can be merged separately:
- * sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT,
- *                                    NULL, 0);
- * sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, NULL, 0, paps,
- *                                    DMX_ADDRESS_COUNT);
- *
- * // Or together in one call:
- * sacn_dmx_merger_update_source_data(merger_handle, source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT,
- *                                    paps, DMX_ADDRESS_COUNT);
- *
- * // Or, if this is within a sACN receiver callback, use sacn_dmx_merger_update_source_from_sacn:
- * SacnHeaderData header;
- * uint8_t pdata[DMX_ADDRESS_COUNT];
- * // Assuming header and pdata are initialized.
- *
- * sacn_dmx_merger_update_source_from_sacn(merger_handle, &header, pdata);
- *
- * // PAP can also be removed. Here, source 1 reverts to universe_priority:
- * sacn_dmx_merger_stop_source_per_address_priority(merger_handle, source_1_handle);
- *
- * // The read-only state of each source can be obtained as well.
- * const SacnDmxMergerSource* source_1_state = sacn_dmx_merger_get_source(merger_handle, source_1_handle);
- * const SacnDmxMergerSource* source_2_state = sacn_dmx_merger_get_source(merger_handle, source_2_handle);
- *
- * // Do something with the merge results (slots and slot_owners)...
- *
- * // Sources can be removed individually:
- * sacn_dmx_merger_remove_source(merger_handle, source_1_handle);
- * sacn_dmx_merger_remove_source(merger_handle, source_2_handle);
- *
- * // Mergers can also be removed individually:
- * sacn_dmx_merger_destroy(merger_handle);
- *
- * // Or, if sACN is deinitialized, all of the mergers are destroyed automatically:
- * sacn_deinit();
- * @endcode
+ * See @ref using_dmx_merger for a detailed description of how to use this API.
  *
  * @{
  */

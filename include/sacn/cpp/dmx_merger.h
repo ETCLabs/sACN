@@ -39,7 +39,7 @@ namespace sacn
 {
 /**
  * @ingroup sacn_dmx_merger_cpp
- * @brief An instance of sACN DMX Merger functionality.
+ * @brief An instance of sACN DMX Merger functionality; see @ref using_dmx_merger.
  * 
  * This class instantiates software mergers for buffers containing DMX512-A start code 0 packets.
  * It also uses buffers containing DMX512-A start code 0xdd packets to support per-address priority.
@@ -54,66 +54,8 @@ namespace sacn
  *     per-address priority.
  *  - 512 source identifiers (i.e. "winning source") to indicate which source was considered the
  *     source of the merged data value, or that no source currently owns this address.
- * 
- * Usage:
- * @code
- * // These buffers are updated on each merger call with the merge results.
- * // They must be valid as long as the merger is using them.
- * uint8_t slots[DMX_ADDRESS_COUNT];
- * sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
- * 
- * // Merger configuration used for the initialization of each merger:
- * sacn::DmxMerger::Settings settings(slots_, slot_owners_);
- * 
- * // A merger provides a handle for each of its sources. Source CIDs are tracked as well.
- * sacn_source_id_t source_1_handle, source_2_handle;
- * etcpal::Uuid source_1_cid, source_2_cid;
- * // Initialize CIDs here...
- * 
- * // Initialize a merger and two sources, getting the source handles in return.
- * sacn::DmxMerger merger;
- * merger.Startup(settings);
- * 
- * // Make sure to check/handle error cases (this is omitted in this example).
- * source_1_handle = merger.AddSource(source_1_cid).value();
- * source_2_handle = merger.AddSource(source_2_cid).value();
- * 
- * // Input data for merging:
- * uint8_t levels[DMX_ADDRESS_COUNT];
- * uint8_t paps[DMX_ADDRESS_COUNT];
- * uint8_t universe_priority;
- * // Initialize levels, paps, and universe_priority here...
- * 
- * // Levels and PAPs can be merged separately:
- * merger.UpdateSourceData(source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT);
- * merger.UpdateSourceData(source_1_handle, universe_priority, nullptr, 0, paps, DMX_ADDRESS_COUNT);
- * 
- * // Or together in one call:
- * merger.UpdateSourceData(source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT, paps, DMX_ADDRESS_COUNT);
- * 
- * // Or, if this is within a sACN receiver callback, use UpdateSourceDataFromSacn:
- * SacnHeaderData header;
- * uint8_t pdata[DMX_ADDRESS_COUNT];
- * // Assuming header and pdata are initialized.
  *
- * merger.UpdateSourceDataFromSacn(header, pdata);
- * 
- * // PAP can also be removed. Here, source 1 reverts to universe_priority:
- * merger.StopSourcePerAddressPriority(source_1_handle);
- * 
- * // The read-only state of each source can be obtained as well.
- * const SacnDmxMergerSource* source_1_state = merger.GetSourceInfo(source_1_handle);
- * const SacnDmxMergerSource* source_2_state = merger.GetSourceInfo(source_2_handle);
- * 
- * // Do something with the merge results (slots and slot_owners)...
- * 
- * // Sources can be removed individually:
- * merger.RemoveSource(source_1_handle);
- * merger.RemoveSource(source_2_handle);
- * 
- * // However, when each merger is shut down, all of its sources are removed along with it:
- * merger.Shutdown();
- * @endcode
+ * See @ref using_dmx_merger for a detailed description of how to use this API.
  */
 class DmxMerger
 {

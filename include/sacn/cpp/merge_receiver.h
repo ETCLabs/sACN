@@ -39,9 +39,13 @@ namespace sacn
 {
 /**
  * @ingroup sacn_merge_receiver_cpp
- * @brief An instance of sACN Merge Receiver functionality.
+ * @brief An instance of sACN Merge Receiver functionality; see @ref using_merge_receiver.
+ *
+ * This API is used to minimally wrap the sACN Receiver and DMX Merger logic together so an application can receive and
+ * merge sACN sources in software.
+ *
+ * See @ref using_merge_receiver for a detailed description of how to use this API.
  */
-// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE -- DO WE NEED A using_merge_receiver.md, or one giant using_receiver.md???
 class MergeReceiver
 {
 public:
