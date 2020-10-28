@@ -163,13 +163,14 @@ uint8_t universe_priority;
 // Initialize levels, paps, and universe_priority here...
 
 // Levels and PAPs can be merged separately:
-sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT, NULL,
-                                   0);
-sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, NULL, 0, paps, DMX_ADDRESS_COUNT);
+etcpal_error_t result = sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, levels, 
+                                                           DMX_ADDRESS_COUNT, NULL, 0);
+result = sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, NULL, 0, paps, 
+                                            DMX_ADDRESS_COUNT);
 
 // Or together in one call:
-sacn_dmx_merger_update_source_data(merger_handle, source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT, paps,
-                                   DMX_ADDRESS_COUNT);
+etcpal_error_t result = sacn_dmx_merger_update_source_data(merger_handle, source_2_handle, universe_priority, levels, 
+                                                           DMX_ADDRESS_COUNT, paps, DMX_ADDRESS_COUNT);
 
 // Print merge results
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
@@ -185,11 +186,12 @@ uint8_t universe_priority;
 // Initialize levels, paps, and universe_priority here...
 
 // Levels and PAPs can be merged separately:
-merger.UpdateSourceData(source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT);
-merger.UpdateSourceData(source_1_handle, universe_priority, nullptr, 0, paps, DMX_ADDRESS_COUNT);
+etcpal::Error result = merger.UpdateSourceData(source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT);
+result = merger.UpdateSourceData(source_1_handle, universe_priority, nullptr, 0, paps, DMX_ADDRESS_COUNT);
 
 // Or together in one call:
-merger.UpdateSourceData(source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT, paps, DMX_ADDRESS_COUNT);
+etcpal::Error result = merger.UpdateSourceData(source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT, paps, 
+                                               DMX_ADDRESS_COUNT);
 
 // Print merge results
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
