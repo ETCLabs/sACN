@@ -296,7 +296,7 @@
 /***************************** sACN DMX Merger Options *****************************/
 
 /**
- * @defgroup sacn_dmx_merger sACN DMX Merger Options
+ * @defgroup sacnopts_dmx_merger sACN DMX Merger Options
  * @ingroup sacnopts
  *
  * Configuration options for the @ref sacn_dmx_merger module.
