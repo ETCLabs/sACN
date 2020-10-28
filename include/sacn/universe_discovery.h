@@ -44,10 +44,90 @@
  *
  * sACN sources often periodically send Universe Discovery packets to announce what universes they are sourcing.
  * Use this API to monitor such traffic for your own needs.
+ * 
+ * Usage:
+ * @code
+ * #include "sacn/universe_discovery.h"
+ *
+ * EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
+ * // Initialize log_params...
+ *
+ * etcpal_error_t init_result = sacn_init(&log_params);
+ * // Or, to init without worrying about logs from the sACN library...
+ * etcpal_error_t init_result = sacn_init(NULL);
+ * 
+ * SacnUniverseDiscoveryConfig my_config = SACN_UNIVERSE_DISCOVERY_CONFIG_DEFAULT_INIT;
+ * my_config.callbacks.source_update = my_source_update;
+ * my_config.callbacks.source_expired = my_source_expired;
+ * my_config.callbacks.limit_exceeded = my_limit_exceeded;
+ * 
+ * SacnMcastInterface my_netints[NUM_MY_NETINTS];
+ * // Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
+ *
+ * sacn_universe_discovery_t my_handle;
+ *
+ * // If you want to specify specific network interfaces to use:
+ * etcpal_error_t create_result = sacn_universe_discovery_create(&my_config, &my_handle, my_netints, NUM_MY_NETINTS);
+ * // Or, if you just want to use all network interfaces:
+ * etcpal_error_t create_result = sacn_universe_discovery_create(&my_config, &my_handle, NULL, 0);
+ * // Check create_result here...
+ * 
+ * // Now the thread is running and your callbacks will handle application-side processing.
+ * 
+ * // What if your network interfaces change? Update my_netints and call this:
+ * etcpal_error_t reset_result = sacn_universe_discovery_reset_networking(my_handle, my_netints, NUM_MY_NETINTS);
+ * // Check reset_result here...
+ * 
+ * // To destroy a universe discovery listener, call this:
+ * etcpal_error_t destroy_result = sacn_universe_discovery_destroy(my_handle);
+ * // Check destroy_result here...
+ * 
+ * // During application shutdown, everything can be cleaned up by calling sacn_deinit.
+ * sacn_deinit();
+ * @endcode
+ *
+ * Callback demonstrations:
+ * @code
+ * void my_source_update(sacn_universe_discovery_t handle, const EtcPalUuid* cid, const char* name,
+ *                       const uint16_t* sourced_universes, size_t num_sourced_universes, void* context)
+ * {
+ *   if (cid && name)
+ *   {
+ *     char cid_str[ETCPAL_UUID_STRING_BYTES];
+ *     etcpal_uuid_to_string(cid, cid_str);
+ *     printf("Universe discovery (handle %d): Source %s (name %s) ", handle, cid_str, name);
+ *     if(sourced_universes)
+ *     {
+ *       printf("is active on these universes: ");
+ *       for(size_t i = 0; i < num_sourced_universes; ++i)
+ *         printf("%d ", sourced_universes[i]);
+ *       printf("\n");
+ *     }
+ *     else
+ *     {
+ *       printf("is not active on any universes.\n");
+ *     }
+ *   }
+ * }
+ *
+ * void my_source_expired(sacn_universe_discovery_t handle, const EtcPalUuid* cid, const char* name, void* context)
+ * {
+ *   if (cid && name)
+ *   {
+ *     char cid_str[ETCPAL_UUID_STRING_BYTES];
+ *     etcpal_uuid_to_string(cid, cid_str);
+ *     printf("Universe discovery (handle %d): Source %s (name %s) has expired.\n", handle, cid_str, name);
+ *   }
+ * }
+ *
+ * void my_limit_exceeded(sacn_universe_discovery_t handle, void* context)
+ * {
+ *   printf("Universe discovery (handle %d): Source/universe limit exceeded!\n", handle);
+ * }
+ * @endcode
  *
  * @{
  */
-// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE WITH SAMPLE CODE.
 
 #ifdef __cplusplus
 extern "C" {

@@ -38,10 +38,78 @@
 namespace sacn
 {
 /**
- *@ingroup sacn_universe_discovery_cpp
- *@brief An instance of sACN Universe Discovery functionality.
+ * @ingroup sacn_universe_discovery_cpp
+ * @brief An instance of sACN Universe Discovery functionality.
+ *
+ * sACN sources often periodically send Universe Discovery packets to announce what universes they are sourcing.
+ * Use this API to monitor such traffic for your own needs.
+ * 
+ * Usage:
+ * @code
+ * #include "sacn/cpp/universe_discovery.h"
+ *
+ * EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
+ * // Initialize log_params...
+ *
+ * etcpal::Error init_result = sacn_init(&log_params);
+ * // Or, to init without worrying about logs from the sACN library...
+ * etcpal::Error init_result = sacn_init(NULL);
+ * 
+ * std::vector<SacnMcastInterface> my_netints;
+ * // Assuming my_netints is initialized by the application...
+ *
+ * UniverseDiscovery my_universe_discovery;
+ * MyNotifyHandler my_notify;  // MyNotifyHandler is an application-defined class for implementing notifications.
+ *
+ * // If you want to specify specific network interfaces to use:
+ * etcpal::Error startup_result = my_universe_discovery.Startup(my_notify, my_netints);
+ * // Or, if you just want to use all network interfaces:
+ * etcpal::Error startup_result = my_universe_discovery.Startup(my_notify, std::vector<SacnMcastInterface>());
+ * // Check startup_result here...
+ * 
+ * // Now the thread is running and your callbacks will handle application-side processing.
+ * 
+ * // What if your network interfaces change? Update my_netints and call this:
+ * etcpal::Error reset_result = my_universe_discovery.ResetNetworking(my_netints);
+ * // Check reset_result here...
+ * 
+ * // To destroy a universe discovery listener, call this:
+ * my_universe_discovery.Shutdown();
+ * 
+ * // During application shutdown, everything can be cleaned up by calling sacn_deinit.
+ * sacn_deinit();
+ * @endcode
+ *
+ * Callback demonstrations:
+ * @code
+ * void MyNotifyHandler::HandleUpdateSource(const etcpal::Uuid& cid, const std::string& name,
+ *                                          const uint16_t* sourced_universes, size_t num_sourced_sources)
+ * {
+ *   std::cout << "Universe discovery: Source " << cid.ToString() << " (name " << name << ") ";
+ *   if(sourced_universes)
+ *   {
+ *     std::cout << "is active on these universes: ";
+ *     for(size_t i = 0; i < num_sourced_universes; ++i)
+ *       std::cout << sourced_universes[i] << " ";
+ *     std::cout << "\n";
+ *   }
+ *   else
+ *   {
+ *     std::cout << "is not active on any universes.\n";
+ *   }
+ * }
+ *
+ * void MyNotifyHandler::HandleSourceExpired(const etcpal::Uuid& cid, const std::string& name)
+ * {
+ *   std::cout << "Universe discovery: Source " << cid.ToString() << " (name " << name << ") has expired.\n";
+ * }
+ *
+ * void MyNotifyHandler::HandleMemoryLimitExceeded()
+ * {
+ *   std::cout << "Universe discovery: Source/universe limit exceeded!\n";
+ * }
+ * @endcode
  */
-// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE WITH SAMPLE CODE.
 
 class UniverseDiscovery
 {
