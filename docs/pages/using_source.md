@@ -37,12 +37,12 @@ sacn_deinit();
 EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
 // Initialize log_params...
 
-etcpal::Error init_result = sacn_init(&log_params);
+etcpal::Error init_result = sacn::Init(&log_params);
 // Or, to init without worrying about logs from the sACN library...
-etcpal::Error init_result = sacn_init(NULL);
+etcpal::Error init_result = sacn::Init();
 
 // During shutdown:
-sacn_deinit();
+sacn::Deinit();
 ```
 <!-- CODE_BLOCK_END -->
 
