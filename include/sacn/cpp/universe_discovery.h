@@ -162,8 +162,9 @@ public:
      * universes_per_source_max set to #SACN_UNIVERSE_DISCOVERY_INFINITE, this callback will never be called and may be
      * set to NULL.
      *
-     * if #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max is ignored and
-     * #SACN_UNIVERSE_DISCOVERY_MAX_SOURCES and #SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE are used instead.
+     * If #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max and universes_per_source_max are
+     * ignored and #SACN_UNIVERSE_DISCOVERY_MAX_SOURCES and #SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE are used
+     * instead.
      *
      * This callback is rate-limited: it will only be called when the first universe discovery packet is received that
      * takes the module beyond a memory limit.  After that, it will not be called until the number of sources or
@@ -189,7 +190,7 @@ public:
 
     /** The maximum number of universes this listener will record for a source.  It is recommended that applications
        using dynamic memory use #SACN_UNIVERSE_DISCOVERY_INFINITE for this value. This parameter is ignored when
-       configured to use static memory -- #SACN_UNIVERSE_DISCOVERY_MAX_SOURCES is used instead.*/
+       configured to use static memory -- #SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE is used instead.*/
     size_t universes_per_source_max{SACN_UNIVERSE_DISCOVERY_INFINITE};
 
     /** Create default data structure. */
@@ -269,9 +270,11 @@ extern "C" inline void UniverseDiscoveryCbMemoryLimitExceeded(sacn_universe_disc
  * Note that a listener is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in] Settings Configuration parameters for the sACN Universe Discovery listener to be created.
- * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * @param[in] settings Configuration parameters for the sACN Universe Discovery listener to be created.
+ * @param[in] notify_handler The callback handler for the sACN Universe Discovery listener to be created.
+ * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
+ * modified.
  * @return #kEtcPalErrOk: Listener created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -300,6 +303,7 @@ inline etcpal::Error UniverseDiscovery::Startup(const Settings& settings, Notify
  * Note that a listener is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
+ * @param[in] notify_handler The callback handler for the sACN Universe Discovery listener to be created.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
  * modified.
@@ -343,9 +347,9 @@ inline void UniverseDiscovery::Shutdown()
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
- * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
+ * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
+ * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
+ * modified.
  * @return #kEtcPalErrOk: Network changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.

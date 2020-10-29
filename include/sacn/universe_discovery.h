@@ -79,8 +79,7 @@
  * // Check reset_result here...
  * 
  * // To destroy a universe discovery listener, call this:
- * etcpal_error_t destroy_result = sacn_universe_discovery_destroy(my_handle);
- * // Check destroy_result here...
+ * sacn_universe_discovery_destroy(my_handle);
  * 
  * // During application shutdown, everything can be cleaned up by calling sacn_deinit.
  * sacn_deinit();
@@ -222,7 +221,7 @@ typedef struct SacnUniverseDiscoveryConfig
 
   /** The maximum number of universes this listener will record for a source.  It is recommended that applications using
      dynamic memory use #SACN_UNIVERSE_DISCOVERY_INFINITE for this value. This parameter is ignored when configured to
-     use static memory -- #SACN_UNIVERSE_DISCOVERY_MAX_SOURCES is used instead.*/
+     use static memory -- #SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE is used instead.*/
   size_t universes_per_source_max;
 } SacnUniverseDiscoveryConfig;
 
@@ -237,7 +236,7 @@ void sacn_universe_discovery_config_init(SacnUniverseDiscoveryConfig* config);
 etcpal_error_t sacn_universe_discovery_create(const SacnUniverseDiscoveryConfig* config,
                                               sacn_universe_discovery_t* handle, SacnMcastInterface* netints,
                                               size_t num_netints);
-etcpal_error_t sacn_universe_discovery_destroy(sacn_universe_discovery_t handle);
+void sacn_universe_discovery_destroy(sacn_universe_discovery_t handle);
 
 etcpal_error_t sacn_universe_discovery_reset_networking(sacn_universe_discovery_t handle, SacnMcastInterface* netints,
                                                         size_t num_netints);

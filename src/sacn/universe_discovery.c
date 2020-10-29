@@ -127,17 +127,12 @@ etcpal_error_t sacn_universe_discovery_create(const SacnUniverseDiscoveryConfig*
  *
  *
  * @param[in] handle Handle to the listener to destroy.
- * @return #kEtcPalErrOk: Listener destroyed successfully.
- * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid listener.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_universe_discovery_destroy(sacn_universe_discovery_t handle)
+void sacn_universe_discovery_destroy(sacn_universe_discovery_t handle)
 {
   // TODO CHRISTIAN
   // Shutdown the thread if it is for the last listener.
   ETCPAL_UNUSED_ARG(handle);
-  return kEtcPalErrNotImpl;
 }
 
 /**
