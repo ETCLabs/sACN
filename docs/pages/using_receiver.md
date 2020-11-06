@@ -8,43 +8,8 @@ header-only wrapper around the C interface.
 
 ## Initialization and Destruction
 
-The sACN library has overall init and deinit functions that should be called once each at
-application startup and shutdown time. These functions interface with the EtcPal \ref etcpal_log
-API to configure what happens when the sACN library logs messages. Optionally pass an
-EtcPalLogParams structure to use this functionality. This structure can be shared across different
-ETC library modules.
-
-<!-- CODE_BLOCK_START -->
-```c
-#include "sacn/receiver.h"
-
-// During startup:
-EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
-// Initialize log_params...
-
-sacn_init(&log_params);
-// Or, to init without worrying about logs from the sACN library...
-sacn_init(NULL);
-
-// During shutdown:
-sacn_deinit();
-```
-<!-- CODE_BLOCK_MID -->
-```cpp
-#include "sacn/cpp/receiver.h"
-
-// During startup:
-etcpal::Logger logger;
-// Initialize logger...
-
-sacn::Init(logger);
-// Or, to init without worrying about logs from the sACN library...
-sacn::Init();
-
-// During shutdown:
-sacn::Deinit();
-```
-<!-- CODE_BLOCK_END -->
+The sACN library must be globally initialized before using the Receiver API. See
+\ref global_init_and_destroy.
 
 An sACN receiver instance can listen on one universe at a time, but the universe it listens on can
 be changed at any time. A receiver begins listening when it is created. To create an sACN receiver
