@@ -178,12 +178,7 @@ void my_universe_non_dmx_callback(sacn_merge_receiver_t handle, uint16_t univers
   printf("Got non-DMX sACN update from source %s (address %s:%u, name %s) on universe %u, priority %u, start code %u\n",
          cid_str, addr_str, source_addr->port, header->source_name, universe, header->priority, header->start_code);
 
-  // Example for an sACN-enabled fixture...
-  if (header->start_code == MY_CUSTOM_START_CODE && my_start_addr + MY_DMX_FOOTPRINT <= header->slot_count)
-  {
-    memcpy(my_custom_data_buf, &pdata[my_start_addr], MY_DMX_FOOTPRINT);
-    // Act on the data somehow
-  }
+  // Act on the data somehow
 }
 ```
 <!-- CODE_BLOCK_MID -->
@@ -197,12 +192,7 @@ void MyNotifyHandler::HandleNonDmxData(uint16_t universe, const etcpal::SockAddr
             << source_addr.ToString() << ", name " << header.source_name << ") on universe " << universe 
             << ", priority " << header.priority << ", start code " << header.start_code << "\n";
 
-  // Example for an sACN-enabled fixture...
-  if (header.start_code == MY_CUSTOM_START_CODE && my_start_addr + MY_DMX_FOOTPRINT <= header.slot_count)
-  {
-    memcpy(my_custom_data_buf, &pdata[my_start_addr], MY_DMX_FOOTPRINT);
-    // Act on the data somehow
-  }
+  // Act on the data somehow
 }
 ```
 <!-- CODE_BLOCK_END -->
