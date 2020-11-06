@@ -53,12 +53,12 @@ Settings my_config(my_cid, my_name);
 std::vector<SacnMcastInterface> my_netints;
 // Assuming my_netints is initialized by the application...
 
-Source my_source;
+sacn::Source my_source;
 
 // If you want to specify specific network interfaces to use:
 my_source.Startup(my_config, my_netints);
 // Or, if you just want to use all network interfaces:
-my_source.Startup(my_config, std::vector<SacnMcastInterface>());
+my_source.Startup(my_config);
 
 // To destroy the source when you're done with it:
 my_source.Shutdown();
