@@ -73,15 +73,13 @@ sacn_receiver_change_universe(my_receiver_handle, new_universe);
 <!-- CODE_BLOCK_MID -->
 ```cpp
 // Get the universe currently being listened to
-uint16_t current_universe;
 auto result = receiver.GetUniverse();
-
-if(result)
-  current_universe = *result;
-
-// Change the universe to listen to
-uint16_t new_universe = current_universe + 1;
-receiver.ChangeUniverse(new_universe);
+if (result)
+{
+  // Change the universe to listen to
+  uint16_t new_universe = *result + 1;
+  receiver.ChangeUniverse(new_universe);
+}
 ```
 <!-- CODE_BLOCK_END -->
 
