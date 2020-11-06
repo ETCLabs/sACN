@@ -87,7 +87,11 @@ if (result)
 
 There may be multiple sources transmitting data on a universe. A sources found notification occurs
 whenever a new set of sources has been found, and the correct starting values for NULL start code
-data and per-address priority have been determined for each.
+data (and per-address priority if #SACN_ETC_PRIORITY_EXTENSION is set to 1) have been determined
+for each.
+
+Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
+library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0.
 
 <!-- CODE_BLOCK_START -->
 ```c

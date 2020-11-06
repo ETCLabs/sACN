@@ -105,6 +105,10 @@ the data received from the SacnSourcesFoundCallback().
 lost source callback from the sACN Receiver module will be passed to the merger, after which the
 merged result is immediately and synchronously passed to this callback.
 
+Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
+library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0 (in which case per-address priority
+packets received have no effect).
+
 This callback should be processed quickly, since it will interfere with the receipt and processing
 of other sACN packets on the universe.
 

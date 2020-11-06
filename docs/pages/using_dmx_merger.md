@@ -5,6 +5,9 @@ The sACN DMX Merger API provides a software merger that takes start code 0 and p
 exposes both a C and C++ language interface. The C++ interface is a header-only wrapper around the
 C interface.
 
+Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
+library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0.
+
 <!-- LANGUAGE_SELECTOR -->
 
 ## Initialization and Destruction

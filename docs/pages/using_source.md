@@ -78,6 +78,9 @@ send for those start codes (0x00 for values, 0xDD for PAP). Once you create this
 can simply pass it into the Add Universe function. When you're done transmitting on that universe,
 you can call the Remove Universe function.
 
+Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
+library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0.
+
 <!-- CODE_BLOCK_START -->
 ```c
 uint8_t my_values_buffer[DMX_ADDRESS_COUNT];
