@@ -126,13 +126,12 @@ sacn_dmx_merger_remove_source(merger_handle, source_2_handle);
 <!-- CODE_BLOCK_MID -->
 ```cpp
 // Add a couple of sources, which are tracked with handles and CIDs.
-sacn_source_id_t source_1_handle, source_2_handle;
 etcpal::Uuid source_1_cid, source_2_cid;
 // Initialize CIDs here...
 
 // AddSource may also return an error, which is not checked for in this example.
-source_1_handle = merger.AddSource(source_1_cid).value();
-source_2_handle = merger.AddSource(source_2_cid).value();
+sacn_source_id_t source_1_handle = merger.AddSource(source_1_cid).value();
+sacn_source_id_t source_2_handle = merger.AddSource(source_2_cid).value();
 
 // Sources can later be removed individually, which updates the merger's output.
 merger.RemoveSource(source_1_handle);
