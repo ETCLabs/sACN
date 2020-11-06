@@ -23,9 +23,9 @@ ETC library modules.
 EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
 // Initialize log_params...
 
-etcpal_error_t init_result = sacn_init(&log_params);
+sacn_init(&log_params);
 // Or, to init without worrying about logs from the sACN library...
-etcpal_error_t init_result = sacn_init(NULL);
+sacn_init(NULL);
 
 // During shutdown:
 sacn_deinit();
@@ -38,9 +38,9 @@ sacn_deinit();
 etcpal::Logger logger;
 // Initialize logger...
 
-etcpal::Error init_result = sacn::Init(logger);
+sacn::Init(logger);
 // Or, to init without worrying about logs from the sACN library...
-etcpal::Error init_result = sacn::Init();
+sacn::Init();
 
 // During shutdown:
 sacn::Deinit();
@@ -72,15 +72,7 @@ config.callbacks.universe_non_dmx = my_universe_non_dmx_callback;
 config.callbacks.source_limit_exceeded = my_source_limit_exceeded_callback; // optional, can be NULL
 
 sacn_merge_receiver_t my_merge_receiver_handle;
-etcpal_error_t result = sacn_merge_receiver_create(&config, &my_merge_receiver_handle);
-if (result == kEtcPalErrOk)
-{
-  // Handle is valid and may be referenced in later calls to API functions.
-}
-else
-{
-  // Some error occurred, handle is not valid.
-}
+sacn_merge_receiver_create(&config, &my_merge_receiver_handle);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
@@ -90,18 +82,9 @@ sacn::MergeReceiver merge_receiver; // Instantiate a merge receiver
 // You implement the callbacks by implementing the sacn::MergeReceiver::NotifyHandler interface.
 // The NotifyHandler-derived instance, referred to here as my_notify_handler, must be passed in to Startup:
 MyNotifyHandler my_notify_handler;
-etcpal::Error startup_result = merge_receiver.Startup(config, my_notify_handler);
+merge_receiver.Startup(config, my_notify_handler);
 // Or do this if Startup is being called within the NotifyHandler-derived class:
-etcpal::Error startup_result = merge_receiver.Startup(config, *this);
-
-if (startup_result)
-{
-  // The merge receiver is initialized and can now be used.
-}
-else
-{
-  // Some error occurred, the merge receiver is not valid.
-}
+merge_receiver.Startup(config, *this);
 ```
 <!-- CODE_BLOCK_END -->
 
@@ -115,11 +98,11 @@ current universe being listened to, or to change the universe to listen to.
 ```c
 // Get the universe currently being listened to
 uint16_t current_universe;
-etcpal_error_t result = sacn_merge_receiver_get_universe(my_merge_receiver_handle, &current_universe);
+sacn_merge_receiver_get_universe(my_merge_receiver_handle, &current_universe);
 
 // Change the universe to listen to
 uint16_t new_universe = current_universe + 1;
-etcpal_error_t result = sacn_merge_receiver_change_universe(my_merge_receiver_handle, new_universe);
+sacn_merge_receiver_change_universe(my_merge_receiver_handle, new_universe);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
@@ -132,7 +115,7 @@ if(result)
 
 // Change the universe to listen to
 uint16_t new_universe = current_universe + 1;
-etcpal::Error result = merge_receiver.ChangeUniverse(new_universe);
+merge_receiver.ChangeUniverse(new_universe);
 ```
 <!-- CODE_BLOCK_END -->
 

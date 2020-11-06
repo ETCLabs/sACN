@@ -22,9 +22,9 @@ ETC library modules.
 EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
 // Initialize log_params...
 
-etcpal_error_t init_result = sacn_init(&log_params);
+sacn_init(&log_params);
 // Or, to init without worrying about logs from the sACN library...
-etcpal_error_t init_result = sacn_init(NULL);
+sacn_init(NULL);
 
 // During shutdown:
 sacn_deinit();
@@ -37,9 +37,9 @@ sacn_deinit();
 etcpal::Logger logger;
 // Initialize logger...
 
-etcpal::Error init_result = sacn::Init(logger);
+sacn::Init(logger);
 // Or, to init without worrying about logs from the sACN library...
-etcpal::Error init_result = sacn::Init();
+sacn::Init();
 
 // During shutdown:
 sacn::Deinit();
@@ -73,15 +73,7 @@ config.callbacks.source_pap_lost = my_source_pap_lost_callback; // optional, can
 config.callbacks.source_limit_exceeded = my_source_limit_exceeded_callback; // optional, can be NULL
 
 sacn_receiver_t my_receiver_handle;
-etcpal_error_t result = sacn_receiver_create(&config, &my_receiver_handle);
-if (result == kEtcPalErrOk)
-{
-  // Handle is valid and may be referenced in later calls to API functions.
-}
-else
-{
-  // Some error occurred, handle is not valid.
-}
+sacn_receiver_create(&config, &my_receiver_handle);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
@@ -91,18 +83,9 @@ sacn::Receiver receiver; // Instantiate a receiver
 // You implement the callbacks by implementing the sacn::Receiver::NotifyHandler interface.
 // The NotifyHandler-derived instance, referred to here as my_notify_handler, must be passed in to Startup:
 MyNotifyHandler my_notify_handler;
-etcpal::Error startup_result = receiver.Startup(config, my_notify_handler);
+receiver.Startup(config, my_notify_handler);
 // Or do this if Startup is being called within the NotifyHandler-derived class:
-etcpal::Error startup_result = receiver.Startup(config, *this);
-
-if (startup_result)
-{
-  // The receiver is initialized and can now be used.
-}
-else
-{
-  // Some error occurred, the receiver is not valid.
-}
+receiver.Startup(config, *this);
 ```
 <!-- CODE_BLOCK_END -->
 
@@ -116,11 +99,11 @@ current universe being listened to, or to change the universe to listen to.
 ```c
 // Get the universe currently being listened to
 uint16_t current_universe;
-etcpal_error_t result = sacn_receiver_get_universe(my_receiver_handle, &current_universe);
+sacn_receiver_get_universe(my_receiver_handle, &current_universe);
 
 // Change the universe to listen to
 uint16_t new_universe = current_universe + 1;
-etcpal_error_t result = sacn_receiver_change_universe(my_receiver_handle, new_universe);
+sacn_receiver_change_universe(my_receiver_handle, new_universe);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
@@ -133,7 +116,7 @@ if(result)
 
 // Change the universe to listen to
 uint16_t new_universe = current_universe + 1;
-etcpal::Error result = receiver.ChangeUniverse(new_universe);
+receiver.ChangeUniverse(new_universe);
 ```
 <!-- CODE_BLOCK_END -->
 

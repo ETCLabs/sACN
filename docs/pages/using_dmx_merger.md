@@ -23,9 +23,9 @@ ETC library modules.
 EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
 // Initialize log_params...
 
-etcpal_error_t init_result = sacn_init(&log_params);
+sacn_init(&log_params);
 // Or, to init without worrying about logs from the sACN library...
-etcpal_error_t init_result = sacn_init(NULL);
+sacn_init(NULL);
 
 // During shutdown:
 sacn_deinit();
@@ -38,9 +38,9 @@ sacn_deinit();
 etcpal::Logger logger;
 // Initialize logger...
 
-etcpal::Error init_result = sacn::Init(logger);
+sacn::Init(logger);
 // Or, to init without worrying about logs from the sACN library...
-etcpal::Error init_result = sacn::Init();
+sacn::Init();
 
 // During shutdown:
 sacn::Deinit();
@@ -76,11 +76,11 @@ merger_config.slot_owners = slot_owners;
 
 // Initialize a merger and obtain its handle.
 sacn_dmx_merger_t merger_handle;
-etcpal_error_t result = sacn_dmx_merger_create(&merger_config, &merger_handle);
+sacn_dmx_merger_create(&merger_config, &merger_handle);
 
 // Mergers can later be destroyed individually.
 // Keep in mind that sacn_deinit() will destroy all mergers automatically.
-etcpal_error_t result = sacn_dmx_merger_destroy(merger_handle);
+sacn_dmx_merger_destroy(merger_handle);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
@@ -94,7 +94,7 @@ sacn::DmxMerger::Settings settings(slots, slot_owners);
 
 // Initialize a merger.
 sacn::DmxMerger merger;
-etcpal::Error result = merger.Startup(settings);
+merger.Startup(settings);
 
 // Mergers can later be destroyed individually.
 // Keep in mind that sacn_deinit() will destroy all mergers automatically.
@@ -116,13 +116,12 @@ sacn_source_id_t source_1_handle, source_2_handle;
 EtcPalUuid source_1_cid, source_2_cid;
 // Initialize CIDs here...
 
-etcpal_error_t result;
-result = sacn_dmx_merger_add_source(merger_handle, &source_1_cid, &source_1_handle);
-result = sacn_dmx_merger_add_source(merger_handle, &source_2_cid, &source_2_handle);
+sacn_dmx_merger_add_source(merger_handle, &source_1_cid, &source_1_handle);
+sacn_dmx_merger_add_source(merger_handle, &source_2_cid, &source_2_handle);
 
 // Sources can later be removed individually, which updates the merger's output.
-result = sacn_dmx_merger_remove_source(merger_handle, source_1_handle);
-result = sacn_dmx_merger_remove_source(merger_handle, source_2_handle);
+sacn_dmx_merger_remove_source(merger_handle, source_1_handle);
+sacn_dmx_merger_remove_source(merger_handle, source_2_handle);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
@@ -163,14 +162,13 @@ uint8_t universe_priority;
 // Initialize levels, paps, and universe_priority here...
 
 // Levels and PAPs can be merged separately:
-etcpal_error_t result = sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, levels, 
-                                                           DMX_ADDRESS_COUNT, NULL, 0);
-result = sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, NULL, 0, paps, 
-                                            DMX_ADDRESS_COUNT);
+sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT, NULL,
+                                   0);
+sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, NULL, 0, paps, DMX_ADDRESS_COUNT);
 
 // Or together in one call:
-etcpal_error_t result = sacn_dmx_merger_update_source_data(merger_handle, source_2_handle, universe_priority, levels, 
-                                                           DMX_ADDRESS_COUNT, paps, DMX_ADDRESS_COUNT);
+sacn_dmx_merger_update_source_data(merger_handle, source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT, paps,
+                                   DMX_ADDRESS_COUNT);
 
 // Print merge results
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
@@ -186,12 +184,11 @@ uint8_t universe_priority;
 // Initialize levels, paps, and universe_priority here...
 
 // Levels and PAPs can be merged separately:
-etcpal::Error result = merger.UpdateSourceData(source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT);
-result = merger.UpdateSourceData(source_1_handle, universe_priority, nullptr, 0, paps, DMX_ADDRESS_COUNT);
+merger.UpdateSourceData(source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT);
+merger.UpdateSourceData(source_1_handle, universe_priority, nullptr, 0, paps, DMX_ADDRESS_COUNT);
 
 // Or together in one call:
-etcpal::Error result = merger.UpdateSourceData(source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT, paps, 
-                                               DMX_ADDRESS_COUNT);
+merger.UpdateSourceData(source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT, paps, DMX_ADDRESS_COUNT);
 
 // Print merge results
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
@@ -250,7 +247,7 @@ void my_source_pap_lost_callback(sacn_receiver_t handle, uint16_t universe, cons
   sacn_source_id_t source_handle = sacn_dmx_merger_get_id(merger_handle, &source->cid);
 
   if(source_handle != SACN_DMX_MERGER_SOURCE_INVALID)
-    etcpal_error_t result = sacn_dmx_merger_stop_source_per_address_priority(merger_handle, source_handle);
+    sacn_dmx_merger_stop_source_per_address_priority(merger_handle, source_handle);
 }
 ```
 <!-- CODE_BLOCK_MID -->

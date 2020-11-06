@@ -22,9 +22,9 @@ ETC library modules.
 EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
 // Initialize log_params...
 
-etcpal_error_t init_result = sacn_init(&log_params);
+sacn_init(&log_params);
 // Or, to init without worrying about logs from the sACN library...
-etcpal_error_t init_result = sacn_init(NULL);
+sacn_init(NULL);
 
 // During shutdown:
 sacn_deinit();
@@ -37,9 +37,9 @@ sacn_deinit();
 etcpal::Logger logger;
 // Initialize logger...
 
-etcpal::Error init_result = sacn::Init(logger);
+sacn::Init(logger);
 // Or, to init without worrying about logs from the sACN library...
-etcpal::Error init_result = sacn::Init();
+sacn::Init();
 
 // During shutdown:
 sacn::Deinit();
@@ -70,9 +70,9 @@ SacnMcastInterface my_netints[NUM_MY_NETINTS];
 sacn_source_t my_handle;
 
 // If you want to specify specific network interfaces to use:
-etcpal_error_t result = sacn_source_create(&my_config, &my_handle, my_netints, NUM_MY_NETINTS);
+sacn_source_create(&my_config, &my_handle, my_netints, NUM_MY_NETINTS);
 // Or, if you just want to use all network interfaces:
-etcpal_error_t result = sacn_source_create(&my_config, &my_handle, NULL, 0);
+sacn_source_create(&my_config, &my_handle, NULL, 0);
 
 // To destroy the source when you're done with it:
 sacn_source_destroy(my_handle);
@@ -91,9 +91,9 @@ std::vector<SacnMcastInterface> my_netints;
 Source my_source;
 
 // If you want to specify specific network interfaces to use:
-etcpal::Error result = my_source.Startup(my_config, my_netints);
+my_source.Startup(my_config, my_netints);
 // Or, if you just want to use all network interfaces:
-etcpal::Error result = my_source.Startup(my_config, std::vector<SacnMcastInterface>());
+my_source.Startup(my_config, std::vector<SacnMcastInterface>());
 
 // To destroy the source when you're done with it:
 my_source.Shutdown();
@@ -127,7 +127,7 @@ sacn_source_universe_config_init(&my_universe_config, my_universe, my_values_buf
 sacn_source_universe_config_init(&my_universe_config, my_universe, my_values_buffer, DMX_ADDRESS_COUNT, NULL);
 my_universe_config.priority = 123;
 
-etcpal_error_t result = sacn_source_add_universe(my_handle, &my_universe_config);
+sacn_source_add_universe(my_handle, &my_universe_config);
 // You can add additional universes as well, in the same way.
 
 // To remove a universe from your source when you're done transmitting on it:
@@ -146,7 +146,7 @@ my_universe_config.priorities_buffer = my_priorities_buffer;
 // Otherwise, specify a universe priority:
 my_universe_config.priority = 123;
 
-etcpal::Error result = my_source.AddUniverse(my_universe_config);
+my_source.AddUniverse(my_universe_config);
 // You can add additional universes as well, in the same way.
 
 // To remove a universe from your source when you're done transmitting on it:
@@ -195,7 +195,7 @@ configuration, call Set Dirty to transmit using that new configuration.
 ```c
 // Unicast can be sent to one or more addresses, in addition to multicast.
 EtcPalIpAddr custom_destination;  // Application initializes custom_destination...
-etcpal_error_t result = sacn_source_add_unicast_destination(my_handle, my_universe, &custom_destination);
+sacn_source_add_unicast_destination(my_handle, my_universe, &custom_destination);
 sacn_source_set_dirty(my_handle, my_universe); // Indicate the data should be sent on multicast and unicast (or just
                                                // unicast if send_unicast_only is enabled in SacnSourceUniverseConfig).
 
@@ -206,7 +206,7 @@ sacn_source_remove_unicast_destination(my_handle, my_universe, &custom_destinati
 ```cpp
 // Unicast can be sent to one or more addresses, in addition to multicast.
 etcpal::IpAddr custom_destination;  // Application initializes custom_destination...
-etcpal::Error result = my_source.AddUnicastDestination(my_universe, custom_destination);
+my_source.AddUnicastDestination(my_universe, custom_destination);
 my_source.SetDirty(my_universe); // Indicate the data should be sent on multicast and unicast (or just unicast if
                                  // send_unicast_only is enabled in Source::UniverseSettings).
 
@@ -227,8 +227,7 @@ function to transmit that data synchronously.
 uint8_t my_custom_start_code;
 uint8_t my_custom_start_code_data[DMX_ADDRESS_COUNT];
 // Initialize start code and data...
-etcpal_error_t result = sacn_source_send_now(my_handle, my_universe, my_custom_start_code, my_custom_start_code_data, 
-                                             DMX_ADDRESS_COUNT);
+sacn_source_send_now(my_handle, my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
@@ -236,8 +235,7 @@ etcpal_error_t result = sacn_source_send_now(my_handle, my_universe, my_custom_s
 uint8_t my_custom_start_code;
 uint8_t my_custom_start_code_data[DMX_ADDRESS_COUNT];
 // Initialize start code and data...
-etcpal::Error result = my_source.SendNow(my_universe, my_custom_start_code, my_custom_start_code_data, 
-                                         DMX_ADDRESS_COUNT);
+my_source.SendNow(my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);
 ```
 <!-- CODE_BLOCK_END -->
 
@@ -254,20 +252,20 @@ Send Synchronization function.
 // You can also set up a synchronization universe for a universe.
 // Receivers should hang on to the data and wait for a sync message.
 uint16_t my_sync_universe = 123;  // Let's say the sync universe is 123, for example.
-etcpal_error_t result = sacn_source_change_synchronization_universe(my_handle, my_universe, my_sync_universe);
+sacn_source_change_synchronization_universe(my_handle, my_universe, my_sync_universe);
 
 // Whenever you want the data to be applied, you can immediately send a sync message for your universe.
-etcpal_error_t result = sacn_source_send_synchronization(my_handle, my_universe);
+sacn_source_send_synchronization(my_handle, my_universe);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
 // You can also set up a synchronization universe for a universe.
 // Receivers should hang on to the data and wait for a sync message.
 uint16_t my_sync_universe = 123;  // Let's say the sync universe is 123, for example.
-etcpal::Error result = my_source.ChangeSynchronizationUniverse(my_universe, my_sync_universe);
+my_source.ChangeSynchronizationUniverse(my_universe, my_sync_universe);
 
 // Whenever you want the data to be applied, you can immediately send a sync message for your universe.
-etcpal::Error result = my_source.SendSynchronization(my_universe);
+my_source.SendSynchronization(my_universe);
 ```
 <!-- CODE_BLOCK_END -->
 
@@ -280,22 +278,22 @@ appropriate Change function, followed by a call to Set Dirty to transmit the cha
 ```c
 // The preview flag, priority, and name can also be changed at any time:
 const char* new_name = "Hello World";
-etcpal_error_t result = sacn_source_change_name(my_handle, new_name)
+sacn_source_change_name(my_handle, new_name)
 uint8_t new_priority = 50;
-etcpal_error_t result = sacn_source_change_priority(my_handle, my_universe, new_priority);
+sacn_source_change_priority(my_handle, my_universe, new_priority);
 bool new_preview_flag = true;
-etcpal_error_t result = sacn_source_change_preview_flag(my_handle, my_universe, new_preview_flag);
+sacn_source_change_preview_flag(my_handle, my_universe, new_preview_flag);
 sacn_source_set_dirty(my_handle, my_universe);  // Indicate new data should be transmitted.
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
 // The preview flag, priority, and name can also be changed at any time:
 std::string new_name("Hello World");
-etcpal::Error result = my_source.ChangeName(new_name)
+my_source.ChangeName(new_name)
 uint8_t new_priority = 50;
-etcpal::Error result = my_source.ChangePriority(my_universe, new_priority);
+my_source.ChangePriority(my_universe, new_priority);
 bool new_preview_flag = true;
-etcpal::Error result = my_source.ChangePreviewFlag(my_universe, new_preview_flag);
+my_source.ChangePreviewFlag(my_universe, new_preview_flag);
 my_source.SetDirty(my_universe);  // Indicate new data should be transmitted.
 ```
 <!-- CODE_BLOCK_END -->
