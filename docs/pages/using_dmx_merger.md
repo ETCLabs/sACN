@@ -35,10 +35,10 @@ sacn_deinit();
 #include "sacn/cpp/dmx_merger.h"
 
 // During startup:
-EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
-// Initialize log_params...
+etcpal::Logger logger;
+// Initialize logger...
 
-etcpal::Error init_result = sacn::Init(&log_params);
+etcpal::Error init_result = sacn::Init(logger);
 // Or, to init without worrying about logs from the sACN library...
 etcpal::Error init_result = sacn::Init();
 
