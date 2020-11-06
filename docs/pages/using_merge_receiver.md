@@ -120,15 +120,17 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, 
   printf("Got new merge results on universe %u\n", universe);
 
   // Example for an sACN-enabled fixture...
-  bool my_slots_all_sourced = true;
-  for(unsigned int i = 0; i < MY_DMX_FOOTPRINT; ++i)
-    my_slots_all_sourced = my_slots_all_sourced && SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, my_start_addr + i);
-
-  if(my_slots_all_sourced)
+  for (int i = 0; i < MY_DMX_FOOTPRINT; ++i)
   {
-    memcpy(my_data_buf, &slots[my_start_addr], MY_DMX_FOOTPRINT);
-    // Act on the data somehow
+    if (!SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, my_start_addr + i))
+    {
+      // One of the slots in my DMX footprint does not have a valid source
+      return;
+    }
   }
+
+  memcpy(my_data_buf, &slots[my_start_addr], MY_DMX_FOOTPRINT);
+  // Act on the data somehow
 }
 ```
 <!-- CODE_BLOCK_MID -->
@@ -140,15 +142,17 @@ void MyNotifyHandler::HandleMergedData(uint16_t universe, const uint8_t* slots, 
   std::cout << "Got new merge results on universe " << universe << "\n";
 
   // Example for an sACN-enabled fixture...
-  bool my_slots_all_sourced = true;
-  for(unsigned int i = 0; i < MY_DMX_FOOTPRINT; ++i)
-    my_slots_all_sourced = my_slots_all_sourced && SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, my_start_addr + i);
-
-  if(my_slots_all_sourced)
+  for (int i = 0; i < MY_DMX_FOOTPRINT; ++i)
   {
-    memcpy(my_data_buf, &slots[my_start_addr], MY_DMX_FOOTPRINT);
-    // Act on the data somehow
+    if (!SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, my_start_addr + i))
+    {
+      // One of the slots in my DMX footprint does not have a valid source
+      return;
+    }
   }
+
+  memcpy(my_data_buf, &slots[my_start_addr], MY_DMX_FOOTPRINT);
+  // Act on the data somehow
 }
 ```
 <!-- CODE_BLOCK_END -->
