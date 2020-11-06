@@ -213,7 +213,7 @@ You can also configure synchronization universes for each of your universes usin
 Synchronization Universe function. Then the transmitted DMX data will include this synchronization
 universe, indicating to the receivers to wait to apply the data until a synchronization message is
 received on the specified synchronization universe. To send the synchronization message, call the
-Send Synchronization function.
+Send Synchronization function. NOTE: sACN Sync will not be supported in sACN 2.0.0.
 
 <!-- CODE_BLOCK_START -->
 ```c
