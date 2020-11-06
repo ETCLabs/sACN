@@ -60,5 +60,4 @@ protected:
 
 TEST_F(TestMergeReceiver, SetStandardVersionWorks)
 {
-  //CHRISTIAN TODO: CLEAN UP TESTING
 }

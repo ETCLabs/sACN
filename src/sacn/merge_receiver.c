@@ -17,12 +17,6 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
- - Fill in all the holes I made... :)
- - Make sure everything works with static & dynamic memory. C & C++, too..
- - This entire project should build without warnings!!
-*/
-
 #include <limits.h>
 #include <stdint.h>
 #include <string.h>
@@ -75,7 +69,6 @@ ETCPAL_MEMPOOL_DEFINE(sacnrecv_merge_receivers, SacnMergeReceiver, SACN_RECEIVER
 etcpal_error_t sacn_merge_receiver_init(void)
 {
   /*
-  //CHRISTIAN TODO CLEANUP
   // TODO: CLEANUP  -- Be sure to check SACN_RECEIVER_MAX_UNIVERSES, as it is illegal to declare a 0-size array in C.
 
   etcpal_error_t res = kEtcPalErrOk;
@@ -104,8 +97,6 @@ etcpal_error_t sacn_merge_receiver_init(void)
 void sacn_merge_receiver_deinit(void)
 {
   /*
-  CHRISTIAN TODO CLEANUP
-
   // Stop all receive threads
   for (unsigned int i = 0; i < sacn_mem_get_num_threads(); ++i)
   {
@@ -165,11 +156,9 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
 etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle,
                                           SacnMcastInterface* netints, size_t num_netints)
 {
-  //TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
 
-  // CHRISTIAN TODO
   if (!config || !handle)
     return kEtcPalErrInvalid;
 
@@ -187,7 +176,6 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
  */
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
 {
-  // CHRISTIAN TODO
   ETCPAL_UNUSED_ARG(handle);
   return kEtcPalErrNotImpl;
 }
@@ -205,7 +193,6 @@ etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
  */
 etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id)
 {
-  // TODO CHRISTIAN CLEANUP
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe_id);
   return kEtcPalErrNotImpl;
@@ -232,7 +219,6 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
   if (!UNIVERSE_ID_VALID(new_universe_id))
     return kEtcPalErrInvalid;
 
-  // TODO CHRISTIAN CLEANUP
   ETCPAL_UNUSED_ARG(handle);
   return kEtcPalErrNotImpl;
 }
@@ -263,7 +249,6 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
 etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, SacnMcastInterface* netints,
                                                     size_t num_netints)
 {
-  // TODO CHRISTIAN CLEANUP
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
@@ -279,7 +264,6 @@ etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle
  */
 sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid)
 {
-  // TODO CHRISTIAN CLEANUP
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(source_cid);
   return SACN_DMX_MERGER_SOURCE_INVALID;
@@ -298,7 +282,6 @@ sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle,
 etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, sacn_source_id_t source_id,
                                                   EtcPalUuid* source_cid)
 {
-  // TODO CHRISTIAN CLEANUP
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(source_id);
   ETCPAL_UNUSED_ARG(source_cid);

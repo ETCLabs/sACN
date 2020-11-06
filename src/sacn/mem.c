@@ -37,7 +37,6 @@
 
 #if SACN_DYNAMIC_MEM
 
-// TODO CHRISTIAN: Find a better way to handle the failure case, instead of returning false.
 #define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static)                              \
   do                                                                                                            \
   {                                                                                                             \
@@ -410,8 +409,6 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
  */
 SourcesFoundNotification* get_sources_found_buffer(sacn_thread_id_t thread_id, size_t size)
 {
-  //CHRISTIAN TODO TEST THIS!
-  //CHRISTIAN TODO: Look into duplicate code here.
   if (thread_id < mem_bufs.num_threads)
   {
     SourcesFoundNotificationBuf* notifications = &mem_bufs.sources_found[thread_id];
@@ -892,7 +889,6 @@ etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr
   return kEtcPalErrOk;
 }
 
-//CHRISTIAN TODO TEST THESE
 etcpal_error_t init_sources_found_bufs(unsigned int num_threads)
 {
   mem_bufs.sources_found = calloc(num_threads, sizeof(SourcesFoundNotificationBuf));
@@ -1059,7 +1055,6 @@ void deinit_sources_lost_entry(SourcesLostNotification* sources_lost)
     free(sources_lost->lost_sources);
 }
 
-//CHRISTIAN TODO TEST!
 void deinit_sources_found_bufs(void)
 {
   if (mem_bufs.sources_found)

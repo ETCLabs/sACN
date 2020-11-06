@@ -17,34 +17,6 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
- - Add full support for the sources found notification. Packets aren't forwarded to the application until the source
- list is stable.
- - Sync support.  Update TODO comments in receiver & merge_receiver that state sync isn't supported.
- - Start Codes that aren't 0 & 0xdd should still get forwarded to the application in handle_sacn_data_packet!
- - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
-   filter out the duplicate packet (just like IPv4 & IPv6).
- - IPv6 support.  See the CHRISTIAN TODO IPV6 comments for some hints on where to change.
- - Add unicast support to sockets.c in the SACN_RECEIVER_SOCKET_PER_UNIVERSE case.
- - Make sure unicast support works in both socket modes, with one or more receivers created.
- - Make sure everything works with static & dynamic memory.
- - Make source addition honors source_count_max, even in dynamic mode.
- - Get usage/API documentation in place and cleaned up so we can have a larger review.
- - refactor common.c's init & deinit functions to be more similar to
- https://github.com/ETCLabs/RDMnet/blob/develop/src/rdmnet/core/common.c#L141's functions, as Sam put in the review.
- - Make the example receiver use the new api.
- - Make an example receiver & testing for the c++ header.
- - IPv6 support.  See the CHRISTIAN TODO IPV6 comments for some hints on where to change.
- - Make sure draft support works properly.  If a source is sending both draft and ratified, the sequence numbers should
-   filter out the duplicate packet (just like IPv4 & IPv6).  THIS WILL NOT BE TRUE!!!! because the draft library is now
- a separate module with different sequencing, etc. So Draft will most likely be treated like a different source...
- Should we assume that both won't be sent, or do some checks to ignore draft if we're currently seeing ratified??
- - This entire project should build without warnings!!
- - Make sure the new functionality for receiver/merge_receiver create & reset_networking work with and without
- good_interfaces, in all combinations (nill, small array, large array, etc).
- - Sync support.  Update TODO comments in receiver & merge_receiver that state sync isn't supported.
-*/
-
 #include "sacn/receiver.h"
 
 #include <limits.h>
@@ -380,7 +352,6 @@ etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* univ
   if (!sacn_initialized())
     return kEtcPalErrNotInit;
 
-  // TODO CHRISTIAN CLEANUP
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe_id);
   return kEtcPalErrNotImpl;
@@ -507,7 +478,6 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  */
 etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastInterface* netints, size_t num_netints)
 {
-  // TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
@@ -1294,9 +1264,6 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
 
   // No notifications during the sampling period. Data will be saved for after the sampling period.
   *notify = !receiver->sampling;
-
-  // CHRISTIAN TODO: This logic is a little faulty, as it assumes you always have room in dynamic mode.  We should check
-  // the configured max as well.  It still could be infinite..
 
   // A new source has appeared!
   SacnTrackedSource* src = ALLOC_TRACKED_SOURCE();
