@@ -1079,9 +1079,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
           universe_data->universe = receiver->keys.universe;
           universe_data->context = receiver->callbacks.context;
         }
-        else if (add_found_source(source_found, &header->cid, header->source_name, from_addr, header->priority,
-                                  src->null_start_code_buffer.data, src->null_start_code_buffer.slot_count,
-                                  header->preview, src->pap_buffer.data, src->pap_buffer.slot_count))
+        else if (add_found_source(source_found, src))
         {
           source_found->callback = receiver->callbacks.sources_found;
           source_found->handle = receiver->keys.handle;
@@ -1510,10 +1508,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
     else if (sampling_period_just_ended && !src->found)
     {
       // Attempt to construct a notification with all the sources found during the sampling period.
-      src->found = add_found_source(sources_found, &src->cid, src->name, &src->null_start_code_buffer.from_addr,
-                                    src->null_start_code_buffer.priority, src->null_start_code_buffer.data,
-                                    src->null_start_code_buffer.slot_count, src->null_start_code_buffer.preview,
-                                    src->pap_buffer.data, src->pap_buffer.slot_count);
+      src->found = add_found_source(sources_found, src);
     }
 
     src = etcpal_rbiter_next(&src_it);

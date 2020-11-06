@@ -543,41 +543,24 @@ bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* ci
  * Add a new found source to a SourcesFoundNotification.
  *
  * [out] sources_found SourcesFoundNotification instance to which to append the found source.
- * [in] cid CID of the source that was found.
- * [in] name Name of the source that was found; copied into the notification.
- * [in] from_addr The address from which we received these initial packets.
- * [in] priority The source's per-universe priority.
- * [in] values The DMX (startcode 0) data. The library owns this data, and the memory is only guaranteed to be valid for the
- * length of the SacnSourcesFound callback.
- * [in] values_len The count of valid values.
- * [in] preview Whether or not we only saw startcode 0 packets with the preview flag set.
- * [in] per_address The per-address priority (startcode 0xdd) data, if the source is sending it. The library owns this data, and the
- * memory is only guaranteed to be valid for the length of the SacnSourcesFound callback.
- * [in] per_address_len The count of valid priorities.
- * Returns true if the source was successfully added, false if memory could not be allocated.
+ * [in] source The source that was found.
  */
-bool add_found_source(SourcesFoundNotification* sources_found, const EtcPalUuid* cid, const char* name,
-                      const EtcPalSockAddr* from_addr, uint8_t priority, const uint8_t* values, size_t values_len,
-                      bool preview, const uint8_t* per_address, size_t per_address_len)
+bool add_found_source(SourcesFoundNotification* sources_found, const SacnTrackedSource* source)
 {
   SACN_ASSERT(sources_found);
-  SACN_ASSERT(cid);
-  SACN_ASSERT(name);
-  SACN_ASSERT(from_addr);
-  SACN_ASSERT(values);
-  SACN_ASSERT(per_address);
+  SACN_ASSERT(source);
 
   CHECK_ROOM_FOR_ONE_MORE(sources_found, found_sources, SacnFoundSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
 
-  sources_found->found_sources[sources_found->num_found_sources].cid = *cid;
-  ETCPAL_MSVC_NO_DEP_WRN strcpy(sources_found->found_sources[sources_found->num_found_sources].name, name);
-  sources_found->found_sources[sources_found->num_found_sources].from_addr = *from_addr;
-  sources_found->found_sources[sources_found->num_found_sources].priority = priority;
-  sources_found->found_sources[sources_found->num_found_sources].values = values;
-  sources_found->found_sources[sources_found->num_found_sources].values_len = values_len;
-  sources_found->found_sources[sources_found->num_found_sources].preview = preview;
-  sources_found->found_sources[sources_found->num_found_sources].per_address = per_address;
-  sources_found->found_sources[sources_found->num_found_sources].per_address_len = per_address_len;
+  sources_found->found_sources[sources_found->num_found_sources].cid = source->cid;
+  ETCPAL_MSVC_NO_DEP_WRN strcpy(sources_found->found_sources[sources_found->num_found_sources].name, source->name);
+  sources_found->found_sources[sources_found->num_found_sources].from_addr = source->null_start_code_buffer.from_addr;
+  sources_found->found_sources[sources_found->num_found_sources].priority = source->null_start_code_buffer.priority;
+  sources_found->found_sources[sources_found->num_found_sources].values = source->null_start_code_buffer.data;
+  sources_found->found_sources[sources_found->num_found_sources].values_len = source->null_start_code_buffer.slot_count;
+  sources_found->found_sources[sources_found->num_found_sources].preview = source->null_start_code_buffer.preview;
+  sources_found->found_sources[sources_found->num_found_sources].per_address = source->pap_buffer.data;
+  sources_found->found_sources[sources_found->num_found_sources].per_address_len = source->pap_buffer.slot_count;
   ++sources_found->num_found_sources;
 
   return true;

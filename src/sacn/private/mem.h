@@ -58,9 +58,7 @@ bool add_online_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* ci
 bool add_unknown_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name);
 
 bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* cid, const char* name, bool terminated);
-bool add_found_source(SourcesFoundNotification* sources_found, const EtcPalUuid* cid, const char* name,
-                      const EtcPalSockAddr* from_addr, uint8_t priority, const uint8_t* values, size_t values_len,
-                      bool preview, const uint8_t* per_address, size_t per_address_len);
+bool add_found_source(SourcesFoundNotification* sources_found, const SacnTrackedSource* source);
 
 bool add_dead_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket);
 #if SACN_RECEIVER_SOCKET_PER_UNIVERSE
