@@ -231,7 +231,7 @@ typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t handle, uint16_t unive
  * #SACN_RECEIVER_INFINITE_SOURCES, this callback will never be called and may be set to NULL.
 
  * if #SACNDYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max is ignored and
- * #SACN_RECIVER_MAX_SOURCES_PER_UNIVERSE is used instead.
+ * #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.
  *
  * This callback is rate-limited: it will only be called when the first sACN packet is received
  * from a source beyond the limit specified. After that, it will not be called again until the number of sources sending

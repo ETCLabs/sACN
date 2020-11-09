@@ -707,6 +707,8 @@ etcpal_error_t create_new_receiver(const SacnReceiverConfig* config, SacnMcastIn
 
   receiver->callbacks = config->callbacks;
 
+  receiver->source_count_max = config->source_count_max;
+
   receiver->next = NULL;
 
   *new_receiver = receiver;
@@ -1277,7 +1279,20 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
   *notify = !receiver->sampling;
 
   // A new source has appeared!
-  SacnTrackedSource* src = ALLOC_TRACKED_SOURCE();
+  SacnTrackedSource* src = NULL;
+
+  size_t current_number_of_sources = etcpal_rbtree_size(&receiver->sources);
+#if SACN_DYNAMIC_MEM
+  size_t max_number_of_sources = receiver->source_count_max;
+  bool infinite_sources = (max_number_of_sources == SACN_RECEIVER_INFINITE_SOURCES);
+#else
+  size_t max_number_of_sources = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE;
+  bool infinite_sources = false;
+#endif
+
+  if (infinite_sources || (current_number_of_sources < max_number_of_sources))
+    src = ALLOC_TRACKED_SOURCE();
+
   if (!src)
   {
     // No room for new source.
