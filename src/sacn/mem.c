@@ -37,7 +37,7 @@
 
 #if SACN_DYNAMIC_MEM
 
-#define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static)                              \
+#define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static, failure_return_value)        \
   do                                                                                                            \
   {                                                                                                             \
     if (size_requested > container->buffer##_capacity)                                                          \
@@ -51,27 +51,27 @@
       }                                                                                                         \
       else                                                                                                      \
       {                                                                                                         \
-        return false;                                                                                           \
+        return failure_return_value;                                                                            \
       }                                                                                                         \
     }                                                                                                           \
   } while (0)
 
-#define CHECK_ROOM_FOR_ONE_MORE(container, buffer, buffer_type, max_static) \
-  CHECK_CAPACITY(container, container->num_##buffer + 1, buffer, buffer_type, max_static)
+#define CHECK_ROOM_FOR_ONE_MORE(container, buffer, buffer_type, max_static, failure_return_value) \
+  CHECK_CAPACITY(container, container->num_##buffer + 1, buffer, buffer_type, max_static, failure_return_value)
 
 #else  // SACN_DYNAMIC_MEM
 
-#define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static) \
-  do                                                                               \
-  {                                                                                \
-    if (size_requested > max_static)                                               \
-    {                                                                              \
-      return false;                                                                \
-    }                                                                              \
+#define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static, failure_return_value) \
+  do                                                                                                     \
+  {                                                                                                      \
+    if (size_requested > max_static)                                                                     \
+    {                                                                                                    \
+      return failure_return_value;                                                                       \
+    }                                                                                                    \
   } while (0)
 
-#define CHECK_ROOM_FOR_ONE_MORE(container, buffer, buffer_type, max_static) \
-  CHECK_CAPACITY(container, container->num_##buffer + 1, buffer, buffer_type, max_static)
+#define CHECK_ROOM_FOR_ONE_MORE(container, buffer, buffer_type, max_static, failure_return_value) \
+  CHECK_CAPACITY(container, container->num_##buffer + 1, buffer, buffer_type, max_static, failure_return_value)
 
 #endif  // SACN_DYNAMIC_MEM
 
@@ -276,7 +276,7 @@ SacnTrackedSource** get_to_erase_buffer(sacn_thread_id_t thread_id, size_t size)
   {
     ToEraseBuf* to_return = &mem_bufs.to_erase[thread_id];
 
-    CHECK_CAPACITY(to_return, size, buf, SacnTrackedSource*, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+    CHECK_CAPACITY(to_return, size, buf, SacnTrackedSource*, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, NULL);
 
     memset(to_return->buf, 0, size * sizeof(SacnTrackedSource*));
     return to_return->buf;
@@ -458,7 +458,7 @@ bool add_offline_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* c
   SACN_ASSERT(status_lists);
   SACN_ASSERT(cid);
 
-  CHECK_ROOM_FOR_ONE_MORE(status_lists, offline, SacnLostSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  CHECK_ROOM_FOR_ONE_MORE(status_lists, offline, SacnLostSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
   status_lists->offline[status_lists->num_offline].cid = *cid;
   status_lists->offline[status_lists->num_offline].name = name;
@@ -481,7 +481,8 @@ bool add_online_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* ci
   SACN_ASSERT(status_lists);
   SACN_ASSERT(cid);
 
-  CHECK_ROOM_FOR_ONE_MORE(status_lists, online, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  CHECK_ROOM_FOR_ONE_MORE(status_lists, online, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE,
+                          false);
 
   status_lists->online[status_lists->num_online].cid = *cid;
   status_lists->online[status_lists->num_online].name = name;
@@ -503,7 +504,8 @@ bool add_unknown_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* c
   SACN_ASSERT(status_lists);
   SACN_ASSERT(cid);
 
-  CHECK_ROOM_FOR_ONE_MORE(status_lists, unknown, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  CHECK_ROOM_FOR_ONE_MORE(status_lists, unknown, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE,
+                          false);
 
   status_lists->unknown[status_lists->num_unknown].cid = *cid;
   status_lists->unknown[status_lists->num_unknown].name = name;
@@ -526,7 +528,7 @@ bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* ci
   SACN_ASSERT(cid);
   SACN_ASSERT(name);
 
-  CHECK_ROOM_FOR_ONE_MORE(sources_lost, lost_sources, SacnLostSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  CHECK_ROOM_FOR_ONE_MORE(sources_lost, lost_sources, SacnLostSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
   sources_lost->lost_sources[sources_lost->num_lost_sources].cid = *cid;
   ETCPAL_MSVC_NO_DEP_WRN strcpy(sources_lost->lost_sources[sources_lost->num_lost_sources].name, name);
@@ -547,7 +549,7 @@ bool add_found_source(SourcesFoundNotification* sources_found, const SacnTracked
   SACN_ASSERT(sources_found);
   SACN_ASSERT(source);
 
-  CHECK_ROOM_FOR_ONE_MORE(sources_found, found_sources, SacnFoundSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  CHECK_ROOM_FOR_ONE_MORE(sources_found, found_sources, SacnFoundSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
   sources_found->found_sources[sources_found->num_found_sources].cid = source->cid;
   ETCPAL_MSVC_NO_DEP_WRN strcpy(sources_found->found_sources[sources_found->num_found_sources].name, source->name);
@@ -574,7 +576,7 @@ bool add_dead_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t
 {
   SACN_ASSERT(recv_thread_context);
 
-  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, dead_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2);
+  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, dead_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2, false);
 
   recv_thread_context->dead_sockets[recv_thread_context->num_dead_sockets++] = socket;
   return true;
@@ -593,7 +595,8 @@ bool add_pending_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socke
 {
   SACN_ASSERT(recv_thread_context);
 
-  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, pending_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2);
+  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, pending_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2,
+                          false);
 
   recv_thread_context->pending_sockets[recv_thread_context->num_pending_sockets++] = socket;
   return true;
@@ -605,7 +608,7 @@ bool add_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t 
 {
   SACN_ASSERT(recv_thread_context);
 
-  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, socket_refs, SocketRef, SACN_RECEIVER_MAX_SOCKET_REFS);
+  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, socket_refs, SocketRef, SACN_RECEIVER_MAX_SOCKET_REFS, false);
 
   recv_thread_context->socket_refs[recv_thread_context->num_socket_refs].sock = socket;
   recv_thread_context->socket_refs[recv_thread_context->num_socket_refs].refcount = 1;
