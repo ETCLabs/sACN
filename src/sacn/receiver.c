@@ -351,10 +351,23 @@ etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* univ
 {
   if (!sacn_initialized())
     return kEtcPalErrNotInit;
+  if (universe_id == NULL)
+    return kEtcPalErrInvalid;
 
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe_id);
-  return kEtcPalErrNotImpl;
+  etcpal_error_t res = kEtcPalErrOk;
+  if (sacn_lock())
+  {
+    SacnReceiver* receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers, &handle);
+    if (receiver)
+      *universe_id = receiver->keys.universe;
+    else
+      res = kEtcPalErrNotFound;
+
+
+    sacn_unlock();
+  }
+
+  return res;
 }
 
 /**
