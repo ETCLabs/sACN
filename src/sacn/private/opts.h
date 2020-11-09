@@ -192,6 +192,11 @@
 #define SACN_RECEIVER_MAX_UNIVERSES 4
 #endif
 
+// Be sure to check SACN_RECEIVER_MAX_UNIVERSES, as it is illegal to declare a 0-size or negative-size array in C.
+#if !SACN_DYNAMIC_MEM && (SACN_RECEIVER_MAX_UNIVERSES <= 0)
+#error "SACN_RECEIVER_MAX_UNIVERSES is invalid! Please define it to be a positive, non-zero value."
+#endif
+
 /**
  * @brief The maximum number of sources that can be tracked on each universe.
  *
