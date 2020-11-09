@@ -275,9 +275,9 @@ typedef struct SacnReceiverConfig
 } SacnReceiverConfig;
 
 /** A default-value initializer for an SacnReceiverConfig struct. */
-#define SACN_RECEIVER_CONFIG_DEFAULT_INIT                  \
-  {                                                        \
-    0, {NULL, NULL, NULL, NULL, NULL, NULL}, 0, 0,         \
+#define SACN_RECEIVER_CONFIG_DEFAULT_INIT                                       \
+  {                                                                             \
+    0, {NULL, NULL, NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, 0, \
   }
 
 void sacn_receiver_config_init(SacnReceiverConfig* config);

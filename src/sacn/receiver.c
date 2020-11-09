@@ -209,6 +209,7 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
   if (config)
   {
     memset(config, 0, sizeof(SacnReceiverConfig));
+    config->source_count_max = SACN_RECEIVER_INFINITE_SOURCES;
   }
 }
 
