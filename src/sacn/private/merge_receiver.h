@@ -40,7 +40,6 @@ typedef struct SacnMergeReceiver
 {
   // Configured callbacks
   SacnMergeReceiverCallbacks callbacks;
-  void* callback_context;
 
   struct SacnMergeReceiver* next;
 } SacnMergeReceiver;

@@ -49,7 +49,12 @@ extern "C" {
 #define SACN_MTU 1472
 #define SACN_PORT 5568
 
-#define SACN_RECEIVER_MAX_SOCKET_REFS (((SACN_RECEIVER_MAX_UNIVERSES - 1) / SACN_RECEIVER_MAX_SUBS_PER_SOCKET) + 1)
+/*
+ * This ensures there are always enough SocketRefs. This is multiplied by 2 because SocketRefs come in pairs - one for
+ * IPv4, and another for IPv6. This is because a single SocketRef cannot intermix IPv4 and IPv6.
+ */
+#define SACN_RECEIVER_MAX_SOCKET_REFS \
+  ((((SACN_RECEIVER_MAX_UNIVERSES - 1) / SACN_RECEIVER_MAX_SUBS_PER_SOCKET) + 1) * 2)
 
 typedef unsigned int sacn_thread_id_t;
 #define SACN_THREAD_ID_INVALID UINT_MAX
@@ -169,13 +174,14 @@ struct SacnReceiver
   sacn_thread_id_t thread_id;
 
   // Sockets / network interface info
-  etcpal_socket_t socket;
+  etcpal_socket_t ipv4_socket;
+  etcpal_socket_t ipv6_socket;
   /* (optional) array of network interfaces on which to listen to the specified universe. If num_netints = 0,
    * all available network interfaces will be used. */
 #if SACN_DYNAMIC_MEM
-  SacnMcastNetintId* netints;
+  EtcPalMcastNetintId* netints;
 #else
-  SacnMcastNetintId netints[SACN_MAX_NETINTS];
+  EtcPalMcastNetintId netints[SACN_MAX_NETINTS];
 #endif
   /* Number of elements in the netints array. */
   size_t num_netints;
@@ -192,7 +198,6 @@ struct SacnReceiver
 
   // Configured callbacks
   SacnReceiverCallbacks callbacks;
-  void* callback_context;
 
   SacnReceiver* next;
 };
@@ -218,6 +223,26 @@ typedef enum
 } sacn_recv_state_t;
 #endif
 
+typedef struct SourceDataBuffer
+{
+  /* Whether this buffer has been written to yet. */
+  bool written;
+  /* The address from which we received this data. */
+  EtcPalSockAddr from_addr;
+  /* The priority of the sACN data. Valid range is 0-200, inclusive. */
+  uint8_t priority;
+  /* Whether the Preview_Data bit is set for the sACN data. From E1.31: "Indicates that the data in
+   * this packet is intended for use in visualization or media server preview applications and
+   * shall not be used to generate live output." */
+  bool preview;
+  /* The start code of the DMX data. */
+  uint8_t start_code;
+  /* The number of slots in the DMX data. */
+  uint16_t slot_count;
+  /* The DMX data. */
+  uint8_t data[DMX_ADDRESS_COUNT];
+} SourceDataBuffer;
+
 /* An sACN source that is being tracked on a given universe. */
 typedef struct SacnTrackedSource
 {
@@ -225,12 +250,20 @@ typedef struct SacnTrackedSource
   char name[SACN_SOURCE_NAME_MAX_LEN];
   EtcPalTimer packet_timer;
   uint8_t seq;
+  bool found;
   bool terminated;
   bool dmx_received_since_last_tick;
+
 #if SACN_ETC_PRIORITY_EXTENSION
   sacn_recv_state_t recv_state;
   /* pap stands for Per-Address Priority. */
   EtcPalTimer pap_timer;
+#endif
+
+  /* This is where incoming data is saved for later processing. */
+  SourceDataBuffer null_start_code_buffer;
+#if SACN_ETC_PRIORITY_EXTENSION
+  SourceDataBuffer pap_buffer;
 #endif
 } SacnTrackedSource;
 
@@ -243,7 +276,7 @@ typedef struct SourcesFoundNotification
 {
   SacnSourcesFoundCallback callback;
   sacn_receiver_t handle;
-  uint16_t universe; 
+  uint16_t universe;
   SACN_DECLARE_BUF(SacnFoundSource, found_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_found_sources;
   void* context;
@@ -254,7 +287,7 @@ typedef struct UniverseDataNotification
 {
   SacnUniverseDataCallback callback;
   sacn_receiver_t handle;
-  uint16_t universe; 
+  uint16_t universe;
   SacnHeaderData header;
   const uint8_t* pdata;
   void* context;
@@ -265,7 +298,7 @@ typedef struct SourcesLostNotification
 {
   SacnSourcesLostCallback callback;
   sacn_receiver_t handle;
-  uint16_t universe; 
+  uint16_t universe;
   SACN_DECLARE_BUF(SacnLostSource, lost_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_lost_sources;
   void* context;
@@ -277,7 +310,7 @@ typedef struct SourcePapLostNotification
   SacnSourcePapLostCallback callback;
   SacnRemoteSource source;
   sacn_receiver_t handle;
-  uint16_t universe; 
+  uint16_t universe;
   void* context;
 } SourcePapLostNotification;
 
@@ -286,7 +319,7 @@ typedef struct SourceLimitExceededNotification
 {
   SacnSourceLimitExceededCallback callback;
   sacn_receiver_t handle;
-  uint16_t universe; 
+  uint16_t universe;
   void* context;
 } SourceLimitExceededNotification;
 
@@ -312,11 +345,11 @@ typedef struct SacnRecvThreadContext
   // We do most interactions with sockets from the same thread that we receive from them, to avoid
   // thread safety foibles on some platforms. So, sockets to add and remove from the thread's
   // polling context are queued to be acted on from the thread.
-  SACN_DECLARE_BUF(etcpal_socket_t, dead_sockets, SACN_RECEIVER_MAX_UNIVERSES);
+  SACN_DECLARE_BUF(etcpal_socket_t, dead_sockets, SACN_RECEIVER_MAX_UNIVERSES * 2);
   size_t num_dead_sockets;
 
 #if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-  SACN_DECLARE_BUF(etcpal_socket_t, pending_sockets, SACN_RECEIVER_MAX_UNIVERSES);
+  SACN_DECLARE_BUF(etcpal_socket_t, pending_sockets, SACN_RECEIVER_MAX_UNIVERSES * 2);
   size_t num_pending_sockets;
 #else
   SACN_DECLARE_BUF(SocketRef, socket_refs, SACN_RECEIVER_MAX_SOCKET_REFS);

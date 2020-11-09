@@ -228,8 +228,9 @@
  *
  * The upshot is: don't change this option unless you know what you're doing.
  */
+// TODO: TEST ON LINUX and lwip!!
 #ifndef SACN_RECEIVER_SOCKET_PER_UNIVERSE
-#define SACN_RECEIVER_SOCKET_PER_UNIVERSE (!_WIN32 && !__APPLE__)
+#define SACN_RECEIVER_SOCKET_PER_UNIVERSE 0 //(!_WIN32 && !__APPLE__)
 #endif
 
 /**
@@ -295,7 +296,7 @@
 /***************************** sACN DMX Merger Options *****************************/
 
 /**
- * @defgroup sacn_dmx_merger sACN DMX Merger Options
+ * @defgroup sacnopts_dmx_merger sACN DMX Merger Options
  * @ingroup sacnopts
  *
  * Configuration options for the @ref sacn_dmx_merger module.

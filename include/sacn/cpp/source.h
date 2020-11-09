@@ -40,9 +40,12 @@ namespace sacn
 {
 /**
  * @ingroup sacn_source_cpp
- * @brief An instance of sACN Source functionality.
+ * @brief An instance of sACN Source functionality; see @ref using_source.
+ *
+ * Components that send sACN are referred to as sACN Sources. Use this API to act as an sACN Source.
+ * 
+ * See @ref using_source for a detailed description of how to use this API.
  */
-// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE -- DO WE NEED A using_source.md???
 class Source
 {
 public:

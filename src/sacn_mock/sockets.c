@@ -21,9 +21,9 @@
 
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_init);
 DEFINE_FAKE_VOID_FUNC(sacn_sockets_deinit);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_validate_netint_config, const SacnMcastNetintId*, size_t);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_validate_netint_config, SacnMcastInterface*, size_t, size_t*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_add_receiver_socket, sacn_thread_id_t, etcpal_iptype_t, uint16_t,
-                       const SacnMcastNetintId*, size_t, etcpal_socket_t*);
+                       const EtcPalMcastNetintId*, size_t, etcpal_socket_t*);
 DEFINE_FAKE_VOID_FUNC(sacn_remove_receiver_socket, sacn_thread_id_t, etcpal_socket_t, bool);
 DEFINE_FAKE_VOID_FUNC(sacn_add_pending_sockets, SacnRecvThreadContext*);
 DEFINE_FAKE_VOID_FUNC(sacn_cleanup_dead_sockets, SacnRecvThreadContext*);

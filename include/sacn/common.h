@@ -92,26 +92,12 @@ typedef struct SacnHeaderData
 } SacnHeaderData;
 
 /**
- * A set of identifying information for a network interface, for multicast purposes. When creating
- * network sockets to use with multicast sACN, the interface IP addresses don't matter and the
- * primary key for a network interface is simply a combination of the interface index and the IP
- * protocol used.
- */
-// TODO CHRISTIAN : This is identical to the RdmnetMcastNetintId.  They need to be merged into ETCPal as
-// EtcPalMcastNetintId.
-typedef struct SacnMcastNetintId
-{
-  etcpal_iptype_t ip_type; /**< The IP protocol used on the network interface. */
-  unsigned int index;      /**< The OS index of the network interface. */
-} SacnMcastNetintId;
-
-/**
 * On input, this structure is used to indicate a network interface to use.
 * On output, this structure indicates whether or not the operation was a success.
 */
 typedef struct SacnMcastInterface
 {
-  SacnMcastNetintId iface;
+  EtcPalMcastNetintId iface;
   bool operation_succeeded;
 } SacnMcastInterface;
 

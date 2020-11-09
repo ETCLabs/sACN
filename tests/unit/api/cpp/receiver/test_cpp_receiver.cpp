@@ -62,6 +62,4 @@ TEST_F(TestReceiver, SetStandardVersionWorks)
 {
   // Initialization should set it to the default
   EXPECT_EQ(sacn_receiver_get_standard_version(), kSacnStandardVersionAll);
-
-  //CHRISTIAN TODO: CLEAN UP TESTING
 }
