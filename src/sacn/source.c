@@ -17,21 +17,6 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
- - Make sure I didn't miss any requirements or details from the protocol.
- - A whole lotta implementation.  You should be able to base some this on the earlier C++ library, but also look at the
- spec for 0xdd, since the old library didn't handle intermixing 0x00 & 0xdd on take-control and release-control.  Ray
- can help there, too. This will probably be the largest portion of testing..
- - Get usage/API documentation in place and cleaned up so we can have a larger review.
- - Make sure everything works with static & dynamic memory.
- - This entire project should build without warnings!!
- - Make an example source that uses the new api.
- - Make an example source & testing for the c++ header.
- - Don't forget the Draft library!!!
- - IPv6 support.
- - Sync support.  Update TODO comments in source.h & .c that state sync isn't supported.
-*/
-
 #include "sacn/source.h"
 
 #if SACN_DYNAMIC_MEM
@@ -54,13 +39,11 @@
    This also starts up the module-provided Tick thread. */
 etcpal_error_t sacn_source_init(void)
 {
-  // TODO CHRISTIAN
   return kEtcPalErrOk;
 }
 
 void sacn_source_deinit(void)
 {
-  // TODO CHRISTIAN
   // Shut down the Tick thread...
 }
 
@@ -73,7 +56,6 @@ void sacn_source_deinit(void)
  */
 void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, const char* name)
 {
-  // TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(config);
   ETCPAL_UNUSED_ARG(cid);
   ETCPAL_UNUSED_ARG(name);
@@ -91,7 +73,6 @@ void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, co
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe, const uint8_t* values_buffer,
                                       size_t values_len, const uint8_t* priorities_buffer)
 {
-  // TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(config);
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(values_buffer);
@@ -124,7 +105,6 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle,
                                   SacnMcastInterface* netints, size_t num_netints)
 {
-  // TODO CHRISTIAN
   // If the Tick thread hasn't been started yet, start it if the config isn't manual.
 
   ETCPAL_UNUSED_ARG(config);
@@ -151,7 +131,6 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
  */
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name)
 {
-  // TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(new_name);
   return kEtcPalErrNotImpl;
@@ -171,8 +150,6 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
  */
 void sacn_source_destroy(sacn_source_t handle)
 {
-  // TODO CHRISTIAN
-
   ETCPAL_UNUSED_ARG(handle);
 }
 
@@ -197,8 +174,6 @@ void sacn_source_destroy(sacn_source_t handle)
  */
 etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config)
 {
-  // TODO CHRISTIAN
-
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(config);
   return kEtcPalErrNotImpl;
@@ -221,8 +196,6 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
  */
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 {
-  // TODO CHRISTIAN
-
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
 }
@@ -244,8 +217,6 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
  */
 etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)
 {
-  // TODO CHRISTIAN
-
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(dest);
@@ -266,8 +237,6 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
  */
 void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)
 {
-  // TODO CHRISTIAN
-
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(dest);
@@ -288,8 +257,6 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
  */
 etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t universe, uint8_t new_priority)
 {
-  // TODO CHRISTIAN
-
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(new_priority);
@@ -313,8 +280,6 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
  */
 etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t universe, bool new_preview_flag)
 {
-  // TODO CHRISTIAN
-
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(new_preview_flag);
@@ -371,8 +336,6 @@ etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
 etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uint8_t start_code, const uint8_t* buffer,
                                     size_t buflen)
 {
-  // TODO CHRISTIAN
-
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(start_code);
@@ -416,8 +379,6 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t u
  */
 void sacn_source_set_dirty(sacn_source_t handle, uint16_t universe)
 {
-  // TODO CHRISTIAN
-
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
 }
@@ -432,8 +393,6 @@ void sacn_source_set_dirty(sacn_source_t handle, uint16_t universe)
  */
 void sacn_source_set_list_dirty(sacn_source_t handle, const uint16_t* universes, size_t num_universes)
 {
-  // TODO CHRISTIAN
-
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universes);
   ETCPAL_UNUSED_ARG(num_universes);
@@ -478,7 +437,6 @@ void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t univers
  */
 int sacn_source_process_all(void)
 {
-  // TODO CHRISTIAN
   return 0;
 }
 
@@ -509,7 +467,6 @@ int sacn_source_process_all(void)
  */
 etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, SacnMcastInterface* netints, size_t num_netints)
 {
-  // TODO CHRISTIAN
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);

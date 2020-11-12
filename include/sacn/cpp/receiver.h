@@ -37,10 +37,14 @@
 namespace sacn
 {
 /**
- *@ingroup sacn_receiver_cpp
- *@brief An instance of sACN Receiver functionality.
+ * @ingroup sacn_receiver_cpp
+ * @brief An instance of sACN Receiver functionality; see @ref using_receiver.
+ *
+ * Components that receive sACN are referred to as sACN Receivers. Use this API to act as an sACN
+ * Receiver.
+ *
+ * See @ref using_receiver for a detailed description of how to use this API.
  */
-// CHRISTIAN TODO: FILL OUT THIS COMMENT MORE -- DO WE NEED A using_receiver.md???
 class Receiver
 {
 public:

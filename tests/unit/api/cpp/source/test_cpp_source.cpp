@@ -60,5 +60,4 @@ protected:
 
 TEST_F(TestSource, SetStandardVersionWorks)
 {
-  //CHRISTIAN TODO: CLEAN UP TESTING
 }

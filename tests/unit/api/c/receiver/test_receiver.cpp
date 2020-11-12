@@ -104,7 +104,7 @@ TEST_F(TestReceiver, ChangeUniverseWorks)
   config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
   config.universe_id = CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE;
 
-  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t, const SacnMcastNetintId*,
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t, const EtcPalMcastNetintId*,
                                                  size_t, etcpal_socket_t* socket) {
     *socket = CHANGE_UNIVERSE_WORKS_FIRST_SOCKET;
     return kEtcPalErrOk;
@@ -119,7 +119,7 @@ TEST_F(TestReceiver, ChangeUniverseWorks)
     EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
   };
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
-                                                 const SacnMcastNetintId*, size_t, etcpal_socket_t* socket) {
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
     EXPECT_EQ(ip_type, kEtcPalIpTypeV4);  // TODO IPv6
     EXPECT_EQ(universe, CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE);
     EXPECT_NE(get_recv_thread_context(thread_id), nullptr);

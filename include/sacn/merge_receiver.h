@@ -35,10 +35,12 @@
 /**
  * @defgroup sacn_merge_receiver sACN Merge Receiver
  * @ingroup sACN
- * @brief The sACN Merge Receiver API
+ * @brief The sACN Merge Receiver API; see @ref using_merge_receiver.
  *
  * This API is used to minimally wrap the sACN Receiver and DMX Merger logic together so an application can receive and
  * merge sACN sources in software.
+ *
+ * See @ref using_merge_receiver for a detailed description of how to use this API.
  *
  * @{
  */

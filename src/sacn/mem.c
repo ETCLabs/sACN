@@ -409,7 +409,6 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
  */
 SourcesFoundNotification* get_sources_found_buffer(sacn_thread_id_t thread_id, size_t size)
 {
-  //CHRISTIAN TODO TEST THIS!
   if (thread_id < mem_bufs.num_threads)
   {
     SourcesFoundNotificationBuf* notifications = &mem_bufs.sources_found[thread_id];
@@ -525,6 +524,7 @@ bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* ci
 {
   SACN_ASSERT(sources_lost);
   SACN_ASSERT(cid);
+  SACN_ASSERT(name);
 
   CHECK_ROOM_FOR_ONE_MORE(sources_lost, lost_sources, SacnLostSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
 
@@ -532,22 +532,35 @@ bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* ci
   ETCPAL_MSVC_NO_DEP_WRN strcpy(sources_lost->lost_sources[sources_lost->num_lost_sources].name, name);
   sources_lost->lost_sources[sources_lost->num_lost_sources].terminated = terminated;
   ++sources_lost->num_lost_sources;
+
   return true;
 }
 
-//CHRISTIAN TODO:
 /*
  * Add a new found source to a SourcesFoundNotification.
  *
  * [out] sources_found SourcesFoundNotification instance to which to append the found source.
- * ????????????
- * Returns true if the source was successfully added, false if memory could not be allocated.
+ * [in] source The source that was found.
  */
-bool add_found_source(SourcesFoundNotification* sources_found /*,  ??????? */)
+bool add_found_source(SourcesFoundNotification* sources_found, const SacnTrackedSource* source)
 {
-  ETCPAL_UNUSED_ARG(sources_found);
+  SACN_ASSERT(sources_found);
+  SACN_ASSERT(source);
 
-  return false;
+  CHECK_ROOM_FOR_ONE_MORE(sources_found, found_sources, SacnFoundSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+
+  sources_found->found_sources[sources_found->num_found_sources].cid = source->cid;
+  ETCPAL_MSVC_NO_DEP_WRN strcpy(sources_found->found_sources[sources_found->num_found_sources].name, source->name);
+  sources_found->found_sources[sources_found->num_found_sources].from_addr = source->null_start_code_buffer.from_addr;
+  sources_found->found_sources[sources_found->num_found_sources].priority = source->null_start_code_buffer.priority;
+  sources_found->found_sources[sources_found->num_found_sources].values = source->null_start_code_buffer.data;
+  sources_found->found_sources[sources_found->num_found_sources].values_len = source->null_start_code_buffer.slot_count;
+  sources_found->found_sources[sources_found->num_found_sources].preview = source->null_start_code_buffer.preview;
+  sources_found->found_sources[sources_found->num_found_sources].per_address = source->pap_buffer.data;
+  sources_found->found_sources[sources_found->num_found_sources].per_address_len = source->pap_buffer.slot_count;
+  ++sources_found->num_found_sources;
+
+  return true;
 }
 
 /*
@@ -561,7 +574,7 @@ bool add_dead_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t
 {
   SACN_ASSERT(recv_thread_context);
 
-  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, dead_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES);
+  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, dead_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2);
 
   recv_thread_context->dead_sockets[recv_thread_context->num_dead_sockets++] = socket;
   return true;
@@ -580,7 +593,7 @@ bool add_pending_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socke
 {
   SACN_ASSERT(recv_thread_context);
 
-  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, pending_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES);
+  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, pending_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2);
 
   recv_thread_context->pending_sockets[recv_thread_context->num_pending_sockets++] = socket;
   return true;
@@ -876,7 +889,6 @@ etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr
   return kEtcPalErrOk;
 }
 
-//CHRISTIAN TODO TEST THESE
 etcpal_error_t init_sources_found_bufs(unsigned int num_threads)
 {
   mem_bufs.sources_found = calloc(num_threads, sizeof(SourcesFoundNotificationBuf));
@@ -1043,7 +1055,6 @@ void deinit_sources_lost_entry(SourcesLostNotification* sources_lost)
     free(sources_lost->lost_sources);
 }
 
-//CHRISTIAN TODO TEST!
 void deinit_sources_found_bufs(void)
 {
   if (mem_bufs.sources_found)
