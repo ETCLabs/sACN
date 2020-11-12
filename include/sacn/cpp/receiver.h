@@ -135,11 +135,11 @@ public:
   Receiver& operator=(Receiver&& other) = default;  /**< Move a device instance. */
 
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
-                        std::vector<SacnMcastInterface>& netints);
+                        std::vector<SacnMcastInterface>& netints = kAllInterfaces);
   void Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
-  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
+  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints = kAllInterfaces);
 
   // Lesser used functions.  These apply to all instances of this class.
   static void SetStandardVersion(sacn_standard_version_t version);
@@ -151,6 +151,9 @@ public:
 
 private:
   SacnReceiverConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
+
+  /** An internal shortcut for selecting all network interfaces. **/
+  static std::vector<SacnMcastInterface> kAllInterfaces;
 
   Handle handle_{kInvalidHandle};
 };

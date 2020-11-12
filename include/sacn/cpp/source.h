@@ -138,7 +138,7 @@ public:
   Source(Source&& other) = default;             /**< Move a source instance. */
   Source& operator=(Source&& other) = default;  /**< Move a source instance. */
 
-  etcpal::Error Startup(const Settings& settings, std::vector<SacnMcastInterface>& netints);
+  etcpal::Error Startup(const Settings& settings, std::vector<SacnMcastInterface>& netints = kAllInterfaces);
   void Shutdown();
 
   etcpal::Error ChangeName(const std::string& new_name);
@@ -160,7 +160,7 @@ public:
   void SetDirty(const std::vector<uint16_t>& universes);
   void SetDirtyAndForceSync(uint16_t universe);
 
-  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
+  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints = kAllInterfaces);
 
   constexpr Handle handle() const;
 
@@ -169,6 +169,9 @@ public:
 private:
   SacnSourceConfig TranslateConfig(const Settings& settings);
   SacnSourceUniverseConfig TranslateUniverseConfig(const UniverseSettings& settings);
+
+  /** An internal shortcut for selecting all network interfaces. **/
+  static std::vector<SacnMcastInterface> kAllInterfaces;
 
   Handle handle_{kInvalidHandle};
 };

@@ -132,8 +132,6 @@ public:
 
     /** The maximum number of sources this universe will listen to when using dynamic memory. */
     size_t source_count_max{SACN_RECEIVER_INFINITE_SOURCES};
-    /// If non-empty, the list of network interfaces to listen on.  Otherwise all available interfaces are used.
-    std::vector<EtcPalMcastNetintId> netints; 
 
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
@@ -149,11 +147,11 @@ public:
   MergeReceiver& operator=(MergeReceiver&& other) = default;  /**< Move a merge receiver instance. */
 
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
-                        std::vector<SacnMcastInterface>& netints);
+                        std::vector<SacnMcastInterface>& netints = kAllInterfaces);
   void Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
-  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
+  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints = kAllInterfaces);
 
   etcpal::Expected<sacn_source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
   etcpal::Expected<etcpal::Uuid> GetSourceCid(sacn_source_id_t source) const;
@@ -162,6 +160,9 @@ public:
 
 private:
   SacnMergeReceiverConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
+
+  /** An internal shortcut for selecting all network interfaces. **/
+  static std::vector<SacnMcastInterface> kAllInterfaces;
 
   Handle handle_{kInvalidHandle};
 };

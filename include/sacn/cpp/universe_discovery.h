@@ -204,16 +204,19 @@ public:
   UniverseDiscovery& operator=(UniverseDiscovery&& other) = default; /**< Move a listener instance. */
 
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
-                        std::vector<SacnMcastInterface>& netints);
+                        std::vector<SacnMcastInterface>& netints = kAllInterfaces);
 
-  etcpal::Error Startup(NotifyHandler& notify_handler, std::vector<SacnMcastInterface>& netints);
+  etcpal::Error Startup(NotifyHandler& notify_handler, std::vector<SacnMcastInterface>& netints = kAllInterfaces);
   void Shutdown();
-  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
+  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints = kAllInterfaces);
 
   constexpr Handle handle() const;
 
 private:
   SacnUniverseDiscoveryConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
+
+  /** An internal shortcut for selecting all network interfaces. **/
+  static std::vector<SacnMcastInterface> kAllInterfaces;
 
   Handle handle_{kInvalidHandle};
 };
