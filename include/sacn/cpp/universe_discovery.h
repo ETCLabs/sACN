@@ -82,8 +82,8 @@ namespace sacn
  *
  * Callback demonstrations:
  * @code
- * void MyNotifyHandler::HandleUpdateSource(const etcpal::Uuid& cid, const std::string& name,
- *                                          const uint16_t* sourced_universes, size_t num_sourced_sources)
+ * void MyNotifyHandler::HandleSourceUpdated(const etcpal::Uuid& cid, const std::string& name,
+ *                                           const uint16_t* sourced_universes, size_t num_sourced_universes)
  * {
  *   std::cout << "Universe discovery: Source " << cid.ToString() << " (name " << name << ") ";
  *   if(sourced_universes)
@@ -140,11 +140,11 @@ public:
      * @param[in] name The UTF-8 name string.
      * @param[in] sourced_universes Numerically sorted array of the currently sourced universes.  Will be NULL if the
      * source is not currently transmitting any universes.
-     * @param[in] num_sourced_universe Size of the sourced_universes array.  Will be 0 if the source is not currently
+     * @param[in] num_sourced_universes Size of the sourced_universes array.  Will be 0 if the source is not currently
      * transmitting any universes.
      */
-    virtual void HandleUpdateSource(const etcpal::Uuid& cid, const std::string& name, const uint16_t* sourced_universes,
-                                    size_t num_sourced_sources) = 0;
+    virtual void HandleSourceUpdated(const etcpal::Uuid& cid, const std::string& name,
+                                     const uint16_t* sourced_universes, size_t num_sourced_universes) = 0;
 
     /**
      * @brief Notify that a source is no longer transmitting Universe Discovery messages.
@@ -159,8 +159,7 @@ public:
      *
      * If #SACN_DYNAMIC_MEM was defined to 1 when sACN was compiled (the default on non-embedded
      * platforms), and the configuration you pass to sacn_universe_discovery_create() has source_count_max and
-     * universes_per_source_max set to #SACN_UNIVERSE_DISCOVERY_INFINITE, this callback will never be called and may be
-     * set to NULL.
+     * universes_per_source_max set to #SACN_UNIVERSE_DISCOVERY_INFINITE, this callback will never be called.
      *
      * If #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max and universes_per_source_max are
      * ignored and #SACN_UNIVERSE_DISCOVERY_MAX_SOURCES and #SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE are used
@@ -170,7 +169,7 @@ public:
      * takes the module beyond a memory limit.  After that, it will not be called until the number of sources or
      * universes has dropped below the limit and hits it again.
      */
-    virtual void HandleMemoryLimitExceeded() = 0;
+    virtual void HandleMemoryLimitExceeded() {}
   };
 
   /**
@@ -227,16 +226,16 @@ private:
  */
 namespace internal
 {
-extern "C" inline void UniverseDiscoveryCbUpdateSource(sacn_universe_discovery_t handle, const EtcPalUuid* cid,
-                                                       const char* name, const uint16_t* sourced_universes,
-                                                       size_t num_sourced_universes, void* context)
+extern "C" inline void UniverseDiscoveryCbSourceUpdated(sacn_universe_discovery_t handle, const EtcPalUuid* cid,
+                                                        const char* name, const uint16_t* sourced_universes,
+                                                        size_t num_sourced_universes, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
 
   if (context && cid && name)
   {
-    static_cast<UniverseDiscovery::NotifyHandler*>(context)->HandleUpdateSource(*cid, name, sourced_universes,
-                                                                                num_sourced_universes);
+    static_cast<UniverseDiscovery::NotifyHandler*>(context)->HandleSourceUpdated(*cid, name, sourced_universes,
+                                                                                 num_sourced_universes);
   }
 }
 
@@ -384,7 +383,7 @@ inline SacnUniverseDiscoveryConfig UniverseDiscovery::TranslateConfig(const Sett
   // clang-format off
   SacnUniverseDiscoveryConfig config = {
     {
-      internal::UniverseDiscoveryCbUpdateSource,
+      internal::UniverseDiscoveryCbSourceUpdated,
       internal::UniverseDiscoveryCbSourceExpired,
       internal::UniverseDiscoveryCbMemoryLimitExceeded,
       &notify_handler

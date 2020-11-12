@@ -57,7 +57,7 @@
  * etcpal_error_t init_result = sacn_init(NULL);
  * 
  * SacnUniverseDiscoveryConfig my_config = SACN_UNIVERSE_DISCOVERY_CONFIG_DEFAULT_INIT;
- * my_config.callbacks.source_update = my_source_update;
+ * my_config.callbacks.source_updated = my_source_updated;
  * my_config.callbacks.source_expired = my_source_expired;
  * my_config.callbacks.limit_exceeded = my_limit_exceeded;
  * 
@@ -87,8 +87,8 @@
  *
  * Callback demonstrations:
  * @code
- * void my_source_update(sacn_universe_discovery_t handle, const EtcPalUuid* cid, const char* name,
- *                       const uint16_t* sourced_universes, size_t num_sourced_universes, void* context)
+ * void my_source_updated(sacn_universe_discovery_t handle, const EtcPalUuid* cid, const char* name,
+ *                        const uint16_t* sourced_universes, size_t num_sourced_universes, void* context)
  * {
  *   if (cid && name)
  *   {
@@ -162,9 +162,9 @@ typedef int sacn_universe_discovery_t;
  * transmitting any universes.
  * @param[in] context Context pointer that was given at the creation of the universe discovery instance.
  */
-typedef void (*SacnUniverseDiscoveryUpdateSourceCallback)(sacn_universe_discovery_t handle, const EtcPalUuid* cid,
-                                                          const char* name, const uint16_t* sourced_universes,
-                                                          size_t num_sourced_universes, void* context);
+typedef void (*SacnUniverseDiscoverySourceUpdatedCallback)(sacn_universe_discovery_t handle, const EtcPalUuid* cid,
+                                                           const char* name, const uint16_t* sourced_universes,
+                                                           size_t num_sourced_universes, void* context);
 
 /**
  * @brief Notify that a source is no longer transmitting Universe Discovery messages.
@@ -200,7 +200,7 @@ typedef void (*SacnUniverseDiscoveryLimitExceededCallback)(sacn_universe_discove
 /** A set of callback functions that the library uses to notify the application about universe discovery events. */
 typedef struct SacnUniverseDiscoveryCallbacks
 {
-  SacnUniverseDiscoveryUpdateSourceCallback source_update;   /**< Required */
+  SacnUniverseDiscoverySourceUpdatedCallback source_updated;   /**< Required */
   SacnUniverseDiscoverySourceExpiredCallback source_expired; /**< Required */
   SacnUniverseDiscoveryLimitExceededCallback limit_exceeded; /**< Optional */
   void* context; /**< (optional) Pointer to opaque data passed back with each callback. */
