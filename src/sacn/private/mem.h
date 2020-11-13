@@ -61,12 +61,8 @@ bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* ci
 bool add_found_source(SourcesFoundNotification* sources_found, const SacnTrackedSource* source);
 
 bool add_dead_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket);
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-bool add_pending_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket);
-#else
 bool add_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket);
 bool remove_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket);
-#endif
 void add_receiver_to_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver);
 void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver);
 

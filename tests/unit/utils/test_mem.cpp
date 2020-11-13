@@ -252,20 +252,12 @@ TEST_F(TestMem, ValidInitializedRecvThreadContext)
 
 #if SACN_DYNAMIC_MEM
     EXPECT_NE(recv_thread_context->dead_sockets, nullptr);
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-    EXPECT_NE(recv_thread_context->pending_sockets, nullptr);
-#else
     EXPECT_NE(recv_thread_context->socket_refs, nullptr);
-#endif
 #endif
 
     EXPECT_EQ(recv_thread_context->num_dead_sockets, 0);
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-    EXPECT_EQ(recv_thread_context->num_pending_sockets, 0);
-#else
     EXPECT_EQ(recv_thread_context->num_socket_refs, 0);
     EXPECT_EQ(recv_thread_context->new_socket_refs, 0);
-#endif
   });
 }
 
@@ -296,38 +288,6 @@ TEST_F(TestMem, AddDeadSocketWorks)
 #endif
   });
 }
-
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-
-TEST_F(TestMem, AddPendingSocketWorks)
-{
-  DoForEachThread([](sacn_thread_id_t thread) {
-    SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread);
-    ASSERT_NE(recv_thread_context, nullptr);
-
-#if SACN_DYNAMIC_MEM
-    // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
-    {
-      ASSERT_TRUE(add_pending_socket(recv_thread_context, (etcpal_socket_t)i));
-      EXPECT_EQ(recv_thread_context->num_pending_sockets, i + 1);
-      EXPECT_EQ(recv_thread_context->pending_sockets[i], (etcpal_socket_t)i);
-    }
-#else
-    // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
-    {
-      ASSERT_TRUE(add_pending_socket(recv_thread_context, (etcpal_socket_t)i));
-      EXPECT_EQ(recv_thread_context->num_pending_sockets, i + 1);
-      EXPECT_EQ(recv_thread_context->pending_sockets[i], (etcpal_socket_t)i);
-    }
-    // And make sure we can't add another
-    EXPECT_FALSE(add_pending_socket(recv_thread_context, (etcpal_socket_t)SACN_RECEIVER_MAX_UNIVERSES));
-#endif
-  });
-}
-
-#else  // SACN_RECEIVER_SOCKET_PER_UNIVERSE
 
 TEST_F(TestMem, AddSocketRefWorks)
 {
@@ -390,8 +350,6 @@ TEST_F(TestMem, RemoveSocketRefWorks)
     EXPECT_EQ(recv_thread_context->num_socket_refs, 1);
   });
 }
-
-#endif  // SACN_RECEIVER_SOCKET_PER_UNIVERSE
 
 TEST_F(TestMem, ValidInitializedUniverseData)
 {

@@ -582,28 +582,6 @@ bool add_dead_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t
   return true;
 }
 
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-
-/*
- * Add a new dead socket to a SacnRecvThreadContext.
- *
- * [out] recv_thread_context SacnRecvThreadConstext instance to which to append the dead socket.
- * [in] socket Dead socket.
- * Returns true if the socket was successfully added, false if memory could not be allocated.
- */
-bool add_pending_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket)
-{
-  SACN_ASSERT(recv_thread_context);
-
-  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, pending_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2,
-                          false);
-
-  recv_thread_context->pending_sockets[recv_thread_context->num_pending_sockets++] = socket;
-  return true;
-}
-
-#else  // SACN_RECEIVER_SOCKET_PER_UNIVERSE
-
 bool add_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket)
 {
   SACN_ASSERT(recv_thread_context);
@@ -637,8 +615,6 @@ bool remove_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket
   }
   return false;
 }
-
-#endif  // SACN_RECEIVER_SOCKET_PER_UNIVERSE
 
 void add_receiver_to_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver)
 {
@@ -828,17 +804,10 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* recv_thread
     return kEtcPalErrNoMem;
   recv_thread_context->dead_sockets_capacity = INITIAL_CAPACITY;
 
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-  recv_thread_context->pending_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
-  if (!recv_thread_context->pending_sockets)
-    return kEtcPalErrNoMem;
-  recv_thread_context->pending_sockets_capacity = INITIAL_CAPACITY;
-#else
   recv_thread_context->socket_refs = calloc(INITIAL_CAPACITY, sizeof(SocketRef));
   if (!recv_thread_context->socket_refs)
     return kEtcPalErrNoMem;
   recv_thread_context->socket_refs_capacity = INITIAL_CAPACITY;
-#endif
 
   return kEtcPalErrOk;
 }
@@ -1011,13 +980,8 @@ void deinit_recv_thread_context_entry(SacnRecvThreadContext* recv_thread_context
 
   if (recv_thread_context->dead_sockets)
     free(recv_thread_context->dead_sockets);
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-  if (recv_thread_context->pending_sockets)
-    free(recv_thread_context->pending_sockets);
-#else
   if (recv_thread_context->socket_refs)
     free(recv_thread_context->socket_refs);
-#endif
 }
 
 void deinit_universe_data_buf(void)

@@ -328,14 +328,12 @@ typedef struct SourceLimitExceededNotification
   void* context;
 } SourceLimitExceededNotification;
 
-#if !SACN_RECEIVER_SOCKET_PER_UNIVERSE
 /* For the shared-socket model, this represents a shared socket. */
 typedef struct SocketRef
 {
   etcpal_socket_t sock; /* The socket descriptor. */
   size_t refcount;      /* How many addresses the socket is subscribed to. */
 } SocketRef;
-#endif
 
 /* Holds the discrete data used by each receiver thread. */
 typedef struct SacnRecvThreadContext
@@ -353,14 +351,9 @@ typedef struct SacnRecvThreadContext
   SACN_DECLARE_BUF(etcpal_socket_t, dead_sockets, SACN_RECEIVER_MAX_UNIVERSES * 2);
   size_t num_dead_sockets;
 
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-  SACN_DECLARE_BUF(etcpal_socket_t, pending_sockets, SACN_RECEIVER_MAX_UNIVERSES * 2);
-  size_t num_pending_sockets;
-#else
   SACN_DECLARE_BUF(SocketRef, socket_refs, SACN_RECEIVER_MAX_SOCKET_REFS);
   size_t num_socket_refs;
   size_t new_socket_refs;
-#endif
 
   // This section is only touched from the thread, outside the lock.
   EtcPalPollContext poll_context;
