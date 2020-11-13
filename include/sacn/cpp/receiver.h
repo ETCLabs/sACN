@@ -117,7 +117,7 @@ public:
 
     /********* Optional values **********/
 
-    size_t source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
+    int source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
                                                                 listen to when using dynamic memory. */
     unsigned int flags{0};                   /**< A set of option flags. See the C API's "sACN receiver flags". */
 

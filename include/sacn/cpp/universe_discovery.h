@@ -185,12 +185,12 @@ public:
     /** The maximum number of sources this listener will record.  It is recommended that applications using dynamic
        memory use #SACN_UNIVERSE_DISCOVERY_INFINITE for this value. This parameter is ignored when configured to use
        static memory -- #SACN_UNIVERSE_DISCOVERY_MAX_SOURCES is used instead.*/
-    size_t source_count_max{SACN_UNIVERSE_DISCOVERY_INFINITE};
+    int source_count_max{SACN_UNIVERSE_DISCOVERY_INFINITE};
 
     /** The maximum number of universes this listener will record for a source.  It is recommended that applications
        using dynamic memory use #SACN_UNIVERSE_DISCOVERY_INFINITE for this value. This parameter is ignored when
        configured to use static memory -- #SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE is used instead.*/
-    size_t universes_per_source_max{SACN_UNIVERSE_DISCOVERY_INFINITE};
+    int universes_per_source_max{SACN_UNIVERSE_DISCOVERY_INFINITE};
 
     /** Create default data structure. */
     Settings() = default;
