@@ -25,6 +25,8 @@
  * @brief C++ wrapper for the sACN Universe Discovery API
  */
 
+#include <vector>
+
 #include "sacn/universe_discovery.h"
 #include "etcpal/cpp/inet.h"
 #include "etcpal/cpp/uuid.h"
@@ -83,14 +85,14 @@ namespace sacn
  * Callback demonstrations:
  * @code
  * void MyNotifyHandler::HandleSourceUpdated(const etcpal::Uuid& cid, const std::string& name,
- *                                           const uint16_t* sourced_universes, size_t num_sourced_universes)
+                                             const std::vector<uint16_t>& sourced_universes)
  * {
  *   std::cout << "Universe discovery: Source " << cid.ToString() << " (name " << name << ") ";
- *   if(sourced_universes)
+ *   if(!sourced_universes.empty())
  *   {
  *     std::cout << "is active on these universes: ";
- *     for(size_t i = 0; i < num_sourced_universes; ++i)
- *       std::cout << sourced_universes[i] << " ";
+ *     for(uint16_t univ : sourced_universes)
+ *       std::cout << univ << " ";
  *     std::cout << "\n";
  *   }
  *   else
@@ -138,13 +140,11 @@ public:
      *
      * @param[in] cid The CID of the source.
      * @param[in] name The UTF-8 name string.
-     * @param[in] sourced_universes Numerically sorted array of the currently sourced universes.  Will be NULL if the
+     * @param[in] sourced_universes Numerically sorted array of the currently sourced universes.  Will be empty if the
      * source is not currently transmitting any universes.
-     * @param[in] num_sourced_universes Size of the sourced_universes array.  Will be 0 if the source is not currently
-     * transmitting any universes.
      */
     virtual void HandleSourceUpdated(const etcpal::Uuid& cid, const std::string& name,
-                                     const uint16_t* sourced_universes, size_t num_sourced_universes) = 0;
+                                     const std::vector<uint16_t>& sourced_universes) = 0;
 
     /**
      * @brief Notify that a source is no longer transmitting Universe Discovery messages.
@@ -234,8 +234,10 @@ extern "C" inline void UniverseDiscoveryCbSourceUpdated(sacn_universe_discovery_
 
   if (context && cid && name)
   {
-    static_cast<UniverseDiscovery::NotifyHandler*>(context)->HandleSourceUpdated(*cid, name, sourced_universes,
-                                                                                 num_sourced_universes);
+    std::vector<uint16_t> sourced_vec;
+    if (sourced_universes && (num_sourced_universes > 0))
+      sourced_vec.assign(sourced_universes, sourced_universes + num_sourced_universes);
+    static_cast<UniverseDiscovery::NotifyHandler*>(context)->HandleSourceUpdated(*cid, name, sourced_vec);
   }
 }
 

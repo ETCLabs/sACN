@@ -125,24 +125,23 @@ void my_sources_found_callback(sacn_receiver_t handle, uint16_t universe, const 
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourcesFound(uint16_t universe, const SacnFoundSource* found_sources, 
-                                         size_t num_found_sources)
+void MyNotifyHandler::HandleSourcesFound(uint16_t universe, const std::vector<SacnFoundSource>& found_sources)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // fields available:
-  for(const SacnFoundSource* src = found_sources; src < (found_sources + num_found_sources); ++src)
+  for(const SacnFoundSource& src : found_sources)
   {
-    std::cout << "Found new source " << etcpal::Uuid(src->cid).ToString() << " (address " 
-              << etcpal::IpAddr(src->from_addr.ip).ToString() << ":" << src->from_addr.port << ", name " << src->name 
+    std::cout << "Found new source " << etcpal::Uuid(src.cid).ToString() << " (address " 
+              << etcpal::IpAddr(src.from_addr.ip).ToString() << ":" << src.from_addr.port << ", name " << src.name 
               << ") on universe " << universe << "\n";
 
-    std::cout << "Starting values:\n Preview: " << src->preview << "\n Per-universe priority: " << src->priority 
+    std::cout << "Starting values:\n Preview: " << src.preview << "\n Per-universe priority: " << src.priority 
               << "\n";
 
-    for(unsigned int i = 0; i < src->values_len; ++i)
-      std::cout << " NULL start code data, slot " << i << ": " << src->values[i] << "\n";
-    for(unsigned int i = 0; i < src->per_address_len; ++i)
-      std::cout << " Per-address priority, slot " << i << ": " << src->per_address[i] << "\n";
+    for(unsigned int i = 0; i < src.values_len; ++i)
+      std::cout << " NULL start code data, slot " << i << ": " << src.values[i] << "\n";
+    for(unsigned int i = 0; i < src.per_address_len; ++i)
+      std::cout << " Per-address priority, slot " << i << ": " << src.per_address[i] << "\n";
   }
 }
 ```
@@ -297,15 +296,15 @@ void my_sources_lost_callback(sacn_receiver_t handle, uint16_t universe, const S
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourcesLost(uint16_t universe, const SacnLostSource* lost_sources, size_t num_lost_sources)
+void MyNotifyHandler::HandleSourcesLost(uint16_t universe, const std::vector<SacnLostSource>& lost_sources)
 {
   // You might not normally print a message on this condition, but this is just to demonstrate
   // the fields available:
   std::cout << "The following sources have gone offline:\n";
-  for (SacnLostSource* source = lost_sources; source < lost_sources + num_lost_sources; ++source)
+  for(const SacnLostSource& src : lost_sources)
   {
-    std::cout << "CID: " << etcpal::Uuid(source->cid).ToString() << "\tName: " << source->name << "\tTerminated: " 
-              << source->terminated << "\n";
+    std::cout << "CID: " << etcpal::Uuid(source.cid).ToString() << "\tName: " << source.name << "\tTerminated: " 
+              << source.terminated << "\n";
 
     // Remove the source from your state tracking...
   }

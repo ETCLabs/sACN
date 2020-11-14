@@ -335,6 +335,11 @@
  * @{
  */
 
+/* TODO: These constants are here for the case we need a separate thread for universe discovery.
+ *  It could very well be that some sACN receiver thread in the library can drive this as well,
+ *  in which case these constants don't need to be here.
+ */
+
 /**
  * @brief The priority of the sACN universe discovery thread.
  *

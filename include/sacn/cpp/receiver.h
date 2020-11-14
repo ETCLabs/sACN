@@ -25,6 +25,8 @@
  * @brief C++ wrapper for the sACN Receiver API
  */
 
+#include <vector>
+
 #include "sacn/receiver.h"
 #include "etcpal/cpp/inet.h"
 
@@ -65,12 +67,10 @@ public:
     /**
     * @brief Notify that one or more sources have been found.
     * @param universe The universe this receiver is monitoring.
-    * @param found_sources Array of structs describing the source or sources that have been found with their current
+    * @param found_sources Vector of structs describing the source or sources that have been found with their current
     * values.
-    * @param num_sources_found Size of the found_sources array.
     */
-    virtual void HandleSourcesFound(uint16_t universe, const SacnFoundSource* found_sources,
-                                    size_t num_found_sources) = 0;
+    virtual void HandleSourcesFound(uint16_t universe, const std::vector<SacnFoundSource>& found_sources) = 0;
 
     /**
     * @brief Notify that a data packet has been received.
@@ -85,10 +85,9 @@ public:
     /**
      * @brief Notify that one or more sources have entered a data loss state.
      * @param universe The universe this receiver is monitoring.
-     * @param lost_sources Array of structs describing the source or sources that have been lost.
-     * @param num_lost_sources Size of the lost_sources array.
+     * @param lost_sources Vector of structs describing the source or sources that have been lost.
      */
-    virtual void HandleSourcesLost(uint16_t universe, const SacnLostSource* lost_sources, size_t num_lost_sources) = 0;
+    virtual void HandleSourcesLost(uint16_t universe, const std::vector<SacnLostSource>& lost_sources) = 0;
 
     /**
      * @brief Notify that a source has stopped transmission of per-address priority packets.
@@ -170,9 +169,10 @@ extern "C" inline void ReceiverCbSourcesFound(sacn_receiver_t handle, uint16_t u
 {
   ETCPAL_UNUSED_ARG(handle);
 
-  if (context)
+  if (context && found_sources && (num_found_sources > 0))
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesFound(universe, found_sources, num_found_sources);
+    std::vector<SacnFoundSource> found_vec(found_sources, found_sources + num_found_sources);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesFound(universe, found_vec);
   }
 }
 
@@ -193,9 +193,10 @@ extern "C" inline void ReceiverCbSourcesLost(sacn_receiver_t handle, uint16_t un
 {
   ETCPAL_UNUSED_ARG(handle);
 
-  if (context)
+  if (context && lost_sources && (num_lost_sources > 0))
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesLost(universe, lost_sources, num_lost_sources);
+    std::vector<SacnLostSource> lost_vec(lost_sources, lost_sources + num_lost_sources);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesLost(universe, lost_vec);
   }
 }
 
