@@ -18,7 +18,7 @@
  *****************************************************************************/
 
 #include "sacn/cpp/common.h"
-#include "sacn/cpp/universe_discovery.h"
+#include "sacn/cpp/source_detector.h"
 
 #include <limits>
 #include "etcpal_mock/common.h"
@@ -27,7 +27,7 @@
 #include "sacn_mock/private/sockets.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
-#include "sacn/private/universe_discovery.h"
+#include "sacn/private/source_detector.h"
 #include "gtest/gtest.h"
 
 #if SACN_DYNAMIC_MEM
@@ -48,12 +48,12 @@ protected:
     sacn_sockets_reset_all_fakes();
 
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
-    ASSERT_EQ(sacn_universe_discovery_init(), kEtcPalErrOk);
+    ASSERT_EQ(sacn_source_detector_init(), kEtcPalErrOk);
   }
 
   void TearDown() override
   {
-    sacn_universe_discovery_deinit();
+    sacn_source_detector_deinit();
     sacn_mem_deinit();
   }
 };

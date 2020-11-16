@@ -18,17 +18,17 @@
  *****************************************************************************/
 
 /**
- * @file sacn/private/universe_discovery.h
+ * @file sacn/private/source_detector.h
  * @brief Private constants, types, and function declarations for the
- *        @ref sacn_universe_discovery "sACN Universe Discovery" module.
+ *        @ref sacn_source_detector "sACN Source Detector" module.
  */
 
-#ifndef SACN_PRIVATE_UNIVERSE_DISCOVERY_H_
-#define SACN_PRIVATE_UNIVERSE_DISCOVERY_H_
+#ifndef SACN_PRIVATE_SOURCE_DETECTOR_H_
+#define SACN_PRIVATE_SOURCE_DETECTOR_H_
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "sacn/universe_discovery.h"
+#include "sacn/source_detector.h"
 #include "sacn/private/common.h"
 #include "sacn/private/opts.h"
 
@@ -36,15 +36,15 @@
 extern "C" {
 #endif
 
-/* Sources have up until the second E1.31 Appendix A E131_E131_UNIVERSE_DISCOVERY_INTERVAL (10s) to report universe
+/* Sources have up until the second E1.31 Appendix A E131_E131_UNIVERSE_DISCOVERY_INTERVAL (10s) to report
  * changes, and to act as a keep-alive for universe discovery. */
-#define DISCOVERY_SOURCE_TIMEOUT_MS 20000
+#define SOURCE_DETECTOR_SOURCE_TIMEOUT_MS 20000
 
-etcpal_error_t sacn_universe_discovery_init(void);
-void sacn_universe_discovery_deinit(void);
+etcpal_error_t sacn_source_detector_init(void);
+void sacn_source_detector_deinit(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SACN_PRIVATE_UNIVERSE_DISCOVERY_H_ */
+#endif /* SACN_PRIVATE_SOURCE_DETECTOR_H_ */

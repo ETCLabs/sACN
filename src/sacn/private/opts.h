@@ -325,53 +325,53 @@
  * @}
  */
 
-/***************************** sACN Universe Discovery Options *****************************/
+/***************************** sACN Source Detector Options *****************************/
 
 /**
- * @defgroup sacnopts_universe_discovery sACN Universe Discovery Options
+ * @defgroup sacnopts_source_detector sACN Source Detector Options
  * @ingroup sacnopts
  *
- * Configuration options for the @ref sacn_universe_discovery module.
+ * Configuration options for the @ref sacn_source_detector module.
  * @{
  */
 
-/* TODO: These constants are here for the case we need a separate thread for universe discovery.
+/* TODO: These constants are here for the case we need a separate thread for source detection.
  *  It could very well be that some sACN receiver thread in the library can drive this as well,
  *  in which case these constants don't need to be here.
  */
 
 /**
- * @brief The priority of the sACN universe discovery thread.
+ * @brief The priority of the sACN source detector thread.
  *
  * This is usually only meaningful on real-time systems.
  */
-#ifndef SACN_UNIVERSE_DISCOVERY_THREAD_PRIORITY
-#define SACN_UNIVERSE_DISCOVERY_THREAD_PRIORITY ETCPAL_THREAD_DEFAULT_PRIORITY
+#ifndef SACN_SOURCE_DETECTOR_THREAD_PRIORITY
+#define SACN_SOURCE_DETECTOR_THREAD_PRIORITY ETCPAL_THREAD_DEFAULT_PRIORITY
 #endif
 
 /**
- * @brief The stack size of each sACN universe discovery thread.
+ * @brief The stack size of each sACN source detector thread.
  *
  * It's usually only necessary to worry about this on real-time or embedded systems.
  */
-#ifndef SACN_UNIVERSE_DISCOVERY_THREAD_STACK
-#define SACN_UNIVERSE_DISCOVERY_THREAD_STACK ETCPAL_THREAD_DEFAULT_STACK
+#ifndef SACN_SOURCE_DETECTOR_THREAD_STACK
+#define SACN_SOURCE_DETECTOR_THREAD_STACK ETCPAL_THREAD_DEFAULT_STACK
 #endif
 
 /* Infinite read blocks are not supported due to the potential for hangs on shutdown. */
-#if defined(SACN_UNIVERSE_DISCOVERY_READ_TIMEOUT_MS) && SACN_UNIVERSE_DISCOVERY_READ_TIMEOUT_MS < 0
-#undef SACN_UNIVERSE_DISCOVERY_READ_TIMEOUT_MS /* It will get the default value below */
+#if defined(SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS) && SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS < 0
+#undef SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS /* It will get the default value below */
 #endif
 
-//TODO CHRISTIAN change sacnrecv_read to whatever you need, or remove the constant.
+//TODO change this to whatever you need, or remove the constant.
 /**
- * @brief The maximum amount of time that a call to sacnrecv_read() will block waiting for data, in
+ * @brief The maximum amount of time the Source Detector thread will block waiting for data, in
  *        milliseconds.
  *
  * It is recommended to keep this time short to avoid delays on shutdown.
  */
-#ifndef SACN_UNIVERSE_DISCOVERY_READ_TIMEOUT_MS
-#define SACN_UNIVERSE_DISCOVERY_READ_TIMEOUT_MS 100
+#ifndef SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS
+#define SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS 100
 #endif
 
 /**
@@ -382,8 +382,8 @@
  * 
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
-#ifndef SACN_UNIVERSE_DISCOVERY_MAX_SOURCES
-#define SACN_UNIVERSE_DISCOVERY_MAX_SOURCES 5
+#ifndef SACN_SOURCE_DETECTOR_MAX_SOURCES
+#define SACN_SOURCE_DETECTOR_MAX_SOURCES 5
 #endif
 
 /**
@@ -394,8 +394,8 @@
  * 
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
-#ifndef SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE
-#define SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_SOURCE 5
+#ifndef SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE
+#define SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE 5
 #endif
 
 

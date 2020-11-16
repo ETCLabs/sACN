@@ -26,7 +26,7 @@
 #include "sacn/private/receiver.h"
 #include "sacn/private/dmx_merger.h"
 #include "sacn/private/merge_receiver.h"
-#include "sacn/private/universe_discovery.h"
+#include "sacn/private/source_detector.h"
 
 /*************************** Private constants *******************************/
 
@@ -109,7 +109,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     if (res == kEtcPalErrOk)
       merge_receiver_initted = ((res = sacn_merge_receiver_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
-      universe_discovery_initted = ((res = sacn_universe_discovery_init()) == kEtcPalErrOk);
+      universe_discovery_initted = ((res = sacn_source_detector_init()) == kEtcPalErrOk);
 
     if (res == kEtcPalErrOk)
     {
@@ -119,7 +119,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     {
       // Clean up
       if (universe_discovery_initted)
-        sacn_universe_discovery_deinit();
+        sacn_source_detector_deinit();
       if (merge_receiver_initted)
         sacn_merge_receiver_deinit();
       if (merger_initted)
