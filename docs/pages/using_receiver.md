@@ -216,18 +216,21 @@ data callback, as well as in the #SacnLostSource struct in the sources lost call
 
 ### Priority
 
-The sACN standard provides a priority value with each sACN data packet. This unsigned 8-bit value
-ranges from 0 to 200 inclusive, where 0 is the lowest and 200 is the highest priority. The priority
-value for a packet is available in the header structure that accompanies the universe data
+The sACN standard provides a universe priority value with each sACN data packet. This unsigned
+8-bit value ranges from 0 to 200, where 0 is the lowest and 200 is the highest priority. The
+priority value for a packet is available in the header structure that accompanies the universe data
 callback. It is the application's responsibility to ensure that higher-priority data takes
 precedence over lower-priority data.
 
 ETC has extended the sACN standard with a method of tracking priority on a per-address basis. This
 is implemented by sending an alternate START code packet on the same universe periodically - the
 START code is `0xdd`. When receiving a data packet with the start code `0xdd`, the slots in that
-packet are to be interpreted as a priority value from 0 to 200 inclusive for the corresponding slot
-in the DMX (NULL START code) packets. Receivers which wish to implement the per-address priority
-extension should check for the `0xdd` start code and handle the data accordingly.
+packet are to be interpreted as a priority value from 1 to 200 for the corresponding slot in the
+DMX (NULL START code) packets. A value of 0 indicates "not sourced", meaning the source is not
+sending NULL START code data to that slot. Likewise, if less than 512 `0xdd` slots are received,
+then the slots beyond the last `0xdd` slot should also be treated as not sourced. Receivers which
+wish to implement the per-address priority extension should check for the `0xdd` start code and
+handle the data accordingly.
 
 When implementing the per-slot priority extension, the source PAP lost callback should be
 implemented to handle the condition where a source that was previously sending `0xdd` packets stops
