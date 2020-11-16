@@ -260,7 +260,7 @@
  * @brief Currently unused; will be used in the future.
  */
 #ifndef SACN_RECEIVER_MAX_THREADS
-#define SACN_RECEIVER_MAX_THREADS 4
+#define SACN_RECEIVER_MAX_THREADS 1
 #endif
 
 /**
