@@ -11,7 +11,7 @@ set(TEST_MERGER_SOURCES
   ${SACN_SRC}/sacn/source.c
   ${SACN_SRC}/sacn/util.c
   ${SACN_SRC}/sacn_mock/common.c
-  ${SACN_SRC}/sacn_mock/data_loss.c
+  ${SACN_SRC}/sacn_mock/source_loss.c
   ${SACN_SRC}/sacn_mock/dmx_merger.c
   ${SACN_SRC}/sacn_mock/sockets.c
 )

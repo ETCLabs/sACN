@@ -268,11 +268,11 @@ more information.
 
 ## Sources Lost Conditions
 
-When a previously-tracked source stops sending data, the sACN library implements a custom data-loss
-algorithm to attempt to group lost sources together. See \ref data_loss_behavior for more
+When a previously-tracked source stops sending data, the sACN library implements a custom source-loss
+algorithm to attempt to group lost sources together. See \ref source_loss_behavior for more
 information on this algorithm.
 
-After the data-loss algorithm runs, the library will deliver a sources lost callback to indicate
+After the source-loss algorithm runs, the library will deliver a sources lost callback to indicate
 that some number of sources have gone offline.
 
 <!-- CODE_BLOCK_START -->

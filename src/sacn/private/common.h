@@ -118,7 +118,7 @@ typedef unsigned int sacn_thread_id_t;
 #define UNIVERSE_ID_VALID(universe_id) ((universe_id != 0) && (universe_id <= 64000))
 
 /******************************************************************************
- * Types used by the data loss module
+ * Types used by the source loss module
  *****************************************************************************/
 
 typedef struct SacnRemoteSourceInternal
@@ -191,7 +191,7 @@ struct SacnReceiver
   EtcPalTimer sample_timer;
   bool suppress_limit_exceeded_notification;
   EtcPalRbTree sources;       // The sources being tracked on this universe.
-  TerminationSet* term_sets;  // Data loss tracking
+  TerminationSet* term_sets;  // Source loss tracking
 
   // Option flags
   bool filter_preview_data;
