@@ -221,14 +221,15 @@
 #endif
 
 /**
- * @brief If set to 1, bind only one socket to remove duplicate multicast traffic.
+ * @brief If set to 1, bind only two sockets per thread to reduce duplicate multicast traffic.
  *
  * Each sACN receiver socket joins up to #SACN_RECEIVER_MAX_SUBS_PER_SOCKET unique multicast
  * groups. If #SACN_RECEIVER_LIMIT_BIND is 0, then each socket binds to the wildcard. On certain
  * platforms, this results in multicast traffic being duplicated between sockets. In this case,
- * setting #SACN_RECEIVER_LIMIT_BIND to 1 will limit sACN to binding just one socket. The purpose
- * is to cause all multicast and unicast traffic to go to the bound socket. This has been verified
- * to work on Linux and lwIP.
+ * setting #SACN_RECEIVER_LIMIT_BIND to 1 will limit sACN to binding (and polling) just two sockets
+ * per thread (one for IPv4 and another for IPv6). The purpose is to cause all multicast and
+ * unicast traffic to go to the bound sockets and reduce duplication. This has been verified to
+ * work on Linux and lwIP.
  * 
  * Set this to 0 in your sacn_config.h if the default causes packets to be lost on your platform.
  *
