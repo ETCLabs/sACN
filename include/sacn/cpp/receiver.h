@@ -83,7 +83,7 @@ public:
                                     const SacnHeaderData& header, const uint8_t* pdata) = 0;
 
     /**
-     * @brief Notify that one or more sources have entered a data loss state.
+     * @brief Notify that one or more sources have entered a source loss state.
      * @param universe The universe this receiver is monitoring.
      * @param lost_sources Array of structs describing the source or sources that have been lost.
      * @param num_lost_sources Size of the lost_sources array.
@@ -377,9 +377,9 @@ inline sacn_standard_version_t Receiver::GetStandardVersion()
 /**
  * @brief Set the expired notification wait time.
  *
- * The library will wait at least this long after a data loss condition has been encountered before
- * calling HandleSourcesLost(). However, the wait may be longer due to the data loss algorithm (see \ref
- * data_loss_behavior).
+ * The library will wait at least this long after a source loss condition has been encountered before
+ * calling HandleSourcesLost(). However, the wait may be longer due to the source loss algorithm (see \ref
+ * source_loss_behavior).
  *
  * @param[in] wait_ms Wait time in milliseconds.
  */
@@ -391,9 +391,9 @@ inline void Receiver::SetExpiredWait(uint32_t wait_ms)
 /**
  * @brief Get the current value of the expired notification wait time.
  *
- * The library will wait at least this long after a data loss condition has been encountered before
- * calling HandleSourcesLost(). However, the wait may be longer due to the data loss algorithm (see \ref
- * data_loss_behavior).
+ * The library will wait at least this long after a source loss condition has been encountered before
+ * calling HandleSourcesLost(). However, the wait may be longer due to the source loss algorithm (see \ref
+ * source_loss_behavior).
  *
  * @return Wait time in milliseconds.
  */

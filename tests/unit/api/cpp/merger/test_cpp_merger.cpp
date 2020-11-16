@@ -23,7 +23,7 @@
 #include <limits>
 #include "etcpal_mock/common.h"
 #include "sacn_mock/private/common.h"
-#include "sacn_mock/private/data_loss.h"
+#include "sacn_mock/private/source_loss.h"
 #include "sacn_mock/private/sockets.h"
 #include "sacn_mock/private/dmx_merger.h"
 #include "sacn/private/mem.h"
@@ -43,7 +43,7 @@ protected:
   {
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
-    sacn_data_loss_reset_all_fakes();
+    sacn_source_loss_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
     sacn_dmx_merger_reset_all_fakes();
 

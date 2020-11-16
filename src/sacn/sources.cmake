@@ -10,7 +10,7 @@ set(SACN_PUBLIC_HEADERS
 )
 set(SACN_PRIVATE_HEADERS
   ${SACN_SRC}/sacn/private/common.h
-  ${SACN_SRC}/sacn/private/data_loss.h
+  ${SACN_SRC}/sacn/private/source_loss.h
   ${SACN_SRC}/sacn/private/mem.h
   ${SACN_SRC}/sacn/private/dmx_merger.h
   ${SACN_SRC}/sacn/private/opts.h
@@ -34,7 +34,7 @@ set(SACN_API_SOURCES
 #find it when we add more serious testing.
 set(SACN_MOCKABLE_SOURCES
   ${SACN_SRC}/sacn/common.c
-  ${SACN_SRC}/sacn/data_loss.c
+  ${SACN_SRC}/sacn/source_loss.c
   ${SACN_SRC}/sacn/sockets.c
 )
 

@@ -80,7 +80,7 @@ typedef enum
  * @brief The default expired notification wait time.
  *
  * Also referred to as a "hold last look" time, the default amount of time the library will wait
- * after a universe enters a data loss condition before calling the sources_lost() callback. Can be
+ * after a universe enters a source loss condition before calling the sources_lost() callback. Can be
  * changed with sacn_receiver_set_expired_wait().
  */
 #define SACN_DEFAULT_EXPIRED_WAIT_MS 1000u
@@ -189,11 +189,11 @@ typedef void (*SacnUniverseDataCallback)(sacn_receiver_t handle, uint16_t univer
                                          const SacnHeaderData* header, const uint8_t* pdata, void* context);
 
 /**
- * @brief Notify that one or more sources have entered a data loss state.
+ * @brief Notify that one or more sources have entered a source loss state.
  *
  * This could be due to timeout or explicit termination. Sources are grouped using an algorithm
  * designed to prevent level jumps when multiple sources are lost simultaneously. See
- * @ref data_loss_behavior for more information.
+ * @ref source_loss_behavior for more information.
  *
  * @param[in] handle Handle to the receiver instance for which sources were lost.
  * @param[in] universe The universe this receiver is monitoring.

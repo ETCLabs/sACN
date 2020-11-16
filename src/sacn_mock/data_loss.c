@@ -17,20 +17,20 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include "sacn_mock/private/data_loss.h"
+#include "sacn_mock/private/source_loss.h"
 
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_data_loss_init);
-DEFINE_FAKE_VOID_FUNC(sacn_data_loss_deinit);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_loss_init);
+DEFINE_FAKE_VOID_FUNC(sacn_source_loss_deinit);
 DEFINE_FAKE_VOID_FUNC(mark_sources_online, const SacnRemoteSourceInternal*, size_t, TerminationSet*);
 DEFINE_FAKE_VOID_FUNC(mark_sources_offline, const SacnLostSourceInternal*, size_t, const SacnRemoteSourceInternal*,
                       size_t, TerminationSet**, uint32_t);
 DEFINE_FAKE_VOID_FUNC(get_expired_sources, TerminationSet**, SourcesLostNotification*);
 DEFINE_FAKE_VOID_FUNC(clear_term_set_list, TerminationSet*);
 
-void sacn_data_loss_reset_all_fakes(void)
+void sacn_source_loss_reset_all_fakes(void)
 {
-  RESET_FAKE(sacn_data_loss_init);
-  RESET_FAKE(sacn_data_loss_deinit);
+  RESET_FAKE(sacn_source_loss_init);
+  RESET_FAKE(sacn_source_loss_deinit);
   RESET_FAKE(mark_sources_online);
   RESET_FAKE(mark_sources_offline);
   RESET_FAKE(get_expired_sources);

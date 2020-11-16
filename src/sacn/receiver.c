@@ -27,7 +27,7 @@
 #include "etcpal/common.h"
 #include "etcpal/rbtree.h"
 #include "sacn/private/common.h"
-#include "sacn/private/data_loss.h"
+#include "sacn/private/source_loss.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/pdu.h"
 #include "sacn/private/receiver.h"
@@ -545,9 +545,9 @@ sacn_standard_version_t sacn_receiver_get_standard_version()
 /**
  * @brief Set the expired notification wait time.
  *
- * The library will wait at least this long after a data loss condition has been encountered before
+ * The library will wait at least this long after a source loss condition has been encountered before
  * sending a @ref SacnSourcesLostCallback "sources_lost()" notification. However, the wait may be
- * longer due to the data loss algorithm (see @ref data_loss_behavior).
+ * longer due to the source loss algorithm (see @ref source_loss_behavior).
  *
  * @param[in] wait_ms Wait time in milliseconds.
  */
@@ -566,9 +566,9 @@ void sacn_receiver_set_expired_wait(uint32_t wait_ms)
 /**
  * @brief Get the current value of the expired notification wait time.
  *
- * The library will wait at least this long after a data loss condition has been encountered before
+ * The library will wait at least this long after a source loss condition has been encountered before
  * sending a @ref SacnSourcesLostCallback "sources_lost()" notification. However, the wait may be
- * longer due to the data loss algorithm (see @ref data_loss_behavior).
+ * longer due to the source loss algorithm (see @ref source_loss_behavior).
  *
  * @return Wait time in milliseconds.
  */
@@ -1159,7 +1159,7 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
 
   // No matter how valid, we got something.
   src->dmx_received_since_last_tick = true;
-  etcpal_timer_start(&src->packet_timer, DATA_LOSS_TIMEOUT);
+  etcpal_timer_start(&src->packet_timer, SOURCE_LOSS_TIMEOUT);
 
 #if SACN_ETC_PRIORITY_EXTENSION
   switch (src->recv_state)
@@ -1184,7 +1184,7 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
         // Our per-address-priority waiting period has expired. Keep the timer going in case the
         // source starts sending PAP later.
         src->recv_state = kRecvStateHaveDmxOnly;
-        etcpal_timer_start(&src->pap_timer, DATA_LOSS_TIMEOUT);
+        etcpal_timer_start(&src->pap_timer, SOURCE_LOSS_TIMEOUT);
       }
       else
       {
@@ -1241,7 +1241,7 @@ void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* not
     case kRecvStateWaitingForPap:
     case kRecvStateHaveDmxOnly:
       src->recv_state = kRecvStateHaveDmxAndPap;
-      etcpal_timer_start(&src->pap_timer, DATA_LOSS_TIMEOUT);
+      etcpal_timer_start(&src->pap_timer, SOURCE_LOSS_TIMEOUT);
       break;
     case kRecvStateHaveDmxAndPap:
       etcpal_timer_reset(&src->pap_timer);
@@ -1314,7 +1314,7 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
   }
   src->cid = *sender_cid;
   ETCPAL_MSVC_NO_DEP_WRN strcpy(src->name, header->source_name);
-  etcpal_timer_start(&src->packet_timer, DATA_LOSS_TIMEOUT);
+  etcpal_timer_start(&src->packet_timer, SOURCE_LOSS_TIMEOUT);
   src->seq = seq;
   src->found = false;
   src->terminated = false;
@@ -1327,7 +1327,7 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
     if (header->start_code == SACN_STARTCODE_PRIORITY)
     {
       src->recv_state = kRecvStateWaitingForDmx;
-      etcpal_timer_start(&src->pap_timer, DATA_LOSS_TIMEOUT);
+      etcpal_timer_start(&src->pap_timer, SOURCE_LOSS_TIMEOUT);
     }
     else
     {
