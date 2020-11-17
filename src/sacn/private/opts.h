@@ -189,7 +189,7 @@
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_RECEIVER_MAX_UNIVERSES
-#define SACN_RECEIVER_MAX_UNIVERSES 4
+#define SACN_RECEIVER_MAX_UNIVERSES 8
 #endif
 
 // Be sure to check SACN_RECEIVER_MAX_UNIVERSES, as it is illegal to declare a 0-size or negative-size array in C.
@@ -205,7 +205,7 @@
  * highest-priority source.
  */
 #ifndef SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE
-#define SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE 10
+#define SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE 8
 #endif
 
 /**
