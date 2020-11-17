@@ -125,8 +125,8 @@ typedef struct SacnLostSource
   EtcPalUuid cid;
   /** The name of the source. */
   char name[SACN_SOURCE_NAME_MAX_LEN];
-  /** Whether the source was determined to be lost due to the Stream_Terminated bit being set in the
-   *  sACN data packet. */
+  /** If true, the source was determined to be lost due to the Stream_Terminated bit being set in the
+   *  sACN data packet. If false, the source was lost due to a source loss timeout. */
   bool terminated;
 } SacnLostSource;
 
