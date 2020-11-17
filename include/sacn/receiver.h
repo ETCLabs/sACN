@@ -79,9 +79,8 @@ typedef enum
 /**
  * @brief The default expired notification wait time.
  *
- * Also referred to as a "hold last look" time, the default amount of time the library will wait
- * after a universe enters a source loss condition before calling the sources_lost() callback. Can be
- * changed with sacn_receiver_set_expired_wait().
+ * The default amount of time the library will wait after a universe enters a source loss condition
+ * before calling the sources_lost() callback. Can be changed with sacn_receiver_set_expired_wait().
  */
 #define SACN_DEFAULT_EXPIRED_WAIT_MS 1000u
 
