@@ -94,16 +94,21 @@ source with the highest level. That is the Highest Takes Precedence (HTP) merge 
 ## Receiving sACN Data
 
 The merged data callback is called whenever there are new merge results for the universe being
-listened to. This callback will be called in multiple ways:
+listened to, pending the sampling period. The sampling period occurs when a receiver starts
+listening on a new universe or a new set of interfaces. Universe data is merged as it comes in
+during this period, but the notification of this data doesn't occur until after the sampling period
+ends. This removes flicker as various sources in the network are discovered.
 
-1. When a new non-preview data packet or per-address priority packet is received from the sACN
-Receiver module, it is immediately and synchronously passed to the DMX Merger, after which the
-merged result is immediately and synchronously passed to this callback.  Note that this includes
-the data received from the SacnSourcesFoundCallback().
+This callback will be called in multiple ways:
+
+1. When a new non-preview data packet or per-address priority packet is received from the sACN 
+Receiver module, it is immediately and synchronously passed to the DMX Merger. If the sampling
+period has not ended, the merged result is not passed to this callback until the sampling period
+ends. Otherwise, it is immediately and synchronously passed to this callback.
 
 2. When a sACN source is no longer sending non-preview data or per-address priority packets, the
 lost source callback from the sACN Receiver module will be passed to the merger, after which the
-merged result is immediately and synchronously passed to this callback.
+merged result is passed to this callback pending the sampling period.
 
 Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
 library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0 (in which case per-address priority
@@ -284,7 +289,7 @@ library will check against the `source_count_max` value from the merge receiver 
 instead of #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE. The `source_count_max` value may be set to
 #SACN_RECEIVER_INFINITE_SOURCES, in which case the library will track as many sources as it is
 able to dynamically allocate memory for, and this callback will not be called in normal program
-operation (and can be set to NULL in the config struct in C).
+operation (in this case it can be set to NULL in the config struct in C).
 
 <!-- CODE_BLOCK_START -->
 ```c

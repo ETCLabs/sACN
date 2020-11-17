@@ -469,7 +469,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, the receiver is in a sampling period for the new universe and will provide
+ * After this call completes successfully, the receiver is in a sampling period for the universe and will provide
  * SourcesFound() notifications when appropriate.
  * If this call fails, the caller must call sacn_receiver_destroy for the receiver, because the receiver may be in an
  * invalid state.
