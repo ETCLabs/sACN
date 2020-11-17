@@ -144,14 +144,14 @@ typedef struct SacnMergeReceiverConfig
 
   /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
       This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used
-     instead.*/
+      instead.*/
   size_t source_count_max;
 } SacnMergeReceiverConfig;
 
 /** A default-value initializer for an SacnMergeReceiverConfig struct. */
-#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT \
-  {                                             \
-    0, {NULL, NULL, NULL}, 0                    \
+#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                 \
+  {                                                             \
+    0, {NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES \
   }
 
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
