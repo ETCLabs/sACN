@@ -94,7 +94,7 @@ typedef struct SacnSourceConfig
     kEtcPalNullUuid, "", SACN_SOURCE_INFINITE_UNIVERSES, false \
   }
 
-void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, const char* name);
+void sacn_source_config_init(SacnSourceConfig* config);
 
 typedef struct SacnSourceUniverseConfig
 {
@@ -140,8 +140,7 @@ typedef struct SacnSourceUniverseConfig
     0, NULL, 0, 100, NULL, false, false, 0       \
   }
 
-void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe, const uint8_t* values_buffer,
-                                      size_t values_len, const uint8_t* priorities_buffer);
+void sacn_source_universe_config_init(SacnSourceUniverseConfig* config);
 
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle,
                                   SacnMcastInterface* netints, size_t num_netints);
