@@ -89,9 +89,9 @@ typedef struct SacnSourceConfig
 } SacnSourceConfig;
 
 /** A default-value initializer for an SacnSourceConfig struct. */
-#define SACN_SOURCE_CONFIG_DEFAULT_INIT \
-  {                                     \
-    kEtcPalNullUuid, "", 0, false       \
+#define SACN_SOURCE_CONFIG_DEFAULT_INIT                        \
+  {                                                            \
+    kEtcPalNullUuid, "", SACN_SOURCE_INFINITE_UNIVERSES, false \
   }
 
 void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, const char* name);
