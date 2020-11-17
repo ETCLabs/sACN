@@ -148,7 +148,8 @@ typedef struct SacnMergeReceiverConfig
   size_t source_count_max;
 
   /** If true, this allows per-address priorities (if any are received) to be fed into the merger. If false, received
-      per-address priorities are ignored, and only universe priorities are used in the merger. */
+      per-address priorities are ignored, and only universe priorities are used in the merger. Keep in mind that this
+      setting will be ignored if #SACN_ETC_PRIORITY_EXTENSTION = 0, in which case per-address priorities are ignored. */
   bool use_pap;
 } SacnMergeReceiverConfig;
 
