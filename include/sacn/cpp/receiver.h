@@ -325,7 +325,7 @@ inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, the receiver is in a sampling period for the new universe and will provide
+ * After this call completes successfully, the receiver is in a sampling period for the universe and will provide
  * HandleSourcesFound() calls when appropriate.
  * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
  *

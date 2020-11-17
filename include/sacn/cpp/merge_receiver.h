@@ -68,12 +68,12 @@ public:
      *
      * This callback will be called in multiple ways:
      * 1. When a new non-preview data packet or per-address priority packet is received from the sACN Receiver module,
-     * it is immediately and synchronously passed to the DMX Merger, after which the merged result is immediately and
-     * synchronously passed to this callback.  Note that this includes the data received from the
-     * SacnSourcesFoundCallback().
+     * it is immediately and synchronously passed to the DMX Merger. If the sampling period has not ended, the merged
+     * result is not passed to this callback until the sampling period ends. Otherwise, it is immediately and
+     * synchronously passed to this callback.
      * 2. When a sACN source is no longer sending non-preview data or per-address priority packets, the lost source
-     * callback from the sACN Receiver module will be passed to the merger, after which the merged result is immediately
-     * and synchronously passed to this callback.
+     * callback from the sACN Receiver module will be passed to the merger, after which the merged result is passed to
+     * this callback pending the sampling period.
      *
      * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
      * packets on the universe.
@@ -288,9 +288,9 @@ etcpal::Expected<uint16_t> MergeReceiver::GetUniverse() const
 /**
  * @brief Change the universe this class is listening to.
  *
- * An sACN merge receiver can only listen on one universe at a time. After this call completes successfully, the merge
- * receiver is in a sampling period for the new universe and will provide HandleSourcesFound() calls when appropriate.
- * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ * An sACN merge receiver can only listen on one universe at a time. After this call completes, a new sampling period
+ * will occur, and then underlying updates will generate new calls to HandleMergedData(). If this call fails, the caller
+ * must call Shutdown() on this class, because it may be in an invalid state.
  *
  * @param[in] new_universe_id New universe number that this merge receiver should listen to.
  * @return #kEtcPalErrOk: Universe changed successfully.
@@ -310,9 +310,9 @@ inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, the merge receiver is in a sampling period for the new universe and will provide
- * HandleSourcesFound() calls when appropriate.
- * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ * After this call completes, a new sampling period occurs, and then underlying updates will generate new calls to
+ * HandleMergedData(). If this call fails, the caller must call Shutdown() on this class, because it may be in an
+ * invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
