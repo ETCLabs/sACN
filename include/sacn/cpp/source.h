@@ -121,6 +121,9 @@ public:
     /** If true, this sACN source will only send unicast traffic on this universe. Defaults to false. */
     bool send_unicast_only{false};
 
+    /** The initial set of unicast destinations for this universe. */
+    const std::vector<EtcPalIpAddr> unicast_destinations;
+
     /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
     uint16_t sync_universe{0};
 
@@ -577,6 +580,8 @@ inline SacnSourceConfig Source::TranslateConfig(const Settings& settings)
 
 inline SacnSourceUniverseConfig Source::TranslateUniverseConfig(const UniverseSettings& settings)
 {
+  size_t num_unicast_destinations = settings.unicast_destinations.size();
+
   // clang-format off
   SacnSourceUniverseConfig config = {
     settings.universe, 
@@ -586,6 +591,8 @@ inline SacnSourceUniverseConfig Source::TranslateUniverseConfig(const UniverseSe
     settings.priorities_buffer,
     settings.send_preview,
     settings.send_unicast_only,
+    (num_unicast_destinations > 0) ? settings.unicast_destinations.data() : nullptr,
+    num_unicast_destinations,
     settings.sync_universe
   };
   // clang-format on

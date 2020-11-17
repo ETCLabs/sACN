@@ -129,15 +129,20 @@ typedef struct SacnSourceUniverseConfig
   /** If true, this sACN source will only send unicast traffic on this universe. Defaults to false. */
   bool send_unicast_only;
 
+  /** The initial set of unicast destinations for this universe. */
+  const EtcPalIpAddr* unicast_destinations;
+  /** The size of unicast_destinations. */
+  size_t num_unicast_destinations;
+
   /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
   uint16_t sync_universe;
 
 } SacnSourceUniverseConfig;
 
 /** A default-value initializer for an SacnSourceUniverseConfig struct. */
-#define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT \
-  {                                              \
-    0, NULL, 0, 100, NULL, false, false, 0       \
+#define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT    \
+  {                                                 \
+    0, NULL, 0, 100, NULL, false, false, NULL, 0, 0 \
   }
 
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config);
