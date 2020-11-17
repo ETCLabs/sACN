@@ -286,7 +286,7 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
 
     EtcPalSockAddr* bind_addr = &recv_any;
 #if SACN_RECEIVER_LIMIT_BIND
-    if (context->num_socket_refs > 0)
+    if (context->num_socket_refs > 0)  // TODO: Bind once for IPv4 and again for IPv6
       bind_addr = NULL;
 #endif
     res = create_receiver_socket(ip_type, bind_addr, true, &new_socket);
@@ -416,6 +416,7 @@ void sacn_add_pending_sockets(SacnRecvThreadContext* recv_thread_context)
     for (size_t i = recv_thread_context->num_socket_refs - recv_thread_context->new_socket_refs;
          i < recv_thread_context->num_socket_refs; ++i)
     {
+      // TODO: Only add sockets that called bind (check LIMIT_BIND)
       etcpal_error_t add_res = etcpal_poll_add_socket(&recv_thread_context->poll_context,
                                                       recv_thread_context->socket_refs[i].sock, ETCPAL_POLL_IN, NULL);
       if (add_res != kEtcPalErrOk)

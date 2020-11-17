@@ -87,13 +87,19 @@ typedef struct SacnDmxMergerConfig
 
   /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
       Memory is owned by the application.*/
-  uint8_t* slots;
+  uint8_t* slots; // Make sure this is set to 0 when owner is invalid (init and source loss)
 
   /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
       that slot, or #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
       You can use SACN_DMX_MERGER_SOURCE_IS_VALID() if you don't want to look at the slot_owners directly.
       Memory is owned by the application.*/
-  sacn_source_id_t* slot_owners;
+  sacn_source_id_t* slot_owners;  // TODO: Document OPTIONAL
+
+  uint8_t* winning_paps;  // TODO: Document OPTIONAL & only used if converting to sACN and need pap & 0 convert to 1 &
+                          // set to 0 if owner is invalid
+  // TODO: Reflect this on CPP side
+
+  // TODO: Better text on when you would use slot_owners, winning_paps, or none.
 
 } SacnDmxMergerConfig;
 
