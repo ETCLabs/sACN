@@ -7,6 +7,7 @@ set(SACN_PUBLIC_HEADERS
   ${SACN_INCLUDE}/sacn/source.h
   ${SACN_INCLUDE}/sacn/version.h
   ${SACN_INCLUDE}/sacn/dmx_merger.h
+  ${SACN_INCLUDE}/sacn/source_detector.h
 )
 set(SACN_PRIVATE_HEADERS
   ${SACN_SRC}/sacn/private/common.h
@@ -19,6 +20,7 @@ set(SACN_PRIVATE_HEADERS
   ${SACN_SRC}/sacn/private/merge_receiver.h
   ${SACN_SRC}/sacn/private/source.h
   ${SACN_SRC}/sacn/private/util.h
+  ${SACN_SRC}/sacn/private/source_detector.h
 )
 set(SACN_API_SOURCES
   ${SACN_SRC}/sacn/mem.c
@@ -28,6 +30,7 @@ set(SACN_API_SOURCES
   ${SACN_SRC}/sacn/merge_receiver.c
   ${SACN_SRC}/sacn/source.c
   ${SACN_SRC}/sacn/util.c
+  ${SACN_SRC}/sacn/source_detector.c
 )
 
 #TODO: There's probably a better name for this, but we'll

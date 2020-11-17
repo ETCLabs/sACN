@@ -325,4 +325,82 @@
  * @}
  */
 
+/***************************** sACN Source Detector Options *****************************/
+
+/**
+ * @defgroup sacnopts_source_detector sACN Source Detector Options
+ * @ingroup sacnopts
+ *
+ * Configuration options for the @ref sacn_source_detector module.
+ * @{
+ */
+
+/* TODO: These constants are here for the case we need a separate thread for source detection.
+ *  It could very well be that some sACN receiver thread in the library can drive this as well,
+ *  in which case these constants don't need to be here.
+ */
+
+/**
+ * @brief The priority of the sACN source detector thread.
+ *
+ * This is usually only meaningful on real-time systems.
+ */
+#ifndef SACN_SOURCE_DETECTOR_THREAD_PRIORITY
+#define SACN_SOURCE_DETECTOR_THREAD_PRIORITY ETCPAL_THREAD_DEFAULT_PRIORITY
+#endif
+
+/**
+ * @brief The stack size of each sACN source detector thread.
+ *
+ * It's usually only necessary to worry about this on real-time or embedded systems.
+ */
+#ifndef SACN_SOURCE_DETECTOR_THREAD_STACK
+#define SACN_SOURCE_DETECTOR_THREAD_STACK ETCPAL_THREAD_DEFAULT_STACK
+#endif
+
+/* Infinite read blocks are not supported due to the potential for hangs on shutdown. */
+#if defined(SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS) && SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS < 0
+#undef SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS /* It will get the default value below */
+#endif
+
+//TODO change this to whatever you need, or remove the constant.
+/**
+ * @brief The maximum amount of time the Source Detector thread will block waiting for data, in
+ *        milliseconds.
+ *
+ * It is recommended to keep this time short to avoid delays on shutdown.
+ */
+#ifndef SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS
+#define SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS 100
+#endif
+
+/**
+ * @brief The maximum number of sACN sources that can be monitored.
+ * 
+ * This number is intentionally set on the small side.  This module
+ * is more likely to be needed by applications that use dynamic memory.
+ * 
+ * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
+ */
+#ifndef SACN_SOURCE_DETECTOR_MAX_SOURCES
+#define SACN_SOURCE_DETECTOR_MAX_SOURCES 5
+#endif
+
+/**
+ * @brief The maximum number of sACN universes that can be tracked on each source.
+ *
+ * This number is intentionally set on the small side.  This module
+ * is more likely to be needed by applications that use dynamic memory.
+ * 
+ * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
+ */
+#ifndef SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE
+#define SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE 5
+#endif
+
+
+/**
+ * @}
+ */
+
 #endif /* SACN_PRIVATE_OPTS_H_ */

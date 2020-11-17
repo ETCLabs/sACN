@@ -83,7 +83,7 @@ typedef struct SacnDmxMergerConfig
   /** The maximum number of sources this merger will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
       This parameter is ignored when configured to use static memory -- #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used
       instead.*/
-  size_t source_count_max;
+  int source_count_max;
 
   /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
       Memory is owned by the application.*/
