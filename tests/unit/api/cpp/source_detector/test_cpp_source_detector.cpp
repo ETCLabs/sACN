@@ -31,17 +31,20 @@
 #include "gtest/gtest.h"
 
 #if SACN_DYNAMIC_MEM
-#define TestUniverseDiscovery TestCppUniverseDiscoveryDynamic
+#define TestSourceDetector TestCppSourceDetectorDynamic
 #else
-#define TestUniverseDiscovery TestCppUniverseDiscoveryStatic
+#define TestSourceDetector TestCppSourceDetectorStatic
 #endif
 
 
-class TestUniverseDiscovery : public ::testing::Test
+class TestSourceDetector : public ::testing::Test
 {
 protected:
   void SetUp() override
   {
+    //Just making sure the source detector c++ interface compiles
+    sacn::SourceDetector tst_detector;
+
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
     sacn_data_loss_reset_all_fakes();
@@ -58,7 +61,7 @@ protected:
   }
 };
 
-TEST_F(TestUniverseDiscovery, TestFoo)
+TEST_F(TestSourceDetector, TestFoo)
 {
-  //CHRISTIAN TODO: CLEAN UP TESTING
+  //TODO: CLEAN UP TESTING
 }

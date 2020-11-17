@@ -77,7 +77,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     bool source_initted = false;
     bool merger_initted = false;
     bool merge_receiver_initted = false;
-    bool universe_discovery_initted = false;
+    bool source_detector_initted = false;
 
     // Init the log params early so the other modules can log things on initialization
     if (log_params)
@@ -109,7 +109,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     if (res == kEtcPalErrOk)
       merge_receiver_initted = ((res = sacn_merge_receiver_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
-      universe_discovery_initted = ((res = sacn_source_detector_init()) == kEtcPalErrOk);
+      source_detector_initted = ((res = sacn_source_detector_init()) == kEtcPalErrOk);
 
     if (res == kEtcPalErrOk)
     {
@@ -118,7 +118,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     else
     {
       // Clean up
-      if (universe_discovery_initted)
+      if (source_detector_initted)
         sacn_source_detector_deinit();
       if (merge_receiver_initted)
         sacn_merge_receiver_deinit();

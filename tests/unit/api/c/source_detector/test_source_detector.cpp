@@ -30,12 +30,12 @@
 #include "fff.h"
 
 #if SACN_DYNAMIC_MEM
-#define TestUniverseDiscovery TestUniverseDiscoveryDynamic
+#define TestSourceDetector TestSourceDetectorDynamic
 #else
-#define TestUniverseDiscovery TestUniverseDiscoveryStatic
+#define TestSourceDetector TestSourceDetectorStatic
 #endif
 
-class TestUniverseDiscovery : public ::testing::Test
+class TestSourceDetector : public ::testing::Test
 {
 protected:
   void SetUp() override
@@ -55,7 +55,7 @@ protected:
   }
 };
 
-TEST_F(TestUniverseDiscovery, TestFoo)
+TEST_F(TestSourceDetector, TestFoo)
 {
-  //CHRISTIAN TODO
+  //TODO
 }
