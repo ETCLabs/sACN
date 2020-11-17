@@ -121,7 +121,8 @@ public:
     /** If true, this sACN source will only send unicast traffic on this universe. Defaults to false. */
     bool send_unicast_only{false};
 
-    /** The initial set of unicast destinations for this universe. */
+    /** The initial set of unicast destinations for this universe. This can be changed further by using
+        Source::AddUnicastDestination() and Source::RemoveUnicastDestination(). */
     const std::vector<EtcPalIpAddr> unicast_destinations;
 
     /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */

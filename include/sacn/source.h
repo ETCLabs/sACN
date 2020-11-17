@@ -129,7 +129,8 @@ typedef struct SacnSourceUniverseConfig
   /** If true, this sACN source will only send unicast traffic on this universe. Defaults to false. */
   bool send_unicast_only;
 
-  /** The initial set of unicast destinations for this universe. */
+  /** The initial set of unicast destinations for this universe. This can be changed further by using
+      sacn_source_add_unicast_destination() and sacn_source_remove_unicast_destination(). */
   const EtcPalIpAddr* unicast_destinations;
   /** The size of unicast_destinations. */
   size_t num_unicast_destinations;
