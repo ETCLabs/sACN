@@ -342,7 +342,10 @@ inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterfa
 }
 
 /**
- * @brief Returns the source id for that source cid.
+ * @brief Converts a source CID to the corresponding source ID.
+ *
+ * This is a simple conversion from a source CID to it's corresponding source ID. A source ID will be returned only if
+ * it is a source that has been discovered by the merge receiver.
  *
  * @param[in] source_cid The UUID of the source CID.
  * @return On success this will be the source ID, otherwise kEtcPalErrInvalid.
@@ -356,9 +359,9 @@ inline etcpal::Expected<sacn_source_id_t> MergeReceiver::GetSourceId(const etcpa
 }
 
 /**
- * @brief Returns the source cid for that source id.
+ * @brief Converts a source ID to the corresponding source CID.
  *
- * @param[in] source_id The id of the source.
+ * @param[in] source_id The ID of the source.
  * @return On success this will be the source CID, otherwise kEtcPalErrInvalid.
  */
 inline etcpal::Expected<etcpal::Uuid> MergeReceiver::GetSourceCid(sacn_source_id_t source_id) const

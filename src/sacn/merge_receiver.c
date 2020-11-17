@@ -258,11 +258,14 @@ etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle
 }
 
 /**
- * @brief Returns the source id for that source cid.
+ * @brief Converts a source CID to the corresponding source ID, or #SACN_DMX_MERGER_SOURCE_INVALID if not found.
+ *
+ * This is a simple conversion from a source CID to it's corresponding source ID. A source ID will be returned only if
+ * it is a source that has been discovered by the merge receiver.
  *
  * @param[in] handle The handle to the merge receiver.
  * @param[in] source_cid The UUID of the source CID.
- * @return The source ID, or #SACN_DMX_MERGER_SOURCE_INVALID.
+ * @return The source ID, or #SACN_DMX_MERGER_SOURCE_INVALID if not found.
  */
 sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid)
 {
@@ -272,7 +275,7 @@ sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle,
 }
 
 /**
- * @brief fills in the source cid for that source id.
+ * @brief Converts a source ID to the corresponding source CID.
  *
  * @param[in] handle The handle to the merge receiver.
  * @param[in] source_id The ID of the source.
