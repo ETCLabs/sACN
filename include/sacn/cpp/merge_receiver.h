@@ -132,6 +132,13 @@ public:
 
     /** The maximum number of sources this universe will listen to when using dynamic memory. */
     size_t source_count_max{SACN_RECEIVER_INFINITE_SOURCES};
+
+    /** If true, this allows per-address priorities (if any are received) to be fed into the merger. If false, received
+     *  per-address priorities are ignored, and only universe priorities are used in the merger. Keep in mind that this
+     *  setting will be ignored if #SACN_ETC_PRIORITY_EXTENSTION = 0, in which case per-address priorities are ignored.
+     */
+    bool use_pap{true};
+
     /// If non-empty, the list of network interfaces to listen on.  Otherwise all available interfaces are used.
     std::vector<EtcPalMcastNetintId> netints; 
 
@@ -384,6 +391,7 @@ inline SacnMergeReceiverConfig MergeReceiver::TranslateConfig(const Settings& se
       &notify_handler
     },
     settings.source_count_max,
+    settings.use_pap,
   };
   // clang-format on
 
