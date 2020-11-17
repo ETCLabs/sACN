@@ -38,13 +38,13 @@
 #if SACN_DYNAMIC_MEM
 #define ALLOC_MERGE_RECEIVER() malloc(sizeof(SacnMergeReceiver))
 #define FREE_MERGE_RECEIVER(ptr) \
-  do                       \
-  {                        \
-    if (ptr->netints)      \
-    {                      \
-      free(ptr->netints);  \
-    }                      \
-    free(ptr);             \
+  do                             \
+  {                              \
+    if (ptr->netints)            \
+    {                            \
+      free(ptr->netints);        \
+    }                            \
+    free(ptr);                   \
   } while (0)
 #else
 #define ALLOC_MERGE_RECEIVER() etcpal_mempool_alloc(sacnrecv_merge_receivers)
@@ -126,6 +126,7 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
   if (config)
   {
     memset(config, 0, sizeof(SacnMergeReceiverConfig));
+    config->use_pap = true;
   }
 }
 

@@ -146,12 +146,16 @@ typedef struct SacnMergeReceiverConfig
       This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used
       instead.*/
   size_t source_count_max;
+
+  /** If true, this allows per-address priorities (if any are received) to be fed into the merger. If false, received
+      per-address priorities are ignored, and only universe priorities are used in the merger. */
+  bool use_pap;
 } SacnMergeReceiverConfig;
 
 /** A default-value initializer for an SacnMergeReceiverConfig struct. */
-#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                 \
-  {                                                             \
-    0, {NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES \
+#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                       \
+  {                                                                   \
+    0, {NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, true \
   }
 
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
