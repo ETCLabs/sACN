@@ -110,9 +110,6 @@ static void handle_incoming(sacn_thread_id_t thread_id, const uint8_t* data, siz
                             const EtcPalSockAddr* from_addr);
 static void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
                                     const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr, bool draft);
-static void process_source_data_buffers(SacnTrackedSource* src, const EtcPalSockAddr* from_addr,
-                                        const SacnHeaderData* header, const uint8_t* pdata, bool filter_preview_data,
-                                        bool* notify);
 static void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
                                     SourcePapLostNotification* source_pap_lost, bool* notify);
 static void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* notify);
@@ -124,16 +121,15 @@ static void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const Etc
                                       const SacnHeaderData* header,
                                       SourceLimitExceededNotification* source_limit_exceeded,
                                       SourcePapLostNotification* source_pap_lost,
-                                      UniverseDataNotification* universe_data, SourcesFoundNotification* source_found);
+                                      UniverseDataNotification* universe_data);
 
 // Process periodic timeout functionality
 static void process_receivers(SacnRecvThreadContext* recv_thread_context);
 static void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver,
-                                     SourcesLostNotification* sources_lost, SourcesFoundNotification* sources_found);
+                                     SourcesLostNotification* sources_lost);
 static bool check_source_timeouts(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
 static void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
-static void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost,
-                                       const SourcesFoundNotification* sources_found_arr, size_t num_sources_found);
+static void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost);
 
 // Tree node management
 static int tracked_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
@@ -373,9 +369,9 @@ etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* univ
  * @brief Change the universe on which an sACN receiver is listening.
  *
  * An sACN receiver can only listen on one universe at a time. After this call completes successfully, the receiver is
- * in a sampling period for the new universe and will provide SourcesFound() notifications when appropriate.
- * If this call fails, the caller must call sacn_receiver_destroy for the receiver, because the receiver may be in an
- * invalid state.
+ * in a sampling period for the universe and will provide SamplingPeriodStarted() and SamplingPeriodEnded()
+ * notifications, as well as UniverseData() notifications as packets are received for the universe. If this call fails,
+ * the caller must call sacn_receiver_destroy for the receiver, because the receiver may be in an invalid state.
  *
  * @param[in] handle Handle to the receiver for which to change the universe.
  * @param[in] new_universe_id New universe number that this receiver should listen to.
@@ -470,12 +466,12 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
  * After this call completes successfully, the receiver is in a sampling period for the universe and will provide
- * SourcesFound() notifications when appropriate.
- * If this call fails, the caller must call sacn_receiver_destroy for the receiver, because the receiver may be in an
- * invalid state.
+ * SamplingPeriodStarted() and SamplingPeriodEnded() notifications, as well as UniverseData() notifications as packets
+ * are received for the universe. If this call fails, the caller must call sacn_receiver_destroy for the receiver,
+ * because the receiver may be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
- * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ * network interfaces passed in. This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] handle Handle to the receiver for which to reset the networking.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
@@ -598,8 +594,8 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
 {
   SACN_ASSERT(config);
 
-  if (!UNIVERSE_ID_VALID(config->universe_id) || !config->callbacks.sources_found || !config->callbacks.universe_data ||
-      !config->callbacks.sources_lost)
+  if (!UNIVERSE_ID_VALID(config->universe_id) || !config->callbacks.universe_data || !config->callbacks.sources_lost ||
+      !config->callbacks.sampling_period_ended)
   {
     return kEtcPalErrInvalid;
   }
@@ -952,7 +948,6 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
                              const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr, bool draft)
 {
   UniverseDataNotification* universe_data = get_universe_data(thread_id);
-  SourcesFoundNotification* source_found = get_sources_found_buffer(thread_id, 1);
   SourceLimitExceededNotification* source_limit_exceeded = get_source_limit_exceeded(thread_id);
   SourcePapLostNotification* source_pap_lost = get_source_pap_lost(thread_id);
   if (!universe_data || !source_limit_exceeded || !source_pap_lost)
@@ -1040,8 +1035,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 #endif
       else if (header->start_code != SACN_STARTCODE_PRIORITY)
       {
-        // Other start codes should only go to universe_data, after the sampling period.
-        notify = src->found;
+        notify = true;
       }
     }
     else if (!is_termination_packet)
@@ -1052,26 +1046,17 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 
     if (src)
     {
-      process_source_data_buffers(src, from_addr, header, universe_data->pdata, receiver->filter_preview_data, &notify);
+      if (header->preview && receiver->filter_preview_data)
+      {
+        notify = false;
+      }
 
       if (notify)
       {
-        if (src->found)
-        {
-          universe_data->callback = receiver->callbacks.universe_data;
-          universe_data->handle = receiver->keys.handle;
-          universe_data->universe = receiver->keys.universe;
-          universe_data->context = receiver->callbacks.context;
-        }
-        else if (add_found_source(source_found, src))
-        {
-          source_found->callback = receiver->callbacks.sources_found;
-          source_found->handle = receiver->keys.handle;
-          source_found->universe = receiver->keys.universe;
-          source_found->context = receiver->callbacks.context;
-
-          src->found = true;
-        }
+        universe_data->callback = receiver->callbacks.universe_data;
+        universe_data->handle = receiver->keys.handle;
+        universe_data->universe = receiver->keys.universe;
+        universe_data->context = receiver->callbacks.context;
       }
     }
 
@@ -1079,68 +1064,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
   }
 
   // Deliver callbacks if applicable.
-  deliver_receive_callbacks(from_addr, sender_cid, header, source_limit_exceeded, source_pap_lost, universe_data,
-                            source_found);
-}
-
-void process_source_data_buffers(SacnTrackedSource* src, const EtcPalSockAddr* from_addr, const SacnHeaderData* header,
-                                 const uint8_t* pdata, bool filter_preview_data, bool* notify)
-{
-  if (header->preview && filter_preview_data && src->found)
-  {
-    // Discard preview data if the sources found notification already happened.
-    *notify = false;
-  }
-  else if (!src->found)  // These buffers are only needed for the SourcesFound notification.
-  {
-    SourceDataBuffer* source_data_buffer = NULL;
-    if (header->start_code == SACN_STARTCODE_DMX)
-    {
-      source_data_buffer = &src->null_start_code_buffer;
-    }
-#if SACN_ETC_PRIORITY_EXTENSION
-    else if (header->start_code == SACN_STARTCODE_PRIORITY)
-    {
-      source_data_buffer = &src->pap_buffer;
-    }
-#endif
-
-    if (source_data_buffer)
-    {
-      if (header->preview && filter_preview_data && source_data_buffer->written && !source_data_buffer->preview)
-      {
-        // Discard preview data if we already have non-preview data.
-        *notify = false;
-      }
-      else
-      {
-        source_data_buffer->written = true;
-        source_data_buffer->from_addr = *from_addr;
-        source_data_buffer->priority = header->priority;
-        source_data_buffer->preview = header->preview;
-        source_data_buffer->start_code = header->start_code;
-
-        if (header->preview && filter_preview_data)
-        {
-          source_data_buffer->slot_count = 0;
-          memset(source_data_buffer->data, 0, DMX_ADDRESS_COUNT);
-        }
-        else
-        {
-          source_data_buffer->slot_count = header->slot_count;
-          memcpy(source_data_buffer->data, pdata, header->slot_count);
-          memset(source_data_buffer->data + header->slot_count, 0, DMX_ADDRESS_COUNT - header->slot_count);
-        }
-      }
-    }
-  }
-
-#if SACN_ETC_PRIORITY_EXTENSION
-  if (!src->found && etcpal_timer_is_expired(&src->pap_timer) && (src->pap_buffer.slot_count > 0))
-  {
-    memset(&src->pap_buffer, 0, sizeof(SourceDataBuffer));
-  }
-#endif
+  deliver_receive_callbacks(from_addr, sender_cid, header, source_limit_exceeded, source_pap_lost, universe_data);
 }
 
 /*
@@ -1316,7 +1240,6 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
   ETCPAL_MSVC_NO_DEP_WRN strcpy(src->name, header->source_name);
   etcpal_timer_start(&src->packet_timer, SOURCE_LOSS_TIMEOUT);
   src->seq = seq;
-  src->found = false;
   src->terminated = false;
   src->dmx_received_since_last_tick = true;
 
@@ -1347,11 +1270,6 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
   }
 #endif
 
-  memset(&src->null_start_code_buffer, 0, sizeof(SourceDataBuffer));
-#if SACN_ETC_PRIORITY_EXTENSION
-  memset(&src->pap_buffer, 0, sizeof(SourceDataBuffer));
-#endif
-
   etcpal_rbtree_insert(&receiver->sources, src);
   *new_source = src;
 
@@ -1379,8 +1297,7 @@ bool check_sequence(int8_t new_seq, int8_t old_seq)
 
 void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid* sender_cid,
                                const SacnHeaderData* header, SourceLimitExceededNotification* source_limit_exceeded,
-                               SourcePapLostNotification* source_pap_lost, UniverseDataNotification* universe_data,
-                               SourcesFoundNotification* source_found)
+                               SourcePapLostNotification* source_pap_lost, UniverseDataNotification* universe_data)
 {
 #if !SACN_LOGGING_ENABLED
   ETCPAL_UNUSED_ARG(header);
@@ -1414,12 +1331,6 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
     universe_data->callback(universe_data->handle, universe_data->universe, from_addr, &universe_data->header,
                             universe_data->pdata, universe_data->context);
   }
-
-  if (source_found->handle != SACN_RECEIVER_INVALID && source_found->callback)
-  {
-    source_found->callback(source_found->handle, source_found->universe, source_found->found_sources,
-                           source_found->num_found_sources, source_found->context);
-  }
 }
 
 /**************************************************************************************************
@@ -1434,16 +1345,13 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
 {
   SourcesLostNotification* sources_lost = NULL;
   size_t num_sources_lost = 0;
-  SourcesFoundNotification* sources_found = NULL;
-  size_t num_sources_found = 0;
 
   if (sacn_lock())
   {
     size_t num_receivers = recv_thread_context->num_receivers;
 
     sources_lost = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
-    sources_found = get_sources_found_buffer(recv_thread_context->thread_id, num_receivers);
-    if (!sources_lost || !sources_found)
+    if (!sources_lost)
     {
       sacn_unlock();
       SACN_LOG_ERR("Could not allocate memory to track state data for sACN receivers!");
@@ -1452,18 +1360,16 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
 
     for (SacnReceiver* receiver = recv_thread_context->receivers; receiver; receiver = receiver->next)
     {
-      process_receiver_sources(recv_thread_context->thread_id, receiver, &sources_lost[num_sources_lost++],
-                               &sources_found[num_sources_found++]);
+      process_receiver_sources(recv_thread_context->thread_id, receiver, &sources_lost[num_sources_lost++]);
     }
 
     sacn_unlock();
   }
 
-  deliver_periodic_callbacks(sources_lost, num_sources_lost, sources_found, num_sources_found);
+  deliver_periodic_callbacks(sources_lost, num_sources_lost);
 }
 
-void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver, SourcesLostNotification* sources_lost,
-                              SourcesFoundNotification* sources_found)
+void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver, SourcesLostNotification* sources_lost)
 {
   SacnSourceStatusLists* status_lists = get_status_lists(thread_id);
   SacnTrackedSource** to_erase = get_to_erase_buffer(thread_id, etcpal_rbtree_size(&receiver->sources));
@@ -1499,11 +1405,6 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
         SACN_LOG_DEBUG("Removing internally tracked source %s", cid_str);
       }
     }
-    else if (sampling_period_just_ended && !src->found)
-    {
-      // Attempt to construct a notification with all the sources found during the sampling period.
-      src->found = add_found_source(sources_found, src);
-    }
 
     src = etcpal_rbiter_next(&src_it);
   }
@@ -1529,14 +1430,6 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
     {
       etcpal_rbtree_remove_with_cb(&receiver->sources, &sources_lost->lost_sources[i].cid, source_tree_dealloc);
     }
-  }
-
-  if (sources_found->num_found_sources > 0)
-  {
-    sources_found->callback = receiver->callbacks.sources_found;
-    sources_found->context = receiver->callbacks.context;
-    sources_found->handle = receiver->keys.handle;
-    sources_found->universe = receiver->keys.universe;
   }
 }
 
@@ -1621,15 +1514,8 @@ void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_
   }
 }
 
-void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost,
-                                const SourcesFoundNotification* sources_found_arr, size_t num_sources_found)
+void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost)
 {
-  for (const SourcesFoundNotification* notif = sources_found_arr; notif < sources_found_arr + num_sources_found;
-       ++notif)
-  {
-    if (notif->callback)
-      notif->callback(notif->handle, notif->universe, notif->found_sources, notif->num_found_sources, notif->context);
-  }
   for (const SourcesLostNotification* notif = sources_lost_arr; notif < sources_lost_arr + num_sources_lost; ++notif)
   {
     if (notif->callback)

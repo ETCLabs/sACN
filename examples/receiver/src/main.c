@@ -383,48 +383,6 @@ static etcpal_error_t console_change_listening_universe(const SacnReceiverCallba
  *************************************************************************************************/
 
 /*
- * This callback is called when a set of new sources is found. Add the new source state, and set
- * the level data to be displayed.
- */
-static void handle_sources_found(sacn_receiver_t handle, uint16_t universe, const SacnFoundSource* found_sources,
-                                 size_t num_found_sources, void* context)
-{
-  ETCPAL_UNUSED_ARG(handle);
-
-  if (etcpal_mutex_lock(&mutex))
-  {
-    ListeningUniverse* listener = (ListeningUniverse*)context;
-    assert(listener);
-
-    for (const SacnFoundSource* found_source = found_sources; found_source < (found_sources + num_found_sources);
-         ++found_source)
-    {
-      // See if there's room for new source data
-      SourceData* new_source_data = find_source_hole(listener);
-      if (new_source_data)
-      {
-        new_source_data->cid = found_source->cid;
-        strcpy(new_source_data->name, found_source->name);
-        new_source_data->priority = found_source->priority;
-        new_source_data->num_updates = 1;
-        new_source_data->update_start_time_ms = etcpal_getms();
-        size_t values_len =
-            (found_source->values_len < NUM_SLOTS_DISPLAYED) ? found_source->values_len : NUM_SLOTS_DISPLAYED;
-        memcpy(new_source_data->last_update, found_source->values, values_len);
-        memset(new_source_data->last_update + values_len, 0, NUM_SLOTS_DISPLAYED - values_len);
-        new_source_data->valid = true;
-        ++listener->num_sources;
-      }
-      else
-      {
-        printf("No room to track new source on universe %u\n", universe);
-      }
-    }
-    etcpal_mutex_unlock(&mutex);
-  }
-}
-
-/*
  * This callback is called when a sACN data packet is received on a universe. In a real application
  * this data would be acted upon somehow. We just update some stats about the source of the data,
  * and store the first few slots.
@@ -442,12 +400,34 @@ static void handle_universe_data(sacn_receiver_t handle, uint16_t universe, cons
 
     // Get the source state to update.
     SourceData* source = find_source(listener, &header->cid);
+    if (source == NULL)
+    {
+      // See if there's room for new source data
+      source = find_source_hole(listener);
+      if (source)
+      {
+        source->cid = header->cid;
+        strcpy(source->name, header->source_name);
+        source->num_updates = 0;
+        source->update_start_time_ms = etcpal_getms();
+        source->valid = true;
+        ++listener->num_sources;
+      }
+      else
+      {
+        printf("No room to track new source on universe %u\n", universe);
+      }
+    }
+
     if (source)
     {
       ++source->num_updates;
       source->priority = header->priority;
-      memcpy(source->last_update, pdata, NUM_SLOTS_DISPLAYED);
+      size_t values_len = (header->slot_count < NUM_SLOTS_DISPLAYED) ? header->slot_count : NUM_SLOTS_DISPLAYED;
+      memcpy(source->last_update, pdata, values_len);
+      memset(source->last_update + values_len, 0, NUM_SLOTS_DISPLAYED - values_len);
     }
+
     etcpal_mutex_unlock(&mutex);
   }
 }
@@ -486,6 +466,28 @@ static void handle_sources_lost(sacn_receiver_t handle, uint16_t universe, const
 }
 
 /*
+ * The sampling period has ended. Just log a message here.
+ */
+void handle_sampling_period_ended(sacn_receiver_t handle, uint16_t universe, void* context)
+{
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(context);
+
+  printf("Sampling period ended on universe %u.\n", universe);
+}
+
+/*
+ * The sampling period has begun. Just log a message here.
+ */
+void handle_sampling_period_started(sacn_receiver_t handle, uint16_t universe, void* context)
+{
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(context);
+
+  printf("Sampling period started on universe %u.\n", universe);
+}
+
+/*
  * If sACN is compiled with SACN_ETC_PRIORITY_EXTENSION=1, this callback is called if a source was
  * sending per-channel priority packets and stopped sending them, but is still sending NULL start
  * code data.
@@ -512,9 +514,10 @@ static void handle_source_limit_exceeded(sacn_receiver_t handle, uint16_t univer
 
 // clang-format off
 static const SacnReceiverCallbacks kSacnCallbacks = {
-  handle_sources_found,
   handle_universe_data,
   handle_sources_lost,
+  handle_sampling_period_ended,
+  handle_sampling_period_started,
   handle_source_pap_lost,
   handle_source_limit_exceeded,
   NULL

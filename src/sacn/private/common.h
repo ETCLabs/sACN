@@ -255,7 +255,6 @@ typedef struct SacnTrackedSource
   char name[SACN_SOURCE_NAME_MAX_LEN];
   EtcPalTimer packet_timer;
   uint8_t seq;
-  bool found;
   bool terminated;
   bool dmx_received_since_last_tick;
 
@@ -264,28 +263,11 @@ typedef struct SacnTrackedSource
   /* pap stands for Per-Address Priority. */
   EtcPalTimer pap_timer;
 #endif
-
-  /* This is where incoming data is saved for later processing. */
-  SourceDataBuffer null_start_code_buffer;
-#if SACN_ETC_PRIORITY_EXTENSION
-  SourceDataBuffer pap_buffer;
-#endif
 } SacnTrackedSource;
 
 /******************************************************************************
  * Notifications delivered by the sACN receive module
  *****************************************************************************/
-
-/* Data for the sources_found() callback */
-typedef struct SourcesFoundNotification
-{
-  SacnSourcesFoundCallback callback;
-  sacn_receiver_t handle;
-  uint16_t universe;
-  SACN_DECLARE_BUF(SacnFoundSource, found_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
-  size_t num_found_sources;
-  void* context;
-} SourcesFoundNotification;
 
 /* Data for the universe_data() callback */
 typedef struct UniverseDataNotification

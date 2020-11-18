@@ -133,8 +133,7 @@ One way to input this data is to pass it in directly, using the update source da
 function takes pointers to the NULL start code and per-address priority buffers, their lengths,
 and the universe priority value. If the NULL start code or per-address-priority data is not being
 updated, the corresponding pointer should be NULL, with a length of 0. Therefore, this function
-allows the updating of one or the other, or both. This function would be ideal for initializing
-the source data from the receiver API's sources found callback.
+allows the updating of one or the other, or both.
 
 <!-- CODE_BLOCK_START -->
 ```c
