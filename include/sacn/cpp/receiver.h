@@ -25,6 +25,8 @@
  * @brief C++ wrapper for the sACN Receiver API
  */
 
+#include <vector>
+
 #include "sacn/receiver.h"
 #include "etcpal/cpp/inet.h"
 
@@ -75,10 +77,9 @@ public:
     /**
      * @brief Notify that one or more sources have entered a source loss state.
      * @param universe The universe this receiver is monitoring.
-     * @param lost_sources Array of structs describing the source or sources that have been lost.
-     * @param num_lost_sources Size of the lost_sources array.
+     * @param lost_sources Vector of structs describing the source or sources that have been lost.
      */
-    virtual void HandleSourcesLost(uint16_t universe, const SacnLostSource* lost_sources, size_t num_lost_sources) = 0;
+    virtual void HandleSourcesLost(uint16_t universe, const std::vector<SacnLostSource>& lost_sources) = 0;
 
     /**
      * @brief Notify that a receiver's sampling period has ended.
@@ -119,7 +120,7 @@ public:
 
     /********* Optional values **********/
 
-    size_t source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
+    int source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
                                                                 listen to when using dynamic memory. */
     unsigned int flags{0};                   /**< A set of option flags. See the C API's "sACN receiver flags". */
 
@@ -136,11 +137,13 @@ public:
   Receiver(Receiver&& other) = default;             /**< Move a device instance. */
   Receiver& operator=(Receiver&& other) = default;  /**< Move a device instance. */
 
+  etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler);
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
                         std::vector<SacnMcastInterface>& netints);
   void Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
+  etcpal::Error ResetNetworking();
   etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
 
   // Lesser used functions.  These apply to all instances of this class.
@@ -180,9 +183,10 @@ extern "C" inline void ReceiverCbSourcesLost(sacn_receiver_t handle, uint16_t un
 {
   ETCPAL_UNUSED_ARG(handle);
 
-  if (context)
+  if (context && lost_sources && (num_lost_sources > 0))
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesLost(universe, lost_sources, num_lost_sources);
+    std::vector<SacnLostSource> lost_vec(lost_sources, lost_sources + num_lost_sources);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesLost(universe, lost_vec);
   }
 }
 
@@ -248,6 +252,34 @@ inline Receiver::Settings::Settings(uint16_t new_universe_id) : universe_id(new_
 inline bool Receiver::Settings::IsValid() const
 {
   return (universe_id > 0);
+}
+
+/**
+ * @brief Start listening for sACN data on a universe.
+ *
+ * This is the overload of Startup that uses all network interfaces.
+ * 
+ * An sACN receiver can listen on one universe at a time, and each universe can only be listened to
+ * by one receiver at at time.
+ *
+ * Note that a receiver is considered as successfully created if it is able to successfully use any of the
+ * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
+ * @param[in] settings Configuration parameters for the sACN receiver and this class instance.
+ * @param[in] notify_handler The notification interface to call back to the application.
+ * @return #kEtcPalErrOk: Receiver created successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrExists: A receiver already exists which is listening on the specified universe.
+ * @return #kEtcPalErrNoMem: No room to allocate memory for this receiver.
+ * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& notify_handler)
+{
+  std::vector<SacnMcastInterface> netints;
+  return Startup(settings, notify_handler, netints);
 }
 
 /**
@@ -330,6 +362,33 @@ etcpal::Expected<uint16_t> Receiver::GetUniverse() const
 inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
 {
   return sacn_receiver_change_universe(handle_, new_universe_id);
+}
+
+/**
+ * @brief Resets the underlying network sockets and packet receipt state for this class..
+ *
+ * This is the overload of ResetNetworking that uses all network interfaces.
+ *
+ * This is typically used when the application detects that the list of networking interfaces has changed.
+ *
+ * After this call completes successfully, the receiver is in a sampling period for the new universe and will provide
+ * HandleSourcesFound() calls when appropriate.
+ * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ *
+ * Note that the networking reset is considered successful if it is able to successfully use any of the
+ * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
+ * @return #kEtcPalErrOk: Universe changed successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+inline etcpal::Error Receiver::ResetNetworking()
+{
+  std::vector<SacnMcastInterface> netints;
+  return ResetNetworking(netints);
 }
 
 /**

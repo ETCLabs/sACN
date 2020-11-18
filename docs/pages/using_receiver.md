@@ -264,15 +264,15 @@ void my_sources_lost_callback(sacn_receiver_t handle, uint16_t universe, const S
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourcesLost(uint16_t universe, const SacnLostSource* lost_sources, size_t num_lost_sources)
+void MyNotifyHandler::HandleSourcesLost(uint16_t universe, const std::vector<SacnLostSource>& lost_sources)
 {
   // You might not normally print a message on this condition, but this is just to demonstrate
   // the fields available:
   std::cout << "The following sources have gone offline:\n";
-  for (SacnLostSource* source = lost_sources; source < lost_sources + num_lost_sources; ++source)
+  for(const SacnLostSource& src : lost_sources)
   {
-    std::cout << "CID: " << etcpal::Uuid(source->cid).ToString() << "\tName: " << source->name << "\tTerminated: " 
-              << source->terminated << "\n";
+    std::cout << "CID: " << etcpal::Uuid(source.cid).ToString() << "\tName: " << source.name << "\tTerminated: " 
+              << source.terminated << "\n";
 
     // Remove the source from your state tracking...
   }

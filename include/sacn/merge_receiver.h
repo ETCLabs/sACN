@@ -145,7 +145,7 @@ typedef struct SacnMergeReceiverConfig
   /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
       This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used
       instead.*/
-  size_t source_count_max;
+  int source_count_max;
 
   /** If true, this allows per-address priorities (if any are received) to be fed into the merger. If false, received
       per-address priorities are ignored, and only universe priorities are used in the merger. Keep in mind that this

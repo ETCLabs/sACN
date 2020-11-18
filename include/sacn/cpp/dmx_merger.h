@@ -86,7 +86,7 @@ public:
 
     /********* Optional values **********/
 
-    size_t source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
+    int source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
                                                                 listen to when using dynamic memory. */
 
     /** Create an empty, invalid data structure by default. */

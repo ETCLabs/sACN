@@ -238,7 +238,7 @@ typedef struct SacnReceiverConfig
   /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
       This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used
      instead.*/
-  size_t source_count_max;
+  int source_count_max;
   /** A set of option flags. See "sACN receiver flags". */
   unsigned int flags;
 } SacnReceiverConfig;
