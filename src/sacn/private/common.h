@@ -331,8 +331,12 @@ typedef struct SourceLimitExceededNotification
 /* For the shared-socket model, this represents a shared socket. */
 typedef struct SocketRef
 {
-  etcpal_socket_t sock; /* The socket descriptor. */
-  size_t refcount;      /* How many addresses the socket is subscribed to. */
+  etcpal_socket_t sock;     /* The socket descriptor. */
+  size_t refcount;          /* How many addresses the socket is subscribed to. */
+  etcpal_iptype_t ip_type;  /* The IP type used in multicast subscriptions and the bind address. */
+#if SACN_RECEIVER_LIMIT_BIND
+  bool bound;               /* True if bind was called on this socket, false otherwise. */
+#endif
 } SocketRef;
 
 /* Holds the discrete data used by each receiver thread. */
@@ -354,6 +358,10 @@ typedef struct SacnRecvThreadContext
   SACN_DECLARE_BUF(SocketRef, socket_refs, SACN_RECEIVER_MAX_SOCKET_REFS);
   size_t num_socket_refs;
   size_t new_socket_refs;
+#if SACN_RECEIVER_LIMIT_BIND
+  bool ipv4_bound;
+  bool ipv6_bound;
+#endif
 
   // This section is only touched from the thread, outside the lock.
   EtcPalPollContext poll_context;

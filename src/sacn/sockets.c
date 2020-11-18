@@ -266,9 +266,7 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
   // Find a shared socket that has room for another subscription.
   for (SocketRef* entry = context->socket_refs; entry < context->socket_refs + context->num_socket_refs; ++entry)
   {
-    EtcPalSockAddr bound_addr;
-    if ((etcpal_getsockname(entry->sock, &bound_addr) == kEtcPalErrOk) && (bound_addr.ip.type == ip_type) &&
-        (entry->refcount < SACN_RECEIVER_MAX_SUBS_PER_SOCKET))
+    if ((entry->ip_type == ip_type) && (entry->refcount < SACN_RECEIVER_MAX_SUBS_PER_SOCKET))
     {
       new_socket = entry->sock;
       ++entry->refcount;
@@ -286,14 +284,19 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
 
     EtcPalSockAddr* bind_addr = &recv_any;
 #if SACN_RECEIVER_LIMIT_BIND
-    if (context->num_socket_refs > 0)  // TODO: Bind once for IPv4 and again for IPv6
+    // Limit IPv4 to one bind and IPv6 to one bind for this thread.
+    if (((ip_type != kEtcPalIpTypeV4) || context->ipv4_bound) && ((ip_type != kEtcPalIpTypeV6) || context->ipv6_bound))
       bind_addr = NULL;
+    else if (ip_type == kEtcPalIpTypeV4)
+      context->ipv4_bound = true;
+    else if (ip_type == kEtcPalIpTypeV6)
+      context->ipv6_bound = true;
 #endif
     res = create_receiver_socket(ip_type, bind_addr, true, &new_socket);
     if (res == kEtcPalErrOk)
     {
       // Try to add the new socket ref to the array
-      if (!add_socket_ref(context, new_socket))
+      if (!add_socket_ref(context, new_socket, ip_type, bind_addr != NULL))
       {
         res = kEtcPalErrNoMem;
         etcpal_close(new_socket);
@@ -416,14 +419,18 @@ void sacn_add_pending_sockets(SacnRecvThreadContext* recv_thread_context)
     for (size_t i = recv_thread_context->num_socket_refs - recv_thread_context->new_socket_refs;
          i < recv_thread_context->num_socket_refs; ++i)
     {
-      // TODO: Only add sockets that called bind (check LIMIT_BIND)
-      etcpal_error_t add_res = etcpal_poll_add_socket(&recv_thread_context->poll_context,
-                                                      recv_thread_context->socket_refs[i].sock, ETCPAL_POLL_IN, NULL);
-      if (add_res != kEtcPalErrOk)
+#if SACN_RECEIVER_LIMIT_BIND
+      if (recv_thread_context->socket_refs[i].bound)
+#endif
       {
-        SACN_LOG_ERR(
-            "Error adding new socket to sACN poll context: '%s'. sACN Receiver will likely not work correctly.",
-            etcpal_strerror(add_res));
+        etcpal_error_t add_res = etcpal_poll_add_socket(&recv_thread_context->poll_context,
+                                                        recv_thread_context->socket_refs[i].sock, ETCPAL_POLL_IN, NULL);
+        if (add_res != kEtcPalErrOk)
+        {
+          SACN_LOG_ERR(
+              "Error adding new socket to sACN poll context: '%s'. sACN Receiver will likely not work correctly.",
+              etcpal_strerror(add_res));
+        }
       }
     }
   }
@@ -487,8 +494,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
   return poll_res;
 }
 
-etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t num_netints,
-                                           size_t* num_valid_netints)
+etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t num_netints, size_t* num_valid_netints)
 {
   if (num_valid_netints)
     *num_valid_netints = 0u;

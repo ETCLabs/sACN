@@ -582,14 +582,23 @@ bool add_dead_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t
   return true;
 }
 
-bool add_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket)
+bool add_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket, etcpal_iptype_t ip_type,
+                    bool bound)
 {
+#if !SACN_RECEIVER_LIMIT_BIND
+  ETCPAL_UNUSED_ARG(bound);
+#endif
+
   SACN_ASSERT(recv_thread_context);
 
   CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, socket_refs, SocketRef, SACN_RECEIVER_MAX_SOCKET_REFS, false);
 
   recv_thread_context->socket_refs[recv_thread_context->num_socket_refs].sock = socket;
   recv_thread_context->socket_refs[recv_thread_context->num_socket_refs].refcount = 1;
+  recv_thread_context->socket_refs[recv_thread_context->num_socket_refs].ip_type = ip_type;
+#if SACN_RECEIVER_LIMIT_BIND
+  recv_thread_context->socket_refs[recv_thread_context->num_socket_refs].bound = bound;
+#endif
   ++recv_thread_context->num_socket_refs;
   ++recv_thread_context->new_socket_refs;
   return true;
@@ -808,6 +817,13 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* recv_thread
   if (!recv_thread_context->socket_refs)
     return kEtcPalErrNoMem;
   recv_thread_context->socket_refs_capacity = INITIAL_CAPACITY;
+
+  recv_thread_context->num_socket_refs = 0;
+  recv_thread_context->new_socket_refs = 0;
+#if SACN_RECEIVER_LIMIT_BIND
+  recv_thread_context->ipv4_bound = false;
+  recv_thread_context->ipv6_bound = false;
+#endif
 
   return kEtcPalErrOk;
 }

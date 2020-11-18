@@ -299,7 +299,7 @@ TEST_F(TestMem, AddSocketRefWorks)
     // Just test some arbitrary number
     for (int i = 0; i < 20; ++i)
     {
-      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i));
+      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i, kEtcPalIpTypeInvalid, false));
       EXPECT_EQ(recv_thread_context->num_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->new_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->socket_refs[i].sock, (etcpal_socket_t)i);
@@ -309,14 +309,15 @@ TEST_F(TestMem, AddSocketRefWorks)
     // Test up to the maximum capacity
     for (int i = 0; i < SACN_RECEIVER_MAX_SOCKET_REFS; ++i)
     {
-      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i));
+      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i, kEtcPalIpTypeInvalid, false));
       EXPECT_EQ(recv_thread_context->num_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->new_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->socket_refs[i].sock, (etcpal_socket_t)i);
       EXPECT_EQ(recv_thread_context->socket_refs[i].refcount, 1);
     }
     // And make sure we can't add another
-    EXPECT_FALSE(add_socket_ref(recv_thread_context, (etcpal_socket_t)SACN_RECEIVER_MAX_SOCKET_REFS));
+    EXPECT_FALSE(add_socket_ref(recv_thread_context, (etcpal_socket_t)SACN_RECEIVER_MAX_SOCKET_REFS,
+                                kEtcPalIpTypeInvalid, false));
 #endif
   });
 }
