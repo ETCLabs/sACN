@@ -40,6 +40,8 @@
 #include "etcpal/mempool.h"
 #endif
 
+// TODO: Sources Found was ripped out - now tie up loose ends and implement new start/end notifs
+
 /***************************** Private constants *****************************/
 
 static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PRIORITY, SACN_RECEIVER_THREAD_STACK,

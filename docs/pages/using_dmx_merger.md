@@ -1,9 +1,9 @@
 # Using the sACN DMX Merger API                                                 {#using_dmx_merger}
 
 The sACN DMX Merger API provides a software merger that takes start code 0 and per-address priority
-(PAP) data as input and outputs the merged levels, along with source IDs for each level. This API
-exposes both a C and C++ language interface. The C++ interface is a header-only wrapper around the
-C interface.
+(PAP) data as input and outputs the merged levels, along with source IDs and per-address priorities
+for each level. This API exposes both a C and C++ language interface. The C++ interface is a
+header-only wrapper around the C interface.
 
 Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
 library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0.
@@ -19,27 +19,29 @@ A merger must first be created before it can be used. A separate merger should b
 universe that needs merging.
 
 To create a merger, a config needs to be initialized and passed into the create/startup function.
-In the config, two array pointers must be specified for the merge results: one for the merged slot
-levels, and another for the source ID of each slot. The application owns these output arrays and
-must ensure that their memory is valid until the merger is destroyed. The maximum source count (the
-maximum number of sources the merger will merge when #SACN_DYNAMIC_MEM is 1) is also specified in
-the config, and it defaults to #SACN_RECEIVER_INFINITE_SOURCES. If #SACN_DYNAMIC_MEM is 0, then
+In the config, the output array pointer for the merged slot levels must be specified. There are
+also two optional output array pointers: one for the per-address priority of each slot, and another
+for the source ID of each slot. These two are set to NULL if not used. The application owns the
+memory that it points to in the config, and must ensure that the memory provided is valid until the
+merger is destroyed. The maximum source count (the maximum number of sources the merger will merge
+when #SACN_DYNAMIC_MEM is 1) is also specified in the config, and it defaults to
+#SACN_RECEIVER_INFINITE_SOURCES. If #SACN_DYNAMIC_MEM is 0, then
 #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used instead.
 
 Once the merger is created, the merger's functionality can be used. Mergers can also be destroyed
-individually with the destroy/shutdown function, although keep in mind that `sacn_deinit()` will
-destroy all of the mergers automatically.
+individually with the destroy/shutdown function, although keep in mind that all mergers are destroyed automatically when sACN deinitializes.
 
 <!-- CODE_BLOCK_START -->
 ```c
 // These buffers are updated on each merger call with the merge results.
-// They must be valid as long as the merger is using them.
 uint8_t slots[DMX_ADDRESS_COUNT];
+uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
 sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
 
 // Merger configuration used for the initialization of each merger:
 SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
 merger_config.slots = slots;
+merger_config.per_address_priorities = per_address_priorities;
 merger_config.slot_owners = slot_owners;
 
 // Initialize a merger and obtain its handle.
@@ -55,10 +57,13 @@ sacn_dmx_merger_destroy(merger_handle);
 // These buffers are updated on each merger call with the merge results.
 // They must be valid as long as the merger is using them.
 uint8_t slots[DMX_ADDRESS_COUNT];
+uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
 sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
 
 // Merger configuration used for the initialization of each merger:
-sacn::DmxMerger::Settings settings(slots, slot_owners);
+sacn::DmxMerger::Settings settings(slots);
+settings.per_address_priorities = per_address_priorities;
+settings.slot_owners = slot_owners;
 
 // Initialize a merger.
 sacn::DmxMerger merger;
@@ -154,7 +159,7 @@ sacn_dmx_merger_update_source_data(merger_handle, source_2_handle, universe_prio
 // Print merge results
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
 {
-  printf("Slot %u:\n Level: %u\n Source ID: %u\n", i, slots[i], slot_owners[i]);
+  printf("Slot %u:\n Level: %u\n PAP: %u\n Source ID: %u\n", i, slots[i], per_address_priorities[i], slot_owners[i]);
 }
 ```
 <!-- CODE_BLOCK_MID -->
@@ -174,7 +179,8 @@ merger.UpdateSourceData(source_2_handle, universe_priority, levels, DMX_ADDRESS_
 // Print merge results
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
 {
-  std::cout << "Slot " << i << ":\n Level: " << slots[i] << "\n Source ID: " << slot_owners[i] << "\n";
+  std::cout << "Slot " << i << ":\n Level: " << slots[i] << ":\n PAP: " << per_address_priorities[i] << "\n Source ID: "
+            << slot_owners[i] << "\n";
 }
 ```
 <!-- CODE_BLOCK_END -->

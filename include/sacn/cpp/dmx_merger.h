@@ -74,24 +74,32 @@ public:
     /********* Required values **********/
 
     /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
-        Memory is owned by the application.*/
+        Memory is owned by the application. Slots that are not sourced are set to 0.*/
     uint8_t* slots{nullptr};
 
-    /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
-        that slot, or #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
-        You can use SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, slot_index) if you don't want to look at the
-        slot_owners directly.
+    /********* Optional values **********/
+
+    /** Per-address priorities for each slot. This is used if the merge results need to be sent over sACN. Otherwise
+        this can just be set to nullptr. If a source with a universe priority of 0 wins, that priority is converted
+        to 1. If there is no winner for a slot, then a per-address priority of 0 is used to show that there is no source
+        for that slot.
+        Memory is owned by the application.*/
+    uint8_t* per_address_priorities{nullptr};
+
+    /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
+        #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if you
+        need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to
+        NULL and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of
+        0 (not sourced).
         Memory is owned by the application.*/
     sacn_source_id_t* slot_owners{nullptr};
-
-    /********* Optional values **********/
 
     int source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
                                                                 listen to when using dynamic memory. */
 
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
-    Settings(uint8_t* slots_ptr, sacn_source_id_t* slot_owners_ptr);
+    Settings(uint8_t* slots_ptr);
 
     bool IsValid() const;
   };
@@ -128,8 +136,7 @@ private:
  *
  * Optional members can be modified directly in the struct.
  */
-inline DmxMerger::Settings::Settings(uint8_t* slots_ptr, sacn_source_id_t* slot_owners_ptr)
-    : slots(slots_ptr), slot_owners(slot_owners_ptr)
+inline DmxMerger::Settings::Settings(uint8_t* slots_ptr) : slots(slots_ptr)
 {
 }
 

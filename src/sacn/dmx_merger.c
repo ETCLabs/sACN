@@ -27,6 +27,10 @@
 #include "etcpal/mempool.h"
 #endif
 
+// TODO: Make sure slots output is set to 0 when owner is invalid (init and source loss)
+// TODO: Handle the case where slot_owners is NULL
+// TODO: Implement per_address_priorities
+
 /***************************** Private constants *****************************/
 /****************************** Private macros *******************************/
 
