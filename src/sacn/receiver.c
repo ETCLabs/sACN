@@ -131,7 +131,8 @@ static void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* r
                                      SourcesLostNotification* sources_lost);
 static bool check_source_timeouts(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
 static void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
-static void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost);
+static void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost,
+                                       const SamplingEndedNotification* sampling_ended_arr, size_t num_sampling_ended);
 
 // Tree node management
 static int tracked_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
@@ -1345,6 +1346,8 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
  */
 void process_receivers(SacnRecvThreadContext* recv_thread_context)
 {
+  SamplingEndedNotification* sampling_ended = NULL;
+  size_t num_sampling_ended = 0;
   SourcesLostNotification* sources_lost = NULL;
   size_t num_sources_lost = 0;
 
@@ -1352,8 +1355,9 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
   {
     size_t num_receivers = recv_thread_context->num_receivers;
 
+    sampling_ended = get_sampling_ended_buffer(recv_thread_context->thread_id, num_receivers);
     sources_lost = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
-    if (!sources_lost)
+    if (!sampling_ended || !sources_lost)
     {
       sacn_unlock();
       SACN_LOG_ERR("Could not allocate memory to track state data for sACN receivers!");
@@ -1362,13 +1366,23 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
 
     for (SacnReceiver* receiver = recv_thread_context->receivers; receiver; receiver = receiver->next)
     {
+      // Check the sample period
+      if (receiver->sampling && etcpal_timer_is_expired(&receiver->sample_timer))
+      {
+        receiver->sampling = false;
+        sampling_ended[num_sampling_ended].callback = receiver->callbacks.sampling_ended;
+        sampling_ended[num_sampling_ended].context = receiver->callbacks.context;
+        sampling_ended[num_sampling_ended].handle = receiver->keys.handle;
+        ++num_sampling_ended;
+      }
+
       process_receiver_sources(recv_thread_context->thread_id, receiver, &sources_lost[num_sources_lost++]);
     }
 
     sacn_unlock();
   }
 
-  deliver_periodic_callbacks(sources_lost, num_sources_lost);
+  deliver_periodic_callbacks(sources_lost, num_sources_lost, sampling_ended, num_sampling_ended);
 }
 
 void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver, SourcesLostNotification* sources_lost)
@@ -1382,14 +1396,6 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
     return;
   }
   size_t num_to_erase = 0;
-
-  // Check the sample period
-  bool sampling_period_just_ended = false;
-  if (receiver->sampling && etcpal_timer_is_expired(&receiver->sample_timer))
-  {
-    receiver->sampling = false;
-    sampling_period_just_ended = true;
-  }
 
   // And iterate through the sources on each universe
   EtcPalRbIter src_it;
@@ -1516,8 +1522,16 @@ void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_
   }
 }
 
-void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost)
+void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost,
+                                const SamplingEndedNotification* sampling_ended_arr, size_t num_sampling_ended)
 {
+  for (const SamplingEndedNotification* notif = sampling_ended_arr; notif < sampling_ended_arr + num_sampling_ended;
+       ++notif)
+  {
+    if (notif->callback)
+      notif->callback(notif->handle, notif->universe, notif->context);
+  }
+
   for (const SourcesLostNotification* notif = sources_lost_arr; notif < sources_lost_arr + num_sources_lost; ++notif)
   {
     if (notif->callback)
