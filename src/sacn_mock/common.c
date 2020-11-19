@@ -19,7 +19,7 @@
 
 #include "sacn_mock/private/common.h"
 
-#include "sacn_mock/private/data_loss.h"
+#include "sacn_mock/private/source_loss.h"
 #include "sacn_mock/private/sockets.h"
 
 DEFINE_FAKE_VALUE_FUNC(bool, sacn_initialized);
@@ -34,11 +34,4 @@ void sacn_common_reset_all_fakes(void)
 
   sacn_initialized_fake.return_val = true;
   sacn_lock_fake.return_val = true;
-}
-
-void sacn_reset_all_fakes(void)
-{
-  sacn_common_reset_all_fakes();
-  sacn_data_loss_reset_all_fakes();
-  sacn_sockets_reset_all_fakes();
 }

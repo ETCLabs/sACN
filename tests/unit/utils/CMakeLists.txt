@@ -1,12 +1,12 @@
-# sACN data loss behavior unit tests
+# sACN source loss behavior unit tests
 
 set(TEST_UTILS_SOURCES
-  test_data_loss.cpp
+  test_source_loss.cpp
   test_mem.cpp
   test_sockets.cpp
   main.cpp
 
-  ${SACN_SRC}/sacn/data_loss.c
+  ${SACN_SRC}/sacn/source_loss.c
   ${SACN_SRC}/sacn/mem.c
   ${SACN_SRC}/sacn/sockets.c
 )

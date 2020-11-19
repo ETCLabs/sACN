@@ -22,7 +22,7 @@
 #include <limits>
 #include "etcpal_mock/common.h"
 #include "sacn_mock/private/common.h"
-#include "sacn_mock/private/data_loss.h"
+#include "sacn_mock/private/source_loss.h"
 #include "sacn_mock/private/sockets.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
@@ -53,7 +53,9 @@ protected:
   void SetUp() override
   {
     etcpal_reset_all_fakes();
-    sacn_reset_all_fakes();
+    sacn_common_reset_all_fakes();
+    sacn_source_loss_reset_all_fakes();
+    sacn_sockets_reset_all_fakes();
 
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_receiver_init(), kEtcPalErrOk);
@@ -97,19 +99,19 @@ TEST_F(TestReceiver, SetExpiredWaitWorks)
 TEST_F(TestReceiver, ChangeUniverseWorks)
 {
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+  config.callbacks.universe_data = [](sacn_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
                                       void*) {};
-  config.callbacks.sources_lost = [](sacn_receiver_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
   config.universe_id = CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE;
 
-  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t, const SacnMcastNetintId*,
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t, const EtcPalMcastNetintId*,
                                                  size_t, etcpal_socket_t* socket) {
     *socket = CHANGE_UNIVERSE_WORKS_FIRST_SOCKET;
     return kEtcPalErrOk;
   };
 
   sacn_receiver_t handle;
-  sacn_receiver_create(&config, &handle);
+  sacn_receiver_create(&config, &handle, nullptr, 0);
 
   clear_term_set_list_fake.custom_fake = [](TerminationSet* list) { EXPECT_EQ(list, nullptr); };
   sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t socket, bool) {
@@ -117,7 +119,7 @@ TEST_F(TestReceiver, ChangeUniverseWorks)
     EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
   };
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
-                                                 const SacnMcastNetintId*, size_t, etcpal_socket_t* socket) {
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
     EXPECT_EQ(ip_type, kEtcPalIpTypeV4);  // TODO IPv6
     EXPECT_EQ(universe, CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE);
     EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
@@ -175,19 +177,19 @@ TEST_F(TestReceiver, ChangeUniverseErrNotInitWorks)
 TEST_F(TestReceiver, ChangeUniverseErrExistsWorks)
 {
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+  config.callbacks.universe_data = [](sacn_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
                                       void*) {};
-  config.callbacks.sources_lost = [](sacn_receiver_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
 
   config.universe_id = CHANGE_UNIVERSE_RECEIVER_EXISTS_UNIVERSE;
 
   sacn_receiver_t handle_existing_receiver;
-  sacn_receiver_create(&config, &handle_existing_receiver);
+  sacn_receiver_create(&config, &handle_existing_receiver, nullptr, 0);
 
   config.universe_id = CHANGE_UNIVERSE_NO_RECEIVER_UNIVERSE_1;
 
   sacn_receiver_t handle_changing_receiver;
-  sacn_receiver_create(&config, &handle_changing_receiver);
+  sacn_receiver_create(&config, &handle_changing_receiver, nullptr, 0);
 
   etcpal_error_t change_universe_no_err_exists_result =
       sacn_receiver_change_universe(handle_changing_receiver, CHANGE_UNIVERSE_NO_RECEIVER_UNIVERSE_2);
@@ -205,13 +207,13 @@ TEST_F(TestReceiver, ChangeUniverseErrNotFoundWorks)
   EXPECT_EQ(change_universe_not_found_result, kEtcPalErrNotFound);
 
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+  config.callbacks.universe_data = [](sacn_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
                                       void*) {};
-  config.callbacks.sources_lost = [](sacn_receiver_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
   config.universe_id = CHANGE_UNIVERSE_VALID_UNIVERSE_1;
 
   sacn_receiver_t handle;
-  sacn_receiver_create(&config, &handle);
+  sacn_receiver_create(&config, &handle, nullptr, 0);
 
   etcpal_error_t change_universe_found_result =
       sacn_receiver_change_universe(handle, CHANGE_UNIVERSE_VALID_UNIVERSE_2);

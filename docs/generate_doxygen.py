@@ -7,6 +7,83 @@ import time
 
 THIS_SCRIPT_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 
+LANGUAGE_SELECTOR_TEXT = r"""
+\htmlonly
+<div class="tab">
+  <button id="button_{0}_c" class="tablinks" onclick="selectAllC()">Show All C Snippets</button>
+  <button id="button_{0}_cpp" class="tablinks" onclick="selectAllCpp()">Show All C++ Snippets</button>
+</div>
+\endhtmlonly
+"""
+PANEL_START_TEXT = r"""
+\htmlonly
+<div class="tab">
+  <button id="button_{0}_c" class="tablinks" onclick="selectLanguage(event, '{0}', 'c')">C</button>
+  <button id="button_{0}_cpp" class="tablinks" onclick="selectLanguage(event, '{0}', 'cpp')">C++</button>
+</div>
+<div id="div_{0}_c" class="tabcontent">
+\endhtmlonly
+"""
+PANEL_MID_TEXT = r"""
+\htmlonly
+</div>
+<div id="div_{0}_cpp" class="tabcontent">
+\endhtmlonly
+"""
+PANEL_END_TEXT = r"""
+\htmlonly
+</div>
+\endhtmlonly
+"""
+
+# Substitute special sentinels in the how-to markdown files with constructs which will render as
+# C/C++ language-selector panels on the HTML output.
+
+print("Converting markdown files...")
+
+try:
+    shutil.rmtree(os.path.join(THIS_SCRIPT_DIRECTORY, "GeneratedFiles"), ignore_errors=True)
+    os.makedirs(os.path.join(THIS_SCRIPT_DIRECTORY, "GeneratedFiles"))
+except OSError:
+    pass
+
+markdown_source_directories = [
+    os.path.join(THIS_SCRIPT_DIRECTORY, "pages"),
+]
+
+markdown_files = []
+for directory in markdown_source_directories:
+    markdown_files.extend(
+        os.path.join(directory, file_name)
+        for file_name in os.listdir(directory)
+        if os.path.isfile(os.path.join(directory, file_name)) and file_name.endswith(".md")
+    )
+
+for file_path in markdown_files:
+    panel_number = 1
+    with open(file_path, "r") as file_handle:
+        with open(
+            os.path.join(THIS_SCRIPT_DIRECTORY, "GeneratedFiles", os.path.basename(file_path)), "w"
+        ) as out_file:
+            for line in file_handle.readlines():
+                new_line = line.replace(
+                    "<!-- CODE_BLOCK_START -->", PANEL_START_TEXT.format(panel_number)
+                )
+                new_line = new_line.replace(
+                    "<!-- CODE_BLOCK_MID -->", PANEL_MID_TEXT.format(panel_number)
+                )
+                new_line = new_line.replace(
+                    "<!-- CODE_BLOCK_END -->", PANEL_END_TEXT.format(panel_number)
+                )
+                new_line = new_line.replace(
+                    "<!-- LANGUAGE_SELECTOR -->", LANGUAGE_SELECTOR_TEXT.format(panel_number)
+                )
+                if "<!-- CODE_BLOCK_END -->" in line or "<!-- LANGUAGE_SELECTOR -->" in line:
+                    panel_number += 1
+                out_file.write(new_line)
+
+# Generate the docs.
+
 print("Generating Doxygen and capturing warnings...")
 
 if os.getenv("BUILD_REASON", "IndividualCI") == "PullRequest":

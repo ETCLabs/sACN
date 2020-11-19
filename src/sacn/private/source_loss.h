@@ -17,8 +17,8 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#ifndef SACN_PRIVATE_DATA_LOSS_H_
-#define SACN_PRIVATE_DATA_LOSS_H_
+#ifndef SACN_PRIVATE_SOURCE_LOSS_H_
+#define SACN_PRIVATE_SOURCE_LOSS_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -35,10 +35,10 @@ extern "C" {
 
 #define SACN_MAX_TERM_SETS SACN_RECEIVER_TOTAL_MAX_SOURCES
 #define SACN_MAX_TERM_SET_SOURCES (SACN_RECEIVER_TOTAL_MAX_SOURCES * 2)
-#define SACN_DATA_LOSS_MAX_RB_NODES (SACN_MAX_TERM_SET_SOURCES)
+#define SACN_SOURCE_LOSS_MAX_RB_NODES (SACN_MAX_TERM_SET_SOURCES)
 
-etcpal_error_t sacn_data_loss_init(void);
-void sacn_data_loss_deinit(void);
+etcpal_error_t sacn_source_loss_init(void);
+void sacn_source_loss_deinit(void);
 
 void mark_sources_online(const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
                          TerminationSet* term_set_list);
@@ -53,4 +53,4 @@ void clear_term_set_list(TerminationSet* list);
 }
 #endif
 
-#endif /* SACN_PRIVATE_DATA_LOSS_H_ */
+#endif /* SACN_PRIVATE_SOURCE_LOSS_H_ */

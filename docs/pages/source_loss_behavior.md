@@ -1,4 +1,4 @@
-# Data Loss Behavior                                      {#data_loss_behavior}
+# Source Loss Behavior                                      {#source_loss_behavior}
 
 The [sACN Receiver](@ref sacn_receiver) module uses a custom algorithm, designed by ETC's network
 team, to react predictably in the event that multiple sACN Sources are lost in quick succession.
@@ -18,16 +18,16 @@ Consider the following scenario:
 
 Sources 1 and 2 are sending sACN consistently with the parameters shown on the same universe, to
 which the receiver is listening. Then, the receiver is disconnected from the switch. The receiver
-starts a data loss timer for both sources.
+starts a source loss (network data loss) timer for both sources.
 
 The timer for Source 2 could easily expire first, in which case the receiver will for a brief time
 consider Source 1 to have taken over. This will result in a short flash of all of the DMX slots on
-that universe to full, before the data loss timer for Source 1 also expires.
+that universe to full, before the source loss timer for Source 1 also expires.
 
 To avoid this unwanted behavior, the algorithm is specified as follows:
 
  * Whenever a source is considered to be lost, either due to the Stream_Terminated bit being set or
-   a data loss timeout, the library shall compile a list of all other sources currently being
+   a source loss timeout, the library shall compile a list of all other sources currently being
    tracked for that universe and wait until their online/offline status has been verified before
    sending a [sources_lost()](@ref SacnSourcesLostCallback) notification.
  * If multiple sources are determined to be offline during this verification, they shall all be
@@ -50,7 +50,7 @@ sending data                     times out                               notifie
      +                               +                                      +
      |                               |                                      |
      |------------------------------>|                                      |
-     |    sACN Data Loss Timeout     |---------------------------->         |
+     |    sACN Source Loss Timeout   |---------------------------->         |
      |          2.5 seconds          |       Settle Period                  |
      |                               |      0 to 2.5 seconds                |
      |                               |                                      |

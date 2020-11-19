@@ -17,10 +17,10 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/receiver.h
- * \brief Private constants, types, and function declarations for the
- *        \ref sacn_receiver "sACN Receiver" module.
+/**
+ * @file sacn/private/receiver.h
+ * @brief Private constants, types, and function declarations for the
+ *        @ref sacn_receiver "sACN Receiver" module.
  */
 
 #ifndef SACN_PRIVATE_RECEIVER_H_
@@ -38,8 +38,8 @@ extern "C" {
 
 #define SACN_RECEIVER_MAX_RB_NODES ((SACN_RECEIVER_MAX_UNIVERSES * 2) + SACN_RECEIVER_TOTAL_MAX_SOURCES)
 
-/* The data-loss timeout, as defined in E1.31 */
-#define DATA_LOSS_TIMEOUT 2500
+/* The source-loss timeout, defined in E1.31 as network data loss */
+#define SOURCE_LOSS_TIMEOUT 2500
 /* How long to wait for a 0xdd packet once a new source is discovered */
 #define WAIT_FOR_PRIORITY 1500
 /* Length of the sampling period for a new universe */

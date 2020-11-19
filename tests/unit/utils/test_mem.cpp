@@ -252,20 +252,12 @@ TEST_F(TestMem, ValidInitializedRecvThreadContext)
 
 #if SACN_DYNAMIC_MEM
     EXPECT_NE(recv_thread_context->dead_sockets, nullptr);
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-    EXPECT_NE(recv_thread_context->pending_sockets, nullptr);
-#else
     EXPECT_NE(recv_thread_context->socket_refs, nullptr);
-#endif
 #endif
 
     EXPECT_EQ(recv_thread_context->num_dead_sockets, 0);
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-    EXPECT_EQ(recv_thread_context->num_pending_sockets, 0);
-#else
     EXPECT_EQ(recv_thread_context->num_socket_refs, 0);
     EXPECT_EQ(recv_thread_context->new_socket_refs, 0);
-#endif
   });
 }
 
@@ -297,38 +289,6 @@ TEST_F(TestMem, AddDeadSocketWorks)
   });
 }
 
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-
-TEST_F(TestMem, AddPendingSocketWorks)
-{
-  DoForEachThread([](sacn_thread_id_t thread) {
-    SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread);
-    ASSERT_NE(recv_thread_context, nullptr);
-
-#if SACN_DYNAMIC_MEM
-    // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
-    {
-      ASSERT_TRUE(add_pending_socket(recv_thread_context, (etcpal_socket_t)i));
-      EXPECT_EQ(recv_thread_context->num_pending_sockets, i + 1);
-      EXPECT_EQ(recv_thread_context->pending_sockets[i], (etcpal_socket_t)i);
-    }
-#else
-    // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
-    {
-      ASSERT_TRUE(add_pending_socket(recv_thread_context, (etcpal_socket_t)i));
-      EXPECT_EQ(recv_thread_context->num_pending_sockets, i + 1);
-      EXPECT_EQ(recv_thread_context->pending_sockets[i], (etcpal_socket_t)i);
-    }
-    // And make sure we can't add another
-    EXPECT_FALSE(add_pending_socket(recv_thread_context, (etcpal_socket_t)SACN_RECEIVER_MAX_UNIVERSES));
-#endif
-  });
-}
-
-#else  // SACN_RECEIVER_SOCKET_PER_UNIVERSE
-
 TEST_F(TestMem, AddSocketRefWorks)
 {
   DoForEachThread([](sacn_thread_id_t thread) {
@@ -339,7 +299,7 @@ TEST_F(TestMem, AddSocketRefWorks)
     // Just test some arbitrary number
     for (int i = 0; i < 20; ++i)
     {
-      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i));
+      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i, kEtcPalIpTypeInvalid, false));
       EXPECT_EQ(recv_thread_context->num_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->new_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->socket_refs[i].sock, (etcpal_socket_t)i);
@@ -349,14 +309,15 @@ TEST_F(TestMem, AddSocketRefWorks)
     // Test up to the maximum capacity
     for (int i = 0; i < SACN_RECEIVER_MAX_SOCKET_REFS; ++i)
     {
-      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i));
+      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i, kEtcPalIpTypeInvalid, false));
       EXPECT_EQ(recv_thread_context->num_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->new_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->socket_refs[i].sock, (etcpal_socket_t)i);
       EXPECT_EQ(recv_thread_context->socket_refs[i].refcount, 1);
     }
     // And make sure we can't add another
-    EXPECT_FALSE(add_socket_ref(recv_thread_context, (etcpal_socket_t)SACN_RECEIVER_MAX_SOCKET_REFS));
+    EXPECT_FALSE(add_socket_ref(recv_thread_context, (etcpal_socket_t)SACN_RECEIVER_MAX_SOCKET_REFS,
+                                kEtcPalIpTypeInvalid, false));
 #endif
   });
 }
@@ -390,8 +351,6 @@ TEST_F(TestMem, RemoveSocketRefWorks)
     EXPECT_EQ(recv_thread_context->num_socket_refs, 1);
   });
 }
-
-#endif  // SACN_RECEIVER_SOCKET_PER_UNIVERSE
 
 TEST_F(TestMem, ValidInitializedUniverseData)
 {
@@ -521,89 +480,35 @@ TEST_F(TestMem, SourcesLostIsReZeroedWithEachGet)
   EXPECT_EQ(sources_lost->context, nullptr);
 }
 
-TEST_F(TestMem, ValidInitializedSourcePcpLost)
+TEST_F(TestMem, ValidInitializedSourcePapLost)
 {
   DoForEachThread([](sacn_thread_id_t thread) {
-    SourcePcpLostNotification* source_pcp_lost = get_source_pcp_lost(thread);
-    ASSERT_NE(source_pcp_lost, nullptr);
+    SourcePapLostNotification* source_pap_lost = get_source_pap_lost(thread);
+    ASSERT_NE(source_pap_lost, nullptr);
 
-    EXPECT_EQ(source_pcp_lost->callback, nullptr);
-    EXPECT_EQ(source_pcp_lost->handle, SACN_RECEIVER_INVALID);
-    EXPECT_EQ(source_pcp_lost->context, nullptr);
+    EXPECT_EQ(source_pap_lost->callback, nullptr);
+    EXPECT_EQ(source_pap_lost->handle, SACN_RECEIVER_INVALID);
+    EXPECT_EQ(source_pap_lost->context, nullptr);
   });
 }
 
-TEST_F(TestMem, SourcePcpLostIsReZeroedWithEachGet)
+TEST_F(TestMem, SourcePapLostIsReZeroedWithEachGet)
 {
-  SourcePcpLostNotification* source_pcp_lost = get_source_pcp_lost(0);
-  ASSERT_NE(source_pcp_lost, nullptr);
+  SourcePapLostNotification* source_pap_lost = get_source_pap_lost(0);
+  ASSERT_NE(source_pap_lost, nullptr);
 
   // Modify some elements
-  source_pcp_lost->handle = 2;
-  source_pcp_lost->callback = reinterpret_cast<SacnSourcePcpLostCallback>(kMagicPointerValue);
-  source_pcp_lost->context = reinterpret_cast<void*>(kMagicPointerValue);
+  source_pap_lost->handle = 2;
+  source_pap_lost->callback = reinterpret_cast<SacnSourcePapLostCallback>(kMagicPointerValue);
+  source_pap_lost->context = reinterpret_cast<void*>(kMagicPointerValue);
 
   // Now get again and make sure they are re-zeroed
-  source_pcp_lost = get_source_pcp_lost(0);
-  ASSERT_NE(source_pcp_lost, nullptr);
+  source_pap_lost = get_source_pap_lost(0);
+  ASSERT_NE(source_pap_lost, nullptr);
 
-  EXPECT_EQ(source_pcp_lost->callback, nullptr);
-  EXPECT_EQ(source_pcp_lost->handle, SACN_RECEIVER_INVALID);
-  EXPECT_EQ(source_pcp_lost->context, nullptr);
-}
-
-TEST_F(TestMem, ValidInitializedSamplingEndedBuf)
-{
-  DoForEachThread([](sacn_thread_id_t thread) {
-#if SACN_DYNAMIC_MEM
-    // Just test some arbitrary number for the buffer size
-    SamplingEndedNotification* sampling_ended_buf = get_sampling_ended_buffer(thread, 20);
-    ASSERT_NE(sampling_ended_buf, nullptr);
-
-    for (int i = 0; i < 20; ++i)
-    {
-      auto sampling_ended = &sampling_ended_buf[i];
-      EXPECT_EQ(sampling_ended->callback, nullptr);
-      EXPECT_EQ(sampling_ended->handle, SACN_RECEIVER_INVALID);
-      EXPECT_EQ(sampling_ended->context, nullptr);
-    }
-#else
-    SamplingEndedNotification* sampling_ended_buf = get_sampling_ended_buffer(thread, SACN_RECEIVER_MAX_UNIVERSES);
-    ASSERT_NE(sampling_ended_buf, nullptr);
-
-    // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_THREADS; ++i)
-    {
-      auto sampling_ended = &sampling_ended_buf[i];
-      EXPECT_EQ(sampling_ended->callback, nullptr);
-      EXPECT_EQ(sampling_ended->handle, SACN_RECEIVER_INVALID);
-      EXPECT_EQ(sampling_ended->context, nullptr);
-    }
-
-    // Trying to get more than the max capacity should not work
-    sampling_ended_buf = get_sampling_ended_buffer(thread, SACN_RECEIVER_MAX_UNIVERSES + 1);
-    EXPECT_EQ(sampling_ended_buf, nullptr);
-#endif
-  });
-}
-
-TEST_F(TestMem, SamplingEndedIsReZeroedWithEachGet)
-{
-  SamplingEndedNotification* sampling_ended = get_sampling_ended_buffer(0, 1);
-  ASSERT_NE(sampling_ended, nullptr);
-
-  // Modify some elements
-  sampling_ended->handle = 2;
-  sampling_ended->callback = reinterpret_cast<SacnSamplingEndedCallback>(kMagicPointerValue);
-  sampling_ended->context = reinterpret_cast<void*>(kMagicPointerValue);
-
-  // Now get again and make sure they are re-zeroed
-  sampling_ended = get_sampling_ended_buffer(0, 1);
-  ASSERT_NE(sampling_ended, nullptr);
-
-  EXPECT_EQ(sampling_ended->callback, nullptr);
-  EXPECT_EQ(sampling_ended->handle, SACN_RECEIVER_INVALID);
-  EXPECT_EQ(sampling_ended->context, nullptr);
+  EXPECT_EQ(source_pap_lost->callback, nullptr);
+  EXPECT_EQ(source_pap_lost->handle, SACN_RECEIVER_INVALID);
+  EXPECT_EQ(source_pap_lost->context, nullptr);
 }
 
 TEST_F(TestMem, ValidInitializedSourceLimitExceeded)
