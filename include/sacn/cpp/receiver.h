@@ -285,8 +285,12 @@ inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& 
 /**
  * @brief Start listening for sACN data on a universe.
  *
- * An sACN receiver can listen on one universe at a time, and each universe can only be listened to
- * by one receiver at at time.
+ * An sACN receiver can listen on one universe at a time, and each universe can only be listened to by one receiver at
+ * at time.
+ *
+ * After this call completes successfully, the receiver is in a sampling period for the universe and will provide
+ * HandleSamplingPeriodStarted() and HandleSamplingPeriodEnded() notifications, as well as HandleUniverseData()
+ * notifications as packets are received for the universe.
  *
  * Note that a receiver is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -371,9 +375,10 @@ inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, the receiver is in a sampling period for the new universe and will provide
- * HandleSourcesFound() calls when appropriate.
- * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ * After this call completes successfully, the receiver is in a sampling period for the universe and will provide
+ * HandleSamplingPeriodStarted() and HandleSamplingPeriodEnded() notifications, as well as HandleUniverseData()
+ * notifications as packets are received for the universe. If this call fails, the caller must call Shutdown() on
+ * this class, because it may be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
