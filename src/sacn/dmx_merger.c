@@ -307,18 +307,16 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
  *     in the DmxMergerUniverseConfig structure when creating the merger.
  *
  * @param[in] merger The handle to the merger.
- * @param[in] source_cid The sACN CID of the source.
  * @param[out] source_id Filled in on success with the source id.
  * @return #kEtcPalErrOk: Source added successfully.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNoMem: No room to allocate memory for this source, or the max number of sources has been reached.
- * @return #kEtcPalErrExists: the source at that cid was already added.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid,
-                                          sacn_source_id_t* source_id)
+etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_source_id_t* source_id)
 {
+#if 0  // TODO: Cleanup CIDs
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
@@ -434,6 +432,9 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
   }
 
   return result;
+#else
+  return kEtcPalErrNotImpl;
+#endif
 }
 
 /**
@@ -450,6 +451,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPal
  */
 etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_source_id_t source)
 {
+#if 0  // TODO: Cleanup CIDs
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
@@ -522,26 +524,9 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_sour
   }
 
   return result;
-}
-
-/**
- * @brief Returns the source id for that source cid.
- *
- * @param[in] merger The handle to the merger.
- * @param[in] source_cid The UUID of the source CID.
- * @return The source ID, or #SACN_DMX_MERGER_SOURCE_INVALID.
- */
-sacn_source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid)
-{
-  sacn_source_id_t result = SACN_DMX_MERGER_SOURCE_INVALID;
-
-  if (sacn_lock())
-  {
-    result = get_source_id(merger, source_cid);
-    sacn_unlock();
-  }
-
-  return result;
+#else
+  return kEtcPalErrNotImpl;
+#endif
 }
 
 /**
@@ -667,102 +652,6 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn
         update_per_address_priorities(merger_state, source_state, address_priorities,
                                       (uint16_t)address_priorities_count);
       }
-    }
-
-    sacn_unlock();
-  }
-
-  // Return the final etcpal_error_t result.
-  return result;
-}
-
-/**
- * @brief Updates the source data from a sACN packet and recalculate outputs.
- *
- * Processes data passed from the sACN receiver's SacnUniverseDataCallback() handler.  This causes the merger to
- * recalculate the outputs.
- *
- * @param[in] merger The handle to the merger.
- * @param[in] header The sACN header.  Must NOT be NULL.
- * @param[in] pdata The sACN data.
- * @return #kEtcPalErrOk: Source updated and merge completed.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
- * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid merger, or source CID in the header doesn't match
- * a known source.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
- */
-etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, const SacnHeaderData* header,
-                                                       const uint8_t* pdata)
-{
-  etcpal_error_t result = kEtcPalErrOk;
-
-  // Verify module initialized.
-  if (!sacn_initialized())
-    result = kEtcPalErrNotInit;
-
-  // Validate arguments.
-  if (result == kEtcPalErrOk)
-  {
-    if ((merger == SACN_DMX_MERGER_INVALID) || !header || (!pdata && (header->slot_count > 0)))
-      result = kEtcPalErrInvalid;
-  }
-
-  if (result == kEtcPalErrOk)
-  {
-    if (ETCPAL_UUID_IS_NULL(&header->cid) || !UNIVERSE_ID_VALID(header->universe_id) ||
-        (header->slot_count > DMX_ADDRESS_COUNT))
-    {
-      result = kEtcPalErrInvalid;
-    }
-  }
-
-  if (sacn_lock())
-  {
-    sacn_source_id_t source = SACN_DMX_MERGER_SOURCE_INVALID;
-    MergerState* merger_state = NULL;
-    SourceState* source_state = NULL;
-
-    // Check that the source is added.
-    if (result == kEtcPalErrOk)
-    {
-      source = get_source_id(merger, &header->cid);
-
-      if (source == SACN_DMX_MERGER_SOURCE_INVALID)
-        result = kEtcPalErrNotFound;
-    }
-
-    // Look up the merger state.
-    if (result == kEtcPalErrOk)
-    {
-      merger_state = etcpal_rbtree_find(&mergers, &merger);
-
-      if (!merger_state)
-        result = kEtcPalErrNotFound;
-    }
-
-    // Look up the source state.
-    if (result == kEtcPalErrOk)
-    {
-      source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
-
-      if (!source_state)
-        result = kEtcPalErrNotFound;
-    }
-
-    if (result == kEtcPalErrOk)
-    {
-      if (pdata)
-      {
-        // If start_code = 0x00, update level data. Otherwise, if start_code = 0xDD, update per-address priority data.
-        if (header->start_code == 0x00)
-          update_levels(merger_state, source_state, pdata, header->slot_count);
-        else if (header->start_code == 0xDD)
-          update_per_address_priorities(merger_state, source_state, pdata, header->slot_count);
-      }
-
-      // Update this source's universe priority.
-      update_universe_priority(merger_state, source_state, header->priority);
     }
 
     sacn_unlock();
@@ -1076,12 +965,13 @@ void free_mergers_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 
 SourceState* construct_source_state(sacn_source_id_t handle, const EtcPalUuid* cid)
 {
+  // TODO: Cleanup CID
   SourceState* source_state = ALLOC_SOURCE_STATE();
 
   if (source_state)
   {
     source_state->handle = handle;
-    memcpy(source_state->source.cid.data, cid->data, ETCPAL_UUID_BYTES);
+    source_state->source.id = handle;
     memset(source_state->source.values, 0, DMX_ADDRESS_COUNT);
     source_state->source.valid_value_count = 0;
     source_state->source.universe_priority = 0;

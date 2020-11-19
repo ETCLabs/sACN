@@ -138,8 +138,8 @@ typedef struct SacnDmxMergerConfig
     application calls a variant of sacn_dmx_merger_update_source to do the actual update. */
 typedef struct SacnDmxMergerSource
 {
-  /** The UUID (e.g. sACN CID) of the DMX source. */
-  EtcPalUuid cid;
+  /** The merger's ID for the DMX source. */
+  sacn_source_id_t id;
 
   /** The DMX data values (0 - 255). */
   uint8_t values[DMX_ADDRESS_COUNT];
@@ -163,16 +163,12 @@ typedef struct SacnDmxMergerSource
 etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle);
 etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle);
 
-etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid,
-                                          sacn_source_id_t* source_id);
+etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_source_id_t* source_id);
 etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_source_id_t source);
-sacn_source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid);
 const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_source_id_t source);
 etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn_source_id_t source, uint8_t priority,
                                                   const uint8_t* new_values, size_t new_values_count,
                                                   const uint8_t* address_priorities, size_t address_priorities_count);
-etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, const SacnHeaderData* header,
-                                                       const uint8_t* pdata);
 etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, sacn_source_id_t source);
 
 #ifdef __cplusplus

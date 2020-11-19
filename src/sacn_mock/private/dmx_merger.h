@@ -32,8 +32,7 @@ DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_dmx_merger_init);
 DECLARE_FAKE_VOID_FUNC(sacn_dmx_merger_deinit);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_dmx_merger_create, const SacnDmxMergerConfig*, sacn_dmx_merger_t*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_dmx_merger_destroy, sacn_dmx_merger_t);
-DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_dmx_merger_add_source, sacn_dmx_merger_t, const EtcPalUuid*,
-                        sacn_source_id_t*);
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_dmx_merger_add_source, sacn_dmx_merger_t, sacn_source_id_t*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_dmx_merger_remove_source, sacn_dmx_merger_t, sacn_source_id_t);
 DECLARE_FAKE_VALUE_FUNC(sacn_source_id_t, sacn_dmx_merger_get_id, sacn_dmx_merger_t, const EtcPalUuid*);
 DECLARE_FAKE_VALUE_FUNC(const SacnDmxMergerSource*, sacn_dmx_merger_get_source, sacn_dmx_merger_t, sacn_source_id_t);
