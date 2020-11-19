@@ -1330,8 +1330,9 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
 
   if (universe_data->handle != SACN_RECEIVER_INVALID && universe_data->callback)
   {
-    universe_data->callback(universe_data->handle, universe_data->universe, from_addr, &universe_data->header,
-                            universe_data->pdata, universe_data->context);
+    bool is_sampling = false;  // TODO: Pass in actual is_sampling
+    universe_data->callback(universe_data->handle, from_addr, &universe_data->header, universe_data->pdata,
+                            is_sampling, universe_data->context);
   }
 }
 

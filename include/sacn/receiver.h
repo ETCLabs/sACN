@@ -129,14 +129,15 @@ typedef struct SacnLostSource
  * TODO: this version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
  *
  * @param[in] handle Handle to the receiver instance for which universe data was received.
- * @param[in] universe The universe this receiver is monitoring.
  * @param[in] source_addr The network address from which the sACN packet originated.
  * @param[in] header The header data of the sACN packet.
  * @param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count.
+ * @param[in] is_sampling True if this data was received during the sampling period, false otherwise.
  * @param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnUniverseDataCallback)(sacn_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr,
-                                         const SacnHeaderData* header, const uint8_t* pdata, void* context);
+typedef void (*SacnUniverseDataCallback)(sacn_receiver_t handle, const EtcPalSockAddr* source_addr,
+                                         const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling,
+                                         void* context);
 
 /**
  * @brief Notify that one or more sources have entered a source loss state.

@@ -66,13 +66,13 @@ public:
 
     /**
     * @brief Notify that a data packet has been received.
-    * @param universe The universe this receiver is monitoring.
     * @param source_addr IP address & port of the packet source.
     * @param header The sACN header data.
     * @param pdata The DMX data.  Use header.slot_count to determine the length of this array.
+    * @param is_sampling True if this data was received during the sampling period, false otherwise.
     */
-    virtual void HandleUniverseData(uint16_t universe, const etcpal::SockAddr& source_addr,
-                                    const SacnHeaderData& header, const uint8_t* pdata) = 0;
+    virtual void HandleUniverseData(const etcpal::SockAddr& source_addr, const SacnHeaderData& header,
+                                    const uint8_t* pdata, bool is_sampling) = 0;
 
     /**
      * @brief Notify that one or more sources have entered a source loss state.
@@ -166,15 +166,15 @@ private:
  */
 namespace internal
 {
-extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t handle, uint16_t universe,
-                                              const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
-                                              const uint8_t* pdata, void* context)
+extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t handle, const EtcPalSockAddr* source_addr,
+                                              const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling,
+                                              void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
 
   if (source_addr && header && context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(universe, *source_addr, *header, pdata);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(*source_addr, *header, pdata, is_sampling);
   }
 }
 
