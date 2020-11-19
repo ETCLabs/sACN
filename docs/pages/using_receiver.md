@@ -123,8 +123,8 @@ void my_universe_data_callback(sacn_receiver_t handle, const EtcPalSockAddr* sou
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleUniverseData(const etcpal::SockAddr& source_addr, const SacnHeaderData& header,
-                                         const uint8_t* pdata, bool is_sampling)
+void MyNotifyHandler::HandleUniverseData(Handle handle, const etcpal::SockAddr& source_addr,
+                                         const SacnHeaderData& header, const uint8_t* pdata, bool is_sampling)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // header fields available:
@@ -169,7 +169,7 @@ void my_sampling_period_ended_callback(sacn_receiver_t handle, uint16_t universe
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSamplingPeriodEnded(uint16_t universe)
+void MyNotifyHandler::HandleSamplingPeriodEnded(Handle handle, uint16_t universe)
 {
   // Apply universe data as needed...
 }
@@ -223,7 +223,7 @@ void my_source_pap_lost_callback(sacn_receiver_t handle, uint16_t universe, cons
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourcePapLost(uint16_t universe, const SacnRemoteSource& source)
+void MyNotifyHandler::HandleSourcePapLost(Handle handle, uint16_t universe, const SacnRemoteSource& source)
 {
   // Revert to using the per-packet priority value to resolve priorities for this universe.
 }
@@ -278,7 +278,8 @@ void my_sources_lost_callback(sacn_receiver_t handle, uint16_t universe, const S
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourcesLost(uint16_t universe, const std::vector<SacnLostSource>& lost_sources)
+void MyNotifyHandler::HandleSourcesLost(Handle handle, uint16_t universe,
+                                        const std::vector<SacnLostSource>& lost_sources)
 {
   // You might not normally print a message on this condition, but this is just to demonstrate
   // the fields available:
@@ -326,7 +327,7 @@ void my_source_limit_exceeded_callback(sacn_receiver_t handle, uint16_t universe
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourceLimitExceeded(uint16_t universe)
+void MyNotifyHandler::HandleSourceLimitExceeded(Handle handle, uint16_t universe)
 {
   // Handle the condition in an application-defined way. Maybe log it?
 }
