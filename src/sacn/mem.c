@@ -82,6 +82,11 @@ typedef struct SourcesLostNotificationBuf
   SACN_DECLARE_BUF(SourcesLostNotification, buf, SACN_RECEIVER_MAX_UNIVERSES);
 } SourcesLostNotificationBuf;
 
+typedef struct SamplingStartedNotificationBuf
+{
+  SACN_DECLARE_BUF(SamplingStartedNotification, buf, SACN_RECEIVER_MAX_UNIVERSES);
+} SamplingStartedNotificationBuf;
+
 typedef struct SamplingEndedNotificationBuf
 {
   SACN_DECLARE_BUF(SamplingEndedNotification, buf, SACN_RECEIVER_MAX_UNIVERSES);
@@ -106,6 +111,7 @@ static struct SacnMemBufs
   UniverseDataNotification* universe_data;
   SourcesLostNotificationBuf* sources_lost;
   SourcePapLostNotification* source_pap_lost;
+  SamplingStartedNotificationBuf* sampling_started;
   SamplingEndedNotificationBuf* sampling_ended;
   SourceLimitExceededNotification* source_limit_exceeded;
 #else
@@ -116,6 +122,7 @@ static struct SacnMemBufs
   UniverseDataNotification universe_data[SACN_RECEIVER_MAX_THREADS];
   SourcesLostNotificationBuf sources_lost[SACN_RECEIVER_MAX_THREADS];
   SourcePapLostNotification source_pap_lost[SACN_RECEIVER_MAX_THREADS];
+  SamplingStartedNotificationBuf sampling_started[SACN_RECEIVER_MAX_THREADS];
   SamplingEndedNotificationBuf sampling_ended[SACN_RECEIVER_MAX_THREADS];
   SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_THREADS];
 #endif
@@ -149,6 +156,8 @@ static etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_l
 
 static etcpal_error_t init_source_pap_lost_buf(unsigned int num_threads);
 
+static etcpal_error_t init_sampling_started_bufs(unsigned int num_threads);
+static etcpal_error_t init_sampling_started_buf(SamplingStartedNotificationBuf* sampling_started_buf);
 static etcpal_error_t init_sampling_ended_bufs(unsigned int num_threads);
 static etcpal_error_t init_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_ended_buf);
 
@@ -172,6 +181,8 @@ static void deinit_sources_lost_entry(SourcesLostNotification* sources_lost);
 
 static void deinit_source_pap_lost_buf(void);
 
+static void deinit_sampling_started_bufs(void);
+static void deinit_sampling_started_buf(SamplingStartedNotificationBuf* sampling_started_buf);
 static void deinit_sampling_ended_bufs(void);
 static void deinit_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_ended_buf);
 
@@ -206,6 +217,8 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
   if (res == kEtcPalErrOk)
     res = init_source_pap_lost_buf(num_threads);
   if (res == kEtcPalErrOk)
+    res = init_sampling_started_bufs(num_threads);
+  if (res == kEtcPalErrOk)
     res = init_sampling_ended_bufs(num_threads);
   if (res == kEtcPalErrOk)
     res = init_source_limit_exceeded_buf(num_threads);
@@ -226,6 +239,7 @@ void sacn_mem_deinit(void)
 #if SACN_DYNAMIC_MEM
   deinit_source_limit_exceeded_buf();
   deinit_sampling_ended_bufs();
+  deinit_sampling_started_bufs();
   deinit_source_pap_lost_buf();
   deinit_sources_lost_bufs();
   deinit_universe_data_buf();
@@ -397,13 +411,37 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
 }
 
 /*
- * Get a buffer of SamplingEndedNotification instances associated with a given thread. All
- * instances in the array
- * will be initialized to default values.
+ * Get a buffer of SamplingStartedNotification instances associated with a given thread. All
+ * instances in the array will be initialized to default values.
  *
  * [in] thread_id Thread ID for which to get the buffer.
- * [in] size Size
- * of the buffer requested.
+ * [in] size Size of the buffer requested.
+ * Returns the buffer or NULL if the thread ID was invalid or memory could not be
+ * allocated.
+ */
+SamplingStartedNotification* get_sampling_started_buffer(sacn_thread_id_t thread_id, size_t size)
+{
+  if (thread_id < mem_bufs.num_threads)
+  {
+    SamplingStartedNotificationBuf* notifications = &mem_bufs.sampling_started[thread_id];
+
+    CHECK_CAPACITY(notifications, size, buf, SamplingStartedNotification, SACN_RECEIVER_MAX_UNIVERSES, NULL);
+
+    memset(notifications->buf, 0, size * sizeof(SamplingStartedNotification));
+    for (size_t i = 0; i < size; ++i)
+      notifications->buf[i].handle = SACN_RECEIVER_INVALID;
+
+    return notifications->buf;
+  }
+  return NULL;
+}
+
+/*
+ * Get a buffer of SamplingEndedNotification instances associated with a given thread. All
+ * instances in the array will be initialized to default values.
+ *
+ * [in] thread_id Thread ID for which to get the buffer.
+ * [in] size Size of the buffer requested.
  * Returns the buffer or NULL if the thread ID was invalid or memory could not be
  * allocated.
  */
@@ -821,6 +859,33 @@ etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr
   return kEtcPalErrOk;
 }
 
+etcpal_error_t init_sampling_started_bufs(unsigned int num_threads)
+{
+  mem_bufs.sampling_started = calloc(num_threads, sizeof(SamplingStartedNotificationBuf));
+  if (!mem_bufs.sampling_started)
+    return kEtcPalErrNoMem;
+
+  for (unsigned int i = 0; i < num_threads; ++i)
+  {
+    etcpal_error_t res = init_sampling_started_buf(&mem_bufs.sampling_started[i]);
+    if (res != kEtcPalErrOk)
+      return res;
+  }
+  return kEtcPalErrOk;
+}
+
+etcpal_error_t init_sampling_started_buf(SamplingStartedNotificationBuf* sampling_started_buf)
+{
+  SACN_ASSERT(sampling_started_buf);
+
+  sampling_started_buf->buf = calloc(INITIAL_CAPACITY, sizeof(SamplingStartedNotification));
+  if (!sampling_started_buf->buf)
+    return kEtcPalErrNoMem;
+
+  sampling_started_buf->buf_capacity = INITIAL_CAPACITY;
+  return kEtcPalErrOk;
+}
+
 etcpal_error_t init_sampling_ended_bufs(unsigned int num_threads)
 {
   mem_bufs.sampling_ended = calloc(num_threads, sizeof(SamplingEndedNotificationBuf));
@@ -972,6 +1037,24 @@ void deinit_source_pap_lost_buf(void)
 {
   if (mem_bufs.source_pap_lost)
     free(mem_bufs.source_pap_lost);
+}
+
+void deinit_sampling_started_bufs(void)
+{
+  if (mem_bufs.sampling_started)
+  {
+    for (unsigned int i = 0; i < mem_bufs.num_threads; ++i)
+      deinit_sampling_started_buf(&mem_bufs.sampling_started[i]);
+    free(mem_bufs.sampling_started);
+  }
+}
+
+void deinit_sampling_started_buf(SamplingStartedNotificationBuf* sampling_started_buf)
+{
+  SACN_ASSERT(sampling_started_buf);
+
+  if (sampling_started_buf->buf)
+    free(sampling_started_buf->buf);
 }
 
 void deinit_sampling_ended_bufs(void)

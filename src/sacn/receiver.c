@@ -132,7 +132,9 @@ static void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* r
 static bool check_source_timeouts(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
 static void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
 static void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost,
-                                       const SamplingEndedNotification* sampling_ended_arr, size_t num_sampling_ended);
+                                       const SamplingStartedNotification* sampling_started_arr,
+                                       size_t num_sampling_started, const SamplingEndedNotification* sampling_ended_arr,
+                                       size_t num_sampling_ended);
 
 // Tree node management
 static int tracked_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
@@ -365,7 +367,6 @@ etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* univ
     else
       res = kEtcPalErrNotFound;
 
-
     sacn_unlock();
   }
 
@@ -454,6 +455,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
     if (res == kEtcPalErrOk)
     {
       receiver->sampling = true;
+      receiver->notified_sampling_started = false;
       etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
     }
 
@@ -702,6 +704,7 @@ etcpal_error_t create_new_receiver(const SacnReceiverConfig* config, SacnMcastIn
   }
 
   receiver->sampling = true;
+  receiver->notified_sampling_started = false;
   etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
   receiver->suppress_limit_exceeded_notification = false;
   etcpal_rbtree_init(&receiver->sources, tracked_source_compare, node_alloc, node_dealloc);
@@ -1336,8 +1339,8 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
   if (universe_data->handle != SACN_RECEIVER_INVALID && universe_data->callback)
   {
     bool is_sampling = false;  // TODO: Pass in actual is_sampling
-    universe_data->callback(universe_data->handle, from_addr, &universe_data->header, universe_data->pdata,
-                            is_sampling, universe_data->context);
+    universe_data->callback(universe_data->handle, from_addr, &universe_data->header, universe_data->pdata, is_sampling,
+                            universe_data->context);
   }
 }
 
@@ -1351,6 +1354,8 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
  */
 void process_receivers(SacnRecvThreadContext* recv_thread_context)
 {
+  SamplingStartedNotification* sampling_started = NULL;
+  size_t num_sampling_started = 0;
   SamplingEndedNotification* sampling_ended = NULL;
   size_t num_sampling_ended = 0;
   SourcesLostNotification* sources_lost = NULL;
@@ -1360,9 +1365,10 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
   {
     size_t num_receivers = recv_thread_context->num_receivers;
 
+    sampling_started = get_sampling_started_buffer(recv_thread_context->thread_id, num_receivers);
     sampling_ended = get_sampling_ended_buffer(recv_thread_context->thread_id, num_receivers);
     sources_lost = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
-    if (!sampling_ended || !sources_lost)
+    if (!sampling_started || !sampling_ended || !sources_lost)
     {
       sacn_unlock();
       SACN_LOG_ERR("Could not allocate memory to track state data for sACN receivers!");
@@ -1372,6 +1378,15 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
     for (SacnReceiver* receiver = recv_thread_context->receivers; receiver; receiver = receiver->next)
     {
       // Check the sample period
+      if (!receiver->notified_sampling_started)
+      {
+        receiver->notified_sampling_started = true;
+        sampling_started[num_sampling_started].callback = receiver->callbacks.sampling_period_started;
+        sampling_started[num_sampling_started].context = receiver->callbacks.context;
+        sampling_started[num_sampling_started].handle = receiver->keys.handle;
+        ++num_sampling_started;
+      }
+
       if (receiver->sampling && etcpal_timer_is_expired(&receiver->sample_timer))
       {
         receiver->sampling = false;
@@ -1387,7 +1402,8 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
     sacn_unlock();
   }
 
-  deliver_periodic_callbacks(sources_lost, num_sources_lost, sampling_ended, num_sampling_ended);
+  deliver_periodic_callbacks(sources_lost, num_sources_lost, sampling_started, num_sampling_started, sampling_ended,
+                             num_sampling_ended);
 }
 
 void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver, SourcesLostNotification* sources_lost)
@@ -1528,8 +1544,16 @@ void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_
 }
 
 void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost,
+                                const SamplingStartedNotification* sampling_started_arr, size_t num_sampling_started,
                                 const SamplingEndedNotification* sampling_ended_arr, size_t num_sampling_ended)
 {
+  for (const SamplingStartedNotification* notif = sampling_started_arr;
+       notif < sampling_started_arr + num_sampling_started; ++notif)
+  {
+    if (notif->callback)
+      notif->callback(notif->handle, notif->universe, notif->context);
+  }
+
   for (const SamplingEndedNotification* notif = sampling_ended_arr; notif < sampling_ended_arr + num_sampling_ended;
        ++notif)
   {

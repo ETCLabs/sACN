@@ -188,6 +188,7 @@ struct SacnReceiver
 
   // State tracking
   bool sampling;
+  bool notified_sampling_started;
   EtcPalTimer sample_timer;
   bool suppress_limit_exceeded_notification;
   EtcPalRbTree sources;       // The sources being tracked on this universe.
@@ -290,6 +291,15 @@ typedef struct SourcesLostNotification
   size_t num_lost_sources;
   void* context;
 } SourcesLostNotification;
+
+/* Data for the sampling_period_started() callback */
+typedef struct SamplingStartedNotification
+{
+  SacnSamplingPeriodStartedCallback callback;
+  sacn_receiver_t handle;
+  uint16_t universe;
+  void* context;
+} SamplingStartedNotification;
 
 /* Data for the sampling_period_ended() callback */
 typedef struct SamplingEndedNotification

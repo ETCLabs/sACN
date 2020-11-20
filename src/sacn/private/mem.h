@@ -51,6 +51,7 @@ SourceLimitExceededNotification* get_source_limit_exceeded(sacn_thread_id_t thre
 
 // These are processed in the periodic timeout processing, so there are multiple per thread.
 SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, size_t size);
+SamplingStartedNotification* get_sampling_started_buffer(sacn_thread_id_t thread_id, size_t size);
 SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id, size_t size);
 
 bool add_offline_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name, bool terminated);
