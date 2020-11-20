@@ -88,9 +88,10 @@ typedef struct SacnDmxMergerConfig
 
   /********* Optional values **********/
 
-  /** Per-address priorities for each slot. This is used if the merge results need to be sent over sACN. Otherwise this
-      can just be set to NULL. If a source with a universe priority of 0 wins, that priority is converted to 1. If there
-      is no winner for a slot, then a per-address priority of 0 is used to show that there is no source for that slot.
+  /** Buffer of #DMX_ADDRESS_COUNT per-address priorities for each winning slot. This is used if the merge results need
+      to be sent over sACN. Otherwise this can just be set to NULL. If a source with a universe priority of 0 wins, that
+      priority is converted to 1. If there is no winner for a slot, then a per-address priority of 0 is used to show
+      that there is no source for that slot.
       Memory is owned by the application.*/
   uint8_t* per_address_priorities;
 
