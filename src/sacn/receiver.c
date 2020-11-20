@@ -1375,7 +1375,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
       if (receiver->sampling && etcpal_timer_is_expired(&receiver->sample_timer))
       {
         receiver->sampling = false;
-        sampling_ended[num_sampling_ended].callback = receiver->callbacks.sampling_ended;
+        sampling_ended[num_sampling_ended].callback = receiver->callbacks.sampling_period_ended;
         sampling_ended[num_sampling_ended].context = receiver->callbacks.context;
         sampling_ended[num_sampling_ended].handle = receiver->keys.handle;
         ++num_sampling_ended;

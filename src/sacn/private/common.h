@@ -291,6 +291,15 @@ typedef struct SourcesLostNotification
   void* context;
 } SourcesLostNotification;
 
+/* Data for the sampling_period_ended() callback */
+typedef struct SamplingEndedNotification
+{
+  SacnSamplingPeriodEndedCallback callback;
+  sacn_receiver_t handle;
+  uint16_t universe;
+  void* context;
+} SamplingEndedNotification;
+
 /* Data for the source_pap_lost() callback */
 typedef struct SourcePapLostNotification
 {
