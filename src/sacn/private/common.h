@@ -229,26 +229,6 @@ typedef enum
 } sacn_recv_state_t;
 #endif
 
-typedef struct SourceDataBuffer
-{
-  /* Whether this buffer has been written to yet. */
-  bool written;
-  /* The address from which we received this data. */
-  EtcPalSockAddr from_addr;
-  /* The priority of the sACN data. Valid range is 0-200, inclusive. */
-  uint8_t priority;
-  /* Whether the Preview_Data bit is set for the sACN data. From E1.31: "Indicates that the data in
-   * this packet is intended for use in visualization or media server preview applications and
-   * shall not be used to generate live output." */
-  bool preview;
-  /* The start code of the DMX data. */
-  uint8_t start_code;
-  /* The number of slots in the DMX data. */
-  uint16_t slot_count;
-  /* The DMX data. */
-  uint8_t data[DMX_ADDRESS_COUNT];
-} SourceDataBuffer;
-
 /* An sACN source that is being tracked on a given universe. */
 typedef struct SacnTrackedSource
 {
