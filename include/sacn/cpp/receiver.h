@@ -85,18 +85,18 @@ public:
                                    const std::vector<SacnLostSource>& lost_sources) = 0;
 
     /**
-     * @brief Notify that a receiver's sampling period has ended.
-     * @param handle The receiver's handle.
-     * @param universe The universe the receiver is monitoring.
-     */
-    virtual void HandleSamplingPeriodEnded(Handle handle, uint16_t universe) = 0;
-
-    /**
      * @brief Notify that a receiver's sampling period has begun.
      * @param handle The receiver's handle.
      * @param universe The universe the receiver is monitoring.
      */
     virtual void HandleSamplingPeriodStarted(Handle handle, uint16_t universe) = 0;
+
+    /**
+     * @brief Notify that a receiver's sampling period has ended.
+     * @param handle The receiver's handle.
+     * @param universe The universe the receiver is monitoring.
+     */
+    virtual void HandleSamplingPeriodEnded(Handle handle, uint16_t universe) = 0;
 
     /**
      * @brief Notify that a source has stopped transmission of per-address priority packets.
@@ -177,8 +177,6 @@ extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t handle, const EtcP
                                               const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling,
                                               void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (source_addr && header && context)
   {
     static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(handle, *source_addr, *header, pdata,
@@ -189,8 +187,6 @@ extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t handle, const EtcP
 extern "C" inline void ReceiverCbSourcesLost(sacn_receiver_t handle, uint16_t universe,
                                              const SacnLostSource* lost_sources, size_t num_lost_sources, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context && lost_sources && (num_lost_sources > 0))
   {
     std::vector<SacnLostSource> lost_vec(lost_sources, lost_sources + num_lost_sources);
@@ -198,31 +194,25 @@ extern "C" inline void ReceiverCbSourcesLost(sacn_receiver_t handle, uint16_t un
   }
 }
 
-extern "C" inline void ReceiverCbSamplingPeriodEnded(sacn_receiver_t handle, uint16_t universe, void* context)
-{
-  ETCPAL_UNUSED_ARG(handle);
-
-  if (context)
-  {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSamplingPeriodEnded(handle, universe);
-  }
-}
-
 extern "C" inline void ReceiverCbSamplingPeriodStarted(sacn_receiver_t handle, uint16_t universe, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context)
   {
     static_cast<Receiver::NotifyHandler*>(context)->HandleSamplingPeriodStarted(handle, universe);
   }
 }
 
+extern "C" inline void ReceiverCbSamplingPeriodEnded(sacn_receiver_t handle, uint16_t universe, void* context)
+{
+  if (context)
+  {
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSamplingPeriodEnded(handle, universe);
+  }
+}
+
 extern "C" inline void ReceiverCbPapLost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
                                          void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (source && context)
   {
     static_cast<Receiver::NotifyHandler*>(context)->HandleSourcePapLost(handle, universe, *source);
@@ -231,8 +221,6 @@ extern "C" inline void ReceiverCbPapLost(sacn_receiver_t handle, uint16_t univer
 
 extern "C" inline void ReceiverCbSourceLimitExceeded(sacn_receiver_t handle, uint16_t universe, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context)
   {
     static_cast<Receiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(handle, universe);
@@ -505,8 +493,8 @@ inline SacnReceiverConfig Receiver::TranslateConfig(const Settings& settings, No
     {
       internal::ReceiverCbUniverseData,
       internal::ReceiverCbSourcesLost,
-      internal::ReceiverCbSamplingPeriodEnded,
       internal::ReceiverCbSamplingPeriodStarted,
+      internal::ReceiverCbSamplingPeriodEnded,
       internal::ReceiverCbPapLost,
       internal::ReceiverCbSourceLimitExceeded,
       &notify_handler

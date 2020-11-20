@@ -233,8 +233,6 @@ extern "C" inline void SourceDetectorCbSourceUpdated(sacn_source_detector_t hand
                                                      const char* name, const uint16_t* sourced_universes,
                                                      size_t num_sourced_universes, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context && cid && name)
   {
     std::vector<uint16_t> sourced_vec;
@@ -247,8 +245,6 @@ extern "C" inline void SourceDetectorCbSourceUpdated(sacn_source_detector_t hand
 extern "C" inline void SourceDetectorCbSourceExpired(sacn_source_detector_t handle, const EtcPalUuid* cid,
                                                      const char* name, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context && cid && name)
   {
     static_cast<SourceDetector::NotifyHandler*>(context)->HandleSourceExpired(handle, *cid, name);
@@ -257,8 +253,6 @@ extern "C" inline void SourceDetectorCbSourceExpired(sacn_source_detector_t hand
 
 extern "C" inline void SourceDetectorCbMemoryLimitExceeded(sacn_source_detector_t handle, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context)
   {
     static_cast<SourceDetector::NotifyHandler*>(context)->HandleMemoryLimitExceeded(handle);

@@ -156,15 +156,6 @@ typedef void (*SacnSourcesLostCallback)(sacn_receiver_t handle, uint16_t univers
                                         size_t num_lost_sources, void* context);
 
 /**
- * @brief Notify that a receiver's sampling period has ended.
- *
- * @param[in] handle Handle to the receiver instance for which the sampling period ended.
- * @param[in] universe The universe this receiver is monitoring.
- * @param[in] context Context pointer that was given at the creation of the receiver instance.
- */
-typedef void (*SacnSamplingPeriodEndedCallback)(sacn_receiver_t handle, uint16_t universe, void* context);
-
-/**
  * @brief Notify that a receiver's sampling period has begun.
  *
  * @param[in] handle Handle to the receiver instance for which the sampling period started.
@@ -172,6 +163,15 @@ typedef void (*SacnSamplingPeriodEndedCallback)(sacn_receiver_t handle, uint16_t
  * @param[in] context Context pointer that was given at the creation of the receiver instance.
  */
 typedef void (*SacnSamplingPeriodStartedCallback)(sacn_receiver_t handle, uint16_t universe, void* context);
+
+/**
+ * @brief Notify that a receiver's sampling period has ended.
+ *
+ * @param[in] handle Handle to the receiver instance for which the sampling period ended.
+ * @param[in] universe The universe this receiver is monitoring.
+ * @param[in] context Context pointer that was given at the creation of the receiver instance.
+ */
+typedef void (*SacnSamplingPeriodEndedCallback)(sacn_receiver_t handle, uint16_t universe, void* context);
 
 /**
  * @brief Notify that a source has stopped transmission of per-address priority packets.
@@ -217,8 +217,8 @@ typedef struct SacnRecvCallbacks
 {
   SacnUniverseDataCallback universe_data;                    /**< Required */
   SacnSourcesLostCallback sources_lost;                      /**< Required */
-  SacnSamplingPeriodEndedCallback sampling_period_ended;     /**< Required */
   SacnSamplingPeriodStartedCallback sampling_period_started; /**< Optional */
+  SacnSamplingPeriodEndedCallback sampling_period_ended;     /**< Required */
   SacnSourcePapLostCallback source_pap_lost;                 /**< Optional */
   SacnSourceLimitExceededCallback source_limit_exceeded;     /**< Optional */
   void* context; /**< (optional) Pointer to opaque data passed back with each callback. */
