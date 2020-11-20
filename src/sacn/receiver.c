@@ -1086,7 +1086,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
                              SourcePapLostNotification* source_pap_lost, bool* notify)
 {
-  *notify = !receiver->sampling;  // The data is saved for after the sampling period.
+  *notify = true;  // Notify universe data during and after the sampling period.
 
   // No matter how valid, we got something.
   src->dmx_received_since_last_tick = true;
@@ -1160,7 +1160,7 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
  */
 void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* notify)
 {
-  *notify = !receiver->sampling;
+  *notify = true;
 
   switch (src->recv_state)
   {
@@ -1207,8 +1207,8 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
     return;
 #endif
 
-  // No notifications during the sampling period. Data will be saved for after the sampling period.
-  *notify = !receiver->sampling;
+  // Notify universe data during and after the sampling period.
+  *notify = true;
 
   // A new source has appeared!
   SacnTrackedSource* src = NULL;
