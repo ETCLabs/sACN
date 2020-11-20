@@ -160,7 +160,8 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, 
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleMergedData(uint16_t universe, const uint8_t* slots, const sacn_source_id_t* slot_owners)
+void MyNotifyHandler::HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
+                                       const sacn_source_id_t* slot_owners)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // fields available:
@@ -208,7 +209,7 @@ void my_universe_non_dmx_callback(sacn_merge_receiver_t handle, uint16_t univers
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleNonDmxData(uint16_t universe, const etcpal::SockAddr& source_addr,
+void MyNotifyHandler::HandleNonDmxData(Handle handle, uint16_t universe, const etcpal::SockAddr& source_addr,
                                        const SacnHeaderData& header, const uint8_t* pdata)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
@@ -255,13 +256,13 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, 
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleMergedData(uint16_t universe, const uint8_t* slots, const sacn_source_id_t* slot_owners)
+void MyNotifyHandler::HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
+                                       const sacn_source_id_t* slot_owners)
 {
   for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
   {
-    // merge_receivers_ is a map between universes and merge receiver objects
-
-    auto cid = merge_receivers_[universe].GetSourceCid(slot_owners[i]);
+    // merge_receivers_ is a map between handles and merge receiver objects
+    auto cid = merge_receivers_[handle].GetSourceCid(slot_owners[i]);
 
     if(cid)
     {
@@ -302,7 +303,7 @@ void my_source_limit_exceeded_callback(sacn_merge_receiver_t handle, uint16_t un
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourceLimitExceeded(uint16_t universe)
+void MyNotifyHandler::HandleSourceLimitExceeded(Handle handle, uint16_t universe)
 {
   // Handle the condition in an application-defined way. Maybe log it?
 }

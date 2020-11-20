@@ -84,7 +84,7 @@ namespace sacn
  *
  * Callback demonstrations:
  * @code
- * void MyNotifyHandler::HandleSourceUpdated(const etcpal::Uuid& cid, const std::string& name,
+ * void MyNotifyHandler::HandleSourceUpdated(Handle handle, const etcpal::Uuid& cid, const std::string& name,
                                              const std::vector<uint16_t>& sourced_universes)
  * {
  *   std::cout << "Source Detector: Source " << cid.ToString() << " (name " << name << ") ";
@@ -101,12 +101,12 @@ namespace sacn
  *   }
  * }
  *
- * void MyNotifyHandler::HandleSourceExpired(const etcpal::Uuid& cid, const std::string& name)
+ * void MyNotifyHandler::HandleSourceExpired(Handle handle, const etcpal::Uuid& cid, const std::string& name)
  * {
  *   std::cout << "Source Detector: Source " << cid.ToString() << " (name " << name << ") has expired.\n";
  * }
  *
- * void MyNotifyHandler::HandleMemoryLimitExceeded()
+ * void MyNotifyHandler::HandleMemoryLimitExceeded(Handle handle)
  * {
  *   std::cout << "Source Detector: Source/universe limit exceeded!\n";
  * }
@@ -138,21 +138,23 @@ public:
      *
      * The list of sourced universes is guaranteed by the protocol to be numerically sorted.
      *
+     * @param[in] handle The source detector's handle.
      * @param[in] cid The CID of the source.
      * @param[in] name The UTF-8 name string.
      * @param[in] sourced_universes Numerically sorted array of the currently sourced universes.  Will be empty if the
      * source is not currently transmitting any universes.
      */
-    virtual void HandleSourceUpdated(const etcpal::Uuid& cid, const std::string& name,
+    virtual void HandleSourceUpdated(Handle handle, const etcpal::Uuid& cid, const std::string& name,
                                      const std::vector<uint16_t>& sourced_universes) = 0;
 
     /**
      * @brief Notify that a source is no longer transmitting Universe Discovery messages.
      *
+     * @param[in] handle The source detector's handle.
      * @param[in] cid The CID of the source.
      * @param[in] name The UTF-8 name string.
      */
-    virtual void HandleSourceExpired(const etcpal::Uuid& cid, const std::string& name) = 0;
+    virtual void HandleSourceExpired(Handle handle, const etcpal::Uuid& cid, const std::string& name) = 0;
 
     /**
      * @brief Notify that the module has run out of memory to track universes or sources
@@ -168,8 +170,11 @@ public:
      * This callback is rate-limited: it will only be called when the first universe discovery packet is received that
      * takes the module beyond a memory limit.  After that, it will not be called until the number of sources or
      * universes has dropped below the limit and hits it again.
+     *
+     * @param[in] handle The source detector's handle.
+     * 
      */
-    virtual void HandleMemoryLimitExceeded() {}
+    virtual void HandleMemoryLimitExceeded(Handle handle) {}
   };
 
   /**
@@ -228,35 +233,29 @@ extern "C" inline void SourceDetectorCbSourceUpdated(sacn_source_detector_t hand
                                                      const char* name, const uint16_t* sourced_universes,
                                                      size_t num_sourced_universes, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context && cid && name)
   {
     std::vector<uint16_t> sourced_vec;
     if (sourced_universes && (num_sourced_universes > 0))
       sourced_vec.assign(sourced_universes, sourced_universes + num_sourced_universes);
-    static_cast<SourceDetector::NotifyHandler*>(context)->HandleSourceUpdated(*cid, name, sourced_vec);
+    static_cast<SourceDetector::NotifyHandler*>(context)->HandleSourceUpdated(handle, *cid, name, sourced_vec);
   }
 }
 
 extern "C" inline void SourceDetectorCbSourceExpired(sacn_source_detector_t handle, const EtcPalUuid* cid,
-                                                        const char* name, void* context)
+                                                     const char* name, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context && cid && name)
   {
-    static_cast<SourceDetector::NotifyHandler*>(context)->HandleSourceExpired(*cid, name);
+    static_cast<SourceDetector::NotifyHandler*>(context)->HandleSourceExpired(handle, *cid, name);
   }
 }
 
 extern "C" inline void SourceDetectorCbMemoryLimitExceeded(sacn_source_detector_t handle, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context)
   {
-    static_cast<SourceDetector::NotifyHandler*>(context)->HandleMemoryLimitExceeded();
+    static_cast<SourceDetector::NotifyHandler*>(context)->HandleMemoryLimitExceeded(handle);
   }
 }
 

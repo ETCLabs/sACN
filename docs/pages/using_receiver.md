@@ -91,8 +91,8 @@ the corresponding universe data callback.
 
 <!-- CODE_BLOCK_START -->
 ```c
-void my_universe_data_callback(sacn_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr, 
-                               const SacnHeaderData* header, const uint8_t* pdata, void* context)
+void my_universe_data_callback(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
+                               const uint8_t* pdata, bool is_sampling, void* context)
 {
   // Check handle and/or context as necessary...
 
@@ -104,8 +104,14 @@ void my_universe_data_callback(sacn_receiver_t handle, uint16_t universe, const 
   char cid_str[ETCPAL_UUID_STRING_BYTES];
   etcpal_uuid_to_string(&header->cid, cid_str);
 
-  printf("Got sACN update from source %s (address %s:%u, name %s) on universe %u, priority %u, start code %u\n",
-         cid_str, addr_str, source_addr->port, header->source_name, universe, header->priority, header->start_code);
+  printf("Got sACN update from source %s (address %s:%u, name %s) on universe %u, priority %u, start code %u",
+         cid_str, addr_str, source_addr->port, header->source_name, header->universe_id, header->priority,
+         header->start_code);
+
+  if (is_sampling)
+    printf(" (during the sampling period)\n");
+  else
+    printf("\n");
 
   // Example for an sACN-enabled fixture...
   if (header->start_code == 0 && my_start_addr + MY_DMX_FOOTPRINT <= header->slot_count)
@@ -117,14 +123,19 @@ void my_universe_data_callback(sacn_receiver_t handle, uint16_t universe, const 
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleUniverseData(uint16_t universe, const etcpal::SockAddr& source_addr,
-                                         const SacnHeaderData& header, const uint8_t* pdata)
+void MyNotifyHandler::HandleUniverseData(Handle handle, const etcpal::SockAddr& source_addr,
+                                         const SacnHeaderData& header, const uint8_t* pdata, bool is_sampling)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // header fields available:
   std::cout << "Got sACN update from source " << etcpal::Uuid(header.cid).ToString() << " (address " 
-            << source_addr.ToString() << ", name " << header.source_name << ") on universe " << universe 
-            << ", priority " << header.priority << ", start code " << header.start_code << "\n";
+            << source_addr.ToString() << ", name " << header.source_name << ") on universe "
+            << header.universe_id << ", priority " << header.priority << ", start code " << header.start_code;
+
+  if (is_sampling)
+    std::cout << " (during the sampling period)\n";
+  else
+    std::cout << "\n";
 
   // Example for an sACN-enabled fixture...
   if (header.start_code == 0 && my_start_addr + MY_DMX_FOOTPRINT <= header.slot_count)
@@ -140,9 +151,12 @@ void MyNotifyHandler::HandleUniverseData(uint16_t universe, const etcpal::SockAd
 
 There may be multiple sources transmitting data on a universe. The sampling period is used in order
 to remove flicker as sources are discoverd. There are notifications for when the sampling period
-begins, as well as when it ends, for each universe. The sampling period ended notification allows
-the application to act on the universe data with assurance that all of the current sources are
-represented.
+begins, as well as when it ends, for each universe. The Universe Data callback also provides the
+is_sampling parameter to indicate if the data was received during the sampling period. These
+notifications allow the application to know when to act on the universe data with assurance that
+all of the current sources are represented.
+
+Here is an example of the Sampling Period Ended callback:
 
 <!-- CODE_BLOCK_START -->
 ```c
@@ -155,7 +169,7 @@ void my_sampling_period_ended_callback(sacn_receiver_t handle, uint16_t universe
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSamplingPeriodEnded(uint16_t universe)
+void MyNotifyHandler::HandleSamplingPeriodEnded(Handle handle, uint16_t universe)
 {
   // Apply universe data as needed...
 }
@@ -209,7 +223,7 @@ void my_source_pap_lost_callback(sacn_receiver_t handle, uint16_t universe, cons
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourcePapLost(uint16_t universe, const SacnRemoteSource& source)
+void MyNotifyHandler::HandleSourcePapLost(Handle handle, uint16_t universe, const SacnRemoteSource& source)
 {
   // Revert to using the per-packet priority value to resolve priorities for this universe.
 }
@@ -264,7 +278,8 @@ void my_sources_lost_callback(sacn_receiver_t handle, uint16_t universe, const S
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourcesLost(uint16_t universe, const std::vector<SacnLostSource>& lost_sources)
+void MyNotifyHandler::HandleSourcesLost(Handle handle, uint16_t universe,
+                                        const std::vector<SacnLostSource>& lost_sources)
 {
   // You might not normally print a message on this condition, but this is just to demonstrate
   // the fields available:
@@ -312,7 +327,7 @@ void my_source_limit_exceeded_callback(sacn_receiver_t handle, uint16_t universe
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourceLimitExceeded(uint16_t universe)
+void MyNotifyHandler::HandleSourceLimitExceeded(Handle handle, uint16_t universe)
 {
   // Handle the condition in an application-defined way. Maybe log it?
 }

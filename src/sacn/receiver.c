@@ -218,6 +218,10 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
  * A sACN receiver can listen on one universe at a time, and each universe can only be listened to
  * by one receiver at at time.
  *
+ * After this call completes successfully, the receiver is in a sampling period for the universe and will provide
+ * SamplingPeriodStarted() and SamplingPeriodEnded() notifications, as well as UniverseData() notifications as packets
+ * are received for the universe.
+ *
  * Note that a receiver is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
@@ -1331,8 +1335,9 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
 
   if (universe_data->handle != SACN_RECEIVER_INVALID && universe_data->callback)
   {
-    universe_data->callback(universe_data->handle, universe_data->universe, from_addr, &universe_data->header,
-                            universe_data->pdata, universe_data->context);
+    bool is_sampling = false;  // TODO: Pass in actual is_sampling
+    universe_data->callback(universe_data->handle, from_addr, &universe_data->header, universe_data->pdata,
+                            is_sampling, universe_data->context);
   }
 }
 

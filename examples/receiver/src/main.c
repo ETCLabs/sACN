@@ -387,8 +387,8 @@ static etcpal_error_t console_change_listening_universe(const SacnReceiverCallba
  * this data would be acted upon somehow. We just update some stats about the source of the data,
  * and store the first few slots.
  */
-static void handle_universe_data(sacn_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr,
-                                 const SacnHeaderData* header, const uint8_t* pdata, void* context)
+static void handle_universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr,
+                                 const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(source_addr);
@@ -415,7 +415,7 @@ static void handle_universe_data(sacn_receiver_t handle, uint16_t universe, cons
       }
       else
       {
-        printf("No room to track new source on universe %u\n", universe);
+        printf("No room to track new source on universe %u\n", header->universe_id);
       }
     }
 

@@ -78,6 +78,7 @@ public:
      * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
      * packets on the universe.
      *
+     * @param[in] handle The merge receiver's handle.
      * @param[in] universe The universe this merge receiver is monitoring.
      * @param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe.  This buffer
      *                  is owned by the library.
@@ -86,7 +87,8 @@ public:
      *            SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, index) to check the slot validity. This buffer is owned
      *            by the library.
      */
-    virtual void HandleMergedData(uint16_t universe, const uint8_t* slots, const sacn_source_id_t* slot_owners) = 0;
+    virtual void HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
+                                  const sacn_source_id_t* slot_owners) = 0;
 
     /**
      * @brief Notify that a non-data packet has been received.
@@ -97,13 +99,14 @@ public:
      * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
      * packets on the universe.
      *
+     * @param[in] handle The merge receiver's handle.
      * @param[in] universe The universe this merge receiver is monitoring.
      * @param[in] source_addr The network address from which the sACN packet originated.
      * @param[in] header The header data of the sACN packet.
      * @param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count. This buffer
      *                  is owned by the library.
      */
-    virtual void HandleNonDmxData(uint16_t universe, const etcpal::SockAddr& source_addr,
+    virtual void HandleNonDmxData(Handle handle, uint16_t universe, const etcpal::SockAddr& source_addr,
                                   const SacnHeaderData& header, const uint8_t* pdata) = 0;
 
     /**
@@ -112,9 +115,10 @@ public:
      *
      * This is a notification that is directly forwarded from the sACN Receiver module.
      *
+     * @param[in] handle The merge receiver's handle.
      * @param[in] universe The universe this merge receiver is monitoring.
      */
-    virtual void HandleSourceLimitExceeded(uint16_t universe) = 0;
+    virtual void HandleSourceLimitExceeded(Handle handle, uint16_t universe) = 0;
   };
 
   /**
@@ -181,32 +185,27 @@ namespace internal
 extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, uint16_t universe, const uint8_t* slots,
                                                  const sacn_source_id_t* slot_owners, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleMergedData(universe, slots, slot_owners);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleMergedData(handle, universe, slots, slot_owners);
   }
 }
 
 extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr,
                                              const SacnHeaderData* header, const uint8_t* pdata, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context && source_addr && header)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(universe, *source_addr, *header, pdata);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(handle, universe, *source_addr, *header,
+                                                                          pdata);
   }
 }
 
 extern "C" inline void MergeReceiverCbSourceLimitExceeded(sacn_merge_receiver_t handle, uint16_t universe, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(universe);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(handle, universe);
   }
 }
 
