@@ -1384,6 +1384,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
         sampling_started[num_sampling_started].callback = receiver->callbacks.sampling_period_started;
         sampling_started[num_sampling_started].context = receiver->callbacks.context;
         sampling_started[num_sampling_started].handle = receiver->keys.handle;
+        sampling_started[num_sampling_started].universe = receiver->keys.universe;
         ++num_sampling_started;
       }
 
@@ -1393,6 +1394,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
         sampling_ended[num_sampling_ended].callback = receiver->callbacks.sampling_period_ended;
         sampling_ended[num_sampling_ended].context = receiver->callbacks.context;
         sampling_ended[num_sampling_ended].handle = receiver->keys.handle;
+        sampling_ended[num_sampling_ended].universe = receiver->keys.universe;
         ++num_sampling_ended;
       }
 
