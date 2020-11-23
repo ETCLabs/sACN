@@ -9,7 +9,7 @@ trigger:
 pr:
 - develop
 # TODO Remove this line after the api-proposal branch is destroyed. From now on, we'll use a branch name starting with "review-base"
-- api-proposal
+- api_proposal
 - review-base/*
 
 variables:
