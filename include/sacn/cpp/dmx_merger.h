@@ -87,7 +87,7 @@ public:
     uint8_t* per_address_priorities{nullptr};
 
     /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
-        #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if you
+        #SACN_DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if you
         need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to
         NULL and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of
         0 (not sourced).
@@ -152,7 +152,7 @@ inline bool DmxMerger::Settings::IsValid() const
  * Creates a new merger that uses the passed in config data.  The application owns all buffers
  * in the config, so be sure to call Shutdown() before destroying the buffers.
  *
- * @param[in] config Configuration parameters for the DMX merger to be created.
+ * @param[in] settings Configuration parameters for the DMX merger to be created.
  * @return #kEtcPalErrOk: Merger created successful.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.

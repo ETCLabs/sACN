@@ -96,7 +96,7 @@ typedef struct SacnDmxMergerConfig
   uint8_t* per_address_priorities;
 
   /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
-      #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if you need
+      #SACN_DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if you need
       to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to NULL and
       use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of 0 (not
       sourced).

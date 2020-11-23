@@ -97,7 +97,13 @@ typedef struct SacnHeaderData
 */
 typedef struct SacnMcastInterface
 {
+  /**
+   * The multicast interface to use.
+   */
   EtcPalMcastNetintId iface;
+  /**
+   * Whether or not the multicast interface was useable.
+   */
   bool operation_succeeded;
 } SacnMcastInterface;
 

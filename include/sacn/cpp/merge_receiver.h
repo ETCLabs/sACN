@@ -80,7 +80,7 @@ public:
      *
      * @param[in] handle The merge receiver's handle.
      * @param[in] universe The universe this merge receiver is monitoring.
-     * @param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe.  This buffer
+     * @param[in] slots Buffer of #SACN_DMX_ADDRESS_COUNT bytes containing the merged levels for the universe.  This buffer
      *                  is owned by the library.
      * @param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source_ids.  If a value in the buffer is
      *           #DMX_MERGER_SOURCE_INVALID, the corresponding slot is not currently controlled. You can also use
@@ -143,7 +143,7 @@ public:
 
     /** If true, this allows per-address priorities (if any are received) to be fed into the merger. If false, received
         per-address priorities are ignored, and only universe priorities are used in the merger. Keep in mind that this
-        setting will be ignored if #SACN_ETC_PRIORITY_EXTENSTION = 0, in which case per-address priorities are ignored.
+        setting will be ignored if #SACN_ETC_PRIORITY_EXTENSION = 0, in which case per-address priorities are ignored.
      */
     bool use_pap{true};
 

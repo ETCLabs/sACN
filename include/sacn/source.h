@@ -96,6 +96,7 @@ typedef struct SacnSourceConfig
 
 void sacn_source_config_init(SacnSourceConfig* config);
 
+/** A set of configuration information for a sACN universe. */
 typedef struct SacnSourceUniverseConfig
 {
   /********* Required values **********/

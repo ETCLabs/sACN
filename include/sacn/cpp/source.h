@@ -325,7 +325,7 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
  * Discovery packets.
 
- * @param[in] config Configuration parameters for the universe to be added.
+ * @param[in] settings Configuration parameters for the universe to be added.
  * @return #kEtcPalErrOk: Universe successfully added.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -417,6 +417,7 @@ inline etcpal::Error Source::ChangePriority(uint16_t universe, uint8_t new_prior
  * E1.31) "intended for use in visualization or media server preview applications and shall not be
  * used to generate live output."
  *
+ * @param[in] universe The universe to change.
  * @param[in] new_preview_flag The new send_preview option.
  * @return #kEtcPalErrOk: send_preview option set successfully.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.

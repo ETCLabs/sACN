@@ -199,7 +199,7 @@ typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t handle, uint16_t unive
  * platforms), and the configuration you pass to sacn_receiver_create() has source_count_max set to
  * #SACN_RECEIVER_INFINITE_SOURCES, this callback will never be called and may be set to NULL.
 
- * if #SACNDYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max is ignored and
+ * if #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max is ignored and
  * #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.
  *
  * This callback is rate-limited: it will only be called when the first sACN packet is received
