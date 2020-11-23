@@ -174,7 +174,7 @@ public:
      * @param[in] handle The source detector's handle.
      * 
      */
-    virtual void HandleMemoryLimitExceeded(Handle handle) {}
+    virtual void HandleMemoryLimitExceeded(Handle handle) { ETCPAL_UNUSED_ARG(handle); }
   };
 
   /**

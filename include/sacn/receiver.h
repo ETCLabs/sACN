@@ -218,7 +218,7 @@ typedef struct SacnRecvCallbacks
   SacnUniverseDataCallback universe_data;                    /**< Required */
   SacnSourcesLostCallback sources_lost;                      /**< Required */
   SacnSamplingPeriodStartedCallback sampling_period_started; /**< Optional */
-  SacnSamplingPeriodEndedCallback sampling_period_ended;     /**< Required */
+  SacnSamplingPeriodEndedCallback sampling_period_ended;     /**< Optional */
   SacnSourcePapLostCallback source_pap_lost;                 /**< Optional */
   SacnSourceLimitExceededCallback source_limit_exceeded;     /**< Optional */
   void* context; /**< (optional) Pointer to opaque data passed back with each callback. */

@@ -118,7 +118,11 @@ public:
      * @param[in] handle The merge receiver's handle.
      * @param[in] universe The universe this merge receiver is monitoring.
      */
-    virtual void HandleSourceLimitExceeded(Handle handle, uint16_t universe) = 0;
+    virtual void HandleSourceLimitExceeded(Handle handle, uint16_t universe)
+    {
+      ETCPAL_UNUSED_ARG(handle);
+      ETCPAL_UNUSED_ARG(universe);
+    }
   };
 
   /**
