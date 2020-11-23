@@ -31,10 +31,10 @@
 #include "etcpal/cpp/inet.h"
 
 /**
-* @defgroup sacn_receiver_cpp sACN Receiver API
-* @ingroup sacn_cpp_api
-* @brief A C++ wrapper for the sACN Receiver API
-*/
+ * @defgroup sacn_receiver_cpp sACN Receiver API
+ * @ingroup sacn_cpp_api
+ * @brief A C++ wrapper for the sACN Receiver API
+ */
 
 namespace sacn
 {
@@ -56,52 +56,80 @@ public:
   static constexpr Handle kInvalidHandle = SACN_RECEIVER_INVALID;
 
   /**
-  * @ingroup sacn_receiver_cpp
-  * @brief A base class for a class that receives notification callbacks from a sACN receiver.
-  */
+   * @ingroup sacn_receiver_cpp
+   * @brief A base class for a class that receives notification callbacks from a sACN receiver.
+   */
   class NotifyHandler
   {
   public:
     virtual ~NotifyHandler() = default;
 
     /**
-    * @brief Notify that one or more sources have been found.
-    * @param universe The universe this receiver is monitoring.
-    * @param found_sources Vector of structs describing the source or sources that have been found with their current
-    * values.
-    */
-    virtual void HandleSourcesFound(uint16_t universe, const std::vector<SacnFoundSource>& found_sources) = 0;
+     * @brief Notify that a data packet has been received.
+     * @param handle The receiver's handle.
+     * @param source_addr IP address & port of the packet source.
+     * @param header The sACN header data.
+     * @param pdata The DMX data.  Use header.slot_count to determine the length of this array.
+     * @param is_sampling True if this data was received during the sampling period, false otherwise.
+     */
+    virtual void HandleUniverseData(Handle handle, const etcpal::SockAddr& source_addr, const SacnHeaderData& header,
+                                    const uint8_t* pdata, bool is_sampling) = 0;
 
     /**
-    * @brief Notify that a data packet has been received.
-    * @param universe The universe this receiver is monitoring.
-    * @param source_addr IP address & port of the packet source.
-    * @param header The sACN header data.
-    * @param pdata The DMX data.  Use header.slot_count to determine the length of this array.
-    */
-    virtual void HandleUniverseData(uint16_t universe, const etcpal::SockAddr& source_addr,
-                                    const SacnHeaderData& header, const uint8_t* pdata) = 0;
-
-    /**
-     * @brief Notify that one or more sources have entered a data loss state.
+     * @brief Notify that one or more sources have entered a source loss state.
+     * @param handle The receiver's handle.
      * @param universe The universe this receiver is monitoring.
      * @param lost_sources Vector of structs describing the source or sources that have been lost.
      */
-    virtual void HandleSourcesLost(uint16_t universe, const std::vector<SacnLostSource>& lost_sources) = 0;
+    virtual void HandleSourcesLost(Handle handle, uint16_t universe,
+                                   const std::vector<SacnLostSource>& lost_sources) = 0;
+
+    /**
+     * @brief Notify that a receiver's sampling period has begun.
+     * @param handle The receiver's handle.
+     * @param universe The universe the receiver is monitoring.
+     */
+    virtual void HandleSamplingPeriodStarted(Handle handle, uint16_t universe)
+    {
+      ETCPAL_UNUSED_ARG(handle);
+      ETCPAL_UNUSED_ARG(universe);
+    }
+
+    /**
+     * @brief Notify that a receiver's sampling period has ended.
+     * @param handle The receiver's handle.
+     * @param universe The universe the receiver is monitoring.
+     */
+    virtual void HandleSamplingPeriodEnded(Handle handle, uint16_t universe)
+    {
+      ETCPAL_UNUSED_ARG(handle);
+      ETCPAL_UNUSED_ARG(universe);
+    }
 
     /**
      * @brief Notify that a source has stopped transmission of per-address priority packets.
+     * @param handle The receiver's handle.
      * @param universe The universe this receiver is monitoring.
      * @param source Information about the source that has stopped transmission of per-address priority.
      */
-    virtual void HandleSourcePapLost(uint16_t universe, const SacnRemoteSource& source) = 0;
+    virtual void HandleSourcePapLost(Handle handle, uint16_t universe, const SacnRemoteSource& source)
+    {
+      ETCPAL_UNUSED_ARG(handle);
+      ETCPAL_UNUSED_ARG(universe);
+      ETCPAL_UNUSED_ARG(source);
+    }
 
     /**
      * @brief Notify that more than the configured maximum number of sources are currently sending on the universe
      * being listened to.
+     * @param handle The receiver's handle.
      * @param universe The universe this receiver is monitoring.
      */
-    virtual void HandleSourceLimitExceeded(uint16_t universe) = 0;
+    virtual void HandleSourceLimitExceeded(Handle handle, uint16_t universe)
+    {
+      ETCPAL_UNUSED_ARG(handle);
+      ETCPAL_UNUSED_ARG(universe);
+    }
   };
 
   /**
@@ -112,13 +140,13 @@ public:
   {
     /********* Required values **********/
 
-    uint16_t universe_id{0};  /**< The sACN universe number the receiver is listening to. */
+    uint16_t universe_id{0}; /**< The sACN universe number the receiver is listening to. */
 
     /********* Optional values **********/
 
     int source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
                                                                 listen to when using dynamic memory. */
-    unsigned int flags{0};                   /**< A set of option flags. See the C API's "sACN receiver flags". */
+    unsigned int flags{0}; /**< A set of option flags. See the C API's "sACN receiver flags". */
 
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
@@ -130,8 +158,8 @@ public:
   Receiver() = default;
   Receiver(const Receiver& other) = delete;
   Receiver& operator=(const Receiver& other) = delete;
-  Receiver(Receiver&& other) = default;             /**< Move a device instance. */
-  Receiver& operator=(Receiver&& other) = default;  /**< Move a device instance. */
+  Receiver(Receiver&& other) = default;            /**< Move a device instance. */
+  Receiver& operator=(Receiver&& other) = default; /**< Move a device instance. */
 
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler);
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
@@ -162,61 +190,57 @@ private:
  */
 namespace internal
 {
-extern "C" inline void ReceiverCbSourcesFound(sacn_receiver_t handle, uint16_t universe,
-                                              const SacnFoundSource* found_sources, size_t num_found_sources,
+extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t handle, const EtcPalSockAddr* source_addr,
+                                              const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling,
                                               void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
-  if (context && found_sources && (num_found_sources > 0))
-  {
-    std::vector<SacnFoundSource> found_vec(found_sources, found_sources + num_found_sources);
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesFound(universe, found_vec);
-  }
-}
-
-extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t handle, uint16_t universe,
-                                              const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
-                                              const uint8_t* pdata, void* context)
-{
-  ETCPAL_UNUSED_ARG(handle);
-
   if (source_addr && header && context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(universe, *source_addr, *header, pdata);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(handle, *source_addr, *header, pdata,
+                                                                       is_sampling);
   }
 }
 
 extern "C" inline void ReceiverCbSourcesLost(sacn_receiver_t handle, uint16_t universe,
                                              const SacnLostSource* lost_sources, size_t num_lost_sources, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context && lost_sources && (num_lost_sources > 0))
   {
     std::vector<SacnLostSource> lost_vec(lost_sources, lost_sources + num_lost_sources);
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesLost(universe, lost_vec);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesLost(handle, universe, lost_vec);
+  }
+}
+
+extern "C" inline void ReceiverCbSamplingPeriodStarted(sacn_receiver_t handle, uint16_t universe, void* context)
+{
+  if (context)
+  {
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSamplingPeriodStarted(handle, universe);
+  }
+}
+
+extern "C" inline void ReceiverCbSamplingPeriodEnded(sacn_receiver_t handle, uint16_t universe, void* context)
+{
+  if (context)
+  {
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSamplingPeriodEnded(handle, universe);
   }
 }
 
 extern "C" inline void ReceiverCbPapLost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
                                          void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (source && context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcePapLost(universe, *source);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcePapLost(handle, universe, *source);
   }
 }
 
 extern "C" inline void ReceiverCbSourceLimitExceeded(sacn_receiver_t handle, uint16_t universe, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(universe);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(handle, universe);
   }
 }
 
@@ -247,7 +271,7 @@ inline bool Receiver::Settings::IsValid() const
  * @brief Start listening for sACN data on a universe.
  *
  * This is the overload of Startup that uses all network interfaces.
- * 
+ *
  * An sACN receiver can listen on one universe at a time, and each universe can only be listened to
  * by one receiver at at time.
  *
@@ -274,8 +298,12 @@ inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& 
 /**
  * @brief Start listening for sACN data on a universe.
  *
- * An sACN receiver can listen on one universe at a time, and each universe can only be listened to
- * by one receiver at at time.
+ * An sACN receiver can listen on one universe at a time, and each universe can only be listened to by one receiver at
+ * at time.
+ *
+ * After this call completes successfully, the receiver is in a sampling period for the universe and will provide
+ * HandleSamplingPeriodStarted() and HandleSamplingPeriodEnded() notifications, as well as HandleUniverseData()
+ * notifications as packets are received for the universe.
  *
  * Note that a receiver is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -283,7 +311,8 @@ inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& 
  * @param[in] settings Configuration parameters for the sACN receiver and this class instance.
  * @param[in] notify_handler The notification interface to call back to the application.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
+ * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
+ * modified.
  * @return #kEtcPalErrOk: Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -335,8 +364,10 @@ etcpal::Expected<uint16_t> Receiver::GetUniverse() const
  * @brief Change the universe this class is listening to.
  *
  * An sACN receiver can only listen on one universe at a time. After this call completes successfully, the receiver is
- * in a sampling period for the new universe and will provide HandleSourcesFound() calls when appropriate.
- * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ * in a sampling period for the new universe and will provide HandleSamplingPeriodStarted() and
+ * HandleSamplingPeriodEnded() notifications, as well as HandleUniverseData() notifications as packets are received for
+ * the new universe. If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid
+ * state.
  *
  * @param[in] new_universe_id New universe number that this receiver should listen to.
  * @return #kEtcPalErrOk: Universe changed successfully.
@@ -358,9 +389,10 @@ inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, the receiver is in a sampling period for the new universe and will provide
- * HandleSourcesFound() calls when appropriate.
- * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ * After this call completes successfully, the receiver is in a sampling period for the universe and will provide
+ * HandleSamplingPeriodStarted() and HandleSamplingPeriodEnded() notifications, as well as HandleUniverseData()
+ * notifications as packets are received for the universe. If this call fails, the caller must call Shutdown() on
+ * this class, because it may be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -383,15 +415,17 @@ inline etcpal::Error Receiver::ResetNetworking()
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, the receiver is in a sampling period for the new universe and will provide
- * HandleSourcesFound() calls when appropriate.
- * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ * After this call completes successfully, the receiver is in a sampling period for the universe and will provide
+ * HandleSamplingPeriodStarted() and HandleSamplingPeriodEnded() notifications, as well as HandleUniverseData()
+ * notifications as packets are received for the universe. If this call fails, the caller must call Shutdown() on
+ * this class, because it may be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
- * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ * network interfaces passed in. This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
+ * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
+ * modified.
  * @return #kEtcPalErrOk: Universe changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -435,9 +469,9 @@ inline sacn_standard_version_t Receiver::GetStandardVersion()
 /**
  * @brief Set the expired notification wait time.
  *
- * The library will wait at least this long after a data loss condition has been encountered before
- * calling HandleSourcesLost(). However, the wait may be longer due to the data loss algorithm (see \ref
- * data_loss_behavior).
+ * The library will wait at least this long after a source loss condition has been encountered before
+ * calling HandleSourcesLost(). However, the wait may be longer due to the source loss algorithm (see \ref
+ * source_loss_behavior).
  *
  * @param[in] wait_ms Wait time in milliseconds.
  */
@@ -449,9 +483,9 @@ inline void Receiver::SetExpiredWait(uint32_t wait_ms)
 /**
  * @brief Get the current value of the expired notification wait time.
  *
- * The library will wait at least this long after a data loss condition has been encountered before
- * calling HandleSourcesLost(). However, the wait may be longer due to the data loss algorithm (see \ref
- * data_loss_behavior).
+ * The library will wait at least this long after a source loss condition has been encountered before
+ * calling HandleSourcesLost(). However, the wait may be longer due to the source loss algorithm (see \ref
+ * source_loss_behavior).
  *
  * @return Wait time in milliseconds.
  */
@@ -476,9 +510,10 @@ inline SacnReceiverConfig Receiver::TranslateConfig(const Settings& settings, No
   SacnReceiverConfig config = {
     settings.universe_id,
     {
-      internal::ReceiverCbSourcesFound,
       internal::ReceiverCbUniverseData,
       internal::ReceiverCbSourcesLost,
+      internal::ReceiverCbSamplingPeriodStarted,
+      internal::ReceiverCbSamplingPeriodEnded,
       internal::ReceiverCbPapLost,
       internal::ReceiverCbSourceLimitExceeded,
       &notify_handler

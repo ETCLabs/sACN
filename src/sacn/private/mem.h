@@ -51,22 +51,17 @@ SourceLimitExceededNotification* get_source_limit_exceeded(sacn_thread_id_t thre
 
 // These are processed in the periodic timeout processing, so there are multiple per thread.
 SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, size_t size);
-SourcesFoundNotification* get_sources_found_buffer(sacn_thread_id_t thread_id, size_t size);
 
 bool add_offline_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name, bool terminated);
 bool add_online_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name);
 bool add_unknown_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name);
 
 bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* cid, const char* name, bool terminated);
-bool add_found_source(SourcesFoundNotification* sources_found, const SacnTrackedSource* source);
 
 bool add_dead_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket);
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-bool add_pending_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket);
-#else
-bool add_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket);
+bool add_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket, etcpal_iptype_t ip_type,
+                    bool bound);
 bool remove_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket);
-#endif
 void add_receiver_to_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver);
 void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver);
 

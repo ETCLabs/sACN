@@ -94,20 +94,41 @@ source with the highest level. That is the Highest Takes Precedence (HTP) merge 
 ## Receiving sACN Data
 
 The merged data callback is called whenever there are new merge results for the universe being
-listened to. This callback will be called in multiple ways:
+listened to, pending the sampling period. The sampling period occurs when a receiver starts
+listening on a new universe or a new set of interfaces. Universe data is merged as it comes in
+during this period, but the notification of this data doesn't occur until after the sampling period
+ends. This removes flicker as various sources in the network are discovered.
 
-1. When a new non-preview data packet or per-address priority packet is received from the sACN
-Receiver module, it is immediately and synchronously passed to the DMX Merger, after which the
-merged result is immediately and synchronously passed to this callback.  Note that this includes
-the data received from the SacnSourcesFoundCallback().
+This callback will be called in multiple ways:
+
+1. When a new non-preview data packet or per-address priority packet is received from the sACN 
+Receiver module, it is immediately and synchronously passed to the DMX Merger. If the sampling
+period has not ended, the merged result is not passed to this callback until the sampling period
+ends. Otherwise, it is immediately and synchronously passed to this callback.
 
 2. When a sACN source is no longer sending non-preview data or per-address priority packets, the
 lost source callback from the sACN Receiver module will be passed to the merger, after which the
-merged result is immediately and synchronously passed to this callback.
+merged result is passed to this callback pending the sampling period.
 
 Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
 library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0 (in which case per-address priority
 packets received have no effect).
+
+The merger will prioritize sources with the highest per-address priority (or universe priority if
+the source doesn't provide per-address priorities). If two sources have the same highest priority,
+the one with the highest NULL start code level wins (HTP).
+
+There is a key distinction in how the merger interprets the lowest priority. The lowest universe
+priority is 0, but the lowest per-address priority is 1. This is because a per-address priority of
+0 indicates that the source is not sending any levels to the corresponding slot. Therefore, if
+source A has a universe priority of 0 and a level of 10, and source B has a per-address priority of
+0 and a level of 50, source A will still win despite having a lower level. This is because
+per-address priority 0 indicates that there is no level at this slot at all, whereas universe
+priority 0 simply indicates the lowest priority. If source B had a per-address priority of 1, then
+source B would win no matter what the levels were.
+
+Also keep in mind that if less than 512 per-address priorities are received, then the remaining
+slots will be treated as if they had a per-address priority of 0.
 
 This callback should be processed quickly, since it will interfere with the receipt and processing
 of other sACN packets on the universe.
@@ -139,7 +160,8 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, 
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleMergedData(uint16_t universe, const uint8_t* slots, const sacn_source_id_t* slot_owners)
+void MyNotifyHandler::HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
+                                       const sacn_source_id_t* slot_owners)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // fields available:
@@ -187,7 +209,7 @@ void my_universe_non_dmx_callback(sacn_merge_receiver_t handle, uint16_t univers
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleNonDmxData(uint16_t universe, const etcpal::SockAddr& source_addr,
+void MyNotifyHandler::HandleNonDmxData(Handle handle, uint16_t universe, const etcpal::SockAddr& source_addr,
                                        const SacnHeaderData& header, const uint8_t* pdata)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
@@ -234,13 +256,13 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, 
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleMergedData(uint16_t universe, const uint8_t* slots, const sacn_source_id_t* slot_owners)
+void MyNotifyHandler::HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
+                                       const sacn_source_id_t* slot_owners)
 {
   for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
   {
-    // merge_receivers_ is a map between universes and merge receiver objects
-
-    auto cid = merge_receivers_[universe].GetSourceCid(slot_owners[i]);
+    // merge_receivers_ is a map between handles and merge receiver objects
+    auto cid = merge_receivers_[handle].GetSourceCid(slot_owners[i]);
 
     if(cid)
     {
@@ -268,7 +290,7 @@ library will check against the `source_count_max` value from the merge receiver 
 instead of #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE. The `source_count_max` value may be set to
 #SACN_RECEIVER_INFINITE_SOURCES, in which case the library will track as many sources as it is
 able to dynamically allocate memory for, and this callback will not be called in normal program
-operation (and can be set to NULL in the config struct in C).
+operation (in this case it can be set to NULL in the config struct in C).
 
 <!-- CODE_BLOCK_START -->
 ```c
@@ -281,7 +303,7 @@ void my_source_limit_exceeded_callback(sacn_merge_receiver_t handle, uint16_t un
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourceLimitExceeded(uint16_t universe)
+void MyNotifyHandler::HandleSourceLimitExceeded(Handle handle, uint16_t universe)
 {
   // Handle the condition in an application-defined way. Maybe log it?
 }

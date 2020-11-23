@@ -51,33 +51,20 @@ void sacn_source_deinit(void)
  * @brief Initialize an sACN Source Config struct to default values.
  *
  * @param[out] config Config struct to initialize.
- * @param[in] cid The CID to assign. Must not be NULL.
- * @param[in] name The source name to assign. Will be truncated to fit #SACN_SOURCE_NAME_MAX_LEN bytes.
  */
-void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, const char* name)
+void sacn_source_config_init(SacnSourceConfig* config)
 {
   ETCPAL_UNUSED_ARG(config);
-  ETCPAL_UNUSED_ARG(cid);
-  ETCPAL_UNUSED_ARG(name);
 }
 
 /**
  * @brief Initialize an sACN Source Universe Config struct to default values.
  *
  * @param[out] config Config struct to initialize.
- * @param[in] universe The universe number to create.
- * @param[in] values_buffer The DMX values buffer, may not be NULL.
- * @param[in] values_len The length of values_buffer.
- * @param[in] priorities_buffer If non-NULL, holds the per-address priority buffer.
  */
-void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe, const uint8_t* values_buffer,
-                                      size_t values_len, const uint8_t* priorities_buffer)
+void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
 {
   ETCPAL_UNUSED_ARG(config);
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(values_buffer);
-  ETCPAL_UNUSED_ARG(values_len);
-  ETCPAL_UNUSED_ARG(priorities_buffer);
 }
 
 /**

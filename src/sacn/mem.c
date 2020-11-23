@@ -37,7 +37,7 @@
 
 #if SACN_DYNAMIC_MEM
 
-#define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static)                              \
+#define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static, failure_return_value)        \
   do                                                                                                            \
   {                                                                                                             \
     if (size_requested > container->buffer##_capacity)                                                          \
@@ -51,27 +51,27 @@
       }                                                                                                         \
       else                                                                                                      \
       {                                                                                                         \
-        return false;                                                                                           \
+        return failure_return_value;                                                                            \
       }                                                                                                         \
     }                                                                                                           \
   } while (0)
 
-#define CHECK_ROOM_FOR_ONE_MORE(container, buffer, buffer_type, max_static) \
-  CHECK_CAPACITY(container, container->num_##buffer + 1, buffer, buffer_type, max_static)
+#define CHECK_ROOM_FOR_ONE_MORE(container, buffer, buffer_type, max_static, failure_return_value) \
+  CHECK_CAPACITY(container, container->num_##buffer + 1, buffer, buffer_type, max_static, failure_return_value)
 
 #else  // SACN_DYNAMIC_MEM
 
-#define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static) \
-  do                                                                               \
-  {                                                                                \
-    if (size_requested > max_static)                                               \
-    {                                                                              \
-      return false;                                                                \
-    }                                                                              \
+#define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static, failure_return_value) \
+  do                                                                                                     \
+  {                                                                                                      \
+    if (size_requested > max_static)                                                                     \
+    {                                                                                                    \
+      return failure_return_value;                                                                       \
+    }                                                                                                    \
   } while (0)
 
-#define CHECK_ROOM_FOR_ONE_MORE(container, buffer, buffer_type, max_static) \
-  CHECK_CAPACITY(container, container->num_##buffer + 1, buffer, buffer_type, max_static)
+#define CHECK_ROOM_FOR_ONE_MORE(container, buffer, buffer_type, max_static, failure_return_value) \
+  CHECK_CAPACITY(container, container->num_##buffer + 1, buffer, buffer_type, max_static, failure_return_value)
 
 #endif  // SACN_DYNAMIC_MEM
 
@@ -81,11 +81,6 @@ typedef struct SourcesLostNotificationBuf
 {
   SACN_DECLARE_BUF(SourcesLostNotification, buf, SACN_RECEIVER_MAX_UNIVERSES);
 } SourcesLostNotificationBuf;
-
-typedef struct SourcesFoundNotificationBuf
-{
-  SACN_DECLARE_BUF(SourcesFoundNotification, buf, SACN_RECEIVER_MAX_UNIVERSES);
-} SourcesFoundNotificationBuf;
 
 typedef struct ToEraseBuf
 {
@@ -105,7 +100,6 @@ static struct SacnMemBufs
 
   UniverseDataNotification* universe_data;
   SourcesLostNotificationBuf* sources_lost;
-  SourcesFoundNotificationBuf* sources_found;
   SourcePapLostNotification* source_pap_lost;
   SourceLimitExceededNotification* source_limit_exceeded;
 #else
@@ -115,7 +109,6 @@ static struct SacnMemBufs
 
   UniverseDataNotification universe_data[SACN_RECEIVER_MAX_THREADS];
   SourcesLostNotificationBuf sources_lost[SACN_RECEIVER_MAX_THREADS];
-  SourcesFoundNotificationBuf sources_found[SACN_RECEIVER_MAX_THREADS];
   SourcePapLostNotification source_pap_lost[SACN_RECEIVER_MAX_THREADS];
   SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_THREADS];
 #endif
@@ -125,7 +118,6 @@ static struct SacnMemBufs
 
 static void zero_status_lists(SacnSourceStatusLists* status_lists);
 static void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t size);
-static void zero_sources_found_array(SourcesFoundNotification* sources_found_arr, size_t size);
 
 #if SACN_DYNAMIC_MEM
 static size_t grow_capacity(size_t old_capacity, size_t capacity_requested);
@@ -148,10 +140,6 @@ static etcpal_error_t init_sources_lost_bufs(unsigned int num_threads);
 static etcpal_error_t init_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_buf);
 static etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t size);
 
-static etcpal_error_t init_sources_found_bufs(unsigned int num_threads);
-static etcpal_error_t init_sources_found_buf(SourcesFoundNotificationBuf* sources_found_buf);
-static etcpal_error_t init_sources_found_array(SourcesFoundNotification* sources_found_arr, size_t size);
-
 static etcpal_error_t init_source_pap_lost_buf(unsigned int num_threads);
 
 static etcpal_error_t init_source_limit_exceeded_buf(unsigned int num_threads);
@@ -171,10 +159,6 @@ static void deinit_universe_data_buf(void);
 static void deinit_sources_lost_bufs(void);
 static void deinit_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_buf);
 static void deinit_sources_lost_entry(SourcesLostNotification* sources_lost);
-
-static void deinit_sources_found_bufs(void);
-static void deinit_sources_found_buf(SourcesFoundNotificationBuf* sources_found_buf);
-static void deinit_sources_found_entry(SourcesFoundNotification* sources_found);
 
 static void deinit_source_pap_lost_buf(void);
 
@@ -207,8 +191,6 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
   if (res == kEtcPalErrOk)
     res = init_sources_lost_bufs(num_threads);
   if (res == kEtcPalErrOk)
-    res = init_sources_found_bufs(num_threads);
-  if (res == kEtcPalErrOk)
     res = init_source_pap_lost_buf(num_threads);
   if (res == kEtcPalErrOk)
     res = init_source_limit_exceeded_buf(num_threads);
@@ -230,7 +212,6 @@ void sacn_mem_deinit(void)
   deinit_source_limit_exceeded_buf();
   deinit_source_pap_lost_buf();
   deinit_sources_lost_bufs();
-  deinit_sources_found_bufs();
   deinit_universe_data_buf();
   deinit_recv_thread_context_buf();
   deinit_to_erase_bufs();
@@ -276,7 +257,7 @@ SacnTrackedSource** get_to_erase_buffer(sacn_thread_id_t thread_id, size_t size)
   {
     ToEraseBuf* to_return = &mem_bufs.to_erase[thread_id];
 
-    CHECK_CAPACITY(to_return, size, buf, SacnTrackedSource*, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+    CHECK_CAPACITY(to_return, size, buf, SacnTrackedSource*, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, NULL);
 
     memset(to_return->buf, 0, size * sizeof(SacnTrackedSource*));
     return to_return->buf;
@@ -400,50 +381,6 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
 }
 
 /*
- * Get a buffer of SourcesFoundNotification instances associated with a given thread. All instances
- * in the array will be initialized to default values.
- *
- * [in] thread_id Thread ID for which to get the buffer.
- * [in] size Size of the buffer requested.
- * Returns the buffer or NULL if the thread ID was invalid or memory could not be allocated.
- */
-SourcesFoundNotification* get_sources_found_buffer(sacn_thread_id_t thread_id, size_t size)
-{
-  if (thread_id < mem_bufs.num_threads)
-  {
-    SourcesFoundNotificationBuf* notifications = &mem_bufs.sources_found[thread_id];
-
-    // This one cannot use CHECK_CAPACITY() because of a special case in the initialization of the
-    // reallocated buffer
-#if SACN_DYNAMIC_MEM
-    if (size > notifications->buf_capacity)
-    {
-      size_t new_capacity = grow_capacity(notifications->buf_capacity, size);
-      SourcesFoundNotification* new_buf =
-          (SourcesFoundNotification*)realloc(notifications->buf, new_capacity * sizeof(SourcesFoundNotification));
-      if (new_buf && init_sources_found_array(&new_buf[notifications->buf_capacity],
-                                             new_capacity - notifications->buf_capacity) == kEtcPalErrOk)
-      {
-        notifications->buf = new_buf;
-        notifications->buf_capacity = new_capacity;
-      }
-      else
-      {
-        return NULL;
-      }
-    }
-#else
-    if (size > SACN_RECEIVER_MAX_UNIVERSES)
-      return NULL;
-#endif
-
-    zero_sources_found_array(notifications->buf, size);
-    return notifications->buf;
-  }
-  return NULL;
-}
-
-/*
  * Add a new offline source to an SacnSourceStatusLists.
  *
  * [out] status_lists Status lists instance to which to append the new source.
@@ -458,7 +395,7 @@ bool add_offline_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* c
   SACN_ASSERT(status_lists);
   SACN_ASSERT(cid);
 
-  CHECK_ROOM_FOR_ONE_MORE(status_lists, offline, SacnLostSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  CHECK_ROOM_FOR_ONE_MORE(status_lists, offline, SacnLostSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
   status_lists->offline[status_lists->num_offline].cid = *cid;
   status_lists->offline[status_lists->num_offline].name = name;
@@ -481,7 +418,8 @@ bool add_online_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* ci
   SACN_ASSERT(status_lists);
   SACN_ASSERT(cid);
 
-  CHECK_ROOM_FOR_ONE_MORE(status_lists, online, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  CHECK_ROOM_FOR_ONE_MORE(status_lists, online, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE,
+                          false);
 
   status_lists->online[status_lists->num_online].cid = *cid;
   status_lists->online[status_lists->num_online].name = name;
@@ -503,7 +441,8 @@ bool add_unknown_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* c
   SACN_ASSERT(status_lists);
   SACN_ASSERT(cid);
 
-  CHECK_ROOM_FOR_ONE_MORE(status_lists, unknown, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  CHECK_ROOM_FOR_ONE_MORE(status_lists, unknown, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE,
+                          false);
 
   status_lists->unknown[status_lists->num_unknown].cid = *cid;
   status_lists->unknown[status_lists->num_unknown].name = name;
@@ -526,39 +465,12 @@ bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* ci
   SACN_ASSERT(cid);
   SACN_ASSERT(name);
 
-  CHECK_ROOM_FOR_ONE_MORE(sources_lost, lost_sources, SacnLostSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  CHECK_ROOM_FOR_ONE_MORE(sources_lost, lost_sources, SacnLostSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
   sources_lost->lost_sources[sources_lost->num_lost_sources].cid = *cid;
   ETCPAL_MSVC_NO_DEP_WRN strcpy(sources_lost->lost_sources[sources_lost->num_lost_sources].name, name);
   sources_lost->lost_sources[sources_lost->num_lost_sources].terminated = terminated;
   ++sources_lost->num_lost_sources;
-
-  return true;
-}
-
-/*
- * Add a new found source to a SourcesFoundNotification.
- *
- * [out] sources_found SourcesFoundNotification instance to which to append the found source.
- * [in] source The source that was found.
- */
-bool add_found_source(SourcesFoundNotification* sources_found, const SacnTrackedSource* source)
-{
-  SACN_ASSERT(sources_found);
-  SACN_ASSERT(source);
-
-  CHECK_ROOM_FOR_ONE_MORE(sources_found, found_sources, SacnFoundSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
-
-  sources_found->found_sources[sources_found->num_found_sources].cid = source->cid;
-  ETCPAL_MSVC_NO_DEP_WRN strcpy(sources_found->found_sources[sources_found->num_found_sources].name, source->name);
-  sources_found->found_sources[sources_found->num_found_sources].from_addr = source->null_start_code_buffer.from_addr;
-  sources_found->found_sources[sources_found->num_found_sources].priority = source->null_start_code_buffer.priority;
-  sources_found->found_sources[sources_found->num_found_sources].values = source->null_start_code_buffer.data;
-  sources_found->found_sources[sources_found->num_found_sources].values_len = source->null_start_code_buffer.slot_count;
-  sources_found->found_sources[sources_found->num_found_sources].preview = source->null_start_code_buffer.preview;
-  sources_found->found_sources[sources_found->num_found_sources].per_address = source->pap_buffer.data;
-  sources_found->found_sources[sources_found->num_found_sources].per_address_len = source->pap_buffer.slot_count;
-  ++sources_found->num_found_sources;
 
   return true;
 }
@@ -574,41 +486,29 @@ bool add_dead_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t
 {
   SACN_ASSERT(recv_thread_context);
 
-  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, dead_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2);
+  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, dead_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2, false);
 
   recv_thread_context->dead_sockets[recv_thread_context->num_dead_sockets++] = socket;
   return true;
 }
 
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-
-/*
- * Add a new dead socket to a SacnRecvThreadContext.
- *
- * [out] recv_thread_context SacnRecvThreadConstext instance to which to append the dead socket.
- * [in] socket Dead socket.
- * Returns true if the socket was successfully added, false if memory could not be allocated.
- */
-bool add_pending_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket)
+bool add_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket, etcpal_iptype_t ip_type,
+                    bool bound)
 {
+#if !SACN_RECEIVER_LIMIT_BIND
+  ETCPAL_UNUSED_ARG(bound);
+#endif
+
   SACN_ASSERT(recv_thread_context);
 
-  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, pending_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2);
-
-  recv_thread_context->pending_sockets[recv_thread_context->num_pending_sockets++] = socket;
-  return true;
-}
-
-#else  // SACN_RECEIVER_SOCKET_PER_UNIVERSE
-
-bool add_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket)
-{
-  SACN_ASSERT(recv_thread_context);
-
-  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, socket_refs, SocketRef, SACN_RECEIVER_MAX_SOCKET_REFS);
+  CHECK_ROOM_FOR_ONE_MORE(recv_thread_context, socket_refs, SocketRef, SACN_RECEIVER_MAX_SOCKET_REFS, false);
 
   recv_thread_context->socket_refs[recv_thread_context->num_socket_refs].sock = socket;
   recv_thread_context->socket_refs[recv_thread_context->num_socket_refs].refcount = 1;
+  recv_thread_context->socket_refs[recv_thread_context->num_socket_refs].ip_type = ip_type;
+#if SACN_RECEIVER_LIMIT_BIND
+  recv_thread_context->socket_refs[recv_thread_context->num_socket_refs].bound = bound;
+#endif
   ++recv_thread_context->num_socket_refs;
   ++recv_thread_context->new_socket_refs;
   return true;
@@ -634,8 +534,6 @@ bool remove_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket
   }
   return false;
 }
-
-#endif  // SACN_RECEIVER_SOCKET_PER_UNIVERSE
 
 void add_receiver_to_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver)
 {
@@ -700,16 +598,6 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
   }
 }
 
-void zero_sources_found_array(SourcesFoundNotification* sources_found_arr, size_t size)
-{
-  for (SourcesFoundNotification* sources_found = sources_found_arr; sources_found < sources_found_arr + size; ++sources_found)
-  {
-    sources_found->callback = NULL;
-    sources_found->handle = SACN_RECEIVER_INVALID;
-    sources_found->num_found_sources = 0;
-    sources_found->context = NULL;
-  }
-}
 #if SACN_DYNAMIC_MEM
 size_t grow_capacity(size_t old_capacity, size_t capacity_requested)
 {
@@ -825,16 +713,16 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* recv_thread
     return kEtcPalErrNoMem;
   recv_thread_context->dead_sockets_capacity = INITIAL_CAPACITY;
 
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-  recv_thread_context->pending_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
-  if (!recv_thread_context->pending_sockets)
-    return kEtcPalErrNoMem;
-  recv_thread_context->pending_sockets_capacity = INITIAL_CAPACITY;
-#else
   recv_thread_context->socket_refs = calloc(INITIAL_CAPACITY, sizeof(SocketRef));
   if (!recv_thread_context->socket_refs)
     return kEtcPalErrNoMem;
   recv_thread_context->socket_refs_capacity = INITIAL_CAPACITY;
+
+  recv_thread_context->num_socket_refs = 0;
+  recv_thread_context->new_socket_refs = 0;
+#if SACN_RECEIVER_LIMIT_BIND
+  recv_thread_context->ipv4_bound = false;
+  recv_thread_context->ipv6_bound = false;
 #endif
 
   return kEtcPalErrOk;
@@ -885,47 +773,6 @@ etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr
     if (!sources_lost->lost_sources)
       return kEtcPalErrNoMem;
     sources_lost->lost_sources_capacity = INITIAL_CAPACITY;
-  }
-  return kEtcPalErrOk;
-}
-
-etcpal_error_t init_sources_found_bufs(unsigned int num_threads)
-{
-  mem_bufs.sources_found = calloc(num_threads, sizeof(SourcesFoundNotificationBuf));
-  if (!mem_bufs.sources_found)
-    return kEtcPalErrNoMem;
-
-  for (unsigned int i = 0; i < num_threads; ++i)
-  {
-    etcpal_error_t res = init_sources_found_buf(&mem_bufs.sources_found[i]);
-    if (res != kEtcPalErrOk)
-      return res;
-  }
-  return kEtcPalErrOk;
-}
-
-etcpal_error_t init_sources_found_buf(SourcesFoundNotificationBuf* sources_found_buf)
-{
-  SACN_ASSERT(sources_found_buf);
-
-  sources_found_buf->buf = calloc(INITIAL_CAPACITY, sizeof(SourcesFoundNotification));
-  if (!sources_found_buf->buf)
-    return kEtcPalErrNoMem;
-
-  sources_found_buf->buf_capacity = INITIAL_CAPACITY;
-  return init_sources_found_array(sources_found_buf->buf, INITIAL_CAPACITY);
-}
-
-etcpal_error_t init_sources_found_array(SourcesFoundNotification* sources_found_arr, size_t size)
-{
-  SACN_ASSERT(sources_found_arr);
-
-  for (SourcesFoundNotification* sources_found = sources_found_arr; sources_found < sources_found_arr + size; ++sources_found)
-  {
-    sources_found->found_sources = calloc(INITIAL_CAPACITY, sizeof(SacnFoundSource));
-    if (!sources_found->found_sources)
-      return kEtcPalErrNoMem;
-    sources_found->found_sources_capacity = INITIAL_CAPACITY;
   }
   return kEtcPalErrOk;
 }
@@ -1008,13 +855,8 @@ void deinit_recv_thread_context_entry(SacnRecvThreadContext* recv_thread_context
 
   if (recv_thread_context->dead_sockets)
     free(recv_thread_context->dead_sockets);
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-  if (recv_thread_context->pending_sockets)
-    free(recv_thread_context->pending_sockets);
-#else
   if (recv_thread_context->socket_refs)
     free(recv_thread_context->socket_refs);
-#endif
 }
 
 void deinit_universe_data_buf(void)
@@ -1053,38 +895,6 @@ void deinit_sources_lost_entry(SourcesLostNotification* sources_lost)
 
   if (sources_lost->lost_sources)
     free(sources_lost->lost_sources);
-}
-
-void deinit_sources_found_bufs(void)
-{
-  if (mem_bufs.sources_found)
-  {
-    for (unsigned int i = 0; i < mem_bufs.num_threads; ++i)
-      deinit_sources_found_buf(&mem_bufs.sources_found[i]);
-    free(mem_bufs.sources_found);
-  }
-}
-
-void deinit_sources_found_buf(SourcesFoundNotificationBuf* sources_found_buf)
-{
-  SACN_ASSERT(sources_found_buf);
-
-  if (sources_found_buf->buf)
-  {
-    for (size_t i = 0; i < sources_found_buf->buf_capacity; ++i)
-    {
-      deinit_sources_found_entry(&sources_found_buf->buf[i]);
-    }
-    free(sources_found_buf->buf);
-  }
-}
-
-void deinit_sources_found_entry(SourcesFoundNotification* sources_found)
-{
-  SACN_ASSERT(sources_found);
-
-  if (sources_found->found_sources)
-    free(sources_found->found_sources);
 }
 
 void deinit_source_pap_lost_buf(void)

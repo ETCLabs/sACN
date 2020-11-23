@@ -20,7 +20,7 @@
 #include "sacn/private/common.h"
 
 #include "sacn/private/mem.h"
-#include "sacn/private/data_loss.h"
+#include "sacn/private/source_loss.h"
 #include "sacn/private/sockets.h"
 #include "sacn/private/source.h"
 #include "sacn/private/receiver.h"
@@ -72,7 +72,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     bool mutex_initted = false;
     bool mem_initted = false;
     bool sockets_initted = false;
-    bool data_loss_initted = false;
+    bool source_loss_initted = false;
     bool receiver_initted = false;
     bool source_initted = false;
     bool merger_initted = false;
@@ -99,7 +99,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     if (res == kEtcPalErrOk)
       sockets_initted = ((res = sacn_sockets_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
-      data_loss_initted = ((res = sacn_data_loss_init()) == kEtcPalErrOk);
+      source_loss_initted = ((res = sacn_source_loss_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
       receiver_initted = ((res = sacn_receiver_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
@@ -128,8 +128,8 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
         sacn_source_deinit();
       if (receiver_initted)
         sacn_receiver_deinit();
-      if (data_loss_initted)
-        sacn_data_loss_deinit();
+      if (source_loss_initted)
+        sacn_source_loss_deinit();
       if (sockets_initted)
         sacn_sockets_deinit();
       if (mem_initted)
@@ -162,7 +162,7 @@ void sacn_deinit(void)
     sacn_dmx_merger_deinit();
     sacn_source_deinit();
     sacn_receiver_deinit();
-    sacn_data_loss_deinit();
+    sacn_source_loss_deinit();
     sacn_sockets_deinit();
     sacn_mem_deinit();
     etcpal_mutex_destroy(&sacn_mutex);

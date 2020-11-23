@@ -5,10 +5,10 @@
 in the entertainment industry for real-time control of entertainment technology, especially
 lighting fixtures.
 
-This repository contains a C-language library for communicating via sACN.
+This repository contains a C-language library and a C++ wrapper library for communicating via sACN.
 
-**NOTE**: This open-source implementation is still early in development, and currently only
-receiving sACN is implemented.
+**NOTE**: This open-source implementation is still in development. The merge receiver, source, and
+source detector have not been implemented yet.
 
 ## Building
 
@@ -20,7 +20,7 @@ documentation, please see the [documentation](http://etclabs.github.io/sACN).
 The current version of this repository implements ANSI E1.31-2009. You can download the standard
 document for free from the [ESTA TSP downloads page](https://tsp.esta.org/tsp/documents/published_docs.php). 
 
-Updating to the new features in the 2016 and 2018 revisions of the standard are on the to-do list.
+The 2016 and 2018 revisions of the standard are currently being implemented.
 
 ## About this ETCLabs Project
 

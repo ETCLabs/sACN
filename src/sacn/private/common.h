@@ -118,7 +118,7 @@ typedef unsigned int sacn_thread_id_t;
 #define UNIVERSE_ID_VALID(universe_id) ((universe_id != 0) && (universe_id <= 64000))
 
 /******************************************************************************
- * Types used by the data loss module
+ * Types used by the source loss module
  *****************************************************************************/
 
 typedef struct SacnRemoteSourceInternal
@@ -191,13 +191,18 @@ struct SacnReceiver
   EtcPalTimer sample_timer;
   bool suppress_limit_exceeded_notification;
   EtcPalRbTree sources;       // The sources being tracked on this universe.
-  TerminationSet* term_sets;  // Data loss tracking
+  TerminationSet* term_sets;  // Source loss tracking
 
   // Option flags
   bool filter_preview_data;
 
   // Configured callbacks
   SacnReceiverCallbacks callbacks;
+
+  /* The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
+   * This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used
+   * instead. */
+  size_t source_count_max;
 
   SacnReceiver* next;
 };
@@ -250,7 +255,6 @@ typedef struct SacnTrackedSource
   char name[SACN_SOURCE_NAME_MAX_LEN];
   EtcPalTimer packet_timer;
   uint8_t seq;
-  bool found;
   bool terminated;
   bool dmx_received_since_last_tick;
 
@@ -259,28 +263,11 @@ typedef struct SacnTrackedSource
   /* pap stands for Per-Address Priority. */
   EtcPalTimer pap_timer;
 #endif
-
-  /* This is where incoming data is saved for later processing. */
-  SourceDataBuffer null_start_code_buffer;
-#if SACN_ETC_PRIORITY_EXTENSION
-  SourceDataBuffer pap_buffer;
-#endif
 } SacnTrackedSource;
 
 /******************************************************************************
  * Notifications delivered by the sACN receive module
  *****************************************************************************/
-
-/* Data for the sources_found() callback */
-typedef struct SourcesFoundNotification
-{
-  SacnSourcesFoundCallback callback;
-  sacn_receiver_t handle;
-  uint16_t universe;
-  SACN_DECLARE_BUF(SacnFoundSource, found_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
-  size_t num_found_sources;
-  void* context;
-} SourcesFoundNotification;
 
 /* Data for the universe_data() callback */
 typedef struct UniverseDataNotification
@@ -323,14 +310,16 @@ typedef struct SourceLimitExceededNotification
   void* context;
 } SourceLimitExceededNotification;
 
-#if !SACN_RECEIVER_SOCKET_PER_UNIVERSE
 /* For the shared-socket model, this represents a shared socket. */
 typedef struct SocketRef
 {
-  etcpal_socket_t sock; /* The socket descriptor. */
-  size_t refcount;      /* How many addresses the socket is subscribed to. */
-} SocketRef;
+  etcpal_socket_t sock;     /* The socket descriptor. */
+  size_t refcount;          /* How many addresses the socket is subscribed to. */
+  etcpal_iptype_t ip_type;  /* The IP type used in multicast subscriptions and the bind address. */
+#if SACN_RECEIVER_LIMIT_BIND
+  bool bound;               /* True if bind was called on this socket, false otherwise. */
 #endif
+} SocketRef;
 
 /* Holds the discrete data used by each receiver thread. */
 typedef struct SacnRecvThreadContext
@@ -348,13 +337,12 @@ typedef struct SacnRecvThreadContext
   SACN_DECLARE_BUF(etcpal_socket_t, dead_sockets, SACN_RECEIVER_MAX_UNIVERSES * 2);
   size_t num_dead_sockets;
 
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-  SACN_DECLARE_BUF(etcpal_socket_t, pending_sockets, SACN_RECEIVER_MAX_UNIVERSES * 2);
-  size_t num_pending_sockets;
-#else
   SACN_DECLARE_BUF(SocketRef, socket_refs, SACN_RECEIVER_MAX_SOCKET_REFS);
   size_t num_socket_refs;
   size_t new_socket_refs;
+#if SACN_RECEIVER_LIMIT_BIND
+  bool ipv4_bound;
+  bool ipv6_bound;
 #endif
 
   // This section is only touched from the thread, outside the lock.

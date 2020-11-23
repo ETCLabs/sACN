@@ -74,24 +74,32 @@ public:
     /********* Required values **********/
 
     /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
-        Memory is owned by the application.*/
+        Memory is owned by the application. Slots that are not sourced are set to 0.*/
     uint8_t* slots{nullptr};
 
-    /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
-        that slot, or #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
-        You can use SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, slot_index) if you don't want to look at the
-        slot_owners directly.
+    /********* Optional values **********/
+
+    /** Buffer of #DMX_ADDRESS_COUNT per-address priorities for each winning slot. This is used if the merge
+        results need to be sent over sACN. Otherwise this can just be set to nullptr. If a source with a universe
+        priority of 0 wins, that priority is converted to 1. If there is no winner for a slot, then a per-address
+        priority of 0 is used to show that there is no source for that slot.
+        Memory is owned by the application.*/
+    uint8_t* per_address_priorities{nullptr};
+
+    /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
+        #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if you
+        need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to
+        NULL and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of
+        0 (not sourced).
         Memory is owned by the application.*/
     sacn_source_id_t* slot_owners{nullptr};
-
-    /********* Optional values **********/
 
     int source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
                                                                 listen to when using dynamic memory. */
 
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
-    Settings(uint8_t* slots_ptr, sacn_source_id_t* slot_owners_ptr);
+    Settings(uint8_t* slots_ptr);
 
     bool IsValid() const;
   };
@@ -105,14 +113,12 @@ public:
   etcpal::Error Startup(const Settings& settings);
   void Shutdown();
 
-  etcpal::Expected<sacn_source_id_t> AddSource(const etcpal::Uuid& source_cid);
+  etcpal::Expected<sacn_source_id_t> AddSource();
   etcpal::Error RemoveSource(sacn_source_id_t source);
-  etcpal::Expected<sacn_source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
   const SacnDmxMergerSource* GetSourceInfo(sacn_source_id_t source) const;
   etcpal::Error UpdateSourceData(sacn_source_id_t source, uint8_t priority, const uint8_t* new_values,
                                  size_t new_values_count, const uint8_t* address_priorities = nullptr,
                                  size_t address_priorities_count = 0);
-  etcpal::Error UpdateSourceDataFromSacn(const SacnHeaderData& header, const uint8_t* pdata);
   etcpal::Error StopSourcePerAddressPriority(sacn_source_id_t source);
 
   constexpr Handle handle() const;
@@ -128,8 +134,7 @@ private:
  *
  * Optional members can be modified directly in the struct.
  */
-inline DmxMerger::Settings::Settings(uint8_t* slots_ptr, sacn_source_id_t* slot_owners_ptr)
-    : slots(slots_ptr), slot_owners(slot_owners_ptr)
+inline DmxMerger::Settings::Settings(uint8_t* slots_ptr) : slots(slots_ptr)
 {
 }
 
@@ -185,18 +190,16 @@ inline void DmxMerger::Shutdown()
  *   - It is the source identifer that is put into the slot_owners buffer that was passed
  *     in the DmxMergerUniverseConfig structure when creating the merger.
  *
- * @param[in] source_cid The sACN CID of the source.
  * @return The successfully added source_id.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrInvalid: The merger was not started correctly.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNoMem: No room to allocate memory for this source, or the max number of sources has been reached.
- * @return #kEtcPalErrExists: the source at that cid was already added.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Expected<sacn_source_id_t> DmxMerger::AddSource(const etcpal::Uuid& source_cid)
+inline etcpal::Expected<sacn_source_id_t> DmxMerger::AddSource()
 {
   sacn_source_id_t result = SACN_DMX_MERGER_SOURCE_INVALID;
-  etcpal_error_t err = sacn_dmx_merger_add_source(handle_, &source_cid.get(), &result);
+  etcpal_error_t err = sacn_dmx_merger_add_source(handle_, &result);
   if (err == kEtcPalErrOk)
     return result;
   else
@@ -217,20 +220,6 @@ inline etcpal::Expected<sacn_source_id_t> DmxMerger::AddSource(const etcpal::Uui
 inline etcpal::Error DmxMerger::RemoveSource(sacn_source_id_t source)
 {
   return sacn_dmx_merger_remove_source(handle_, source);
-}
-
-/**
- * @brief Returns the source id for that source cid.
- *
- * @param[in] source_cid The UUID of the source CID.
- * @return On success this will be the source ID, otherwise kEtcPalErrInvalid.
- */
-inline etcpal::Expected<sacn_source_id_t> DmxMerger::GetSourceId(const etcpal::Uuid& source_cid) const
-{
-  sacn_source_id_t result = sacn_dmx_merger_get_id(handle_, &source_cid.get());
-  if (result != SACN_DMX_MERGER_SOURCE_INVALID)
-    return result;
-  return kEtcPalErrInvalid;
 }
 
 /**
@@ -278,26 +267,6 @@ inline etcpal::Error DmxMerger::UpdateSourceData(sacn_source_id_t source, uint8_
 }
 
 /**
- * @brief Updates the source data from a sACN packet and recalculate outputs.
- *
- * Processes data passed from the sACN receiver's SacnUniverseDataCallback() handler.  This causes the merger to
- * recalculate the outputs.
- *
- * @param[in] header The sACN header.
- * @param[in] pdata The sACN data.
- * @return #kEtcPalErrOk: Source updated and merge completed.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
- * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid merger, or source CID in the header doesn't match
- * a known source.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
- */
-inline etcpal::Error DmxMerger::UpdateSourceDataFromSacn(const SacnHeaderData& header, const uint8_t* pdata)
-{
-  return sacn_dmx_merger_update_source_from_sacn(handle_, &header, pdata);
-}
-
-/**
  * @brief Removes the per-address data from the source and recalculate outputs.
  *
  * Per-address priority data can time out in sACN just like values.
@@ -329,9 +298,10 @@ inline SacnDmxMergerConfig DmxMerger::TranslateConfig(const Settings& settings)
 {
   // clang-format off
   SacnDmxMergerConfig config = {
-    settings.source_count_max,
     settings.slots,
-    settings.slot_owners
+    settings.per_address_priorities,
+    settings.slot_owners,
+    settings.source_count_max
   };
   // clang-format on
 

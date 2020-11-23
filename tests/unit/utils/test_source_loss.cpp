@@ -17,7 +17,7 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include "sacn/private/data_loss.h"
+#include "sacn/private/source_loss.h"
 
 #include <algorithm>
 #include <cstring>
@@ -32,9 +32,9 @@
 #include "fff.h"
 
 #if SACN_DYNAMIC_MEM
-#define TestDataLoss TestDataLossDynamic
+#define TestSourceLoss TestSourceLossDynamic
 #else
-#define TestDataLoss TestDataLossStatic
+#define TestSourceLoss TestSourceLossStatic
 #endif
 
 bool operator<(const SacnRemoteSourceInternal& a, const SacnRemoteSourceInternal& b)
@@ -47,7 +47,7 @@ bool operator==(const SacnRemoteSourceInternal& a, const SacnRemoteSourceInterna
   return (a.cid == b.cid && (0 == std::strcmp(a.name, b.name)));
 }
 
-class TestDataLoss : public ::testing::Test
+class TestSourceLoss : public ::testing::Test
 {
 protected:
   void SetUp() override
@@ -55,7 +55,7 @@ protected:
     etcpal_reset_all_fakes();
 
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
-    ASSERT_EQ(sacn_data_loss_init(), kEtcPalErrOk);
+    ASSERT_EQ(sacn_source_loss_init(), kEtcPalErrOk);
 
     expired_sources_ = get_sources_lost_buffer(0, SACN_RECEIVER_MAX_UNIVERSES);
     ASSERT_NE(expired_sources_, nullptr);
@@ -72,7 +72,7 @@ protected:
 
   void TearDown() override
   {
-    sacn_data_loss_deinit();
+    sacn_source_loss_deinit();
     sacn_mem_deinit();
   }
 
@@ -99,7 +99,7 @@ protected:
 
 // Test the case where all sources are marked offline in the same tick. In this case, we should get
 // all sources lost in the same notification.
-TEST_F(TestDataLoss, AllSourcesOfflineAtOnce)
+TEST_F(TestSourceLoss, AllSourcesOfflineAtOnce)
 {
   std::vector<SacnLostSourceInternal> offline_sources;
   offline_sources.reserve(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
@@ -131,7 +131,7 @@ TEST_F(TestDataLoss, AllSourcesOfflineAtOnce)
 
 // Simulate each source expiring on a different call to tick, without any of them being marked back
 // online in the interim. In this case, we should get all sources lost in the same notification.
-TEST_F(TestDataLoss, AllSourcesOfflineOneByOne)
+TEST_F(TestSourceLoss, AllSourcesOfflineOneByOne)
 {
   for (size_t i = 0; i < sources_.size() - 1; ++i)
   {
@@ -173,7 +173,7 @@ TEST_F(TestDataLoss, AllSourcesOfflineOneByOne)
 
 // Simulate each source expiring on a different call to tick, with all remaining sources remaining
 // online in between. In this case, we should get each source lost in a different notification.
-TEST_F(TestDataLoss, WorstCaseEachSourceOfflineIndividually)
+TEST_F(TestSourceLoss, WorstCaseEachSourceOfflineIndividually)
 {
   std::vector<SacnLostSourceInternal> offline;
   offline.reserve(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
@@ -223,7 +223,7 @@ TEST_F(TestDataLoss, WorstCaseEachSourceOfflineIndividually)
 
 // Simulate each source timing out, then going back online before the notification can be delivered.
 // In this case we should get no expired notification.
-TEST_F(TestDataLoss, EachSourceOfflineThenOnline)
+TEST_F(TestSourceLoss, EachSourceOfflineThenOnline)
 {
   for (size_t i = 0; i < sources_.size(); ++i)
   {
@@ -252,7 +252,7 @@ TEST_F(TestDataLoss, EachSourceOfflineThenOnline)
   EXPECT_EQ(term_set_list_, nullptr);
 }
 
-TEST_F(TestDataLoss, ClearListWorks)
+TEST_F(TestSourceLoss, ClearListWorks)
 {
   std::vector<SacnLostSourceInternal> offline;
   offline.reserve(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);

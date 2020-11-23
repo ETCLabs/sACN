@@ -43,7 +43,7 @@ namespace sacn
  * @brief An instance of sACN Source functionality; see @ref using_source.
  *
  * Components that send sACN are referred to as sACN Sources. Use this API to act as an sACN Source.
- * 
+ *
  * See @ref using_source for a detailed description of how to use this API.
  */
 class Source
@@ -104,7 +104,8 @@ public:
 
     /********* Optional values **********/
 
-    /** The sACN universe priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100. */
+    /** The sACN universe priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to
+        100. */
     uint8_t priority{100};
     /** The (optional) buffer of up to 512 per-address priorities that will be sent each tick.
         If this is nil, only the universe priority will be used.
@@ -121,6 +122,10 @@ public:
     /** If true, this sACN source will only send unicast traffic on this universe. Defaults to false. */
     bool send_unicast_only{false};
 
+    /** The initial set of unicast destinations for this universe. This can be changed further by using
+        Source::AddUnicastDestination() and Source::RemoveUnicastDestination(). */
+    const std::vector<etcpal::IpAddr> unicast_destinations;
+
     /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
     uint16_t sync_universe{0};
 
@@ -131,12 +136,11 @@ public:
     bool IsValid() const;
   };
 
-
   Source() = default;
   Source(const Source& other) = delete;
   Source& operator=(const Source& other) = delete;
-  Source(Source&& other) = default;             /**< Move a source instance. */
-  Source& operator=(Source&& other) = default;  /**< Move a source instance. */
+  Source(Source&& other) = default;            /**< Move a source instance. */
+  Source& operator=(Source&& other) = default; /**< Move a source instance. */
 
   etcpal::Error Startup(const Settings& settings);
   etcpal::Error Startup(const Settings& settings, std::vector<SacnMcastInterface>& netints);
@@ -169,8 +173,18 @@ public:
   static int ProcessAll();
 
 private:
+  class TranslatedUniverseConfig
+  {
+  public:
+    TranslatedUniverseConfig(const UniverseSettings& settings);
+    const SacnSourceUniverseConfig& get() noexcept;
+
+  private:
+    std::vector<EtcPalIpAddr> unicast_destinations_;
+    SacnSourceUniverseConfig config_;
+  };
+
   SacnSourceConfig TranslateConfig(const Settings& settings);
-  SacnSourceUniverseConfig TranslateUniverseConfig(const UniverseSettings& settings);
 
   Handle handle_{kInvalidHandle};
 };
@@ -199,7 +213,7 @@ inline bool Source::Settings::IsValid() const
  * Optional members can be modified directly in the struct.
  */
 inline Source::UniverseSettings::UniverseSettings(uint16_t universe_id, const uint8_t* new_values_buffer,
-                                                    size_t new_values_size)
+                                                  size_t new_values_size)
     : universe(universe_id), values_buffer(new_values_buffer), num_values(new_values_size)
 {
 }
@@ -216,7 +230,7 @@ inline bool Source::UniverseSettings::IsValid() const
  * @brief Create a new sACN source to send sACN data.
  *
  * This is an overload of Startup that uses all network interfaces.
- * 
+ *
  * This creates the instance of the source, but no data is sent until AddUniverse() and SetDirty() is called.
  *
  * Note that a source is considered as successfully created if it is able to successfully use any of the
@@ -247,7 +261,8 @@ inline etcpal::Error Source::Startup(const Settings& settings)
  *
  * @param[in] settings Configuration parameters for the sACN source to be created.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
+ * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
+ * modified.
  * @return #kEtcPalErrOk: Source successfully created.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -321,8 +336,8 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
  */
 inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings)
 {
-  SacnSourceUniverseConfig config = TranslateUniverseConfig(settings);
-  return sacn_source_add_universe(handle_, &config);
+  TranslatedUniverseConfig config(settings);
+  return sacn_source_add_universe(handle_, &config.get());
 }
 
 /**
@@ -526,7 +541,7 @@ inline void Source::SetDirtyAndForceSync(uint16_t universe)
  * called by an internal thread of the module. Otherwise, this must be called at the maximum rate
  * at which the application will send sACN.
  *
- * Sends data for universes which have been marked dirty, and sends keep-alive data for universes which 
+ * Sends data for universes which have been marked dirty, and sends keep-alive data for universes which
  * haven't changed. Also destroys sources & universes that have been marked for termination after sending the required
  * three terminated packets.
  *
@@ -581,7 +596,8 @@ inline etcpal::Error Source::ResetNetworking()
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
+ * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
+ * modified.
  * @return #kEtcPalErrOk: Source changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -629,22 +645,40 @@ inline SacnSourceConfig Source::TranslateConfig(const Settings& settings)
   return config;
 }
 
-inline SacnSourceUniverseConfig Source::TranslateUniverseConfig(const UniverseSettings& settings)
+inline const SacnSourceUniverseConfig& Source::TranslatedUniverseConfig::get() noexcept
 {
-  // clang-format off
-  SacnSourceUniverseConfig config = {
-    settings.universe, 
-    settings.values_buffer,
-    settings.num_values,
-    settings.priority,
-    settings.priorities_buffer,
-    settings.send_preview,
-    settings.send_unicast_only,
-    settings.sync_universe
-  };
+  if (!unicast_destinations_.empty())
+  {
+    config_.unicast_destinations = unicast_destinations_.data();
+    config_.num_unicast_destinations = unicast_destinations_.size();
+  }
+
+  return config_;
+}
+
+// clang-format off
+inline Source::TranslatedUniverseConfig::TranslatedUniverseConfig(const UniverseSettings& settings)
+    : config_{
+        settings.universe,
+        settings.values_buffer,
+        settings.num_values,
+        settings.priority,
+        settings.priorities_buffer,
+        settings.send_preview,
+        settings.send_unicast_only,
+        nullptr,
+        0,
+        settings.sync_universe
+      }
+{
   // clang-format on
 
-  return config;
+  if (!settings.unicast_destinations.empty())
+  {
+    unicast_destinations_.reserve(settings.unicast_destinations.size());
+    std::transform(settings.unicast_destinations.begin(), settings.unicast_destinations.end(),
+                   std::back_inserter(unicast_destinations_), [](const etcpal::IpAddr& dest) { return dest.get(); });
+  }
 }
 
 };  // namespace sacn

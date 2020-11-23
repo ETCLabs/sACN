@@ -189,7 +189,12 @@
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_RECEIVER_MAX_UNIVERSES
-#define SACN_RECEIVER_MAX_UNIVERSES 4
+#define SACN_RECEIVER_MAX_UNIVERSES 8
+#endif
+
+// Be sure to check SACN_RECEIVER_MAX_UNIVERSES, as it is illegal to declare a 0-size or negative-size array in C.
+#if !SACN_DYNAMIC_MEM && (SACN_RECEIVER_MAX_UNIVERSES <= 0)
+#error "SACN_RECEIVER_MAX_UNIVERSES is invalid! Please define it to be a positive, non-zero value."
 #endif
 
 /**
@@ -200,7 +205,7 @@
  * highest-priority source.
  */
 #ifndef SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE
-#define SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE 10
+#define SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE 8
 #endif
 
 /**
@@ -216,28 +221,28 @@
 #endif
 
 /**
- * @brief Whether a new network socket should be created for every sACN universe being listened to.
+ * @brief If set to 1, bind only two sockets per thread to reduce duplicate multicast traffic.
  *
- * This option exists to account for quirks in different network stacks. On stacks where multicast
- * traffic is not excessively duplicated between sockets, we conserve sockets by sharing a single
- * socket for multiple multicast subscriptions.
+ * Each sACN receiver socket joins up to #SACN_RECEIVER_MAX_SUBS_PER_SOCKET unique multicast
+ * groups. If #SACN_RECEIVER_LIMIT_BIND is 0, then each socket binds to the wildcard. On certain
+ * platforms, this results in multicast traffic being duplicated between sockets. In this case,
+ * setting #SACN_RECEIVER_LIMIT_BIND to 1 will limit sACN to binding (and polling) just two sockets
+ * per thread (one for IPv4 and another for IPv6). The purpose is to cause all multicast and
+ * unicast traffic to go to the bound sockets and reduce duplication. This has been verified to
+ * work on Linux and lwIP.
+ * 
+ * Set this to 0 in your sacn_config.h if the default causes packets to be lost on your platform.
  *
- * The default value of this option represents the result of testing the code on Windows, macOS,
- * Linux, lwIP, VxWorks and MQX. Some other *nixes, like FreeBSD etc., are not tested but assumed
- * to be similar to Linux (this assumption may be wrong).
- *
- * The upshot is: don't change this option unless you know what you're doing.
+ * Don't change this option unless you know what you're doing.
  */
-// TODO: TEST ON LINUX and lwip!!
-#ifndef SACN_RECEIVER_SOCKET_PER_UNIVERSE
-#define SACN_RECEIVER_SOCKET_PER_UNIVERSE 0 //(!_WIN32 && !__APPLE__)
+#ifndef SACN_RECEIVER_LIMIT_BIND
+#define SACN_RECEIVER_LIMIT_BIND (!_WIN32 && !__APPLE__)
 #endif
 
 /**
  * @brief The maximum number of multicast subscriptions supported per shared socket.
  *
- * Only meaningful if #SACN_RECEIVER_SOCKET_PER_UNIVERSE is defined to 0. For the shared socket
- * model, we cap multicast subscriptions at a certain number to keep it below the system limit.
+ * We cap multicast subscriptions at a certain number to keep it below the system limit.
  *
  * Don't change this option unless you know what you're doing.
  */
@@ -255,9 +260,8 @@
 /**
  * @brief Currently unused; will be used in the future.
  */
-#ifndef SACN_RECEIVER_MAX_THREADS
-#define SACN_RECEIVER_MAX_THREADS 4
-#endif
+#undef SACN_RECEIVER_MAX_THREADS
+#define SACN_RECEIVER_MAX_THREADS 1
 
 /**
  * @}

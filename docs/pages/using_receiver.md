@@ -31,9 +31,10 @@ sacn_receiver_config_init(&config);
 config.universe_id = 1; // Listen on universe 1
 
 // Set the callback functions - defined elsewhere
-config.callbacks.sources_found = my_sources_found_callback;
 config.callbacks.universe_data = my_universe_data_callback;
 config.callbacks.sources_lost = my_sources_lost_callback;
+config.callbacks.sampling_period_ended = my_sampling_period_ended_callback;
+config.callbacks.sampling_period_started = my_sampling_period_started_callback; // optional, can be NULL
 config.callbacks.source_pap_lost = my_source_pap_lost_callback; // optional, can be NULL
 config.callbacks.source_limit_exceeded = my_source_limit_exceeded_callback; // optional, can be NULL
 
@@ -83,80 +84,15 @@ if (result)
 ```
 <!-- CODE_BLOCK_END -->
 
-## Finding New Sources
-
-There may be multiple sources transmitting data on a universe. A sources found notification occurs
-whenever a new set of sources has been found, and the correct starting values for NULL start code
-data (and per-address priority if #SACN_ETC_PRIORITY_EXTENSION is set to 1) have been determined
-for each.
-
-Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
-library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0.
-
-<!-- CODE_BLOCK_START -->
-```c
-void my_sources_found_callback(sacn_receiver_t handle, uint16_t universe, const SacnFoundSource* found_sources,
-                               size_t num_found_sources, void* context)
-{
-  // Check handle and/or context as necessary...
-
-  // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
-  // fields available:
-  for(const SacnFoundSource* src = found_sources; src < (found_sources + num_found_sources); ++src)
-  {
-    char addr_str[ETCPAL_IP_STRING_BYTES];
-    etcpal_ip_to_string(&src->from_addr.ip, addr_str);
-
-    char cid_str[ETCPAL_UUID_STRING_BYTES];
-    etcpal_uuid_to_string(&src->cid, cid_str);
-
-    printf("Found new source %s (address %s:%u, name %s) on universe %u\n", cid_str, addr_str, src->from_addr.port,
-           src->name, universe);
-
-    printf("Starting values:\n Preview: %s\n Per-universe priority: %u\n", src->preview ? "true" : "false", 
-           src->priority);
-
-    for(unsigned int i = 0; i < src->values_len; ++i)
-      printf(" NULL start code data, slot %u: %u\n", i, src->values[i]);
-    for(unsigned int i = 0; i < src->per_address_len; ++i)
-      printf(" Per-address priority, slot %u: %u\n", i, src->per_address[i]);
-  }
-}
-```
-<!-- CODE_BLOCK_MID -->
-```cpp
-void MyNotifyHandler::HandleSourcesFound(uint16_t universe, const std::vector<SacnFoundSource>& found_sources)
-{
-  // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
-  // fields available:
-  for(const SacnFoundSource& src : found_sources)
-  {
-    std::cout << "Found new source " << etcpal::Uuid(src.cid).ToString() << " (address " 
-              << etcpal::IpAddr(src.from_addr.ip).ToString() << ":" << src.from_addr.port << ", name " << src.name 
-              << ") on universe " << universe << "\n";
-
-    std::cout << "Starting values:\n Preview: " << src.preview << "\n Per-universe priority: " << src.priority 
-              << "\n";
-
-    for(unsigned int i = 0; i < src.values_len; ++i)
-      std::cout << " NULL start code data, slot " << i << ": " << src.values[i] << "\n";
-    for(unsigned int i = 0; i < src.per_address_len; ++i)
-      std::cout << " Per-address priority, slot " << i << ": " << src.per_address[i] << "\n";
-  }
-}
-```
-<!-- CODE_BLOCK_END -->
-
 ## Receiving sACN Data
 
-Each time DMX data is received on a universe that is being listened to, from a source that was
-already included in a sources found notification, it will be forwarded via the corresponding
-universe data callback.
+Each time DMX data is received on a universe that is being listened to, it will be forwarded via
+the corresponding universe data callback.
 
 <!-- CODE_BLOCK_START -->
 ```c
-void my_universe_data_callback(sacn_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr, 
-                               const SacnHeaderData* header, const uint8_t* pdata, void* context)
+void my_universe_data_callback(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
+                               const uint8_t* pdata, bool is_sampling, void* context)
 {
   // Check handle and/or context as necessary...
 
@@ -168,8 +104,14 @@ void my_universe_data_callback(sacn_receiver_t handle, uint16_t universe, const 
   char cid_str[ETCPAL_UUID_STRING_BYTES];
   etcpal_uuid_to_string(&header->cid, cid_str);
 
-  printf("Got sACN update from source %s (address %s:%u, name %s) on universe %u, priority %u, start code %u\n",
-         cid_str, addr_str, source_addr->port, header->source_name, universe, header->priority, header->start_code);
+  printf("Got sACN update from source %s (address %s:%u, name %s) on universe %u, priority %u, start code %u",
+         cid_str, addr_str, source_addr->port, header->source_name, header->universe_id, header->priority,
+         header->start_code);
+
+  if (is_sampling)
+    printf(" (during the sampling period)\n");
+  else
+    printf("\n");
 
   // Example for an sACN-enabled fixture...
   if (header->start_code == 0 && my_start_addr + MY_DMX_FOOTPRINT <= header->slot_count)
@@ -181,14 +123,19 @@ void my_universe_data_callback(sacn_receiver_t handle, uint16_t universe, const 
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleUniverseData(uint16_t universe, const etcpal::SockAddr& source_addr,
-                                         const SacnHeaderData& header, const uint8_t* pdata)
+void MyNotifyHandler::HandleUniverseData(Handle handle, const etcpal::SockAddr& source_addr,
+                                         const SacnHeaderData& header, const uint8_t* pdata, bool is_sampling)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // header fields available:
   std::cout << "Got sACN update from source " << etcpal::Uuid(header.cid).ToString() << " (address " 
-            << source_addr.ToString() << ", name " << header.source_name << ") on universe " << universe 
-            << ", priority " << header.priority << ", start code " << header.start_code << "\n";
+            << source_addr.ToString() << ", name " << header.source_name << ") on universe "
+            << header.universe_id << ", priority " << header.priority << ", start code " << header.start_code;
+
+  if (is_sampling)
+    std::cout << " (during the sampling period)\n";
+  else
+    std::cout << "\n";
 
   // Example for an sACN-enabled fixture...
   if (header.start_code == 0 && my_start_addr + MY_DMX_FOOTPRINT <= header.slot_count)
@@ -196,6 +143,35 @@ void MyNotifyHandler::HandleUniverseData(uint16_t universe, const etcpal::SockAd
     memcpy(my_data_buf, &pdata[my_start_addr], MY_DMX_FOOTPRINT);
     // Act on the data somehow
   }
+}
+```
+<!-- CODE_BLOCK_END -->
+
+## The Sampling period
+
+There may be multiple sources transmitting data on a universe. The sampling period is used in order
+to remove flicker as sources are discoverd. There are notifications for when the sampling period
+begins, as well as when it ends, for each universe. The Universe Data callback also provides the
+is_sampling parameter to indicate if the data was received during the sampling period. These
+notifications allow the application to know when to act on the universe data with assurance that
+all of the current sources are represented.
+
+Here is an example of the Sampling Period Ended callback:
+
+<!-- CODE_BLOCK_START -->
+```c
+void my_sampling_period_ended_callback(sacn_receiver_t handle, uint16_t universe, void* context)
+{
+  // Check handle and/or context as necessary...
+
+  // Apply universe data as needed...
+}
+```
+<!-- CODE_BLOCK_MID -->
+```cpp
+void MyNotifyHandler::HandleSamplingPeriodEnded(Handle handle, uint16_t universe)
+{
+  // Apply universe data as needed...
 }
 ```
 <!-- CODE_BLOCK_END -->
@@ -210,25 +186,28 @@ the library and others can be implemented by the consuming application.
 Each source has a _Component Identifier_ (CID), which is a UUID that is unique to that source. The
 CID should be used as a primary key to differentiate sources. Sources also have a descriptive name
 that can be user-assigned and is not required to be unique. This source data is provided in the
-#SacnFoundSource struct in the sources found callback, the #SacnHeaderData struct in the universe
-data callback, as well as in the #SacnLostSource struct in the sources lost callback.
+#SacnHeaderData struct in the universe data callback, as well as in the #SacnLostSource struct in
+the sources lost callback.
 
 ### Priority
 
-The sACN standard provides a priority value with each sACN data packet. This unsigned 8-bit value
-ranges from 0 to 200 inclusive, where 0 is the lowest and 200 is the highest priority. The priority
-value for a packet is available in the header structure that accompanies the universe data
+The sACN standard provides a universe priority value with each sACN data packet. This unsigned
+8-bit value ranges from 0 to 200, where 0 is the lowest and 200 is the highest priority. The
+priority value for a packet is available in the header structure that accompanies the universe data
 callback. It is the application's responsibility to ensure that higher-priority data takes
 precedence over lower-priority data.
 
 ETC has extended the sACN standard with a method of tracking priority on a per-address basis. This
 is implemented by sending an alternate START code packet on the same universe periodically - the
 START code is `0xdd`. When receiving a data packet with the start code `0xdd`, the slots in that
-packet are to be interpreted as a priority value from 0 to 200 inclusive for the corresponding slot
-in the DMX (NULL START code) packets. Receivers which wish to implement the per-address priority
-extension should check for the `0xdd` start code and handle the data accordingly.
+packet are to be interpreted as a priority value from 1 to 200 for the corresponding slot in the
+DMX (NULL START code) packets. A value of 0 indicates "not sourced", meaning the source is not
+sending NULL START code data to that slot. Likewise, if less than 512 `0xdd` slots are received,
+then the slots beyond the last `0xdd` slot should also be treated as not sourced. Receivers which
+wish to implement the per-address priority extension should check for the `0xdd` start code and
+handle the data accordingly.
 
-When implementing the per-slot priority extension, the source PAP lost callback should be
+When implementing the per-address priority extension, the source PAP lost callback should be
 implemented to handle the condition where a source that was previously sending `0xdd` packets stops
 sending them:
 
@@ -244,12 +223,15 @@ void my_source_pap_lost_callback(sacn_receiver_t handle, uint16_t universe, cons
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourcePapLost(uint16_t universe, const SacnRemoteSource& source)
+void MyNotifyHandler::HandleSourcePapLost(Handle handle, uint16_t universe, const SacnRemoteSource& source)
 {
   // Revert to using the per-packet priority value to resolve priorities for this universe.
 }
 ```
 <!-- CODE_BLOCK_END -->
+
+If the library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0, then `0xdd` packets will not
+be received, and the source PAP lost callback will not be called.
 
 ### Merging
 
@@ -262,16 +244,16 @@ The sACN library provides a couple of APIs to facilitate merging. The first, the
 provides a software merger that takes start code 0 and PAP data as input and outputs the merged
 levels, along with source IDs for each level. For more information, see \ref using_dmx_merger.
 The second, the merge receiver API, combines the receiver and DMX merger APIs to offer a simplified
-solution for receiver functionality with merging built in. See \ref using_merge_receiver for
-more information.
+solution for receiver functionality with merging built in. See \ref using_merge_receiver for more
+information.
 
 ## Sources Lost Conditions
 
-When a previously-tracked source stops sending data, the sACN library implements a custom data-loss
-algorithm to attempt to group lost sources together. See \ref data_loss_behavior for more
+When a previously-tracked source stops sending data, the sACN library implements a custom source-loss
+algorithm to attempt to group lost sources together. See \ref source_loss_behavior for more
 information on this algorithm.
 
-After the data-loss algorithm runs, the library will deliver a sources lost callback to indicate
+After the source-loss algorithm runs, the library will deliver a sources lost callback to indicate
 that some number of sources have gone offline.
 
 <!-- CODE_BLOCK_START -->
@@ -296,7 +278,8 @@ void my_sources_lost_callback(sacn_receiver_t handle, uint16_t universe, const S
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourcesLost(uint16_t universe, const std::vector<SacnLostSource>& lost_sources)
+void MyNotifyHandler::HandleSourcesLost(Handle handle, uint16_t universe,
+                                        const std::vector<SacnLostSource>& lost_sources)
 {
   // You might not normally print a message on this condition, but this is just to demonstrate
   // the fields available:
@@ -312,8 +295,8 @@ void MyNotifyHandler::HandleSourcesLost(uint16_t universe, const std::vector<Sac
 ```
 <!-- CODE_BLOCK_END -->
 
-If a source that was lost comes back again, then it will be included in another sources found
-notification.
+If a source that was lost comes back again, then there will once again be universe data
+notifications for that source.
 
 ## Source Limit Exceeded Conditions
 
@@ -344,7 +327,7 @@ void my_source_limit_exceeded_callback(sacn_receiver_t handle, uint16_t universe
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourceLimitExceeded(uint16_t universe)
+void MyNotifyHandler::HandleSourceLimitExceeded(Handle handle, uint16_t universe)
 {
   // Handle the condition in an application-defined way. Maybe log it?
 }

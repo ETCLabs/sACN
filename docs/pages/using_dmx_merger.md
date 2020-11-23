@@ -1,9 +1,9 @@
 # Using the sACN DMX Merger API                                                 {#using_dmx_merger}
 
 The sACN DMX Merger API provides a software merger that takes start code 0 and per-address priority
-(PAP) data as input and outputs the merged levels, along with source IDs for each level. This API
-exposes both a C and C++ language interface. The C++ interface is a header-only wrapper around the
-C interface.
+(PAP) data as input and outputs the merged levels, along with source IDs and per-address priorities
+for each level. This API exposes both a C and C++ language interface. The C++ interface is a
+header-only wrapper around the C interface.
 
 Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
 library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0.
@@ -19,27 +19,30 @@ A merger must first be created before it can be used. A separate merger should b
 universe that needs merging.
 
 To create a merger, a config needs to be initialized and passed into the create/startup function.
-In the config, two array pointers must be specified for the merge results: one for the merged slot
-levels, and another for the source ID of each slot. The application owns these output arrays and
-must ensure that their memory is valid until the merger is destroyed. The maximum source count (the
-maximum number of sources the merger will merge when #SACN_DYNAMIC_MEM is 1) is also specified in
-the config, and it defaults to #SACN_RECEIVER_INFINITE_SOURCES. If #SACN_DYNAMIC_MEM is 0, then
+In the config, the output array pointer for the merged slot levels must be specified. There are
+also two optional output array pointers: one for the per-address priority of each slot, and another
+for the source ID of each slot. These two are set to NULL if not used. The application owns the
+memory that it points to in the config, and must ensure that the memory provided is valid until the
+merger is destroyed. The maximum source count (the maximum number of sources the merger will merge
+when #SACN_DYNAMIC_MEM is 1) is also specified in the config, and it defaults to
+#SACN_RECEIVER_INFINITE_SOURCES. If #SACN_DYNAMIC_MEM is 0, then
 #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used instead.
 
 Once the merger is created, the merger's functionality can be used. Mergers can also be destroyed
-individually with the destroy/shutdown function, although keep in mind that `sacn_deinit()` will
-destroy all of the mergers automatically.
+individually with the destroy/shutdown function, although keep in mind that all mergers are
+destroyed automatically when sACN deinitializes.
 
 <!-- CODE_BLOCK_START -->
 ```c
 // These buffers are updated on each merger call with the merge results.
-// They must be valid as long as the merger is using them.
 uint8_t slots[DMX_ADDRESS_COUNT];
+uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
 sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
 
 // Merger configuration used for the initialization of each merger:
 SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
 merger_config.slots = slots;
+merger_config.per_address_priorities = per_address_priorities;
 merger_config.slot_owners = slot_owners;
 
 // Initialize a merger and obtain its handle.
@@ -55,17 +58,20 @@ sacn_dmx_merger_destroy(merger_handle);
 // These buffers are updated on each merger call with the merge results.
 // They must be valid as long as the merger is using them.
 uint8_t slots[DMX_ADDRESS_COUNT];
+uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
 sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
 
 // Merger configuration used for the initialization of each merger:
-sacn::DmxMerger::Settings settings(slots, slot_owners);
+sacn::DmxMerger::Settings settings(slots);
+settings.per_address_priorities = per_address_priorities;
+settings.slot_owners = slot_owners;
 
 // Initialize a merger.
 sacn::DmxMerger merger;
 merger.Startup(settings);
 
 // Mergers can later be destroyed individually.
-// Keep in mind that sacn_deinit() will destroy all mergers automatically.
+// Keep in mind that sacn::Deinit() will destroy all mergers automatically.
 merger.Shutdown();
 ```
 <!-- CODE_BLOCK_END -->
@@ -73,19 +79,17 @@ merger.Shutdown();
 ## Adding and Removing Sources
 
 In order to input data into a merger, each source being merged must first be added to the merger.
-To do this, use the add source function, which takes the source's CID as input and provides a
-source handle on success, or an error code on failure. A source can later be removed individually,
-which also removes it from the merge output.
+To do this, use the add source function, which provides a new source handle on success, or an error
+code on failure. A source can later be removed individually, which also removes it from the merge
+output.
 
 <!-- CODE_BLOCK_START -->
 ```c
-// Add a couple of sources, which are tracked with handles and CIDs.
+// Add a couple of sources, which are tracked with handles.
 sacn_source_id_t source_1_handle, source_2_handle;
-EtcPalUuid source_1_cid, source_2_cid;
-// Initialize CIDs here...
 
-sacn_dmx_merger_add_source(merger_handle, &source_1_cid, &source_1_handle);
-sacn_dmx_merger_add_source(merger_handle, &source_2_cid, &source_2_handle);
+sacn_dmx_merger_add_source(merger_handle, &source_1_handle);
+sacn_dmx_merger_add_source(merger_handle, &source_2_handle);
 
 // Sources can later be removed individually, which updates the merger's output.
 sacn_dmx_merger_remove_source(merger_handle, source_1_handle);
@@ -93,13 +97,10 @@ sacn_dmx_merger_remove_source(merger_handle, source_2_handle);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-// Add a couple of sources, which are tracked with handles and CIDs.
-etcpal::Uuid source_1_cid, source_2_cid;
-// Initialize CIDs here...
-
+// Add a couple of sources, which are tracked with handles.
 // AddSource may also return an error, which is not checked for in this example.
-sacn_source_id_t source_1_handle = merger.AddSource(source_1_cid).value();
-sacn_source_id_t source_2_handle = merger.AddSource(source_2_cid).value();
+sacn_source_id_t source_1_handle = merger.AddSource().value();
+sacn_source_id_t source_2_handle = merger.AddSource().value();
 
 // Sources can later be removed individually, which updates the merger's output.
 merger.RemoveSource(source_1_handle);
@@ -111,15 +112,27 @@ merger.RemoveSource(source_2_handle);
 
 Different types of data can be fed into a merger: the NULL start code levels, per-address
 priorities, and universe priority. Inputting this data into a merger causes its merge output to
-synchronously update. There are different ways this data can be passed in, depending on the use
-case.
+synchronously update. The merger will prioritize sources with the highest per-address priority
+(or universe priority if the source doesn't provide per-address priorities). If two sources have
+the same highest priority, the one with the highest NULL start code level wins (HTP).
 
-One way to input this data is to pass it in directly, using the update source data function. This
+There is a key distinction in how the merger interprets the lowest priority. The lowest universe
+priority is 0, but the lowest per-address priority is 1. This is because a per-address priority of
+0 indicates that the source is not sending any levels to the corresponding slot. Therefore, if
+Source A has a universe priority of 0 and a level of 10, and Source B has a per-address priority of
+0 and a level of 50, Source A will still win despite having a lower level. This is because
+per-address priority 0 indicates that there is no level at this slot at all, whereas universe
+priority 0 simply indicates the lowest priority. If Source B had a per-address priority of 1, then
+Source B would win no matter what the levels were.
+
+Also keep in mind that if less than 512 per-address priorities are inputted, then the remaining
+slots will be treated as if they had a per-address priority of 0.
+
+The way to input this data is to pass it in directly, using the update source data function. This
 function takes pointers to the NULL start code and per-address priority buffers, their lengths,
 and the universe priority value. If the NULL start code or per-address-priority data is not being
 updated, the corresponding pointer should be NULL, with a length of 0. Therefore, this function
-allows the updating of one or the other, or both. This function would be ideal for initializing
-the source data from the receiver API's sources found callback.
+allows the updating of one or the other, or both.
 
 <!-- CODE_BLOCK_START -->
 ```c
@@ -140,7 +153,7 @@ sacn_dmx_merger_update_source_data(merger_handle, source_2_handle, universe_prio
 // Print merge results
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
 {
-  printf("Slot %u:\n Level: %u\n Source ID: %u\n", i, slots[i], slot_owners[i]);
+  printf("Slot %u:\n Level: %u\n PAP: %u\n Source ID: %u\n", i, slots[i], per_address_priorities[i], slot_owners[i]);
 }
 ```
 <!-- CODE_BLOCK_MID -->
@@ -160,37 +173,8 @@ merger.UpdateSourceData(source_2_handle, universe_priority, levels, DMX_ADDRESS_
 // Print merge results
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
 {
-  std::cout << "Slot " << i << ":\n Level: " << slots[i] << "\n Source ID: " << slot_owners[i] << "\n";
-}
-```
-<!-- CODE_BLOCK_END -->
-
-Another way to input this data is from within the receiver API's universe data callback, using the
-update source from sACN function. This function takes the #SacnHeaderData and the pdata, as
-provided by the universe data callback. Using these, it determines the universe priority, NULL
-start code, and/or per-address priority data, and uses them to do the same update as the update
-source data function.
-
-<!-- CODE_BLOCK_START -->
-```c
-void my_universe_data_callback(sacn_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr, 
-                               const SacnHeaderData* header, const uint8_t* pdata, void* context)
-{
-  // Check handle and/or context as necessary...
-
-  // Look up merger_handle based on universe...
-
-  sacn_dmx_merger_update_source_from_sacn(merger_handle, header, pdata);
-}
-```
-<!-- CODE_BLOCK_MID -->
-```cpp
-void MyNotifyHandler::HandleUniverseData(uint16_t universe, const etcpal::SockAddr& source_addr,
-                                         const SacnHeaderData& header, const uint8_t* pdata)
-{
-  // mergers_ is a map between universes and merger objects
-
-  mergers_[universe].UpdateSourceDataFromSacn(header, pdata);
+  std::cout << "Slot " << i << ":\n Level: " << slots[i] << ":\n PAP: " << per_address_priorities[i] << "\n Source ID: "
+            << slot_owners[i] << "\n";
 }
 ```
 <!-- CODE_BLOCK_END -->
@@ -201,6 +185,8 @@ A source may stop sending per-address priorities at any time. When this happens,
 reset the priorities for that source to the universe priority and update the merge results
 accordingly. This can be done by calling the stop source per-address priority function.
 
+The following example illustrates how this is used from the receiver API's PAP Lost callback:
+
 <!-- CODE_BLOCK_START -->
 ```c
 void my_source_pap_lost_callback(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source, 
@@ -208,26 +194,22 @@ void my_source_pap_lost_callback(sacn_receiver_t handle, uint16_t universe, cons
 {
   // Check handle and/or context as necessary...
 
+  sacn_dmx_merger_t merger_handle;
   // Look up merger_handle based on universe...
 
-  // Use the source's CID to look up its handle
-  sacn_source_id_t source_handle = sacn_dmx_merger_get_id(merger_handle, &source->cid);
+  sacn_source_id_t source_handle;
+  // Look up source_handle based on CID...
 
-  if(source_handle != SACN_DMX_MERGER_SOURCE_INVALID)
-    sacn_dmx_merger_stop_source_per_address_priority(merger_handle, source_handle);
+  sacn_dmx_merger_stop_source_per_address_priority(merger_handle, source_handle);
 }
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
 void MyNotifyHandler::HandleSourcePapLost(uint16_t universe, const SacnRemoteSource& source)
 {
-  // mergers_ is a map between universes and merger objects
-
-  // Use the source's CID to look up its handle
-  auto source_handle = mergers_[universe].GetSourceId(source.cid);
-
-  if(source_handle)
-    mergers_[universe].StopSourcePerAddressPriority(*source_handle);
+  // mergers_ is the application's map between universes and merger objects
+  // source_handles_ is the application's map between CIDs and source handles
+  mergers_[universe].StopSourcePerAddressPriority(source_handles_[source.cid]);
 }
 ```
 <!-- CODE_BLOCK_END -->
@@ -235,7 +217,7 @@ void MyNotifyHandler::HandleSourcePapLost(uint16_t universe, const SacnRemoteSou
 ## Accessing Source Information
 
 Each merger provides read-only access to the state of each of its sources, which can be obtained
-by calling the get source function. The state information includes the source's CID, NULL start
+by calling the get source function. The state information includes the source's handle, NULL start
 code levels, universe priority, and per-address priorities if available.
 
 <!-- CODE_BLOCK_START -->
@@ -247,9 +229,7 @@ if (source_state)
   // Do some printouts to demonstrate the fields available
   printf("Source data:\n");
 
-  char cid_str[ETCPAL_UUID_STRING_BYTES];
-  etcpal_uuid_to_string(&source_state->cid, cid_str);
-  printf(" CID: %s\n Universe Priority: %u\n", cid_str, source_state->universe_priority);
+  printf(" Universe Priority: %u\n", source_state->universe_priority);
 
   for(unsigned int i = 0; i < source_state->valid_value_count; ++i)
   {
@@ -272,8 +252,7 @@ const SacnDmxMergerSource* source_state = merger.GetSourceInfo(source_1_handle);
 if (source_state)
 {
   // Do some printouts to demonstrate the fields available
-  std::cout << "Source data:\n CID: " << etcpal::Uuid(source_state->cid).ToString() << "\n Universe Priority: " 
-            << source_state->universe_priority << "\n";
+  std::cout << "Source data:\n Universe Priority: " << source_state->universe_priority << "\n";
 
   for(unsigned int i = 0; i < source_state->valid_value_count; ++i)
   {

@@ -38,13 +38,13 @@
 #if SACN_DYNAMIC_MEM
 #define ALLOC_MERGE_RECEIVER() malloc(sizeof(SacnMergeReceiver))
 #define FREE_MERGE_RECEIVER(ptr) \
-  do                       \
-  {                        \
-    if (ptr->netints)      \
-    {                      \
-      free(ptr->netints);  \
-    }                      \
-    free(ptr);             \
+  do                             \
+  {                              \
+    if (ptr->netints)            \
+    {                            \
+      free(ptr->netints);        \
+    }                            \
+    free(ptr);                   \
   } while (0)
 #else
 #define ALLOC_MERGE_RECEIVER() etcpal_mempool_alloc(sacnrecv_merge_receivers)
@@ -126,6 +126,7 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
   if (config)
   {
     memset(config, 0, sizeof(SacnMergeReceiverConfig));
+    config->use_pap = true;
   }
 }
 
@@ -201,9 +202,10 @@ etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, ui
 /**
  * @brief Change the universe on which a sACN Merge Receiver is listening.
  *
- * An sACN merge receiver can only listen on one universe at a time. After this call completes, underlying updates will
- * generate new calls to SacnMergeReceiverMergedDataCallback(). If this call fails, the caller must call
- * sacn_merge_receiver_destroy for the merge receiver, because the merge receiver may be in an invalid state.
+ * An sACN merge receiver can only listen on one universe at a time. After this call completes, a new sampling period
+ * will occur, and then underlying updates will generate new calls to SacnMergeReceiverMergedDataCallback(). If this
+ * call fails, the caller must call sacn_merge_receiver_destroy for the merge receiver, because the merge receiver may
+ * be in an invalid state.
  *
  * @param[in] handle Handle to the merge receiver for which to change the universe.
  * @param[in] new_universe_id New universe number that this merge receiver should listen to.
@@ -228,9 +230,9 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes, underlying updates will generate new calls to SacnMergeReceiverMergedDataCallback(). If
- * this call fails, the caller must call sacn_merge_receiver_destroy for the merge receiver, because the receiver may be
- * in an invalid state.
+ * After this call completes, a new sampling period occurs, and then underlying updates will generate new calls to
+ * SacnMergeReceiverMergedDataCallback(). If this call fails, the caller must call sacn_merge_receiver_destroy for the
+ * merge receiver, because the merge receiver may be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -256,11 +258,14 @@ etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle
 }
 
 /**
- * @brief Returns the source id for that source cid.
+ * @brief Converts a source CID to the corresponding source ID, or #SACN_DMX_MERGER_SOURCE_INVALID if not found.
+ *
+ * This is a simple conversion from a source CID to it's corresponding source ID. A source ID will be returned only if
+ * it is a source that has been discovered by the merge receiver.
  *
  * @param[in] handle The handle to the merge receiver.
  * @param[in] source_cid The UUID of the source CID.
- * @return The source ID, or #SACN_DMX_MERGER_SOURCE_INVALID.
+ * @return The source ID, or #SACN_DMX_MERGER_SOURCE_INVALID if not found.
  */
 sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid)
 {
@@ -270,7 +275,7 @@ sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle,
 }
 
 /**
- * @brief fills in the source cid for that source id.
+ * @brief Converts a source ID to the corresponding source CID.
  *
  * @param[in] handle The handle to the merge receiver.
  * @param[in] source_id The ID of the source.

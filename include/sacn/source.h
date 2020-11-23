@@ -89,12 +89,12 @@ typedef struct SacnSourceConfig
 } SacnSourceConfig;
 
 /** A default-value initializer for an SacnSourceConfig struct. */
-#define SACN_SOURCE_CONFIG_DEFAULT_INIT \
-  {                                     \
-    kEtcPalNullUuid, "", 0, false       \
+#define SACN_SOURCE_CONFIG_DEFAULT_INIT                        \
+  {                                                            \
+    kEtcPalNullUuid, "", SACN_SOURCE_INFINITE_UNIVERSES, false \
   }
 
-void sacn_source_config_init(SacnSourceConfig* config, const EtcPalUuid* cid, const char* name);
+void sacn_source_config_init(SacnSourceConfig* config);
 
 typedef struct SacnSourceUniverseConfig
 {
@@ -129,19 +129,24 @@ typedef struct SacnSourceUniverseConfig
   /** If true, this sACN source will only send unicast traffic on this universe. Defaults to false. */
   bool send_unicast_only;
 
+  /** The initial set of unicast destinations for this universe. This can be changed further by using
+      sacn_source_add_unicast_destination() and sacn_source_remove_unicast_destination(). */
+  const EtcPalIpAddr* unicast_destinations;
+  /** The size of unicast_destinations. */
+  size_t num_unicast_destinations;
+
   /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
   uint16_t sync_universe;
 
 } SacnSourceUniverseConfig;
 
 /** A default-value initializer for an SacnSourceUniverseConfig struct. */
-#define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT \
-  {                                              \
-    0, NULL, 0, 100, NULL, false, false, 0       \
+#define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT    \
+  {                                                 \
+    0, NULL, 0, 100, NULL, false, false, NULL, 0, 0 \
   }
 
-void sacn_source_universe_config_init(SacnSourceUniverseConfig* config, uint16_t universe, const uint8_t* values_buffer,
-                                      size_t values_len, const uint8_t* priorities_buffer);
+void sacn_source_universe_config_init(SacnSourceUniverseConfig* config);
 
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle,
                                   SacnMcastInterface* netints, size_t num_netints);

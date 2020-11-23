@@ -68,16 +68,17 @@ public:
      *
      * This callback will be called in multiple ways:
      * 1. When a new non-preview data packet or per-address priority packet is received from the sACN Receiver module,
-     * it is immediately and synchronously passed to the DMX Merger, after which the merged result is immediately and
-     * synchronously passed to this callback.  Note that this includes the data received from the
-     * SacnSourcesFoundCallback().
+     * it is immediately and synchronously passed to the DMX Merger. If the sampling period has not ended, the merged
+     * result is not passed to this callback until the sampling period ends. Otherwise, it is immediately and
+     * synchronously passed to this callback.
      * 2. When a sACN source is no longer sending non-preview data or per-address priority packets, the lost source
-     * callback from the sACN Receiver module will be passed to the merger, after which the merged result is immediately
-     * and synchronously passed to this callback.
+     * callback from the sACN Receiver module will be passed to the merger, after which the merged result is passed to
+     * this callback pending the sampling period.
      *
      * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
      * packets on the universe.
      *
+     * @param[in] handle The merge receiver's handle.
      * @param[in] universe The universe this merge receiver is monitoring.
      * @param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe.  This buffer
      *                  is owned by the library.
@@ -86,7 +87,8 @@ public:
      *            SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, index) to check the slot validity. This buffer is owned
      *            by the library.
      */
-    virtual void HandleMergedData(uint16_t universe, const uint8_t* slots, const sacn_source_id_t* slot_owners) = 0;
+    virtual void HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
+                                  const sacn_source_id_t* slot_owners) = 0;
 
     /**
      * @brief Notify that a non-data packet has been received.
@@ -97,13 +99,14 @@ public:
      * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
      * packets on the universe.
      *
+     * @param[in] handle The merge receiver's handle.
      * @param[in] universe The universe this merge receiver is monitoring.
      * @param[in] source_addr The network address from which the sACN packet originated.
      * @param[in] header The header data of the sACN packet.
      * @param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count. This buffer
      *                  is owned by the library.
      */
-    virtual void HandleNonDmxData(uint16_t universe, const etcpal::SockAddr& source_addr,
+    virtual void HandleNonDmxData(Handle handle, uint16_t universe, const etcpal::SockAddr& source_addr,
                                   const SacnHeaderData& header, const uint8_t* pdata) = 0;
 
     /**
@@ -112,9 +115,14 @@ public:
      *
      * This is a notification that is directly forwarded from the sACN Receiver module.
      *
+     * @param[in] handle The merge receiver's handle.
      * @param[in] universe The universe this merge receiver is monitoring.
      */
-    virtual void HandleSourceLimitExceeded(uint16_t universe) = 0;
+    virtual void HandleSourceLimitExceeded(Handle handle, uint16_t universe)
+    {
+      ETCPAL_UNUSED_ARG(handle);
+      ETCPAL_UNUSED_ARG(universe);
+    }
   };
 
   /**
@@ -132,6 +140,12 @@ public:
 
     /** The maximum number of sources this universe will listen to when using dynamic memory. */
     int source_count_max{SACN_RECEIVER_INFINITE_SOURCES};
+
+    /** If true, this allows per-address priorities (if any are received) to be fed into the merger. If false, received
+        per-address priorities are ignored, and only universe priorities are used in the merger. Keep in mind that this
+        setting will be ignored if #SACN_ETC_PRIORITY_EXTENSTION = 0, in which case per-address priorities are ignored.
+     */
+    bool use_pap{true};
 
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
@@ -175,32 +189,27 @@ namespace internal
 extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, uint16_t universe, const uint8_t* slots,
                                                  const sacn_source_id_t* slot_owners, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleMergedData(universe, slots, slot_owners);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleMergedData(handle, universe, slots, slot_owners);
   }
 }
 
 extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr,
                                              const SacnHeaderData* header, const uint8_t* pdata, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context && source_addr && header)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(universe, *source_addr, *header, pdata);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(handle, universe, *source_addr, *header,
+                                                                          pdata);
   }
 }
 
 extern "C" inline void MergeReceiverCbSourceLimitExceeded(sacn_merge_receiver_t handle, uint16_t universe, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-
   if (context)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(universe);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(handle, universe);
   }
 }
 
@@ -316,9 +325,9 @@ etcpal::Expected<uint16_t> MergeReceiver::GetUniverse() const
 /**
  * @brief Change the universe this class is listening to.
  *
- * An sACN merge receiver can only listen on one universe at a time. After this call completes successfully, the merge
- * receiver is in a sampling period for the new universe and will provide HandleSourcesFound() calls when appropriate.
- * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ * An sACN merge receiver can only listen on one universe at a time. After this call completes, a new sampling period
+ * will occur, and then underlying updates will generate new calls to HandleMergedData(). If this call fails, the caller
+ * must call Shutdown() on this class, because it may be in an invalid state.
  *
  * @param[in] new_universe_id New universe number that this merge receiver should listen to.
  * @return #kEtcPalErrOk: Universe changed successfully.
@@ -365,9 +374,9 @@ inline etcpal::Error MergeReceiver::ResetNetworking()
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, the merge receiver is in a sampling period for the new universe and will provide
- * HandleSourcesFound() calls when appropriate.
- * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ * After this call completes, a new sampling period occurs, and then underlying updates will generate new calls to
+ * HandleMergedData(). If this call fails, the caller must call Shutdown() on this class, because it may be in an
+ * invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -390,7 +399,10 @@ inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterfa
 }
 
 /**
- * @brief Returns the source id for that source cid.
+ * @brief Converts a source CID to the corresponding source ID.
+ *
+ * This is a simple conversion from a source CID to it's corresponding source ID. A source ID will be returned only if
+ * it is a source that has been discovered by the merge receiver.
  *
  * @param[in] source_cid The UUID of the source CID.
  * @return On success this will be the source ID, otherwise kEtcPalErrInvalid.
@@ -404,9 +416,9 @@ inline etcpal::Expected<sacn_source_id_t> MergeReceiver::GetSourceId(const etcpa
 }
 
 /**
- * @brief Returns the source cid for that source id.
+ * @brief Converts a source ID to the corresponding source CID.
  *
- * @param[in] source_id The id of the source.
+ * @param[in] source_id The ID of the source.
  * @return On success this will be the source CID, otherwise kEtcPalErrInvalid.
  */
 inline etcpal::Expected<etcpal::Uuid> MergeReceiver::GetSourceCid(sacn_source_id_t source_id) const
@@ -439,6 +451,7 @@ inline SacnMergeReceiverConfig MergeReceiver::TranslateConfig(const Settings& se
       &notify_handler
     },
     settings.source_count_max,
+    settings.use_pap,
   };
   // clang-format on
 

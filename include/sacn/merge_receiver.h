@@ -59,12 +59,12 @@ typedef int sacn_merge_receiver_t;
  *
  * This callback will be called in multiple ways:
  * 1. When a new non-preview data packet or per-address priority packet is received from the sACN Receiver module,
- * it is immediately and synchronously passed to the DMX Merger, after which the merged result is immediately and
- * synchronously passed to this callback.  Note that this includes the data received from the
- * SacnSourcesFoundCallback().
+ * it is immediately and synchronously passed to the DMX Merger. If the sampling period has not ended, the merged result
+ * is not passed to this callback until the sampling period ends. Otherwise, it is immediately and synchronously passed
+ * to this callback.
  * 2. When a sACN source is no longer sending non-preview data or per-address priority packets, the lost source callback
- * from the sACN Receiver module will be passed to the merger, after which the merged result is immediately and
- * synchronously passed to this callback.
+ * from the sACN Receiver module will be passed to the merger, after which the merged result is passed to this callback
+ * pending the sampling period.
  *
  * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
  * packets on the universe.
@@ -144,14 +144,19 @@ typedef struct SacnMergeReceiverConfig
 
   /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
       This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used
-     instead.*/
+      instead.*/
   int source_count_max;
+
+  /** If true, this allows per-address priorities (if any are received) to be fed into the merger. If false, received
+      per-address priorities are ignored, and only universe priorities are used in the merger. Keep in mind that this
+      setting will be ignored if #SACN_ETC_PRIORITY_EXTENSTION = 0, in which case per-address priorities are ignored. */
+  bool use_pap;
 } SacnMergeReceiverConfig;
 
 /** A default-value initializer for an SacnMergeReceiverConfig struct. */
-#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT \
-  {                                             \
-    0, {NULL, NULL, NULL}, 0                    \
+#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                       \
+  {                                                                   \
+    0, {NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, true \
   }
 
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);

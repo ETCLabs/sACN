@@ -22,7 +22,7 @@
 #include <limits>
 #include "etcpal_mock/common.h"
 #include "sacn_mock/private/common.h"
-#include "sacn_mock/private/data_loss.h"
+#include "sacn_mock/private/source_loss.h"
 #include "sacn_mock/private/sockets.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
@@ -54,7 +54,7 @@ protected:
   {
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
-    sacn_data_loss_reset_all_fakes();
+    sacn_source_loss_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
 
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
@@ -99,8 +99,8 @@ TEST_F(TestReceiver, SetExpiredWaitWorks)
 TEST_F(TestReceiver, ChangeUniverseWorks)
 {
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
-                                      void*) {};
+  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+                                      bool, void*) {};
   config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
   config.universe_id = CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE;
 
@@ -177,8 +177,8 @@ TEST_F(TestReceiver, ChangeUniverseErrNotInitWorks)
 TEST_F(TestReceiver, ChangeUniverseErrExistsWorks)
 {
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
-                                      void*) {};
+  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+                                      bool, void*) {};
   config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
 
   config.universe_id = CHANGE_UNIVERSE_RECEIVER_EXISTS_UNIVERSE;
@@ -207,8 +207,8 @@ TEST_F(TestReceiver, ChangeUniverseErrNotFoundWorks)
   EXPECT_EQ(change_universe_not_found_result, kEtcPalErrNotFound);
 
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
-                                      void*) {};
+  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+                                      bool, void*) {};
   config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
   config.universe_id = CHANGE_UNIVERSE_VALID_UNIVERSE_1;
 

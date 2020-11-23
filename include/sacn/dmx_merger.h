@@ -80,20 +80,33 @@ typedef uint16_t sacn_source_id_t;
 /** A set of configuration information for a merger instance. */
 typedef struct SacnDmxMergerConfig
 {
+  /********* Required values **********/
+
+  /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
+      Memory is owned by the application. Slots that are not sourced are set to 0.*/
+  uint8_t* slots;
+
+  /********* Optional values **********/
+
+  /** Buffer of #DMX_ADDRESS_COUNT per-address priorities for each winning slot. This is used if the merge results need
+      to be sent over sACN. Otherwise this can just be set to NULL. If a source with a universe priority of 0 wins, that
+      priority is converted to 1. If there is no winner for a slot, then a per-address priority of 0 is used to show
+      that there is no source for that slot.
+      Memory is owned by the application.*/
+  uint8_t* per_address_priorities;
+
+  /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
+      #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if you need
+      to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to NULL and
+      use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of 0 (not
+      sourced).
+      Memory is owned by the application.*/
+  sacn_source_id_t* slot_owners;
+
   /** The maximum number of sources this merger will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
       This parameter is ignored when configured to use static memory -- #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used
       instead.*/
   int source_count_max;
-
-  /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
-      Memory is owned by the application.*/
-  uint8_t* slots;
-
-  /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for
-      that slot, or #DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot.
-      You can use SACN_DMX_MERGER_SOURCE_IS_VALID() if you don't want to look at the slot_owners directly.
-      Memory is owned by the application.*/
-  sacn_source_id_t* slot_owners;
 
 } SacnDmxMergerConfig;
 
@@ -108,9 +121,9 @@ typedef struct SacnDmxMergerConfig
  * @endcode
  *
  */
-#define SACN_DMX_MERGER_CONFIG_INIT            \
-  {                                            \
-    SACN_RECEIVER_INFINITE_SOURCES, NULL, NULL \
+#define SACN_DMX_MERGER_CONFIG_INIT                  \
+  {                                                  \
+    NULL, NULL, NULL, SACN_RECEIVER_INFINITE_SOURCES \
   }
 
 /**
@@ -126,8 +139,8 @@ typedef struct SacnDmxMergerConfig
     application calls a variant of sacn_dmx_merger_update_source to do the actual update. */
 typedef struct SacnDmxMergerSource
 {
-  /** The UUID (e.g. sACN CID) of the DMX source. */
-  EtcPalUuid cid;
+  /** The merger's ID for the DMX source. */
+  sacn_source_id_t id;
 
   /** The DMX data values (0 - 255). */
   uint8_t values[DMX_ADDRESS_COUNT];
@@ -151,16 +164,12 @@ typedef struct SacnDmxMergerSource
 etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle);
 etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle);
 
-etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid,
-                                          sacn_source_id_t* source_id);
+etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_source_id_t* source_id);
 etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_source_id_t source);
-sacn_source_id_t sacn_dmx_merger_get_id(sacn_dmx_merger_t merger, const EtcPalUuid* source_cid);
 const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_source_id_t source);
 etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn_source_id_t source, uint8_t priority,
                                                   const uint8_t* new_values, size_t new_values_count,
                                                   const uint8_t* address_priorities, size_t address_priorities_count);
-etcpal_error_t sacn_dmx_merger_update_source_from_sacn(sacn_dmx_merger_t merger, const SacnHeaderData* header,
-                                                       const uint8_t* pdata);
 etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, sacn_source_id_t source);
 
 #ifdef __cplusplus
