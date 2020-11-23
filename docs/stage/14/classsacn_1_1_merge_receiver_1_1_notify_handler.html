@@ -276,8 +276,8 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>The merge receiver's handle. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The universe this merge receiver is monitoring. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">slots</td><td>Buffer of #SACN_DMX_ADDRESS_COUNT bytes containing the merged levels for the universe. This buffer is owned by the library. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">slot_owners</td><td>Buffer of <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a> source_ids. If a value in the buffer is #DMX_MERGER_SOURCE_INVALID, the corresponding slot is not currently controlled. You can also use <a class="el" href="group__sacn__dmx__merger.html#ga7b7762d0e6afca73eb8c31fa55354439" title="Utility to see if a slot_owner is valid. ">SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, index)</a> to check the slot validity. This buffer is owned by the library. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">slots</td><td>Buffer of <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a> bytes containing the merged levels for the universe. This buffer is owned by the library. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">slot_owners</td><td>Buffer of <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a> source_ids. If a value in the buffer is <a class="el" href="group__sacn__dmx__merger.html#ga1ca9e023e2091c5a8a4e5e2ba426f055">SACN_DMX_MERGER_SOURCE_INVALID</a>, the corresponding slot is not currently controlled. You can also use <a class="el" href="group__sacn__dmx__merger.html#ga7b7762d0e6afca73eb8c31fa55354439" title="Utility to see if a slot_owner is valid. ">SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, index)</a> to check the slot validity. This buffer is owned by the library. </td></tr>
   </table>
   </dd>
 </dl>
