@@ -119,11 +119,11 @@ the same highest priority, the one with the highest NULL start code level wins (
 There is a key distinction in how the merger interprets the lowest priority. The lowest universe
 priority is 0, but the lowest per-address priority is 1. This is because a per-address priority of
 0 indicates that the source is not sending any levels to the corresponding slot. Therefore, if
-source A has a universe priority of 0 and a level of 10, and source B has a per-address priority of
-0 and a level of 50, source A will still win despite having a lower level. This is because
+Source A has a universe priority of 0 and a level of 10, and Source B has a per-address priority of
+0 and a level of 50, Source A will still win despite having a lower level. This is because
 per-address priority 0 indicates that there is no level at this slot at all, whereas universe
-priority 0 simply indicates the lowest priority. If source B had a per-address priority of 1, then
-source B would win no matter what the levels were.
+priority 0 simply indicates the lowest priority. If Source B had a per-address priority of 1, then
+Source B would win no matter what the levels were.
 
 Also keep in mind that if less than 512 per-address priorities are inputted, then the remaining
 slots will be treated as if they had a per-address priority of 0.
