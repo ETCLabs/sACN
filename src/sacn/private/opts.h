@@ -258,11 +258,10 @@
 /** @endcond */
 
 /**
- * @brief Currently unused; will be used in the future. Keep this set to 1.
+ * @brief Currently unused; will be used in the future.
  */
-#ifndef SACN_RECEIVER_MAX_THREADS
+#undef SACN_RECEIVER_MAX_THREADS
 #define SACN_RECEIVER_MAX_THREADS 1
-#endif
 
 /**
  * @}
