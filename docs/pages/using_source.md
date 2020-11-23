@@ -186,6 +186,9 @@ my_source.RemoveUnicastDestination(my_universe, custom_destination);
 ```
 <!-- CODE_BLOCK_END -->
 
+The starting set of unicast destinations can also be specified with the universe configuration's
+optional unicast_destinations setting.
+
 ## Custom Start Codes
 
 The buffers in the universe configuration only allow you to send start code 0x00 (NULL) and 0xDD
