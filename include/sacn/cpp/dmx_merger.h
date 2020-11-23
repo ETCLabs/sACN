@@ -40,13 +40,13 @@ namespace sacn
 /**
  * @ingroup sacn_dmx_merger_cpp
  * @brief An instance of sACN DMX Merger functionality; see @ref using_dmx_merger.
- * 
+ *
  * This class instantiates software mergers for buffers containing DMX512-A start code 0 packets.
  * It also uses buffers containing DMX512-A start code 0xdd packets to support per-address priority.
- * 
+ *
  * While this class is used to easily merge the outputs from the sACN Receiver API, it can also be used
  * to merge your own DMX sources together, even in combination with the sources received via sACN.
- * 
+ *
  * When asked to calculate the merge, the merger will evaluate the current source
  * buffers and update two result buffers:
  *  - 512 bytes for the merged data values (i.e. "winning level").  These are calculated by using
@@ -87,8 +87,8 @@ public:
     uint8_t* per_address_priorities{nullptr};
 
     /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
-        #SACN_DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if you
-        need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to
+        #SACN_DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if
+       you need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to
         NULL and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of
         0 (not sourced).
         Memory is owned by the application.*/
@@ -107,8 +107,8 @@ public:
   DmxMerger() = default;
   DmxMerger(const DmxMerger& other) = delete;
   DmxMerger& operator=(const DmxMerger& other) = delete;
-  DmxMerger(DmxMerger&& other) = default;             /**< Move a dmx merger instance. */
-  DmxMerger& operator=(DmxMerger&& other) = default;  /**< Move a dmx merger instance. */
+  DmxMerger(DmxMerger&& other) = default;            /**< Move a dmx merger instance. */
+  DmxMerger& operator=(DmxMerger&& other) = default; /**< Move a dmx merger instance. */
 
   etcpal::Error Startup(const Settings& settings);
   void Shutdown();

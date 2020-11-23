@@ -157,8 +157,8 @@ public:
   MergeReceiver() = default;
   MergeReceiver(const MergeReceiver& other) = delete;
   MergeReceiver& operator=(const MergeReceiver& other) = delete;
-  MergeReceiver(MergeReceiver&& other) = default;             /**< Move a merge receiver instance. */
-  MergeReceiver& operator=(MergeReceiver&& other) = default;  /**< Move a merge receiver instance. */
+  MergeReceiver(MergeReceiver&& other) = default;            /**< Move a merge receiver instance. */
+  MergeReceiver& operator=(MergeReceiver&& other) = default; /**< Move a merge receiver instance. */
 
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler);
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
@@ -195,8 +195,9 @@ extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, u
   }
 }
 
-extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr,
-                                             const SacnHeaderData* header, const uint8_t* pdata, void* context)
+extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, uint16_t universe,
+                                             const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
+                                             const uint8_t* pdata, void* context)
 {
   if (context && source_addr && header)
   {
@@ -205,7 +206,8 @@ extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, uint1
   }
 }
 
-extern "C" inline void MergeReceiverCbSourceLimitExceeded(sacn_merge_receiver_t handle, uint16_t universe, void* context)
+extern "C" inline void MergeReceiverCbSourceLimitExceeded(sacn_merge_receiver_t handle, uint16_t universe,
+                                                          void* context)
 {
   if (context)
   {
@@ -238,7 +240,7 @@ inline bool MergeReceiver::Settings::IsValid() const
  * @brief Start listening for sACN data on a universe.
  *
  * This is the overload of Startup that uses all network interfaces.
- * 
+ *
  * An sACN merge receiver can listen on one universe at a time, and each universe can only be listened to
  * by one merge receiver at at time.
  *
@@ -274,7 +276,8 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
  * @param[in] settings Configuration parameters for the sACN merge receiver and this class instance.
  * @param[in] notify_handler The notification interface to call back to the application.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
+ * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
+ * modified.
  * @return #kEtcPalErrOk: Merge Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -289,9 +292,9 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
 {
   SacnMergeReceiverConfig config = TranslateConfig(settings, notify_handler);
 
-  if(netints.empty())
+  if (netints.empty())
     return sacn_merge_receiver_create(&config, &handle_, NULL, 0);
-  
+
   return sacn_merge_receiver_create(&config, &handle_, netints.data(), netints.size());
 }
 
@@ -349,9 +352,9 @@ inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, the merge receiver is in a sampling period for the new universe and will provide
- * HandleSourcesFound() calls when appropriate.
- * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ * After this call completes successfully, the merge receiver is in a sampling period for the new universe and will
+ * provide HandleSourcesFound() calls when appropriate. If this call fails, the caller must call Shutdown() on this
+ * class, because it may be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -382,7 +385,8 @@ inline etcpal::Error MergeReceiver::ResetNetworking()
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
+ * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
+ * modified.
  * @return #kEtcPalErrOk: Universe changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.

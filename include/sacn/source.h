@@ -42,7 +42,7 @@
  * @brief The sACN Source API; see @ref using_source.
  *
  * Components that send sACN are referred to as sACN Sources. Use this API to act as an sACN Source.
- * 
+ *
  * See @ref using_source for a detailed description of how to use this API.
  *
  * @{
@@ -113,7 +113,8 @@ typedef struct SacnSourceUniverseConfig
 
   /********* Optional values **********/
 
-  /** The sACN universe priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100. */
+  /** The sACN universe priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100.
+   */
   uint8_t priority;
   /** The (optional) buffer of up to 512 per-address priorities that will be sent each tick.
       If this is NULL, only the universe priority will be used.
@@ -122,7 +123,7 @@ typedef struct SacnSourceUniverseConfig
       specification.
       The memory is owned by the application, and should not be destroyed until after the universe is
       deleted on this source. The size of this buffer must match the size of values_buffer.  */
-  const uint8_t* priorities_buffer; 
+  const uint8_t* priorities_buffer;
 
   /** If true, this sACN source will send preview data. Defaults to false. */
   bool send_preview;
@@ -149,8 +150,8 @@ typedef struct SacnSourceUniverseConfig
 
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config);
 
-etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle,
-                                  SacnMcastInterface* netints, size_t num_netints);
+etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle, SacnMcastInterface* netints,
+                                  size_t num_netints);
 void sacn_source_destroy(sacn_source_t handle);
 
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name);

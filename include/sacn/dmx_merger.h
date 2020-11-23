@@ -75,7 +75,7 @@ typedef int sacn_dmx_merger_t;
 typedef uint16_t sacn_source_id_t;
 
 /** An invalid source id handle value. */
-#define SACN_DMX_MERGER_SOURCE_INVALID ((sacn_source_id_t) -1)
+#define SACN_DMX_MERGER_SOURCE_INVALID ((sacn_source_id_t)-1)
 
 /** A set of configuration information for a merger instance. */
 typedef struct SacnDmxMergerConfig
@@ -96,9 +96,9 @@ typedef struct SacnDmxMergerConfig
   uint8_t* per_address_priorities;
 
   /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
-      #SACN_DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if you need
-      to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to NULL and
-      use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of 0 (not
+      #SACN_DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if you
+     need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to NULL
+     and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of 0 (not
       sourced).
       Memory is owned by the application.*/
   sacn_source_id_t* slot_owners;

@@ -89,8 +89,8 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
  * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle,
-                                  SacnMcastInterface* netints, size_t num_netints)
+etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle, SacnMcastInterface* netints,
+                                  size_t num_netints)
 {
   // If the Tick thread hasn't been started yet, start it if the config isn't manual.
 

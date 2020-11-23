@@ -92,9 +92,9 @@ typedef struct SacnHeaderData
 } SacnHeaderData;
 
 /**
-* On input, this structure is used to indicate a network interface to use.
-* On output, this structure indicates whether or not the operation was a success.
-*/
+ * On input, this structure is used to indicate a network interface to use.
+ * On output, this structure indicates whether or not the operation was a success.
+ */
 typedef struct SacnMcastInterface
 {
   /**
