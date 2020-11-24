@@ -2,13 +2,10 @@
 
 ## Introduction
 
-sACN is a C-language library that implements **ANSI E1.31: Lightweight streaming protocol for
+sACN is a C-language library (with C++ wrappers) that implements **ANSI E1.31: Lightweight streaming protocol for
 transport of DMX512 using ACN**, commonly referred to as **Streaming ACN** or **sACN**. The sACN
 library is designed to be portable and scalable to almost any sACN usage scenario, from lightweight
 embedded devices to large-scale data sending operations.
-
-**NOTE**: This open-source implementation is still early in development, and currently only
-receiving sACN is implemented.
 
 Check out \ref getting_started to get started with using the library in your application. To jump
 right into the documentation, check out the [Modules Overview](\ref sACN).

@@ -199,7 +199,7 @@ typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t handle, uint16_t unive
  * platforms), and the configuration you pass to sacn_receiver_create() has source_count_max set to
  * #SACN_RECEIVER_INFINITE_SOURCES, this callback will never be called and may be set to NULL.
 
- * if #SACNDYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max is ignored and
+ * if #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max is ignored and
  * #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.
  *
  * This callback is rate-limited: it will only be called when the first sACN packet is received
@@ -257,8 +257,7 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
 etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle);
 etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id);
-etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastInterface* netints,
-                                              size_t num_netints);
+etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastInterface* netints, size_t num_netints);
 
 void sacn_receiver_set_standard_version(sacn_standard_version_t version);
 sacn_standard_version_t sacn_receiver_get_standard_version();

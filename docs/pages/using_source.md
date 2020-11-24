@@ -49,7 +49,7 @@ etcpal::Uuid my_cid;
 std::string my_name;
 // Assuming my_cid and my_name are initialized by the application...
 
-Settings my_config(my_cid, my_name);
+sacn::Source::Settings my_config(my_cid, my_name);
 
 std::vector<SacnMcastInterface> my_netints;
 // Assuming my_netints is initialized by the application...
@@ -111,7 +111,7 @@ uint8_t my_priorities_buffer[DMX_ADDRESS_COUNT];
 
 uint16_t my_universe = 1;  // Using universe 1 as an example.
 
-UniverseSettings my_universe_config(my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
+sacn::Source::UniverseSettings my_universe_config(my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
 // If you want per-address priorities:
 my_universe_config.priorities_buffer = my_priorities_buffer;
 // Otherwise, specify a universe priority:
