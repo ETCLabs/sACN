@@ -628,19 +628,11 @@ inline SacnSourceConfig Source::TranslateConfig(const Settings& settings)
   // clang-format off
   SacnSourceConfig config = {
     settings.cid.get(),
-    "",
+    settings.name.c_str(),
     settings.universe_count_max,
     settings.manually_process_source,
   };
   // clang-format on
-
-  ETCPAL_MSVC_BEGIN_NO_DEP_WARNINGS();
-
-  // Update the string
-  strncpy(config.name, settings.name.c_str(), SACN_SOURCE_NAME_MAX_LEN);
-  config.name[SACN_SOURCE_NAME_MAX_LEN - 1] = 0;
-
-  ETCPAL_MSVC_END_NO_DEP_WARNINGS();
 
   return config;
 }

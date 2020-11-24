@@ -28,7 +28,7 @@ char my_name[SACN_SOURCE_NAME_MAX_LEN];
 
 SacnSourceConfig my_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
 my_config.cid = my_cid;
-memcpy(my_config.name, my_name, SACN_SOURCE_NAME_MAX_LEN);
+my_config.name = my_name;
 
 SacnMcastInterface my_netints[NUM_MY_NETINTS];
 // Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
