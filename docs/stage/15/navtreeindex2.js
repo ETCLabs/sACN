@@ -19,7 +19,7 @@ var NAVTREEINDEX2 =
 "struct_sacn_source_config.html":[3,0,3,0],
 "struct_sacn_source_config.html#a16ca9a84fb49dbc5b40b8b333a239e2d":[3,0,3,0,1],
 "struct_sacn_source_config.html#a4c3f7d9a58af5033f9acd8c942bf81d9":[3,0,3,0,0],
-"struct_sacn_source_config.html#a7e3669a12853b82f7d2b7488bb174956":[3,0,3,0,2],
+"struct_sacn_source_config.html#a8f8f80d37794cde9472343e4487ba3eb":[3,0,3,0,2],
 "struct_sacn_source_config.html#af4a1d1d970b94a6a07b8c612b8d7ad73":[3,0,3,0,3],
 "struct_sacn_source_detector_callbacks.html":[3,0,4,0],
 "struct_sacn_source_detector_callbacks.html#a2a102ec50557c2902e0b43656c0fa33c":[3,0,4,0,1],
