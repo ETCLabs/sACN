@@ -7,7 +7,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=9" />
   <meta name="generator" content="Doxygen 1.8.13" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>sACN: Per Channel Priority</title>
+  <title>sACN: Per Address Priority</title>
   <link href="tabs.css" rel="stylesheet" type="text/css" />
   <script type="text/javascript" src="jquery.js"></script>
   <script type="text/javascript" src="dynsections.js"></script>
@@ -177,7 +177,7 @@ $(function() {
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('per_channel_priority.html','');});
+$(document).ready(function(){initNavTree('per_address_priority.html','');});
 </script>
 <div id="doc-content">
 <!-- window showing the filter options -->
@@ -196,55 +196,57 @@ $(document).ready(function(){initNavTree('per_channel_priority.html','');});
 
 <div class="header">
   <div class="headertitle">
-<div class="title">Per Channel Priority </div>  </div>
+<div class="title">Per Address Priority </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>The sACN protocol specification details DMX-style control over TCP/IP networks. While this provides a fast and efficient mechanism to transport the well-understood DMX protocol, it also introduces a problem that may not be as well-understood by the industry: multiple sources.</p>
-<p>Unlike DMX over RS485, multiple sources may easily provide overlapping sets of universe data, and may only be interested in controlling subsections of different universes. While sACN has a priority field in the packet, this does not cover cases where a controller wants to explicitly control a small subsection of values without disturbing the rest – and HTP doesn’t help when that controller wants to force a subset of the channels to a lower DMX level.</p>
-<p>To better handle multiple source control scenarios, the 0xDD sACN start code was obtained by ETC from ESTA to allow setting a priority per-channel, with the option of having DMX levels for a particular channel ignored by a sink. This provides a more versatile and finer resolution priority mechanism over the sACN provided packet priority. This document details how devices wishing to use this finer-grained mechanism should behave.</p>
-<h1>References</h1>
-<p>ANSI E1.31: Lightweight streaming protocol for transport of DMX512 using ACN</p>
+<div class="textblock"><p>The sACN protocol specification details DMX-style control over TCP/IP networks. While this provides a fast and efficient mechanism to transport the well-understood DMX protocol, it also introduces a problem that may not be as well-understood by the industry: multiple sources. Unlike DMX over RS485, multiple sources may easily provide overlapping sets of universe data, and may only be interested in controlling subsections of different universes.</p>
+<p>While sACN has a priority field in the packet, this does not cover cases where a controller wants to explicitly control a small subsection of values without disturbing the rest – and HTP doesn’t help when that controller wants to force a subset of the values to a lower DMX level.</p>
+<p>To better handle multiple source control scenarios, the 0xDD sACN start code was obtained by ETC from ESTA to allow setting a priority per-address, with the option of having DMX levels for a particular address ignored by a sink. This provides a more versatile and finer resolution priority mechanism over the sACN provided packet priority. This document details how sACN devices implementing this extension will use this start code.</p>
 <h1>Document Conventions</h1>
 <p>The following acronyms and terms are used:</p><ul>
-<li><em>sACN</em>, <em>Streaming ACN</em>, <em>streaming DMX</em>: Reference "ANSI E1.31"</li>
+<li><em>sACN</em>, <em>Streaming ACN</em>, <em>streaming DMX</em>: Reference “BSR E1.31 DMX512-A Streaming Protocol”</li>
 <li><em>Sink</em>: A device that receives sACN</li>
-<li><em>Source</em>: A device that send sACN. Sources are uniquely identified by their CID.</li>
+<li><em>Source</em>: A device that send sACN. Sources are uniquely identified by their CID number.</li>
 <li><em>DMX level(s)</em>: Property values associated with a Null START code data packet.</li>
 <li><em>HTP</em>: Highest Takes Precedence: The source with the highest level will have control.</li>
-<li><em>Packet priority field</em>: Value of priority field in a sACN packet.</li>
-<li><em>Final channel level</em>: Channel level after all rules have been applied.</li>
-<li><em>Data loss behavior</em>: Action taken by a sink to a DMX level in the absence of a controlling source. This is typically one of<ul>
+<li><em>Packet priority field</em>: Value of priority field in an sACN packet.</li>
+<li><em>Packet options field</em>: Value of options field in an sACN packet.</li>
+<li><em>Universe</em>: A collection of 512 values, corresponding to a DMX universe.</li>
+<li><em>Address</em>: A single value in the universe, also known as a channel.</li>
+<li><em>Universal Hold Last Look Time</em>: Configurable time after which data loss behavior will take effect.</li>
+<li><em>Data loss behavior</em>: Action taken by a sink to a DMX level in the absence of a controlling source. This is typically<ul>
 <li>Assume 0</li>
 <li>Fade to 0</li>
 <li>Hold last known level for a preconfigured time (could be forever)</li>
-<li>Fade to some predetermined level, e)disable port or something similar as determined by the manufacture of the sink.</li>
+<li>Fade to some predetermined level</li>
+<li>Disable port or something similar as determined by the manufacture of the sink.</li>
 </ul>
 </li>
 </ul>
 <h1>Rules for using the 0xDD start code</h1>
 <ol type="1">
-<li>Devices will support per-channel priority via the alternate start code 0xDD, which will be used to identify the sACN packet as carrying “per-channel priority” values and not DMX levels.</li>
+<li>Devices will support per-address priority via the alternate start code 0xDD, which will be used to identify the sACN packet as carrying “per-address priority” values and not DMX levels.</li>
 <li>The rules apply on a per universe basis where a sink is receiving sACN packets for the same universe from different sources.</li>
-<li>Per-channel priority values consist of a series of single byte values indicating the source’s desired priority for the corresponding DMX level. Priority values can be set from 0 to 200 where 200 is the highest priority and 1 is the lowest priority. Priority values 201 thru 255 are reserved for the sink to use as internal priorities.</li>
+<li>Per-address priority values consist of a series of single byte values indicating the source’s desired priority for the corresponding DMX level. Priority values can be set from 0 to 200 where 200 is the highest priority and 1 is the lowest priority. Priority values 201 thru 255 are reserved for the sink to use as internal priorities.</li>
 <li>A priority value of 0 indicates that the DMX level from the source is to be ignored by the sink.</li>
-<li>The final channel level is taken from the source with highest priority. If there is more than one source with the same highest priority, HTP shall be applied between sources.</li>
+<li>The final value at an address is taken from the source with highest priority. If there is more than one source with the same highest priority, HTP shall be applied between sources.</li>
 <li>If a 0xDD packet is received with less than 512 values, the missing values are assumed to be 0 (DMX level ignored);</li>
-<li>Per-channel priorities for sources that do not send 0xDD packets will be taken from the packet priority field. If the packet priority field is zero (source does not support priorities), a value of 100 will be used.</li>
+<li>Per-address priorities for sources that do not send 0xDD packets will be taken from the packet priority field.</li>
 <li>The source follows the sACN rules for non-changing data for 0xDD packets as well, so a change of priorities for a universe is sent for 3 extra frames and then sent once every 800-1000ms.</li>
-<li>When a source wants to take control of a channel, it should set desired DMX level and then set the per-channel priority to a non-0 value.</li>
-<li>When a source wants to give up control of a channel, it sets the per-channel priority to a 0 value. It is recommended that it subsequently sends out DMX levels of 0 for that channel.</li>
-<li>Setting a priority to zero may result in data loss behavior for the corresponding channel if there is no other source that gets control. It may be desirable for sources to provide a user configurable option to also set the data to 0 before setting the priority to 0.</li>
-<li>For some compatibility with sinks that don’t support the 0xDD packets, sources sending 0xDD packets shall also provide a packet priority value that applies to all channels. The default value for this priority shall be 100. This allows for packet priority and HTP control between sources.</li>
+<li>When a source wants to take control of an address, it should set desired DMX level and then set the per-address priority to a non-0 value.</li>
+<li>When a source wants to give up control of an address, it sets the per-address priority to a 0 value. It is recommended that it subsequently sends out DMX levels of 0 for that address.</li>
+<li>Setting a priority to zero may result in data loss behavior for the corresponding address if there is no other source that gets control. It may be desirable for sources to provide a user configurable option to also set the data to 0 before setting the priority to 0.</li>
+<li>For some compatibility with sinks that don’t support the 0xDD packets, sources sending 0xDD packets shall also provide a packet priority value that applies to all addresses. The default value for this priority shall be 100. This allows for packet priority and HTP control between sources.</li>
 <li>When a sink detects a new source, it waits for a 0xDD packet for up to 1.5 seconds before processing DMX levels from that source. If a sink does not detect a 0xDD packet, it fails back and uses the packet priority until a 0xDD packet is detected.</li>
-<li>When a sink detects that a source has reached the sACN data loss timeout for 0xDD packets (e.g. no 0xDD packets in 2.5 seconds), but is still receiving NULL start code packets, the sink shall fall back to using the sACN packet priority located in the NULL start code packets.</li>
-<li>When a sink detects that a source has reached the sACN data loss timeout for NULL start code packets (e.g. no NULL start code packets in 2.5 seconds) the sink shall act as if the source has given up control of its channels as stated in point 16 even it 0xDD packets continue to be received. The desired sequence for a source to terminate its sACN stream is to first send three 0xDD packets releasing control of all channels and then stop sending NULL start code and 0xDD packets. This will allow the device with the next highest priority to gain control without having to wait for the 2.5 second timeout.</li>
-<li>When a sink detects that a source has given up control of a channel (by setting the priority for that channel to 0), the sink will give control to the source with next highest priority. If no source is available, data loss behavior for that channel shall apply.</li>
+<li>When a sink detects that a source has reached the sACN data loss timeout for 0xDD packets (e.g. no 0xDD packets in Universal Hold Last Look Time&ndash;2.5 seconds at minimum), but is still receiving NULL start code packets, the sink shall fall back to using the sACN packet priority located in the NULL start code packets.</li>
+<li>When a sink detects that a source has reached the sACN data loss timeout for NULL start code packets (e.g. no NULL start code packets in the Universal Hold Last Look Time&ndash;2.5 seconds at minimum) the sink shall act as if the source has given up control of its addresses as stated in 4.16 even if 0xDD packets continue to be received. The desired sequence for a source to terminate its sACN stream is to send three packets with the Stream_Terminated bit (6) of the Packet options field set to 1. This will allow the device with the next highest priority to gain control after the appropriate sampling time resolution.</li>
+<li>When a sink detects that a source has given up control of an address (by setting the priority for that address to 0), the sink will give control to the source with next highest priority. If no source is available, data loss behavior for that address shall apply.</li>
 </ol>
 <h1>Summary</h1>
-<p>In summary, priority may be specified on a per packet basis in sACN using this extension to the protocol. This extension allows priorities to be provided on a per-channel basis using the alternate start code of 0xDD.</p>
-<p>With this extension, take control is done via setting a non-zero priority for a channel. Giving up control is the reverse, setting the priority to 0.</p>
+<p>In summary, priority may be specified on a per packet basis in sACN. This ETC extension allows priorities to be provided on a per-address basis using the alternate start code of 0xDD.</p>
+<p>With this extension, taking control is accomplished by setting a non-zero priority for an address. Giving up control is the reverse, setting the priority to 0.</p>
 <p>Overall, sinks wait for a short period on start up to see if the alternate start code priority information is being provided before they start accepting data.</p>
-<p>If no alternate start code priority information arrives, they use the packet priority. If the packets specify that they are not carrying a priority, by placing a zero in the field, a priority of 100 is assumed for all channels. </p>
+<p>If no alternate start code priority information arrives, they use the packet priority. If the packet is a Draft sACN packet and it specifies that it does not carry a priority, by placing a zero in the fiel </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
