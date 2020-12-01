@@ -5,3 +5,4 @@ found here.
 
 **Page List:**
 * \subpage source_loss_behavior
+* \subpage per_channel_priority
