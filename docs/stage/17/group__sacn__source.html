@@ -1,0 +1,1292 @@
+<!-- HTML header for doxygen 1.8.14-->
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=9" />
+  <meta name="generator" content="Doxygen 1.8.13" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>sACN: sACN Source</title>
+  <link href="tabs.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="text/javascript" src="dynsections.js"></script>
+  <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript">
+  $(document).ready(initResizable);
+</script>
+  <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
+  <script type="text/javascript">
+    $(function () {
+      $.get('/sACN/versions.txt', function (data) {
+        if (data) {
+          var lines = data.split('\n');
+          if (lines.length > 0) {
+            var version_select = $("#version_select").empty();
+            lines.forEach(function (line) {
+              line = line.trim();
+              if (!line) {
+                return;
+              }
+              line = line.split(':');
+              var option_name = line[0].replace(/^v/, '');
+              if (line.length > 1) {
+                option_name += ' (' + line[1] + ')';
+              }
+              var option_val = '/sACN/docs/' + line[0];
+              var option = $('<option></option>').attr("value", option_val)
+                .text(option_name);
+              if (window.location.pathname.match('docs/' + line[0])) {
+                option = option.attr("selected", "selected");
+              }
+              version_select.append(option);
+            });
+          }
+        }
+      }, 'text');
+    });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
+  </script>
+  <!--END CUSTOM SCRIPT-->
+</head>
+<body>
+  <div id="top">
+    <!-- do not remove this div, it is closed by doxygen! -->
+    <div id="titlearea">
+      <table cellspacing="0" cellpadding="0" style="width: 100%">
+        <tbody>
+          <tr style="height: 56px;">
+            <td id="projectalign" style="padding-left: 0.5em;">
+              <div id="projectname">sACN
+                &#160;<span id="projectnumber">Staging for pull request 17</span>
+              </div>
+              <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+            </td>
+            <!--BEGIN CUSTOM INSERTED SECTION-->
+            <td style="text-align: right; padding-right: 0.5em">
+              <div id="otherversions">
+                View other versions:
+                <select id="version_select" onchange="location = this.value">
+                </select>
+              </div>
+            </td>
+            <!--END CUSTOM INSERTED SECTION-->
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- end header part -->
+<!-- Generated by Doxygen 1.8.13 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "search",false,'Search');
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(document).ready(function(){initNavTree('group__sacn__source.html','');});
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#nested-classes">Data Structures</a> &#124;
+<a href="#define-members">Macros</a> &#124;
+<a href="#typedef-members">Typedefs</a> &#124;
+<a href="#func-members">Functions</a>  </div>
+  <div class="headertitle">
+<div class="title">sACN Source<div class="ingroups"><a class="el" href="group__s_a_c_n.html">sACN</a></div></div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>The sACN Source API; see <a class="el" href="using_source.html">Using the sACN Source API</a>.  
+<a href="#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_config.html">SacnSourceConfig</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:ga446e9e065e08c7a90309a993b2502153"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153">SACN_SOURCE_INVALID</a>&#160;&#160;&#160;-1</td></tr>
+<tr class="separator:ga446e9e065e08c7a90309a993b2502153"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1ac5056bc752c32ca80c08b9839a142d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d">SACN_SOURCE_INFINITE_UNIVERSES</a>&#160;&#160;&#160;0</td></tr>
+<tr class="memdesc:ga1ac5056bc752c32ca80c08b9839a142d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constant for "infinite" when sending sACN universes.  <a href="#ga1ac5056bc752c32ca80c08b9839a142d">More...</a><br /></td></tr>
+<tr class="separator:ga1ac5056bc752c32ca80c08b9839a142d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1fc88ea9a51c4a935ec87630a0b177f1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga1fc88ea9a51c4a935ec87630a0b177f1">SACN_SOURCE_CONFIG_DEFAULT_INIT</a></td></tr>
+<tr class="separator:ga1fc88ea9a51c4a935ec87630a0b177f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga20483046bfb90da7c9bf089fc0229a6b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga20483046bfb90da7c9bf089fc0229a6b">SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT</a></td></tr>
+<tr class="separator:ga20483046bfb90da7c9bf089fc0229a6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:gacc4c9d2c77cf4126e9ac7faf297c3dd8"><td class="memItemLeft" align="right" valign="top">typedef int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a></td></tr>
+<tr class="separator:gacc4c9d2c77cf4126e9ac7faf297c3dd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga831d00887301c3f23e83b6d28c89c1d9"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_source_config.html">SacnSourceConfig</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga831d00887301c3f23e83b6d28c89c1d9">SacnSourceConfig</a></td></tr>
+<tr class="separator:ga831d00887301c3f23e83b6d28c89c1d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae16dae7e0b7d303f0d8c3c98bf6a8dfd"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#gae16dae7e0b7d303f0d8c3c98bf6a8dfd">SacnSourceUniverseConfig</a></td></tr>
+<tr class="separator:gae16dae7e0b7d303f0d8c3c98bf6a8dfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ga4d115a7b828b0f45444ac36f0b946e64"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga4d115a7b828b0f45444ac36f0b946e64">sacn_source_config_init</a> (<a class="el" href="struct_sacn_source_config.html">SacnSourceConfig</a> *config)</td></tr>
+<tr class="memdesc:ga4d115a7b828b0f45444ac36f0b946e64"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize an sACN Source Config struct to default values.  <a href="#ga4d115a7b828b0f45444ac36f0b946e64">More...</a><br /></td></tr>
+<tr class="separator:ga4d115a7b828b0f45444ac36f0b946e64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga79d292e6589859e52e82834c611311ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga79d292e6589859e52e82834c611311ea">sacn_source_universe_config_init</a> (<a class="el" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a> *config)</td></tr>
+<tr class="memdesc:ga79d292e6589859e52e82834c611311ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize an sACN Source Universe Config struct to default values.  <a href="#ga79d292e6589859e52e82834c611311ea">More...</a><br /></td></tr>
+<tr class="separator:ga79d292e6589859e52e82834c611311ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7c8d35a839aed2e55538543caedb76cb"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga7c8d35a839aed2e55538543caedb76cb">sacn_source_create</a> (const <a class="el" href="struct_sacn_source_config.html">SacnSourceConfig</a> *config, <a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> *handle, <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *netints, size_t num_netints)</td></tr>
+<tr class="memdesc:ga7c8d35a839aed2e55538543caedb76cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new sACN source to send sACN data.  <a href="#ga7c8d35a839aed2e55538543caedb76cb">More...</a><br /></td></tr>
+<tr class="separator:ga7c8d35a839aed2e55538543caedb76cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaeb8a9797368aabad696c81225b4c8aaa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#gaeb8a9797368aabad696c81225b4c8aaa">sacn_source_destroy</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle)</td></tr>
+<tr class="memdesc:gaeb8a9797368aabad696c81225b4c8aaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy an sACN source instance.  <a href="#gaeb8a9797368aabad696c81225b4c8aaa">More...</a><br /></td></tr>
+<tr class="separator:gaeb8a9797368aabad696c81225b4c8aaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0c44cd3dba2627779bfb65ea8349fe1c"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga0c44cd3dba2627779bfb65ea8349fe1c">sacn_source_change_name</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, const char *new_name)</td></tr>
+<tr class="memdesc:ga0c44cd3dba2627779bfb65ea8349fe1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the name of an sACN source.  <a href="#ga0c44cd3dba2627779bfb65ea8349fe1c">More...</a><br /></td></tr>
+<tr class="separator:ga0c44cd3dba2627779bfb65ea8349fe1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga26ddc8ae45a94f791d094daac13a1f44"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga26ddc8ae45a94f791d094daac13a1f44">sacn_source_add_universe</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, const <a class="el" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a> *config)</td></tr>
+<tr class="memdesc:ga26ddc8ae45a94f791d094daac13a1f44"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a universe to an sACN source.  <a href="#ga26ddc8ae45a94f791d094daac13a1f44">More...</a><br /></td></tr>
+<tr class="separator:ga26ddc8ae45a94f791d094daac13a1f44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7f8233fae115142c2e2a9488faa12d5d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga7f8233fae115142c2e2a9488faa12d5d">sacn_source_remove_universe</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, uint16_t universe)</td></tr>
+<tr class="memdesc:ga7f8233fae115142c2e2a9488faa12d5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a universe from a source.  <a href="#ga7f8233fae115142c2e2a9488faa12d5d">More...</a><br /></td></tr>
+<tr class="separator:ga7f8233fae115142c2e2a9488faa12d5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga2b7d3fb6a2d252eee7c051acfe97d242"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga2b7d3fb6a2d252eee7c051acfe97d242">sacn_source_add_unicast_destination</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, uint16_t universe, const <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a> *dest)</td></tr>
+<tr class="memdesc:ga2b7d3fb6a2d252eee7c051acfe97d242"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a unicast destination for a source's universe.  <a href="#ga2b7d3fb6a2d252eee7c051acfe97d242">More...</a><br /></td></tr>
+<tr class="separator:ga2b7d3fb6a2d252eee7c051acfe97d242"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4ebe5d509af8c963c104f2dd96a3ac76"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga4ebe5d509af8c963c104f2dd96a3ac76">sacn_source_remove_unicast_destination</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, uint16_t universe, const <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a> *dest)</td></tr>
+<tr class="memdesc:ga4ebe5d509af8c963c104f2dd96a3ac76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a unicast destination on a source's universe.  <a href="#ga4ebe5d509af8c963c104f2dd96a3ac76">More...</a><br /></td></tr>
+<tr class="separator:ga4ebe5d509af8c963c104f2dd96a3ac76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0ee9dd3d8114b4277cb73134d0ae2dc4"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga0ee9dd3d8114b4277cb73134d0ae2dc4">sacn_source_change_priority</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, uint16_t universe, uint8_t new_priority)</td></tr>
+<tr class="memdesc:ga0ee9dd3d8114b4277cb73134d0ae2dc4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the priority of a universe on a sACN source.  <a href="#ga0ee9dd3d8114b4277cb73134d0ae2dc4">More...</a><br /></td></tr>
+<tr class="separator:ga0ee9dd3d8114b4277cb73134d0ae2dc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga99d5fce087ce0b2b7d2caedf65bcce5e"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga99d5fce087ce0b2b7d2caedf65bcce5e">sacn_source_change_preview_flag</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, uint16_t universe, bool new_preview_flag)</td></tr>
+<tr class="memdesc:ga99d5fce087ce0b2b7d2caedf65bcce5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the send_preview option on a universe of a sACN source.  <a href="#ga99d5fce087ce0b2b7d2caedf65bcce5e">More...</a><br /></td></tr>
+<tr class="separator:ga99d5fce087ce0b2b7d2caedf65bcce5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac21fab7b1fe15c281e89303ce26d08fd"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#gac21fab7b1fe15c281e89303ce26d08fd">sacn_source_change_synchronization_universe</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, uint16_t universe, uint16_t new_sync_universe)</td></tr>
+<tr class="memdesc:gac21fab7b1fe15c281e89303ce26d08fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Changes the synchronize uinverse for a universe of a sACN source.  <a href="#gac21fab7b1fe15c281e89303ce26d08fd">More...</a><br /></td></tr>
+<tr class="separator:gac21fab7b1fe15c281e89303ce26d08fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6e7cea16d61ae355bc313452f0b47e48"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga6e7cea16d61ae355bc313452f0b47e48">sacn_source_send_now</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, uint16_t universe, uint8_t start_code, const uint8_t *buffer, size_t buflen)</td></tr>
+<tr class="memdesc:ga6e7cea16d61ae355bc313452f0b47e48"><td class="mdescLeft">&#160;</td><td class="mdescRight">Immediately sends the provided sACN start code &amp; data.  <a href="#ga6e7cea16d61ae355bc313452f0b47e48">More...</a><br /></td></tr>
+<tr class="separator:ga6e7cea16d61ae355bc313452f0b47e48"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0e07a954dab245c7d6f323d9bdeb2df3"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga0e07a954dab245c7d6f323d9bdeb2df3">sacn_source_send_synchronization</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, uint16_t universe)</td></tr>
+<tr class="memdesc:ga0e07a954dab245c7d6f323d9bdeb2df3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Immediately sends a synchronization packet for the universe on a source.  <a href="#ga0e07a954dab245c7d6f323d9bdeb2df3">More...</a><br /></td></tr>
+<tr class="separator:ga0e07a954dab245c7d6f323d9bdeb2df3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabb1ec4c01d45908f9754d72f2648a2f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#gabb1ec4c01d45908f9754d72f2648a2f2">sacn_source_set_dirty</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, uint16_t universe)</td></tr>
+<tr class="memdesc:gabb1ec4c01d45908f9754d72f2648a2f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicate that the data in the buffer for this source and universe has changed and should be sent on the next call to <a class="el" href="group__sacn__source.html#gac37da68fe1766976353149cdeb4b0d35" title="Process created sources and do the actual sending of sACN data on all universes. ">sacn_source_process_all()</a>.  <a href="#gabb1ec4c01d45908f9754d72f2648a2f2">More...</a><br /></td></tr>
+<tr class="separator:gabb1ec4c01d45908f9754d72f2648a2f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7c00734cdf6d3ec40ac35b2d02ba93d5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga7c00734cdf6d3ec40ac35b2d02ba93d5">sacn_source_set_list_dirty</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, const uint16_t *universes, size_t num_universes)</td></tr>
+<tr class="memdesc:ga7c00734cdf6d3ec40ac35b2d02ba93d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicate that the data in the buffers for a list of universes on a source has changed and should be sent on the next call to <a class="el" href="group__sacn__source.html#gac37da68fe1766976353149cdeb4b0d35" title="Process created sources and do the actual sending of sACN data on all universes. ">sacn_source_process_all()</a>.  <a href="#ga7c00734cdf6d3ec40ac35b2d02ba93d5">More...</a><br /></td></tr>
+<tr class="separator:ga7c00734cdf6d3ec40ac35b2d02ba93d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa2e4d640b5c69334320ac6c7e4532cbe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#gaa2e4d640b5c69334320ac6c7e4532cbe">sacn_source_set_dirty_and_force_sync</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, uint16_t universe)</td></tr>
+<tr class="memdesc:gaa2e4d640b5c69334320ac6c7e4532cbe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Like sacn_source_set_dirty, but also sets the force_sync flag on the packet.  <a href="#gaa2e4d640b5c69334320ac6c7e4532cbe">More...</a><br /></td></tr>
+<tr class="separator:gaa2e4d640b5c69334320ac6c7e4532cbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac37da68fe1766976353149cdeb4b0d35"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#gac37da68fe1766976353149cdeb4b0d35">sacn_source_process_all</a> (void)</td></tr>
+<tr class="memdesc:gac37da68fe1766976353149cdeb4b0d35"><td class="mdescLeft">&#160;</td><td class="mdescRight">Process created sources and do the actual sending of sACN data on all universes.  <a href="#gac37da68fe1766976353149cdeb4b0d35">More...</a><br /></td></tr>
+<tr class="separator:gac37da68fe1766976353149cdeb4b0d35"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga640e6fc11870f82af656f8a997f1c694"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga640e6fc11870f82af656f8a997f1c694">sacn_source_reset_networking</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *netints, size_t num_netints)</td></tr>
+<tr class="memdesc:ga640e6fc11870f82af656f8a997f1c694"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets for the sACN source.  <a href="#ga640e6fc11870f82af656f8a997f1c694">More...</a><br /></td></tr>
+<tr class="separator:ga640e6fc11870f82af656f8a997f1c694"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<p>The sACN Source API; see <a class="el" href="using_source.html">Using the sACN Source API</a>. </p>
+<p>Components that send sACN are referred to as sACN Sources. Use this API to act as an sACN Source.</p>
+<p>See <a class="el" href="using_source.html">Using the sACN Source API</a> for a detailed description of how to use this API. </p>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="ga1fc88ea9a51c4a935ec87630a0b177f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga1fc88ea9a51c4a935ec87630a0b177f1">&#9670;&nbsp;</a></span>SACN_SOURCE_CONFIG_DEFAULT_INIT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_SOURCE_CONFIG_DEFAULT_INIT</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">{                                                              \</div><div class="line">    kEtcPalNullUuid, NULL, <a class="code" href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d">SACN_SOURCE_INFINITE_UNIVERSES</a>, <span class="keyword">false</span> \</div><div class="line">  }</div><div class="ttc" id="group__sacn__source_html_ga1ac5056bc752c32ca80c08b9839a142d"><div class="ttname"><a href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d">SACN_SOURCE_INFINITE_UNIVERSES</a></div><div class="ttdeci">#define SACN_SOURCE_INFINITE_UNIVERSES</div><div class="ttdoc">Constant for &quot;infinite&quot; when sending sACN universes. </div><div class="ttdef"><b>Definition:</b> source.h:66</div></div>
+</div><!-- fragment --><p>A default-value initializer for an <a class="el" href="struct_sacn_source_config.html">SacnSourceConfig</a> struct. </p>
+
+</div>
+</div>
+<a id="ga1ac5056bc752c32ca80c08b9839a142d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga1ac5056bc752c32ca80c08b9839a142d">&#9670;&nbsp;</a></span>SACN_SOURCE_INFINITE_UNIVERSES</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_SOURCE_INFINITE_UNIVERSES&#160;&#160;&#160;0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Constant for "infinite" when sending sACN universes. </p>
+<p>When using dynamic memory, this constant can be passed in when creating a source. It represents an infinite number of universes that can be sent to. </p>
+
+</div>
+</div>
+<a id="ga446e9e065e08c7a90309a993b2502153"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga446e9e065e08c7a90309a993b2502153">&#9670;&nbsp;</a></span>SACN_SOURCE_INVALID</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_SOURCE_INVALID&#160;&#160;&#160;-1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>An invalid sACN source handle value. </p>
+
+</div>
+</div>
+<a id="ga20483046bfb90da7c9bf089fc0229a6b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga20483046bfb90da7c9bf089fc0229a6b">&#9670;&nbsp;</a></span>SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">{                                                 \</div><div class="line">    0, NULL, 0, 100, NULL, <span class="keyword">false</span>, <span class="keyword">false</span>, NULL, 0, 0 \</div><div class="line">  }</div></div><!-- fragment --><p>A default-value initializer for an <a class="el" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a> struct. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Typedef Documentation</h2>
+<a id="gacc4c9d2c77cf4126e9ac7faf297c3dd8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gacc4c9d2c77cf4126e9ac7faf297c3dd8">&#9670;&nbsp;</a></span>sacn_source_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef int <a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A handle to a sACN source. </p>
+
+</div>
+</div>
+<a id="ga831d00887301c3f23e83b6d28c89c1d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga831d00887301c3f23e83b6d28c89c1d9">&#9670;&nbsp;</a></span>SacnSourceConfig</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="struct_sacn_source_config.html">SacnSourceConfig</a>  <a class="el" href="struct_sacn_source_config.html">SacnSourceConfig</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A set of configuration information for a sACN source. </p>
+
+</div>
+</div>
+<a id="gae16dae7e0b7d303f0d8c3c98bf6a8dfd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gae16dae7e0b7d303f0d8c3c98bf6a8dfd">&#9670;&nbsp;</a></span>SacnSourceUniverseConfig</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a>  <a class="el" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A set of configuration information for a sACN universe. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="ga2b7d3fb6a2d252eee7c051acfe97d242"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga2b7d3fb6a2d252eee7c051acfe97d242">&#9670;&nbsp;</a></span>sacn_source_add_unicast_destination()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_source_add_unicast_destination </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a> *&#160;</td>
+          <td class="paramname"><em>dest</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Add a unicast destination for a source's universe. </p>
+<p>Adds a unicast destination for a source's universe. After this call completes, the applicaton must call <a class="el" href="group__sacn__source.html#gabb1ec4c01d45908f9754d72f2648a2f2" title="Indicate that the data in the buffer for this source and universe has changed and should be sent on t...">sacn_source_set_dirty()</a> to mark it ready for processing.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dest</td><td>The destination IP. May not be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Address added successfully. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or the universe is not on that source. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ga26ddc8ae45a94f791d094daac13a1f44"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga26ddc8ae45a94f791d094daac13a1f44">&#9670;&nbsp;</a></span>sacn_source_add_universe()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_source_add_universe </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a> *&#160;</td>
+          <td class="paramname"><em>config</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Add a universe to an sACN source. </p>
+<p>Adds a universe to a source. After this call completes, the applicaton must call <a class="el" href="group__sacn__source.html#gabb1ec4c01d45908f9754d72f2648a2f2" title="Indicate that the data in the buffer for this source and universe has changed and should be sent on t...">sacn_source_set_dirty()</a> to mark it ready for processing.</p>
+<p>If the source is not marked as unicast_only, the source will add the universe to its sACN Universe Discovery packets.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source to which to add a universe. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">config</td><td>Configuration parameters for the universe to be added. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Universe successfully added. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afaeab0ae4d277d52dc56a1d78f81868c2d">kEtcPalErrExists</a>: Universe given was already added to this source. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afad16b0fe51e8664f8b30b740ea1e51599">kEtcPalErrNoMem</a>: No room to allocate additional universe. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ga0c44cd3dba2627779bfb65ea8349fe1c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga0c44cd3dba2627779bfb65ea8349fe1c">&#9670;&nbsp;</a></span>sacn_source_change_name()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_source_change_name </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>new_name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Change the name of an sACN source. </p>
+<p>The name is a UTF-8 string representing "a user-assigned name provided by the source of the
+packet for use in displaying the identity of a source to a user." Only up to <a class="el" href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8" title="The maximum length of an sACN source name, including the null-terminator. ">SACN_SOURCE_NAME_MAX_LEN</a> characters will be used.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_name</td><td>New name to use for this universe. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Name set successfully. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ga99d5fce087ce0b2b7d2caedf65bcce5e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga99d5fce087ce0b2b7d2caedf65bcce5e">&#9670;&nbsp;</a></span>sacn_source_change_preview_flag()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_source_change_preview_flag </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>new_preview_flag</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Change the send_preview option on a universe of a sACN source. </p>
+<p>Sets the state of a flag in the outgoing sACN packets that indicates that the data is (from E1.31) "intended for use in visualization or media server preview applications and shall not be
+used to generate live output."</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source for which to set the Preview_Data option. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The universe to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_preview_flag</td><td>The new send_preview option. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: send_preview option set successfully. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or the universe is not on that source. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ga0ee9dd3d8114b4277cb73134d0ae2dc4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga0ee9dd3d8114b4277cb73134d0ae2dc4">&#9670;&nbsp;</a></span>sacn_source_change_priority()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_source_change_priority </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>new_priority</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Change the priority of a universe on a sACN source. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source for which to set the priority. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_priority</td><td>New priority of the data sent from this source. Valid range is 0 to 200, inclusive. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Priority set successfully. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or the universe is not on that source. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="gac21fab7b1fe15c281e89303ce26d08fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gac21fab7b1fe15c281e89303ce26d08fd">&#9670;&nbsp;</a></span>sacn_source_change_synchronization_universe()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_source_change_synchronization_universe </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>new_sync_universe</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Changes the synchronize uinverse for a universe of a sACN source. </p>
+<p>This will change the synchronization universe used by a sACN universe on the source. If this value is 0, synchronization is turned off for that universe.</p>
+<p>TODO: At this time, synchronization is not supported by this library.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The universe to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_sync_universe</td><td>The new synchronization universe to set. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: sync_universe set successfully. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or the universe is not on that source. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ga4d115a7b828b0f45444ac36f0b946e64"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga4d115a7b828b0f45444ac36f0b946e64">&#9670;&nbsp;</a></span>sacn_source_config_init()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sacn_source_config_init </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct_sacn_source_config.html">SacnSourceConfig</a> *&#160;</td>
+          <td class="paramname"><em>config</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initialize an sACN Source Config struct to default values. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">config</td><td>Config struct to initialize. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga7c8d35a839aed2e55538543caedb76cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7c8d35a839aed2e55538543caedb76cb">&#9670;&nbsp;</a></span>sacn_source_create()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_source_create </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="struct_sacn_source_config.html">SacnSourceConfig</a> *&#160;</td>
+          <td class="paramname"><em>config</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> *&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *&#160;</td>
+          <td class="paramname"><em>netints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>num_netints</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a new sACN source to send sACN data. </p>
+<p>This creates the instance of the source, but no data is sent until <a class="el" href="group__sacn__source.html#ga26ddc8ae45a94f791d094daac13a1f44" title="Add a universe to an sACN source. ">sacn_source_add_universe()</a> and <a class="el" href="group__sacn__source.html#gabb1ec4c01d45908f9754d72f2648a2f2" title="Indicate that the data in the buffer for this source and universe has changed and should be sent on t...">sacn_source_set_dirty()</a> is called.</p>
+<p>Note that a source is considered as successfully created if it is able to successfully use any of the network interfaces passed in. This will only return <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">config</td><td>Configuration parameters for the sACN source to be created. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">handle</td><td>Filled in on success with a handle to the sACN source. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If non-NULL, this is the list of interfaces the application wants to use, and the operation_succeeded flags are filled in. If NULL, all available interfaces are tried. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">num_netints</td><td>Optional. The size of netints, or 0 if netints is NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Source successfully created. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a>: None of the network interfaces provided were usable by the library. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afad16b0fe51e8664f8b30b740ea1e51599">kEtcPalErrNoMem</a>: No room to allocate an additional source. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: A network interface ID given was not found on the system. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="gaeb8a9797368aabad696c81225b4c8aaa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaeb8a9797368aabad696c81225b4c8aaa">&#9670;&nbsp;</a></span>sacn_source_destroy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sacn_source_destroy </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Destroy an sACN source instance. </p>
+<p>Stops sending all universes for this source. The destruction is queued, and actually occurs on a call to <a class="el" href="group__sacn__source.html#gac37da68fe1766976353149cdeb4b0d35" title="Process created sources and do the actual sending of sACN data on all universes. ">sacn_source_process_all()</a> after an additional three packets have been sent with the "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.</p>
+<p>Even though the destruction is queued, after this call the library will no longer use the priorities_buffer or values_buffer you passed in on your call to <a class="el" href="group__sacn__source.html#ga26ddc8ae45a94f791d094daac13a1f44" title="Add a universe to an sACN source. ">sacn_source_add_universe()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source to destroy. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="gac37da68fe1766976353149cdeb4b0d35"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gac37da68fe1766976353149cdeb4b0d35">&#9670;&nbsp;</a></span>sacn_source_process_all()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int sacn_source_process_all </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Process created sources and do the actual sending of sACN data on all universes. </p>
+<p>Note: Unless you created the source with manually_process_source set to true, this will be automatically called by an internal thread of the module. Otherwise, this must be called at the maximum rate at which the application will send sACN.</p>
+<p>Sends data for universes which have been marked dirty, and sends keep-alive data for universes which haven't changed. Also destroys sources &amp; universes that have been marked for termination after sending the required three terminated packets.</p>
+<dl class="section return"><dt>Returns</dt><dd>Current number of sources tracked by the library. This can be useful on shutdown to track when destroyed sources have finished sending the terminated packets and actually been destroyed. </dd></dl>
+
+</div>
+</div>
+<a id="ga4ebe5d509af8c963c104f2dd96a3ac76"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga4ebe5d509af8c963c104f2dd96a3ac76">&#9670;&nbsp;</a></span>sacn_source_remove_unicast_destination()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sacn_source_remove_unicast_destination </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a> *&#160;</td>
+          <td class="paramname"><em>dest</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Remove a unicast destination on a source's universe. </p>
+<p>This queues the address for removal. The removal actually occurs on a call to <a class="el" href="group__sacn__source.html#gac37da68fe1766976353149cdeb4b0d35" title="Process created sources and do the actual sending of sACN data on all universes. ">sacn_source_process_all()</a> after an additional three packets have been sent with the "Stream_Terminated" option set.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dest</td><td>The destination IP. May not be NULL, and must match the address passed to <a class="el" href="group__sacn__source.html#ga2b7d3fb6a2d252eee7c051acfe97d242" title="Add a unicast destination for a source&#39;s universe. ">sacn_source_add_unicast_destination()</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga7f8233fae115142c2e2a9488faa12d5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7f8233fae115142c2e2a9488faa12d5d">&#9670;&nbsp;</a></span>sacn_source_remove_universe()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sacn_source_remove_universe </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Remove a universe from a source. </p>
+<p>This queues the source for removal. The destruction actually occurs on a call to <a class="el" href="group__sacn__source.html#gac37da68fe1766976353149cdeb4b0d35" title="Process created sources and do the actual sending of sACN data on all universes. ">sacn_source_process_all()</a> after an additional three packets have been sent with the "Stream_Terminated" option set.</p>
+<p>The source will also stop transmitting sACN universe discovery packets for that universe.</p>
+<p>Even though the destruction is queued, after this call the library will no longer use the priorities_buffer or values_buffer you passed in on your call to <a class="el" href="group__sacn__source.html#ga26ddc8ae45a94f791d094daac13a1f44" title="Add a universe to an sACN source. ">sacn_source_add_universe()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source from which to remove the universe. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to remove. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga640e6fc11870f82af656f8a997f1c694"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga640e6fc11870f82af656f8a997f1c694">&#9670;&nbsp;</a></span>sacn_source_reset_networking()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_source_reset_networking </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *&#160;</td>
+          <td class="paramname"><em>netints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>num_netints</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Resets the underlying network sockets for the sACN source. </p>
+<p>This is typically used when the application detects that the list of networking interfaces has changed.</p>
+<p>After this call completes successfully, all universes on a source are considered to be dirty and have new values and priorities. It's as if the source just started sending values on that universe.</p>
+<p>If this call fails, the caller must call <a class="el" href="group__sacn__source.html#gaeb8a9797368aabad696c81225b4c8aaa" title="Destroy an sACN source instance. ">sacn_source_destroy()</a>, because the source may be in an invalid state.</p>
+<p>Note that the networking reset is considered successful if it is able to successfully use any of the network interfaces passed in. This will only return <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source for which to reset the networking. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If non-NULL, this is the list of interfaces the application wants to use, and the operation_succeeded flags are filled in. If NULL, all available interfaces are tried. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">num_netints</td><td>Optional. The size of netints, or 0 if netints is NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Source changed successfully. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a>: None of the network interfaces provided were usable by the library. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ga6e7cea16d61ae355bc313452f0b47e48"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga6e7cea16d61ae355bc313452f0b47e48">&#9670;&nbsp;</a></span>sacn_source_send_now()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_source_send_now </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>start_code</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>buflen</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Immediately sends the provided sACN start code &amp; data. </p>
+<p>Immediately sends a sACN packet with the provided start code and data. This function is intended for sACN packets that have a startcode other than 0 or 0xdd, since those start codes are taken care of by <a class="el" href="group__sacn__source.html#gac37da68fe1766976353149cdeb4b0d35" title="Process created sources and do the actual sending of sACN data on all universes. ">sacn_source_process_all()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to send on. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">start_code</td><td>The start code to send. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>The buffer to send. Must not be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buflen</td><td>The size of buffer. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Message successfully sent. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source, or the universe was not found on this source. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ga0e07a954dab245c7d6f323d9bdeb2df3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga0e07a954dab245c7d6f323d9bdeb2df3">&#9670;&nbsp;</a></span>sacn_source_send_synchronization()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_source_send_synchronization </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Immediately sends a synchronization packet for the universe on a source. </p>
+<p>This will cause an immediate transmission of a synchronization packet for the source/universe. If the universe does not have a synchronization universe configured, this call is ignored.</p>
+<p>TODO: At this time, synchronization is not supported by this library.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to send on. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Message successfully sent. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source, or the universe was not found on this source. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="gabb1ec4c01d45908f9754d72f2648a2f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gabb1ec4c01d45908f9754d72f2648a2f2">&#9670;&nbsp;</a></span>sacn_source_set_dirty()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sacn_source_set_dirty </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Indicate that the data in the buffer for this source and universe has changed and should be sent on the next call to <a class="el" href="group__sacn__source.html#gac37da68fe1766976353149cdeb4b0d35" title="Process created sources and do the actual sending of sACN data on all universes. ">sacn_source_process_all()</a>. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source to mark as dirty. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to mark as dirty. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="gaa2e4d640b5c69334320ac6c7e4532cbe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaa2e4d640b5c69334320ac6c7e4532cbe">&#9670;&nbsp;</a></span>sacn_source_set_dirty_and_force_sync()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sacn_source_set_dirty_and_force_sync </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Like sacn_source_set_dirty, but also sets the force_sync flag on the packet. </p>
+<p>This function indicates that the data in the buffer for this source and universe has changed, and should be sent on the next call to <a class="el" href="group__sacn__source.html#gac37da68fe1766976353149cdeb4b0d35" title="Process created sources and do the actual sending of sACN data on all universes. ">sacn_source_process_all()</a>. Additionally, the packet to be sent will have its force_synchronization option flag set.</p>
+<p>If no synchronization universe is configured, this function acts like a direct call to <a class="el" href="group__sacn__source.html#gabb1ec4c01d45908f9754d72f2648a2f2" title="Indicate that the data in the buffer for this source and universe has changed and should be sent on t...">sacn_source_set_dirty()</a>.</p>
+<p>TODO: At this time, synchronization is not supported by this library.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source to mark as dirty. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to mark as dirty. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga7c00734cdf6d3ec40ac35b2d02ba93d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7c00734cdf6d3ec40ac35b2d02ba93d5">&#9670;&nbsp;</a></span>sacn_source_set_list_dirty()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sacn_source_set_list_dirty </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint16_t *&#160;</td>
+          <td class="paramname"><em>universes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>num_universes</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Indicate that the data in the buffers for a list of universes on a source has changed and should be sent on the next call to <a class="el" href="group__sacn__source.html#gac37da68fe1766976353149cdeb4b0d35" title="Process created sources and do the actual sending of sACN data on all universes. ">sacn_source_process_all()</a>. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universes</td><td>Array of universes to mark as dirty. Must not be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">num_universes</td><td>Size of the universes array. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga79d292e6589859e52e82834c611311ea"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga79d292e6589859e52e82834c611311ea">&#9670;&nbsp;</a></span>sacn_source_universe_config_init()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sacn_source_universe_config_init </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a> *&#160;</td>
+          <td class="paramname"><em>config</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initialize an sACN Source Universe Config struct to default values. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">config</td><td>Config struct to initialize. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by
+    <a href="http://www.doxygen.org/index.html">
+    <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
+  </ul>
+</div>
+</body>
+</html>
