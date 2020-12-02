@@ -51,4 +51,4 @@ With this extension, taking control is accomplished by setting a non-zero priori
 
 Overall, receivers wait for a short period on start up to see if the alternate start code priority information is being provided before they start accepting data.
 
-If no alternate start code priority information arrives, they use the packet priority.  If the packet is a Draft sACN packet and it specifies that it does not carry a priority, by placing a zero in the field.
+If no alternate start code priority information arrives, they use the packet priority.
