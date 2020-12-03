@@ -27,7 +27,8 @@ char my_name[SACN_SOURCE_NAME_MAX_LEN];
 // Assuming my_cid and my_name are initialized by the application...
 
 SacnSourceConfig my_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
-sacn_source_config_init(&my_config, &my_cid, my_name);
+my_config.cid = my_cid;
+my_config.name = my_name;
 
 SacnMcastInterface my_netints[NUM_MY_NETINTS];
 // Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
@@ -89,10 +90,12 @@ uint8_t my_priorities_buffer[DMX_ADDRESS_COUNT];
 uint16_t my_universe = 1;  // Using universe 1 as an example.
 
 SacnSourceUniverseConfig my_universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
-sacn_source_universe_config_init(&my_universe_config, my_universe, my_values_buffer, DMX_ADDRESS_COUNT,
-                                 my_priorities_buffer);
+my_universe_config.universe = my_universe;
+my_universe_config.values_buffer = my_values_buffer;
+my_universe_config.num_values = DMX_ADDRESS_COUNT;
+my_universe_config.priorities_buffer = my_priorities_buffer;
 // Or, if you don't want to send per-address priorities:
-sacn_source_universe_config_init(&my_universe_config, my_universe, my_values_buffer, DMX_ADDRESS_COUNT, NULL);
+my_universe_config.priorities_buffer = NULL;
 my_universe_config.priority = 123;
 
 sacn_source_add_universe(my_handle, &my_universe_config);
@@ -182,6 +185,9 @@ my_source.SetDirty(my_universe); // Indicate the data should be sent on multicas
 my_source.RemoveUnicastDestination(my_universe, custom_destination);
 ```
 <!-- CODE_BLOCK_END -->
+
+The starting set of unicast destinations can also be specified with the universe configuration's
+optional unicast_destinations setting.
 
 ## Custom Start Codes
 

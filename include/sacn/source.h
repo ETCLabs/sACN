@@ -73,7 +73,7 @@ typedef struct SacnSourceConfig
   /** The source's CID. */
   EtcPalUuid cid;
   /** The source's name, a UTF-8 encoded string. */
-  char name[SACN_SOURCE_NAME_MAX_LEN];
+  const char* name;
 
   /********* Optional values **********/
 
@@ -89,9 +89,9 @@ typedef struct SacnSourceConfig
 } SacnSourceConfig;
 
 /** A default-value initializer for an SacnSourceConfig struct. */
-#define SACN_SOURCE_CONFIG_DEFAULT_INIT                        \
-  {                                                            \
-    kEtcPalNullUuid, "", SACN_SOURCE_INFINITE_UNIVERSES, false \
+#define SACN_SOURCE_CONFIG_DEFAULT_INIT                          \
+  {                                                              \
+    kEtcPalNullUuid, NULL, SACN_SOURCE_INFINITE_UNIVERSES, false \
   }
 
 void sacn_source_config_init(SacnSourceConfig* config);
