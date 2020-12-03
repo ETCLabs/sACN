@@ -40,7 +40,7 @@ var NAVTREEINDEX =
 [
 "additional_documentation.html",
 "group__sacn__receiver.html#ga3c5b4aec7e1c6fbfc7255c282b7ccf1d",
-"struct_sacn_merge_receiver_config.html#ac1381db71af830c6635c5d2b338217ba"
+"struct_sacn_merge_receiver_config.html#aa56795d5b57bff4910ce11baac4003ba"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

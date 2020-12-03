@@ -1,5 +1,6 @@
 var NAVTREEINDEX2 =
 {
+"struct_sacn_merge_receiver_config.html#aa56795d5b57bff4910ce11baac4003ba":[3,0,1,1,1],
 "struct_sacn_merge_receiver_config.html#ac1381db71af830c6635c5d2b338217ba":[3,0,1,1,0],
 "struct_sacn_merge_receiver_config.html#af4536f740a72ae5788afacd0db91da30":[3,0,1,1,3],
 "struct_sacn_receiver_config.html":[3,0,2,3],
