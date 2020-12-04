@@ -349,7 +349,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>If false (default), this module starts a shared thread that calls <a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0" title="Process created sources and do the actual sending of sACN data on all universes. ">ProcessAll()</a> every 23 ms. If true, no thread is started and the application must call <a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0" title="Process created sources and do the actual sending of sACN data on all universes. ">ProcessAll()</a> at its DMX rate, usually 23 ms. </p>
+<p>If false (default), this source will be added to a background thread that will send sACN updates at a maximum rate of every 23 ms. If true, the source will not be added to the thread and the application must call <a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126" title="Trigger the transmision of sACN packets for all universes of sources that were created with manually_...">ProcessManual()</a> at its maximum DMX rate, typically 23 ms. </p>
 
 </div>
 </div>

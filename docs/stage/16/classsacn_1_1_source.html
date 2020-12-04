@@ -274,15 +274,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aecaeb4e484f6b34e839b705a1395765f"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f">SendSynchronization</a> (uint16_t universe)</td></tr>
 <tr class="memdesc:aecaeb4e484f6b34e839b705a1395765f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Immediately sends a synchronization packet for the universe on a source.  <a href="#aecaeb4e484f6b34e839b705a1395765f">More...</a><br /></td></tr>
 <tr class="separator:aecaeb4e484f6b34e839b705a1395765f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a87418ebdc993d17156feac2b246a226d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a87418ebdc993d17156feac2b246a226d">SetDirty</a> (uint16_t universe)</td></tr>
-<tr class="memdesc:a87418ebdc993d17156feac2b246a226d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicate that the data in the buffer for this source and universe has changed and should be sent on the next call to <a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0" title="Process created sources and do the actual sending of sACN data on all universes. ">ProcessAll()</a>.  <a href="#a87418ebdc993d17156feac2b246a226d">More...</a><br /></td></tr>
-<tr class="separator:a87418ebdc993d17156feac2b246a226d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad07a54235bd77e171622c0ae81ddfa3d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ad07a54235bd77e171622c0ae81ddfa3d">SetDirty</a> (const std::vector&lt; uint16_t &gt; &amp;universes)</td></tr>
-<tr class="memdesc:ad07a54235bd77e171622c0ae81ddfa3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicate that the data in the buffers for a list of universes on a source has changed and should be sent on the next call to <a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0" title="Process created sources and do the actual sending of sACN data on all universes. ">ProcessAll()</a>.  <a href="#ad07a54235bd77e171622c0ae81ddfa3d">More...</a><br /></td></tr>
-<tr class="separator:ad07a54235bd77e171622c0ae81ddfa3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adaf9752b6c13fb3e9dc426579f094198"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#adaf9752b6c13fb3e9dc426579f094198">SetDirtyAndForceSync</a> (uint16_t universe)</td></tr>
-<tr class="memdesc:adaf9752b6c13fb3e9dc426579f094198"><td class="mdescLeft">&#160;</td><td class="mdescRight">Like <a class="el" href="classsacn_1_1_source.html#a87418ebdc993d17156feac2b246a226d" title="Indicate that the data in the buffer for this source and universe has changed and should be sent on t...">Source::SetDirty</a>, but also sets the force_sync flag on the packet.  <a href="#adaf9752b6c13fb3e9dc426579f094198">More...</a><br /></td></tr>
-<tr class="separator:adaf9752b6c13fb3e9dc426579f094198"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac162298618ea8824476cbe33cb95c047"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047">UpdateValues</a> (uint16_t universe, const uint8_t *new_values, size_t new_values_size)</td></tr>
+<tr class="memdesc:ac162298618ea8824476cbe33cb95c047"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies the universe's dmx values into the packet to be sent on the next call to ProcessAll()  <a href="#ac162298618ea8824476cbe33cb95c047">More...</a><br /></td></tr>
+<tr class="separator:ac162298618ea8824476cbe33cb95c047"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6604c17fdfc2154ec16331fff6cf9bd3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a6604c17fdfc2154ec16331fff6cf9bd3">UpdateValues</a> (uint16_t universe, const uint8_t *new_values, size_t new_values_size, const uint8_t *new_priorities, size_t new_priorities_size)</td></tr>
+<tr class="memdesc:a6604c17fdfc2154ec16331fff6cf9bd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies the universe's dmx values and per-address priorities into packets that are sent on the next call to ProcessAll()  <a href="#a6604c17fdfc2154ec16331fff6cf9bd3">More...</a><br /></td></tr>
+<tr class="separator:a6604c17fdfc2154ec16331fff6cf9bd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a5aeeebf0c4930dd45abc67bbc665a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a2a5aeeebf0c4930dd45abc67bbc665a2">UpdateValuesAndForceSync</a> (uint16_t universe, const uint8_t *new_values, size_t new_values_size)</td></tr>
+<tr class="memdesc:a2a5aeeebf0c4930dd45abc67bbc665a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Like <a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047" title="Copies the universe&#39;s dmx values into the packet to be sent on the next call to ProcessAll() ...">UpdateValues()</a>, but also sets the force_sync flag on the packet.  <a href="#a2a5aeeebf0c4930dd45abc67bbc665a2">More...</a><br /></td></tr>
+<tr class="separator:a2a5aeeebf0c4930dd45abc67bbc665a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af65ca703eb59bd26ca80a0493169eb0f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#af65ca703eb59bd26ca80a0493169eb0f">UpdateValuesAndForceSync</a> (uint16_t universe, const uint8_t *new_values, size_t new_values_size, const uint8_t *new_priorities, size_t new_priorities_size)</td></tr>
+<tr class="memdesc:af65ca703eb59bd26ca80a0493169eb0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Like <a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047" title="Copies the universe&#39;s dmx values into the packet to be sent on the next call to ProcessAll() ...">UpdateValues()</a>, but also sets the force_sync flag on the packet.  <a href="#af65ca703eb59bd26ca80a0493169eb0f">More...</a><br /></td></tr>
+<tr class="separator:af65ca703eb59bd26ca80a0493169eb0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a164496f7cd6035473d44731924b7e48a"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a164496f7cd6035473d44731924b7e48a">ResetNetworking</a> ()</td></tr>
 <tr class="memdesc:a164496f7cd6035473d44731924b7e48a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets for the sACN source..  <a href="#a164496f7cd6035473d44731924b7e48a">More...</a><br /></td></tr>
 <tr class="separator:a164496f7cd6035473d44731924b7e48a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -295,9 +298,9 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a9af81f416648acc786d48cfc77670ed0"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0">ProcessAll</a> ()</td></tr>
-<tr class="memdesc:a9af81f416648acc786d48cfc77670ed0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Process created sources and do the actual sending of sACN data on all universes.  <a href="#a9af81f416648acc786d48cfc77670ed0">More...</a><br /></td></tr>
-<tr class="separator:a9af81f416648acc786d48cfc77670ed0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0b6181050c6d436a907401688950126"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126">ProcessManual</a> ()</td></tr>
+<tr class="memdesc:ad0b6181050c6d436a907401688950126"><td class="mdescLeft">&#160;</td><td class="mdescRight">Trigger the transmision of sACN packets for all universes of sources that were created with manually_process_source set to true.  <a href="#ad0b6181050c6d436a907401688950126">More...</a><br /></td></tr>
+<tr class="separator:ad0b6181050c6d436a907401688950126"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
@@ -388,7 +391,7 @@ Static Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Add a unicast destination for a source's universe. </p>
-<p>Adds a unicast destination for a source's universe. After this call completes, the applicaton must call <a class="el" href="classsacn_1_1_source.html#a87418ebdc993d17156feac2b246a226d" title="Indicate that the data in the buffer for this source and universe has changed and should be sent on t...">SetDirty()</a> to mark it ready for processing.</p>
+<p>Adds a unicast destination for a source's universe. After this call completes, the applicaton must call a variant of <a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047" title="Copies the universe&#39;s dmx values into the packet to be sent on the next call to ProcessAll() ...">UpdateValues()</a> to mark it ready for processing.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to change. </td></tr>
@@ -433,7 +436,7 @@ Static Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Add a universe to an sACN source. </p>
-<p>Adds a universe to a source. After this call completes, the applicaton must call <a class="el" href="classsacn_1_1_source.html#a87418ebdc993d17156feac2b246a226d" title="Indicate that the data in the buffer for this source and universe has changed and should be sent on t...">SetDirty()</a> to mark it ready for processing.</p>
+<p>Adds a universe to a source. After this call completes, the applicaton must call a variant of <a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047" title="Copies the universe&#39;s dmx values into the packet to be sent on the next call to ProcessAll() ...">UpdateValues()</a> to mark it ready for processing.</p>
 <p>If the source is not marked as unicast_only, the source will add the universe to its sACN Universe Discovery packets.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -723,8 +726,8 @@ used to generate live output."</p>
 
 </div>
 </div>
-<a id="a9af81f416648acc786d48cfc77670ed0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9af81f416648acc786d48cfc77670ed0">&#9670;&nbsp;</a></span>ProcessAll()</h2>
+<a id="ad0b6181050c6d436a907401688950126"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad0b6181050c6d436a907401688950126">&#9670;&nbsp;</a></span>ProcessManual()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -733,7 +736,7 @@ used to generate live output."</p>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int ProcessAll </td>
+          <td class="memname">int ProcessManual </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -746,10 +749,10 @@ used to generate live output."</p>
 </table>
 </div><div class="memdoc">
 
-<p>Process created sources and do the actual sending of sACN data on all universes. </p>
-<p>Note: Unless you created the source with manually_process_source set to true, this will be automatically called by an internal thread of the module. Otherwise, this must be called at the maximum rate at which the application will send sACN.</p>
-<p>Sends data for universes which have been marked dirty, and sends keep-alive data for universes which haven't changed. Also destroys sources &amp; universes that have been marked for termination after sending the required three terminated packets.</p>
-<dl class="section return"><dt>Returns</dt><dd>Current number of sources tracked by the library. This can be useful on shutdown to track when destroyed sources have finished sending the terminated packets and have actually been destroyed. </dd></dl>
+<p>Trigger the transmision of sACN packets for all universes of sources that were created with manually_process_source set to true. </p>
+<p>Note: Unless you created the source with manually_process_source set to true, similar functionality will be automatically called by an internal thread of the module. Otherwise, this must be called at the maximum rate at which the application will send sACN.</p>
+<p>Sends the current data for universes which have been updated, and sends keep-alive data for universes which haven't been updated. Also destroys sources &amp; universes that have been marked for termination after sending the required three terminated packets.</p>
+<dl class="section return"><dt>Returns</dt><dd>Current number of sources tracked by the library. This can be useful on shutdown to track when destroyed sources have finished sending the terminated packets and actually been destroyed. </dd></dl>
 
 </div>
 </div>
@@ -788,7 +791,7 @@ used to generate live output."</p>
 </div><div class="memdoc">
 
 <p>Remove a unicast destination on a source's universe. </p>
-<p>This queues the address for removal. The removal actually occurs on a call to <a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0" title="Process created sources and do the actual sending of sACN data on all universes. ">ProcessAll()</a> after an additional three packets have been sent with the "Stream_Terminated" option set.</p>
+<p>This queues the address for removal. The removal actually occurs on a call to ProcessAll() after an additional three packets have been sent with the "Stream_Terminated" option set.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to change. </td></tr>
@@ -824,7 +827,7 @@ used to generate live output."</p>
 </div><div class="memdoc">
 
 <p>Remove a universe from a source. </p>
-<p>This queues the source for removal. The destruction actually occurs on a call to <a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0" title="Process created sources and do the actual sending of sACN data on all universes. ">ProcessAll()</a> after an additional three packets have been sent with the "Stream_Terminated" option set.</p>
+<p>This queues the source for removal. The destruction actually occurs on a call to ProcessAll() after an additional three packets have been sent with the "Stream_Terminated" option set.</p>
 <p>The source will also stop transmitting sACN universe discovery packets for that universe.</p>
 <p>Even though the destruction is queued, after this call the library will no longer use the priorities_buffer or values_buffer you passed in on your call to <a class="el" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e" title="Add a universe to an sACN source. ">AddUniverse()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -862,7 +865,7 @@ used to generate live output."</p>
 <p>Resets the underlying network sockets for the sACN source.. </p>
 <p>This is the overload of ResetNetworking that uses all network interfaces.</p>
 <p>This is typically used when the application detects that the list of networking interfaces has changed.</p>
-<p>After this call completes successfully, all universes on a source are considered to be dirty and have new values and priorities. It's as if the source just started sending values on that universe.</p>
+<p>After this call completes successfully, all universes on a source are considered to be updated and have new values and priorities. It's as if the source just started sending values on that universe.</p>
 <p>If this call fails, the caller must call <a class="el" href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9" title="Destroy an sACN source instance. ">Shutdown()</a>, because the source may be in an invalid state.</p>
 <p>Note that the networking reset is considered successful if it is able to successfully use any of the network interfaces. This will only return <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
 <dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API. ">Source</a> changed successfully. </dd>
@@ -905,7 +908,7 @@ used to generate live output."</p>
 
 <p>Resets the underlying network sockets for the sACN source. </p>
 <p>This is typically used when the application detects that the list of networking interfaces has changed.</p>
-<p>After this call completes successfully, all universes on a source are considered to be dirty and have new values and priorities. It's as if the source just started sending values on that universe.</p>
+<p>After this call completes successfully, all universes on a source are considered to be updated and have new values and priorities. It's as if the source just started sending values on that universe.</p>
 <p>If this call fails, the caller must call <a class="el" href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9" title="Destroy an sACN source instance. ">Shutdown()</a>, because the source may be in an invalid state.</p>
 <p>Note that the networking reset is considered successful if it is able to successfully use any of the network interfaces passed in. This will only return <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -975,7 +978,7 @@ used to generate live output."</p>
 </div><div class="memdoc">
 
 <p>Immediately sends the provided sACN start code &amp; data. </p>
-<p>Immediately sends a sACN packet with the provided start code and data. This function is intended for sACN packets that have a startcode other than 0 or 0xdd, since those start codes are taken care of by <a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0" title="Process created sources and do the actual sending of sACN data on all universes. ">ProcessAll()</a>.</p>
+<p>Immediately sends a sACN packet with the provided start code and data. This function is intended for sACN packets that have a startcode other than 0 or 0xdd, since those start codes are taken care of by ProcessAll().</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to send on. </td></tr>
@@ -1042,111 +1045,6 @@ used to generate live output."</p>
 
 </div>
 </div>
-<a id="a87418ebdc993d17156feac2b246a226d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a87418ebdc993d17156feac2b246a226d">&#9670;&nbsp;</a></span>SetDirty() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void SetDirty </td>
-          <td>(</td>
-          <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>universe</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Indicate that the data in the buffer for this source and universe has changed and should be sent on the next call to <a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0" title="Process created sources and do the actual sending of sACN data on all universes. ">ProcessAll()</a>. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to mark as dirty. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="ad07a54235bd77e171622c0ae81ddfa3d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad07a54235bd77e171622c0ae81ddfa3d">&#9670;&nbsp;</a></span>SetDirty() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void SetDirty </td>
-          <td>(</td>
-          <td class="paramtype">const std::vector&lt; uint16_t &gt; &amp;&#160;</td>
-          <td class="paramname"><em>universes</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Indicate that the data in the buffers for a list of universes on a source has changed and should be sent on the next call to <a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0" title="Process created sources and do the actual sending of sACN data on all universes. ">ProcessAll()</a>. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">universes</td><td>Vector of universes to mark as dirty. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="adaf9752b6c13fb3e9dc426579f094198"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adaf9752b6c13fb3e9dc426579f094198">&#9670;&nbsp;</a></span>SetDirtyAndForceSync()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void SetDirtyAndForceSync </td>
-          <td>(</td>
-          <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>universe</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Like <a class="el" href="classsacn_1_1_source.html#a87418ebdc993d17156feac2b246a226d" title="Indicate that the data in the buffer for this source and universe has changed and should be sent on t...">Source::SetDirty</a>, but also sets the force_sync flag on the packet. </p>
-<p>This function indicates that the data in the buffer for this source and universe has changed, and should be sent on the next call to <a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0" title="Process created sources and do the actual sending of sACN data on all universes. ">ProcessAll()</a>. Additionally, the packet to be sent will have its force_synchronization option flag set.</p>
-<p>If no synchronization universe is configured, this function acts like a direct call to <a class="el" href="classsacn_1_1_source.html#a87418ebdc993d17156feac2b246a226d" title="Indicate that the data in the buffer for this source and universe has changed and should be sent on t...">SetDirty()</a>.</p>
-<p>TODO: At this time, synchronization is not supported by this library.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to mark as dirty. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a id="ac5f038c2b480cf9ef5e19e3eba8dbaf9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac5f038c2b480cf9ef5e19e3eba8dbaf9">&#9670;&nbsp;</a></span>Shutdown()</h2>
 
@@ -1171,7 +1069,7 @@ used to generate live output."</p>
 </div><div class="memdoc">
 
 <p>Destroy an sACN source instance. </p>
-<p>Stops sending all universes for this source. The destruction is queued, and actually occurs on a call to <a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0" title="Process created sources and do the actual sending of sACN data on all universes. ">ProcessAll()</a> after an additional three packets have been sent with the "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.</p>
+<p>Stops sending all universes for this source. The destruction is queued, and actually occurs on a call to ProcessAll() after an additional three packets have been sent with the "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.</p>
 <p>Even though the destruction is queued, after this call the library will no longer use the priorities_buffer or values_buffer you passed in on your call to <a class="el" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e" title="Add a universe to an sACN source. ">AddUniverse()</a>. </p>
 
 </div>
@@ -1202,7 +1100,7 @@ used to generate live output."</p>
 
 <p>Create a new sACN source to send sACN data. </p>
 <p>This is an overload of Startup that uses all network interfaces.</p>
-<p>This creates the instance of the source, but no data is sent until <a class="el" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e" title="Add a universe to an sACN source. ">AddUniverse()</a> and <a class="el" href="classsacn_1_1_source.html#a87418ebdc993d17156feac2b246a226d" title="Indicate that the data in the buffer for this source and universe has changed and should be sent on t...">SetDirty()</a> is called.</p>
+<p>This creates the instance of the source, but no data is sent until <a class="el" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e" title="Add a universe to an sACN source. ">AddUniverse()</a> and a variant of <a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047" title="Copies the universe&#39;s dmx values into the packet to be sent on the next call to ProcessAll() ...">UpdateValues()</a> is called.</p>
 <p>Note that a source is considered as successfully created if it is able to successfully use any of the network interfaces. This will only return <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -1261,7 +1159,7 @@ used to generate live output."</p>
 </div><div class="memdoc">
 
 <p>Create a new sACN source to send sACN data. </p>
-<p>This creates the instance of the source, but no data is sent until <a class="el" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e" title="Add a universe to an sACN source. ">AddUniverse()</a> and <a class="el" href="classsacn_1_1_source.html#a87418ebdc993d17156feac2b246a226d" title="Indicate that the data in the buffer for this source and universe has changed and should be sent on t...">SetDirty()</a> is called.</p>
+<p>This creates the instance of the source, but no data is sent until <a class="el" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e" title="Add a universe to an sACN source. ">AddUniverse()</a> and a variant of <a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047" title="Copies the universe&#39;s dmx values into the packet to be sent on the next call to ProcessAll() ...">UpdateValues()</a> is called.</p>
 <p>Note that a source is considered as successfully created if it is able to successfully use any of the network interfaces passed in. This will only return <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -1283,6 +1181,253 @@ used to generate live output."</p>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: A network interface ID given was not found on the system. </dd>
 <dd>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ac162298618ea8824476cbe33cb95c047"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac162298618ea8824476cbe33cb95c047">&#9670;&nbsp;</a></span>UpdateValues() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void UpdateValues </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_values_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Copies the universe's dmx values into the packet to be sent on the next call to ProcessAll() </p>
+<p>This function will update the outgoing packet values, and reset the logic that slows down packet transmission due to inactivity.</p>
+<p>When you don't have per-address priority changes to make, use this function. Otherwise, use the version of <a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047" title="Copies the universe&#39;s dmx values into the packet to be sent on the next call to ProcessAll() ...">UpdateValues()</a> that takes a per-address priority buffer.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_values</td><td>A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values will be used. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_values_size</td><td>Size of new_values. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a6604c17fdfc2154ec16331fff6cf9bd3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6604c17fdfc2154ec16331fff6cf9bd3">&#9670;&nbsp;</a></span>UpdateValues() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void UpdateValues </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_values_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_priorities</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_priorities_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Copies the universe's dmx values and per-address priorities into packets that are sent on the next call to ProcessAll() </p>
+<p>This function will update the outgoing packet values for both DMX and per-address priority data, and reset the logic that slows down packet transmission due to inactivity.</p>
+<p>Per-address priority support has specific rules about when to send value changes vs. pap changes. These rules are documented in <a href="https://etclabs.github.io/sACN/docs/head/per_address_priority.html,">https://etclabs.github.io/sACN/docs/head/per_address_priority.html,</a> and are triggered by the use of this function. Changing per-address priorities to and from "don't care", changing the size of the priorities array, or passing in NULL/non-NULL for the priorities will cause this library to do the necessary tasks to "take control" or "release control" of the corresponding DMX values.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_values</td><td>A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values will be used. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">values_size</td><td>Size of new_values. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_priorities</td><td>A buffer of per-address priorities to copy from. This may be NULL if you are not using per-address priorities or want to stop using per-address priorities. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_priorities_size</td><td>Size of new_priorities. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a2a5aeeebf0c4930dd45abc67bbc665a2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a5aeeebf0c4930dd45abc67bbc665a2">&#9670;&nbsp;</a></span>UpdateValuesAndForceSync() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void UpdateValuesAndForceSync </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_values_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Like <a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047" title="Copies the universe&#39;s dmx values into the packet to be sent on the next call to ProcessAll() ...">UpdateValues()</a>, but also sets the force_sync flag on the packet. </p>
+<p>This function will update the outgoing packet values to be sent on the next call to ProcessAll(), and will reset the logic that slows down packet transmission due to inactivity. Additionally, the packet to be sent will have its force_synchronization option flag set.</p>
+<p>If no synchronization universe is configured, this function acts like a direct call to <a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047" title="Copies the universe&#39;s dmx values into the packet to be sent on the next call to ProcessAll() ...">UpdateValues()</a>.</p>
+<p>TODO: At this time, synchronization is not supported by this library.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_values</td><td>A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values will be used. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_values_size</td><td>Size of new_values. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="af65ca703eb59bd26ca80a0493169eb0f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af65ca703eb59bd26ca80a0493169eb0f">&#9670;&nbsp;</a></span>UpdateValuesAndForceSync() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void UpdateValuesAndForceSync </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_values_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_priorities</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_priorities_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Like <a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047" title="Copies the universe&#39;s dmx values into the packet to be sent on the next call to ProcessAll() ...">UpdateValues()</a>, but also sets the force_sync flag on the packet. </p>
+<p>This function will update the outgoing packet values to be sent on the next call to ProcessAll(), and will reset the logic that slows down packet transmission due to inactivity. Additionally, the final packet to be sent by this call will have its force_synchronization option flag set.</p>
+<p>Per-address priority support has specific rules about when to send value changes vs. pap changes. These rules are documented in <a href="https://etclabs.github.io/sACN/docs/head/per_address_priority.html,">https://etclabs.github.io/sACN/docs/head/per_address_priority.html,</a> and are triggered by the use of this function. Changing per-address priorities to and from "don't care", changing the size of the priorities array, or passing in NULL/non-NULL for the priorities will cause this library to do the necessary tasks to "take control" or "release control" of the corresponding DMX values.</p>
+<p>If no synchronization universe is configured, this function acts like a direct call to <a class="el" href="group__sacn__source.html#ga5eeb0dbabcfbfe8846aa0cccc28264b3" title="Copies the universe&#39;s dmx values and per-address priorities into packets that are sent on the next ca...">sacn_source_update_values_and_pap()</a>.</p>
+<p>TODO: At this time, synchronization is not supported by this library.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_values</td><td>A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values will be used. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">values_size</td><td>Size of new_values. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_priorities</td><td>A buffer of per-address priorities to copy from. This may be NULL if you are not using per-address priorities or want to stop using per-address priorities. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_priorities_size</td><td>Size of new_priorities. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

@@ -257,7 +257,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Buffer of <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a> levels that this library keeps up to date as it merges. Memory is owned by the application. Slots that are not sourced are set to 0. </p>
+<p>Buffer of <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a> levels that this library keeps up to date as it merges. Slots that are not sourced are set to 0. Memory is owned by the application, but while this merger exists the application must not modify this buffer directly! Doing so would affect the results of the merge. </p>
 
 </div>
 </div>

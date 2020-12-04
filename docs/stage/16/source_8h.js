@@ -16,14 +16,15 @@ var source_8h =
     [ "sacn_source_config_init", "group__sacn__source.html#ga4d115a7b828b0f45444ac36f0b946e64", null ],
     [ "sacn_source_create", "group__sacn__source.html#ga7c8d35a839aed2e55538543caedb76cb", null ],
     [ "sacn_source_destroy", "group__sacn__source.html#gaeb8a9797368aabad696c81225b4c8aaa", null ],
-    [ "sacn_source_process_all", "group__sacn__source.html#gac37da68fe1766976353149cdeb4b0d35", null ],
+    [ "sacn_source_process_manual", "group__sacn__source.html#ga05ae91a74132e84439e18364de2b62d4", null ],
     [ "sacn_source_remove_unicast_destination", "group__sacn__source.html#ga4ebe5d509af8c963c104f2dd96a3ac76", null ],
     [ "sacn_source_remove_universe", "group__sacn__source.html#ga7f8233fae115142c2e2a9488faa12d5d", null ],
     [ "sacn_source_reset_networking", "group__sacn__source.html#ga640e6fc11870f82af656f8a997f1c694", null ],
     [ "sacn_source_send_now", "group__sacn__source.html#ga6e7cea16d61ae355bc313452f0b47e48", null ],
     [ "sacn_source_send_synchronization", "group__sacn__source.html#ga0e07a954dab245c7d6f323d9bdeb2df3", null ],
-    [ "sacn_source_set_dirty", "group__sacn__source.html#gabb1ec4c01d45908f9754d72f2648a2f2", null ],
-    [ "sacn_source_set_dirty_and_force_sync", "group__sacn__source.html#gaa2e4d640b5c69334320ac6c7e4532cbe", null ],
-    [ "sacn_source_set_list_dirty", "group__sacn__source.html#ga7c00734cdf6d3ec40ac35b2d02ba93d5", null ],
-    [ "sacn_source_universe_config_init", "group__sacn__source.html#ga79d292e6589859e52e82834c611311ea", null ]
+    [ "sacn_source_universe_config_init", "group__sacn__source.html#ga79d292e6589859e52e82834c611311ea", null ],
+    [ "sacn_source_update_values", "group__sacn__source.html#gabf3e1c5a9c098ad1a85d4d3099a84cf4", null ],
+    [ "sacn_source_update_values_and_force_sync", "group__sacn__source.html#ga4a1b2868d1234dde8870f64c28243cf7", null ],
+    [ "sacn_source_update_values_and_pap", "group__sacn__source.html#ga5eeb0dbabcfbfe8846aa0cccc28264b3", null ],
+    [ "sacn_source_update_values_and_pap_and_force_sync", "group__sacn__source.html#gaee393cb6670ce6ed37270607b0311a50", null ]
 ];

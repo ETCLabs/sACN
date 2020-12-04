@@ -413,10 +413,6 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>num_unicast_destinations
 : <a class="el" href="struct_sacn_source_universe_config.html#aa148fe1bdf89b3e7b900a130d32de29c">SacnSourceUniverseConfig</a>
 </li>
-<li>num_values
-: <a class="el" href="structsacn_1_1_source_1_1_universe_settings.html#ac6e502c93b06488a31160deaf84d86be">Source::UniverseSettings</a>
-, <a class="el" href="struct_sacn_source_universe_config.html#ac6e502c93b06488a31160deaf84d86be">SacnSourceUniverseConfig</a>
-</li>
 </ul>
 
 
@@ -442,17 +438,13 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>preview
 : <a class="el" href="struct_sacn_header_data.html#a631d1206624dc91b6c574bf919a7699d">SacnHeaderData</a>
 </li>
-<li>priorities_buffer
-: <a class="el" href="structsacn_1_1_source_1_1_universe_settings.html#a66342535a77d55b77bbb5146963c1357">Source::UniverseSettings</a>
-, <a class="el" href="struct_sacn_source_universe_config.html#a66342535a77d55b77bbb5146963c1357">SacnSourceUniverseConfig</a>
-</li>
 <li>priority
 : <a class="el" href="structsacn_1_1_source_1_1_universe_settings.html#a0ad043071ccc7a261d79a759dc9c6f0c">Source::UniverseSettings</a>
 , <a class="el" href="struct_sacn_header_data.html#a0ad043071ccc7a261d79a759dc9c6f0c">SacnHeaderData</a>
 , <a class="el" href="struct_sacn_source_universe_config.html#a0ad043071ccc7a261d79a759dc9c6f0c">SacnSourceUniverseConfig</a>
 </li>
-<li>ProcessAll()
-: <a class="el" href="classsacn_1_1_source.html#a9af81f416648acc786d48cfc77670ed0">Source</a>
+<li>ProcessManual()
+: <a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126">Source</a>
 </li>
 </ul>
 
@@ -499,12 +491,6 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>SendSynchronization()
 : <a class="el" href="classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f">Source</a>
-</li>
-<li>SetDirty()
-: <a class="el" href="classsacn_1_1_source.html#a87418ebdc993d17156feac2b246a226d">Source</a>
-</li>
-<li>SetDirtyAndForceSync()
-: <a class="el" href="classsacn_1_1_source.html#adaf9752b6c13fb3e9dc426579f094198">Source</a>
 </li>
 <li>SetExpiredWait()
 : <a class="el" href="classsacn_1_1_receiver.html#a0f7e0ac39dc43d67c53daa787e733859">Receiver</a>
@@ -577,10 +563,10 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>Startup()
 : <a class="el" href="classsacn_1_1_dmx_merger.html#ab263565edc9ebf5ffd6e82a18184e4c3">DmxMerger</a>
-, <a class="el" href="classsacn_1_1_merge_receiver.html#abb65535d2f1ed30a79014d81eb7f6807">MergeReceiver</a>
-, <a class="el" href="classsacn_1_1_receiver.html#ab8a65d7188fcd0074fd757a450a79100">Receiver</a>
+, <a class="el" href="classsacn_1_1_merge_receiver.html#ab8a65d7188fcd0074fd757a450a79100">MergeReceiver</a>
+, <a class="el" href="classsacn_1_1_receiver.html#abb65535d2f1ed30a79014d81eb7f6807">Receiver</a>
 , <a class="el" href="classsacn_1_1_source.html#afd6082e8538ae31363d3d44cc9aeb8a6">Source</a>
-, <a class="el" href="classsacn_1_1_source_detector.html#a213169bd9a5d38cb80144f8d9fb82962">SourceDetector</a>
+, <a class="el" href="classsacn_1_1_source_detector.html#ab8a65d7188fcd0074fd757a450a79100">SourceDetector</a>
 </li>
 <li>StopSourcePerAddressPriority()
 : <a class="el" href="classsacn_1_1_dmx_merger.html#a517bd4a6db0fa24d7a1b373b2299d744">DmxMerger</a>
@@ -639,6 +625,12 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>UpdateSourceData()
 : <a class="el" href="classsacn_1_1_dmx_merger.html#a371e9bad9f53ed9b3082908e9a2ee067">DmxMerger</a>
 </li>
+<li>UpdateValues()
+: <a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047">Source</a>
+</li>
+<li>UpdateValuesAndForceSync()
+: <a class="el" href="classsacn_1_1_source.html#a2a5aeeebf0c4930dd45abc67bbc665a2">Source</a>
+</li>
 <li>use_pap
 : <a class="el" href="structsacn_1_1_merge_receiver_1_1_settings.html#af4536f740a72ae5788afacd0db91da30">MergeReceiver::Settings</a>
 , <a class="el" href="struct_sacn_merge_receiver_config.html#af4536f740a72ae5788afacd0db91da30">SacnMergeReceiverConfig</a>
@@ -652,10 +644,6 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>values
 : <a class="el" href="struct_sacn_dmx_merger_source.html#a2a3a6f8f8ac492ee4711d9544f5e5a0f">SacnDmxMergerSource</a>
-</li>
-<li>values_buffer
-: <a class="el" href="structsacn_1_1_source_1_1_universe_settings.html#a65fa1fb4746594d6b5cd793bb2e3ffcc">Source::UniverseSettings</a>
-, <a class="el" href="struct_sacn_source_universe_config.html#a65fa1fb4746594d6b5cd793bb2e3ffcc">SacnSourceUniverseConfig</a>
 </li>
 </ul>
 </div><!-- contents -->

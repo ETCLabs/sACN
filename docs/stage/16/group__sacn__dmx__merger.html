@@ -266,7 +266,6 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>The sACN DMX Merger API; see <a class="el" href="using_dmx_merger.html">Using the sACN DMX Merger API</a>. </p>
 <p>This API provides a software merger for buffers containing DMX512-A start code 0 packets. It also uses buffers containing DMX512-A start code 0xdd packets to support per-address priority.</p>
-<p>While this API is used to easily merge the outputs from the sACN Receiver API, it can also be used to merge your own DMX sources together, even in combination with the sources received via sACN.</p>
 <p>When asked to calculate the merge, the merger will evaluate the current source buffers and update two result buffers:</p><ul>
 <li>512 bytes for the merged data values (i.e. "winning level"). These are calculated by using a Highest-Level-Takes-Precedence(HTP) algorithm for all sources that share the highest per-address priority.</li>
 <li>512 source identifiers (i.e. "winning source") to indicate which source was considered the source of the merged data value, or that no source currently owns this address.</li>
@@ -731,7 +730,6 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Updates the source data and recalculate outputs. </p>
-<p>The direct method to change source data. This causes the merger to recalculate the outputs. If you are processing sACN packets, you may prefer dmx_merger_update_source_from_sacn().</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">merger</td><td>The handle to the merger. </td></tr>

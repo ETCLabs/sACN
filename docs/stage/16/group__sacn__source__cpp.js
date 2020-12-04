@@ -11,17 +11,14 @@ var group__sacn__source__cpp =
     ] ],
     [ "UniverseSettings", "structsacn_1_1_source_1_1_universe_settings.html", [
       [ "UniverseSettings", "structsacn_1_1_source_1_1_universe_settings.html#af00507fb4c88058e9363bb4007ddea6f", null ],
-      [ "UniverseSettings", "structsacn_1_1_source_1_1_universe_settings.html#a5a07016f7215b4cb7bc493c81f26e6b5", null ],
+      [ "UniverseSettings", "structsacn_1_1_source_1_1_universe_settings.html#aea1e029adb6a6702a0594a0a6fdce16d", null ],
       [ "IsValid", "structsacn_1_1_source_1_1_universe_settings.html#ac532c4b500b1a85ea22217f2c65a70ed", null ],
-      [ "num_values", "structsacn_1_1_source_1_1_universe_settings.html#ac6e502c93b06488a31160deaf84d86be", null ],
-      [ "priorities_buffer", "structsacn_1_1_source_1_1_universe_settings.html#a66342535a77d55b77bbb5146963c1357", null ],
       [ "priority", "structsacn_1_1_source_1_1_universe_settings.html#a0ad043071ccc7a261d79a759dc9c6f0c", null ],
       [ "send_preview", "structsacn_1_1_source_1_1_universe_settings.html#a5c7913b52f7d575e1cedacbd6601b047", null ],
       [ "send_unicast_only", "structsacn_1_1_source_1_1_universe_settings.html#adcf08448ca5544a8be4518fc2d966ef0", null ],
       [ "sync_universe", "structsacn_1_1_source_1_1_universe_settings.html#a9c7dff151ba6b32fc343e6aa55147bcc", null ],
       [ "unicast_destinations", "structsacn_1_1_source_1_1_universe_settings.html#a9cf8b7c7691e8c1634ae68b495659650", null ],
-      [ "universe", "structsacn_1_1_source_1_1_universe_settings.html#a0cf34824f8777f28b50f62b7870d6f8c", null ],
-      [ "values_buffer", "structsacn_1_1_source_1_1_universe_settings.html#a65fa1fb4746594d6b5cd793bb2e3ffcc", null ]
+      [ "universe", "structsacn_1_1_source_1_1_universe_settings.html#a0cf34824f8777f28b50f62b7870d6f8c", null ]
     ] ],
     [ "Source", "classsacn_1_1_source.html", [
       [ "Handle", "classsacn_1_1_source.html#a6c08b4f270d0515441eb0eeef16776d0", null ],
@@ -43,11 +40,12 @@ var group__sacn__source__cpp =
       [ "ResetNetworking", "classsacn_1_1_source.html#a26dd2b3b95dbaac498bfc0ba231f42e6", null ],
       [ "SendNow", "classsacn_1_1_source.html#a22cf560eca13a3cbc4c8384bad438897", null ],
       [ "SendSynchronization", "classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f", null ],
-      [ "SetDirty", "classsacn_1_1_source.html#a87418ebdc993d17156feac2b246a226d", null ],
-      [ "SetDirty", "classsacn_1_1_source.html#ad07a54235bd77e171622c0ae81ddfa3d", null ],
-      [ "SetDirtyAndForceSync", "classsacn_1_1_source.html#adaf9752b6c13fb3e9dc426579f094198", null ],
       [ "Shutdown", "classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9", null ],
       [ "Startup", "classsacn_1_1_source.html#ab263565edc9ebf5ffd6e82a18184e4c3", null ],
-      [ "Startup", "classsacn_1_1_source.html#afd6082e8538ae31363d3d44cc9aeb8a6", null ]
+      [ "Startup", "classsacn_1_1_source.html#afd6082e8538ae31363d3d44cc9aeb8a6", null ],
+      [ "UpdateValues", "classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047", null ],
+      [ "UpdateValues", "classsacn_1_1_source.html#a6604c17fdfc2154ec16331fff6cf9bd3", null ],
+      [ "UpdateValuesAndForceSync", "classsacn_1_1_source.html#a2a5aeeebf0c4930dd45abc67bbc665a2", null ],
+      [ "UpdateValuesAndForceSync", "classsacn_1_1_source.html#af65ca703eb59bd26ca80a0493169eb0f", null ]
     ] ]
 ];

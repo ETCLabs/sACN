@@ -14,6 +14,5 @@ var searchData=
   ['notifyfromisr',['NotifyFromIsr',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_signal.html#ad8b69b07e8a31350db1cd221db678cb3',1,'etcpal::Signal']]],
   ['notifyhandler',['NotifyHandler',['../classsacn_1_1_merge_receiver_1_1_notify_handler.html',1,'MergeReceiver::NotifyHandler'],['../classsacn_1_1_receiver_1_1_notify_handler.html',1,'Receiver::NotifyHandler'],['../classsacn_1_1_source_detector_1_1_notify_handler.html',1,'SourceDetector::NotifyHandler']]],
   ['now',['Now',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_time_point.html#ac59e08d917c73620c51f17923428da50',1,'etcpal::TimePoint']]],
-  ['num_5funicast_5fdestinations',['num_unicast_destinations',['../struct_sacn_source_universe_config.html#aa148fe1bdf89b3e7b900a130d32de29c',1,'SacnSourceUniverseConfig']]],
-  ['num_5fvalues',['num_values',['../struct_sacn_source_universe_config.html#ac6e502c93b06488a31160deaf84d86be',1,'SacnSourceUniverseConfig::num_values()'],['../structsacn_1_1_source_1_1_universe_settings.html#ac6e502c93b06488a31160deaf84d86be',1,'sacn::Source::UniverseSettings::num_values()']]]
+  ['num_5funicast_5fdestinations',['num_unicast_destinations',['../struct_sacn_source_universe_config.html#aa148fe1bdf89b3e7b900a130d32de29c',1,'SacnSourceUniverseConfig']]]
 ];
