@@ -43,9 +43,6 @@
  * This API provides a software merger for buffers containing DMX512-A start code 0 packets.
  * It also uses buffers containing DMX512-A start code 0xdd packets to support per-address priority.
  *
- * While this API is used to easily merge the outputs from the sACN Receiver API, it can also be used
- * to merge your own DMX sources together, even in combination with the sources received via sACN.
- *
  * When asked to calculate the merge, the merger will evaluate the current source
  * buffers and update two result buffers:
  *  - 512 bytes for the merged data values (i.e. "winning level").  These are calculated by using
@@ -82,8 +79,10 @@ typedef struct SacnDmxMergerConfig
 {
   /********* Required values **********/
 
-  /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
-      Memory is owned by the application. Slots that are not sourced are set to 0.*/
+  /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.  Slots that are not sourced
+      are set to 0.
+      Memory is owned by the application, but while this merger exists the application must not modify this buffer
+      directly!  Doing so would affect the results of the merge.*/
   uint8_t* slots;
 
   /********* Optional values **********/

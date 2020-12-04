@@ -568,9 +568,6 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
 /**
  * @brief Updates the source data and recalculate outputs.
  *
- * The direct method to change source data.  This causes the merger to recalculate the outputs.
- * If you are processing sACN packets, you may prefer dmx_merger_update_source_from_sacn().
- *
  * @param[in] merger The handle to the merger.
  * @param[in] source The id of the source to modify.
  * @param[in] priority The universe-level priority of the source.

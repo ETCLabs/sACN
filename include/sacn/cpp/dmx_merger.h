@@ -44,9 +44,6 @@ namespace sacn
  * This class instantiates software mergers for buffers containing DMX512-A start code 0 packets.
  * It also uses buffers containing DMX512-A start code 0xdd packets to support per-address priority.
  *
- * While this class is used to easily merge the outputs from the sACN Receiver API, it can also be used
- * to merge your own DMX sources together, even in combination with the sources received via sACN.
- *
  * When asked to calculate the merge, the merger will evaluate the current source
  * buffers and update two result buffers:
  *  - 512 bytes for the merged data values (i.e. "winning level").  These are calculated by using
@@ -73,8 +70,10 @@ public:
   {
     /********* Required values **********/
 
-    /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.
-        Memory is owned by the application. Slots that are not sourced are set to 0.*/
+    /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.  Slots that are not sourced
+        are set to 0.
+        Memory is owned by the application, but while this merger exists the application must not modify this buffer
+        directly!  Doing so would affect the results of the merge.*/
     uint8_t* slots{nullptr};
 
     /********* Optional values **********/
@@ -88,7 +87,7 @@ public:
 
     /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
         #SACN_DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if
-       you need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to
+        you need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to
         NULL and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of
         0 (not sourced).
         Memory is owned by the application.*/
@@ -239,9 +238,6 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_source_id_t sour
 
 /**
  * @brief Updates the source data and recalculate outputs.
- *
- * The direct method to change source data.  This causes the merger to recalculate the outputs.
- * If you are processing sACN packets, you may prefer UpdateSourceDataFromSacn().
  *
  * @param[in] source The id of the source to modify.
  * @param[in] priority The universe-level priority of the source.
