@@ -81,9 +81,9 @@ typedef struct SacnSourceConfig
       This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES is used instead.*/
   size_t universe_count_max;
 
-  /** If false (default), this module starts a shared thread that calls sacn_source_process_all() every 23 ms.
-      If true, no thread is started and the application must call sacn_source_process_all() at its DMX rate,
-      usually 23 ms. */
+  /** If false (default), this source will be added to a background thread that will send sACN updates at a
+      maximum rate of every 23 ms. If true, the source will not be added to the thread and the application
+      must call sacn_source_process_manual() at its maximum DMX rate, typically 23 ms. */
   bool manually_process_source;
 
 } SacnSourceConfig;
@@ -168,7 +168,7 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
                                                       const uint8_t* new_values, size_t new_values_size,
                                                       const uint8_t* new_priorities, size_t new_priorities_size);
 
-int sacn_source_process_all(void);
+int sacn_source_process_manual(void);
 
 etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, SacnMcastInterface* netints, size_t num_netints);
 

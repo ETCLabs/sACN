@@ -488,10 +488,11 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 }
 
 /**
- * @brief Process created sources and do the actual sending of sACN data on all universes.
+ * @brief Trigger the transmision of sACN packets for all universes of sources that were created with
+ * manually_process_source set to true.
  *
- * Note: Unless you created the source with manually_process_source set to true, this will be automatically
- * called by an internal thread of the module. Otherwise, this must be called at the maximum rate
+ * Note: Unless you created the source with manually_process_source set to true, similar functionality will be
+ * automatically called by an internal thread of the module. Otherwise, this must be called at the maximum rate
  * at which the application will send sACN.
  *
  * Sends the current data for universes which have been updated, and sends keep-alive data for universes which
@@ -502,7 +503,7 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
  *         track when destroyed sources have finished sending the terminated packets and actually
  *         been destroyed.
  */
-int sacn_source_process_all(void)
+int sacn_source_process_manual(void)
 {
   return 0;
 }

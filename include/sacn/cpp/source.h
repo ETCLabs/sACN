@@ -72,9 +72,9 @@ public:
     /** The maximum number of universes this source will send to when using dynamic memory. */
     size_t universe_count_max{SACN_SOURCE_INFINITE_UNIVERSES};
 
-    /** If false (default), this module starts a shared thread that calls ProcessAll() every 23 ms.
-        If true, no thread is started and the application must call ProcessAll() at its DMX rate,
-        usually 23 ms. */
+  /** If false (default), this source will be added to a background thread that will send sACN updates at a
+      maximum rate of every 23 ms. If true, the source will not be added to the thread and the application
+      must call ProcessManual() at its maximum DMX rate, typically 23 ms. */
     bool manually_process_source{false};
 
     /** Create an empty, invalid data structure by default. */
@@ -159,7 +159,7 @@ public:
 
   constexpr Handle handle() const;
 
-  static int ProcessAll();
+  static int ProcessManual();
 
 private:
   class TranslatedUniverseConfig
@@ -585,23 +585,24 @@ inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* n
 }
 
 /**
- * @brief Process created sources and do the actual sending of sACN data on all universes.
+ * @brief Trigger the transmision of sACN packets for all universes of sources that were created with
+ * manually_process_source set to true.
  *
- * Note: Unless you created the source with manually_process_source set to true, this will be automatically
- * called by an internal thread of the module. Otherwise, this must be called at the maximum rate
+ * Note: Unless you created the source with manually_process_source set to true, similar functionality will be
+ * automatically called by an internal thread of the module. Otherwise, this must be called at the maximum rate
  * at which the application will send sACN.
  *
- * Sends data for universes which have been updated, and sends keep-alive data for universes which
+ * Sends the current data for universes which have been updated, and sends keep-alive data for universes which
  * haven't been updated. Also destroys sources & universes that have been marked for termination after sending the
  * required three terminated packets.
  *
  * @return Current number of sources tracked by the library. This can be useful on shutdown to
- *         track when destroyed sources have finished sending the terminated packets and have actually
+ *         track when destroyed sources have finished sending the terminated packets and actually
  *         been destroyed.
  */
-inline int Source::ProcessAll()
+inline int Source::ProcessManual()
 {
-  return sacn_source_process_all();
+  return sacn_source_process_manual();
 }
 
 /**
