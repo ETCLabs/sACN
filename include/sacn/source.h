@@ -104,26 +104,12 @@ typedef struct SacnSourceUniverseConfig
   /** The universe number. At this time, only values from 1 - 63999 are accepted.
       You cannot have a source send more than one stream of values to a single universe. */
   uint16_t universe;
-  /** The buffer of up to 512 dmx values that will be sent each tick.
-      This pointer may not be NULL. The memory is owned by the application, and should not
-      be destroyed until after the universe is deleted on this source. */
-  const uint8_t* values_buffer;
-  /** The size of values_buffer. */
-  size_t num_values;
 
   /********* Optional values **********/
 
   /** The sACN universe priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100.
    */
   uint8_t priority;
-  /** The (optional) buffer of up to 512 per-address priorities that will be sent each tick.
-      If this is NULL, only the universe priority will be used.
-      If non-NULL, this buffer is evaluated each tick.  Changes to and from 0 ("don't care") cause appropriate
-      sacn packets over time to take and give control of those DMX values as defined in the per-address priority
-      specification.
-      The memory is owned by the application, and should not be destroyed until after the universe is
-      deleted on this source. The size of this buffer must match the size of values_buffer.  */
-  const uint8_t* priorities_buffer;
 
   /** If true, this sACN source will send preview data. Defaults to false. */
   bool send_preview;
@@ -143,9 +129,9 @@ typedef struct SacnSourceUniverseConfig
 } SacnSourceUniverseConfig;
 
 /** A default-value initializer for an SacnSourceUniverseConfig struct. */
-#define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT    \
-  {                                                 \
-    0, NULL, 0, 100, NULL, false, false, NULL, 0, 0 \
+#define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT \
+  {                                              \
+    0, 100, false, false, NULL, 0, 0             \
   }
 
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config);
@@ -171,9 +157,16 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
                                     size_t buflen);
 etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t universe);
 
-void sacn_source_set_dirty(sacn_source_t handle, uint16_t universe);
-void sacn_source_set_list_dirty(sacn_source_t handle, const uint16_t* universes, size_t num_universes);
-void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t universe);
+void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
+                               size_t new_values_size);
+void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
+                                       size_t new_values_size, const uint8_t* new_priorities,
+                                       size_t new_priorities_size);
+void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
+                                              size_t new_values_size);
+void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe,
+                                                      const uint8_t* new_values, size_t new_values_size,
+                                                      const uint8_t* new_priorities, size_t new_priorities_size);
 
 int sacn_source_process_all(void);
 

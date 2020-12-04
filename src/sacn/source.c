@@ -71,7 +71,7 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
  * @brief Create a new sACN source to send sACN data.
  *
  * This creates the instance of the source, but no data is sent until sacn_source_add_universe() and
- * sacn_source_set_dirty() is called.
+ * either sacn_source_update_values() or sacn_source_update_values_and_pap() are called.
  *
  * Note that a source is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -144,7 +144,8 @@ void sacn_source_destroy(sacn_source_t handle)
  * @brief Add a universe to an sACN source.
  *
  * Adds a universe to a source.
- * After this call completes, the applicaton must call sacn_source_set_dirty() to mark it ready for processing.
+ * After this call completes, the applicaton must call either sacn_source_update_values() or
+ * sacn_source_update_values_and_pap() to mark it ready for processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
  * Discovery packets.
@@ -191,7 +192,8 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
  * @brief Add a unicast destination for a source's universe.
  *
  * Adds a unicast destination for a source's universe.
- * After this call completes, the applicaton must call sacn_source_set_dirty() to mark it ready for processing.
+ * After this call completes, the applicaton must call either sacn_source_update_values() or
+ * sacn_source_update_values_and_pap() to mark it ready for processing.
  *
  * @param[in] handle Handle to the source to change.
  * @param[in] universe Universe to change.
@@ -359,53 +361,130 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t u
 }
 
 /**
- * @brief Indicate that the data in the buffer for this source and universe has changed and
- *        should be sent on the next call to sacn_source_process_all().
+ * @brief Copies the universe's dmx values into the packet to be sent on the next call to sacn_source_process_all()
  *
- * @param[in] handle Handle to the source to mark as dirty.
- * @param[in] universe Universe to mark as dirty.
+ * This function will update the outgoing packet values, and reset the logic that slows down packet transmission due to
+ * inactivity.
+ *
+ * When you don't have per-address priority changes to make, use this function. Otherwise, use
+ * sacn_source_update_values_and_pap().
+ *
+ * @param[in] handle Handle to the source to update.
+ * @param[in] universe Universe to update.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values
+ * will be used.
+ * @param[in] new_values_size Size of new_values.
  */
-void sacn_source_set_dirty(sacn_source_t handle, uint16_t universe)
+void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
+                               size_t new_values_size)
 {
+  // TODO
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(new_values);
+  ETCPAL_UNUSED_ARG(new_values_size);
 }
 
 /**
- * @brief Indicate that the data in the buffers for a list of universes on a source  has
- *        changed and should be sent on the next call to sacn_source_process_all().
+ * @brief Copies the universe's dmx values and per-address priorities into packets that are sent on the next call to
+ * sacn_source_process_all()
  *
- * @param[in] handle Handle to the source.
- * @param[in] universes Array of universes to mark as dirty. Must not be NULL.
- * @param[in] num_universes Size of the universes array.
+ * This function will update the outgoing packet values for both DMX and per-address priority data, and reset the logic
+ * that slows down packet transmission due to inactivity.
+ *
+ * Per-address priority support has specific rules about when to send value changes vs. pap changes.  These rules are
+ * documented in https://etclabs.github.io/sACN/docs/head/per_address_priority.html, and are triggered by the use of
+ * this function. Changing per-address priorities to and from "don't care", changing the size of the priorities array,
+ * or passing in NULL/non-NULL for the priorities will cause this library to do the necessary tasks to "take control" or
+ * "release control" of the corresponding DMX values.
+ *
+ * @param[in] handle Handle to the source to update.
+ * @param[in] universe Universe to update.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values
+ * will be used.
+ * @param[in] values_size Size of new_values.
+ * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
+ * per-address priorities or want to stop using per-address priorities.
+ * @param[in] new_priorities_size Size of new_priorities.
  */
-void sacn_source_set_list_dirty(sacn_source_t handle, const uint16_t* universes, size_t num_universes)
+void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
+                                       size_t new_values_size, const uint8_t* new_priorities,
+                                       size_t new_priorities_size)
 {
+  // TODO
   ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universes);
-  ETCPAL_UNUSED_ARG(num_universes);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(new_values);
+  ETCPAL_UNUSED_ARG(new_values_size);
+  ETCPAL_UNUSED_ARG(new_priorities);
+  ETCPAL_UNUSED_ARG(new_priorities_size);
 }
 
 /**
- * @brief Like sacn_source_set_dirty, but also sets the force_sync flag on the packet.
+ * @brief Like sacn_source_update_values(), but also sets the force_sync flag on the packet.
  *
- * This function indicates that the data in the buffer for this source and universe has changed,
- * and should be sent on the next call to sacn_source_process_all().  Additionally, the packet
- * to be sent will have its force_synchronization option flag set.
+ * This function will update the outgoing packet values to be sent on the next call to sacn_source_process_all(), and
+ * will reset the logic that slows down packet transmission due to inactivity. Additionally, the packet to be sent will
+ * have its force_synchronization option flag set.
  *
- * If no synchronization universe is configured, this function acts like a direct call to sacn_source_set_dirty().
+ * If no synchronization universe is configured, this function acts like a direct call to sacn_source_update_values().
  *
  * TODO: At this time, synchronization is not supported by this library.
  *
- * @param[in] handle Handle to the source to mark as dirty.
- * @param[in] universe Universe to mark as dirty.
+ * @param[in] handle Handle to the source to update.
+ * @param[in] universe Universe to update.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values
+ * will be used.
+ * @param[in] new_values_size Size of new_values.
  */
-void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t universe)
+void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
+                                              size_t new_values_size)
 {
   // TODO
-
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(new_values);
+  ETCPAL_UNUSED_ARG(new_values_size);
+}
+
+/**
+ * @brief Like sacn_source_update_values_and_pap(), but also sets the force_sync flag on the packet.
+ *
+ * This function will update the outgoing packet values to be sent on the next call to sacn_source_process_all(), and
+ * will reset the logic that slows down packet transmission due to inactivity. Additionally, the final packet to be sent
+ * by this call will have its force_synchronization option flag set.
+ *
+ * Per-address priority support has specific rules about when to send value changes vs. pap changes.  These rules are
+ * documented in https://etclabs.github.io/sACN/docs/head/per_address_priority.html, and are triggered by the use of
+ * this function. Changing per-address priorities to and from "don't care", changing the size of the priorities array,
+ * or passing in NULL/non-NULL for the priorities will cause this library to do the necessary tasks to "take control" or
+ * "release control" of the corresponding DMX values.
+ *
+ * If no synchronization universe is configured, this function acts like a direct call to
+ * sacn_source_update_values_and_pap().
+ *
+ * TODO: At this time, synchronization is not supported by this library.
+ *
+ * @param[in] handle Handle to the source to update.
+ * @param[in] universe Universe to update.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values
+ * will be used.
+ * @param[in] values_size Size of new_values.
+ * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
+ * per-address priorities or want to stop using per-address priorities.
+ * @param[in] new_priorities_size Size of new_priorities.
+ */
+void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe,
+                                                      const uint8_t* new_values, size_t new_values_size,
+                                                      const uint8_t* new_priorities, size_t new_priorities_size)
+{
+  // TODO
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(new_values);
+  ETCPAL_UNUSED_ARG(new_values_size);
+  ETCPAL_UNUSED_ARG(new_priorities);
+  ETCPAL_UNUSED_ARG(new_priorities_size);
 }
 
 /**
@@ -415,9 +494,9 @@ void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t univers
  * called by an internal thread of the module. Otherwise, this must be called at the maximum rate
  * at which the application will send sACN.
  *
- * Sends data for universes which have been marked dirty, and sends keep-alive data for universes which
- * haven't changed. Also destroys sources & universes that have been marked for termination after sending the required
- * three terminated packets.
+ * Sends the current data for universes which have been updated, and sends keep-alive data for universes which
+ * haven't been updated. Also destroys sources & universes that have been marked for termination after sending the
+ * required three terminated packets.
  *
  * @return Current number of sources tracked by the library. This can be useful on shutdown to
  *         track when destroyed sources have finished sending the terminated packets and actually
@@ -433,7 +512,7 @@ int sacn_source_process_all(void)
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, all universes on a source are considered to be dirty and have
+ * After this call completes successfully, all universes on a source are considered to be updated and have
  * new values and priorities. It's as if the source just started sending values on that universe.
  *
  * If this call fails, the caller must call sacn_source_destroy(), because the source may be in an

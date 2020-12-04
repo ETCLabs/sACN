@@ -95,26 +95,12 @@ public:
     /** The universe number. At this time, only values from 1 - 63999 are accepted.
         You cannot have a source send more than one stream of values to a single universe. */
     uint16_t universe{0};
-    /** The buffer of up to 512 dmx values that will be sent each tick.
-        This pointer may not be NULL. The memory is owned by the application, and should not
-        be destroyed until after the universe is deleted on this source. */
-    const uint8_t* values_buffer{nullptr};
-    /** The size of values_buffer. */
-    size_t num_values{0};
 
     /********* Optional values **********/
 
     /** The sACN universe priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to
         100. */
     uint8_t priority{100};
-    /** The (optional) buffer of up to 512 per-address priorities that will be sent each tick.
-        If this is nil, only the universe priority will be used.
-        If non-nil, this buffer is evaluated each tick.  Changes to and from 0 ("don't care") cause appropriate
-        sacn packets over time to take and give control of those DMX values as defined in the per-address priority
-        specification.
-        The memory is owned by the application, and should not be destroyed until after the universe is
-        deleted on this source. The size of this buffer must match the size of values_buffer.  */
-    const uint8_t* priorities_buffer{nullptr};
 
     /** If true, this sACN source will send preview data. Defaults to false. */
     bool send_preview{false};
@@ -131,7 +117,7 @@ public:
 
     /** Create an empty, invalid data structure by default. */
     UniverseSettings() = default;
-    UniverseSettings(uint16_t universe_id, const uint8_t* new_values_buffer, size_t new_values_size);
+    UniverseSettings(uint16_t universe_id);
 
     bool IsValid() const;
   };
@@ -161,9 +147,12 @@ public:
   etcpal::Error SendNow(uint16_t universe, uint8_t start_code, const uint8_t* buffer, size_t buflen);
   etcpal::Error SendSynchronization(uint16_t universe);
 
-  void SetDirty(uint16_t universe);
-  void SetDirty(const std::vector<uint16_t>& universes);
-  void SetDirtyAndForceSync(uint16_t universe);
+  void UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size);
+  void UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size, const uint8_t* new_priorities,
+                    size_t new_priorities_size);
+  void UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size);
+  void UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size,
+                                const uint8_t* new_priorities, size_t new_priorities_size);
 
   etcpal::Error ResetNetworking();
   etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
@@ -212,9 +201,8 @@ inline bool Source::Settings::IsValid() const
  *
  * Optional members can be modified directly in the struct.
  */
-inline Source::UniverseSettings::UniverseSettings(uint16_t universe_id, const uint8_t* new_values_buffer,
-                                                  size_t new_values_size)
-    : universe(universe_id), values_buffer(new_values_buffer), num_values(new_values_size)
+inline Source::UniverseSettings::UniverseSettings(uint16_t universe_id)
+    : universe(universe_id)
 {
 }
 
@@ -223,7 +211,7 @@ inline Source::UniverseSettings::UniverseSettings(uint16_t universe_id, const ui
  */
 inline bool Source::UniverseSettings::IsValid() const
 {
-  return (universe > 0) && values_buffer && (num_values > 0);
+  return universe > 0;
 }
 
 /**
@@ -231,7 +219,7 @@ inline bool Source::UniverseSettings::IsValid() const
  *
  * This is an overload of Startup that uses all network interfaces.
  *
- * This creates the instance of the source, but no data is sent until AddUniverse() and SetDirty() is called.
+ * This creates the instance of the source, but no data is sent until AddUniverse() and a variant of UpdateValues() is called.
  *
  * Note that a source is considered as successfully created if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -254,7 +242,7 @@ inline etcpal::Error Source::Startup(const Settings& settings)
 /**
  * @brief Create a new sACN source to send sACN data.
  *
- * This creates the instance of the source, but no data is sent until AddUniverse() and SetDirty() is called.
+ * This creates the instance of the source, but no data is sent until AddUniverse() and a variant of UpdateValues() is called.
  *
  * Note that a source is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -320,7 +308,7 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
  * @brief Add a universe to an sACN source.
  *
  * Adds a universe to a source.
- * After this call completes, the applicaton must call SetDirty() to mark it ready for processing.
+ * After this call completes, the applicaton must call a variant of UpdateValues() to mark it ready for processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
  * Discovery packets.
@@ -363,7 +351,7 @@ inline void Source::RemoveUniverse(uint16_t universe)
  * @brief Add a unicast destination for a source's universe.
  *
  * Adds a unicast destination for a source's universe.
- * After this call completes, the applicaton must call SetDirty() to mark it ready for processing.
+ * After this call completes, the applicaton must call a variant of UpdateValues() to mark it ready for processing.
 
  * @param[in] universe Universe to change.
  * @param[in] dest The destination IP.
@@ -496,43 +484,104 @@ inline etcpal::Error Source::SendSynchronization(uint16_t universe)
 }
 
 /**
- * @brief Indicate that the data in the buffer for this source and universe has changed and
- *        should be sent on the next call to ProcessAll().
+ * @brief Copies the universe's dmx values into the packet to be sent on the next call to ProcessAll()
  *
- * @param[in] universe Universe to mark as dirty.
+ * This function will update the outgoing packet values, and reset the logic that slows down packet transmission due to
+ * inactivity.
+ *
+ * When you don't have per-address priority changes to make, use this function. Otherwise, use
+ * the version of UpdateValues() that takes a per-address priority buffer.
+ *
+ * @param[in] universe Universe to update.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values
+ * will be used.
+ * @param[in] new_values_size Size of new_values.
  */
-inline void Source::SetDirty(uint16_t universe)
+inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size)
 {
-  sacn_source_set_dirty(handle_, universe);
+  sacn_source_update_values(handle_, universe, new_values, new_values_size);
 }
 
 /**
- * @brief Indicate that the data in the buffers for a list of universes on a source  has
- *        changed and should be sent on the next call to ProcessAll().
+ * @brief Copies the universe's dmx values and per-address priorities into packets that are sent on the next call to
+ * ProcessAll()
  *
- * @param[in] universes Vector of universes to mark as dirty.
+ * This function will update the outgoing packet values for both DMX and per-address priority data, and reset the logic
+ * that slows down packet transmission due to inactivity.
+ *
+ * Per-address priority support has specific rules about when to send value changes vs. pap changes.  These rules are
+ * documented in https://etclabs.github.io/sACN/docs/head/per_address_priority.html, and are triggered by the use of
+ * this function. Changing per-address priorities to and from "don't care", changing the size of the priorities array,
+ * or passing in NULL/non-NULL for the priorities will cause this library to do the necessary tasks to "take control" or
+ * "release control" of the corresponding DMX values.
+ *
+ * @param[in] universe Universe to update.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values
+ * will be used.
+ * @param[in] values_size Size of new_values.
+ * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
+ * per-address priorities or want to stop using per-address priorities.
+ * @param[in] new_priorities_size Size of new_priorities.
  */
-inline void Source::SetDirty(const std::vector<uint16_t>& universes)
+inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size,
+                                 const uint8_t* new_priorities, size_t new_priorities_size)
 {
-  sacn_source_set_list_dirty(handle_, universes.data(), universes.size());
+  sacn_source_update_values_and_pap(handle_, universe, new_values, new_values_size, new_priorities,
+                                    new_priorities_size);
 }
 
 /**
- * @brief Like Source::SetDirty, but also sets the force_sync flag on the packet.
+ * @brief Like UpdateValues(), but also sets the force_sync flag on the packet.
  *
- * This function indicates that the data in the buffer for this source and universe has changed,
- * and should be sent on the next call to ProcessAll().  Additionally, the packet
- * to be sent will have its force_synchronization option flag set.
+ * This function will update the outgoing packet values to be sent on the next call to ProcessAll(), and
+ * will reset the logic that slows down packet transmission due to inactivity. Additionally, the packet to be sent will
+ * have its force_synchronization option flag set.
  *
- * If no synchronization universe is configured, this function acts like a direct call to SetDirty().
+ * If no synchronization universe is configured, this function acts like a direct call to UpdateValues().
  *
  * TODO: At this time, synchronization is not supported by this library.
  *
- * @param[in] universe Universe to mark as dirty.
+ * @param[in] universe Universe to update.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values
+ * will be used.
+ * @param[in] new_values_size Size of new_values.
  */
-inline void Source::SetDirtyAndForceSync(uint16_t universe)
+inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size)
 {
-  sacn_source_set_dirty_and_force_sync(handle_, universe);
+  sacn_source_update_values_and_force_sync(handle_, universe, new_values, new_values_size);
+}
+
+/**
+ * @brief Like UpdateValues(), but also sets the force_sync flag on the packet.
+ *
+ * This function will update the outgoing packet values to be sent on the next call to ProcessAll(), and
+ * will reset the logic that slows down packet transmission due to inactivity. Additionally, the final packet to be sent
+ * by this call will have its force_synchronization option flag set.
+ *
+ * Per-address priority support has specific rules about when to send value changes vs. pap changes.  These rules are
+ * documented in https://etclabs.github.io/sACN/docs/head/per_address_priority.html, and are triggered by the use of
+ * this function. Changing per-address priorities to and from "don't care", changing the size of the priorities array,
+ * or passing in NULL/non-NULL for the priorities will cause this library to do the necessary tasks to "take control" or
+ * "release control" of the corresponding DMX values.
+ *
+ * If no synchronization universe is configured, this function acts like a direct call to
+ * sacn_source_update_values_and_pap().
+ *
+ * TODO: At this time, synchronization is not supported by this library.
+ *
+ * @param[in] universe Universe to update.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values
+ * will be used.
+ * @param[in] values_size Size of new_values.
+ * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
+ * per-address priorities or want to stop using per-address priorities.
+ * @param[in] new_priorities_size Size of new_priorities.
+ */
+inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size,
+                                                      const uint8_t* new_priorities, size_t new_priorities_size)
+{
+  sacn_source_update_values_and_pap_and_force_sync(handle_, universe, new_values, new_values_size, new_priorities,
+                                                   new_priorities_size);
 }
 
 /**
@@ -542,9 +591,9 @@ inline void Source::SetDirtyAndForceSync(uint16_t universe)
  * called by an internal thread of the module. Otherwise, this must be called at the maximum rate
  * at which the application will send sACN.
  *
- * Sends data for universes which have been marked dirty, and sends keep-alive data for universes which
- * haven't changed. Also destroys sources & universes that have been marked for termination after sending the required
- * three terminated packets.
+ * Sends data for universes which have been updated, and sends keep-alive data for universes which
+ * haven't been updated. Also destroys sources & universes that have been marked for termination after sending the
+ * required three terminated packets.
  *
  * @return Current number of sources tracked by the library. This can be useful on shutdown to
  *         track when destroyed sources have finished sending the terminated packets and have actually
@@ -562,7 +611,7 @@ inline int Source::ProcessAll()
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, all universes on a source are considered to be dirty and have
+ * After this call completes successfully, all universes on a source are considered to be updated and have
  * new values and priorities. It's as if the source just started sending values on that universe.
  *
  * If this call fails, the caller must call Shutdown(), because the source may be in an invalid state.
@@ -588,7 +637,7 @@ inline etcpal::Error Source::ResetNetworking()
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, all universes on a source are considered to be dirty and have
+ * After this call completes successfully, all universes on a source are considered to be updated and have
  * new values and priorities. It's as if the source just started sending values on that universe.
  *
  * If this call fails, the caller must call Shutdown(), because the source may be in an invalid state.
@@ -653,10 +702,7 @@ inline const SacnSourceUniverseConfig& Source::TranslatedUniverseConfig::get() n
 inline Source::TranslatedUniverseConfig::TranslatedUniverseConfig(const UniverseSettings& settings)
     : config_{
         settings.universe,
-        settings.values_buffer,
-        settings.num_values,
         settings.priority,
-        settings.priorities_buffer,
         settings.send_preview,
         settings.send_unicast_only,
         nullptr,
