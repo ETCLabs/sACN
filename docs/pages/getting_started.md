@@ -6,3 +6,4 @@
 * For implementing an sACN Receiver with built-in merging, see \subpage using_merge_receiver.
 * For implementing an sACN Receiver without built-in merging, see \subpage using_receiver.
 * For implementing an sACN DMX Merger, see \subpage using_dmx_merger.
+* For implementing as sACN Source Detector, see the documentation for the \ref sacn_source_detector "sACN Source Detector API".
