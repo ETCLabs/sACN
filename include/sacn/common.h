@@ -55,6 +55,16 @@ extern "C" {
 #define DMX_ADDRESS_COUNT 512
 
 /**
+ * This enum defines how the API module will use IPv4 and IPv6 networking.
+ */
+typedef enum 
+{
+  kSacnIpV4Only,
+  kSacnIpV6Only,
+  kSacnIpV4AndIpV6
+} sacn_ip_support_t;
+
+/**
  * The data present in the header of an sACN data packet.
  */
 typedef struct SacnHeaderData

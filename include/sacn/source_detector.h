@@ -223,12 +223,15 @@ typedef struct SacnSourceDetectorConfig
      dynamic memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when configured to
      use static memory -- #SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE is used instead.*/
   int universes_per_source_max;
+
+  /** What IP networking the source detector will support.  The default is #kSacnIpV4AndIpV6. */
+  sacn_ip_support_t ip_supported;
 } SacnSourceDetectorConfig;
 
 /** A default-value initializer for an SacnSourceDetectorConfig struct. */
-#define SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT                                            \
-  {                                                                                         \
-    {NULL, NULL, NULL, NULL}, SACN_SOURCE_DETECTOR_INFINITE, SACN_SOURCE_DETECTOR_INFINITE, \
+#define SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT                                                             \
+  {                                                                                                          \
+    {NULL, NULL, NULL, NULL}, SACN_SOURCE_DETECTOR_INFINITE, SACN_SOURCE_DETECTOR_INFINITE, kSacnIpV4AndIpV6 \
   }
 
 void sacn_source_detector_config_init(SacnSourceDetectorConfig* config);

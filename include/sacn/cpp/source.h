@@ -77,6 +77,9 @@ public:
       must call ProcessManual() at its maximum DMX rate, typically 23 ms. */
     bool manually_process_source{false};
 
+    /** What IP networking the source will support. */
+    sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6};
+
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
     Settings(const etcpal::Uuid& new_cid, const std::string& new_name);
@@ -682,6 +685,7 @@ inline SacnSourceConfig Source::TranslateConfig(const Settings& settings)
     settings.name.c_str(),
     settings.universe_count_max,
     settings.manually_process_source,
+    settings.ip_supported
   };
   // clang-format on
 

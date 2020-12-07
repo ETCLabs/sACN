@@ -86,12 +86,14 @@ typedef struct SacnSourceConfig
       must call sacn_source_process_manual() at its maximum DMX rate, typically 23 ms. */
   bool manually_process_source;
 
+  /** What IP networking the source will support.  The default is #kSacnIpV4AndIpV6. */
+  sacn_ip_support_t ip_supported;
 } SacnSourceConfig;
 
 /** A default-value initializer for an SacnSourceConfig struct. */
-#define SACN_SOURCE_CONFIG_DEFAULT_INIT                          \
-  {                                                              \
-    kEtcPalNullUuid, NULL, SACN_SOURCE_INFINITE_UNIVERSES, false \
+#define SACN_SOURCE_CONFIG_DEFAULT_INIT                                            \
+  {                                                                                \
+    kEtcPalNullUuid, NULL, SACN_SOURCE_INFINITE_UNIVERSES, false, kSacnIpV4AndIpV6 \
   }
 
 void sacn_source_config_init(SacnSourceConfig* config);

@@ -147,6 +147,9 @@ public:
      */
     bool use_pap{true};
 
+    /** What IP networking the merge receiver will support. */
+    sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6};
+
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
     Settings(uint16_t new_universe_id);
@@ -456,6 +459,7 @@ inline SacnMergeReceiverConfig MergeReceiver::TranslateConfig(const Settings& se
     },
     settings.source_count_max,
     settings.use_pap,
+    settings.ip_supported
   };
   // clang-format on
 

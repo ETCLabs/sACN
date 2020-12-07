@@ -242,12 +242,15 @@ typedef struct SacnReceiverConfig
   int source_count_max;
   /** A set of option flags. See "sACN receiver flags". */
   unsigned int flags;
+
+  /** What IP networking the receiver will support.  The default is #kSacnIpV4AndIpV6. */
+  sacn_ip_support_t ip_supported;
 } SacnReceiverConfig;
 
 /** A default-value initializer for an SacnReceiverConfig struct. */
-#define SACN_RECEIVER_CONFIG_DEFAULT_INIT                                       \
-  {                                                                             \
-    0, {NULL, NULL, NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, 0, \
+#define SACN_RECEIVER_CONFIG_DEFAULT_INIT                                                        \
+  {                                                                                              \
+    0, {NULL, NULL, NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, 0, kSacnIpV4AndIpV6 \
   }
 
 void sacn_receiver_config_init(SacnReceiverConfig* config);

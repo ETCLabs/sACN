@@ -197,6 +197,9 @@ public:
        configured to use static memory -- #SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE is used instead.*/
     int universes_per_source_max{SACN_SOURCE_DETECTOR_INFINITE};
 
+    /** What IP networking the source detector will support. */
+    sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6};
+
     /** Create default data structure. */
     Settings() = default;
   };
@@ -462,7 +465,8 @@ inline SacnSourceDetectorConfig SourceDetector::TranslateConfig(const Settings& 
       &notify_handler
     },
     settings.source_count_max,
-    settings.universes_per_source_max
+    settings.universes_per_source_max,
+    settings.ip_supported
   };
   // clang-format on
 

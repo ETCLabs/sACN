@@ -148,6 +148,8 @@ public:
                                                                 listen to when using dynamic memory. */
     unsigned int flags{0}; /**< A set of option flags. See the C API's "sACN receiver flags". */
 
+    sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6}; /**< What IP networking the receiver will support. */
+
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
     Settings(uint16_t new_universe_id);
@@ -520,6 +522,7 @@ inline SacnReceiverConfig Receiver::TranslateConfig(const Settings& settings, No
     },
     settings.source_count_max,
     settings.flags,
+    settings.ip_supported
   };
   // clang-format on
 

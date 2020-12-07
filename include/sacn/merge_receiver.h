@@ -151,12 +151,15 @@ typedef struct SacnMergeReceiverConfig
       per-address priorities are ignored, and only universe priorities are used in the merger. Keep in mind that this
       setting will be ignored if #SACN_ETC_PRIORITY_EXTENSION = 0, in which case per-address priorities are ignored. */
   bool use_pap;
+
+  /** What IP networking the merge_receiver will support.  The default is #kSacnIpV4AndIpV6. */
+  sacn_ip_support_t ip_supported;
 } SacnMergeReceiverConfig;
 
 /** A default-value initializer for an SacnMergeReceiverConfig struct. */
-#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                       \
-  {                                                                   \
-    0, {NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, true \
+#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                         \
+  {                                                                                     \
+    0, {NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, true, kSacnIpV4AndIpV6 \
   }
 
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
