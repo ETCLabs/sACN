@@ -200,6 +200,7 @@ $(document).ready(function(){initNavTree('group__s_a_c_n.html','');});
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#define-members">Macros</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">sACN</div>  </div>
@@ -251,6 +252,14 @@ Typedefs</h2></td></tr>
 <tr class="separator:ga2e6652620c783917abe8e5c6b5d9d8b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab240ac59938a557843efa9068b74e1d4"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#gab240ac59938a557843efa9068b74e1d4">SacnMcastInterface</a></td></tr>
 <tr class="separator:gab240ac59938a557843efa9068b74e1d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:ga02f82b9c734e2d2f70a1106d6480833a"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a> { <b>kSacnIpV4Only</b>, 
+<b>kSacnIpV6Only</b>, 
+<b>kSacnIpV4AndIpV6</b>
+ }</td></tr>
+<tr class="separator:ga02f82b9c734e2d2f70a1106d6480833a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -410,6 +419,22 @@ sACN version strings</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>On input, this structure is used to indicate a network interface to use. On output, this structure indicates whether or not the operation was a success. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="ga02f82b9c734e2d2f70a1106d6480833a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga02f82b9c734e2d2f70a1106d6480833a">&#9670;&nbsp;</a></span>sacn_ip_support_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>This enum defines how the API module will use IPv4 and IPv6 networking. </p>
 
 </div>
 </div>

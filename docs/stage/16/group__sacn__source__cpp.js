@@ -5,6 +5,7 @@ var group__sacn__source__cpp =
       [ "Settings", "structsacn_1_1_source_1_1_settings.html#a6a01ccea29e11babd7c2ba65931f7dc7", null ],
       [ "IsValid", "structsacn_1_1_source_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed", null ],
       [ "cid", "structsacn_1_1_source_1_1_settings.html#ab74b3ddda3c95279107d0059dd7ee9f3", null ],
+      [ "ip_supported", "structsacn_1_1_source_1_1_settings.html#ab619351af6b7a5abcb23e38bdc09e984", null ],
       [ "manually_process_source", "structsacn_1_1_source_1_1_settings.html#a16ca9a84fb49dbc5b40b8b333a239e2d", null ],
       [ "name", "structsacn_1_1_source_1_1_settings.html#a9b45b3e13bd9167aab02e17e08916231", null ],
       [ "universe_count_max", "structsacn_1_1_source_1_1_settings.html#af4a1d1d970b94a6a07b8c612b8d7ad73", null ]

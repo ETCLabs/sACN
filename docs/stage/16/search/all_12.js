@@ -27,6 +27,7 @@ var searchData=
   ['sacn_5fdynamic_5fmem',['SACN_DYNAMIC_MEM',['../group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87',1,'opts.h']]],
   ['sacn_5fetc_5fpriority_5fextension',['SACN_ETC_PRIORITY_EXTENSION',['../group__sacnopts__global.html#ga59ee3abb2f4eb1554d7be219a9c8028b',1,'opts.h']]],
   ['sacn_5finit',['sacn_init',['../group__s_a_c_n.html#ga06e5eacb42e03b67c65ed299500a8366',1,'sacn_init(const EtcPalLogParams *log_params):&#160;common.c'],['../group__s_a_c_n.html#ga06e5eacb42e03b67c65ed299500a8366',1,'sacn_init(const EtcPalLogParams *log_params):&#160;common.c']]],
+  ['sacn_5fip_5fsupport_5ft',['sacn_ip_support_t',['../group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a',1,'common.h']]],
   ['sacn_5flog_5fmsg_5fprefix',['SACN_LOG_MSG_PREFIX',['../group__sacnopts__global.html#ga739093ac67975234540c307629ac8280',1,'opts.h']]],
   ['sacn_5flogging_5fenabled',['SACN_LOGGING_ENABLED',['../group__sacnopts__global.html#ga5b77f40b283fa0f754576a64ff6f3d4c',1,'opts.h']]],
   ['sacn_5floopback',['SACN_LOOPBACK',['../group__sacnopts__global.html#ga6ae6b1e22f87a5c2e49aefbc95a97256',1,'opts.h']]],

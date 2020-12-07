@@ -10,6 +10,7 @@ var group__sacn__merge__receiver__cpp =
       [ "Settings", "structsacn_1_1_merge_receiver_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb", null ],
       [ "Settings", "structsacn_1_1_merge_receiver_1_1_settings.html#a83831072af761dc03118f8474d28536f", null ],
       [ "IsValid", "structsacn_1_1_merge_receiver_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed", null ],
+      [ "ip_supported", "structsacn_1_1_merge_receiver_1_1_settings.html#ab619351af6b7a5abcb23e38bdc09e984", null ],
       [ "source_count_max", "structsacn_1_1_merge_receiver_1_1_settings.html#aa56795d5b57bff4910ce11baac4003ba", null ],
       [ "universe_id", "structsacn_1_1_merge_receiver_1_1_settings.html#a7e0de4d0f4e4bbd14771257febdf7248", null ],
       [ "use_pap", "structsacn_1_1_merge_receiver_1_1_settings.html#af4536f740a72ae5788afacd0db91da30", null ]

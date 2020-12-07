@@ -14,6 +14,7 @@ var group__sacn__receiver__cpp =
       [ "Settings", "structsacn_1_1_receiver_1_1_settings.html#a83831072af761dc03118f8474d28536f", null ],
       [ "IsValid", "structsacn_1_1_receiver_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed", null ],
       [ "flags", "structsacn_1_1_receiver_1_1_settings.html#ac92588540e8c1d014a08cd8a45462b19", null ],
+      [ "ip_supported", "structsacn_1_1_receiver_1_1_settings.html#ab619351af6b7a5abcb23e38bdc09e984", null ],
       [ "source_count_max", "structsacn_1_1_receiver_1_1_settings.html#aa56795d5b57bff4910ce11baac4003ba", null ],
       [ "universe_id", "structsacn_1_1_receiver_1_1_settings.html#a7e0de4d0f4e4bbd14771257febdf7248", null ]
     ] ],
