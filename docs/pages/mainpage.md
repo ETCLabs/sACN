@@ -13,8 +13,7 @@ right into the documentation, check out the [Modules Overview](\ref sACN).
 ## Standard Revision
 
 The sACN library currently implements ANSI E1.31-2018. E1.31-2016 adds synchronization and universe
-discovery features to sACN. E1.31-2018 adds IPv6 support (and a requirement for sACN sources to
-support IPv6).
+discovery features to sACN. E1.31-2018 adds IPv6 support.
 
 ## Platforms
 
