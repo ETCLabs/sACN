@@ -100,8 +100,9 @@ public:
     Settings() = default;
 
     /** Initializes merger settings with the slots output pointer. This constructor is not marked explicit on purpose so
-        that a Settings instance can be implicitly constructed from a slots output pointer, in case that's all the
-        application needs. */
+        that a Settings instance can be implicitly constructed from a slots output pointer, if that's all the
+        application needs.
+     */
     Settings(uint8_t* slots_ptr);
 
     bool IsValid() const;
