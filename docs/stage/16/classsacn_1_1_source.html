@@ -272,7 +272,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a22cf560eca13a3cbc4c8384bad438897"><td class="mdescLeft">&#160;</td><td class="mdescRight">Immediately sends the provided sACN start code &amp; data.  <a href="#a22cf560eca13a3cbc4c8384bad438897">More...</a><br /></td></tr>
 <tr class="separator:a22cf560eca13a3cbc4c8384bad438897"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aecaeb4e484f6b34e839b705a1395765f"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f">SendSynchronization</a> (uint16_t universe)</td></tr>
-<tr class="memdesc:aecaeb4e484f6b34e839b705a1395765f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Immediately sends a synchronization packet for the universe on a source.  <a href="#aecaeb4e484f6b34e839b705a1395765f">More...</a><br /></td></tr>
+<tr class="memdesc:aecaeb4e484f6b34e839b705a1395765f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicate that a new synchronization packet should be sent on the given synchronization universe.  <a href="#aecaeb4e484f6b34e839b705a1395765f">More...</a><br /></td></tr>
 <tr class="separator:aecaeb4e484f6b34e839b705a1395765f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac162298618ea8824476cbe33cb95c047"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047">UpdateValues</a> (uint16_t universe, const uint8_t *new_values, size_t new_values_size)</td></tr>
 <tr class="memdesc:ac162298618ea8824476cbe33cb95c047"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies the universe's dmx values into the packet to be sent on the next call to ProcessAll()  <a href="#ac162298618ea8824476cbe33cb95c047">More...</a><br /></td></tr>
@@ -1013,7 +1013,7 @@ used to generate live output."</p>
           <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a> SendSynchronization </td>
           <td>(</td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>universe</em></td><td>)</td>
+          <td class="paramname"><em>sync_universe</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1024,12 +1024,12 @@ used to generate live output."</p>
 </table>
 </div><div class="memdoc">
 
-<p>Immediately sends a synchronization packet for the universe on a source. </p>
-<p>This will cause an immediate transmission of a synchronization packet for the source/universe. If the universe does not have a synchronization universe configured, this call is ignored.</p>
-<p>TODO: At this time, synchronization is not supported by this library.</p>
+<p>Indicate that a new synchronization packet should be sent on the given synchronization universe. </p>
+<p>This will cause the transmission of a synchronization packet for the source on the given synchronization universe.</p>
+<p>TODO: At this time, synchronization is not supported by this library, so this function is not implemented.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to send on. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sync_universe</td><td>The synchronization universe to send on. </td></tr>
   </table>
   </dd>
 </dl>
