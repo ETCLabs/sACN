@@ -168,7 +168,7 @@ private:
   class TranslatedUniverseConfig
   {
   public:
-    TranslatedUniverseConfig(const UniverseSettings& settings);
+    explicit TranslatedUniverseConfig(const UniverseSettings& settings);
     const SacnSourceUniverseConfig& get() noexcept;
 
   private:
