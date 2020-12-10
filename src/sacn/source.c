@@ -335,15 +335,14 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
 }
 
 /**
- * @brief Immediately sends a synchronization packet for the universe on a source.
+ * @brief Indicate that a new synchronization packet should be sent on the given synchronization universe.
  *
- * This will cause an immediate transmission of a synchronization packet for the source/universe.
- * If the universe does not have a synchronization universe configured, this call is ignored.
+ * This will cause the transmission of a synchronization packet for the source on the given synchronization universe.
  *
- * TODO: At this time, synchronization is not supported by this library.
+ * TODO: At this time, synchronization is not supported by this library, so this function is not implemented.
  *
  * @param[in] handle Handle to the source.
- * @param[in] universe Universe to send on.
+ * @param[in] sync_universe The synchronization universe to send on.
  * @return #kEtcPalErrOk: Message successfully sent.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -351,12 +350,12 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
  *                              source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t universe)
+etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t sync_universe)
 {
   // TODO
 
   ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(sync_universe);
   return kEtcPalErrNotImpl;
 }
 
