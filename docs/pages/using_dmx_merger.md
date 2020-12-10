@@ -186,41 +186,6 @@ for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
 ```
 <!-- CODE_BLOCK_END -->
 
-## Removing Per-Address Priority
-
-A source may stop sending per-address priorities at any time. When this happens, the merger should
-reset the priorities for that source to the universe priority and update the merge results
-accordingly. This can be done by calling the stop source per-address priority function.
-
-The following example illustrates how this is used from the receiver API's PAP Lost callback:
-
-<!-- CODE_BLOCK_START -->
-```c
-void my_source_pap_lost_callback(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source, 
-                                 void* context)
-{
-  // Check handle and/or context as necessary...
-
-  sacn_dmx_merger_t merger_handle;
-  // Look up merger_handle based on universe...
-
-  sacn_source_id_t source_handle;
-  // Look up source_handle based on CID...
-
-  sacn_dmx_merger_stop_source_per_address_priority(merger_handle, source_handle);
-}
-```
-<!-- CODE_BLOCK_MID -->
-```cpp
-void MyNotifyHandler::HandleSourcePapLost(uint16_t universe, const SacnRemoteSource& source)
-{
-  // mergers_ is the application's map between universes and merger objects
-  // source_handles_ is the application's map between CIDs and source handles
-  mergers_[universe].StopSourcePerAddressPriority(source_handles_[source.cid]);
-}
-```
-<!-- CODE_BLOCK_END -->
-
 ## Accessing Source Information
 
 Each merger provides read-only access to the state of each of its sources, which can be obtained
