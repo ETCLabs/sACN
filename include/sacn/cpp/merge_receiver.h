@@ -152,6 +152,10 @@ public:
 
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
+
+    /** Instantiates merge receiver settings based on a universe ID. This constructor is not marked explicit on purpose
+        so that a Settings instance can be implicitly constructed from a universe number.
+     */
     Settings(uint16_t new_universe_id);
 
     bool IsValid() const;
