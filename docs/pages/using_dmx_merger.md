@@ -125,6 +125,13 @@ per-address priority 0 indicates that there is no level at this slot at all, whe
 priority 0 simply indicates the lowest priority. If Source B had a per-address priority of 1, then
 Source B would win no matter what the levels were.
 
+The merger may output per-address priorities if configured to do so by initializing
+per_address_priorities in the merger config/settings. If a universe priority of 1 or above wins a
+slot, the merger will output the same value for the per-address priority for that slot. However, if
+a universe priority of 0 wins a slot, the merger will output a per-address priority of 1 for that
+slot. If a per-address priority wins, that same value is used for the per-address priority output.
+The merger only outputs a per-address priority of 0 if there is no winner for that slot.
+
 Also keep in mind that if less than 512 per-address priorities are inputted, then the remaining
 slots will be treated as if they had a per-address priority of 0.
 
