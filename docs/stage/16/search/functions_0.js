@@ -12,6 +12,6 @@ var searchData=
   ['acn_5froot_5flayer_5fbuf_5fsize',['acn_root_layer_buf_size',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__acn__rlp.html#ga76d83773df9894ecbaf8b505647c32e5',1,]]],
   ['addsource',['AddSource',['../classsacn_1_1_dmx_merger.html#ad5624a399f15ee212a97a6e2701efd02',1,'sacn::DmxMerger']]],
   ['addunicastdestination',['AddUnicastDestination',['../classsacn_1_1_source.html#a5d7f1f26d1a6f5dbffca60dd08ac0454',1,'sacn::Source']]],
-  ['adduniverse',['AddUniverse',['../classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e',1,'sacn::Source']]],
+  ['adduniverse',['AddUniverse',['../classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e',1,'sacn::Source::AddUniverse(const UniverseSettings &amp;settings)'],['../classsacn_1_1_source.html#acde56409812c209c488836f19cf53662',1,'sacn::Source::AddUniverse(const UniverseSettings &amp;settings, std::vector&lt; SacnMcastInterface &gt; &amp;netints)']]],
   ['alert',['Alert',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#a830c42c8d3d96a385510ae78142831e8',1,'etcpal::Logger::Alert(const char *format,...)'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#a830c42c8d3d96a385510ae78142831e8',1,'etcpal::Logger::Alert(const char *format,...)']]]
 ];
