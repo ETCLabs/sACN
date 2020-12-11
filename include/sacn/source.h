@@ -65,6 +65,9 @@ typedef int sacn_source_t;
  */
 #define SACN_SOURCE_INFINITE_UNIVERSES 0
 
+/** The default keep-alive interval for sources, in milliseconds. */
+#define SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT 800
+
 /** A set of configuration information for a sACN source. */
 typedef struct SacnSourceConfig
 {
@@ -78,7 +81,7 @@ typedef struct SacnSourceConfig
   /********* Optional values **********/
 
   /** The maximum number of universes this source will send to.  May be #SACN_SOURCE_INFINITE_UNIVERSES.
-      This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES is used instead.*/
+      This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES is used instead. */
   size_t universe_count_max;
 
   /** If false (default), this source will be added to a background thread that will send sACN updates at a
@@ -88,12 +91,17 @@ typedef struct SacnSourceConfig
 
   /** What IP networking the source will support.  The default is #kSacnIpV4AndIpV6. */
   sacn_ip_support_t ip_supported;
+
+  /** The interval at which the source will send keep-alive packets during transmission suppression, in milliseconds.
+      The default is #SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT. */
+  int keep_alive_interval;
 } SacnSourceConfig;
 
 /** A default-value initializer for an SacnSourceConfig struct. */
-#define SACN_SOURCE_CONFIG_DEFAULT_INIT                                            \
-  {                                                                                \
-    kEtcPalNullUuid, NULL, SACN_SOURCE_INFINITE_UNIVERSES, false, kSacnIpV4AndIpV6 \
+#define SACN_SOURCE_CONFIG_DEFAULT_INIT                                             \
+  {                                                                                 \
+    kEtcPalNullUuid, NULL, SACN_SOURCE_INFINITE_UNIVERSES, false, kSacnIpV4AndIpV6, \
+        SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT                                     \
   }
 
 void sacn_source_config_init(SacnSourceConfig* config);

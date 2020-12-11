@@ -72,13 +72,17 @@ public:
     /** The maximum number of universes this source will send to when using dynamic memory. */
     size_t universe_count_max{SACN_SOURCE_INFINITE_UNIVERSES};
 
-  /** If false (default), this source will be added to a background thread that will send sACN updates at a
-      maximum rate of every 23 ms. If true, the source will not be added to the thread and the application
-      must call ProcessManual() at its maximum DMX rate, typically 23 ms. */
+    /** If false (default), this source will be added to a background thread that will send sACN updates at a
+        maximum rate of every 23 ms. If true, the source will not be added to the thread and the application
+        must call ProcessManual() at its maximum DMX rate, typically 23 ms. */
     bool manually_process_source{false};
 
     /** What IP networking the source will support. */
     sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6};
+
+    /** The interval at which the source will send keep-alive packets during transmission suppression, in milliseconds.
+     */
+    int keep_alive_interval{SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT};
 
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
@@ -204,8 +208,7 @@ inline bool Source::Settings::IsValid() const
  *
  * Optional members can be modified directly in the struct.
  */
-inline Source::UniverseSettings::UniverseSettings(uint16_t universe_id)
-    : universe(universe_id)
+inline Source::UniverseSettings::UniverseSettings(uint16_t universe_id) : universe(universe_id)
 {
 }
 
@@ -220,7 +223,8 @@ inline bool Source::UniverseSettings::IsValid() const
 /**
  * @brief Create a new sACN source to send sACN data.
  *
- * This creates the instance of the source, but no data is sent until AddUniverse() and a variant of UpdateValues() is called.
+ * This creates the instance of the source, but no data is sent until AddUniverse() and a variant of UpdateValues() is
+ * called.
  *
  * @param[in] settings Configuration parameters for the sACN source to be created.
  * @return #kEtcPalErrOk: Source successfully created.
@@ -498,8 +502,8 @@ inline etcpal::Error Source::SendSynchronization(uint16_t sync_universe)
  * the version of UpdateValues() that takes a per-address priority buffer.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values
- * will be used.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
+ * values will be used.
  * @param[in] new_values_size Size of new_values.
  */
 inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size)
@@ -521,8 +525,8 @@ inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, s
  * "release control" of the corresponding DMX values.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values
- * will be used.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
+ * values will be used.
  * @param[in] new_values_size Size of new_values.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
  * per-address priorities or want to stop using per-address priorities.
@@ -547,8 +551,8 @@ inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, s
  * TODO: At this time, synchronization is not supported by this library.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values
- * will be used.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
+ * values will be used.
  * @param[in] new_values_size Size of new_values.
  */
 inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size)
@@ -575,15 +579,15 @@ inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* n
  * TODO: At this time, synchronization is not supported by this library.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512 values
- * will be used.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
+ * values will be used.
  * @param[in] new_values_size Size of new_values.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
  * per-address priorities or want to stop using per-address priorities.
  * @param[in] new_priorities_size Size of new_priorities.
  */
 inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size,
-                                                      const uint8_t* new_priorities, size_t new_priorities_size)
+                                             const uint8_t* new_priorities, size_t new_priorities_size)
 {
   sacn_source_update_values_and_pap_and_force_sync(handle_, universe, new_values, new_values_size, new_priorities,
                                                    new_priorities_size);
@@ -690,7 +694,8 @@ inline SacnSourceConfig Source::TranslateConfig(const Settings& settings)
     settings.name.c_str(),
     settings.universe_count_max,
     settings.manually_process_source,
-    settings.ip_supported
+    settings.ip_supported,
+    settings.keep_alive_interval
   };
   // clang-format on
 
