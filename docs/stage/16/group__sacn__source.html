@@ -222,6 +222,8 @@ Macros</h2></td></tr>
 <tr class="memitem:ga1ac5056bc752c32ca80c08b9839a142d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d">SACN_SOURCE_INFINITE_UNIVERSES</a>&#160;&#160;&#160;0</td></tr>
 <tr class="memdesc:ga1ac5056bc752c32ca80c08b9839a142d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constant for "infinite" when sending sACN universes.  <a href="#ga1ac5056bc752c32ca80c08b9839a142d">More...</a><br /></td></tr>
 <tr class="separator:ga1ac5056bc752c32ca80c08b9839a142d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab3c248f42fcdeccba28617fd2612ce71"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#gab3c248f42fcdeccba28617fd2612ce71">SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT</a>&#160;&#160;&#160;800</td></tr>
+<tr class="separator:gab3c248f42fcdeccba28617fd2612ce71"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga1fc88ea9a51c4a935ec87630a0b177f1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga1fc88ea9a51c4a935ec87630a0b177f1">SACN_SOURCE_CONFIG_DEFAULT_INIT</a></td></tr>
 <tr class="separator:ga1fc88ea9a51c4a935ec87630a0b177f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga20483046bfb90da7c9bf089fc0229a6b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga20483046bfb90da7c9bf089fc0229a6b">SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT</a></td></tr>
@@ -315,7 +317,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">{                                                                                \</div><div class="line">    kEtcPalNullUuid, NULL, <a class="code" href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d">SACN_SOURCE_INFINITE_UNIVERSES</a>, <span class="keyword">false</span>, kSacnIpV4AndIpV6 \</div><div class="line">  }</div><div class="ttc" id="group__sacn__source_html_ga1ac5056bc752c32ca80c08b9839a142d"><div class="ttname"><a href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d">SACN_SOURCE_INFINITE_UNIVERSES</a></div><div class="ttdeci">#define SACN_SOURCE_INFINITE_UNIVERSES</div><div class="ttdoc">Constant for &quot;infinite&quot; when sending sACN universes. </div><div class="ttdef"><b>Definition:</b> source.h:66</div></div>
+<b>Value:</b><div class="fragment"><div class="line">{                                                                                 \</div><div class="line">    kEtcPalNullUuid, NULL, <a class="code" href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d">SACN_SOURCE_INFINITE_UNIVERSES</a>, <span class="keyword">false</span>, kSacnIpV4AndIpV6, \</div><div class="line">        SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT                                     \</div><div class="line">  }</div><div class="ttc" id="group__sacn__source_html_ga1ac5056bc752c32ca80c08b9839a142d"><div class="ttname"><a href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d">SACN_SOURCE_INFINITE_UNIVERSES</a></div><div class="ttdeci">#define SACN_SOURCE_INFINITE_UNIVERSES</div><div class="ttdoc">Constant for &quot;infinite&quot; when sending sACN universes. </div><div class="ttdef"><b>Definition:</b> source.h:66</div></div>
 </div><!-- fragment --><p>A default-value initializer for an <a class="el" href="struct_sacn_source_config.html">SacnSourceConfig</a> struct. </p>
 
 </div>
@@ -349,6 +351,21 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>An invalid sACN source handle value. </p>
+
+</div>
+</div>
+<a id="gab3c248f42fcdeccba28617fd2612ce71"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab3c248f42fcdeccba28617fd2612ce71">&#9670;&nbsp;</a></span>SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT&#160;&#160;&#160;800</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The default keep-alive interval for sources, in milliseconds. </p>
 
 </div>
 </div>

@@ -40,7 +40,7 @@ var NAVTREEINDEX =
 [
 "additional_documentation.html",
 "group__sacn__merge__receiver__cpp.html",
-"struct_sacn_mcast_interface.html#ad3c8d08020c8929474f76beaf32d2c13"
+"struct_sacn_mcast_interface.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
