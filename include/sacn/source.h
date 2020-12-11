@@ -138,13 +138,13 @@ typedef struct SacnSourceUniverseConfig
 
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config);
 
-etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle, SacnMcastInterface* netints,
-                                  size_t num_netints);
+etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle);
 void sacn_source_destroy(sacn_source_t handle);
 
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name);
 
-etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config);
+etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config,
+                                        SacnMcastInterface* netints, size_t num_netints);
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe);
 
 etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest);
@@ -172,7 +172,8 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 
 int sacn_source_process_manual(void);
 
-etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, SacnMcastInterface* netints, size_t num_netints);
+etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
+                                            size_t num_netints);
 
 #ifdef __cplusplus
 }

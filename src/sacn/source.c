@@ -73,31 +73,20 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
  * This creates the instance of the source, but no data is sent until sacn_source_add_universe() and
  * either sacn_source_update_values() or sacn_source_update_values_and_pap() are called.
  *
- * Note that a source is considered as successfully created if it is able to successfully use any of the
- * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
- *
  * @param[in] config Configuration parameters for the sACN source to be created.
  * @param[out] handle Filled in on success with a handle to the sACN source.
- * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and
- * the operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
- * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Source successfully created.
- * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNoMem: No room to allocate an additional source.
- * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle, SacnMcastInterface* netints,
-                                  size_t num_netints)
+etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle)
 {
   // If the Tick thread hasn't been started yet, start it if the config isn't manual.
 
   ETCPAL_UNUSED_ARG(config);
   ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(num_netints);
   return kEtcPalErrNotImpl;
 }
 
@@ -149,21 +138,32 @@ void sacn_source_destroy(sacn_source_t handle)
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
  * Discovery packets.
-
+ *
+ * Note that a universe is considered as successfully added if it is able to successfully use any of the
+ * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
  * @param[in] handle Handle to the source to which to add a universe.
  * @param[in] config Configuration parameters for the universe to be added.
+ * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and
+ * the operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Universe successfully added.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrExists: Universe given was already added to this source.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or a network interface ID given was not
+ * found on the system.
  * @return #kEtcPalErrNoMem: No room to allocate additional universe.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config)
+etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config,
+                                        SacnMcastInterface* netints, size_t num_netints)
 {
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(config);
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(num_netints);
   return kEtcPalErrNotImpl;
 }
 
@@ -508,12 +508,12 @@ int sacn_source_process_manual(void)
 }
 
 /**
- * @brief Resets the underlying network sockets for the sACN source.
+ * @brief Resets the underlying network sockets for a universe.
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, all universes on a source are considered to be updated and have
- * new values and priorities. It's as if the source just started sending values on that universe.
+ * After this call completes successfully, the universe is considered to be updated and have new values and priorities.
+ * It's as if the source just started sending values on that universe.
  *
  * If this call fails, the caller must call sacn_source_destroy(), because the source may be in an
  * invalid state.
@@ -522,6 +522,7 @@ int sacn_source_process_manual(void)
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] handle Handle to the source for which to reset the networking.
+ * @param[in] universe Universe to reset netowrk interfaces for.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
  * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
@@ -529,12 +530,15 @@ int sacn_source_process_manual(void)
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or a network interface ID given was not
+ * found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, SacnMcastInterface* netints, size_t num_netints)
+etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
+                                            size_t num_netints)
 {
   ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
 

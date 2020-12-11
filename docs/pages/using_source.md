@@ -14,11 +14,10 @@ The sACN library must be globally initialized before using the Source API. See
 A source must first be created before it can be used to transmit sACN data. Each source has a name
 and a CID. These are specified in the source's configuration structure, along with other optional
 settings. Once the source's configuration is initialized, it can simply be passed into the source
-Create/Startup function. In this function, you can also specify specific network interfaces for the
-source to use. You can also indicate that all network interfaces should be used. If the source
-Create/Startup function succeeds, that source's functionality will become available. In C, this is
-accessed with a source handle, whereas in C++ it's accessed through a Source object. A source can
-later be destroyed using the source Destroy/Shutdown function.
+Create/Startup function. If the source Create/Startup function succeeds, that source's
+functionality will become available. In C, this is accessed with a source handle, whereas in C++
+it's accessed through a Source object. A source can later be destroyed using the source Destroy
+Shutdown function.
 
 <!-- CODE_BLOCK_START -->
 ```c
@@ -30,15 +29,8 @@ SacnSourceConfig my_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
 my_config.cid = my_cid;
 my_config.name = my_name;
 
-SacnMcastInterface my_netints[NUM_MY_NETINTS];
-// Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
-
 sacn_source_t my_handle;
-
-// If you want to specify specific network interfaces to use:
-sacn_source_create(&my_config, &my_handle, my_netints, NUM_MY_NETINTS);
-// Or, if you just want to use all network interfaces:
-sacn_source_create(&my_config, &my_handle, NULL, 0);
+sacn_source_create(&my_config, &my_handle);
 
 // To destroy the source when you're done with it:
 sacn_source_destroy(my_handle);
@@ -51,14 +43,7 @@ std::string my_name;
 
 sacn::Source::Settings my_config(my_cid, my_name);
 
-std::vector<SacnMcastInterface> my_netints;
-// Assuming my_netints is initialized by the application...
-
 sacn::Source my_source;
-
-// If you want to specify specific network interfaces to use:
-my_source.Startup(my_config, my_netints);
-// Or, if you just want to use all network interfaces:
 my_source.Startup(my_config);
 
 // To destroy the source when you're done with it:
@@ -74,10 +59,10 @@ organization of DMX traffic.
 
 A source can transmit on one or more universes. Each universe has a configuration, which includes
 the universe number, values buffer, and optionally the per-address priority buffer, in addition to
-other optional settings. The buffers you pass into the configuration contain the data you want to
-send for those start codes (0x00 for values, 0xDD for PAP). Once you create this configuration, you
-can simply pass it into the Add Universe function. When you're done transmitting on that universe,
-you can call the Remove Universe function.
+other optional settings. Once you create this configuration, you can simply pass it into the Add
+Universe function. In this function, you can also specify specific network interfaces for the
+source to use for this universe. You can also indicate that all network interfaces should be used.
+When you're done transmitting on that universe, you can call the Remove Universe function.
 
 Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
 library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0.
@@ -89,7 +74,13 @@ uint16_t my_universe = 1;  // Using universe 1 as an example.
 SacnSourceUniverseConfig my_universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
 my_universe_config.universe = my_universe;
 
-sacn_source_add_universe(my_handle, &my_universe_config);
+SacnMcastInterface my_netints[NUM_MY_NETINTS];
+// Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
+
+// If you want to specify specific network interfaces to use:
+sacn_source_add_universe(my_handle, &my_universe_config, my_netints, NUM_MY_NETINTS);
+// Or, if you just want to use all network interfaces:
+sacn_source_add_universe(my_handle, &my_universe_config, NULL, 0);
 // You can add additional universes as well, in the same way.
 
 // To remove a universe from your source when you're done transmitting on it:
@@ -101,6 +92,12 @@ uint16_t my_universe = 1;  // Using universe 1 as an example.
 
 sacn::Source::UniverseSettings my_universe_config(my_universe);
 
+std::vector<SacnMcastInterface> my_netints;
+// Assuming my_netints is initialized by the application...
+
+// If you want to specify specific network interfaces to use:
+my_source.AddUniverse(my_universe_config, my_netints);
+// Or, if you just want to use all network interfaces:
 my_source.AddUniverse(my_universe_config);
 // You can add additional universes as well, in the same way.
 
@@ -127,7 +124,7 @@ uint8_t my_priorities_buffer[DMX_ADDRESS_COUNT];
 // Now copy in the new values to send. Then the source thread will handle transmitting the 
 // data (unless you set manually_process_source to true in the SacnSourceConfig).
 sacn_source_update_values(my_handle, my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
-//or if you're using per-address priorities:
+// Or if you're using per-address priorities:
 sacn_source_update_values_and_pap(my_handle, my_universe, my_values_buffer, DMX_ADDRESS_COUNT, my_priorities_buffer, DMX_ADDRESS_COUNT);
 ```
 <!-- CODE_BLOCK_MID -->
@@ -139,7 +136,7 @@ uint8_t my_priorities_buffer[DMX_ADDRESS_COUNT];
 // Now copy in the new values to send. Then the source thread will handle transmitting the 
 // data (unless you set manually_process_source to true in the Source::Settings).
 my_source.UpdateValues(my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
-//or if you're using per-address priorities:
+// Or if you're using per-address priorities:
 my_source.UpdateValues(my_universe, my_values_buffer, DMX_ADDRESS_COUNT, my_priorities_buffer, DMX_ADDRESS_COUNT);
 ```
 <!-- CODE_BLOCK_END -->
