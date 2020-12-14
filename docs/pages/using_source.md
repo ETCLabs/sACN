@@ -106,6 +106,27 @@ my_source.RemoveUniverse(my_universe);
 ```
 <!-- CODE_BLOCK_END -->
 
+The application can also obtain the list of universes that a source is currently transmitting on:
+
+<!-- CODE_BLOCK_START -->
+```c
+uint16_t *universes;  // This points to an array with UNIVERSES_SIZE (perhaps SACN_SOURCE_MAX_UNIVERSES) elements.
+size_t num_universes = sacn_source_get_universes(handle_, universes, UNIVERSES_SIZE);
+if(num_universes > UNIVERSES_SIZE)
+{
+  // Not all of the universes were written to the array. The application should allocate a larger array and try again.
+}
+else
+{
+  // The first num_universes elements of the universes array represent the complete list of universes.
+}
+```
+<!-- CODE_BLOCK_MID -->
+```cpp
+std::vector<uint16_t> universes = my_source.GetUniverses();
+```
+<!-- CODE_BLOCK_END -->
+
 ## Update Values 
 
 At this point, once you have the desired data in your configured buffer(s), you can use the Update

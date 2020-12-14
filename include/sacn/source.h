@@ -154,6 +154,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
 etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config,
                                         SacnMcastInterface* netints, size_t num_netints);
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe);
+size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size_t universes_size);
 
 etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest);
 void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest);
