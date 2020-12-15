@@ -232,6 +232,21 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
 }
 
 /**
+ * @brief Obtain a list of unicast destinations this source is transmitting on.
+ *
+ * @param[in] handle Handle to the source for which to obtain the list of unicast destinations.
+ * @param[out] destinations A pointer to an application-owned array where the unicast destination list will be written.
+ * @param[in] destinations_size The size of the provided destinations array.
+ * @return The total number of unicast destinations being transmitted by the source. If this is greater than
+ * destinations_size, then only destinations_size addresses were written to the destinations array. If the source was
+ * not found, 0 is returned.
+ */
+size_t sacn_source_get_unicast_destinations(sacn_source_t handle, EtcPalIpAddr* destinations, size_t destinations_size)
+{
+  return 0;  // TODO
+}
+
+/**
  * @brief Change the priority of a universe on a sACN source.
  *
  * @param[in] handle Handle to the source for which to set the priority.
