@@ -258,6 +258,21 @@ etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle
 }
 
 /**
+ * @brief Obtain the statuses of a merge receiver's network interfaces.
+ *
+ * @param[in] handle Handle to the merge receiver for which to obtain the list of network interfaces.
+ * @param[out] netints A pointer to an application-owned array where the network interface list will be written.
+ * @param[in] netints_size The size of the provided netints array.
+ * @return The total number of network interfaces for the merge receiver. If this is greater than netints_size, then
+ * only netints_size addresses were written to the netints array. If the merge receiver was not found, 0 is returned.
+ */
+size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, SacnMcastInterface* netints,
+                                                  size_t netints_size)
+{
+  return 0;  // TODO
+}
+
+/**
  * @brief Converts a source CID to the corresponding source ID, or #SACN_DMX_MERGER_SOURCE_INVALID if not found.
  *
  * This is a simple conversion from a source CID to it's corresponding source ID. A source ID will be returned only if

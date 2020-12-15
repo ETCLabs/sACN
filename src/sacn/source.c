@@ -544,3 +544,19 @@ etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t unive
 
   return kEtcPalErrNotImpl;
 }
+
+/**
+ * @brief Obtain the statuses of a universe's network interfaces.
+ *
+ * @param[in] handle Handle to the source that includes the universe.
+ * @param[in] universe The universe for which to obtain the list of network interfaces.
+ * @param[out] netints A pointer to an application-owned array where the network interface list will be written.
+ * @param[in] netints_size The size of the provided netints array.
+ * @return The total number of network interfaces for the universe. If this is greater than netints_size, then only
+ * netints_size addresses were written to the netints array. If the source or universe were not found, 0 is returned.
+ */
+size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
+                                          size_t netints_size)
+{
+  return 0;  // TODO
+}

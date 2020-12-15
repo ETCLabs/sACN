@@ -217,6 +217,7 @@ public:
   void Shutdown();
   etcpal::Error ResetNetworking();
   etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
+  std::vector<SacnMcastInterface> GetNetworkInterfaces();
 
   constexpr Handle handle() const;
 
@@ -442,6 +443,29 @@ inline etcpal::Error SourceDetector::ResetNetworking(std::vector<SacnMcastInterf
     return sacn_source_detector_reset_networking(handle_, nullptr, 0);
   else
     return sacn_source_detector_reset_networking(handle_, netints.data(), netints.size());
+}
+
+/**
+ * @brief Obtain the statuses of this source detector's network interfaces.
+ *
+ * @return A vector of this source detector's network interfaces and their statuses.
+ */
+inline std::vector<SacnMcastInterface> SourceDetector::GetNetworkInterfaces()
+{
+  // This uses a guessing algorithm with a while loop to avoid race conditions.
+  std::vector<SacnMcastInterface> netints;
+  size_t size_guess = 4u;
+  size_t num_netints = 0u;
+
+  do
+  {
+    netints.resize(size_guess);
+    num_netints = sacn_source_detector_get_network_interfaces(handle_, netints.data(), netints.size());
+    size_guess = num_netints + 4u;
+  } while (num_netints > netints.size());
+
+  netints.resize(num_netints);
+  return netints;
 }
 
 /**
