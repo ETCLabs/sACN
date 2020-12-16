@@ -111,10 +111,11 @@ typedef struct SacnMcastInterface
    * The multicast interface to use.
    */
   EtcPalMcastNetintId iface;
+
   /**
-   * Whether or not the multicast interface was useable.
+   * The status of the multicast interface. The interface is only usable if the status is #kEtcPalErrOk.
    */
-  bool operation_succeeded;
+  etcpal_error_t status;
 } SacnMcastInterface;
 
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params);

@@ -145,7 +145,7 @@ void sacn_source_destroy(sacn_source_t handle)
  * @param[in] handle Handle to the source to which to add a universe.
  * @param[in] config Configuration parameters for the universe to be added.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and
- * the operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * the status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Universe successfully added.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -524,7 +524,7 @@ int sacn_source_process_manual(void)
  * @param[in] handle Handle to the source for which to reset the networking.
  * @param[in] universe Universe to reset netowrk interfaces for.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Source changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.

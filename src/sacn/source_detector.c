@@ -99,7 +99,7 @@ void sacn_source_detector_config_init(SacnSourceDetectorConfig* config)
  * @param[in] config Configuration parameters for the sACN source detector to be created.
  * @param[out] handle Filled in on success with a handle to the detector.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Detector created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -150,7 +150,7 @@ void sacn_source_detector_destroy(sacn_source_detector_t handle)
  *
  * @param[in] handle Handle to the detector for which to reset the networking.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Network changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.

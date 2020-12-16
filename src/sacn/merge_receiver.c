@@ -143,7 +143,7 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
  * @param[in] config Configuration parameters for the sACN Merge Receiver to be created.
  * @param[out] handle Filled in on success with a handle to the sACN Merge Receiver.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Merge Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -239,7 +239,7 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
  *
  * @param[in] handle Handle to the merge receiver for which to reset the networking.
  * @param[in,out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Network reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
