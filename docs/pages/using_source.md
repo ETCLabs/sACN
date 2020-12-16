@@ -180,6 +180,29 @@ my_source.RemoveUnicastDestination(my_universe, custom_destination);
 The starting set of unicast destinations can also be specified with the universe configuration's
 optional unicast_destinations setting.
 
+The application can also obtain the list of unicast destinations that a source is currently
+transmitting on:
+
+<!-- CODE_BLOCK_START -->
+```c
+EtcPalIpAddr *unicast_dests;  // Points to an array with DESTS_SIZE (perhaps SACN_MAX_UNICAST_DESTINATIONS) elements.
+size_t num_dests = sacn_source_get_unicast_destinations(handle_, unicast_dests, DESTS_SIZE);
+if(num_dests > DESTS_SIZE)
+{
+  // Not all of the destinations were written to the array. The application should allocate a larger array & try again.
+}
+else
+{
+  // The first num_dests elements of the unicast_dests array represent the complete list of unicast destinations.
+}
+```
+<!-- CODE_BLOCK_MID -->
+```cpp
+std::vector<etcpal::IpAddr> unicast_dests = my_source.GetUnicastDestinations();
+```
+<!-- CODE_BLOCK_END -->
+
+
 ## Custom Start Codes
 
 The buffers in the universe configuration only allow you to send start code 0x00 (NULL) and 0xDD
