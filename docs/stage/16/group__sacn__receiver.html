@@ -293,6 +293,9 @@ Functions</h2></td></tr>
 <tr class="memitem:gab51edc90f392363d88c4777e09de840b"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#gab51edc90f392363d88c4777e09de840b">sacn_receiver_reset_networking</a> (<a class="el" href="group__sacn__receiver.html#gafc1e3c92911f567bed81bbd04f3f34f6">sacn_receiver_t</a> handle, <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *netints, size_t num_netints)</td></tr>
 <tr class="memdesc:gab51edc90f392363d88c4777e09de840b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets and packet receipt state for the sACN receiver..  <a href="#gab51edc90f392363d88c4777e09de840b">More...</a><br /></td></tr>
 <tr class="separator:gab51edc90f392363d88c4777e09de840b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga44139d6ad5b61268f2db2a089caf02d7"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#ga44139d6ad5b61268f2db2a089caf02d7">sacn_receiver_get_network_interfaces</a> (<a class="el" href="group__sacn__receiver.html#gafc1e3c92911f567bed81bbd04f3f34f6">sacn_receiver_t</a> handle, <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *netints, size_t netints_size)</td></tr>
+<tr class="memdesc:ga44139d6ad5b61268f2db2a089caf02d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain the statuses of a receiver's network interfaces.  <a href="#ga44139d6ad5b61268f2db2a089caf02d7">More...</a><br /></td></tr>
+<tr class="separator:ga44139d6ad5b61268f2db2a089caf02d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4cb36b56dd22b9122f491182a7315e8c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#ga4cb36b56dd22b9122f491182a7315e8c">sacn_receiver_set_standard_version</a> (<a class="el" href="group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0">sacn_standard_version_t</a> version)</td></tr>
 <tr class="memdesc:ga4cb36b56dd22b9122f491182a7315e8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the current version of the sACN standard to which the module is listening.  <a href="#ga4cb36b56dd22b9122f491182a7315e8c">More...</a><br /></td></tr>
 <tr class="separator:ga4cb36b56dd22b9122f491182a7315e8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -781,7 +784,7 @@ sACN receiver flags</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">config</td><td>Configuration parameters for the sACN receiver to be created. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">handle</td><td>Filled in on success with a handle to the sACN receiver. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If non-NULL, this is the list of interfaces the application wants to use, and the operation_succeeded flags are filled in. If NULL, all available interfaces are tried. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If non-NULL, this is the list of interfaces the application wants to use, and the status codes are filled in. If NULL, all available interfaces are tried. </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">num_netints</td><td>Optional. The size of netints, or 0 if netints is NULL. </td></tr>
   </table>
   </dd>
@@ -856,6 +859,51 @@ sACN receiver flags</h2></td></tr>
 <p>Get the current value of the expired notification wait time. </p>
 <p>The library will wait at least this long after a source loss condition has been encountered before sending a <a class="el" href="group__sacn__receiver.html#ga80326cc324898e1faebe2da1339bd0b3">sources_lost()</a> notification. However, the wait may be longer due to the source loss algorithm (see <a class="el" href="source_loss_behavior.html">Source Loss Behavior</a>).</p>
 <dl class="section return"><dt>Returns</dt><dd>Wait time in milliseconds. </dd></dl>
+
+</div>
+</div>
+<a id="ga44139d6ad5b61268f2db2a089caf02d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga44139d6ad5b61268f2db2a089caf02d7">&#9670;&nbsp;</a></span>sacn_receiver_get_network_interfaces()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t sacn_receiver_get_network_interfaces </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__receiver.html#gafc1e3c92911f567bed81bbd04f3f34f6">sacn_receiver_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *&#160;</td>
+          <td class="paramname"><em>netints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>netints_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Obtain the statuses of a receiver's network interfaces. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the receiver for which to obtain the list of network interfaces. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">netints</td><td>A pointer to an application-owned array where the network interface list will be written. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">netints_size</td><td>The size of the provided netints array. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The total number of network interfaces for the receiver. If this is greater than netints_size, then only netints_size addresses were written to the netints array. If the receiver was not found, 0 is returned. </dd></dl>
 
 </div>
 </div>
@@ -965,7 +1013,7 @@ sACN receiver flags</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the receiver for which to reset the networking. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If non-NULL, this is the list of interfaces the application wants to use, and the operation_succeeded flags are filled in. If NULL, all available interfaces are tried. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If non-NULL, this is the list of interfaces the application wants to use, and the status codes are filled in. If NULL, all available interfaces are tried. </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">num_netints</td><td>Optional. The size of netints, or 0 if netints is NULL. </td></tr>
   </table>
   </dd>

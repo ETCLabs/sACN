@@ -256,6 +256,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a26dd2b3b95dbaac498bfc0ba231f42e6"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#a26dd2b3b95dbaac498bfc0ba231f42e6">ResetNetworking</a> (std::vector&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;netints)</td></tr>
 <tr class="memdesc:a26dd2b3b95dbaac498bfc0ba231f42e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets and packet receipt state for this class..  <a href="#a26dd2b3b95dbaac498bfc0ba231f42e6">More...</a><br /></td></tr>
 <tr class="separator:a26dd2b3b95dbaac498bfc0ba231f42e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9cd869d8b5938879aa5b876bacb9b7bc"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#a9cd869d8b5938879aa5b876bacb9b7bc">GetNetworkInterfaces</a> ()</td></tr>
+<tr class="memdesc:a9cd869d8b5938879aa5b876bacb9b7bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain the statuses of this receiver's network interfaces.  <a href="#a9cd869d8b5938879aa5b876bacb9b7bc">More...</a><br /></td></tr>
+<tr class="separator:a9cd869d8b5938879aa5b876bacb9b7bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af5825bc604b5bf0316732a4db412e1f8"><td class="memItemLeft" align="right" valign="top">constexpr <a class="el" href="classsacn_1_1_receiver.html#aa9f5bbfb2d5e01f2239d38c052c1b909">Handle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#af5825bc604b5bf0316732a4db412e1f8">handle</a> () const</td></tr>
 <tr class="memdesc:af5825bc604b5bf0316732a4db412e1f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current handle to the underlying C sacn_receiver.  <a href="#af5825bc604b5bf0316732a4db412e1f8">More...</a><br /></td></tr>
 <tr class="separator:af5825bc604b5bf0316732a4db412e1f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -401,6 +404,34 @@ Static Public Attributes</h2></td></tr>
 <p>Get the current value of the expired notification wait time. </p>
 <p>The library will wait at least this long after a source loss condition has been encountered before calling HandleSourcesLost(). However, the wait may be longer due to the source loss algorithm (see <a class="el" href="source_loss_behavior.html">Source Loss Behavior</a>).</p>
 <dl class="section return"><dt>Returns</dt><dd>Wait time in milliseconds. </dd></dl>
+
+</div>
+</div>
+<a id="a9cd869d8b5938879aa5b876bacb9b7bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9cd869d8b5938879aa5b876bacb9b7bc">&#9670;&nbsp;</a></span>GetNetworkInterfaces()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; GetNetworkInterfaces </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Obtain the statuses of this receiver's network interfaces. </p>
+<dl class="section return"><dt>Returns</dt><dd>A vector of this receiver's network interfaces and their statuses. </dd></dl>
 
 </div>
 </div>
@@ -580,7 +611,7 @@ Static Public Attributes</h2></td></tr>
 <p>Note that the networking reset is considered successful if it is able to successfully use any of the network interfaces passed in. This will only return <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If !empty, this is the list of interfaces the application wants to use, and the operation_succeeded flags are filled in. If empty, all available interfaces are tried and this vector isn't modified. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If empty, all available interfaces are tried and this vector isn't modified. </td></tr>
   </table>
   </dd>
 </dl>
@@ -807,7 +838,7 @@ Static Public Attributes</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">settings</td><td>Configuration parameters for the sACN receiver and this class instance. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">notify_handler</td><td>The notification interface to call back to the application. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If !empty, this is the list of interfaces the application wants to use, and the operation_succeeded flags are filled in. If empty, all available interfaces are tried and this vector isn't modified. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If empty, all available interfaces are tried and this vector isn't modified. </td></tr>
   </table>
   </dd>
 </dl>

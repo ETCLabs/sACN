@@ -17,7 +17,7 @@ var group__s_a_c_n =
     ] ],
     [ "SacnMcastInterface", "struct_sacn_mcast_interface.html", [
       [ "iface", "struct_sacn_mcast_interface.html#a9d398e27f9eb3b1ee3b422225196b684", null ],
-      [ "operation_succeeded", "struct_sacn_mcast_interface.html#ad3c8d08020c8929474f76beaf32d2c13", null ]
+      [ "status", "struct_sacn_mcast_interface.html#a3ed2ca570213574abb27e4d16cab480b", null ]
     ] ],
     [ "DMX_ADDRESS_COUNT", "group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb", null ],
     [ "SACN_SOURCE_NAME_MAX_LEN", "group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8", null ],

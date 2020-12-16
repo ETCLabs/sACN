@@ -25,6 +25,7 @@ var group__sacn__merge__receiver =
     [ "sacn_merge_receiver_config_init", "group__sacn__merge__receiver.html#gab0d6a624f1d44008625335112788eb37", null ],
     [ "sacn_merge_receiver_create", "group__sacn__merge__receiver.html#ga65a9abaa973d15e06a3d7432702d36fc", null ],
     [ "sacn_merge_receiver_destroy", "group__sacn__merge__receiver.html#ga02c0879618435049e7a9bd25dbe58850", null ],
+    [ "sacn_merge_receiver_get_network_interfaces", "group__sacn__merge__receiver.html#ga41ff5370e2f5b4df7b2d6d719c278a28", null ],
     [ "sacn_merge_receiver_get_source_cid", "group__sacn__merge__receiver.html#ga60445acfdd65b2e7fde3f90c25b04b78", null ],
     [ "sacn_merge_receiver_get_source_id", "group__sacn__merge__receiver.html#gac2d683f5c3206876f8ab6c960eb38c12", null ],
     [ "sacn_merge_receiver_get_universe", "group__sacn__merge__receiver.html#ga7345c390c8b94221b481c3cd1ca37de7", null ],

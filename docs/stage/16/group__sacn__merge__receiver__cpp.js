@@ -21,6 +21,7 @@ var group__sacn__merge__receiver__cpp =
       [ "MergeReceiver", "classsacn_1_1_merge_receiver.html#ad3e150350cbde08d2a6cd57573e9ae89", null ],
       [ "MergeReceiver", "classsacn_1_1_merge_receiver.html#acd894017c62b549662194bd84a9f4a15", null ],
       [ "ChangeUniverse", "classsacn_1_1_merge_receiver.html#aa94ae64c11fbb22db3e21fba1e85cc64", null ],
+      [ "GetNetworkInterfaces", "classsacn_1_1_merge_receiver.html#a9cd869d8b5938879aa5b876bacb9b7bc", null ],
       [ "GetSourceCid", "classsacn_1_1_merge_receiver.html#aeacb67c6e3cfcd63f9b047cbe7c0a056", null ],
       [ "GetSourceId", "classsacn_1_1_merge_receiver.html#af9271878d6aef7a83d55fbf5a0027298", null ],
       [ "GetUniverse", "classsacn_1_1_merge_receiver.html#a3d205f22d3d18f81585fd8d07ea21647", null ],

@@ -21,6 +21,7 @@ var searchData=
   ['sources_5flost',['sources_lost',['../struct_sacn_recv_callbacks.html#a4aa47bcca0d30a2c28463942cac94be5',1,'SacnRecvCallbacks']]],
   ['stack_5fsize',['stack_size',['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_thread_params.html#adde5266300e9cdd7ca1134daba9adf24',1,'EtcPalThreadParams']]],
   ['start_5fcode',['start_code',['../struct_sacn_header_data.html#a09df16493b12c991aef309819c8eebab',1,'SacnHeaderData']]],
+  ['status',['status',['../struct_sacn_mcast_interface.html#a3ed2ca570213574abb27e4d16cab480b',1,'SacnMcastInterface']]],
   ['sync_5funiverse',['sync_universe',['../struct_sacn_source_universe_config.html#a9c7dff151ba6b32fc343e6aa55147bcc',1,'SacnSourceUniverseConfig::sync_universe()'],['../structsacn_1_1_source_1_1_universe_settings.html#a9c7dff151ba6b32fc343e6aa55147bcc',1,'sacn::Source::UniverseSettings::sync_universe()']]],
   ['syslog',['syslog',['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_log_strings.html#a5911dbe6a47cb2b9cfbab87a8881b5b6',1,'EtcPalLogStrings']]],
   ['syslog_5fparams',['syslog_params',['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_log_params.html#a6b5edefad9cb5463180d2f3cc9537c44',1,'EtcPalLogParams']]]

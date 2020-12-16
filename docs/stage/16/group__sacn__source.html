@@ -300,6 +300,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga74dd59b7b316f6dea1f398713f19758f"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga74dd59b7b316f6dea1f398713f19758f">sacn_source_reset_networking</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, uint16_t universe, <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *netints, size_t num_netints)</td></tr>
 <tr class="memdesc:ga74dd59b7b316f6dea1f398713f19758f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets for a universe.  <a href="#ga74dd59b7b316f6dea1f398713f19758f">More...</a><br /></td></tr>
 <tr class="separator:ga74dd59b7b316f6dea1f398713f19758f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4949e798ade12169166ec4da8461bf26"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html#ga4949e798ade12169166ec4da8461bf26">sacn_source_get_network_interfaces</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle, uint16_t universe, <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *netints, size_t netints_size)</td></tr>
+<tr class="memdesc:ga4949e798ade12169166ec4da8461bf26"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain the statuses of a universe's network interfaces.  <a href="#ga4949e798ade12169166ec4da8461bf26">More...</a><br /></td></tr>
+<tr class="separator:ga4949e798ade12169166ec4da8461bf26"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>The sACN Source API; see <a class="el" href="using_source.html">Using the sACN Source API</a>. </p>
@@ -531,7 +534,7 @@ Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source to which to add a universe. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">config</td><td>Configuration parameters for the universe to be added. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If non-NULL, this is the list of interfaces the application wants to use, and the operation_succeeded flags are filled in. If NULL, all available interfaces are tried. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If non-NULL, this is the list of interfaces the application wants to use, and the status codes are filled in. If NULL, all available interfaces are tried. </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">num_netints</td><td>Optional. The size of netints, or 0 if netints is NULL. </td></tr>
   </table>
   </dd>
@@ -866,6 +869,58 @@ used to generate live output."</p>
 
 </div>
 </div>
+<a id="ga4949e798ade12169166ec4da8461bf26"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga4949e798ade12169166ec4da8461bf26">&#9670;&nbsp;</a></span>sacn_source_get_network_interfaces()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t sacn_source_get_network_interfaces </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *&#160;</td>
+          <td class="paramname"><em>netints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>netints_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Obtain the statuses of a universe's network interfaces. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source that includes the universe. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The universe for which to obtain the list of network interfaces. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">netints</td><td>A pointer to an application-owned array where the network interface list will be written. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">netints_size</td><td>The size of the provided netints array. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The total number of network interfaces for the universe. If this is greater than netints_size, then only netints_size addresses were written to the netints array. If the source or universe were not found, 0 is returned. </dd></dl>
+
+</div>
+</div>
 <a id="ga05ae91a74132e84439e18364de2b62d4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga05ae91a74132e84439e18364de2b62d4">&#9670;&nbsp;</a></span>sacn_source_process_manual()</h2>
 
@@ -1021,7 +1076,7 @@ used to generate live output."</p>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source for which to reset the networking. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to reset netowrk interfaces for. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If non-NULL, this is the list of interfaces the application wants to use, and the operation_succeeded flags are filled in. If NULL, all available interfaces are tried. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If non-NULL, this is the list of interfaces the application wants to use, and the status codes are filled in. If NULL, all available interfaces are tried. </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">num_netints</td><td>Optional. The size of netints, or 0 if netints is NULL. </td></tr>
   </table>
   </dd>

@@ -5,6 +5,7 @@ var classsacn_1_1_receiver =
     [ "Receiver", "classsacn_1_1_receiver.html#a896715490bebfc93080500e9014a091d", null ],
     [ "Receiver", "classsacn_1_1_receiver.html#a8b226a7db315d39b6fdc4c8e61c3d896", null ],
     [ "ChangeUniverse", "classsacn_1_1_receiver.html#aa94ae64c11fbb22db3e21fba1e85cc64", null ],
+    [ "GetNetworkInterfaces", "classsacn_1_1_receiver.html#a9cd869d8b5938879aa5b876bacb9b7bc", null ],
     [ "GetUniverse", "classsacn_1_1_receiver.html#a3d205f22d3d18f81585fd8d07ea21647", null ],
     [ "handle", "classsacn_1_1_receiver.html#af5825bc604b5bf0316732a4db412e1f8", null ],
     [ "operator=", "classsacn_1_1_receiver.html#ad12ee05fea085da2b0fe8d7982d869e5", null ],

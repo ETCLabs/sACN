@@ -11,6 +11,7 @@ var classsacn_1_1_source =
     [ "ChangePreviewFlag", "classsacn_1_1_source.html#a386b243f62f7cc246de825add2af3161", null ],
     [ "ChangePriority", "classsacn_1_1_source.html#a250e66ea54b315476f4c201600dd7b5f", null ],
     [ "ChangeSynchronizationUniverse", "classsacn_1_1_source.html#a6f73aa9c83e7d7266128cba5d4f70ef2", null ],
+    [ "GetNetworkInterfaces", "classsacn_1_1_source.html#a86e4524a3ef2fb15e2c2caaa38951e65", null ],
     [ "handle", "classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25", null ],
     [ "operator=", "classsacn_1_1_source.html#ace1a98c6e347dddfb9c2b362b93b2a45", null ],
     [ "operator=", "classsacn_1_1_source.html#a70ca8a75288ff8b02f7674f8feea7940", null ],

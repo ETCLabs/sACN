@@ -292,6 +292,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac4614a5903b7e476bf8f9f8fffc8de2b"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ac4614a5903b7e476bf8f9f8fffc8de2b">ResetNetworking</a> (uint16_t universe, std::vector&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;netints)</td></tr>
 <tr class="memdesc:ac4614a5903b7e476bf8f9f8fffc8de2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets for a universe.  <a href="#ac4614a5903b7e476bf8f9f8fffc8de2b">More...</a><br /></td></tr>
 <tr class="separator:ac4614a5903b7e476bf8f9f8fffc8de2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86e4524a3ef2fb15e2c2caaa38951e65"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a86e4524a3ef2fb15e2c2caaa38951e65">GetNetworkInterfaces</a> (uint16_t universe)</td></tr>
+<tr class="memdesc:a86e4524a3ef2fb15e2c2caaa38951e65"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain the statuses of a universe's network interfaces.  <a href="#a86e4524a3ef2fb15e2c2caaa38951e65">More...</a><br /></td></tr>
+<tr class="separator:a86e4524a3ef2fb15e2c2caaa38951e65"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f8c06497d45385dbb819d1dd4fc7a25"><td class="memItemLeft" align="right" valign="top">constexpr <a class="el" href="classsacn_1_1_source.html#a6c08b4f270d0515441eb0eeef16776d0">Handle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25">handle</a> () const</td></tr>
 <tr class="memdesc:a4f8c06497d45385dbb819d1dd4fc7a25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current handle to the underlying C sacn_source.  <a href="#a4f8c06497d45385dbb819d1dd4fc7a25">More...</a><br /></td></tr>
 <tr class="separator:a4f8c06497d45385dbb819d1dd4fc7a25"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -504,7 +507,7 @@ Static Public Attributes</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">settings</td><td>Configuration parameters for the universe to be added. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If !empty, this is the list of interfaces the application wants to use, and the operation_succeeded flags are filled in. If empty, all available interfaces are tried and this vector isn't modified. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If empty, all available interfaces are tried and this vector isn't modified. </td></tr>
   </table>
   </dd>
 </dl>
@@ -734,6 +737,41 @@ used to generate live output."</p>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or the universe is not on that source. </dd>
 <dd>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="a86e4524a3ef2fb15e2c2caaa38951e65"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a86e4524a3ef2fb15e2c2caaa38951e65">&#9670;&nbsp;</a></span>GetNetworkInterfaces()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; GetNetworkInterfaces </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Obtain the statuses of a universe's network interfaces. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The universe for which to obtain the list of network interfaces. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A vector of the universe's network interfaces and their statuses. </dd></dl>
 
 </div>
 </div>
@@ -997,7 +1035,7 @@ used to generate live output."</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to reset netowrk interfaces for. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If !empty, this is the list of interfaces the application wants to use, and the operation_succeeded flags are filled in. If empty, all available interfaces are tried and this vector isn't modified. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If empty, all available interfaces are tried and this vector isn't modified. </td></tr>
   </table>
   </dd>
 </dl>
