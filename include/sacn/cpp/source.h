@@ -143,6 +143,7 @@ public:
   etcpal::Error AddUniverse(const UniverseSettings& settings);
   etcpal::Error AddUniverse(const UniverseSettings& settings, std::vector<SacnMcastInterface>& netints);
   void RemoveUniverse(uint16_t universe);
+  std::vector<uint16_t> GetUniverses();
 
   etcpal::Error AddUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest);
   void RemoveUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest);
@@ -357,6 +358,29 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings, std::
 inline void Source::RemoveUniverse(uint16_t universe)
 {
   sacn_source_remove_universe(handle_, universe);
+}
+
+/**
+ * @brief Obtain a vector of universes this source is transmitting on.
+ *
+ * @return A vector of universes the source is transmitting on.
+ */
+inline std::vector<uint16_t> Source::GetUniverses()
+{
+  // This uses a guessing algorithm with a while loop to avoid race conditions.
+  std::vector<uint16_t> universes;
+  size_t size_guess = 4u;
+  size_t num_universes = 0u;
+
+  do
+  {
+    universes.resize(size_guess);
+    num_universes = sacn_source_get_universes(handle_, universes.data(), universes.size());
+    size_guess = num_universes + 4u;
+  } while (num_universes > universes.size());
+
+  universes.resize(num_universes);
+  return universes;
 }
 
 /**
