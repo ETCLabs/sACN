@@ -1,9 +1,9 @@
 # Using the sACN DMX Merger API                                                 {#using_dmx_merger}
 
-The sACN DMX Merger API provides a software merger that takes start code 0 and per-address priority
-(PAP) data as input and outputs the merged levels, along with source IDs and per-address priorities
-for each level. This API exposes both a C and C++ language interface. The C++ interface is a
-header-only wrapper around the C interface.
+The sACN DMX Merger API provides a software merger that takes level (NULL start code) and priority
+data as input and outputs the merged levels, along with source IDs and per-address priorities
+(PAPs) for each merged level. This API exposes both a C and C++ language interface. The C++
+interface is a header-only wrapper around the C interface.
 
 Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
 library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0.
@@ -114,7 +114,9 @@ Different types of data can be fed into a merger: the NULL start code levels, pe
 priorities, and universe priority. Inputting this data into a merger causes its merge output to
 synchronously update. The merger will prioritize sources with the highest per-address priority
 (or universe priority if the source doesn't provide per-address priorities). If two sources have
-the same highest priority, the one with the highest NULL start code level wins (HTP).
+the same highest priority, the one with the highest NULL start code level wins (HTP). For each
+slot, a source can only be included in the merge if it has both a level and a priority at that
+slot. Otherwise, it will be as if the source were not sourcing that slot.
 
 There is a key distinction in how the merger interprets the lowest priority. The lowest universe
 priority is 0, but the lowest per-address priority is 1. This is because a per-address priority of
@@ -135,11 +137,10 @@ The merger only outputs a per-address priority of 0 if there is no winner for th
 Also keep in mind that if less than 512 per-address priorities are inputted, then the remaining
 slots will be treated as if they had a per-address priority of 0.
 
-The way to input this data is to pass it in directly, using the update source data function. This
-function takes pointers to the NULL start code and per-address priority buffers, their lengths,
-and the universe priority value. If the NULL start code or per-address-priority data is not being
-updated, the corresponding pointer should be NULL, with a length of 0. Therefore, this function
-allows the updating of one or the other, or both.
+The way to input this data for a source is to pass it in directly, using one of the update
+functions. The application can use these functions to update the levels, universe priority, and/or
+per-address priorities (PAPs) individually. Keep in mind that both a level and a priority (universe
+or PAP) must be inputted for a slot before the source can be factored into the merge for that slot.
 
 <!-- CODE_BLOCK_START -->
 ```c
@@ -148,16 +149,14 @@ uint8_t paps[DMX_ADDRESS_COUNT];
 uint8_t universe_priority;
 // Initialize levels, paps, and universe_priority here...
 
-// Levels and PAPs can be merged separately:
-sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT, NULL,
-                                   0);
-sacn_dmx_merger_update_source_data(merger_handle, source_1_handle, universe_priority, NULL, 0, paps, DMX_ADDRESS_COUNT);
+// To update levels:
+sacn_dmx_merger_update_levels(merger_handle, source_1_handle, levels, DMX_ADDRESS_COUNT);
 
-// Or together in one call:
-sacn_dmx_merger_update_source_data(merger_handle, source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT, paps,
-                                   DMX_ADDRESS_COUNT);
+// Then call one of these to update priority:
+sacn_dmx_merger_update_universe_priority(merger_handle, source_1_handle, universe_priority);
+sacn_dmx_merger_update_paps(merger_handle, source_1_handle, paps, DMX_ADDRESS_COUNT);
 
-// Print merge results
+// Now the source has been factored into the merge results, which are printed here.
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
 {
   printf("Slot %u:\n Level: %u\n PAP: %u\n Source ID: %u\n", i, slots[i], per_address_priorities[i], slot_owners[i]);
@@ -170,14 +169,14 @@ uint8_t paps[DMX_ADDRESS_COUNT];
 uint8_t universe_priority;
 // Initialize levels, paps, and universe_priority here...
 
-// Levels and PAPs can be merged separately:
-merger.UpdateSourceData(source_1_handle, universe_priority, levels, DMX_ADDRESS_COUNT);
-merger.UpdateSourceData(source_1_handle, universe_priority, nullptr, 0, paps, DMX_ADDRESS_COUNT);
+// To update levels:
+merger.UpdateLevels(source_1_handle, levels, DMX_ADDRESS_COUNT);
 
-// Or together in one call:
-merger.UpdateSourceData(source_2_handle, universe_priority, levels, DMX_ADDRESS_COUNT, paps, DMX_ADDRESS_COUNT);
+// Then call one of these to update priority:
+merger.UpdateUniversePriority(source_1_handle, universe_priority);
+merger.UpdatePaps(source_1_handle, paps, DMX_ADDRESS_COUNT);
 
-// Print merge results
+// Now the source has been factored into the merge results, which are printed here.
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
 {
   std::cout << "Slot " << i << ":\n Level: " << slots[i] << ":\n PAP: " << per_address_priorities[i] << "\n Source ID: "
