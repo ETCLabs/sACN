@@ -15,6 +15,7 @@ var searchData=
   ['getting_20started_20with_20sacn',['Getting Started with sACN',['../getting_started.html',1,'']]],
   ['getunicastdestinations',['GetUnicastDestinations',['../classsacn_1_1_source.html#a903f148c6c81f16d2cc9d3a623b42256',1,'sacn::Source']]],
   ['getuniverse',['GetUniverse',['../classsacn_1_1_merge_receiver.html#a3d205f22d3d18f81585fd8d07ea21647',1,'sacn::MergeReceiver::GetUniverse()'],['../classsacn_1_1_receiver.html#a3d205f22d3d18f81585fd8d07ea21647',1,'sacn::Receiver::GetUniverse()']]],
+  ['getuniverses',['GetUniverses',['../classsacn_1_1_source.html#adc1d03b3f1516e7f545862b9096d834c',1,'sacn::Source']]],
   ['global_20initialization_20and_20destruction',['Global Initialization and Destruction',['../global_init_and_destroy.html',1,'getting_started']]],
   ['group',['group',['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_group_req.html#ab8ed4113f331d191260b09e960e94254',1,'EtcPalGroupReq::group()'],['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_mreq.html#ab8ed4113f331d191260b09e960e94254',1,'EtcPalMreq::group()']]],
   ['global_20options',['Global Options',['../group__sacnopts__global.html',1,'']]]
