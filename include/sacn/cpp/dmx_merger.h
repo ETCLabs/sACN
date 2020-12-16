@@ -271,11 +271,11 @@ inline etcpal::Error DmxMerger::UpdateLevels(sacn_source_id_t source, const uint
  * slot.
  *
  * If PAPs are not specified for all slots, then the remaining slots will default to a PAP of 0. To remove PAPs for this
- * source and revert to the universe priority, call sacn_dmx_merger_remove_paps.
+ * source and revert to the universe priority, call DmxMerger::RemovePaps.
  *
  * @param[in] source The id of the source to modify.
  * @param[in] paps The per-address priorities to be copied in.
- * @param[in] paps_count The length of address_priorities.
+ * @param[in] paps_count The length of paps.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -293,9 +293,9 @@ inline etcpal::Error DmxMerger::UpdatePaps(sacn_source_id_t source, const uint8_
  * This function updates the universe priority of the specified source, and then triggers the recalculation of each
  * slot. For each slot, the source will only be included in the merge if it has a level and a priority at that slot.
  *
- * If per-address priorities (PAPs) were previously specified for this source with sacn_dmx_merger_update_paps, then the
- * universe priority can have no effect on the merge results until the application calls sacn_dmx_merger_remove_paps, at
- * which point the priorities of each slot will revert to the universe priority passed in here.
+ * If per-address priorities (PAPs) were previously specified for this source with DmxMerger::UpdatePaps, then the
+ * universe priority can have no effect on the merge results until the application calls DmxMerger::RemovePaps, at which
+ * point the priorities of each slot will revert to the universe priority passed in here.
  *
  * @param[in] source The id of the source to modify.
  * @param[in] universe_priority The universe-level priority of the source.

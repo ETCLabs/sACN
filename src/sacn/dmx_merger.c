@@ -600,7 +600,7 @@ etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_sour
  * @param[in] merger The handle to the merger.
  * @param[in] source The id of the source to modify.
  * @param[in] paps The per-address priorities to be copied in.
- * @param[in] paps_count The length of address_priorities.
+ * @param[in] paps_count The length of paps.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
