@@ -86,8 +86,8 @@ if (result)
 
 ## Receiving sACN Data
 
-Each time DMX data is received on a universe that is being listened to, it will be forwarded via
-the corresponding universe data callback.
+The universe data callback forwards incoming DMX data to the application. See the callback's
+documentation for more information about when it is called and when it isn't.
 
 <!-- CODE_BLOCK_START -->
 ```c
@@ -204,8 +204,9 @@ packet are to be interpreted as a priority value from 1 to 200 for the correspon
 DMX (NULL START code) packets. A value of 0 indicates "not sourced", meaning the source is not
 sending NULL START code data to that slot. Likewise, if less than 512 `0xdd` slots are received,
 then the slots beyond the last `0xdd` slot should also be treated as not sourced. Receivers which
-wish to implement the per-address priority extension should check for the `0xdd` start code and
-handle the data accordingly.
+wish to implement the per-address priority extension should make sure that
+#SACN_ETC_PRIORITY_EXTENSION is set to 1, check for the `0xdd` start code, and handle the data
+accordingly.
 
 When implementing the per-address priority extension, the source PAP lost callback should be
 implemented to handle the condition where a source that was previously sending `0xdd` packets stops
@@ -241,11 +242,11 @@ sources together. The most commonly-used algorithm is Highest Takes Precedence (
 numerically highest value for each slot from any source is the one that is acted upon.
 
 The sACN library provides a couple of APIs to facilitate merging. The first, the DMX merger API,
-provides a software merger that takes start code 0 and PAP data as input and outputs the merged
-levels, along with source IDs for each level. For more information, see \ref using_dmx_merger.
-The second, the merge receiver API, combines the receiver and DMX merger APIs to offer a simplified
-solution for receiver functionality with merging built in. See \ref using_merge_receiver for more
-information.
+provides a software merger that takes NULL start code and priority data as input and outputs the
+merged levels, along with source IDs and PAPs for each level. For more information, see \ref
+using_dmx_merger. The second, the merge receiver API, combines the receiver and DMX merger APIs to
+offer a simplified solution for receiver functionality with merging built in. See \ref
+using_merge_receiver for more information.
 
 ## Sources Lost Conditions
 
