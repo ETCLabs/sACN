@@ -16,7 +16,7 @@ var NAVTREE =
       [ "Data Structures", "annotated.html", "annotated_dup" ],
       [ "Data Structure Index", "classes.html", null ],
       [ "Data Fields", "functions.html", [
-        [ "All", "functions.html", null ],
+        [ "All", "functions.html", "functions_dup" ],
         [ "Functions", "functions_func.html", null ],
         [ "Variables", "functions_vars.html", null ],
         [ "Typedefs", "functions_type.html", null ]
@@ -39,8 +39,8 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "additional_documentation.html",
-"group__sacn__merge__receiver__cpp.html",
-"struct_sacn_mcast_interface.html"
+"group__sacn__merge__receiver.html#ga65a9abaa973d15e06a3d7432702d36fc",
+"struct_sacn_dmx_merger_config.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

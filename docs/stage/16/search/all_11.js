@@ -10,6 +10,7 @@ var searchData=
   ['receiver',['Receiver',['../classsacn_1_1_receiver.html',1,'Receiver'],['../classsacn_1_1_receiver.html#a8b226a7db315d39b6fdc4c8e61c3d896',1,'sacn::Receiver::Receiver()']]],
   ['receiver_2eh',['receiver.h',['../receiver_8h.html',1,'(Global Namespace)'],['../cpp_2receiver_8h.html',1,'(Global Namespace)']]],
   ['red',['red',['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_rb_node.html#a6761340706096510fd89edca40a63b9b',1,'EtcPalRbNode']]],
+  ['removepaps',['RemovePaps',['../classsacn_1_1_dmx_merger.html#aae7ebe469f160646c0c59c6f919d47f2',1,'sacn::DmxMerger']]],
   ['removesource',['RemoveSource',['../classsacn_1_1_dmx_merger.html#a39e0f1c04ba69399fb72c9027c6a5fbf',1,'sacn::DmxMerger']]],
   ['removeunicastdestination',['RemoveUnicastDestination',['../classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966',1,'sacn::Source']]],
   ['removeuniverse',['RemoveUniverse',['../classsacn_1_1_source.html#aa0293c6689075dd5cb9692f036c8540f',1,'sacn::Source']]],

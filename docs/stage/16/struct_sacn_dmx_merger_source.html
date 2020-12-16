@@ -206,10 +206,10 @@ $(document).ready(function(){initNavTree('struct_sacn_dmx_merger_source.html',''
 Data Fields</h2></td></tr>
 <tr class="memitem:a6f908810ffc25f89449b60177428980b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_dmx_merger_source.html#a6f908810ffc25f89449b60177428980b">id</a></td></tr>
 <tr class="separator:a6f908810ffc25f89449b60177428980b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2a3a6f8f8ac492ee4711d9544f5e5a0f"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_dmx_merger_source.html#a2a3a6f8f8ac492ee4711d9544f5e5a0f">values</a> [<a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>]</td></tr>
-<tr class="separator:a2a3a6f8f8ac492ee4711d9544f5e5a0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad29d3ea1d86005d6d3d1489669dc4c1a"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_dmx_merger_source.html#ad29d3ea1d86005d6d3d1489669dc4c1a">valid_value_count</a></td></tr>
-<tr class="separator:ad29d3ea1d86005d6d3d1489669dc4c1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a82f491441fd8ea7e0b36c867797a9ba5"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_dmx_merger_source.html#a82f491441fd8ea7e0b36c867797a9ba5">levels</a> [<a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>]</td></tr>
+<tr class="separator:a82f491441fd8ea7e0b36c867797a9ba5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3695ed7e336fa1e6cf75ee3ccbc4937d"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_dmx_merger_source.html#a3695ed7e336fa1e6cf75ee3ccbc4937d">valid_level_count</a></td></tr>
+<tr class="separator:a3695ed7e336fa1e6cf75ee3ccbc4937d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aefc54b6cd291e480d6cb7c9b5b98a3f4"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_dmx_merger_source.html#aefc54b6cd291e480d6cb7c9b5b98a3f4">universe_priority</a></td></tr>
 <tr class="separator:aefc54b6cd291e480d6cb7c9b5b98a3f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2fb729fbb80e2b480e4466e8cbf9b57"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_dmx_merger_source.html#ab2fb729fbb80e2b480e4466e8cbf9b57">address_priority_valid</a></td></tr>
@@ -265,6 +265,21 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a id="a82f491441fd8ea7e0b36c867797a9ba5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a82f491441fd8ea7e0b36c867797a9ba5">&#9670;&nbsp;</a></span>levels</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t levels[<a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The DMX NULL start code data (0 - 255). </p>
+
+</div>
+</div>
 <a id="aefc54b6cd291e480d6cb7c9b5b98a3f4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aefc54b6cd291e480d6cb7c9b5b98a3f4">&#9670;&nbsp;</a></span>universe_priority</h2>
 
@@ -280,33 +295,18 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a id="ad29d3ea1d86005d6d3d1489669dc4c1a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad29d3ea1d86005d6d3d1489669dc4c1a">&#9670;&nbsp;</a></span>valid_value_count</h2>
+<a id="a3695ed7e336fa1e6cf75ee3ccbc4937d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3695ed7e336fa1e6cf75ee3ccbc4937d">&#9670;&nbsp;</a></span>valid_level_count</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">size_t valid_value_count</td>
+          <td class="memname">size_t valid_level_count</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Some sources don't send all 512 values, so here's how much of values to use. </p>
-
-</div>
-</div>
-<a id="a2a3a6f8f8ac492ee4711d9544f5e5a0f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2a3a6f8f8ac492ee4711d9544f5e5a0f">&#9670;&nbsp;</a></span>values</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint8_t values[<a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>]</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>The DMX data values (0 - 255). </p>
+<p>Some sources don't send all 512 levels, so here's how much of levels to use. </p>
 
 </div>
 </div>

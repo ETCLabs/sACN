@@ -5,6 +5,7 @@ var searchData=
   ['readunlock',['ReadUnlock',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_rw_lock.html#a1860d89c46fea6b62da4c7c39756fc4e',1,'etcpal::RwLock']]],
   ['receive',['Receive',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_queue.html#ae2bd22bccd067e5b8558810eb878f7bf',1,'etcpal::Queue::Receive(T &amp;data, int timeout_ms=ETCPAL_WAIT_FOREVER)'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_queue.html#a2e1a4a59421e30ad677c4aab766a6683',1,'etcpal::Queue::Receive(T &amp;data, const std::chrono::duration&lt; Rep, Period &gt; &amp;timeout)']]],
   ['receiver',['Receiver',['../classsacn_1_1_receiver.html#a8b226a7db315d39b6fdc4c8e61c3d896',1,'sacn::Receiver']]],
+  ['removepaps',['RemovePaps',['../classsacn_1_1_dmx_merger.html#aae7ebe469f160646c0c59c6f919d47f2',1,'sacn::DmxMerger']]],
   ['removesource',['RemoveSource',['../classsacn_1_1_dmx_merger.html#a39e0f1c04ba69399fb72c9027c6a5fbf',1,'sacn::DmxMerger']]],
   ['removeunicastdestination',['RemoveUnicastDestination',['../classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966',1,'sacn::Source']]],
   ['removeuniverse',['RemoveUniverse',['../classsacn_1_1_source.html#aa0293c6689075dd5cb9692f036c8540f',1,'sacn::Source']]],

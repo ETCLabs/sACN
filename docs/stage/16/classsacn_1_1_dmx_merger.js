@@ -9,9 +9,11 @@ var classsacn_1_1_dmx_merger =
     [ "handle", "classsacn_1_1_dmx_merger.html#a7a9405a7d27a0e79c0cc00f8a7e2e2e7", null ],
     [ "operator=", "classsacn_1_1_dmx_merger.html#a4fb609db88ca8c7bdef5174128ba50ca", null ],
     [ "operator=", "classsacn_1_1_dmx_merger.html#a95bbd64563cbe066ee91cc07cf85db9b", null ],
+    [ "RemovePaps", "classsacn_1_1_dmx_merger.html#aae7ebe469f160646c0c59c6f919d47f2", null ],
     [ "RemoveSource", "classsacn_1_1_dmx_merger.html#a39e0f1c04ba69399fb72c9027c6a5fbf", null ],
     [ "Shutdown", "classsacn_1_1_dmx_merger.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9", null ],
     [ "Startup", "classsacn_1_1_dmx_merger.html#ab263565edc9ebf5ffd6e82a18184e4c3", null ],
-    [ "StopSourcePerAddressPriority", "classsacn_1_1_dmx_merger.html#a517bd4a6db0fa24d7a1b373b2299d744", null ],
-    [ "UpdateSourceData", "classsacn_1_1_dmx_merger.html#a371e9bad9f53ed9b3082908e9a2ee067", null ]
+    [ "UpdateLevels", "classsacn_1_1_dmx_merger.html#afab0b66c920489827f1973db3f323d7c", null ],
+    [ "UpdatePaps", "classsacn_1_1_dmx_merger.html#a682657780d94091923de1b389ee10db2", null ],
+    [ "UpdateUniversePriority", "classsacn_1_1_dmx_merger.html#a365f36ba84622e8e5e79874cf29c271a", null ]
 ];
