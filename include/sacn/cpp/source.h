@@ -164,6 +164,8 @@ public:
   etcpal::Error ResetNetworking(uint16_t universe);
   etcpal::Error ResetNetworking(uint16_t universe, std::vector<SacnMcastInterface>& netints);
 
+  std::vector<SacnMcastInterface> GetNetworkInterfaces(uint16_t universe);
+
   constexpr Handle handle() const;
 
   static int ProcessManual();
@@ -316,8 +318,7 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings)
 
  * @param[in] settings Configuration parameters for the universe to be added.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
- * modified.
+ * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Universe successfully added.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -658,8 +659,7 @@ inline etcpal::Error Source::ResetNetworking(uint16_t universe)
  *
  * @param[in] universe Universe to reset netowrk interfaces for.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
- * modified.
+ * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Source changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -674,6 +674,30 @@ inline etcpal::Error Source::ResetNetworking(uint16_t universe, std::vector<Sacn
     return sacn_source_reset_networking(handle_, universe, nullptr, 0);
 
   return sacn_source_reset_networking(handle_, universe, netints.data(), netints.size());
+}
+
+/**
+ * @brief Obtain the statuses of a universe's network interfaces.
+ *
+ * @param[in] universe The universe for which to obtain the list of network interfaces.
+ * @return A vector of the universe's network interfaces and their statuses.
+ */
+inline std::vector<SacnMcastInterface> Source::GetNetworkInterfaces(uint16_t universe)
+{
+  // This uses a guessing algorithm with a while loop to avoid race conditions.
+  std::vector<SacnMcastInterface> netints;
+  size_t size_guess = 4u;
+  size_t num_netints = 0u;
+
+  do
+  {
+    netints.resize(size_guess);
+    num_netints = sacn_source_get_network_interfaces(handle_, universe, netints.data(), netints.size());
+    size_guess = num_netints + 4u;
+  } while (num_netints > netints.size());
+
+  netints.resize(num_netints);
+  return netints;
 }
 
 /**

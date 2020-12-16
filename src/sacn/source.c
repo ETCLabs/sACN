@@ -145,7 +145,7 @@ void sacn_source_destroy(sacn_source_t handle)
  * @param[in] handle Handle to the source to which to add a universe.
  * @param[in] config Configuration parameters for the universe to be added.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and
- * the operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * the status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Universe successfully added.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -524,7 +524,7 @@ int sacn_source_process_manual(void)
  * @param[in] handle Handle to the source for which to reset the networking.
  * @param[in] universe Universe to reset netowrk interfaces for.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Source changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -543,4 +543,20 @@ etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t unive
   ETCPAL_UNUSED_ARG(num_netints);
 
   return kEtcPalErrNotImpl;
+}
+
+/**
+ * @brief Obtain the statuses of a universe's network interfaces.
+ *
+ * @param[in] handle Handle to the source that includes the universe.
+ * @param[in] universe The universe for which to obtain the list of network interfaces.
+ * @param[out] netints A pointer to an application-owned array where the network interface list will be written.
+ * @param[in] netints_size The size of the provided netints array.
+ * @return The total number of network interfaces for the universe. If this is greater than netints_size, then only
+ * netints_size addresses were written to the netints array. If the source or universe were not found, 0 is returned.
+ */
+size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
+                                          size_t netints_size)
+{
+  return 0;  // TODO
 }

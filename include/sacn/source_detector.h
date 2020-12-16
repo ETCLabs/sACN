@@ -243,6 +243,9 @@ void sacn_source_detector_destroy(sacn_source_detector_t handle);
 etcpal_error_t sacn_source_detector_reset_networking(sacn_source_detector_t handle, SacnMcastInterface* netints,
                                                      size_t num_netints);
 
+size_t sacn_source_detector_get_network_interfaces(sacn_source_detector_t handle, SacnMcastInterface* netints,
+                                                   size_t netints_size);
+
 #ifdef __cplusplus
 }
 #endif

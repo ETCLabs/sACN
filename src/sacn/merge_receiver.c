@@ -143,7 +143,7 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
  * @param[in] config Configuration parameters for the sACN Merge Receiver to be created.
  * @param[out] handle Filled in on success with a handle to the sACN Merge Receiver.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Merge Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -239,7 +239,7 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
  *
  * @param[in] handle Handle to the merge receiver for which to reset the networking.
  * @param[in,out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Network reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -255,6 +255,21 @@ etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
   return kEtcPalErrNotImpl;
+}
+
+/**
+ * @brief Obtain the statuses of a merge receiver's network interfaces.
+ *
+ * @param[in] handle Handle to the merge receiver for which to obtain the list of network interfaces.
+ * @param[out] netints A pointer to an application-owned array where the network interface list will be written.
+ * @param[in] netints_size The size of the provided netints array.
+ * @return The total number of network interfaces for the merge receiver. If this is greater than netints_size, then
+ * only netints_size addresses were written to the netints array. If the merge receiver was not found, 0 is returned.
+ */
+size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, SacnMcastInterface* netints,
+                                                  size_t netints_size)
+{
+  return 0;  // TODO
 }
 
 /**

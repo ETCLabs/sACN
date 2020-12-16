@@ -183,6 +183,9 @@ int sacn_source_process_manual(void);
 etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
                                             size_t num_netints);
 
+size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
+                                          size_t netints_size);
+
 #ifdef __cplusplus
 }
 #endif

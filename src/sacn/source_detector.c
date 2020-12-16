@@ -99,7 +99,7 @@ void sacn_source_detector_config_init(SacnSourceDetectorConfig* config)
  * @param[in] config Configuration parameters for the sACN source detector to be created.
  * @param[out] handle Filled in on success with a handle to the detector.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Detector created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -150,7 +150,7 @@ void sacn_source_detector_destroy(sacn_source_detector_t handle)
  *
  * @param[in] handle Handle to the detector for which to reset the networking.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Network changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -171,4 +171,19 @@ etcpal_error_t sacn_source_detector_reset_networking(sacn_source_detector_t hand
     return kEtcPalErrNotInit;
 
   return kEtcPalErrNotImpl;
+}
+
+/**
+ * @brief Obtain the statuses of a source detector's network interfaces.
+ *
+ * @param[in] handle Handle to the source detector for which to obtain the list of network interfaces.
+ * @param[out] netints A pointer to an application-owned array where the network interface list will be written.
+ * @param[in] netints_size The size of the provided netints array.
+ * @return The total number of network interfaces for the source detector. If this is greater than netints_size, then
+ * only netints_size addresses were written to the netints array. If the source detector was not found, 0 is returned.
+ */
+size_t sacn_source_detector_get_network_interfaces(sacn_source_detector_t handle, SacnMcastInterface* netints,
+                                                   size_t netints_size)
+{
+  return 0;  // TODO
 }
