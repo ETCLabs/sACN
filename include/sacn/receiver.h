@@ -119,10 +119,15 @@ typedef struct SacnLostSource
 /**
  * @brief Notify that a data packet has been received.
  *
- * Will be called for every sACN data packet received on a listening universe, unless the Stream_Terminated bit is set
- * or if preview packets are being filtered.
+ * This will not be called if the Stream_Terminated bit is set, or if the Preview_Data bit is set and preview packets
+ * are being filtered.
  *
- * The callback will be called for all data packets received, even those without a startcode of 0 or 0xdd.
+ * Start code 0xDD packets will only trigger this notification if #SACN_ETC_PRIORITY_EXTENSION is set to 1. This
+ * callback will be called for all other start codes received, even those without a startcode of 0x00 or 0xDD.
+ *
+ * This notification is always called immediately during the sampling period, if #SACN_ETC_PRIORITY_EXTENSION is set to
+ * 0, or if the start code is not 0x00 or 0xDD. Otherwise, this notification won't be called until both 0x00 and 0xDD
+ * start codes are received, or the 0xDD timer has expired and a 0x00 packet is received.
  *
  * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
  * if the source forces the packet, or if the source sends a data packet without a sync universe.
