@@ -259,6 +259,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a2073e5814e81bf1257c7264a1b984966"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966">RemoveUnicastDestination</a> (uint16_t universe, const <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a> &amp;dest)</td></tr>
 <tr class="memdesc:a2073e5814e81bf1257c7264a1b984966"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a unicast destination on a source's universe.  <a href="#a2073e5814e81bf1257c7264a1b984966">More...</a><br /></td></tr>
 <tr class="separator:a2073e5814e81bf1257c7264a1b984966"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a903f148c6c81f16d2cc9d3a623b42256"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a903f148c6c81f16d2cc9d3a623b42256">GetUnicastDestinations</a> ()</td></tr>
+<tr class="memdesc:a903f148c6c81f16d2cc9d3a623b42256"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain a vector of unicast destinations this source is transmitting on.  <a href="#a903f148c6c81f16d2cc9d3a623b42256">More...</a><br /></td></tr>
+<tr class="separator:a903f148c6c81f16d2cc9d3a623b42256"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a250e66ea54b315476f4c201600dd7b5f"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a250e66ea54b315476f4c201600dd7b5f">ChangePriority</a> (uint16_t universe, uint8_t new_priority)</td></tr>
 <tr class="memdesc:a250e66ea54b315476f4c201600dd7b5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the priority of a universe on a sACN source.  <a href="#a250e66ea54b315476f4c201600dd7b5f">More...</a><br /></td></tr>
 <tr class="separator:a250e66ea54b315476f4c201600dd7b5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -772,6 +775,34 @@ used to generate live output."</p>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>A vector of the universe's network interfaces and their statuses. </dd></dl>
+
+</div>
+</div>
+<a id="a903f148c6c81f16d2cc9d3a623b42256"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a903f148c6c81f16d2cc9d3a623b42256">&#9670;&nbsp;</a></span>GetUnicastDestinations()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a> &gt; GetUnicastDestinations </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Obtain a vector of unicast destinations this source is transmitting on. </p>
+<dl class="section return"><dt>Returns</dt><dd>A vector of unicast destinations the source is transmitting on. </dd></dl>
 
 </div>
 </div>

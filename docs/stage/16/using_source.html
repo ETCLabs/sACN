@@ -274,8 +274,7 @@ $(document).ready(function(){initNavTree('using_source.html','');});
 </div>
 </p>
 <p>The starting set of unicast destinations can also be specified with the universe configuration's optional unicast_destinations setting.</p>
-<h2>Custom Start Codes</h2>
-<p>The buffers in the universe configuration only allow you to send start code 0x00 (NULL) and 0xDD (PAP) data. If you want to send data for a different start code, you'll need to use the Send Now function to transmit that data synchronously.</p>
+<p>The application can also obtain the list of unicast destinations that a source is currently transmitting on:</p>
 <p> 
 <div class="tab">
   <button id="button_6_c" class="tablinks" onclick="selectLanguage(event, '6', 'c')">C</button>
@@ -283,9 +282,25 @@ $(document).ready(function(){initNavTree('using_source.html','');});
 </div>
 <div id="div_6_c" class="tabcontent">
 </p>
-<div class="fragment"><div class="line"><span class="comment">// Custom start code data can also be sent immediately:</span></div><div class="line">uint8_t my_custom_start_code;</div><div class="line">uint8_t my_custom_start_code_data[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line"><span class="comment">// Initialize start code and data...</span></div><div class="line"><a class="code" href="group__sacn__source.html#ga6e7cea16d61ae355bc313452f0b47e48">sacn_source_send_now</a>(my_handle, my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);</div></div><!-- fragment --><p> 
+<div class="fragment"><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a> *unicast_dests;  <span class="comment">// Points to an array with DESTS_SIZE (perhaps SACN_MAX_UNICAST_DESTINATIONS) elements.</span></div><div class="line"><span class="keywordtype">size_t</span> num_dests = <a class="code" href="group__sacn__source.html#gae1f58f8d5951d2edfe567b22ed96c343">sacn_source_get_unicast_destinations</a>(handle_, unicast_dests, DESTS_SIZE);</div><div class="line"><span class="keywordflow">if</span>(num_dests &gt; DESTS_SIZE)</div><div class="line">{</div><div class="line">  <span class="comment">// Not all of the destinations were written to the array. The application should allocate a larger array &amp; try again.</span></div><div class="line">}</div><div class="line"><span class="keywordflow">else</span></div><div class="line">{</div><div class="line">  <span class="comment">// The first num_dests elements of the unicast_dests array represent the complete list of unicast destinations.</span></div><div class="line">}</div></div><!-- fragment --><p> 
 </div>
 <div id="div_6_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line">std::vector&lt;etcpal::IpAddr&gt; unicast_dests = my_source.<a class="code" href="classsacn_1_1_source.html#a903f148c6c81f16d2cc9d3a623b42256">GetUnicastDestinations</a>();</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>Custom Start Codes</h2>
+<p>The buffers in the universe configuration only allow you to send start code 0x00 (NULL) and 0xDD (PAP) data. If you want to send data for a different start code, you'll need to use the Send Now function to transmit that data synchronously.</p>
+<p> 
+<div class="tab">
+  <button id="button_7_c" class="tablinks" onclick="selectLanguage(event, '7', 'c')">C</button>
+  <button id="button_7_cpp" class="tablinks" onclick="selectLanguage(event, '7', 'cpp')">C++</button>
+</div>
+<div id="div_7_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// Custom start code data can also be sent immediately:</span></div><div class="line">uint8_t my_custom_start_code;</div><div class="line">uint8_t my_custom_start_code_data[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line"><span class="comment">// Initialize start code and data...</span></div><div class="line"><a class="code" href="group__sacn__source.html#ga6e7cea16d61ae355bc313452f0b47e48">sacn_source_send_now</a>(my_handle, my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);</div></div><!-- fragment --><p> 
+</div>
+<div id="div_7_cpp" class="tabcontent">
 </p>
 <div class="fragment"><div class="line"><span class="comment">// Custom start code data can also be sent immediately:</span></div><div class="line">uint8_t my_custom_start_code;</div><div class="line">uint8_t my_custom_start_code_data[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line"><span class="comment">// Initialize start code and data...</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#a22cf560eca13a3cbc4c8384bad438897">SendNow</a>(my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);</div></div><!-- fragment --><p> 
 </div>
@@ -294,14 +309,14 @@ $(document).ready(function(){initNavTree('using_source.html','');});
 <p>You can also configure synchronization universes for each of your universes using the Change Synchronization Universe function. Then the transmitted DMX data will include this synchronization universe, indicating to the receivers to wait to apply the data until a synchronization message is received on the specified synchronization universe. To send the synchronization message, call the Send Synchronization function. NOTE: sACN Sync will not be supported in sACN 2.0.0.</p>
 <p> 
 <div class="tab">
-  <button id="button_7_c" class="tablinks" onclick="selectLanguage(event, '7', 'c')">C</button>
-  <button id="button_7_cpp" class="tablinks" onclick="selectLanguage(event, '7', 'cpp')">C++</button>
+  <button id="button_8_c" class="tablinks" onclick="selectLanguage(event, '8', 'c')">C</button>
+  <button id="button_8_cpp" class="tablinks" onclick="selectLanguage(event, '8', 'cpp')">C++</button>
 </div>
-<div id="div_7_c" class="tabcontent">
+<div id="div_8_c" class="tabcontent">
 </p>
 <div class="fragment"><div class="line"><span class="comment">// You can also set up a synchronization universe for a universe.</span></div><div class="line"><span class="comment">// Receivers should hang on to the data and wait for a sync message.</span></div><div class="line">uint16_t my_sync_universe = 123;  <span class="comment">// Let&#39;s say the sync universe is 123, for example.</span></div><div class="line"><a class="code" href="group__sacn__source.html#gac21fab7b1fe15c281e89303ce26d08fd">sacn_source_change_synchronization_universe</a>(my_handle, my_universe, my_sync_universe);</div><div class="line"></div><div class="line"><span class="comment">// Whenever you want the data to be applied, you can immediately send a sync message for your universe.</span></div><div class="line"><a class="code" href="group__sacn__source.html#ga0e07a954dab245c7d6f323d9bdeb2df3">sacn_source_send_synchronization</a>(my_handle, my_universe);</div></div><!-- fragment --><p> 
 </div>
-<div id="div_7_cpp" class="tabcontent">
+<div id="div_8_cpp" class="tabcontent">
 </p>
 <div class="fragment"><div class="line"><span class="comment">// You can also set up a synchronization universe for a universe.</span></div><div class="line"><span class="comment">// Receivers should hang on to the data and wait for a sync message.</span></div><div class="line">uint16_t my_sync_universe = 123;  <span class="comment">// Let&#39;s say the sync universe is 123, for example.</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#a6f73aa9c83e7d7266128cba5d4f70ef2">ChangeSynchronizationUniverse</a>(my_universe, my_sync_universe);</div><div class="line"></div><div class="line"><span class="comment">// Whenever you want the data to be applied, you can immediately send a sync message for your universe.</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f">SendSynchronization</a>(my_universe);</div></div><!-- fragment --><p> 
 </div>
@@ -310,14 +325,14 @@ $(document).ready(function(){initNavTree('using_source.html','');});
 <p>The preview flag, universe priority, and/or source name can be changed at any time using the appropriate Change function, followed by a call to Update Values to transmit the changes to the network.</p>
 <p> 
 <div class="tab">
-  <button id="button_8_c" class="tablinks" onclick="selectLanguage(event, '8', 'c')">C</button>
-  <button id="button_8_cpp" class="tablinks" onclick="selectLanguage(event, '8', 'cpp')">C++</button>
+  <button id="button_9_c" class="tablinks" onclick="selectLanguage(event, '9', 'c')">C</button>
+  <button id="button_9_cpp" class="tablinks" onclick="selectLanguage(event, '9', 'cpp')">C++</button>
 </div>
-<div id="div_8_c" class="tabcontent">
+<div id="div_9_c" class="tabcontent">
 </p>
 <div class="fragment"><div class="line"><span class="comment">// The preview flag, priority, and name can also be changed at any time:</span></div><div class="line"><span class="keyword">const</span> <span class="keywordtype">char</span>* new_name = <span class="stringliteral">&quot;Hello World&quot;</span>;</div><div class="line"><a class="code" href="group__sacn__source.html#ga0c44cd3dba2627779bfb65ea8349fe1c">sacn_source_change_name</a>(my_handle, new_name)</div><div class="line">uint8_t new_priority = 50;</div><div class="line"><a class="code" href="group__sacn__source.html#ga0ee9dd3d8114b4277cb73134d0ae2dc4">sacn_source_change_priority</a>(my_handle, my_universe, new_priority);</div><div class="line"><span class="keywordtype">bool</span> new_preview_flag = <span class="keyword">true</span>;</div><div class="line"><a class="code" href="group__sacn__source.html#ga99d5fce087ce0b2b7d2caedf65bcce5e">sacn_source_change_preview_flag</a>(my_handle, my_universe, new_preview_flag);</div><div class="line"><span class="comment">// Indicate new data should be transmitted.</span></div><div class="line"><a class="code" href="group__sacn__source.html#gabf3e1c5a9c098ad1a85d4d3099a84cf4">sacn_source_update_values</a>(my_handle, my_universe, my_values_buffer, DMX_ADDRESS_COUNT);</div></div><!-- fragment --><p> 
 </div>
-<div id="div_8_cpp" class="tabcontent">
+<div id="div_9_cpp" class="tabcontent">
 </p>
 <div class="fragment"><div class="line"><span class="comment">// The preview flag, priority, and name can also be changed at any time:</span></div><div class="line">std::string new_name(<span class="stringliteral">&quot;Hello World&quot;</span>);</div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#aa33e199741640a65c41cc19d18b4b6f0">ChangeName</a>(new_name)</div><div class="line">uint8_t new_priority = 50;</div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#a250e66ea54b315476f4c201600dd7b5f">ChangePriority</a>(my_universe, new_priority);</div><div class="line"><span class="keywordtype">bool</span> new_preview_flag = <span class="keyword">true</span>;</div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#a386b243f62f7cc246de825add2af3161">ChangePreviewFlag</a>(my_universe, new_preview_flag);</div><div class="line"><span class="comment">// Indicate new data should be transmitted.</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047">UpdateValues</a>(my_universe, my_values_buffer, DMX_ADDRESS_COUNT);</div></div><!-- fragment --><p> 
 </div>
