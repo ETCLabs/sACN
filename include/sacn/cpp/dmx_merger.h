@@ -46,11 +46,11 @@ namespace sacn
  *
  * When asked to calculate the merge, the merger will evaluate the current source
  * buffers and update two result buffers:
- *  - 512 bytes for the merged data values (i.e. "winning level").  These are calculated by using
+ *  - 512 bytes for the merged data levels (i.e. "winning level").  These are calculated by using
  *     a Highest-Level-Takes-Precedence(HTP) algorithm for all sources that share the highest
  *     per-address priority.
  *  - 512 source identifiers (i.e. "winning source") to indicate which source was considered the
- *     source of the merged data value, or that no source currently owns this address.
+ *     source of the merged data level, or that no source currently owns this address.
  *
  * See @ref using_dmx_merger for a detailed description of how to use this API.
  */
@@ -86,7 +86,7 @@ public:
     uint8_t* per_address_priorities{nullptr};
 
     /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
-        #SACN_DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if
+        #SACN_DMX_MERGER_SOURCE_INVALID to indicate that there is no winner for that slot. This is used if
         you need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to
         NULL and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of
         0 (not sourced).

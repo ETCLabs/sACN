@@ -202,14 +202,14 @@ if (source_state)
 
   printf(" Universe Priority: %u\n", source_state->universe_priority);
 
-  for(unsigned int i = 0; i < source_state->valid_value_count; ++i)
+  for(unsigned int i = 0; i < source_state->valid_level_count; ++i)
   {
-    printf(" Level at slot %u: %u\n", i, source_state->values[i]);
+    printf(" Level at slot %u: %u\n", i, source_state->levels[i]);
   }
 
   if(source_state->address_priority_valid)
   {
-    for(unsigned int i = 0; i < source_state->valid_value_count; ++i)
+    for(unsigned int i = 0; i < source_state->valid_level_count; ++i)
     {
       printf(" PAP at slot %u: %u\n", i, source_state->address_priority[i]);
     }
@@ -225,14 +225,14 @@ if (source_state)
   // Do some printouts to demonstrate the fields available
   std::cout << "Source data:\n Universe Priority: " << source_state->universe_priority << "\n";
 
-  for(unsigned int i = 0; i < source_state->valid_value_count; ++i)
+  for(unsigned int i = 0; i < source_state->valid_level_count; ++i)
   {
-    std::cout << " Level at slot " << i << ": " << source_state->values[i] << "\n";
+    std::cout << " Level at slot " << i << ": " << source_state->levels[i] << "\n";
   }
 
   if(source_state->address_priority_valid)
   {
-    for(unsigned int i = 0; i < source_state->valid_value_count; ++i)
+    for(unsigned int i = 0; i < source_state->valid_level_count; ++i)
     {
       std::cout << " PAP at slot " << i << ": " << source_state->address_priority[i] << "\n";
     }

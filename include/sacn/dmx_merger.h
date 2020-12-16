@@ -45,11 +45,11 @@
  *
  * When asked to calculate the merge, the merger will evaluate the current source
  * buffers and update two result buffers:
- *  - 512 bytes for the merged data values (i.e. "winning level").  These are calculated by using
+ *  - 512 bytes for the merged data levels (i.e. "winning level").  These are calculated by using
  *     a Highest-Level-Takes-Precedence(HTP) algorithm for all sources that share the highest
  *     per-address priority.
  *  - 512 source identifiers (i.e. "winning source") to indicate which source was considered the
- *     source of the merged data value, or that no source currently owns this address.
+ *     source of the merged data level, or that no source currently owns this address.
  *
  * This API is thread-safe.
  *
@@ -68,7 +68,7 @@ typedef int sacn_dmx_merger_t;
 /** An invalid sACN merger handle value. */
 #define SACN_DMX_MERGER_INVALID -1
 
-/** The sources on a merger have a short id that is used in the owned values, rather than a UUID.*/
+/** The sources on a merger have a short id that is used in the owned levels, rather than a UUID.*/
 typedef uint16_t sacn_source_id_t;
 
 /** An invalid source id handle value. */
@@ -95,9 +95,9 @@ typedef struct SacnDmxMergerConfig
   uint8_t* per_address_priorities;
 
   /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
-      #SACN_DMX_MERGER_SOURCE_INVALID to indicate that no source is providing values for that slot. This is used if you
-     need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to NULL
-     and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of 0 (not
+      #SACN_DMX_MERGER_SOURCE_INVALID to indicate that there is no winner for that slot. This is used if you
+      need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to NULL
+      and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of 0 (not
       sourced).
       Memory is owned by the application.*/
   sacn_source_id_t* slot_owners;
@@ -141,11 +141,11 @@ typedef struct SacnDmxMergerSource
   /** The merger's ID for the DMX source. */
   sacn_source_id_t id;
 
-  /** The DMX data values (0 - 255). */
-  uint8_t values[DMX_ADDRESS_COUNT];
+  /** The DMX NULL start code data (0 - 255). */
+  uint8_t levels[DMX_ADDRESS_COUNT];
 
-  /** Some sources don't send all 512 values, so here's how much of values to use.*/
-  size_t valid_value_count;
+  /** Some sources don't send all 512 levels, so here's how much of levels to use.*/
+  size_t valid_level_count;
 
   /** The sACN per-universe priority (0 - 200). */
   uint8_t universe_priority;
