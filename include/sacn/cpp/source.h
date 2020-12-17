@@ -147,7 +147,7 @@ public:
 
   etcpal::Error AddUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest);
   void RemoveUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest);
-  std::vector<etcpal::IpAddr> GetUnicastDestinations();
+  std::vector<etcpal::IpAddr> GetUnicastDestinations(uint16_t universe);
 
   etcpal::Error ChangePriority(uint16_t universe, uint8_t new_priority);
   etcpal::Error ChangePreviewFlag(uint16_t universe, bool new_preview_flag);
@@ -418,11 +418,12 @@ inline void Source::RemoveUnicastDestination(uint16_t universe, const etcpal::Ip
 }
 
 /**
- * @brief Obtain a vector of unicast destinations this source is transmitting on.
+ * @brief Obtain a vector of unicast destinations to which this source is transmitting a universe.
  *
- * @return A vector of unicast destinations the source is transmitting on.
+ * @param[in] universe The universe for which to obtain the list of unicast destinations.
+ * @return A vector of unicast destinations the source is transmitting on for the given universe.
  */
-inline std::vector<etcpal::IpAddr> Source::GetUnicastDestinations()
+inline std::vector<etcpal::IpAddr> Source::GetUnicastDestinations(uint16_t universe)
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
   std::vector<EtcPalIpAddr> destinations;
@@ -432,7 +433,7 @@ inline std::vector<etcpal::IpAddr> Source::GetUnicastDestinations()
   do
   {
     destinations.resize(size_guess);
-    num_destinations = sacn_source_get_unicast_destinations(handle_, destinations.data(), destinations.size());
+    num_destinations = sacn_source_get_unicast_destinations(handle_, universe, destinations.data(), destinations.size());
     size_guess = num_destinations + 4u;
   } while (num_destinations > destinations.size());
 

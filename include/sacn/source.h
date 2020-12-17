@@ -158,7 +158,8 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
 
 etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest);
 void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest);
-size_t sacn_source_get_unicast_destinations(sacn_source_t handle, EtcPalIpAddr* destinations, size_t destinations_size);
+size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t universe, EtcPalIpAddr* destinations,
+                                            size_t destinations_size);
 
 etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t universe, uint8_t new_priority);
 etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t universe, bool new_preview_flag);

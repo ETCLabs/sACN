@@ -246,16 +246,18 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
 }
 
 /**
- * @brief Obtain a list of unicast destinations this source is transmitting on.
+ * @brief Obtain a list of unicast destinations to which this source is transmitting a universe.
  *
- * @param[in] handle Handle to the source for which to obtain the list of unicast destinations.
+ * @param[in] handle Handle to the source that is transmitting on the universe in question.
+ * @param[in] universe The universe for which to obtain the list of unicast destinations.
  * @param[out] destinations A pointer to an application-owned array where the unicast destination list will be written.
  * @param[in] destinations_size The size of the provided destinations array.
- * @return The total number of unicast destinations being transmitted by the source. If this is greater than
- * destinations_size, then only destinations_size addresses were written to the destinations array. If the source was
- * not found, 0 is returned.
+ * @return The total number of unicast destinations being transmitted by the source for the given universe. If this is
+ * greater than destinations_size, then only destinations_size addresses were written to the destinations array. If the
+ * source was not found, 0 is returned.
  */
-size_t sacn_source_get_unicast_destinations(sacn_source_t handle, EtcPalIpAddr* destinations, size_t destinations_size)
+size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t universe, EtcPalIpAddr* destinations,
+                                            size_t destinations_size)
 {
   return 0;  // TODO
 }

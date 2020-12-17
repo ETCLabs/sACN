@@ -201,13 +201,13 @@ my_source.RemoveUnicastDestination(my_universe, custom_destination);
 The starting set of unicast destinations can also be specified with the universe configuration's
 optional unicast_destinations setting.
 
-The application can also obtain the list of unicast destinations that a source is currently
+The application can also obtain the list of unicast destinations that a universe is currently
 transmitting on:
 
 <!-- CODE_BLOCK_START -->
 ```c
 EtcPalIpAddr *unicast_dests;  // Points to an array with DESTS_SIZE (perhaps SACN_MAX_UNICAST_DESTINATIONS) elements.
-size_t num_dests = sacn_source_get_unicast_destinations(handle_, unicast_dests, DESTS_SIZE);
+size_t num_dests = sacn_source_get_unicast_destinations(handle_, my_universe, unicast_dests, DESTS_SIZE);
 if(num_dests > DESTS_SIZE)
 {
   // Not all of the destinations were written to the array. The application should allocate a larger array & try again.
@@ -219,7 +219,7 @@ else
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-std::vector<etcpal::IpAddr> unicast_dests = my_source.GetUnicastDestinations();
+std::vector<etcpal::IpAddr> unicast_dests = my_source.GetUnicastDestinations(my_universe);
 ```
 <!-- CODE_BLOCK_END -->
 
