@@ -12,7 +12,7 @@ var searchData=
   ['getsourceinfo',['GetSourceInfo',['../classsacn_1_1_dmx_merger.html#ad96451a546189d4a1dd81c467a078e53',1,'sacn::DmxMerger']]],
   ['getstandardversion',['GetStandardVersion',['../classsacn_1_1_receiver.html#a10fb12573de0db62d78bcc481eaf525f',1,'sacn::Receiver']]],
   ['getstarttime',['GetStartTime',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_timer.html#a2e4c4be67a346b64e3e24b2f6bad80f4',1,'etcpal::Timer']]],
-  ['getunicastdestinations',['GetUnicastDestinations',['../classsacn_1_1_source.html#a903f148c6c81f16d2cc9d3a623b42256',1,'sacn::Source']]],
+  ['getunicastdestinations',['GetUnicastDestinations',['../classsacn_1_1_source.html#a80e1d17f72cc96da34ed4e2ed7b5a439',1,'sacn::Source']]],
   ['getuniverse',['GetUniverse',['../classsacn_1_1_merge_receiver.html#a3d205f22d3d18f81585fd8d07ea21647',1,'sacn::MergeReceiver::GetUniverse()'],['../classsacn_1_1_receiver.html#a3d205f22d3d18f81585fd8d07ea21647',1,'sacn::Receiver::GetUniverse()']]],
   ['getuniverses',['GetUniverses',['../classsacn_1_1_source.html#adc1d03b3f1516e7f545862b9096d834c',1,'sacn::Source']]]
 ];

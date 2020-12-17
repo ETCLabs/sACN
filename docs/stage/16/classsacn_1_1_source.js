@@ -12,7 +12,7 @@ var classsacn_1_1_source =
     [ "ChangePriority", "classsacn_1_1_source.html#a250e66ea54b315476f4c201600dd7b5f", null ],
     [ "ChangeSynchronizationUniverse", "classsacn_1_1_source.html#a6f73aa9c83e7d7266128cba5d4f70ef2", null ],
     [ "GetNetworkInterfaces", "classsacn_1_1_source.html#a86e4524a3ef2fb15e2c2caaa38951e65", null ],
-    [ "GetUnicastDestinations", "classsacn_1_1_source.html#a903f148c6c81f16d2cc9d3a623b42256", null ],
+    [ "GetUnicastDestinations", "classsacn_1_1_source.html#a80e1d17f72cc96da34ed4e2ed7b5a439", null ],
     [ "GetUniverses", "classsacn_1_1_source.html#adc1d03b3f1516e7f545862b9096d834c", null ],
     [ "handle", "classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25", null ],
     [ "operator=", "classsacn_1_1_source.html#ace1a98c6e347dddfb9c2b362b93b2a45", null ],

@@ -289,7 +289,7 @@ $(document).ready(function(){initNavTree('using_source.html','');});
 </div>
 </p>
 <p>The starting set of unicast destinations can also be specified with the universe configuration's optional unicast_destinations setting.</p>
-<p>The application can also obtain the list of unicast destinations that a source is currently transmitting on:</p>
+<p>The application can also obtain the list of unicast destinations that a universe is currently transmitting on:</p>
 <p> 
 <div class="tab">
   <button id="button_7_c" class="tablinks" onclick="selectLanguage(event, '7', 'c')">C</button>
@@ -297,11 +297,11 @@ $(document).ready(function(){initNavTree('using_source.html','');});
 </div>
 <div id="div_7_c" class="tabcontent">
 </p>
-<div class="fragment"><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a> *unicast_dests;  <span class="comment">// Points to an array with DESTS_SIZE (perhaps SACN_MAX_UNICAST_DESTINATIONS) elements.</span></div><div class="line"><span class="keywordtype">size_t</span> num_dests = <a class="code" href="group__sacn__source.html#gae1f58f8d5951d2edfe567b22ed96c343">sacn_source_get_unicast_destinations</a>(handle_, unicast_dests, DESTS_SIZE);</div><div class="line"><span class="keywordflow">if</span>(num_dests &gt; DESTS_SIZE)</div><div class="line">{</div><div class="line">  <span class="comment">// Not all of the destinations were written to the array. The application should allocate a larger array &amp; try again.</span></div><div class="line">}</div><div class="line"><span class="keywordflow">else</span></div><div class="line">{</div><div class="line">  <span class="comment">// The first num_dests elements of the unicast_dests array represent the complete list of unicast destinations.</span></div><div class="line">}</div></div><!-- fragment --><p> 
+<div class="fragment"><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a> *unicast_dests;  <span class="comment">// Points to an array with DESTS_SIZE (perhaps SACN_MAX_UNICAST_DESTINATIONS) elements.</span></div><div class="line"><span class="keywordtype">size_t</span> num_dests = <a class="code" href="group__sacn__source.html#ga12f792b85add6af90ba2560f287b630c">sacn_source_get_unicast_destinations</a>(handle_, my_universe, unicast_dests, DESTS_SIZE);</div><div class="line"><span class="keywordflow">if</span>(num_dests &gt; DESTS_SIZE)</div><div class="line">{</div><div class="line">  <span class="comment">// Not all of the destinations were written to the array. The application should allocate a larger array &amp; try again.</span></div><div class="line">}</div><div class="line"><span class="keywordflow">else</span></div><div class="line">{</div><div class="line">  <span class="comment">// The first num_dests elements of the unicast_dests array represent the complete list of unicast destinations.</span></div><div class="line">}</div></div><!-- fragment --><p> 
 </div>
 <div id="div_7_cpp" class="tabcontent">
 </p>
-<div class="fragment"><div class="line">std::vector&lt;etcpal::IpAddr&gt; unicast_dests = my_source.<a class="code" href="classsacn_1_1_source.html#a903f148c6c81f16d2cc9d3a623b42256">GetUnicastDestinations</a>();</div></div><!-- fragment --><p> 
+<div class="fragment"><div class="line">std::vector&lt;etcpal::IpAddr&gt; unicast_dests = my_source.<a class="code" href="classsacn_1_1_source.html#a80e1d17f72cc96da34ed4e2ed7b5a439">GetUnicastDestinations</a>(my_universe);</div></div><!-- fragment --><p> 
 </div>
 </p>
 <h2>Custom Start Codes</h2>
