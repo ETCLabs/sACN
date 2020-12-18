@@ -45,8 +45,6 @@
  * 
  * See @ref using_source for a detailed description of how to use this API.
  *
- * See @ref using_source for a detailed description of how to use this API.
- *
  * @{
  */
 

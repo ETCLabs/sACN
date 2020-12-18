@@ -81,37 +81,7 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
  * @return #kEtcPalErrNoMem: No room to allocate an additional source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
-{
-  // If the Tick thread hasn't been started yet, start it if the config isn't manual.
-
-  ETCPAL_UNUSED_ARG(config);
-}
-
-/**
- * @brief Create a new sACN source to send sACN data.
- *
- * This creates the instance of the source, but no data is sent until sacn_source_add_universe() and
- * sacn_source_set_dirty() is called.
- *
- * Note that a source is considered as successfully created if it is able to successfully use any of the
- * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
- *
- * @param[in] config Configuration parameters for the sACN source to be created.
- * @param[out] handle Filled in on success with a handle to the sACN source.
- * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and
- * the operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
- * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
- * @return #kEtcPalErrOk: Source successfully created.
- * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
- * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNoMem: No room to allocate an additional source.
- * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
- */
-etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle,
-                                  SacnMcastInterface* netints, size_t num_netints)
+etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle)
 {
   // If the Tick thread hasn't been started yet, start it if the config isn't manual.
 

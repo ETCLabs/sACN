@@ -319,34 +319,6 @@
 /**
  * @brief The maximum number of sources that can be merged on each merger instance.
  *
- * It's usually only necessary to worry about this on real-time or embedded systems.
- */
-#ifndef SACN_SOURCE_DETECTOR_THREAD_STACK
-#define SACN_SOURCE_DETECTOR_THREAD_STACK ETCPAL_THREAD_DEFAULT_STACK
-#endif
-
-/* Infinite read blocks are not supported due to the potential for hangs on shutdown. */
-#if defined(SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS) && SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS < 0
-#undef SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS /* It will get the default value below */
-#endif
-
-//TODO change this to whatever you need, or remove the constant.
-/**
- * @brief The maximum amount of time the Source Detector thread will block waiting for data, in
- *        milliseconds.
- *
- * It is recommended to keep this time short to avoid delays on shutdown.
- */
-#ifndef SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS
-#define SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS 100
-#endif
-
-/**
- * @brief The maximum number of sACN sources that can be monitored.
- * 
- * This number is intentionally set on the small side.  This module
- * is more likely to be needed by applications that use dynamic memory.
- * 
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER
