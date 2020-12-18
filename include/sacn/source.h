@@ -45,6 +45,8 @@
  * 
  * See @ref using_source for a detailed description of how to use this API.
  *
+ * See @ref using_source for a detailed description of how to use this API.
+ *
  * @{
  */
 
@@ -65,6 +67,9 @@ typedef int sacn_source_t;
  */
 #define SACN_SOURCE_INFINITE_UNIVERSES 0
 
+/** The default keep-alive interval for sources, in milliseconds. */
+#define SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT 800
+
 /** A set of configuration information for a sACN source. */
 typedef struct SacnSourceConfig
 {
@@ -73,29 +78,37 @@ typedef struct SacnSourceConfig
   /** The source's CID. */
   EtcPalUuid cid;
   /** The source's name, a UTF-8 encoded string. */
-  char name[SACN_SOURCE_NAME_MAX_LEN];
+  const char* name;
 
   /********* Optional values **********/
 
   /** The maximum number of universes this source will send to.  May be #SACN_SOURCE_INFINITE_UNIVERSES.
-      This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES is used instead.*/
+      This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES is used instead. */
   size_t universe_count_max;
 
-  /** If false (default), this module starts a shared thread that calls sacn_source_process_all() every 23 ms.
-      If true, no thread is started and the application must call sacn_source_process_all() at its DMX rate,
-      usually 23 ms. */
+  /** If false (default), this source will be added to a background thread that will send sACN updates at a
+      maximum rate of every 23 ms. If true, the source will not be added to the thread and the application
+      must call sacn_source_process_manual() at its maximum DMX rate, typically 23 ms. */
   bool manually_process_source;
 
+  /** What IP networking the source will support.  The default is #kSacnIpV4AndIpV6. */
+  sacn_ip_support_t ip_supported;
+
+  /** The interval at which the source will send keep-alive packets during transmission suppression, in milliseconds.
+      The default is #SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT. */
+  int keep_alive_interval;
 } SacnSourceConfig;
 
 /** A default-value initializer for an SacnSourceConfig struct. */
-#define SACN_SOURCE_CONFIG_DEFAULT_INIT                        \
-  {                                                            \
-    kEtcPalNullUuid, "", SACN_SOURCE_INFINITE_UNIVERSES, false \
+#define SACN_SOURCE_CONFIG_DEFAULT_INIT                                             \
+  {                                                                                 \
+    kEtcPalNullUuid, NULL, SACN_SOURCE_INFINITE_UNIVERSES, false, kSacnIpV4AndIpV6, \
+        SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT                                     \
   }
 
 void sacn_source_config_init(SacnSourceConfig* config);
 
+/** A set of configuration information for a sACN universe. */
 typedef struct SacnSourceUniverseConfig
 {
   /********* Required values **********/
@@ -103,25 +116,12 @@ typedef struct SacnSourceUniverseConfig
   /** The universe number. At this time, only values from 1 - 63999 are accepted.
       You cannot have a source send more than one stream of values to a single universe. */
   uint16_t universe;
-  /** The buffer of up to 512 dmx values that will be sent each tick.
-      This pointer may not be NULL. The memory is owned by the application, and should not
-      be destroyed until after the universe is deleted on this source. */
-  const uint8_t* values_buffer;
-  /** The size of values_buffer. */
-  size_t num_values;
 
   /********* Optional values **********/
 
-  /** The sACN universe priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100. */
+  /** The sACN universe priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100.
+   */
   uint8_t priority;
-  /** The (optional) buffer of up to 512 per-address priorities that will be sent each tick.
-      If this is NULL, only the universe priority will be used.
-      If non-NULL, this buffer is evaluated each tick.  Changes to and from 0 ("don't care") cause appropriate
-      sacn packets over time to take and give control of those DMX values as defined in the per-address priority
-      specification.
-      The memory is owned by the application, and should not be destroyed until after the universe is
-      deleted on this source. The size of this buffer must match the size of values_buffer.  */
-  const uint8_t* priorities_buffer; 
 
   /** If true, this sACN source will send preview data. Defaults to false. */
   bool send_preview;
@@ -141,24 +141,27 @@ typedef struct SacnSourceUniverseConfig
 } SacnSourceUniverseConfig;
 
 /** A default-value initializer for an SacnSourceUniverseConfig struct. */
-#define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT    \
-  {                                                 \
-    0, NULL, 0, 100, NULL, false, false, NULL, 0, 0 \
+#define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT \
+  {                                              \
+    0, 100, false, false, NULL, 0, 0             \
   }
 
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config);
 
-etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle,
-                                  SacnMcastInterface* netints, size_t num_netints);
+etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle);
 void sacn_source_destroy(sacn_source_t handle);
 
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name);
 
-etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config);
+etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config,
+                                        SacnMcastInterface* netints, size_t num_netints);
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe);
+size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size_t universes_size);
 
 etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest);
 void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest);
+size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t universe, EtcPalIpAddr* destinations,
+                                            size_t destinations_size);
 
 etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t universe, uint8_t new_priority);
 etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t universe, bool new_preview_flag);
@@ -169,13 +172,24 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
                                     size_t buflen);
 etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t universe);
 
-void sacn_source_set_dirty(sacn_source_t handle, uint16_t universe);
-void sacn_source_set_list_dirty(sacn_source_t handle, const uint16_t* universes, size_t num_universes);
-void sacn_source_set_dirty_and_force_sync(sacn_source_t handle, uint16_t universe);
+void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
+                               size_t new_values_size);
+void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
+                                       size_t new_values_size, const uint8_t* new_priorities,
+                                       size_t new_priorities_size);
+void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
+                                              size_t new_values_size);
+void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe,
+                                                      const uint8_t* new_values, size_t new_values_size,
+                                                      const uint8_t* new_priorities, size_t new_priorities_size);
 
-int sacn_source_process_all(void);
+int sacn_source_process_manual(void);
 
-etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, SacnMcastInterface* netints, size_t num_netints);
+etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
+                                            size_t num_netints);
+
+size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
+                                          size_t netints_size);
 
 #ifdef __cplusplus
 }

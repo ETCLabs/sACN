@@ -230,7 +230,7 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
  * @param[in] config Configuration parameters for the sACN receiver to be created.
  * @param[out] handle Filled in on success with a handle to the sACN receiver.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -484,7 +484,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  *
  * @param[in] handle Handle to the receiver for which to reset the networking.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If NULL, all available interfaces are tried.
+ * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Universe changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
@@ -503,6 +503,20 @@ etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastI
     return kEtcPalErrNotInit;
 
   return kEtcPalErrNotImpl;
+}
+
+/**
+ * @brief Obtain the statuses of a receiver's network interfaces.
+ *
+ * @param[in] handle Handle to the receiver for which to obtain the list of network interfaces.
+ * @param[out] netints A pointer to an application-owned array where the network interface list will be written.
+ * @param[in] netints_size The size of the provided netints array.
+ * @return The total number of network interfaces for the receiver. If this is greater than netints_size, then only
+ * netints_size addresses were written to the netints array. If the receiver was not found, 0 is returned.
+ */
+size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, SacnMcastInterface* netints, size_t netints_size)
+{
+  return 0;  // TODO
 }
 
 /**
@@ -646,7 +660,7 @@ etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, SacnMcastInte
     {
       for (size_t read_index = 0u, write_index = 0u; read_index < num_netints; ++read_index)
       {
-        if (netints[read_index].operation_succeeded)
+        if (netints[read_index].status == kEtcPalErrOk)
         {
           memcpy(&receiver->netints[write_index], &netints[read_index].iface, sizeof(EtcPalMcastNetintId));
           ++write_index;
@@ -1339,8 +1353,8 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
   if (universe_data->handle != SACN_RECEIVER_INVALID && universe_data->callback)
   {
     bool is_sampling = false;  // TODO: Pass in actual is_sampling
-    universe_data->callback(universe_data->handle, from_addr, &universe_data->header, universe_data->pdata, is_sampling,
-                            universe_data->context);
+    universe_data->callback(universe_data->handle, from_addr, &universe_data->header, universe_data->pdata,
+                            is_sampling, universe_data->context);
   }
 }
 

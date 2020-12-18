@@ -74,8 +74,8 @@ typedef int sacn_merge_receiver_t;
  * @param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe. This buffer is
  * owned by the library.
  * @param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source_ids.  If a value in the buffer is
- *           #DMX_MERGER_SOURCE_INVALID, the corresponding slot is not currently controlled. You can also use
- *            SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, index) to check the slot validity. This buffer is owned by
+ *           #SACN_DMX_MERGER_SOURCE_INVALID, the corresponding slot is not currently controlled. You can also use
+ *           #SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, index) to check the slot validity. This buffer is owned by
  * the library.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
@@ -149,14 +149,17 @@ typedef struct SacnMergeReceiverConfig
 
   /** If true, this allows per-address priorities (if any are received) to be fed into the merger. If false, received
       per-address priorities are ignored, and only universe priorities are used in the merger. Keep in mind that this
-      setting will be ignored if #SACN_ETC_PRIORITY_EXTENSTION = 0, in which case per-address priorities are ignored. */
+      setting will be ignored if #SACN_ETC_PRIORITY_EXTENSION = 0, in which case per-address priorities are ignored. */
   bool use_pap;
+
+  /** What IP networking the merge_receiver will support.  The default is #kSacnIpV4AndIpV6. */
+  sacn_ip_support_t ip_supported;
 } SacnMergeReceiverConfig;
 
 /** A default-value initializer for an SacnMergeReceiverConfig struct. */
-#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                       \
-  {                                                                   \
-    0, {NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, true \
+#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                         \
+  {                                                                                     \
+    0, {NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, true, kSacnIpV4AndIpV6 \
   }
 
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
@@ -168,6 +171,8 @@ etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, ui
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id);
 etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, SacnMcastInterface* netints,
                                                     size_t num_netints);
+size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, SacnMcastInterface* netints,
+                                                  size_t netints_size);
 sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid);
 etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, sacn_source_id_t source_id,
                                                   EtcPalUuid* source_cid);

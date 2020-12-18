@@ -83,8 +83,8 @@ public:
      * @param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe.  This buffer
      *                  is owned by the library.
      * @param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source_ids.  If a value in the buffer is
-     *           #DMX_MERGER_SOURCE_INVALID, the corresponding slot is not currently controlled. You can also use
-     *            SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, index) to check the slot validity. This buffer is owned
+     *           #SACN_DMX_MERGER_SOURCE_INVALID, the corresponding slot is not currently controlled. You can also use
+     *           #SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, index) to check the slot validity. This buffer is owned
      *            by the library.
      */
     virtual void HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
@@ -118,7 +118,11 @@ public:
      * @param[in] handle The merge receiver's handle.
      * @param[in] universe The universe this merge receiver is monitoring.
      */
-    virtual void HandleSourceLimitExceeded(Handle handle, uint16_t universe) = 0;
+    virtual void HandleSourceLimitExceeded(Handle handle, uint16_t universe)
+    {
+      ETCPAL_UNUSED_ARG(handle);
+      ETCPAL_UNUSED_ARG(universe);
+    }
   };
 
   /**
@@ -139,12 +143,19 @@ public:
 
     /** If true, this allows per-address priorities (if any are received) to be fed into the merger. If false, received
         per-address priorities are ignored, and only universe priorities are used in the merger. Keep in mind that this
-        setting will be ignored if #SACN_ETC_PRIORITY_EXTENSTION = 0, in which case per-address priorities are ignored.
+        setting will be ignored if #SACN_ETC_PRIORITY_EXTENSION = 0, in which case per-address priorities are ignored.
      */
     bool use_pap{true};
 
+    /** What IP networking the merge receiver will support. */
+    sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6};
+
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
+
+    /** Instantiates merge receiver settings based on a universe ID. This constructor is not marked explicit on purpose
+        so that a Settings instance can be implicitly constructed from a universe number.
+     */
     Settings(uint16_t new_universe_id);
 
     bool IsValid() const;
@@ -153,8 +164,8 @@ public:
   MergeReceiver() = default;
   MergeReceiver(const MergeReceiver& other) = delete;
   MergeReceiver& operator=(const MergeReceiver& other) = delete;
-  MergeReceiver(MergeReceiver&& other) = default;             /**< Move a merge receiver instance. */
-  MergeReceiver& operator=(MergeReceiver&& other) = default;  /**< Move a merge receiver instance. */
+  MergeReceiver(MergeReceiver&& other) = default;            /**< Move a merge receiver instance. */
+  MergeReceiver& operator=(MergeReceiver&& other) = default; /**< Move a merge receiver instance. */
 
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler);
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
@@ -164,6 +175,7 @@ public:
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
   etcpal::Error ResetNetworking();
   etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
+  std::vector<SacnMcastInterface> GetNetworkInterfaces();
 
   etcpal::Expected<sacn_source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
   etcpal::Expected<etcpal::Uuid> GetSourceCid(sacn_source_id_t source) const;
@@ -191,8 +203,9 @@ extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, u
   }
 }
 
-extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr,
-                                             const SacnHeaderData* header, const uint8_t* pdata, void* context)
+extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, uint16_t universe,
+                                             const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
+                                             const uint8_t* pdata, void* context)
 {
   if (context && source_addr && header)
   {
@@ -201,7 +214,8 @@ extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, uint1
   }
 }
 
-extern "C" inline void MergeReceiverCbSourceLimitExceeded(sacn_merge_receiver_t handle, uint16_t universe, void* context)
+extern "C" inline void MergeReceiverCbSourceLimitExceeded(sacn_merge_receiver_t handle, uint16_t universe,
+                                                          void* context)
 {
   if (context)
   {
@@ -234,7 +248,7 @@ inline bool MergeReceiver::Settings::IsValid() const
  * @brief Start listening for sACN data on a universe.
  *
  * This is the overload of Startup that uses all network interfaces.
- * 
+ *
  * An sACN merge receiver can listen on one universe at a time, and each universe can only be listened to
  * by one merge receiver at at time.
  *
@@ -270,7 +284,7 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
  * @param[in] settings Configuration parameters for the sACN merge receiver and this class instance.
  * @param[in] notify_handler The notification interface to call back to the application.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
+ * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Merge Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -285,9 +299,9 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
 {
   SacnMergeReceiverConfig config = TranslateConfig(settings, notify_handler);
 
-  if(netints.empty())
+  if (netints.empty())
     return sacn_merge_receiver_create(&config, &handle_, NULL, 0);
-  
+
   return sacn_merge_receiver_create(&config, &handle_, netints.data(), netints.size());
 }
 
@@ -345,9 +359,9 @@ inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
- * After this call completes successfully, the merge receiver is in a sampling period for the new universe and will provide
- * HandleSourcesFound() calls when appropriate.
- * If this call fails, the caller must call Shutdown() on this class, because it may be in an invalid state.
+ * After this call completes successfully, the merge receiver is in a sampling period for the new universe and will
+ * provide HandleSourcesFound() calls when appropriate. If this call fails, the caller must call Shutdown() on this
+ * class, because it may be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -378,7 +392,7 @@ inline etcpal::Error MergeReceiver::ResetNetworking()
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
+ * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Universe changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -392,6 +406,29 @@ inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterfa
     return sacn_merge_receiver_reset_networking(handle_, nullptr, 0);
 
   return sacn_merge_receiver_reset_networking(handle_, netints.data(), netints.size());
+}
+
+/**
+ * @brief Obtain the statuses of this merge receiver's network interfaces.
+ *
+ * @return A vector of this merge receiver's network interfaces and their statuses.
+ */
+inline std::vector<SacnMcastInterface> MergeReceiver::GetNetworkInterfaces()
+{
+  // This uses a guessing algorithm with a while loop to avoid race conditions.
+  std::vector<SacnMcastInterface> netints;
+  size_t size_guess = 4u;
+  size_t num_netints = 0u;
+
+  do
+  {
+    netints.resize(size_guess);
+    num_netints = sacn_merge_receiver_get_network_interfaces(handle_, netints.data(), netints.size());
+    size_guess = num_netints + 4u;
+  } while (num_netints > netints.size());
+
+  netints.resize(num_netints);
+  return netints;
 }
 
 /**
@@ -448,6 +485,7 @@ inline SacnMergeReceiverConfig MergeReceiver::TranslateConfig(const Settings& se
     },
     settings.source_count_max,
     settings.use_pap,
+    settings.ip_supported
   };
   // clang-format on
 
