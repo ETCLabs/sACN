@@ -137,18 +137,17 @@ protected:
         expected_winning_sources[i] = SACN_DMX_MERGER_SOURCE_INVALID;
       }
     }
+#if 0  // TODO: Replace with calls to update levels, update priority, and/or update PAPs
 
     // Make the merge calls.
     if ((merge_type == MergeTestType::kUpdateSourceData) || (merge_type == MergeTestType::kStopSourcePap))
     {
-#if 0  // TODO: Replace with calls to update levels, update priority, and/or update PAPs
       EXPECT_EQ(sacn_dmx_merger_update_source_data(merger_handle_, source_1, priority_1, values_1, values_1_count,
                                                    address_priorities_1, address_priorities_1_count),
                 kEtcPalErrOk);
       EXPECT_EQ(sacn_dmx_merger_update_source_data(merger_handle_, source_2, priority_2, values_2, values_2_count,
                                                    address_priorities_2, address_priorities_2_count),
                 kEtcPalErrOk);
-#endif
     }
 
     // Execute stop_source_per_address_priority if needed.
@@ -170,6 +169,7 @@ protected:
     EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_1), kEtcPalErrOk);
     EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_2), kEtcPalErrOk);
     EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
+#endif
   }
 
   void TestMerge(uint8_t priority_1, const uint8_t* values_1, const uint8_t* address_priorities_1, uint8_t priority_2,
