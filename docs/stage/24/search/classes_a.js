@@ -15,7 +15,7 @@ var searchData=
   ['sacnsourcedetectorconfig',['SacnSourceDetectorConfig',['../struct_sacn_source_detector_config.html',1,'']]],
   ['sacnsourceuniverseconfig',['SacnSourceUniverseConfig',['../struct_sacn_source_universe_config.html',1,'']]],
   ['semaphore',['Semaphore',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_semaphore.html',1,'etcpal']]],
-  ['settings',['Settings',['../structsacn_1_1_source_1_1_settings.html',1,'Source::Settings'],['../structsacn_1_1_merge_receiver_1_1_settings.html',1,'MergeReceiver::Settings'],['../structsacn_1_1_source_detector_1_1_settings.html',1,'SourceDetector::Settings'],['../structsacn_1_1_dmx_merger_1_1_settings.html',1,'DmxMerger::Settings'],['../structsacn_1_1_receiver_1_1_settings.html',1,'Receiver::Settings']]],
+  ['settings',['Settings',['../structsacn_1_1_source_1_1_settings.html',1,'Source::Settings'],['../structsacn_1_1_receiver_1_1_settings.html',1,'Receiver::Settings'],['../structsacn_1_1_source_detector_1_1_settings.html',1,'SourceDetector::Settings'],['../structsacn_1_1_merge_receiver_1_1_settings.html',1,'MergeReceiver::Settings'],['../structsacn_1_1_dmx_merger_1_1_settings.html',1,'DmxMerger::Settings']]],
   ['signal',['Signal',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_signal.html',1,'etcpal']]],
   ['sockaddr',['SockAddr',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_sock_addr.html',1,'etcpal']]],
   ['source',['Source',['../classsacn_1_1_source.html',1,'sacn']]],
