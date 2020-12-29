@@ -32,7 +32,7 @@
 
 #define SOURCE_STOPPED_SOURCING(source_state, slot_index)                                                      \
   (source_state->source.address_priority_valid && (source_state->source.address_priority[slot_index] == 0)) || \
-      (slot_index >= source_state->source.valid_value_count)
+      (slot_index >= source_state->source.valid_level_count)
 
 /* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
 
@@ -425,7 +425,7 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_sour
     if (result == kEtcPalErrOk)
     {
       // Merge the source with valid_value_count = 0 to remove this source from the merge output.
-      source_state->source.valid_value_count = 0;
+      source_state->source.valid_level_count = 0;
       merge_source_on_all_slots(merger_state, source_state);
 
       // Now that the output no longer refers to this source, remove the source from the lookup trees and free its
@@ -748,10 +748,10 @@ bool source_handle_in_use(int handle_val, void* cookie)
 void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values, uint16_t new_values_count)
 {
   // Update the valid value count.
-  source->source.valid_value_count = new_values_count;
+  source->source.valid_level_count = new_values_count;
 
   // Update the level values.
-  memcpy(source->source.values, new_values, new_values_count);
+  memcpy(source->source.levels, new_values, new_values_count);
 
   // Merge all slots.
   merge_source_on_all_slots(merger, source);
@@ -803,7 +803,7 @@ void update_universe_priority(MergerState* merger, SourceState* source, uint8_t 
  */
 void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
 {
-  uint8_t source_level = source->source.values[slot_index];
+  uint8_t source_level = source->source.levels[slot_index];
   uint8_t source_priority = source->source.address_priority_valid ? source->source.address_priority[slot_index]
                                                                   : source->source.universe_priority;
   bool source_stopped_sourcing = SOURCE_STOPPED_SOURCING(source, slot_index);
@@ -845,7 +845,7 @@ void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
     {
       if (potential_winner->handle != source->handle)  // Don't evaluate the same source.
       {
-        uint8_t potential_winner_level = potential_winner->source.values[slot_index];
+        uint8_t potential_winner_level = potential_winner->source.levels[slot_index];
         uint8_t potential_winner_priority = potential_winner->source.address_priority_valid
                                                 ? potential_winner->source.address_priority[slot_index]
                                                 : potential_winner->source.universe_priority;
@@ -931,8 +931,8 @@ SourceState* construct_source_state(sacn_source_id_t handle)
   {
     source_state->handle = handle;
     source_state->source.id = handle;
-    memset(source_state->source.values, 0, DMX_ADDRESS_COUNT);
-    source_state->source.valid_value_count = 0;
+    memset(source_state->source.levels, 0, DMX_ADDRESS_COUNT);
+    source_state->source.valid_level_count = 0;
     source_state->source.universe_priority = 0;
     source_state->source.address_priority_valid = false;
     memset(source_state->source.address_priority, 0, DMX_ADDRESS_COUNT);

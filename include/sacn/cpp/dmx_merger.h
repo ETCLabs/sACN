@@ -324,7 +324,7 @@ inline etcpal::Error DmxMerger::UpdateUniversePriority(sacn_source_id_t source, 
  */
 inline etcpal::Error DmxMerger::RemovePaps(sacn_source_id_t source)
 {
-  return sacn_dmx_merger_stop_source_per_address_priority(handle_, source);
+  return sacn_dmx_merger_remove_paps(handle_, source);
 }
 
 /**

@@ -95,9 +95,9 @@ protected:
 TEST_F(TestSockets, GoodNetintConfigValidated)
 {
   std::vector<SacnMcastInterface> netints;
-  netints.push_back({{kEtcPalIpTypeV4, 1}, true});
-  netints.push_back({{kEtcPalIpTypeV6, 30}, true});
-  netints.push_back({{kEtcPalIpTypeV4, 1000}, true});
+  netints.push_back({{kEtcPalIpTypeV4, 1}, kEtcPalErrOk});
+  netints.push_back({{kEtcPalIpTypeV6, 30}, kEtcPalErrOk});
+  netints.push_back({{kEtcPalIpTypeV4, 1000}, kEtcPalErrOk});
   EXPECT_EQ(sacn_validate_netint_config(netints.data(), netints.size(), nullptr), kEtcPalErrOk);
 }
 
