@@ -38,8 +38,6 @@ DECLARE_FAKE_VALUE_FUNC(sacn_source_id_t, sacn_dmx_merger_get_id, sacn_dmx_merge
 DECLARE_FAKE_VALUE_FUNC(const SacnDmxMergerSource*, sacn_dmx_merger_get_source, sacn_dmx_merger_t, sacn_source_id_t);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_dmx_merger_update_source_data, sacn_dmx_merger_t, sacn_source_id_t,
                         uint8_t, const uint8_t*, size_t, const uint8_t*, size_t);
-DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_dmx_merger_update_source_from_sacn, sacn_dmx_merger_t,
-                        const SacnHeaderData*, const uint8_t*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_dmx_merger_stop_source_per_address_priority, sacn_dmx_merger_t,
                         sacn_source_id_t);
 

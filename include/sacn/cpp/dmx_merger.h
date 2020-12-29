@@ -27,7 +27,6 @@
 
 #include "sacn/dmx_merger.h"
 #include "etcpal/cpp/inet.h"
-#include "etcpal/cpp/uuid.h"
 
 /**
  * @defgroup sacn_dmx_merger_cpp sACN DMX Merger API
@@ -148,7 +147,7 @@ inline DmxMerger::Settings::Settings(uint8_t* slots_ptr) : slots(slots_ptr)
  */
 inline bool DmxMerger::Settings::IsValid() const
 {
-  return (slots && slot_owners);
+  return (slots != nullptr);
 }
 
 /**
