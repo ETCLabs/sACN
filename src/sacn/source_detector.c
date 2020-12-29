@@ -66,9 +66,7 @@ static const EtcPalThreadParams kSourceDetectorThreadParams = {SACN_SOURCE_DETEC
 etcpal_error_t sacn_source_detector_init(void)
 {
   // TODO CHRISTIAN
-  etcpal_error_t res = kEtcPalErrNotImpl;
-
-  return res;
+  return kEtcPalErrOk;
 }
 
 /* Deinitialize the sACN Source Detector module. Internal function called from sacn_deinit(). */

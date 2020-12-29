@@ -36,7 +36,7 @@
 class TestMem : public ::testing::Test
 {
 protected:
-  static constexpr unsigned int kTestNumThreads = 4;
+  static constexpr unsigned int kTestNumThreads = 1;  // TODO: Set back to 4 if/when SACN_RECEIVER_MAX_THREADS increases
   static constexpr intptr_t kMagicPointerValue = 0xdeadbeef;
 
   void SetUp() override
@@ -277,7 +277,7 @@ TEST_F(TestMem, AddDeadSocketWorks)
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
+    for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES * 2; ++i)
     {
       ASSERT_TRUE(add_dead_socket(recv_thread_context, (etcpal_socket_t)i));
       EXPECT_EQ(recv_thread_context->num_dead_sockets, i + 1);

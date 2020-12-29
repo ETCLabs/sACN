@@ -102,6 +102,7 @@ TEST_F(TestReceiver, ChangeUniverseWorks)
   config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
                                       bool, void*) {};
   config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sampling_period_ended = [](sacn_receiver_t handle, uint16_t universe, void* context) {};
   config.universe_id = CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE;
 
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t, const EtcPalMcastNetintId*,
@@ -120,7 +121,7 @@ TEST_F(TestReceiver, ChangeUniverseWorks)
   };
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
                                                  const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
-    EXPECT_EQ(ip_type, kEtcPalIpTypeV4);  // TODO IPv6
+    EXPECT_NE(ip_type, kEtcPalIpTypeInvalid);
     EXPECT_EQ(universe, CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE);
     EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
     EXPECT_NE(socket, nullptr);
@@ -134,8 +135,8 @@ TEST_F(TestReceiver, ChangeUniverseWorks)
   EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
   EXPECT_EQ(sacn_initialized_fake.call_count, 2u);
   EXPECT_EQ(clear_term_set_list_fake.call_count, 1u);
-  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 1u);
-  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 2u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u);
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 4u);
 
   clear_term_set_list_fake.custom_fake = nullptr;
   sacn_remove_receiver_socket_fake.custom_fake = nullptr;
@@ -180,6 +181,7 @@ TEST_F(TestReceiver, ChangeUniverseErrExistsWorks)
   config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
                                       bool, void*) {};
   config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sampling_period_ended = [](sacn_receiver_t handle, uint16_t universe, void* context) {};
 
   config.universe_id = CHANGE_UNIVERSE_RECEIVER_EXISTS_UNIVERSE;
 
@@ -210,6 +212,7 @@ TEST_F(TestReceiver, ChangeUniverseErrNotFoundWorks)
   config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
                                       bool, void*) {};
   config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sampling_period_ended = [](sacn_receiver_t handle, uint16_t universe, void* context) {};
   config.universe_id = CHANGE_UNIVERSE_VALID_UNIVERSE_1;
 
   sacn_receiver_t handle;
