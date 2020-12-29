@@ -59,8 +59,11 @@ extern "C" {
  */
 typedef enum 
 {
+  /** Use IPv4 only. */
   kSacnIpV4Only,
+  /** Use IPv6 only. */
   kSacnIpV6Only,
+  /** Use both IPv4 and IPv6. */
   kSacnIpV4AndIpV6
 } sacn_ip_support_t;
 
