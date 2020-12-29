@@ -72,6 +72,18 @@ static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PR
 #define FREE_TRACKED_SOURCE(ptr) etcpal_mempool_free(sacnrecv_tracked_sources, ptr)
 #endif
 
+/****************************** Private types ********************************/
+
+typedef struct PeriodicCallbacks
+{
+  const SourcesLostNotification* sources_lost_arr;
+  size_t num_sources_lost;
+  const SamplingStartedNotification* sampling_started_arr;
+  size_t num_sampling_started;
+  const SamplingEndedNotification* sampling_ended_arr;
+  size_t num_sampling_ended;
+} PeriodicCallbacks;
+
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM
@@ -131,10 +143,7 @@ static void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* r
                                      SourcesLostNotification* sources_lost);
 static bool check_source_timeouts(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
 static void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
-static void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost,
-                                       const SamplingStartedNotification* sampling_started_arr,
-                                       size_t num_sampling_started, const SamplingEndedNotification* sampling_ended_arr,
-                                       size_t num_sampling_ended);
+static void deliver_periodic_callbacks(const PeriodicCallbacks* periodic_callbacks);
 
 // Tree node management
 static int tracked_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
@@ -1353,8 +1362,8 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
   if (universe_data->handle != SACN_RECEIVER_INVALID && universe_data->callback)
   {
     bool is_sampling = false;  // TODO: Pass in actual is_sampling
-    universe_data->callback(universe_data->handle, from_addr, &universe_data->header, universe_data->pdata,
-                            is_sampling, universe_data->context);
+    universe_data->callback(universe_data->handle, from_addr, &universe_data->header, universe_data->pdata, is_sampling,
+                            universe_data->context);
   }
 }
 
@@ -1418,8 +1427,15 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
     sacn_unlock();
   }
 
-  deliver_periodic_callbacks(sources_lost, num_sources_lost, sampling_started, num_sampling_started, sampling_ended,
-                             num_sampling_ended);
+  PeriodicCallbacks periodic_callbacks;
+  periodic_callbacks.sources_lost_arr = sources_lost;
+  periodic_callbacks.num_sources_lost = num_sources_lost;
+  periodic_callbacks.sampling_started_arr = sampling_started;
+  periodic_callbacks.num_sampling_started = num_sampling_started;
+  periodic_callbacks.sampling_ended_arr = sampling_ended;
+  periodic_callbacks.num_sampling_ended = num_sampling_ended;
+
+  deliver_periodic_callbacks(&periodic_callbacks);
 }
 
 void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver, SourcesLostNotification* sources_lost)
@@ -1559,25 +1575,24 @@ void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_
   }
 }
 
-void deliver_periodic_callbacks(const SourcesLostNotification* sources_lost_arr, size_t num_sources_lost,
-                                const SamplingStartedNotification* sampling_started_arr, size_t num_sampling_started,
-                                const SamplingEndedNotification* sampling_ended_arr, size_t num_sampling_ended)
+void deliver_periodic_callbacks(const PeriodicCallbacks* periodic_callbacks)
 {
-  for (const SamplingStartedNotification* notif = sampling_started_arr;
-       notif < sampling_started_arr + num_sampling_started; ++notif)
+  for (const SamplingStartedNotification* notif = periodic_callbacks->sampling_started_arr;
+       notif < periodic_callbacks->sampling_started_arr + periodic_callbacks->num_sampling_started; ++notif)
   {
     if (notif->callback)
       notif->callback(notif->handle, notif->universe, notif->context);
   }
 
-  for (const SamplingEndedNotification* notif = sampling_ended_arr; notif < sampling_ended_arr + num_sampling_ended;
-       ++notif)
+  for (const SamplingEndedNotification* notif = periodic_callbacks->sampling_ended_arr;
+       notif < periodic_callbacks->sampling_ended_arr + periodic_callbacks->num_sampling_ended; ++notif)
   {
     if (notif->callback)
       notif->callback(notif->handle, notif->universe, notif->context);
   }
 
-  for (const SourcesLostNotification* notif = sources_lost_arr; notif < sources_lost_arr + num_sources_lost; ++notif)
+  for (const SourcesLostNotification* notif = periodic_callbacks->sources_lost_arr;
+       notif < periodic_callbacks->sources_lost_arr + periodic_callbacks->num_sources_lost; ++notif)
   {
     if (notif->callback)
       notif->callback(notif->handle, notif->universe, notif->lost_sources, notif->num_lost_sources, notif->context);
