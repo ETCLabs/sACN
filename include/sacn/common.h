@@ -55,6 +55,16 @@ extern "C" {
 #define DMX_ADDRESS_COUNT 512
 
 /**
+ * This enum defines how the API module will use IPv4 and IPv6 networking.
+ */
+typedef enum 
+{
+  kSacnIpV4Only,
+  kSacnIpV6Only,
+  kSacnIpV4AndIpV6
+} sacn_ip_support_t;
+
+/**
  * The data present in the header of an sACN data packet.
  */
 typedef struct SacnHeaderData
@@ -101,10 +111,11 @@ typedef struct SacnMcastInterface
    * The multicast interface to use.
    */
   EtcPalMcastNetintId iface;
+
   /**
-   * Whether or not the multicast interface was useable.
+   * The status of the multicast interface. The interface is only usable if the status is #kEtcPalErrOk.
    */
-  bool operation_succeeded;
+  etcpal_error_t status;
 } SacnMcastInterface;
 
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params);

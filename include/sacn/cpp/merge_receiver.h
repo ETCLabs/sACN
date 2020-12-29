@@ -147,8 +147,15 @@ public:
      */
     bool use_pap{true};
 
+    /** What IP networking the merge receiver will support. */
+    sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6};
+
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
+
+    /** Instantiates merge receiver settings based on a universe ID. This constructor is not marked explicit on purpose
+        so that a Settings instance can be implicitly constructed from a universe number.
+     */
     Settings(uint16_t new_universe_id);
 
     bool IsValid() const;
@@ -168,6 +175,7 @@ public:
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
   etcpal::Error ResetNetworking();
   etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
+  std::vector<SacnMcastInterface> GetNetworkInterfaces();
 
   etcpal::Expected<sacn_source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
   etcpal::Expected<etcpal::Uuid> GetSourceCid(sacn_source_id_t source) const;
@@ -276,8 +284,7 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
  * @param[in] settings Configuration parameters for the sACN merge receiver and this class instance.
  * @param[in] notify_handler The notification interface to call back to the application.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
- * modified.
+ * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Merge Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -385,8 +392,7 @@ inline etcpal::Error MergeReceiver::ResetNetworking()
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
- * modified.
+ * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Universe changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -400,6 +406,29 @@ inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterfa
     return sacn_merge_receiver_reset_networking(handle_, nullptr, 0);
 
   return sacn_merge_receiver_reset_networking(handle_, netints.data(), netints.size());
+}
+
+/**
+ * @brief Obtain the statuses of this merge receiver's network interfaces.
+ *
+ * @return A vector of this merge receiver's network interfaces and their statuses.
+ */
+inline std::vector<SacnMcastInterface> MergeReceiver::GetNetworkInterfaces()
+{
+  // This uses a guessing algorithm with a while loop to avoid race conditions.
+  std::vector<SacnMcastInterface> netints;
+  size_t size_guess = 4u;
+  size_t num_netints = 0u;
+
+  do
+  {
+    netints.resize(size_guess);
+    num_netints = sacn_merge_receiver_get_network_interfaces(handle_, netints.data(), netints.size());
+    size_guess = num_netints + 4u;
+  } while (num_netints > netints.size());
+
+  netints.resize(num_netints);
+  return netints;
 }
 
 /**
@@ -456,6 +485,7 @@ inline SacnMergeReceiverConfig MergeReceiver::TranslateConfig(const Settings& se
     },
     settings.source_count_max,
     settings.use_pap,
+    settings.ip_supported
   };
   // clang-format on
 

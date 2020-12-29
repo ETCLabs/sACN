@@ -566,29 +566,149 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
 }
 
 /**
- * @brief Updates the source data and recalculate outputs.
+ * @brief Updates a source's levels and recalculates outputs.
  *
- * The direct method to change source data.  This causes the merger to recalculate the outputs.
- * If you are processing sACN packets, you may prefer dmx_merger_update_source_from_sacn().
+ * This function updates the levels of the specified source, and then triggers the recalculation of each slot. For each
+ * slot, the source will only be included in the merge if it has a level and a priority at that slot.
  *
  * @param[in] merger The handle to the merger.
  * @param[in] source The id of the source to modify.
- * @param[in] priority The universe-level priority of the source.
- * @param[in] new_values The new DMX values to be copied in. this must be NULL if the source is not updating DMX data.
- * @param[in] new_values_count The length of new_values. Must be 0 if the source is not updating DMX data.
- * @param[in] address_priorities The per-address priority values to be copied in.  This must be NULL if the source is
- * not updating per-address priority data.
- * @param[in] address_priorities_count The length of address_priorities.  Must be 0 if the source is not updating
- * per-address priority data.
+ * @param[in] new_levels The new DMX levels to be copied in.
+ * @param[in] new_levels_count The length of new_levels.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn_source_id_t source, uint8_t priority,
-                                                  const uint8_t* new_values, size_t new_values_count,
-                                                  const uint8_t* address_priorities, size_t address_priorities_count)
+etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_source_id_t source,
+                                             const uint8_t* new_levels, size_t new_levels_count)
+{
+  return kEtcPalErrNotImpl;  // TODO
+}
+
+/**
+ * @brief Updates a source's per-address priorities (PAPs) and recalculates outputs.
+ *
+ * This function updates the per-address priorities (PAPs) of the specified source, and then triggers the recalculation
+ * of each slot. For each slot, the source will only be included in the merge if it has a level and a priority at that
+ * slot.
+ *
+ * If PAPs are not specified for all slots, then the remaining slots will default to a PAP of 0. To remove PAPs for this
+ * source and revert to the universe priority, call sacn_dmx_merger_remove_paps.
+ *
+ * @param[in] merger The handle to the merger.
+ * @param[in] source The id of the source to modify.
+ * @param[in] paps The per-address priorities to be copied in.
+ * @param[in] paps_count The length of paps.
+ * @return #kEtcPalErrOk: Source updated and merge completed.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_source_id_t source, const uint8_t* paps,
+                                           size_t paps_count)
+{
+  return kEtcPalErrNotImpl;  // TODO
+}
+
+/**
+ * @brief Updates a source's universe priority and recalculates outputs.
+ *
+ * This function updates the universe priority of the specified source, and then triggers the recalculation of each
+ * slot. For each slot, the source will only be included in the merge if it has a level and a priority at that slot.
+ *
+ * If per-address priorities (PAPs) were previously specified for this source with sacn_dmx_merger_update_paps, then the
+ * universe priority can have no effect on the merge results until the application calls sacn_dmx_merger_remove_paps, at
+ * which point the priorities of each slot will revert to the universe priority passed in here.
+ *
+ * @param[in] merger The handle to the merger.
+ * @param[in] source The id of the source to modify.
+ * @param[in] universe_priority The universe-level priority of the source.
+ * @return #kEtcPalErrOk: Source updated and merge completed.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger, sacn_source_id_t source,
+                                                        uint8_t universe_priority)
+{
+  return kEtcPalErrNotImpl;  // TODO
+}
+
+/**
+ * @brief Removes the per-address priority (PAP) data from the source and recalculate outputs.
+ *
+ * Per-address priority data can time out in sACN just like levels.
+ * This is a convenience function to immediately turn off the per-address priority data for a source and recalculate the
+ * outputs.
+ *
+ * @param[in] merger The handle to the merger.
+ * @param[in] source The id of the source to modify.
+ * @return #kEtcPalErrOk: Source updated and merge completed.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_dmx_merger_remove_paps(sacn_dmx_merger_t merger, sacn_source_id_t source)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+
+  // Verify module initialized.
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+
+  // Validate arguments.
+  if (result == kEtcPalErrOk)
+  {
+    if ((merger == SACN_DMX_MERGER_INVALID) || (source == SACN_DMX_MERGER_SOURCE_INVALID))
+      result = kEtcPalErrNotFound;
+  }
+
+  if (sacn_lock())
+  {
+    MergerState* merger_state = NULL;
+    SourceState* source_state = NULL;
+
+    // Look up the merger state.
+    if (result == kEtcPalErrOk)
+    {
+      merger_state = etcpal_rbtree_find(&mergers, &merger);
+
+      if (!merger_state)
+        result = kEtcPalErrNotFound;
+    }
+
+    // Look up the source state.
+    if (result == kEtcPalErrOk)
+    {
+      source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
+
+      if (!source_state)
+        result = kEtcPalErrNotFound;
+    }
+
+    if (result == kEtcPalErrOk)
+    {
+      // Update the address_priority_valid flag.
+      source_state->source.address_priority_valid = false;
+
+      // Merge all the slots again. It will use universe priority this time because address_priority_valid was updated.
+      merge_source_on_all_slots(merger_state, source_state);
+    }
+
+    sacn_unlock();
+  }
+
+  return result;
+}
+
+// TODO: Move this function into the three new update functions
+etcpal_error_t update_source_data(sacn_dmx_merger_t merger, sacn_source_id_t source, uint8_t priority,
+                                  const uint8_t* new_values, size_t new_values_count, const uint8_t* address_priorities,
+                                  size_t address_priorities_count)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
@@ -658,73 +778,6 @@ etcpal_error_t sacn_dmx_merger_update_source_data(sacn_dmx_merger_t merger, sacn
   }
 
   // Return the final etcpal_error_t result.
-  return result;
-}
-
-/**
- * @brief Removes the per-address data from the source and recalculate outputs.
- *
- * Per-address priority data can time out in sACN just like values.
- * This is a convenience function to immediately turn off the per-address priority data for a source and recalculate the
- * outputs.
- *
- * @param[in] merger The handle to the merger.
- * @param[in] source The id of the source to modify.
- * @return #kEtcPalErrOk: Source updated and merge completed.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
- * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
- */
-etcpal_error_t sacn_dmx_merger_stop_source_per_address_priority(sacn_dmx_merger_t merger, sacn_source_id_t source)
-{
-  etcpal_error_t result = kEtcPalErrOk;
-
-  // Verify module initialized.
-  if (!sacn_initialized())
-    result = kEtcPalErrNotInit;
-
-  // Validate arguments.
-  if (result == kEtcPalErrOk)
-  {
-    if ((merger == SACN_DMX_MERGER_INVALID) || (source == SACN_DMX_MERGER_SOURCE_INVALID))
-      result = kEtcPalErrNotFound;
-  }
-
-  if (sacn_lock())
-  {
-    MergerState* merger_state = NULL;
-    SourceState* source_state = NULL;
-
-    // Look up the merger state.
-    if (result == kEtcPalErrOk)
-    {
-      merger_state = etcpal_rbtree_find(&mergers, &merger);
-
-      if (!merger_state)
-        result = kEtcPalErrNotFound;
-    }
-
-    // Look up the source state.
-    if (result == kEtcPalErrOk)
-    {
-      source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
-
-      if (!source_state)
-        result = kEtcPalErrNotFound;
-    }
-
-    if (result == kEtcPalErrOk)
-    {
-      // Update the address_priority_valid flag.
-      source_state->source.address_priority_valid = false;
-
-      // Merge all the slots again. It will use universe priority this time because address_priority_valid was updated.
-      merge_source_on_all_slots(merger_state, source_state);
-    }
-
-    sacn_unlock();
-  }
-
   return result;
 }
 

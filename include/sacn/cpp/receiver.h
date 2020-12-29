@@ -66,6 +66,21 @@ public:
 
     /**
      * @brief Notify that a data packet has been received.
+     *
+     * This will not be called if the Stream_Terminated bit is set, or if the Preview_Data bit is set and preview
+     * packets are being filtered.
+     *
+     * Start code 0xDD packets will only trigger this notification if #SACN_ETC_PRIORITY_EXTENSION is set to 1. This
+     * callback will be called for all other start codes received, even those without a startcode of 0x00 or 0xDD.
+     *
+     * This notification is always called immediately during the sampling period, if #SACN_ETC_PRIORITY_EXTENSION is set
+     * to 0, or if the start code is not 0x00 or 0xDD. Otherwise, this notification won't be called until both 0x00 and
+     * 0xDD start codes are received, or the 0xDD timer has expired and a 0x00 packet is received.
+     *
+     * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
+     * if the source forces the packet, or if the source sends a data packet without a sync universe.
+     * TODO: this version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
+     *
      * @param handle The receiver's handle.
      * @param source_addr IP address & port of the packet source.
      * @param header The sACN header data.
@@ -148,8 +163,14 @@ public:
                                                                 listen to when using dynamic memory. */
     unsigned int flags{0}; /**< A set of option flags. See the C API's "sACN receiver flags". */
 
+    sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6}; /**< What IP networking the receiver will support. */
+
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
+
+    /** Instantiates receiver settings based on a universe ID. This constructor is not marked explicit on purpose so
+        that a Settings instance can be implicitly constructed from a universe number.
+     */
     Settings(uint16_t new_universe_id);
 
     bool IsValid() const;
@@ -169,6 +190,7 @@ public:
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
   etcpal::Error ResetNetworking();
   etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
+  std::vector<SacnMcastInterface> GetNetworkInterfaces();
 
   // Lesser used functions.  These apply to all instances of this class.
   static void SetStandardVersion(sacn_standard_version_t version);
@@ -311,8 +333,7 @@ inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& 
  * @param[in] settings Configuration parameters for the sACN receiver and this class instance.
  * @param[in] notify_handler The notification interface to call back to the application.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
- * modified.
+ * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -424,8 +445,7 @@ inline etcpal::Error Receiver::ResetNetworking()
  * network interfaces passed in. This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * operation_succeeded flags are filled in.  If empty, all available interfaces are tried and this vector isn't
- * modified.
+ * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Universe changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -439,6 +459,29 @@ inline etcpal::Error Receiver::ResetNetworking(std::vector<SacnMcastInterface>& 
     return sacn_receiver_reset_networking(handle_, nullptr, 0);
   else
     return sacn_receiver_reset_networking(handle_, netints.data(), netints.size());
+}
+
+/**
+ * @brief Obtain the statuses of this receiver's network interfaces.
+ *
+ * @return A vector of this receiver's network interfaces and their statuses.
+ */
+inline std::vector<SacnMcastInterface> Receiver::GetNetworkInterfaces()
+{
+  // This uses a guessing algorithm with a while loop to avoid race conditions.
+  std::vector<SacnMcastInterface> netints;
+  size_t size_guess = 4u;
+  size_t num_netints = 0u;
+
+  do
+  {
+    netints.resize(size_guess);
+    num_netints = sacn_receiver_get_network_interfaces(handle_, netints.data(), netints.size());
+    size_guess = num_netints + 4u;
+  } while (num_netints > netints.size());
+
+  netints.resize(num_netints);
+  return netints;
 }
 
 /**
@@ -520,6 +563,7 @@ inline SacnReceiverConfig Receiver::TranslateConfig(const Settings& settings, No
     },
     settings.source_count_max,
     settings.flags,
+    settings.ip_supported
   };
   // clang-format on
 

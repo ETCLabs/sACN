@@ -119,10 +119,15 @@ typedef struct SacnLostSource
 /**
  * @brief Notify that a data packet has been received.
  *
- * Will be called for every sACN data packet received on a listening universe, unless the Stream_Terminated bit is set
- * or if preview packets are being filtered.
+ * This will not be called if the Stream_Terminated bit is set, or if the Preview_Data bit is set and preview packets
+ * are being filtered.
  *
- * The callback will be called for all data packets received, even those without a startcode of 0 or 0xdd.
+ * Start code 0xDD packets will only trigger this notification if #SACN_ETC_PRIORITY_EXTENSION is set to 1. This
+ * callback will be called for all other start codes received, even those without a startcode of 0x00 or 0xDD.
+ *
+ * This notification is always called immediately during the sampling period, if #SACN_ETC_PRIORITY_EXTENSION is set to
+ * 0, or if the start code is not 0x00 or 0xDD. Otherwise, this notification won't be called until both 0x00 and 0xDD
+ * start codes are received, or the 0xDD timer has expired and a 0x00 packet is received.
  *
  * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
  * if the source forces the packet, or if the source sends a data packet without a sync universe.
@@ -242,12 +247,15 @@ typedef struct SacnReceiverConfig
   int source_count_max;
   /** A set of option flags. See "sACN receiver flags". */
   unsigned int flags;
+
+  /** What IP networking the receiver will support.  The default is #kSacnIpV4AndIpV6. */
+  sacn_ip_support_t ip_supported;
 } SacnReceiverConfig;
 
 /** A default-value initializer for an SacnReceiverConfig struct. */
-#define SACN_RECEIVER_CONFIG_DEFAULT_INIT                                       \
-  {                                                                             \
-    0, {NULL, NULL, NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, 0, \
+#define SACN_RECEIVER_CONFIG_DEFAULT_INIT                                                        \
+  {                                                                                              \
+    0, {NULL, NULL, NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, 0, kSacnIpV4AndIpV6 \
   }
 
 void sacn_receiver_config_init(SacnReceiverConfig* config);
@@ -258,6 +266,7 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle);
 etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id);
 etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastInterface* netints, size_t num_netints);
+size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, SacnMcastInterface* netints, size_t netints_size);
 
 void sacn_receiver_set_standard_version(sacn_standard_version_t version);
 sacn_standard_version_t sacn_receiver_get_standard_version();
