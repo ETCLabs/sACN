@@ -42,7 +42,7 @@
  * @brief The sACN Source API; see @ref using_source.
  *
  * Components that send sACN are referred to as sACN Sources. Use this API to act as an sACN Source.
- *
+ * 
  * See @ref using_source for a detailed description of how to use this API.
  *
  * @{

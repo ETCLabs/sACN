@@ -516,8 +516,8 @@ static void handle_source_limit_exceeded(sacn_receiver_t handle, uint16_t univer
 static const SacnReceiverCallbacks kSacnCallbacks = {
   handle_universe_data,
   handle_sources_lost,
-  handle_sampling_period_ended,
   handle_sampling_period_started,
+  handle_sampling_period_ended,
   handle_source_pap_lost,
   handle_source_limit_exceeded,
   NULL

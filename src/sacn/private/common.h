@@ -188,6 +188,7 @@ struct SacnReceiver
 
   // State tracking
   bool sampling;
+  bool notified_sampling_started;
   EtcPalTimer sample_timer;
   bool suppress_limit_exceeded_notification;
   EtcPalRbTree sources;       // The sources being tracked on this universe.
@@ -227,26 +228,6 @@ typedef enum
   kRecvStateHaveDmxAndPap
 } sacn_recv_state_t;
 #endif
-
-typedef struct SourceDataBuffer
-{
-  /* Whether this buffer has been written to yet. */
-  bool written;
-  /* The address from which we received this data. */
-  EtcPalSockAddr from_addr;
-  /* The priority of the sACN data. Valid range is 0-200, inclusive. */
-  uint8_t priority;
-  /* Whether the Preview_Data bit is set for the sACN data. From E1.31: "Indicates that the data in
-   * this packet is intended for use in visualization or media server preview applications and
-   * shall not be used to generate live output." */
-  bool preview;
-  /* The start code of the DMX data. */
-  uint8_t start_code;
-  /* The number of slots in the DMX data. */
-  uint16_t slot_count;
-  /* The DMX data. */
-  uint8_t data[DMX_ADDRESS_COUNT];
-} SourceDataBuffer;
 
 /* An sACN source that is being tracked on a given universe. */
 typedef struct SacnTrackedSource
@@ -290,6 +271,24 @@ typedef struct SourcesLostNotification
   size_t num_lost_sources;
   void* context;
 } SourcesLostNotification;
+
+/* Data for the sampling_period_started() callback */
+typedef struct SamplingStartedNotification
+{
+  SacnSamplingPeriodStartedCallback callback;
+  sacn_receiver_t handle;
+  uint16_t universe;
+  void* context;
+} SamplingStartedNotification;
+
+/* Data for the sampling_period_ended() callback */
+typedef struct SamplingEndedNotification
+{
+  SacnSamplingPeriodEndedCallback callback;
+  sacn_receiver_t handle;
+  uint16_t universe;
+  void* context;
+} SamplingEndedNotification;
 
 /* Data for the source_pap_lost() callback */
 typedef struct SourcePapLostNotification
