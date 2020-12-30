@@ -322,6 +322,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
   if (!sacn_initialized())
     result = kEtcPalErrNotInit;
 
+  // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
     if (!config)
@@ -438,8 +439,8 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
 /**
  * @brief Destroy an sACN source instance.
  *
- * Stops sending all universes for this source. The destruction is queued, and actually occurs
- * on a call to sacn_source_process_all() after an additional three packets have been sent with the
+ * Stops sending all universes for this source. The destruction is queued, and actually occurs either on the thread or
+ * on a call to sacn_source_process_manual() after an additional three packets have been sent with the
  * "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.
  *
  * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
@@ -449,11 +450,9 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
  */
 void sacn_source_destroy(sacn_source_t handle)
 {
-#if !SOURCE_ENABLED
-  return;
+#if SOURCE_ENABLED
+  
 #endif
-
-  ETCPAL_UNUSED_ARG(handle);
 }
 
 /**
@@ -501,9 +500,9 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
 /**
  * @brief Remove a universe from a source.
  *
- * This queues the source for removal. The destruction actually occurs
- * on a call to sacn_source_process_all() after an additional three packets have been sent with the
- * "Stream_Terminated" option set.
+ * This queues the source for removal. The destruction actually occurs either on the thread or on a call to
+ * sacn_source_process_manual() after an additional three packets have been sent with the "Stream_Terminated" option
+ * set.
  *
  * The source will also stop transmitting sACN universe discovery packets for that universe.
  *
@@ -576,9 +575,9 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
 /**
  * @brief Remove a unicast destination on a source's universe.
  *
- * This queues the address for removal. The removal actually occurs
- * on a call to sacn_source_process_all() after an additional three packets have been sent with the
- * "Stream_Terminated" option set.
+ * This queues the address for removal. The removal actually occurs either on the thread or on a call to
+ * sacn_source_process_manual() after an additional three packets have been sent with the "Stream_Terminated" option
+ * set.
  *
  * @param[in] handle Handle to the source to change.
  * @param[in] universe Universe to change.
@@ -712,7 +711,7 @@ etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
  *
  * Immediately sends a sACN packet with the provided start code and data.
  * This function is intended for sACN packets that have a startcode other than 0 or 0xdd, since those
- * start codes are taken care of by sacn_source_process_all().
+ * start codes are taken care of by either the thread or sacn_source_process_manual().
  *
  * @param[in] handle Handle to the source.
  * @param[in] universe Universe to send on.
@@ -771,7 +770,7 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t s
 }
 
 /**
- * @brief Copies the universe's dmx values into the packet to be sent on the next call to sacn_source_process_all()
+ * @brief Copies the universe's dmx values into the packet to be sent on the next threaded or manual update.
  *
  * This function will update the outgoing packet values, and reset the logic that slows down packet transmission due to
  * inactivity.
@@ -806,8 +805,8 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
 }
 
 /**
- * @brief Copies the universe's dmx values and per-address priorities into packets that are sent on the next call to
- * sacn_source_process_all()
+ * @brief Copies the universe's dmx values and per-address priorities into packets that are sent on the next threaded or
+ * manual update.
  *
  * This function will update the outgoing packet values for both DMX and per-address priority data, and reset the logic
  * that slows down packet transmission due to inactivity.
@@ -855,9 +854,9 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
 /**
  * @brief Like sacn_source_update_values(), but also sets the force_sync flag on the packet.
  *
- * This function will update the outgoing packet values to be sent on the next call to sacn_source_process_all(), and
- * will reset the logic that slows down packet transmission due to inactivity. Additionally, the packet to be sent will
- * have its force_synchronization option flag set.
+ * This function will update the outgoing packet values to be sent on the next threaded or manual update, and will reset
+ * the logic that slows down packet transmission due to inactivity. Additionally, the packet to be sent will have its
+ * force_synchronization option flag set.
  *
  * If no synchronization universe is configured, this function acts like a direct call to sacn_source_update_values().
  *
@@ -892,9 +891,9 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
 /**
  * @brief Like sacn_source_update_values_and_pap(), but also sets the force_sync flag on the packet.
  *
- * This function will update the outgoing packet values to be sent on the next call to sacn_source_process_all(), and
- * will reset the logic that slows down packet transmission due to inactivity. Additionally, the final packet to be sent
- * by this call will have its force_synchronization option flag set.
+ * This function will update the outgoing packet values to be sent on the next threaded or manual update, and will reset
+ * the logic that slows down packet transmission due to inactivity. Additionally, the final packet to be sent by this
+ * call will have its force_synchronization option flag set.
  *
  * Per-address priority support has specific rules about when to send value changes vs. pap changes.  These rules are
  * documented in https://etclabs.github.io/sACN/docs/head/per_address_priority.html, and are triggered by the use of
