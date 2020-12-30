@@ -99,7 +99,7 @@ typedef struct UniverseState
 #if SACN_DYNAMIC_MEM
   EtcPalIpAddr* unicast_dests;
 #else
-  EtcPalIpAddr unicast_dests[SACN_MAX_UNICAST_DESTINATIONS];
+  EtcPalIpAddr unicast_dests[SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE];
 #endif
   size_t num_unicast_dests;  // Number of elements in the unicast_dests array.
   bool send_unicast_only;

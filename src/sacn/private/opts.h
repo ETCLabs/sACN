@@ -303,6 +303,15 @@
 #endif
 
 /**
+ * @brief The maximum number of unicast destinations per universe that a source can send to simultaneously.
+ *
+ * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
+ */
+#ifndef SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE
+#define SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE 4
+#endif
+
+/**
  * @}
  */
 
