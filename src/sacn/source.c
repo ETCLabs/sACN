@@ -21,6 +21,7 @@
 #include "sacn/private/common.h"
 #include "sacn/private/pdu.h"
 #include "sacn/private/sockets.h"
+#include "sacn/private/source.h"
 #include "sacn/private/util.h"
 #include "etcpal/netint.h"
 #include "etcpal/pack.h"
