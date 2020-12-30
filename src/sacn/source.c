@@ -115,7 +115,7 @@ typedef struct UniverseState
 typedef struct NetintState
 {
   EtcPalMcastNetintId id;  // This must be the first struct member.
-  size_t num_refs;  // Number of universes using this netint.
+  size_t num_refs;         // Number of universes using this netint.
 } NetintState;
 
 /**************************** Private variables ******************************/
@@ -132,12 +132,14 @@ ETCPAL_MEMPOOL_DEFINE(sacnsource_rb_nodes, EtcPalRbNode,
 
 static IntHandleManager source_handle_mgr;
 static EtcPalRbTree sources;
+static bool sources_initialized = false;
 static etcpal_socket_t ipv4_multicast_sock = ETCPAL_SOCKET_INVALID;
 static etcpal_socket_t ipv6_multicast_sock = ETCPAL_SOCKET_INVALID;
 static etcpal_socket_t ipv4_unicast_sock = ETCPAL_SOCKET_INVALID;
 static etcpal_socket_t ipv6_unicast_sock = ETCPAL_SOCKET_INVALID;
 static bool shutting_down = false;
 static etcpal_thread_t source_thread_handle;
+static bool thread_initialized = false;
 
 /*********************** Private function prototypes *************************/
 
@@ -213,10 +215,18 @@ etcpal_error_t sacn_source_init(void)
   {
     etcpal_rbtree_init(&sources, source_state_lookup_compare_func, source_rb_node_alloc_func,
                        source_rb_node_dealloc_func);
+    sources_initialized = true;
+
     init_int_handle_manager(&source_handle_mgr, source_handle_in_use, NULL);
 
     res = start_tick_thread();
   }
+
+  if (res == kEtcPalErrOk)
+    thread_initialized = true;
+
+  if (res != kEtcPalErrOk)
+    sacn_source_deinit();  // Clean up
 
   return res;
 }
@@ -224,11 +234,24 @@ etcpal_error_t sacn_source_init(void)
 void sacn_source_deinit(void)
 {
   // Shut down the Tick thread...
-  stop_tick_thread();
+  bool thread_initted = false;
+  if (sacn_lock())
+  {
+    thread_initted = thread_initialized;
+    thread_initialized = false;
+    sacn_unlock();
+  }
+
+  if (thread_initted)
+    stop_tick_thread();
 
   if (sacn_lock())
   {
-    etcpal_rbtree_clear_with_cb(&sources, free_sources_node);
+    if (sources_initialized)
+    {
+      etcpal_rbtree_clear_with_cb(&sources, free_sources_node);
+      sources_initialized = false;
+    }
 
     if (ipv4_multicast_sock != ETCPAL_SOCKET_INVALID)
       etcpal_close(ipv4_multicast_sock);
