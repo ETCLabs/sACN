@@ -1144,7 +1144,11 @@ etcpal_error_t start_tick_thread()
 {
   shutting_down = false;
   EtcPalThreadParams params = ETCPAL_THREAD_PARAMS_INIT;
-  return etcpal_thread_create(&source_thread_handle, &params, source_thread_function, NULL);
+
+  if (etcpal_thread_create(&source_thread_handle, &params, source_thread_function, NULL) != kEtcPalErrOk)
+    return kEtcPalErrSys;
+
+  return kEtcPalErrOk;
 }
 
 // Takes lock
