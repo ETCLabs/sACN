@@ -1081,8 +1081,6 @@ void source_thread_function(void* arg)
       sacn_unlock();
     }
   }
-
-  process_internal(false);
 }
 
 // Takes lock
