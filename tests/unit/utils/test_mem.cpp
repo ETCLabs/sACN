@@ -511,6 +511,115 @@ TEST_F(TestMem, SourcePapLostIsReZeroedWithEachGet)
   EXPECT_EQ(source_pap_lost->context, nullptr);
 }
 
+TEST_F(TestMem, ValidInitializedSamplingStartedBuf)
+{
+  DoForEachThread([](sacn_thread_id_t thread) {
+#if SACN_DYNAMIC_MEM
+    // Just test some arbitrary number for the buffer size
+    SamplingStartedNotification* sampling_started_buf = get_sampling_started_buffer(thread, 20);
+    ASSERT_NE(sampling_started_buf, nullptr);
+
+    for (int i = 0; i < 20; ++i)
+    {
+      auto sampling_started = &sampling_started_buf[i];
+      EXPECT_EQ(sampling_started->callback, nullptr);
+      EXPECT_EQ(sampling_started->handle, SACN_RECEIVER_INVALID);
+      EXPECT_EQ(sampling_started->context, nullptr);
+    }
+#else
+    SamplingStartedNotification* sampling_started_buf =
+        get_sampling_started_buffer(thread, SACN_RECEIVER_MAX_UNIVERSES);
+    ASSERT_NE(sampling_started_buf, nullptr);
+
+    // Test up to the maximum capacity
+    for (int i = 0; i < SACN_RECEIVER_MAX_THREADS; ++i)
+    {
+      auto sampling_started = &sampling_started_buf[i];
+      EXPECT_EQ(sampling_started->callback, nullptr);
+      EXPECT_EQ(sampling_started->handle, SACN_RECEIVER_INVALID);
+      EXPECT_EQ(sampling_started->context, nullptr);
+    }
+
+    // Trying to get more than the max capacity should not work
+    sampling_started_buf = get_sampling_started_buffer(thread, SACN_RECEIVER_MAX_UNIVERSES + 1);
+    EXPECT_EQ(sampling_started_buf, nullptr);
+#endif
+  });
+}
+
+TEST_F(TestMem, SamplingStartedIsReZeroedWithEachGet)
+{
+  SamplingStartedNotification* sampling_started = get_sampling_started_buffer(0, 1);
+  ASSERT_NE(sampling_started, nullptr);
+
+  // Modify some elements
+  sampling_started->handle = 2;
+  sampling_started->callback = reinterpret_cast<SacnSamplingPeriodStartedCallback>(kMagicPointerValue);
+  sampling_started->context = reinterpret_cast<void*>(kMagicPointerValue);
+
+  // Now get again and make sure they are re-zeroed
+  sampling_started = get_sampling_started_buffer(0, 1);
+  ASSERT_NE(sampling_started, nullptr);
+
+  EXPECT_EQ(sampling_started->callback, nullptr);
+  EXPECT_EQ(sampling_started->handle, SACN_RECEIVER_INVALID);
+  EXPECT_EQ(sampling_started->context, nullptr);
+}
+
+TEST_F(TestMem, ValidInitializedSamplingEndedBuf)
+{
+  DoForEachThread([](sacn_thread_id_t thread) {
+#if SACN_DYNAMIC_MEM
+    // Just test some arbitrary number for the buffer size
+    SamplingEndedNotification* sampling_ended_buf = get_sampling_ended_buffer(thread, 20);
+    ASSERT_NE(sampling_ended_buf, nullptr);
+
+    for (int i = 0; i < 20; ++i)
+    {
+      auto sampling_ended = &sampling_ended_buf[i];
+      EXPECT_EQ(sampling_ended->callback, nullptr);
+      EXPECT_EQ(sampling_ended->handle, SACN_RECEIVER_INVALID);
+      EXPECT_EQ(sampling_ended->context, nullptr);
+    }
+#else
+    SamplingEndedNotification* sampling_ended_buf = get_sampling_ended_buffer(thread, SACN_RECEIVER_MAX_UNIVERSES);
+    ASSERT_NE(sampling_ended_buf, nullptr);
+
+    // Test up to the maximum capacity
+    for (int i = 0; i < SACN_RECEIVER_MAX_THREADS; ++i)
+    {
+      auto sampling_ended = &sampling_ended_buf[i];
+      EXPECT_EQ(sampling_ended->callback, nullptr);
+      EXPECT_EQ(sampling_ended->handle, SACN_RECEIVER_INVALID);
+      EXPECT_EQ(sampling_ended->context, nullptr);
+    }
+
+    // Trying to get more than the max capacity should not work
+    sampling_ended_buf = get_sampling_ended_buffer(thread, SACN_RECEIVER_MAX_UNIVERSES + 1);
+    EXPECT_EQ(sampling_ended_buf, nullptr);
+#endif
+  });
+}
+
+TEST_F(TestMem, SamplingEndedIsReZeroedWithEachGet)
+{
+  SamplingEndedNotification* sampling_ended = get_sampling_ended_buffer(0, 1);
+  ASSERT_NE(sampling_ended, nullptr);
+
+  // Modify some elements
+  sampling_ended->handle = 2;
+  sampling_ended->callback = reinterpret_cast<SacnSamplingPeriodEndedCallback>(kMagicPointerValue);
+  sampling_ended->context = reinterpret_cast<void*>(kMagicPointerValue);
+
+  // Now get again and make sure they are re-zeroed
+  sampling_ended = get_sampling_ended_buffer(0, 1);
+  ASSERT_NE(sampling_ended, nullptr);
+
+  EXPECT_EQ(sampling_ended->callback, nullptr);
+  EXPECT_EQ(sampling_ended->handle, SACN_RECEIVER_INVALID);
+  EXPECT_EQ(sampling_ended->context, nullptr);
+}
+
 TEST_F(TestMem, ValidInitializedSourceLimitExceeded)
 {
   DoForEachThread([](sacn_thread_id_t thread) {
