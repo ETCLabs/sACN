@@ -80,6 +80,8 @@ typedef struct SourceState
 {
   sacn_source_t handle;  // This must be the first struct member.
 
+  bool terminating;  // If in the process of terminating all universes and removing this source.
+
   EtcPalRbTree universes;
   size_t num_active_universes;  // Number of universes that actually have NULL start code data.
   bool universe_list_changed;
@@ -182,9 +184,8 @@ static void stop_tick_thread();
 static void source_thread_function(void* arg);
 
 static int process_internal(bool process_manual);
-static void remove_universe_state(const SourceState* source, const UniverseState** universe,
-                                  EtcPalRbIter* universe_iter);
-static void remove_source_state(const SourceState** source, EtcPalRbIter* source_iter);
+static void remove_universe_state(SourceState* source, UniverseState** universe, EtcPalRbIter* universe_iter);
+static void remove_source_state(SourceState** source, EtcPalRbIter* source_iter);
 static void send_null_data(const SourceState* source, UniverseState* universe);
 #if SACN_ETC_PRIORITY_EXTENSION
 static void send_pap_data(const SourceState* source, UniverseState* universe);
@@ -378,6 +379,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
 
       // Initialize everything else.
       source->handle = get_next_int_handle(&source_handle_mgr, -1);
+      source->terminating = false;
       etcpal_rbtree_init(&source->universes, universe_state_lookup_compare_func, source_rb_node_alloc_func,
                          source_rb_node_dealloc_func);
       source->num_active_universes = 0;
@@ -453,8 +455,19 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
  */
 void sacn_source_destroy(sacn_source_t handle)
 {
+  // Validate and lock.
 #if SOURCE_ENABLED
+  if (sacn_initialized() && (handle != SACN_DMX_MERGER_INVALID) && sacn_lock())
+  {
+    // Try to find the source's state.
+    SourceState* source = etcpal_rbtree_find(&sources, &handle);
 
+    // If the source was found, set the terminating flag to initiate termination.
+    if (source)
+      source->terminating = true;
+
+    sacn_unlock();
+  }
 #endif
 }
 
@@ -1210,14 +1223,19 @@ int process_internal(bool process_manual)
     {
       bool source_incremented = false;
 
+      // If the Source API is shutting down, cause this source to terminate (if thread-based)
+      if (!process_manual && shutting_down)
+        source->terminating = true;
+
       // If this is the kind of source we want to process (manual vs. thread-based)
       if (source->process_manually == process_manual)
       {
         // Increment num_sources_tracked (which only counts either manual or thread-based sources)
         ++num_sources_tracked;
 
-        // If universe list has changed OR universe discovery timer expired
-        if (source->universe_list_changed || etcpal_timer_is_expired(&source->universe_discovery_timer))
+        // If source is not terminating AND either the universe list has changed OR universe discovery timer expired
+        if (!source->terminating &&
+            (source->universe_list_changed || etcpal_timer_is_expired(&source->universe_discovery_timer)))
         {
           // Send universe discovery packet, reset universe discovery timer & universe_list_changed flag
           send_universe_discovery(source);
@@ -1233,33 +1251,29 @@ int process_internal(bool process_manual)
         {
           bool universe_incremented = false;
 
-          // If the Source API is shutting down, cause this universe to terminate (if thread-based)
-          if (!process_manual && shutting_down)
-            universe->terminating = true;
-
           // If terminating on this universe
-          if (universe->terminating)
+          if (source->terminating || universe->terminating)
           {
-            // If termination packet has been sent less than 3 times
-            if (universe->num_terminations_sent < 3)
+            // If termination packet has been sent less than 3 times and we have data
+            if ((universe->num_terminations_sent < 3) && universe->has_null_data)
             {
               // Send termination packet
               send_termination(source, universe);
+            }
 
-              // If this was the third termination packet sent
-              if (universe->num_terminations_sent == 3)
+            // If at least 3 terminations were sent, or this universe doesn't have data
+            if ((universe->num_terminations_sent >= 3) || !universe->has_null_data)
+            {
+              // Remove universe state
+              remove_universe_state(source, &universe, &universe_iter);
+              universe_incremented = true;
+
+              // If this source is terminating & there are no longer any universes for this source
+              if (source->terminating && (etcpal_rbtree_size(&source->universes) == 0))
               {
-                // Remove universe state
-                remove_universe_state(source, &universe, &universe_iter);
-                universe_incremented = true;
-
-                // If there are no longer any universes for this source
-                if (etcpal_rbtree_size(&source->universes) == 0)
-                {
-                  // Remove source state
-                  remove_source_state(&source, &source_iter);
-                  source_incremented = true;
-                }
+                // Remove source state
+                remove_source_state(&source, &source_iter);
+                source_incremented = true;
               }
             }
           }
@@ -1311,7 +1325,7 @@ int process_internal(bool process_manual)
 }
 
 // Needs lock
-void remove_universe_state(const SourceState* source, const UniverseState** universe, EtcPalRbIter* universe_iter)
+void remove_universe_state(SourceState* source, UniverseState** universe, EtcPalRbIter* universe_iter)
 {
   UniverseState* universe_to_remove = *universe;
 
@@ -1319,7 +1333,14 @@ void remove_universe_state(const SourceState* source, const UniverseState** univ
 
   if (universe_to_remove)
   {
-    // Update the netints tree first
+    // Update num_active_universes and universe_list_changed if needed
+    if (universe_to_remove->has_null_data)
+    {
+      --source->num_active_universes;
+      source->universe_list_changed = true;
+    }
+
+    // Update the netints tree
     for (size_t i = 0; i < universe_to_remove->num_netints; ++i)
     {
       NetintState* netint_state = etcpal_rbtree_find(&source->netints, &universe_to_remove->netints[i]);
@@ -1343,7 +1364,7 @@ void remove_universe_state(const SourceState* source, const UniverseState** univ
 }
 
 // Needs lock
-void remove_source_state(const SourceState** source, EtcPalRbIter* source_iter)
+void remove_source_state(SourceState** source, EtcPalRbIter* source_iter)
 {
   SourceState* source_to_remove = *source;
   etcpal_rbtree_clear_with_cb(&(*source)->universes, free_universes_node);
