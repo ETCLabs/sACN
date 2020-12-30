@@ -59,6 +59,7 @@
 #endif
 
 #define SOURCE_THREAD_INTERVAL 23
+#define UNICAST_ENABLED (!SACN_DYNAMIC_MEM && (SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE > 0)) || SACN_DYNAMIC_MEM
 
 /****************************** Private types ********************************/
 
@@ -99,7 +100,7 @@ typedef struct UniverseState
 
 #if SACN_DYNAMIC_MEM
   EtcPalIpAddr* unicast_dests;
-#else
+#elif SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE > 0
   EtcPalIpAddr unicast_dests[SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE];
 #endif
   size_t num_unicast_dests;  // Number of elements in the unicast_dests array.
@@ -1161,8 +1162,10 @@ void send_null_data(const SourceState* source, UniverseState* universe)
                           universe->num_netints);
     }
 
+#if UNICAST_ENABLED
     send_data_unicast(universe->universe_id, kEtcPalIpTypeV4, universe->null_send_buf, universe->unicast_dests,
                       universe->num_unicast_dests);
+#endif
   }
 
   if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
@@ -1173,8 +1176,10 @@ void send_null_data(const SourceState* source, UniverseState* universe)
                           universe->num_netints);
     }
 
+#if UNICAST_ENABLED
     send_data_unicast(universe->universe_id, kEtcPalIpTypeV6, universe->null_send_buf, universe->unicast_dests,
                       universe->num_unicast_dests);
+#endif
   }
 
   // Increment sequence number(s)
@@ -1197,8 +1202,10 @@ void send_pap_data(const SourceState* source, UniverseState* universe)
                           universe->num_netints);
     }
 
+#if UNICAST_ENABLED
     send_data_unicast(universe->universe_id, kEtcPalIpTypeV4, universe->pap_send_buf, universe->unicast_dests,
                       universe->num_unicast_dests);
+#endif
   }
 
   if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
@@ -1209,8 +1216,10 @@ void send_pap_data(const SourceState* source, UniverseState* universe)
                           universe->num_netints);
     }
 
+#if UNICAST_ENABLED
     send_data_unicast(universe->universe_id, kEtcPalIpTypeV6, universe->pap_send_buf, universe->unicast_dests,
                       universe->num_unicast_dests);
+#endif
   }
 
   // Increment sequence numbers
