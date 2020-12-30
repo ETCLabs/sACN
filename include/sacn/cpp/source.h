@@ -246,9 +246,9 @@ inline etcpal::Error Source::Startup(const Settings& settings)
 /**
  * @brief Destroy an sACN source instance.
  *
- * Stops sending all universes for this source. The destruction is queued, and actually occurs
- * on a call to ProcessAll() after an additional three packets have been sent with the
- * "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.
+ * Stops sending all universes for this source. The destruction is queued, and actually occurs either on the thread or
+ * on a call to ProcessManual() after an additional three packets have been sent with the "Stream_Terminated" option
+ * set. The source will also stop transmitting sACN universe discovery packets.
  *
  * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
  * or values_buffer you passed in on your call to AddUniverse().
@@ -344,9 +344,8 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings, std::
 /**
  * @brief Remove a universe from a source.
  *
- * This queues the source for removal. The destruction actually occurs
- * on a call to ProcessAll() after an additional three packets have been sent with the
- * "Stream_Terminated" option set.
+ * This queues the source for removal. The destruction actually occurs either on the thread or on a call to
+ * ProcessManual() after an additional three packets have been sent with the "Stream_Terminated" option set.
  *
  * The source will also stop transmitting sACN universe discovery packets for that universe.
  *
@@ -405,9 +404,8 @@ inline etcpal::Error Source::AddUnicastDestination(uint16_t universe, const etcp
 /**
  * @brief Remove a unicast destination on a source's universe.
  *
- * This queues the address for removal. The removal actually occurs
- * on a call to ProcessAll() after an additional three packets have been sent with the
- * "Stream_Terminated" option set.
+ * This queues the address for removal. The removal actually occurs either on the thread or on a call to ProcessManual()
+ * after an additional three packets have been sent with the "Stream_Terminated" option set.
  *
  * @param[in] universe Universe to change.
  * @param[in] dest The destination IP.  Must match the address passed to AddUnicastDestination().
@@ -513,8 +511,8 @@ inline etcpal::Error Source::ChangeSynchronizationUniverse(uint16_t universe, ui
  * @brief Immediately sends the provided sACN start code & data.
  *
  * Immediately sends a sACN packet with the provided start code and data.
- * This function is intended for sACN packets that have a startcode other than 0 or 0xdd, since those
- * start codes are taken care of by ProcessAll().
+ * This function is intended for sACN packets that have a startcode other than 0 or 0xdd, since those start codes are
+ * taken care of by either the thread or ProcessManual().
  *
  * @param[in] universe Universe to send on.
  * @param[in] start_code The start code to send.
@@ -553,7 +551,7 @@ inline etcpal::Error Source::SendSynchronization(uint16_t sync_universe)
 }
 
 /**
- * @brief Copies the universe's dmx values into the packet to be sent on the next call to ProcessAll()
+ * @brief Copies the universe's dmx values into the packet to be sent on the next threaded or manual update.
  *
  * This function will update the outgoing packet values, and reset the logic that slows down packet transmission due to
  * inactivity.
@@ -572,8 +570,8 @@ inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, s
 }
 
 /**
- * @brief Copies the universe's dmx values and per-address priorities into packets that are sent on the next call to
- * ProcessAll()
+ * @brief Copies the universe's dmx values and per-address priorities into packets that are sent on the next threaded or
+ * manual update.
  *
  * This function will update the outgoing packet values for both DMX and per-address priority data, and reset the logic
  * that slows down packet transmission due to inactivity.
@@ -602,9 +600,9 @@ inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, s
 /**
  * @brief Like UpdateValues(), but also sets the force_sync flag on the packet.
  *
- * This function will update the outgoing packet values to be sent on the next call to ProcessAll(), and
- * will reset the logic that slows down packet transmission due to inactivity. Additionally, the packet to be sent will
- * have its force_synchronization option flag set.
+ * This function will update the outgoing packet values to be sent on the next threaded or manual update, and will reset
+ * the logic that slows down packet transmission due to inactivity. Additionally, the packet to be sent will have its
+ * force_synchronization option flag set.
  *
  * If no synchronization universe is configured, this function acts like a direct call to UpdateValues().
  *
@@ -623,9 +621,9 @@ inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* n
 /**
  * @brief Like UpdateValues(), but also sets the force_sync flag on the packet.
  *
- * This function will update the outgoing packet values to be sent on the next call to ProcessAll(), and
- * will reset the logic that slows down packet transmission due to inactivity. Additionally, the final packet to be sent
- * by this call will have its force_synchronization option flag set.
+ * This function will update the outgoing packet values to be sent on the next threaded or manual update, and will reset
+ * the logic that slows down packet transmission due to inactivity. Additionally, the final packet to be sent by this
+ * call will have its force_synchronization option flag set.
  *
  * Per-address priority support has specific rules about when to send value changes vs. pap changes.  These rules are
  * documented in https://etclabs.github.io/sACN/docs/head/per_address_priority.html, and are triggered by the use of
