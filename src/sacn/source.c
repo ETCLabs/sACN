@@ -81,6 +81,7 @@ typedef struct SourceState
   sacn_source_t handle;  // This must be the first struct member.
 
   EtcPalRbTree universes;
+  size_t num_active_universes;  // Number of universes that actually have NULL start code data.
   bool universe_list_changed;
   EtcPalTimer universe_discovery_timer;
   bool process_manually;
@@ -103,12 +104,14 @@ typedef struct UniverseState
   int null_packets_sent_before_suppression;
   EtcPalTimer null_keep_alive_timer;
   uint8_t null_send_buf[SACN_MTU];
+  bool has_null_data;
 
 #if SACN_ETC_PRIORITY_EXTENSION
   // Start code 0xDD state
   int pap_packets_sent_before_suppression;
   EtcPalTimer pap_keep_alive_timer;
   uint8_t pap_send_buf[SACN_MTU];
+  bool has_pap_data;
 #endif
 
 #if SACN_DYNAMIC_MEM
@@ -352,7 +355,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
     }
 
     // Allocate the source's state.
-    SourceState* source = NULL; 
+    SourceState* source = NULL;
     if (result == kEtcPalErrOk)
     {
       source = ALLOC_SOURCE_STATE();
@@ -360,7 +363,6 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
       if (!source)
         result = kEtcPalErrNoMem;
     }
-
 
     // Initialize the source's state and add it to the sources tree.
     if (result == kEtcPalErrOk)
@@ -378,6 +380,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
       source->handle = get_next_int_handle(&source_handle_mgr, -1);
       etcpal_rbtree_init(&source->universes, universe_state_lookup_compare_func, source_rb_node_alloc_func,
                          source_rb_node_dealloc_func);
+      source->num_active_universes = 0;
       source->universe_list_changed = true;
       etcpal_timer_start(&source->universe_discovery_timer, UNIVERSE_DISCOVERY_INTERVAL);
       source->process_manually = config->manually_process_source;
@@ -451,7 +454,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
 void sacn_source_destroy(sacn_source_t handle)
 {
 #if SOURCE_ENABLED
-  
+
 #endif
 }
 
@@ -1266,18 +1269,26 @@ int process_internal(bool process_manual)
             if ((universe->null_packets_sent_before_suppression < 3) ||
                 etcpal_timer_is_expired(&universe->null_keep_alive_timer))
             {
-              // Send 0x00 data & reset the keep-alive timer
-              send_null_data(source, universe);
-              etcpal_timer_reset(&universe->null_keep_alive_timer);
+              // If we have 0x00 data
+              if (universe->has_null_data)
+              {
+                // Send 0x00 data & reset the keep-alive timer
+                send_null_data(source, universe);
+                etcpal_timer_reset(&universe->null_keep_alive_timer);
+              }
             }
 #if SACN_ETC_PRIORITY_EXTENSION
             // If most recent 0xDD data sent < 3 times OR 0xDD keep-alive timer expired
             if ((universe->pap_packets_sent_before_suppression < 3) ||
                 etcpal_timer_is_expired(&universe->pap_keep_alive_timer))
             {
-              // Send 0xDD data & reset the keep-alive timer
-              send_pap_data(source, universe);
-              etcpal_timer_reset(&universe->pap_keep_alive_timer);
+              // If we have 0xDD data
+              if (universe->has_pap_data)
+              {
+                // Send 0xDD data & reset the keep-alive timer
+                send_pap_data(source, universe);
+                etcpal_timer_reset(&universe->pap_keep_alive_timer);
+              }
             }
 #endif
           }
@@ -1562,19 +1573,23 @@ int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* universe_ite
        universe && (num_universes_packed < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE);
        universe = etcpal_rbiter_next(universe_iter))
   {
-    // Pack the universe ID
-    etcpal_pack_u16b(pcur, universe->universe_id);
-    pcur += 2;
+    // If this universe has NULL start code data at a bare minimum
+    if (universe->has_null_data)
+    {
+      // Pack the universe ID
+      etcpal_pack_u16b(pcur, universe->universe_id);
+      pcur += 2;
 
-    // Increment number of universes packed
-    ++num_universes_packed;
+      // Increment number of universes packed
+      ++num_universes_packed;
+    }
   }
 
   // Update universe count, page, and last page PDU fields
   SET_UNIVERSE_COUNT(source->universe_discovery_send_buf, num_universes_packed);
   SET_PAGE(source->universe_discovery_send_buf, page_number);
   SET_LAST_PAGE(source->universe_discovery_send_buf,
-                (uint8_t)(etcpal_rbtree_size(&source->universes) / SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE));
+                (uint8_t)(source->num_active_universes / SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE));
 
   // Return number of universes packed
   return num_universes_packed;
