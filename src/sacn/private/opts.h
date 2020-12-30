@@ -288,6 +288,8 @@
  * @brief The maximum number of sources that can be created.
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
+ *
+ * If this is set to 0, no memory pools are allocated, and the Source API is disabled.
  */
 #ifndef SACN_SOURCE_MAX_SOURCES
 #define SACN_SOURCE_MAX_SOURCES 1
@@ -297,6 +299,8 @@
  * @brief The maximum number of universes that a source can send to simultaneously.
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
+ *
+ * If this is set to 0, no memory pools are allocated, and the Source API is disabled.
  */
 #ifndef SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE
 #define SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE 4
