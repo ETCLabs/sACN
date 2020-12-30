@@ -37,6 +37,7 @@
 /****************************** Private macros *******************************/
 
 #define SOURCE_THREAD_INTERVAL 23
+#define UNIVERSE_DISCOVERY_INTERVAL 10000
 #define SOURCE_ENABLED                                                                                   \
   ((!SACN_DYNAMIC_MEM && (SACN_SOURCE_MAX_SOURCES > 0) && (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)) || \
    SACN_DYNAMIC_MEM)
@@ -161,6 +162,8 @@ static etcpal_error_t init_multicast_socket(etcpal_socket_t* socket, etcpal_ipty
 static etcpal_error_t init_unicast_socket(etcpal_socket_t* socket, etcpal_iptype_t ip_type);
 
 static int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+static int universe_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+static int netint_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 
 static EtcPalRbNode* source_rb_node_alloc_func(void);
 static void source_rb_node_dealloc_func(EtcPalRbNode* node);
@@ -319,24 +322,89 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
   if (!sacn_initialized())
     result = kEtcPalErrNotInit;
 
-  if ((result == kEtcPalErrOk) && (!config || !handle))
-    result = kEtcPalErrInvalid;
+  if (result == kEtcPalErrOk)
+  {
+    if (!config)
+      result = kEtcPalErrInvalid;
+    else if (ETCPAL_UUID_IS_NULL(&config->cid))
+      result = kEtcPalErrInvalid;
+    else if (!config->name)
+      result = kEtcPalErrInvalid;
+    else if (config->keep_alive_interval <= 0)
+      result = kEtcPalErrInvalid;
+    else if (!handle)
+      result = kEtcPalErrInvalid;
+  }
 
-  if ((result == kEtcPalErrOk) && sacn_lock())
+  if (sacn_lock())
   {
     // If the Tick thread hasn't been started yet, start it if the config isn't manual.
-    if (!thread_initialized && !config->manually_process_source)
+    if (result == kEtcPalErrOk)
     {
-      result = start_tick_thread();
+      if (!thread_initialized && !config->manually_process_source)
+      {
+        result = start_tick_thread();
 
-      if (result == kEtcPalErrOk)
-        thread_initialized = true;
+        if (result == kEtcPalErrOk)
+          thread_initialized = true;
+      }
     }
+
+    // Allocate the source's state.
+    SourceState* source = NULL; 
+    if (result == kEtcPalErrOk)
+    {
+      source = ALLOC_SOURCE_STATE();
+
+      if (!source)
+        result = kEtcPalErrNoMem;
+    }
+
+
+    // Initialize the source's state and add it to the sources tree.
+    if (result == kEtcPalErrOk)
+    {
+      // Initialize th universe discovery send buffer.
+      memset(source->universe_discovery_send_buf, 0, SACN_MTU);
+      size_t written = 0;
+      written += pack_sacn_root_layer(source->universe_discovery_send_buf, SACN_UNIVERSE_DISCOVERY_HEADER_SIZE, true,
+                                      &config->cid);
+      written +=
+          pack_sacn_universe_discovery_framing_layer(&source->universe_discovery_send_buf[written], 0, config->name);
+      written += pack_sacn_universe_discovery_layer_header(&source->universe_discovery_send_buf[written], 0, 0, 0);
+
+      // Initialize everything else.
+      source->handle = get_next_int_handle(&source_handle_mgr, -1);
+      etcpal_rbtree_init(&source->universes, universe_state_lookup_compare_func, source_rb_node_alloc_func,
+                         source_rb_node_dealloc_func);
+      source->universe_list_changed = true;
+      etcpal_timer_start(&source->universe_discovery_timer, UNIVERSE_DISCOVERY_INTERVAL);
+      source->process_manually = config->manually_process_source;
+      source->ip_supported = config->ip_supported;
+      etcpal_rbtree_init(&source->netints, netint_state_lookup_compare_func, source_rb_node_alloc_func,
+                         source_rb_node_dealloc_func);
+
+      // Add the state to the sources tree.
+      etcpal_error_t insert_result = etcpal_rbtree_insert(&sources, source);
+
+      // Clean up on failure.
+      if (insert_result != kEtcPalErrOk)
+      {
+        FREE_SOURCE_STATE(source);
+
+        if (insert_result == kEtcPalErrNoMem)
+          result = kEtcPalErrNoMem;
+        else
+          result = kEtcPalErrSys;
+      }
+    }
+
+    // Initialize the handle on success.
+    if (result == kEtcPalErrOk)
+      *handle = source->handle;
 
     sacn_unlock();
   }
-
-  // TODO: Finish
 
   return result;
 }
@@ -1000,6 +1068,27 @@ static int source_state_lookup_compare_func(const EtcPalRbTree* self, const void
   const SourceState* b = (const SourceState*)value_b;
 
   return (a->handle > b->handle) - (a->handle < b->handle);  // Just compare the handles.
+}
+
+int universe_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
+{
+  ETCPAL_UNUSED_ARG(self);
+
+  const UniverseState* a = (const UniverseState*)value_a;
+  const UniverseState* b = (const UniverseState*)value_b;
+
+  return (a->universe_id > b->universe_id) - (a->universe_id < b->universe_id);  // Just compare the IDs.
+}
+
+int netint_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
+{
+  ETCPAL_UNUSED_ARG(self);
+
+  const NetintState* a = (const NetintState*)value_a;
+  const NetintState* b = (const NetintState*)value_b;
+
+  return ((a->id.index > b->id.index) || ((a->id.index == b->id.index) && (a->id.ip_type > b->id.ip_type))) -
+         ((a->id.index < b->id.index) || ((a->id.index == b->id.index) && (a->id.ip_type < b->id.ip_type)));
 }
 
 static EtcPalRbNode* source_rb_node_alloc_func(void)
