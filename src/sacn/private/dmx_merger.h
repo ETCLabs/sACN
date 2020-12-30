@@ -42,26 +42,14 @@ typedef struct SourceState
   SacnDmxMergerSource source;
 } SourceState;
 
-typedef struct CidHandleMapping
-{
-  EtcPalUuid cid;  // This must be the first struct member.
-  sacn_source_id_t handle;
-} CidHandleMapping;
-
 typedef struct MergerState
 {
   sacn_dmx_merger_t handle;  // This must be the first struct member.
-
   IntHandleManager source_handle_mgr;
-
   EtcPalRbTree source_state_lookup;
-  EtcPalRbTree source_handle_lookup;
-
-  size_t source_count_max;
-  uint8_t* slots;
-  sacn_source_id_t* slot_owners;
-
-  uint8_t winning_priorities[DMX_ADDRESS_COUNT];
+  SacnDmxMergerConfig config;
+  uint8_t winning_priorities[DMX_ADDRESS_COUNT];        // These have not been converted to PAPs.
+  sacn_source_id_t winning_sources[DMX_ADDRESS_COUNT];  // This is needed if config.slot_owners is NULL.
 } MergerState;
 
 etcpal_error_t sacn_dmx_merger_init();

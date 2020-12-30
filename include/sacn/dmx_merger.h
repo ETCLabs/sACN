@@ -31,7 +31,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "etcpal/error.h"
-#include "etcpal/uuid.h"
 #include "sacn/common.h"
 #include "sacn/receiver.h"
 

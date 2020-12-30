@@ -27,7 +27,6 @@
 
 #include "sacn/dmx_merger.h"
 #include "etcpal/cpp/inet.h"
-#include "etcpal/cpp/uuid.h"
 
 /**
  * @defgroup sacn_dmx_merger_cpp sACN DMX Merger API
@@ -148,7 +147,7 @@ inline DmxMerger::Settings::Settings(uint8_t* slots_ptr) : slots(slots_ptr)
  */
 inline bool DmxMerger::Settings::IsValid() const
 {
-  return (slots && slot_owners);
+  return (slots != nullptr);
 }
 
 /**
@@ -325,7 +324,7 @@ inline etcpal::Error DmxMerger::UpdateUniversePriority(sacn_source_id_t source, 
  */
 inline etcpal::Error DmxMerger::RemovePaps(sacn_source_id_t source)
 {
-  return sacn_dmx_merger_stop_source_per_address_priority(handle_, source);
+  return sacn_dmx_merger_remove_paps(handle_, source);
 }
 
 /**
