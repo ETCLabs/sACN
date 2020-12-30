@@ -49,6 +49,9 @@ extern "C" {
 #define SACN_MTU 1472
 #define SACN_PORT 5568
 
+#define SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE 512
+#define SACN_DISCOVERY_UNIVERSE 64214
+
 /*
  * This ensures there are always enough SocketRefs. This is multiplied by 2 because SocketRefs come in pairs - one for
  * IPv4, and another for IPv6. This is because a single SocketRef cannot intermix IPv4 and IPv6.

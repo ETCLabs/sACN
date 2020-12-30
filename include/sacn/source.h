@@ -81,7 +81,8 @@ typedef struct SacnSourceConfig
   /********* Optional values **********/
 
   /** The maximum number of universes this source will send to.  May be #SACN_SOURCE_INFINITE_UNIVERSES.
-      This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES is used instead. */
+      This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE is used
+      instead. */
   size_t universe_count_max;
 
   /** If false (default), this source will be added to a background thread that will send sACN updates at a

@@ -21,7 +21,6 @@
 
 #include <string.h>
 #include "etcpal/pack.h"
-#include "etcpal/acn_rlp.h"
 
 // Suppress strncpy() warning on Windows/MSVC.
 #ifdef _MSC_VER
@@ -107,11 +106,7 @@ bool parse_draft_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderD
   return true;
 }
 
-#define SACN_FRAMING_OFFSET 38
-#define SACN_DMP_OFFSET 115
-
-size_t pack_sacn_data_header(uint8_t* buf, const EtcPalUuid* source_cid, const char* source_name, uint8_t priority,
-                             bool preview, uint16_t universe_id, uint8_t start_code, uint16_t slot_count)
+size_t pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const EtcPalUuid* source_cid)
 {
   uint8_t* pcur = buf;
 
@@ -123,14 +118,23 @@ size_t pack_sacn_data_header(uint8_t* buf, const EtcPalUuid* source_cid, const c
   ACN_PDU_SET_V_FLAG(*pcur);
   ACN_PDU_SET_H_FLAG(*pcur);
   ACN_PDU_SET_D_FLAG(*pcur);
-  ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE - ACN_UDP_PREAMBLE_SIZE + slot_count);
+  ACN_PDU_PACK_NORMAL_LEN(pcur, pdu_length - ACN_UDP_PREAMBLE_SIZE);
   pcur += 2;
 
   // RLP vector and header
-  etcpal_pack_u32b(pcur, ACN_VECTOR_ROOT_E131_DATA);
+  etcpal_pack_u32b(pcur, extended ? ACN_VECTOR_ROOT_E131_EXTENDED : ACN_VECTOR_ROOT_E131_DATA);
   pcur += 4;
   memcpy(pcur, source_cid->data, ETCPAL_UUID_BYTES);
   pcur += ETCPAL_UUID_BYTES;
+
+  return (size_t)(pcur - buf);
+}
+
+size_t pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t vector, const char* source_name,
+                                    uint8_t priority, uint16_t sync_address, uint8_t seq_num, bool preview,
+                                    bool terminated, bool force_sync, uint16_t universe_id)
+{
+  uint8_t* pcur = buf;
 
   // Framing layer flags and length
   *pcur = 0;
@@ -141,23 +145,34 @@ size_t pack_sacn_data_header(uint8_t* buf, const EtcPalUuid* source_cid, const c
   pcur += 2;
 
   // Framing layer
-  etcpal_pack_u32b(pcur, VECTOR_E131_DATA_PACKET);
+  etcpal_pack_u32b(pcur, vector);
   pcur += 4;
   strncpy((char*)pcur, source_name, SACN_SOURCE_NAME_MAX_LEN);
   pcur[SACN_SOURCE_NAME_MAX_LEN - 1] = '\0';
   pcur += SACN_SOURCE_NAME_MAX_LEN;
   *pcur = priority;
   ++pcur;
-  etcpal_pack_u16b(pcur, 0u);
+  etcpal_pack_u16b(pcur, sync_address);
   pcur += 2;
-  *pcur = 0;
+  *pcur = seq_num;
   ++pcur;
   *pcur = 0;
   if (preview)
     *pcur |= SACN_OPTVAL_PREVIEW;
+  if (terminated)
+    *pcur |= SACN_OPTVAL_TERMINATED;
+  if (force_sync)
+    *pcur |= SACN_OPTVAL_FORCE_SYNC;
   ++pcur;
   etcpal_pack_u16b(pcur, universe_id);
   pcur += 2;
+
+  return (size_t)(pcur - buf);
+}
+
+size_t pack_sacn_dmp_layer_header(uint8_t* buf, uint8_t start_code, uint16_t slot_count)
+{
+  uint8_t* pcur = buf;
 
   // DMP layer flags and length
   *pcur = 0;
@@ -179,6 +194,79 @@ size_t pack_sacn_data_header(uint8_t* buf, const EtcPalUuid* source_cid, const c
   etcpal_pack_u16b(pcur, slot_count + 1);
   pcur += 2;
   *pcur = start_code;
+  ++pcur;
+
+  return (size_t)(pcur - buf);
+}
+
+size_t pack_sacn_sync_framing_layer(uint8_t* buf, uint8_t seq_num, uint16_t sync_address)
+{
+  uint8_t* pcur = buf;
+
+  // Framing layer flags and length
+  *pcur = 0;
+  ACN_PDU_SET_V_FLAG(*pcur);
+  ACN_PDU_SET_H_FLAG(*pcur);
+  ACN_PDU_SET_D_FLAG(*pcur);
+  ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_SYNC_PDU_SIZE - SACN_FRAMING_OFFSET);
+  pcur += 2;
+
+  // Framing layer
+  etcpal_pack_u32b(pcur, VECTOR_E131_EXTENDED_SYNCHRONIZATION);
+  pcur += 4;
+  *pcur = seq_num;
+  ++pcur;
+  etcpal_pack_u16b(pcur, sync_address);
+  pcur += 2;
+  etcpal_pack_u16b(pcur, 0u);  // Reserved
+  pcur += 2;
+
+  return (size_t)(pcur - buf);
+}
+
+size_t pack_sacn_universe_discovery_framing_layer(uint8_t* buf, uint16_t universe_count, const char* source_name)
+{
+  uint8_t* pcur = buf;
+
+  // Framing layer flags and length
+  *pcur = 0;
+  ACN_PDU_SET_V_FLAG(*pcur);
+  ACN_PDU_SET_H_FLAG(*pcur);
+  ACN_PDU_SET_D_FLAG(*pcur);
+  ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_UNIVERSE_DISCOVERY_HEADER_SIZE - SACN_FRAMING_OFFSET + (universe_count * 2u));
+  pcur += 2;
+
+  // Framing layer
+  etcpal_pack_u32b(pcur, VECTOR_E131_EXTENDED_DISCOVERY);
+  pcur += 4;
+  strncpy((char*)pcur, source_name, SACN_SOURCE_NAME_MAX_LEN);
+  pcur[SACN_SOURCE_NAME_MAX_LEN - 1] = '\0';
+  pcur += SACN_SOURCE_NAME_MAX_LEN;
+  etcpal_pack_u32b(pcur, 0u);  // Reserved
+  pcur += 4;
+
+  return (size_t)(pcur - buf);
+}
+
+size_t pack_sacn_universe_discovery_layer_header(uint8_t* buf, uint16_t universe_count, uint8_t page, uint8_t last_page)
+{
+  uint8_t* pcur = buf;
+
+  // Universe discovery layer flags and length
+  *pcur = 0;
+  ACN_PDU_SET_V_FLAG(*pcur);
+  ACN_PDU_SET_H_FLAG(*pcur);
+  ACN_PDU_SET_D_FLAG(*pcur);
+  ACN_PDU_PACK_NORMAL_LEN(pcur,
+                          SACN_UNIVERSE_DISCOVERY_HEADER_SIZE - SACN_UNIVERSE_DISCOVERY_OFFSET + (universe_count * 2u));
+  pcur += 2;
+
+  // Universe discovery layer
+  etcpal_pack_u32b(pcur, VECTOR_UNIVERSE_DISCOVERY_UNIVERSE_LIST);
+  pcur += 4;
+  *pcur = page;
+  ++pcur;
+  *pcur = last_page;
   ++pcur;
 
   return (size_t)(pcur - buf);

@@ -110,7 +110,7 @@ The application can also obtain the list of universes that a source is currently
 
 <!-- CODE_BLOCK_START -->
 ```c
-uint16_t *universes;  // This points to an array with UNIVERSES_SIZE (perhaps SACN_SOURCE_MAX_UNIVERSES) elements.
+uint16_t *universes;  // Points to an array with UNIVERSES_SIZE (perhaps SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE) elements.
 size_t num_universes = sacn_source_get_universes(handle_, universes, UNIVERSES_SIZE);
 if(num_universes > UNIVERSES_SIZE)
 {

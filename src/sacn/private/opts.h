@@ -285,12 +285,21 @@
 /** @endcond */
 
 /**
+ * @brief The maximum number of sources that can be created.
+ *
+ * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
+ */
+#ifndef SACN_SOURCE_MAX_SOURCES
+#define SACN_SOURCE_MAX_SOURCES 1
+#endif
+
+/**
  * @brief The maximum number of universes that a source can send to simultaneously.
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
-#ifndef SACN_SOURCE_MAX_UNIVERSES
-#define SACN_SOURCE_MAX_UNIVERSES 4
+#ifndef SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE
+#define SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE 4
 #endif
 
 /**

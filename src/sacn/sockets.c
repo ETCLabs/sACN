@@ -230,7 +230,14 @@ etcpal_error_t create_receiver_socket(etcpal_iptype_t ip_type, const EtcPalSockA
   return res;
 }
 
-void get_sacn_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAddr* ip)
+/*
+ * Obtains the sACN multicast address for the given universe and IP type.
+ *
+ * [in] ip_type Whether the multicast address is IPv4 or IPv6.
+ * [in] universe The multicast address' universe.
+ * [out] ip The multicast address for the given universe and IP type.
+ */
+void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAddr* ip)
 {
   if (ip_type == kEtcPalIpTypeV4)
   {
@@ -244,7 +251,7 @@ void get_sacn_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAdd
     ETCPAL_IP_SET_V6_ADDRESS(ip, ipv6_addr_template);
     ip->addr.v6.addr_buf[14] = (uint8_t)(universe >> 8);
     ip->addr.v6.addr_buf[15] = (uint8_t)(universe & 0xff);
-  };
+  }
 }
 
 /*
@@ -266,7 +273,7 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
   etcpal_socket_t new_socket = ETCPAL_SOCKET_INVALID;
 
   EtcPalSockAddr universe_mcast_addr;
-  get_sacn_mcast_addr(ip_type, universe, &universe_mcast_addr.ip);
+  sacn_get_mcast_addr(ip_type, universe, &universe_mcast_addr.ip);
   universe_mcast_addr.port = SACN_PORT;
 
   // Find a shared socket that has room for another subscription.
@@ -573,7 +580,7 @@ etcpal_error_t test_sacn_netint(const EtcPalMcastNetintId* netint_id, const char
     // Test receive sockets using an sACN multicast address.
     EtcPalGroupReq greq;
     greq.ifindex = netint_id->index;
-    get_sacn_mcast_addr(netint_id->ip_type, 1, &greq.group);
+    sacn_get_mcast_addr(netint_id->ip_type, 1, &greq.group);
 
     test_res = create_receiver_socket(netint_id->ip_type, NULL, false, &test_socket);
 
