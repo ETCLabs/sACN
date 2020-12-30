@@ -364,7 +364,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
     // Initialize the source's state and add it to the sources tree.
     if (result == kEtcPalErrOk)
     {
-      // Initialize th universe discovery send buffer.
+      // Initialize the universe discovery send buffer.
       memset(source->universe_discovery_send_buf, 0, SACN_MTU);
       size_t written = 0;
       written += pack_sacn_root_layer(source->universe_discovery_send_buf, SACN_UNIVERSE_DISCOVERY_HEADER_SIZE, true,
