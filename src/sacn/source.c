@@ -37,8 +37,9 @@
 /****************************** Private macros *******************************/
 
 #define SOURCE_THREAD_INTERVAL 23
-#define SOURCE_ENABLED \
-  ((!SACN_DYNAMIC_MEM && (SACN_SOURCE_MAX_SOURCES > 0) && (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)) || SACN_DYNAMIC_MEM)
+#define SOURCE_ENABLED                                                                                   \
+  ((!SACN_DYNAMIC_MEM && (SACN_SOURCE_MAX_SOURCES > 0) && (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)) || \
+   SACN_DYNAMIC_MEM)
 #define UNICAST_ENABLED ((!SACN_DYNAMIC_MEM && (SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE > 0)) || SACN_DYNAMIC_MEM)
 
 /* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
@@ -228,16 +229,11 @@ etcpal_error_t sacn_source_init(void)
     sources_initialized = true;
 
     init_int_handle_manager(&source_handle_mgr, source_handle_in_use, NULL);
-
-    res = start_tick_thread();
   }
-
-  if (res == kEtcPalErrOk)
-    thread_initialized = true;
 
   if (res != kEtcPalErrOk)
     sacn_source_deinit();  // Clean up
-#endif  // SOURCE_ENABLED
+#endif                     // SOURCE_ENABLED
 
   return res;
 }
@@ -317,11 +313,32 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
   return kEtcPalErrNotInit;
 #endif
 
-  // If the Tick thread hasn't been started yet, start it if the config isn't manual.
+  etcpal_error_t result = kEtcPalErrOk;
 
-  ETCPAL_UNUSED_ARG(config);
-  ETCPAL_UNUSED_ARG(handle);
-  return kEtcPalErrNotImpl;
+  // Verify module initialized.
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+
+  if ((result == kEtcPalErrOk) && (!config || !handle))
+    result = kEtcPalErrInvalid;
+
+  if ((result == kEtcPalErrOk) && sacn_lock())
+  {
+    // If the Tick thread hasn't been started yet, start it if the config isn't manual.
+    if (!thread_initialized && !config->manually_process_source)
+    {
+      result = start_tick_thread();
+
+      if (result == kEtcPalErrOk)
+        thread_initialized = true;
+    }
+
+    sacn_unlock();
+  }
+
+  // TODO: Finish
+
+  return result;
 }
 
 /**
@@ -1033,7 +1050,7 @@ bool source_handle_in_use(int handle_val, void* cookie)
   return (handle_val == SACN_SOURCE_INVALID) || etcpal_rbtree_find(&sources, &handle_val);
 }
 
-// No lock needed as long as called from init
+// Needs lock
 etcpal_error_t start_tick_thread()
 {
   shutting_down = false;
