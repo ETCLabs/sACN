@@ -153,6 +153,7 @@ ETCPAL_MEMPOOL_DEFINE(sacnsource_rb_nodes, EtcPalRbNode,
 static IntHandleManager source_handle_mgr;
 static EtcPalRbTree sources;
 static bool sources_initialized = false;
+// TODO: Consider reusing the send sockets in sockets.c, or replace them with these sockets
 static etcpal_socket_t ipv4_multicast_sock = ETCPAL_SOCKET_INVALID;
 static etcpal_socket_t ipv6_multicast_sock = ETCPAL_SOCKET_INVALID;
 static etcpal_socket_t ipv4_unicast_sock = ETCPAL_SOCKET_INVALID;
