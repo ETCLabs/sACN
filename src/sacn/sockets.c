@@ -513,11 +513,16 @@ etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t n
 
     for (SacnMcastInterface* netint = netints; netint < (netints + num_netints); ++netint)
     {
-      netint->status = kEtcPalErrSys;  // TODO: Consider more specific error codes here.
-
-      if ((netint->iface.index != 0) &&
-          ((netint->iface.ip_type == kEtcPalIpTypeV4) || (netint->iface.ip_type == kEtcPalIpTypeV6)) &&
-          (netint_id_index_in_array(&netint->iface, valid_sys_netints, num_valid_sys_netints) != -1))
+      if ((netint->iface.index == 0) || (netint->iface.ip_type == kEtcPalIpTypeInvalid))
+      {
+        netint->status = kEtcPalErrInvalid;
+      }
+      else if (netint_id_index_in_array(&netint->iface, valid_sys_netints, num_valid_sys_netints) == -1)
+      {
+        netint->status = kEtcPalErrNetwork;
+        // TODO: Pass on the specific error codes from each failed netint test
+      }
+      else
       {
         netint->status = kEtcPalErrOk;
         all_interfaces_invalid = false;
