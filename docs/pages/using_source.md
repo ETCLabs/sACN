@@ -132,7 +132,7 @@ std::vector<uint16_t> universes = my_source.GetUniverses();
 At this point, once you have the desired data in your configured buffer(s), you can use the Update
 Values functionality to copy in the data that should be transmitted on the network. Assuming you didn't
 set the manually_process_source setting to true, the source thread will take care of actually
-sending the data. Otherwise, you'll need to call the Process All function at your DMX rate
+sending the data. Otherwise, you'll need to call the Process Manual function at your DMX rate
 (typically 23 ms). Ultimately, you should call Update Values whenever the data in your buffer(s)
 changes and you want that change transmitted to the network.
 
