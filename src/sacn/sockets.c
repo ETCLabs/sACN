@@ -321,14 +321,17 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
   return res;
 }
 
-void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t socket, bool close_now)
+void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t *socket, bool close_now)
 {
-  SACN_ASSERT(socket != ETCPAL_SOCKET_INVALID);
+  SACN_ASSERT(socket != NULL);
+  SACN_ASSERT(*socket != ETCPAL_SOCKET_INVALID);
 
   SacnRecvThreadContext* context = get_recv_thread_context(thread_id);
   SACN_ASSERT(context);
 
-  cleanup_socket(context, socket, close_now);
+  cleanup_socket(context, *socket, close_now);
+
+  *socket = ETCPAL_SOCKET_INVALID;
 }
 
 /*

@@ -115,8 +115,9 @@ TEST_F(TestReceiver, ChangeUniverseWorks)
   sacn_receiver_create(&config, &handle, nullptr, 0);
 
   clear_term_set_list_fake.custom_fake = [](TerminationSet* list) { EXPECT_EQ(list, nullptr); };
-  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t socket, bool) {
-    EXPECT_EQ(socket, CHANGE_UNIVERSE_WORKS_FIRST_SOCKET);
+  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t *socket, bool) {
+    ASSERT_NE(socket, nullptr);
+    EXPECT_EQ(*socket, CHANGE_UNIVERSE_WORKS_FIRST_SOCKET);
     EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
   };
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
