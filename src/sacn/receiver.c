@@ -443,19 +443,19 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
       if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
         sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, false);
 
-      if ((receiver->ip_supported == kSacnIpV4Only) || (receiver->ip_supported == kSacnIpV4AndIpV6))
+      if (supports_ipv4(receiver->ip_supported))
       {
         res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, new_universe_id, receiver->netints,
                                        receiver->num_netints, &receiver->ipv4_socket);
 
-        if ((res == kEtcPalErrNoNetints) && (receiver->ip_supported == kSacnIpV4AndIpV6))
+        if ((res == kEtcPalErrNoNetints) && supports_ipv6(receiver->ip_supported))
           res = kEtcPalErrOk;  // Try IPv6.
       }
     }
 
     if (res == kEtcPalErrOk)
     {
-      if ((receiver->ip_supported == kSacnIpV6Only) || (receiver->ip_supported == kSacnIpV4AndIpV6))
+      if (supports_ipv6(receiver->ip_supported))
       {
         res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, new_universe_id, receiver->netints,
                                        receiver->num_netints, &receiver->ipv6_socket);
@@ -788,25 +788,22 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
 
   etcpal_error_t res = kEtcPalErrOk;
 
-  if ((receiver->ip_supported == kSacnIpV4Only) || (receiver->ip_supported == kSacnIpV4AndIpV6))
+  if (supports_ipv4(receiver->ip_supported))
   {
     res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, config->universe_id, receiver->netints,
                                    receiver->num_netints, &receiver->ipv4_socket);
 
-    if ((res == kEtcPalErrNoNetints) && (receiver->ip_supported == kSacnIpV4AndIpV6))
+    if ((res == kEtcPalErrNoNetints) && supports_ipv6(receiver->ip_supported))
       res = kEtcPalErrOk;  // Try IPv6.
   }
 
-  if (res == kEtcPalErrOk)
+  if ((res == kEtcPalErrOk) && supports_ipv6(receiver->ip_supported))
   {
-    if ((receiver->ip_supported == kSacnIpV6Only) || (receiver->ip_supported == kSacnIpV4AndIpV6))
-    {
-      res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, config->universe_id, receiver->netints,
-                                     receiver->num_netints, &receiver->ipv6_socket);
-    }
+    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, config->universe_id, receiver->netints,
+                                   receiver->num_netints, &receiver->ipv6_socket);
   }
 
-  if (res == kEtcPalErrOk && !assigned_thread->running)
+  if ((res == kEtcPalErrOk) && !assigned_thread->running)
   {
     res = start_receiver_thread(assigned_thread);
     if (res != kEtcPalErrOk)
@@ -823,6 +820,7 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
     // Append the receiver to the thread list
     add_receiver_to_list(assigned_thread, receiver);
   }
+
   return res;
 }
 
