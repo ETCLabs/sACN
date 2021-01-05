@@ -36,7 +36,8 @@
 #define TestReceiver TestReceiverStatic
 #endif
 
-constexpr uint16_t CHANGE_UNIVERSE_WORKS_FIRST_SOCKET = 1u;
+constexpr uint16_t CHANGE_UNIVERSE_WORKS_FIRST_IPV4_SOCKET = 4u;
+constexpr uint16_t CHANGE_UNIVERSE_WORKS_FIRST_IPV6_SOCKET = 6u;
 constexpr uint16_t CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE = 1u;
 constexpr uint16_t CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE = 2u;
 constexpr uint16_t CHANGE_UNIVERSE_INVALID_UNIVERSE_1 = 0u;
@@ -65,6 +66,58 @@ protected:
   {
     sacn_receiver_deinit();
     sacn_mem_deinit();
+  }
+
+  sacn_receiver_t SetupUniverseChangeTest(sacn_ip_support_t ip_supported)
+  {
+    SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
+    config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+                                        bool, void*) {};
+    config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
+    config.callbacks.sampling_period_ended = [](sacn_receiver_t handle, uint16_t universe, void* context) {};
+    config.universe_id = CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE;
+    config.ip_supported = ip_supported;
+
+    sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t ip_type, uint16_t,
+                                                   const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
+      if (ip_type == kEtcPalIpTypeV4)
+        *socket = CHANGE_UNIVERSE_WORKS_FIRST_IPV4_SOCKET;
+      else if (ip_type == kEtcPalIpTypeV6)
+        *socket = CHANGE_UNIVERSE_WORKS_FIRST_IPV6_SOCKET;
+      return kEtcPalErrOk;
+    };
+
+    sacn_receiver_t handle;
+    sacn_receiver_create(&config, &handle, nullptr, 0);
+
+    clear_term_set_list_fake.custom_fake = [](TerminationSet* list) { EXPECT_EQ(list, nullptr); };
+
+    return handle;
+  }
+
+  void PerformUniverseChangeTest(sacn_receiver_t handle, sacn_ip_support_t ip_supported)
+  {
+    etcpal_error_t change_universe_result =
+        sacn_receiver_change_universe(handle, CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE);
+
+    EXPECT_EQ(change_universe_result, kEtcPalErrOk);
+    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+    EXPECT_EQ(sacn_initialized_fake.call_count, 2u);
+    EXPECT_EQ(clear_term_set_list_fake.call_count, 1u);
+
+    switch (ip_supported)
+    {
+      case kSacnIpV4Only:
+      case kSacnIpV6Only:
+        EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 1u);
+        EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 2u);
+        break;
+      case kSacnIpV4AndIpV6:
+        EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u);
+        EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 4u);
+    }
+
+    sacn_receiver_destroy(handle);
   }
 };
 
@@ -96,27 +149,56 @@ TEST_F(TestReceiver, SetExpiredWaitWorks)
   EXPECT_EQ(sacn_receiver_get_expired_wait(), std::numeric_limits<uint32_t>::max());
 }
 
-TEST_F(TestReceiver, ChangeUniverseWorks)
+TEST_F(TestReceiver, ChangeUniverseV4Works)
 {
-  SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
-                                      bool, void*) {};
-  config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
-  config.callbacks.sampling_period_ended = [](sacn_receiver_t handle, uint16_t universe, void* context) {};
-  config.universe_id = CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE;
+  sacn_receiver_t handle = SetupUniverseChangeTest(kSacnIpV4Only);
 
-  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t, const EtcPalMcastNetintId*,
-                                                 size_t, etcpal_socket_t* socket) {
-    *socket = CHANGE_UNIVERSE_WORKS_FIRST_SOCKET;
+  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket, bool) {
+    ASSERT_NE(socket, nullptr);
+    EXPECT_NE(*socket, CHANGE_UNIVERSE_WORKS_FIRST_IPV6_SOCKET);
+    EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
+  };
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
+    EXPECT_NE(ip_type, kEtcPalIpTypeV6);
+    EXPECT_NE(ip_type, kEtcPalIpTypeInvalid);
+    EXPECT_EQ(universe, CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE);
+    EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
+    EXPECT_NE(socket, nullptr);
     return kEtcPalErrOk;
   };
 
-  sacn_receiver_t handle;
-  sacn_receiver_create(&config, &handle, nullptr, 0);
+  PerformUniverseChangeTest(handle, kSacnIpV4Only);
+}
 
-  clear_term_set_list_fake.custom_fake = [](TerminationSet* list) { EXPECT_EQ(list, nullptr); };
-  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t socket, bool) {
-    EXPECT_EQ(socket, CHANGE_UNIVERSE_WORKS_FIRST_SOCKET);
+TEST_F(TestReceiver, ChangeUniverseV6Works)
+{
+  sacn_receiver_t handle = SetupUniverseChangeTest(kSacnIpV6Only);
+
+  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket, bool) {
+    ASSERT_NE(socket, nullptr);
+    EXPECT_NE(*socket, CHANGE_UNIVERSE_WORKS_FIRST_IPV4_SOCKET);
+    EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
+  };
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
+    EXPECT_NE(ip_type, kEtcPalIpTypeV4);
+    EXPECT_NE(ip_type, kEtcPalIpTypeInvalid);
+    EXPECT_EQ(universe, CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE);
+    EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
+    EXPECT_NE(socket, nullptr);
+    return kEtcPalErrOk;
+  };
+
+  PerformUniverseChangeTest(handle, kSacnIpV6Only);
+}
+
+TEST_F(TestReceiver, ChangeUniverseV4V6Works)
+{
+  sacn_receiver_t handle = SetupUniverseChangeTest(kSacnIpV4AndIpV6);
+
+  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket, bool) {
+    ASSERT_NE(socket, nullptr);
     EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
   };
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
@@ -125,24 +207,10 @@ TEST_F(TestReceiver, ChangeUniverseWorks)
     EXPECT_EQ(universe, CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE);
     EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
     EXPECT_NE(socket, nullptr);
-
     return kEtcPalErrOk;
   };
 
-  etcpal_error_t change_universe_result = sacn_receiver_change_universe(handle, CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE);
-
-  EXPECT_EQ(change_universe_result, kEtcPalErrOk);
-  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
-  EXPECT_EQ(sacn_initialized_fake.call_count, 2u);
-  EXPECT_EQ(clear_term_set_list_fake.call_count, 1u);
-  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u);
-  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 4u);
-
-  clear_term_set_list_fake.custom_fake = nullptr;
-  sacn_remove_receiver_socket_fake.custom_fake = nullptr;
-  sacn_add_receiver_socket_fake.custom_fake = nullptr;
-
-  sacn_receiver_destroy(handle);
+  PerformUniverseChangeTest(handle, kSacnIpV4AndIpV6);
 }
 
 TEST_F(TestReceiver, ChangeUniverseErrInvalidWorks)
@@ -218,8 +286,7 @@ TEST_F(TestReceiver, ChangeUniverseErrNotFoundWorks)
   sacn_receiver_t handle;
   sacn_receiver_create(&config, &handle, nullptr, 0);
 
-  etcpal_error_t change_universe_found_result =
-      sacn_receiver_change_universe(handle, CHANGE_UNIVERSE_VALID_UNIVERSE_2);
+  etcpal_error_t change_universe_found_result = sacn_receiver_change_universe(handle, CHANGE_UNIVERSE_VALID_UNIVERSE_2);
   EXPECT_NE(change_universe_found_result, kEtcPalErrNotFound);
 }
 

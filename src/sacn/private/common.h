@@ -205,6 +205,9 @@ struct SacnReceiver
    * instead. */
   size_t source_count_max;
 
+  /* What IP networking the receiver will support. */
+  sacn_ip_support_t ip_supported;
+
   SacnReceiver* next;
 };
 

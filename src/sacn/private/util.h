@@ -26,6 +26,7 @@
 #define SACN_PRIVATE_UTIL_H_
 
 #include <stdbool.h>
+#include "sacn/common.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,6 +55,9 @@ typedef struct IntHandleManager
 
 void init_int_handle_manager(IntHandleManager* manager, HandleValueInUseFunction value_in_use_func, void* cookie);
 int get_next_int_handle(IntHandleManager* manager, int max);
+
+bool supports_ipv4(sacn_ip_support_t support);
+bool supports_ipv6(sacn_ip_support_t support);
 
 #ifdef __cplusplus
 }

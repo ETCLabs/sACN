@@ -67,3 +67,13 @@ int get_next_int_handle(IntHandleManager* manager, int max)
 
   return new_handle;
 }
+
+bool supports_ipv4(sacn_ip_support_t support)
+{
+  return ((support == kSacnIpV4Only) || (support == kSacnIpV4AndIpV6));
+}
+
+bool supports_ipv6(sacn_ip_support_t support)
+{
+  return ((support == kSacnIpV6Only) || (support == kSacnIpV4AndIpV6));
+}
