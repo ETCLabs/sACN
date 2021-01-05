@@ -117,6 +117,8 @@ static etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_c
 static void remove_receiver_from_thread(SacnReceiver* receiver, bool close_socket_now);
 static void remove_receiver_from_maps(SacnReceiver* receiver);
 
+static void remove_receiver_sockets(SacnReceiver* receiver, bool close_now);
+
 static void sacn_receive_thread(void* arg);
 
 // Receiving incoming data
@@ -438,10 +440,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
     // Update the receiver's socket and subscription.
     if (res == kEtcPalErrOk)
     {
-      if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
-        sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, false);
-      if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
-        sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, false);
+      remove_receiver_sockets(receiver, false);
 
       if (supports_ipv4(receiver->ip_supported))
       {
@@ -808,10 +807,7 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
     res = start_receiver_thread(assigned_thread);
     if (res != kEtcPalErrOk)
     {
-      if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
-        sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, true);
-      if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
-        sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, true);
+      remove_receiver_sockets(receiver, true);
     }
   }
 
@@ -874,10 +870,7 @@ void remove_receiver_from_thread(SacnReceiver* receiver, bool close_socket_now)
   SacnRecvThreadContext* context = get_recv_thread_context(receiver->thread_id);
   if (context)
   {
-    if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
-      sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, close_socket_now);
-    if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
-      sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, close_socket_now);
+    remove_receiver_sockets(receiver, close_socket_now);
 
     remove_receiver_from_list(context, receiver);
   }
@@ -892,6 +885,20 @@ void remove_receiver_from_maps(SacnReceiver* receiver)
 {
   etcpal_rbtree_remove(&receiver_state.receivers_by_universe, receiver);
   etcpal_rbtree_remove(&receiver_state.receivers, receiver);
+}
+
+/*
+ * Remove a receiver's sockets, choosing whether to close them now or wait until the next thread cycle.
+ *
+ * [in/out] receiver Receiver whose sockets to remove. Socket handles are set to invalid.
+ * [in] close_now Whether to close the sockets now or wait until the next thread cycle.
+ */
+void remove_receiver_sockets(SacnReceiver* receiver, bool close_now)
+{
+  if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, close_now);
+  if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, close_now);
 }
 
 /*
@@ -1684,10 +1691,7 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
 
   SacnReceiver* receiver = (SacnReceiver*)node->value;
   etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
-  if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, true);
-  if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, true);
+  remove_receiver_sockets(receiver, true);
   FREE_RECEIVER(receiver);
   node_dealloc(node);
 }
