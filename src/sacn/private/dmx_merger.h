@@ -40,6 +40,7 @@ typedef struct SourceState
 {
   sacn_source_id_t handle;  // This must be the first struct member.
   SacnDmxMergerSource source;
+  bool has_universe_priority;
 } SourceState;
 
 typedef struct MergerState
