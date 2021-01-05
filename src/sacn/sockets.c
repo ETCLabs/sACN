@@ -53,7 +53,7 @@ static size_t num_sys_netints;
 
 static etcpal_error_t test_sacn_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str);
 static void add_sacn_netint(const EtcPalMcastNetintId* netint_id, etcpal_error_t status);
-static int netint_id_index_in_array(const EtcPalMcastNetintId* id, const EtcPalMcastNetintId* array, size_t array_size);
+static int netint_id_index_in_array(const EtcPalMcastNetintId* id, const SacnMcastInterface* array, size_t array_size);
 
 static etcpal_error_t create_send_socket(const EtcPalMcastNetintId* netint_id, etcpal_socket_t* socket);
 static etcpal_error_t create_receiver_socket(etcpal_iptype_t ip_type, const EtcPalSockAddr* bind_addr,
