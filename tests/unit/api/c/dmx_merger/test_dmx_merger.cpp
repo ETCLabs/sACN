@@ -81,8 +81,8 @@ protected:
                     // sacn_dmx_merger_remove_paps on the second source.
   };
 
-  void TestMerge(const std::optional<uint8_t>& priority_1, const uint8_t* levels_1, uint16_t levels_1_count,
-                 const uint8_t* paps_1, uint16_t paps_1_count, const std::optional<uint8_t>& priority_2,
+  void TestMerge(const std::optional<int>& priority_1, const uint8_t* levels_1, uint16_t levels_1_count,
+                 const uint8_t* paps_1, uint16_t paps_1_count, const std::optional<int>& priority_2,
                  const uint8_t* levels_2, uint16_t levels_2_count, const uint8_t* paps_2, uint16_t paps_2_count,
                  MergeTestType merge_type)
   {
@@ -109,10 +109,11 @@ protected:
                                    ((i < paps_2_count) && (paps_2[i] != 0)));
 
       // These priorities and values are only valid if the corresponding source is sourcing at i.
-      uint8_t current_priority_1 = (i < paps_1_count) ? paps_1[i] : priority_1.value_or(0);
+      uint8_t current_priority_1 = (i < paps_1_count) ? paps_1[i] : static_cast<uint8_t>(priority_1.value_or(0));
       // If kStopSourcePap is used, then filter out the PAPs of the second source.
-      uint8_t current_priority_2 =
-          ((i < paps_2_count) && (merge_type != MergeTestType::kStopSourcePap)) ? paps_2[i] : priority_2.value_or(0);
+      uint8_t current_priority_2 = ((i < paps_2_count) && (merge_type != MergeTestType::kStopSourcePap))
+                                       ? paps_2[i]
+                                       : static_cast<uint8_t>(priority_2.value_or(0));
       int current_value_1 = (i < levels_1_count) ? levels_1[i] : -1;
       int current_value_2 = (i < levels_2_count) ? levels_2[i] : -1;
 
@@ -143,13 +144,19 @@ protected:
       if (levels_1)
         EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, source_1, levels_1, levels_1_count), kEtcPalErrOk);
       if (priority_1)
-        EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, source_1, *priority_1), kEtcPalErrOk);
+      {
+        EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, source_1, static_cast<uint8_t>(*priority_1)),
+                  kEtcPalErrOk);
+      }
       if (paps_1)
         EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, source_1, paps_1, paps_1_count), kEtcPalErrOk);
       if (levels_2)
         EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, source_2, levels_2, levels_2_count), kEtcPalErrOk);
       if (priority_2)
-        EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, source_2, *priority_2), kEtcPalErrOk);
+      {
+        EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, source_2, static_cast<uint8_t>(*priority_2)),
+                  kEtcPalErrOk);
+      }
       if (paps_2)
         EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, source_2, paps_2, paps_2_count), kEtcPalErrOk);
     }
@@ -175,8 +182,8 @@ protected:
     EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
   }
 
-  void TestMerge(const std::optional<uint8_t>& priority_1, const uint8_t* levels_1, const uint8_t* paps_1,
-                 const std::optional<uint8_t>& priority_2, const uint8_t* levels_2, const uint8_t* paps_2,
+  void TestMerge(const std::optional<int>& priority_1, const uint8_t* levels_1, const uint8_t* paps_1,
+                 const std::optional<int>& priority_2, const uint8_t* levels_2, const uint8_t* paps_2,
                  MergeTestType merge_type)
   {
     TestMerge(priority_1, levels_1, levels_1 ? DMX_ADDRESS_COUNT : 0, paps_1, paps_1 ? DMX_ADDRESS_COUNT : 0,
@@ -792,8 +799,6 @@ TEST_F(TestDmxMerger, UpdatePapsErrNotFoundWorks)
 
 TEST_F(TestDmxMerger, UpdateUniversePriorityErrInvalidWorks)
 {
-  uint8_t foo = 0;
-
   etcpal_error_t invalid_merger_result =
       sacn_dmx_merger_update_universe_priority(SACN_DMX_MERGER_INVALID, 0, VALID_PRIORITY);
   etcpal_error_t invalid_source_result =
