@@ -272,7 +272,8 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
   // Make sure the correct merger state was created.
   EXPECT_EQ(get_number_of_mergers(), 1u);
 
-  MergerState* merger_state = find_merger_state(merger_handle_);
+  MergerState* merger_state = nullptr;
+  lookup_state(merger_handle_, SACN_DMX_MERGER_SOURCE_INVALID, &merger_state, nullptr);
   ASSERT_NE(merger_state, nullptr);
 
   EXPECT_EQ(merger_state->handle, merger_handle_);
@@ -345,7 +346,9 @@ TEST_F(TestDmxMerger, MergerDestroyWorks)
   EXPECT_EQ(get_number_of_mergers(), 0u);
   EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
   EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
-  EXPECT_EQ(find_merger_state(merger_handle_), nullptr);
+  MergerState* merger_state = nullptr;
+  lookup_state(merger_handle_, SACN_DMX_MERGER_SOURCE_INVALID, &merger_state, nullptr);
+  EXPECT_EQ(merger_state, nullptr);
   EXPECT_EQ(get_number_of_mergers(), 0u);
 }
 
@@ -384,7 +387,8 @@ TEST_F(TestDmxMerger, AddSourceWorks)
   EXPECT_NE(source_handle, SACN_DMX_MERGER_SOURCE_INVALID);
 
   // Grab the merger state.
-  MergerState* merger_state = find_merger_state(merger_handle_);
+  MergerState* merger_state = nullptr;
+  lookup_state(merger_handle_, SACN_DMX_MERGER_SOURCE_INVALID, &merger_state, nullptr);
   ASSERT_NE(merger_state, nullptr);
 
   // Now check the source state.
@@ -451,7 +455,8 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
   EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
 
   // Grab the merger state, which will be used later.
-  MergerState* merger_state = find_merger_state(merger_handle_);
+  MergerState* merger_state = nullptr;
+  lookup_state(merger_handle_, SACN_DMX_MERGER_SOURCE_INVALID, &merger_state, nullptr);
   ASSERT_NE(merger_state, nullptr);
 
   // Add a couple of sources.
@@ -532,7 +537,8 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesInternalState)
   EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
 
   // Grab the merger state, which will be used later.
-  MergerState* merger_state = find_merger_state(merger_handle_);
+  MergerState* merger_state = nullptr;
+  lookup_state(merger_handle_, SACN_DMX_MERGER_SOURCE_INVALID, &merger_state, nullptr);
   ASSERT_NE(merger_state, nullptr);
 
   // Add a couple of sources.

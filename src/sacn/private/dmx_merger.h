@@ -56,7 +56,8 @@ typedef struct MergerState
 etcpal_error_t sacn_dmx_merger_init();
 void sacn_dmx_merger_deinit(void);
 
-MergerState* find_merger_state(sacn_dmx_merger_t handle);
+etcpal_error_t lookup_state(sacn_dmx_merger_t merger, sacn_source_id_t source, MergerState** merger_state,
+                            SourceState** source_state);
 size_t get_number_of_mergers();
 
 #ifdef __cplusplus

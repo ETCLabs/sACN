@@ -239,12 +239,7 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
 
     // Try to find the merger's state.
     if (result == kEtcPalErrOk)
-    {
-      merger_state = etcpal_rbtree_find(&mergers, &handle);
-
-      if (!merger_state)
-        result = kEtcPalErrNotFound;
-    }
+      result = lookup_state(handle, SACN_DMX_MERGER_SOURCE_INVALID, &merger_state, NULL);
 
     // Clear the source state lookup tree, using callbacks to free memory.
     if (result == kEtcPalErrOk)
@@ -316,9 +311,9 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_source_
     // Get the merger state, or return error for invalid handle.
     if (result == kEtcPalErrOk)
     {
-      merger_state = etcpal_rbtree_find(&mergers, &merger);
+      result = lookup_state(merger, SACN_DMX_MERGER_SOURCE_INVALID, &merger_state, NULL);
 
-      if (!merger_state)
+      if (result != kEtcPalErrOk)
         result = kEtcPalErrInvalid;
     }
 
@@ -405,21 +400,12 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_sour
     MergerState* merger_state = NULL;
     SourceState* source_state = NULL;
 
-    // Get the merger, or return invalid if not found.
+    // Get the merger and source data, or return invalid if not found.
     if (result == kEtcPalErrOk)
     {
-      merger_state = etcpal_rbtree_find(&mergers, &merger);
+      result = lookup_state(merger, source, &merger_state, &source_state);
 
-      if (!merger_state)
-        result = kEtcPalErrInvalid;
-    }
-
-    // Get the source's data, or return an error if not found.
-    if (result == kEtcPalErrOk)
-    {
-      source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
-
-      if (!source_state)
+      if (result != kEtcPalErrOk)
         result = kEtcPalErrInvalid;
     }
 
@@ -463,15 +449,13 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
   {
     if (sacn_lock())
     {
-      MergerState* merger_state = etcpal_rbtree_find(&mergers, &merger);
+      MergerState* merger_state = NULL;
+      SourceState* source_state = NULL;
 
-      if (merger_state)
-      {
-        SourceState* source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
+      lookup_state(merger, source, &merger_state, &source_state);
 
-        if (source_state)
-          result = &source_state->source;
-      }
+      if (source_state)
+        result = &source_state->source;
 
       sacn_unlock();
     }
@@ -521,23 +505,9 @@ etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_sour
     MergerState* merger_state = NULL;
     SourceState* source_state = NULL;
 
-    // Look up the merger state.
+    // Look up the merger and source state.
     if (result == kEtcPalErrOk)
-    {
-      merger_state = etcpal_rbtree_find(&mergers, &merger);
-
-      if (!merger_state)
-        result = kEtcPalErrNotFound;
-    }
-
-    // Look up the source state.
-    if (result == kEtcPalErrOk)
-    {
-      source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
-
-      if (!source_state)
-        result = kEtcPalErrNotFound;
-    }
+      result = lookup_state(merger, source, &merger_state, &source_state);
 
     // Update this source's level data.
     if ((result == kEtcPalErrOk) && new_levels)
@@ -595,23 +565,9 @@ etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_source
     MergerState* merger_state = NULL;
     SourceState* source_state = NULL;
 
-    // Look up the merger state.
+    // Look up the merger and source state.
     if (result == kEtcPalErrOk)
-    {
-      merger_state = etcpal_rbtree_find(&mergers, &merger);
-
-      if (!merger_state)
-        result = kEtcPalErrNotFound;
-    }
-
-    // Look up the source state.
-    if (result == kEtcPalErrOk)
-    {
-      source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
-
-      if (!source_state)
-        result = kEtcPalErrNotFound;
-    }
+      result = lookup_state(merger, source, &merger_state, &source_state);
 
     // Update this source's per-address-priority data.
     if ((result == kEtcPalErrOk) && paps)
@@ -661,23 +617,9 @@ etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger
     MergerState* merger_state = NULL;
     SourceState* source_state = NULL;
 
-    // Look up the merger state.
+    // Look up the merger and source state.
     if (result == kEtcPalErrOk)
-    {
-      merger_state = etcpal_rbtree_find(&mergers, &merger);
-
-      if (!merger_state)
-        result = kEtcPalErrNotFound;
-    }
-
-    // Look up the source state.
-    if (result == kEtcPalErrOk)
-    {
-      source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
-
-      if (!source_state)
-        result = kEtcPalErrNotFound;
-    }
+      result = lookup_state(merger, source, &merger_state, &source_state);
 
     // Update this source's universe priority.
     if (result == kEtcPalErrOk)
@@ -724,23 +666,9 @@ etcpal_error_t sacn_dmx_merger_remove_paps(sacn_dmx_merger_t merger, sacn_source
     MergerState* merger_state = NULL;
     SourceState* source_state = NULL;
 
-    // Look up the merger state.
+    // Look up the merger and source state.
     if (result == kEtcPalErrOk)
-    {
-      merger_state = etcpal_rbtree_find(&mergers, &merger);
-
-      if (!merger_state)
-        result = kEtcPalErrNotFound;
-    }
-
-    // Look up the source state.
-    if (result == kEtcPalErrOk)
-    {
-      source_state = etcpal_rbtree_find(&merger_state->source_state_lookup, &source);
-
-      if (!source_state)
-        result = kEtcPalErrNotFound;
-    }
+      result = lookup_state(merger, source, &merger_state, &source_state);
 
     if (result == kEtcPalErrOk)
     {
@@ -1036,6 +964,44 @@ MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMerge
   }
 
   return merger_state;
+}
+
+/*
+ * Obtains the state structures for the source and merger specified by the given handles.
+ *
+ * Keep in mind that merger_state or source_state can be NULL if only interested in one or the other.
+ *
+ * Call sacn_lock() before using this function or the state data.
+ */
+etcpal_error_t lookup_state(sacn_dmx_merger_t merger, sacn_source_id_t source, MergerState** merger_state,
+                            SourceState** source_state)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+
+  MergerState* my_merger_state = NULL;
+  SourceState* my_source_state = NULL;
+
+  // Look up the merger state.
+  my_merger_state = etcpal_rbtree_find(&mergers, &merger);
+
+  if (!my_merger_state)
+    result = kEtcPalErrNotFound;
+
+  // Look up the source state.
+  if ((result == kEtcPalErrOk) && source_state)
+  {
+    my_source_state = etcpal_rbtree_find(&my_merger_state->source_state_lookup, &source);
+
+    if (!my_source_state)
+      result = kEtcPalErrNotFound;
+  }
+
+  if (merger_state)
+    *merger_state = my_merger_state;
+  if (source_state)
+    *source_state = my_source_state;
+
+  return result;
 }
 
 MergerState* find_merger_state(sacn_dmx_merger_t handle)
