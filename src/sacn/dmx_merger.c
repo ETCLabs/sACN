@@ -1004,19 +1004,6 @@ etcpal_error_t lookup_state(sacn_dmx_merger_t merger, sacn_source_id_t source, M
   return result;
 }
 
-MergerState* find_merger_state(sacn_dmx_merger_t handle)
-{
-  MergerState* result = NULL;
-
-  if (sacn_lock())
-  {
-    result = (MergerState*)etcpal_rbtree_find(&mergers, &handle);
-    sacn_unlock();
-  }
-
-  return result;
-}
-
 size_t get_number_of_mergers()
 {
   size_t result = 0;
