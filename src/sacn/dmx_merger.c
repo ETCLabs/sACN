@@ -996,10 +996,13 @@ etcpal_error_t lookup_state(sacn_dmx_merger_t merger, sacn_source_id_t source, M
       result = kEtcPalErrNotFound;
   }
 
-  if (merger_state)
-    *merger_state = my_merger_state;
-  if (source_state)
-    *source_state = my_source_state;
+  if (result == kEtcPalErrOk)
+  {
+    if (merger_state)
+      *merger_state = my_merger_state;
+    if (source_state)
+      *source_state = my_source_state;
+  }
 
   return result;
 }
