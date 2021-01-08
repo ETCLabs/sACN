@@ -33,13 +33,17 @@
 
 #if SACN_DYNAMIC_MEM
 #define TestDmxMerger TestDmxMergerDynamic
+#define TestDmxMergerUpdate TestDmxMergerUpdateDynamic
 #else
 #define TestDmxMerger TestDmxMergerStatic
+#define TestDmxMergerUpdate TestDmxMergerUpdateStatic
 #endif
 
 constexpr uint16_t VALID_UNIVERSE_ID = 1;
 constexpr uint16_t INVALID_UNIVERSE_ID = 0;
 constexpr uint8_t VALID_PRIORITY = 100;
+constexpr uint8_t LOW_PRIORITY = 1;
+constexpr uint8_t HIGH_PRIORITY = 200;
 
 class TestDmxMerger : public ::testing::Test
 {
@@ -59,136 +63,12 @@ protected:
     merger_config_.per_address_priorities = per_address_priorities_;
     merger_config_.slot_owners = slot_owners_;
     merger_config_.source_count_max = SACN_RECEIVER_INFINITE_SOURCES;
-
-    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
-    {
-      test_values_ascending_[i] = i % 256;
-      test_values_descending_[i] = 255 - test_values_ascending_[i];
-    }
   }
 
   void TearDown() override
   {
     sacn_dmx_merger_deinit();
     sacn_mem_deinit();
-  }
-
-  // This determines what kind of merge test TestMerge does.
-  enum class MergeTestType
-  {
-    kUpdate,        // Merge using the sacn_dmx_merger_update functions.
-    kStopSourcePap  // Merge using the sacn_dmx_merger_update functions, then call
-                    // sacn_dmx_merger_remove_paps on the second source.
-  };
-
-  void TestMerge(const std::optional<int>& priority_1, const uint8_t* levels_1, uint16_t levels_1_count,
-                 const uint8_t* paps_1, uint16_t paps_1_count, const std::optional<int>& priority_2,
-                 const uint8_t* levels_2, uint16_t levels_2_count, const uint8_t* paps_2, uint16_t paps_2_count,
-                 MergeTestType merge_type)
-  {
-    // Initialize the merger and sources.
-    sacn_source_id_t source_1;
-    sacn_source_id_t source_2;
-
-    EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_1), kEtcPalErrOk);
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2), kEtcPalErrOk);
-
-    // Define the expected merge results.
-    uint8_t expected_winning_values[DMX_ADDRESS_COUNT];
-    uint8_t expected_winning_paps[DMX_ADDRESS_COUNT];
-    sacn_source_id_t expected_winning_sources[DMX_ADDRESS_COUNT];
-
-    for (unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
-    {
-      bool source_1_is_sourced =
-          (i < levels_1_count) && ((!paps_1 && priority_1) || ((i < paps_1_count) && (paps_1[i] != 0)));
-      // If kStopSourcePap, don't factor in source 2's PAPs.
-      bool source_2_is_sourced =
-          (i < levels_2_count) && ((((merge_type == MergeTestType::kStopSourcePap) || !paps_2) && priority_2) ||
-                                   ((i < paps_2_count) && (paps_2[i] != 0)));
-
-      // These priorities and values are only valid if the corresponding source is sourcing at i.
-      uint8_t current_priority_1 = (i < paps_1_count) ? paps_1[i] : static_cast<uint8_t>(priority_1.value_or(0));
-      // If kStopSourcePap is used, then filter out the PAPs of the second source.
-      uint8_t current_priority_2 = ((i < paps_2_count) && (merge_type != MergeTestType::kStopSourcePap))
-                                       ? paps_2[i]
-                                       : static_cast<uint8_t>(priority_2.value_or(0));
-      int current_value_1 = (i < levels_1_count) ? levels_1[i] : -1;
-      int current_value_2 = (i < levels_2_count) ? levels_2[i] : -1;
-
-      if (source_1_is_sourced && (!source_2_is_sourced || (current_priority_1 > current_priority_2) ||
-                                  ((current_priority_1 == current_priority_2) && (current_value_1 > current_value_2))))
-      {
-        expected_winning_values[i] = levels_1[i];
-        expected_winning_paps[i] = (current_priority_1 == 0) ? 1 : current_priority_1;
-        expected_winning_sources[i] = source_1;
-      }
-      else if (source_2_is_sourced)
-      {
-        expected_winning_values[i] = levels_2[i];
-        expected_winning_paps[i] = (current_priority_2 == 0) ? 1 : current_priority_2;
-        expected_winning_sources[i] = source_2;
-      }
-      else
-      {
-        expected_winning_values[i] = 0;
-        expected_winning_paps[i] = 0;
-        expected_winning_sources[i] = SACN_DMX_MERGER_SOURCE_INVALID;
-      }
-    }
-
-    // Make the merge calls.
-    if ((merge_type == MergeTestType::kUpdate) || (merge_type == MergeTestType::kStopSourcePap))
-    {
-      if (levels_1)
-        EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, source_1, levels_1, levels_1_count), kEtcPalErrOk);
-      if (priority_1)
-      {
-        EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, source_1, static_cast<uint8_t>(*priority_1)),
-                  kEtcPalErrOk);
-      }
-      if (paps_1)
-        EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, source_1, paps_1, paps_1_count), kEtcPalErrOk);
-      if (levels_2)
-        EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, source_2, levels_2, levels_2_count), kEtcPalErrOk);
-      if (priority_2)
-      {
-        EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, source_2, static_cast<uint8_t>(*priority_2)),
-                  kEtcPalErrOk);
-      }
-      if (paps_2)
-        EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, source_2, paps_2, paps_2_count), kEtcPalErrOk);
-    }
-
-    // Execute stop_source_per_address_priority if needed.
-    if (merge_type == MergeTestType::kStopSourcePap)
-    {
-      EXPECT_EQ(sacn_dmx_merger_remove_paps(merger_handle_, source_2), kEtcPalErrOk);
-    }
-
-    // Verify the merge results.
-    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
-    {
-      EXPECT_EQ(merger_config_.slots[i], expected_winning_values[i]) << "Test failed on iteration " << i << ".";
-      EXPECT_EQ(merger_config_.per_address_priorities[i], expected_winning_paps[i])
-          << "Test failed on iteration " << i << ".";
-      EXPECT_EQ(merger_config_.slot_owners[i], expected_winning_sources[i]) << "Test failed on iteration " << i << ".";
-    }
-
-    // Deinitialize the sources and merger.
-    EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_1), kEtcPalErrOk);
-    EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_2), kEtcPalErrOk);
-    EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
-  }
-
-  void TestMerge(const std::optional<int>& priority_1, const uint8_t* levels_1, const uint8_t* paps_1,
-                 const std::optional<int>& priority_2, const uint8_t* levels_2, const uint8_t* paps_2,
-                 MergeTestType merge_type)
-  {
-    TestMerge(priority_1, levels_1, levels_1 ? DMX_ADDRESS_COUNT : 0, paps_1, paps_1 ? DMX_ADDRESS_COUNT : 0,
-              priority_2, levels_2, levels_2 ? DMX_ADDRESS_COUNT : 0, paps_2, paps_2 ? DMX_ADDRESS_COUNT : 0,
-              merge_type);
   }
 
   void TestAddSourceMemLimit(bool infinite)
@@ -221,9 +101,104 @@ protected:
   sacn_source_id_t slot_owners_[DMX_ADDRESS_COUNT];
   sacn_dmx_merger_t merger_handle_;
   SacnDmxMergerConfig merger_config_;
+};
 
-  uint8_t test_values_ascending_[DMX_ADDRESS_COUNT];
-  uint8_t test_values_descending_[DMX_ADDRESS_COUNT];
+/* This fixture is for testing the update (merging) functions of the merger API. */
+class TestDmxMergerUpdate : public TestDmxMerger
+{
+protected:
+  void SetUp() override
+  {
+    TestDmxMerger::SetUp();
+
+    // Initialize the merger and sources.
+    EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &merge_source_1_), kEtcPalErrOk);
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &merge_source_2_), kEtcPalErrOk);
+
+    // Initialize expected merge results.
+    ClearExpectedMergeResults();
+
+    // Initialize test values to be used for levels and PAPs.
+    test_values_ascending_.resize(DMX_ADDRESS_COUNT);
+    test_values_descending_.resize(DMX_ADDRESS_COUNT);
+
+    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    {
+      test_values_ascending_[i] = i % 256;
+      test_values_descending_[i] = 255 - test_values_ascending_[i];
+    }
+  }
+
+  void TearDown() override
+  {
+    // Deinitialize the sources and merger.
+    EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_1_), kEtcPalErrOk);
+    EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_2_), kEtcPalErrOk);
+    EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
+
+    TestDmxMerger::TearDown();
+  }
+
+  void UpdateExpectedMergeResults(sacn_source_id_t source, std::optional<int> priority,
+                                  std::optional<std::vector<uint8_t>> levels, std::optional<std::vector<uint8_t>> paps)
+  {
+    for (size_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    {
+      // If this slot is being sourced:
+      if (levels && (i < levels->size()) && ((!paps && priority) || (paps && (i < paps->size()) && (paps->at(i) != 0))))
+      {
+        // Determine the current level and priority for this slot given it is being sourced.
+        int current_level = (levels && (i < levels->size())) ? levels->at(i) : -1;
+        int current_priority = (paps && (i < paps->size())) ? paps->at(i) : priority.value_or(0);
+
+        // If this beats the current expected values, update the expected values.
+        if ((expected_merge_winners_[i] == SACN_DMX_MERGER_SOURCE_INVALID) ||
+            (current_priority > expected_merge_priorities_[i]) ||
+            ((current_priority == expected_merge_priorities_[i]) && (current_level > expected_merge_levels_[i])))
+        {
+          expected_merge_levels_[i] = current_level;
+          expected_merge_priorities_[i] = current_priority;
+          expected_merge_winners_[i] = source;
+        }
+      }
+    }
+  }
+
+  void VerifyMergeResults()
+  {
+    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    {
+      uint8_t expected_slot = static_cast<uint8_t>(expected_merge_levels_[i]);
+      uint8_t expected_pap =
+          (expected_merge_winners_[i] == SACN_DMX_MERGER_SOURCE_INVALID)
+              ? 0u
+              : ((expected_merge_priorities_[i] == 0) ? 1u : static_cast<uint8_t>(expected_merge_priorities_[i]));
+
+      EXPECT_EQ(merger_config_.slots[i], expected_slot) << "Test failed on iteration " << i << ".";
+      EXPECT_EQ(merger_config_.per_address_priorities[i], expected_pap) << "Test failed on iteration " << i << ".";
+      EXPECT_EQ(merger_config_.slot_owners[i], expected_merge_winners_[i]) << "Test failed on iteration " << i << ".";
+    }
+  }
+
+  void ClearExpectedMergeResults()
+  {
+    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    {
+      expected_merge_levels_[i] = 0;
+      expected_merge_priorities_[i] = 0;
+      expected_merge_winners_[i] = SACN_DMX_MERGER_SOURCE_INVALID;
+    }
+  }
+
+  sacn_source_id_t merge_source_1_;
+  sacn_source_id_t merge_source_2_;
+  int expected_merge_levels_[DMX_ADDRESS_COUNT];
+  int expected_merge_priorities_[DMX_ADDRESS_COUNT];
+  sacn_source_id_t expected_merge_winners_[DMX_ADDRESS_COUNT];
+
+  std::vector<uint8_t> test_values_ascending_;
+  std::vector<uint8_t> test_values_descending_;
 };
 
 TEST_F(TestDmxMerger, DeinitClearsMergers)
@@ -624,71 +599,286 @@ TEST_F(TestDmxMerger, GetSourceWorks)
   EXPECT_NE(sacn_dmx_merger_get_source(merger_handle_, source_handle_2), nullptr);
 }
 
-TEST_F(TestDmxMerger, UpdateMergesLevels)
+TEST_F(TestDmxMergerUpdate, MergesLevels)
 {
-  TestMerge(100, test_values_ascending_, nullptr, 100, test_values_descending_, nullptr, MergeTestType::kUpdate);
+  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, test_values_descending_, std::nullopt);
+
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_1_, VALID_PRIORITY), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                          test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_2_, VALID_PRIORITY), kEtcPalErrOk);
+
+  VerifyMergeResults();
 }
 
-TEST_F(TestDmxMerger, UpdateMergesPaps)
+TEST_F(TestDmxMergerUpdate, MergesPaps)
 {
-  TestMerge(100, test_values_ascending_, test_values_descending_, 100, test_values_descending_, test_values_ascending_,
-            MergeTestType::kUpdate);
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, test_values_ascending_);
+
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_1_, test_values_descending_.data(),
+                                        test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                          test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_2_, test_values_ascending_.data(),
+                                        test_values_ascending_.size()),
+            kEtcPalErrOk);
+
+  VerifyMergeResults();
 }
 
-TEST_F(TestDmxMerger, UpdateMergesUps)
+TEST_F(TestDmxMergerUpdate, MergesUps1)
 {
-  TestMerge(0, test_values_ascending_, nullptr, 0, test_values_descending_, nullptr, MergeTestType::kUpdate);
-  TestMerge(0, test_values_ascending_, nullptr, 200, test_values_descending_, nullptr, MergeTestType::kUpdate);
-  TestMerge(200, test_values_ascending_, nullptr, 0, test_values_descending_, nullptr, MergeTestType::kUpdate);
+  UpdateExpectedMergeResults(merge_source_1_, LOW_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, LOW_PRIORITY, test_values_descending_, std::nullopt);
+
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_1_, LOW_PRIORITY), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                          test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_2_, LOW_PRIORITY), kEtcPalErrOk);
+
+  VerifyMergeResults();
 }
 
-TEST_F(TestDmxMerger, UpdateMergesPapsWithUps)
+TEST_F(TestDmxMergerUpdate, MergesUps2)
 {
-  TestMerge(100, test_values_ascending_, test_values_descending_, 100, test_values_descending_, nullptr,
-            MergeTestType::kUpdate);
+  UpdateExpectedMergeResults(merge_source_1_, LOW_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, HIGH_PRIORITY, test_values_descending_, std::nullopt);
+
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_1_, LOW_PRIORITY), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                          test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_2_, HIGH_PRIORITY), kEtcPalErrOk);
+
+  VerifyMergeResults();
 }
 
-TEST_F(TestDmxMerger, UpdateMergesUpsWithPaps)
+TEST_F(TestDmxMergerUpdate, MergesUps3)
 {
-  TestMerge(100, test_values_ascending_, nullptr, 100, test_values_descending_, test_values_ascending_,
-            MergeTestType::kUpdate);
+  UpdateExpectedMergeResults(merge_source_1_, HIGH_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, LOW_PRIORITY, test_values_descending_, std::nullopt);
+
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_1_, HIGH_PRIORITY), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                          test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_2_, LOW_PRIORITY), kEtcPalErrOk);
+
+  VerifyMergeResults();
 }
 
-TEST_F(TestDmxMerger, UpdateHandlesLevelCount)
+TEST_F(TestDmxMergerUpdate, MergesPapsWithUps)
 {
-  for (uint16_t i = 1; i <= DMX_ADDRESS_COUNT; ++i)
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
+  UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, test_values_descending_, std::nullopt);
+
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_1_, test_values_descending_.data(),
+                                        test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                          test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_2_, VALID_PRIORITY), kEtcPalErrOk);
+
+  VerifyMergeResults();
+}
+
+TEST_F(TestDmxMergerUpdate, MergesUpsWithPaps)
+{
+  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, test_values_ascending_);
+
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_1_, VALID_PRIORITY), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                          test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_2_, test_values_ascending_.data(),
+                                        test_values_ascending_.size()),
+            kEtcPalErrOk);
+
+  VerifyMergeResults();
+}
+
+TEST_F(TestDmxMergerUpdate, HandlesLevelCount)
+{
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_1_, VALID_PRIORITY), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_2_, VALID_PRIORITY), kEtcPalErrOk);
+
+  std::vector<uint8_t> variable_levels;
+
+  for (uint16_t i = 0; i < test_values_descending_.size(); ++i)
   {
-    TestMerge(100, test_values_ascending_, DMX_ADDRESS_COUNT, nullptr, 0, 100, test_values_descending_, i, nullptr, 0,
-              MergeTestType::kUpdate);
+    variable_levels.push_back(test_values_descending_[variable_levels.size()]);
+
+    EXPECT_EQ(
+        sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, variable_levels.data(), variable_levels.size()),
+        kEtcPalErrOk);
+
+    ClearExpectedMergeResults();
+    UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
+    UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, variable_levels, std::nullopt);
+    VerifyMergeResults();
   }
 }
 
-TEST_F(TestDmxMerger, UpdateHandlesLessPaps)
+TEST_F(TestDmxMergerUpdate, HandlesLessPaps)
 {
-  for (uint16_t i = 1; i < DMX_ADDRESS_COUNT; ++i)
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_1_, test_values_descending_.data(),
+                                        test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                          test_values_descending_.size()),
+            kEtcPalErrOk);
+
+  std::vector<uint8_t> variable_paps;
+
+  for (uint16_t i = 0; i < test_values_ascending_.size(); ++i)
   {
-    TestMerge(100, test_values_ascending_, DMX_ADDRESS_COUNT, test_values_descending_, DMX_ADDRESS_COUNT, 100,
-              test_values_descending_, DMX_ADDRESS_COUNT, test_values_ascending_, i, MergeTestType::kUpdate);
+    variable_paps.push_back(test_values_ascending_[variable_paps.size()]);
+
+    EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_2_, variable_paps.data(), variable_paps.size()),
+              kEtcPalErrOk);
+
+    ClearExpectedMergeResults();
+    UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
+    UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, variable_paps);
+    VerifyMergeResults();
   }
 }
 
-TEST_F(TestDmxMerger, UpdateDoesNotMergeWithoutLevels)
+TEST_F(TestDmxMergerUpdate, DoesNotMergeWithoutLevels1)
 {
-  TestMerge(100, nullptr, test_values_ascending_, 100, nullptr, test_values_descending_, MergeTestType::kUpdate);
-  TestMerge(100, test_values_ascending_, test_values_ascending_, 100, nullptr, test_values_descending_,
-            MergeTestType::kUpdate);
-  TestMerge(100, nullptr, test_values_ascending_, 100, test_values_ascending_, test_values_descending_,
-            MergeTestType::kUpdate);
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, std::nullopt, test_values_ascending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, std::nullopt, test_values_descending_);
+
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                        test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                        test_values_descending_.size()),
+            kEtcPalErrOk);
+
+  VerifyMergeResults();
 }
 
-TEST_F(TestDmxMerger, UpdateDoesNotMergeWithoutUpOrPap)
+TEST_F(TestDmxMergerUpdate, DoesNotMergeWithoutLevels2)
 {
-  TestMerge(std::nullopt, test_values_ascending_, nullptr, std::nullopt, test_values_descending_, nullptr,
-            MergeTestType::kUpdate);
-  TestMerge(100, test_values_ascending_, test_values_ascending_, std::nullopt, test_values_descending_, nullptr,
-            MergeTestType::kUpdate);
-  TestMerge(std::nullopt, test_values_ascending_, nullptr, 100, test_values_ascending_, test_values_descending_,
-            MergeTestType::kUpdate);
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_ascending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, std::nullopt, test_values_descending_);
+
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                        test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                        test_values_descending_.size()),
+            kEtcPalErrOk);
+
+  VerifyMergeResults();
+}
+
+TEST_F(TestDmxMergerUpdate, DoesNotMergeWithoutLevels3)
+{
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, std::nullopt, test_values_ascending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_ascending_, test_values_descending_);
+
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                        test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                        test_values_descending_.size()),
+            kEtcPalErrOk);
+
+  VerifyMergeResults();
+}
+
+TEST_F(TestDmxMergerUpdate, DoesNotMergeWithoutUpOrPap1)
+{
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, std::nullopt);
+
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                          test_values_descending_.size()),
+            kEtcPalErrOk);
+
+  VerifyMergeResults();
+}
+
+TEST_F(TestDmxMergerUpdate, DoesNotMergeWithoutUpOrPap2)
+{
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_ascending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, std::nullopt);
+
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                        test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                          test_values_descending_.size()),
+            kEtcPalErrOk);
+
+  VerifyMergeResults();
+}
+
+TEST_F(TestDmxMergerUpdate, DoesNotMergeWithoutUpOrPap3)
+{
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_ascending_, test_values_descending_);
+
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                        test_values_descending_.size()),
+            kEtcPalErrOk);
+
+  VerifyMergeResults();
 }
 
 TEST_F(TestDmxMerger, UpdateLevelsErrInvalidWorks)
@@ -850,10 +1040,28 @@ TEST_F(TestDmxMerger, UpdateUniversePriorityErrNotFoundWorks)
   EXPECT_NE(found_result, kEtcPalErrNotFound);
 }
 
-TEST_F(TestDmxMerger, StopSourcePapWorks)
+TEST_F(TestDmxMergerUpdate, StopSourcePapWorks)
 {
-  TestMerge(100, test_values_ascending_, test_values_descending_, 200, test_values_descending_, test_values_ascending_,
-            MergeTestType::kStopSourcePap);
+  UpdateExpectedMergeResults(merge_source_1_, LOW_PRIORITY, test_values_ascending_, test_values_descending_);
+  UpdateExpectedMergeResults(merge_source_2_, HIGH_PRIORITY, test_values_descending_, std::nullopt);
+
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_1_, LOW_PRIORITY), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_1_, test_values_descending_.data(),
+                                        test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_2_, HIGH_PRIORITY), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                          test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, merge_source_2_, test_values_ascending_.data(),
+                                        test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_remove_paps(merger_handle_, merge_source_2_), kEtcPalErrOk);
+
+  VerifyMergeResults();
 }
 
 TEST_F(TestDmxMerger, StopSourcePapErrNotFoundWorks)
