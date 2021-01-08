@@ -118,16 +118,6 @@ protected:
 
     // Initialize expected merge results.
     ClearExpectedMergeResults();
-
-    // Initialize test values to be used for levels and PAPs.
-    test_values_ascending_.resize(DMX_ADDRESS_COUNT);
-    test_values_descending_.resize(DMX_ADDRESS_COUNT);
-
-    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
-    {
-      test_values_ascending_[i] = i % 256;
-      test_values_descending_[i] = 255 - test_values_ascending_[i];
-    }
   }
 
   void TearDown() override
@@ -197,8 +187,19 @@ protected:
   int expected_merge_priorities_[DMX_ADDRESS_COUNT];
   sacn_source_id_t expected_merge_winners_[DMX_ADDRESS_COUNT];
 
-  std::vector<uint8_t> test_values_ascending_;
-  std::vector<uint8_t> test_values_descending_;
+  const std::vector<uint8_t> test_values_ascending_ = [&] {
+    std::vector<uint8_t> vect(DMX_ADDRESS_COUNT);
+    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+      vect[i] = i % 256;
+    return vect;
+  }();
+
+  const std::vector<uint8_t> test_values_descending_ = [&] {
+    std::vector<uint8_t> vect(DMX_ADDRESS_COUNT);
+    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+      vect[i] = 255 - (i % 256);
+    return vect;
+  }();
 };
 
 TEST_F(TestDmxMerger, DeinitClearsMergers)
