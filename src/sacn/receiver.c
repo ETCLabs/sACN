@@ -1314,16 +1314,18 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
   src->dmx_received_since_last_tick = true;
 
 #if SACN_ETC_PRIORITY_EXTENSION
-  // If we are in the sampling period, the wait period for PAP is not necessary.
   if (receiver->sampling)
   {
     if (header->start_code == SACN_STARTCODE_PRIORITY)
     {
+      // Need to wait for DMX - ignore PAP packets until we've seen at least one DMX packet.
+      *notify = false;
       src->recv_state = kRecvStateWaitingForDmx;
       etcpal_timer_start(&src->pap_timer, SOURCE_LOSS_TIMEOUT);
     }
     else
     {
+      // If we are in the sampling period, the wait period for PAP is not necessary.
       src->recv_state = kRecvStateHaveDmxOnly;
     }
   }
