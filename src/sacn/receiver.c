@@ -1049,6 +1049,12 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     return;
   }
 
+  // Ignore SACN_STARTCODE_PRIORITY packets if SACN_ETC_PRIORITY_EXTENSION is disabled.
+#if !SACN_ETC_PRIORITY_EXTENSION
+  if (header->start_code == SACN_STARTCODE_PRIORITY)
+    return;
+#endif
+
   if (sacn_lock())
   {
     SacnReceiverKeys lookup_keys;
