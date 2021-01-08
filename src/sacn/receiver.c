@@ -1127,6 +1127,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
         universe_data->callback = receiver->callbacks.universe_data;
         universe_data->handle = receiver->keys.handle;
         universe_data->universe = receiver->keys.universe;
+        universe_data->is_sampling = receiver->sampling;
         universe_data->context = receiver->callbacks.context;
       }
     }
@@ -1400,9 +1401,8 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
 
   if (universe_data->handle != SACN_RECEIVER_INVALID && universe_data->callback)
   {
-    bool is_sampling = false;  // TODO: Pass in actual is_sampling
-    universe_data->callback(universe_data->handle, from_addr, &universe_data->header, universe_data->pdata, is_sampling,
-                            universe_data->context);
+    universe_data->callback(universe_data->handle, from_addr, &universe_data->header, universe_data->pdata,
+                            universe_data->is_sampling, universe_data->context);
   }
 }
 
