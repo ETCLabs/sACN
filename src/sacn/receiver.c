@@ -1194,16 +1194,13 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
       if (etcpal_timer_is_expired(&src->pap_timer))
       {
         // Source stopped sending PAP but is still sending DMX.
-        if (*notify)
-        {
-          // In this case, also notify the source_pap_lost callback.
-          source_pap_lost->callback = receiver->callbacks.source_pap_lost;
-          source_pap_lost->source.cid = src->cid;
-          ETCPAL_MSVC_NO_DEP_WRN strcpy(source_pap_lost->source.name, src->name);
-          source_pap_lost->context = receiver->callbacks.context;
-          source_pap_lost->handle = receiver->keys.handle;
-          source_pap_lost->universe = receiver->keys.universe;
-        }
+        // In this case, also notify the source_pap_lost callback.
+        source_pap_lost->callback = receiver->callbacks.source_pap_lost;
+        source_pap_lost->source.cid = src->cid;
+        ETCPAL_MSVC_NO_DEP_WRN strcpy(source_pap_lost->source.name, src->name);
+        source_pap_lost->context = receiver->callbacks.context;
+        source_pap_lost->handle = receiver->keys.handle;
+        source_pap_lost->universe = receiver->keys.universe;
 
         src->recv_state = kRecvStateHaveDmxOnly;
       }
