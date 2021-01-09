@@ -199,6 +199,10 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
  */
 size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size_t universes_size)
 {
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universes);
+  ETCPAL_UNUSED_ARG(universes_size);
+
   return 0;  // TODO
 }
 
@@ -259,6 +263,11 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
 size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t universe, EtcPalIpAddr* destinations,
                                             size_t destinations_size)
 {
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(destinations);
+  ETCPAL_UNUSED_ARG(destinations_size);
+
   return 0;  // TODO
 }
 
@@ -589,5 +598,10 @@ etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t unive
 size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
                                           size_t netints_size)
 {
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(netints_size);
+
   return 0;  // TODO
 }
