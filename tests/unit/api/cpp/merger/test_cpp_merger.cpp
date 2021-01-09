@@ -128,7 +128,7 @@ TEST_F(TestMerger, StartupWorks)
       EXPECT_EQ(config->slots, slots_);
       EXPECT_EQ(config->per_address_priorities, paps_);
       EXPECT_EQ(config->slot_owners, slot_owners_);
-      EXPECT_EQ(config->source_count_max, static_cast<size_t>(SACN_RECEIVER_INFINITE_SOURCES));
+      EXPECT_EQ(config->source_count_max, SACN_RECEIVER_INFINITE_SOURCES);
     }
 
     if (handle)
