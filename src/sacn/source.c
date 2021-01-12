@@ -574,9 +574,9 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
 
 #if SACN_DYNAMIC_MEM
       if (config->num_unicast_destinations > 0)
-        universe->netints = calloc(config->num_unicast_destinations, sizeof(EtcPalMcastNetintId));
+        universe->unicast_dests = calloc(config->num_unicast_destinations, sizeof(EtcPalMcastNetintId));
       else
-        universe->netints = NULL;
+        universe->unicast_dests = NULL;
 #endif
       universe->num_unicast_dests = config->num_unicast_destinations;
       universe->send_unicast_only = config->send_unicast_only;
