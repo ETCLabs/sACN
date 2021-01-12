@@ -259,6 +259,7 @@ typedef struct UniverseDataNotification
   SacnUniverseDataCallback callback;
   sacn_receiver_t handle;
   uint16_t universe;
+  bool is_sampling;
   SacnHeaderData header;
   const uint8_t* pdata;
   void* context;
