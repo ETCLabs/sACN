@@ -153,11 +153,27 @@ static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t univ
 {
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
   config.callbacks = *callbacks;
-  config.callback_context = listener;
+  config.callbacks.context = listener;
   config.universe_id = universe;
 
   printf("Creating a new sACN receiver on universe %u.\n", universe);
-  etcpal_error_t result = sacn_receiver_create(&config, &listener->receiver_handle);
+
+  // Normally passing in NULL and 0 for netints and length would achieve the same result, this is just for
+  // demonstration.
+  size_t num_sys_netints = etcpal_netint_get_num_interfaces();
+  const EtcPalNetintInfo* netint_list = etcpal_netint_get_interfaces();
+#define MAX_LISTENER_NETINTS 100
+  SacnMcastInterface netints[MAX_LISTENER_NETINTS];
+
+  for (size_t i = 0; (i < num_sys_netints) && (i < MAX_LISTENER_NETINTS); ++i)
+  {
+    netints[i].iface.index = netint_list[i].index;
+    netints[i].iface.ip_type = netint_list[i].addr.type;
+  }
+
+  etcpal_error_t result =
+      sacn_receiver_create(&config, &listener->receiver_handle, netints,
+                           (num_sys_netints < MAX_LISTENER_NETINTS) ? num_sys_netints : MAX_LISTENER_NETINTS);
   if (result == kEtcPalErrOk)
   {
     listener->universe = universe;
@@ -371,26 +387,21 @@ static etcpal_error_t console_change_listening_universe(const SacnReceiverCallba
  * this data would be acted upon somehow. We just update some stats about the source of the data,
  * and store the first few slots.
  */
-static void handle_universe_data(sacn_receiver_t handle, const EtcPalSockAddr* from_addr, const SacnHeaderData* header,
-                                 const uint8_t* pdata, void* context)
+static void handle_universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr,
+                                 const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(from_addr);
+  ETCPAL_UNUSED_ARG(source_addr);
+  ETCPAL_UNUSED_ARG(is_sampling);
 
   if (etcpal_mutex_lock(&mutex))
   {
     ListeningUniverse* listener = (ListeningUniverse*)context;
     assert(listener);
 
-    // See if we are already tracking this source.
+    // Get the source state to update.
     SourceData* source = find_source(listener, &header->cid);
-    if (source)
-    {
-      ++source->num_updates;
-      source->priority = header->priority;
-      memcpy(source->last_update, pdata, NUM_SLOTS_DISPLAYED);
-    }
-    else
+    if (source == NULL)
     {
       // See if there's room for new source data
       source = find_source_hole(listener);
@@ -398,18 +409,26 @@ static void handle_universe_data(sacn_receiver_t handle, const EtcPalSockAddr* f
       {
         source->cid = header->cid;
         strcpy(source->name, header->source_name);
-        source->priority = header->priority;
-        source->num_updates = 1;
+        source->num_updates = 0;
         source->update_start_time_ms = etcpal_getms();
-        memcpy(source->last_update, pdata, NUM_SLOTS_DISPLAYED);
         source->valid = true;
         ++listener->num_sources;
       }
       else
       {
-        printf("No room to track new source on universe %u\n", listener->universe);
+        printf("No room to track new source on universe %u\n", header->universe_id);
       }
     }
+
+    if (source)
+    {
+      ++source->num_updates;
+      source->priority = header->priority;
+      size_t values_len = (header->slot_count < NUM_SLOTS_DISPLAYED) ? header->slot_count : NUM_SLOTS_DISPLAYED;
+      memcpy(source->last_update, pdata, values_len);
+      memset(source->last_update + values_len, 0, NUM_SLOTS_DISPLAYED - values_len);
+    }
+
     etcpal_mutex_unlock(&mutex);
   }
 }
@@ -419,8 +438,8 @@ static void handle_universe_data(sacn_receiver_t handle, const EtcPalSockAddr* f
  * tracking. In a real application this would be where any hold-last-look, etc. logic is
  * triggered for a universe.
  */
-static void handle_sources_lost(sacn_receiver_t handle, const SacnLostSource* lost_sources, size_t num_lost_sources,
-                                void* context)
+static void handle_sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
+                                size_t num_lost_sources, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
 
@@ -429,7 +448,7 @@ static void handle_sources_lost(sacn_receiver_t handle, const SacnLostSource* lo
     ListeningUniverse* listener = (ListeningUniverse*)context;
     assert(listener);
 
-    printf("Universe %u lost the following source(s):\n", listener->universe);
+    printf("Universe %u lost the following source(s):\n", universe);
     for (const SacnLostSource* lost_source = lost_sources; lost_source < lost_sources + num_lost_sources; ++lost_source)
     {
       char cid_str[ETCPAL_UUID_STRING_BYTES];
@@ -448,13 +467,37 @@ static void handle_sources_lost(sacn_receiver_t handle, const SacnLostSource* lo
 }
 
 /*
+ * The sampling period has ended. Just log a message here.
+ */
+void handle_sampling_period_ended(sacn_receiver_t handle, uint16_t universe, void* context)
+{
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(context);
+
+  printf("Sampling period ended on universe %u.\n", universe);
+}
+
+/*
+ * The sampling period has begun. Just log a message here.
+ */
+void handle_sampling_period_started(sacn_receiver_t handle, uint16_t universe, void* context)
+{
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(context);
+
+  printf("Sampling period started on universe %u.\n", universe);
+}
+
+/*
  * If sACN is compiled with SACN_ETC_PRIORITY_EXTENSION=1, this callback is called if a source was
  * sending per-channel priority packets and stopped sending them, but is still sending NULL start
  * code data.
  */
-static void handle_source_pcp_lost(sacn_receiver_t handle, const SacnRemoteSource* source, void* context)
+static void handle_source_pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
+                                   void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(context);
 
   char cid_str[ETCPAL_UUID_STRING_BYTES];
@@ -462,29 +505,23 @@ static void handle_source_pcp_lost(sacn_receiver_t handle, const SacnRemoteSourc
   printf("Per-channel priority lost for source '%s' (%s)\n", source->name, cid_str);
 }
 
-static void handle_sampling_ended(sacn_receiver_t handle, void* context)
+static void handle_source_limit_exceeded(sacn_receiver_t handle, uint16_t universe, void* context)
 {
   ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(context);
 
-  ListeningUniverse* listener = (ListeningUniverse*)context;
-  printf("Sampling ended for universe %u\n", listener->universe);
-}
-
-static void handle_source_limit_exceeded(sacn_receiver_t handle, void* context)
-{
-  ETCPAL_UNUSED_ARG(handle);
-
-  ListeningUniverse* listener = (ListeningUniverse*)context;
-  printf("Source limit exceeded on universe %u\n", listener->universe);
+  printf("Source limit exceeded on universe %u\n", universe);
 }
 
 // clang-format off
 static const SacnReceiverCallbacks kSacnCallbacks = {
   handle_universe_data,
   handle_sources_lost,
-  handle_source_pcp_lost,
-  handle_sampling_ended,
-  handle_source_limit_exceeded
+  handle_sampling_period_started,
+  handle_sampling_period_ended,
+  handle_source_pap_lost,
+  handle_source_limit_exceeded,
+  NULL
 };
 // clang-format on
 
@@ -517,7 +554,7 @@ int main(void)
 
   // Initialize the sACN library, allowing it to log messages through our callback
   EtcPalLogParams log_params;
-  log_params.action = kEtcPalLogCreateHumanReadable;
+  log_params.action = ETCPAL_LOG_CREATE_HUMAN_READABLE;
   log_params.log_fn = log_callback;
   log_params.time_fn = NULL;
   log_params.log_mask = ETCPAL_LOG_UPTO(ETCPAL_LOG_DEBUG);
@@ -581,7 +618,8 @@ int main(void)
     if (console_result != kEtcPalErrOk)
     {
       printf("A critical error has occurred. Press ctrl-c to end this program.\n");
-      while (getchar() != EOF);
+      while (getchar() != EOF)
+        ;
       keep_running = false;  // Shut down on error.
     }
   }

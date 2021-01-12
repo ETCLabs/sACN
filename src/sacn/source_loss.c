@@ -17,7 +17,7 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include "sacn/private/data_loss.h"
+#include "sacn/private/source_loss.h"
 
 #include "etcpal/common.h"
 #include "etcpal/mempool.h"
@@ -44,7 +44,7 @@
 #if !SACN_DYNAMIC_MEM
 ETCPAL_MEMPOOL_DEFINE(sacn_term_set_sources, TerminationSetSource, SACN_MAX_TERM_SET_SOURCES);
 ETCPAL_MEMPOOL_DEFINE(sacn_term_sets, TerminationSet, SACN_MAX_TERM_SETS);
-ETCPAL_MEMPOOL_DEFINE(sacn_data_loss_rb_nodes, EtcPalRbNode, SACN_DATA_LOSS_MAX_RB_NODES);
+ETCPAL_MEMPOOL_DEFINE(sacn_source_loss_rb_nodes, EtcPalRbNode, SACN_SOURCE_LOSS_MAX_RB_NODES);
 #endif
 
 /*********************** Private function prototypes *************************/
@@ -57,23 +57,23 @@ static void source_remove_callback(const EtcPalRbTree* tree, EtcPalRbNode* node)
 /*************************** Function definitions ****************************/
 
 /*
- * Initialize the data loss module. Returns the result of the initialization.
+ * Initialize the source loss module. Returns the result of the initialization.
  */
-etcpal_error_t sacn_data_loss_init(void)
+etcpal_error_t sacn_source_loss_init(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
 #if !SACN_DYNAMIC_MEM
   res |= etcpal_mempool_init(sacn_term_set_sources);
   res |= etcpal_mempool_init(sacn_term_sets);
-  res |= etcpal_mempool_init(sacn_data_loss_rb_nodes);
+  res |= etcpal_mempool_init(sacn_source_loss_rb_nodes);
 #endif
   return res;
 }
 
 /*
- * Deinitialize the data loss module.
+ * Deinitialize the source loss module.
  */
-void sacn_data_loss_deinit(void)
+void sacn_source_loss_deinit(void)
 {
   /* Nothing to do here. */
 }
@@ -321,7 +321,7 @@ EtcPalRbNode* node_alloc(void)
 #if SACN_DYNAMIC_MEM
   return (EtcPalRbNode*)malloc(sizeof(EtcPalRbNode));
 #else
-  return etcpal_mempool_alloc(sacn_data_loss_rb_nodes);
+  return etcpal_mempool_alloc(sacn_source_loss_rb_nodes);
 #endif
 }
 
@@ -330,7 +330,7 @@ void node_dealloc(EtcPalRbNode* node)
 #if SACN_DYNAMIC_MEM
   free(node);
 #else
-  etcpal_mempool_free(sacn_data_loss_rb_nodes, node);
+  etcpal_mempool_free(sacn_source_loss_rb_nodes, node);
 #endif
 }
 

@@ -36,7 +36,7 @@
 class TestMem : public ::testing::Test
 {
 protected:
-  static constexpr unsigned int kTestNumThreads = 4;
+  static constexpr unsigned int kTestNumThreads = 1;  // TODO: Set back to 4 if/when SACN_RECEIVER_MAX_THREADS increases
   static constexpr intptr_t kMagicPointerValue = 0xdeadbeef;
 
   void SetUp() override
@@ -68,9 +68,9 @@ TEST_F(TestMem, ValidInitializedStatusLists)
     SacnSourceStatusLists* status_lists = get_status_lists(thread);
     ASSERT_NE(status_lists, nullptr);
 
-    EXPECT_EQ(status_lists->num_online, 0);
-    EXPECT_EQ(status_lists->num_offline, 0);
-    EXPECT_EQ(status_lists->num_unknown, 0);
+    EXPECT_EQ(status_lists->num_online, 0u);
+    EXPECT_EQ(status_lists->num_offline, 0u);
+    EXPECT_EQ(status_lists->num_unknown, 0u);
   });
 }
 
@@ -88,9 +88,9 @@ TEST_F(TestMem, StatusListsAreReZeroedWithEachGet)
   status_lists = get_status_lists(0);
   ASSERT_NE(status_lists, nullptr);
 
-  EXPECT_EQ(status_lists->num_online, 0);
-  EXPECT_EQ(status_lists->num_offline, 0);
-  EXPECT_EQ(status_lists->num_unknown, 0);
+  EXPECT_EQ(status_lists->num_online, 0u);
+  EXPECT_EQ(status_lists->num_offline, 0u);
+  EXPECT_EQ(status_lists->num_unknown, 0u);
 }
 
 TEST_F(TestMem, StatusListsAddOfflineWorks)
@@ -101,7 +101,7 @@ TEST_F(TestMem, StatusListsAddOfflineWorks)
 
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
+    for (size_t i = 0; i < 20; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -113,7 +113,7 @@ TEST_F(TestMem, StatusListsAddOfflineWorks)
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
+    for (size_t i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -138,7 +138,7 @@ TEST_F(TestMem, StatusListsAddOnlineWorks)
 
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
+    for (size_t i = 0; i < 20; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -149,7 +149,7 @@ TEST_F(TestMem, StatusListsAddOnlineWorks)
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
+    for (size_t i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -173,7 +173,7 @@ TEST_F(TestMem, StatusListsAddUnknownWorks)
 
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
+    for (size_t i = 0; i < 20; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -184,7 +184,7 @@ TEST_F(TestMem, StatusListsAddUnknownWorks)
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
+    for (size_t i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -248,24 +248,16 @@ TEST_F(TestMem, ValidInitializedRecvThreadContext)
 
     EXPECT_EQ(recv_thread_context->thread_id, thread);
     EXPECT_EQ(recv_thread_context->receivers, nullptr);
-    EXPECT_EQ(recv_thread_context->num_receivers, 0);
+    EXPECT_EQ(recv_thread_context->num_receivers, 0u);
 
 #if SACN_DYNAMIC_MEM
     EXPECT_NE(recv_thread_context->dead_sockets, nullptr);
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-    EXPECT_NE(recv_thread_context->pending_sockets, nullptr);
-#else
     EXPECT_NE(recv_thread_context->socket_refs, nullptr);
 #endif
-#endif
 
-    EXPECT_EQ(recv_thread_context->num_dead_sockets, 0);
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-    EXPECT_EQ(recv_thread_context->num_pending_sockets, 0);
-#else
-    EXPECT_EQ(recv_thread_context->num_socket_refs, 0);
-    EXPECT_EQ(recv_thread_context->new_socket_refs, 0);
-#endif
+    EXPECT_EQ(recv_thread_context->num_dead_sockets, 0u);
+    EXPECT_EQ(recv_thread_context->num_socket_refs, 0u);
+    EXPECT_EQ(recv_thread_context->new_socket_refs, 0u);
   });
 }
 
@@ -277,7 +269,7 @@ TEST_F(TestMem, AddDeadSocketWorks)
 
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
+    for (size_t i = 0; i < 20; ++i)
     {
       ASSERT_TRUE(add_dead_socket(recv_thread_context, (etcpal_socket_t)i));
       EXPECT_EQ(recv_thread_context->num_dead_sockets, i + 1);
@@ -285,7 +277,7 @@ TEST_F(TestMem, AddDeadSocketWorks)
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
+    for (size_t i = 0; i < SACN_RECEIVER_MAX_UNIVERSES * 2; ++i)
     {
       ASSERT_TRUE(add_dead_socket(recv_thread_context, (etcpal_socket_t)i));
       EXPECT_EQ(recv_thread_context->num_dead_sockets, i + 1);
@@ -297,38 +289,6 @@ TEST_F(TestMem, AddDeadSocketWorks)
   });
 }
 
-#if SACN_RECEIVER_SOCKET_PER_UNIVERSE
-
-TEST_F(TestMem, AddPendingSocketWorks)
-{
-  DoForEachThread([](sacn_thread_id_t thread) {
-    SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread);
-    ASSERT_NE(recv_thread_context, nullptr);
-
-#if SACN_DYNAMIC_MEM
-    // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
-    {
-      ASSERT_TRUE(add_pending_socket(recv_thread_context, (etcpal_socket_t)i));
-      EXPECT_EQ(recv_thread_context->num_pending_sockets, i + 1);
-      EXPECT_EQ(recv_thread_context->pending_sockets[i], (etcpal_socket_t)i);
-    }
-#else
-    // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
-    {
-      ASSERT_TRUE(add_pending_socket(recv_thread_context, (etcpal_socket_t)i));
-      EXPECT_EQ(recv_thread_context->num_pending_sockets, i + 1);
-      EXPECT_EQ(recv_thread_context->pending_sockets[i], (etcpal_socket_t)i);
-    }
-    // And make sure we can't add another
-    EXPECT_FALSE(add_pending_socket(recv_thread_context, (etcpal_socket_t)SACN_RECEIVER_MAX_UNIVERSES));
-#endif
-  });
-}
-
-#else  // SACN_RECEIVER_SOCKET_PER_UNIVERSE
-
 TEST_F(TestMem, AddSocketRefWorks)
 {
   DoForEachThread([](sacn_thread_id_t thread) {
@@ -337,26 +297,27 @@ TEST_F(TestMem, AddSocketRefWorks)
 
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
+    for (size_t i = 0; i < 20; ++i)
     {
-      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i));
+      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i, kEtcPalIpTypeInvalid, false));
       EXPECT_EQ(recv_thread_context->num_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->new_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->socket_refs[i].sock, (etcpal_socket_t)i);
-      EXPECT_EQ(recv_thread_context->socket_refs[i].refcount, 1);
+      EXPECT_EQ(recv_thread_context->socket_refs[i].refcount, 1u);
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_SOCKET_REFS; ++i)
+    for (size_t i = 0; i < SACN_RECEIVER_MAX_SOCKET_REFS; ++i)
     {
-      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i));
+      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i, kEtcPalIpTypeInvalid, false));
       EXPECT_EQ(recv_thread_context->num_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->new_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->socket_refs[i].sock, (etcpal_socket_t)i);
-      EXPECT_EQ(recv_thread_context->socket_refs[i].refcount, 1);
+      EXPECT_EQ(recv_thread_context->socket_refs[i].refcount, 1u);
     }
     // And make sure we can't add another
-    EXPECT_FALSE(add_socket_ref(recv_thread_context, (etcpal_socket_t)SACN_RECEIVER_MAX_SOCKET_REFS));
+    EXPECT_FALSE(add_socket_ref(recv_thread_context, (etcpal_socket_t)SACN_RECEIVER_MAX_SOCKET_REFS,
+                                kEtcPalIpTypeInvalid, false));
 #endif
   });
 }
@@ -376,22 +337,20 @@ TEST_F(TestMem, RemoveSocketRefWorks)
     // Remove a socket ref that has a refcount of 1, the other ones should be shifted
     ASSERT_TRUE(remove_socket_ref(recv_thread_context, (etcpal_socket_t)0));
 
-    ASSERT_EQ(recv_thread_context->num_socket_refs, 2);
-    EXPECT_EQ(recv_thread_context->new_socket_refs, 1);
+    ASSERT_EQ(recv_thread_context->num_socket_refs, 2u);
+    EXPECT_EQ(recv_thread_context->new_socket_refs, 1u);
     EXPECT_EQ(recv_thread_context->socket_refs[0].sock, (etcpal_socket_t)1);
-    EXPECT_EQ(recv_thread_context->socket_refs[0].refcount, 20);
+    EXPECT_EQ(recv_thread_context->socket_refs[0].refcount, 20u);
     EXPECT_EQ(recv_thread_context->socket_refs[1].sock, (etcpal_socket_t)2);
-    EXPECT_EQ(recv_thread_context->socket_refs[1].refcount, 3);
+    EXPECT_EQ(recv_thread_context->socket_refs[1].refcount, 3u);
 
     // Remove one with multiple references
     for (int i = 0; i < 2; ++i)
       ASSERT_FALSE(remove_socket_ref(recv_thread_context, (etcpal_socket_t)2));
     EXPECT_TRUE(remove_socket_ref(recv_thread_context, (etcpal_socket_t)2));
-    EXPECT_EQ(recv_thread_context->num_socket_refs, 1);
+    EXPECT_EQ(recv_thread_context->num_socket_refs, 1u);
   });
 }
-
-#endif  // SACN_RECEIVER_SOCKET_PER_UNIVERSE
 
 TEST_F(TestMem, ValidInitializedUniverseData)
 {
@@ -439,7 +398,7 @@ TEST_F(TestMem, ValidInitializedSourcesLostBuf)
       auto sources_lost = &sources_lost_buf[i];
       EXPECT_EQ(sources_lost->callback, nullptr);
       EXPECT_EQ(sources_lost->handle, SACN_RECEIVER_INVALID);
-      EXPECT_EQ(sources_lost->num_lost_sources, 0);
+      EXPECT_EQ(sources_lost->num_lost_sources, 0u);
       EXPECT_EQ(sources_lost->context, nullptr);
     }
 #else
@@ -452,7 +411,7 @@ TEST_F(TestMem, ValidInitializedSourcesLostBuf)
       auto sources_lost = &sources_lost_buf[i];
       EXPECT_EQ(sources_lost->callback, nullptr);
       EXPECT_EQ(sources_lost->handle, SACN_RECEIVER_INVALID);
-      EXPECT_EQ(sources_lost->num_lost_sources, 0);
+      EXPECT_EQ(sources_lost->num_lost_sources, 0u);
       EXPECT_EQ(sources_lost->context, nullptr);
     }
 
@@ -471,7 +430,7 @@ TEST_F(TestMem, AddLostSourceWorks)
 
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
+    for (size_t i = 0; i < 20; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -483,7 +442,7 @@ TEST_F(TestMem, AddLostSourceWorks)
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
+    for (size_t i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -517,39 +476,94 @@ TEST_F(TestMem, SourcesLostIsReZeroedWithEachGet)
 
   EXPECT_EQ(sources_lost->callback, nullptr);
   EXPECT_EQ(sources_lost->handle, SACN_RECEIVER_INVALID);
-  EXPECT_EQ(sources_lost->num_lost_sources, 0);
+  EXPECT_EQ(sources_lost->num_lost_sources, 0u);
   EXPECT_EQ(sources_lost->context, nullptr);
 }
 
-TEST_F(TestMem, ValidInitializedSourcePcpLost)
+TEST_F(TestMem, ValidInitializedSourcePapLost)
 {
   DoForEachThread([](sacn_thread_id_t thread) {
-    SourcePcpLostNotification* source_pcp_lost = get_source_pcp_lost(thread);
-    ASSERT_NE(source_pcp_lost, nullptr);
+    SourcePapLostNotification* source_pap_lost = get_source_pap_lost(thread);
+    ASSERT_NE(source_pap_lost, nullptr);
 
-    EXPECT_EQ(source_pcp_lost->callback, nullptr);
-    EXPECT_EQ(source_pcp_lost->handle, SACN_RECEIVER_INVALID);
-    EXPECT_EQ(source_pcp_lost->context, nullptr);
+    EXPECT_EQ(source_pap_lost->callback, nullptr);
+    EXPECT_EQ(source_pap_lost->handle, SACN_RECEIVER_INVALID);
+    EXPECT_EQ(source_pap_lost->context, nullptr);
   });
 }
 
-TEST_F(TestMem, SourcePcpLostIsReZeroedWithEachGet)
+TEST_F(TestMem, SourcePapLostIsReZeroedWithEachGet)
 {
-  SourcePcpLostNotification* source_pcp_lost = get_source_pcp_lost(0);
-  ASSERT_NE(source_pcp_lost, nullptr);
+  SourcePapLostNotification* source_pap_lost = get_source_pap_lost(0);
+  ASSERT_NE(source_pap_lost, nullptr);
 
   // Modify some elements
-  source_pcp_lost->handle = 2;
-  source_pcp_lost->callback = reinterpret_cast<SacnSourcePcpLostCallback>(kMagicPointerValue);
-  source_pcp_lost->context = reinterpret_cast<void*>(kMagicPointerValue);
+  source_pap_lost->handle = 2;
+  source_pap_lost->callback = reinterpret_cast<SacnSourcePapLostCallback>(kMagicPointerValue);
+  source_pap_lost->context = reinterpret_cast<void*>(kMagicPointerValue);
 
   // Now get again and make sure they are re-zeroed
-  source_pcp_lost = get_source_pcp_lost(0);
-  ASSERT_NE(source_pcp_lost, nullptr);
+  source_pap_lost = get_source_pap_lost(0);
+  ASSERT_NE(source_pap_lost, nullptr);
 
-  EXPECT_EQ(source_pcp_lost->callback, nullptr);
-  EXPECT_EQ(source_pcp_lost->handle, SACN_RECEIVER_INVALID);
-  EXPECT_EQ(source_pcp_lost->context, nullptr);
+  EXPECT_EQ(source_pap_lost->callback, nullptr);
+  EXPECT_EQ(source_pap_lost->handle, SACN_RECEIVER_INVALID);
+  EXPECT_EQ(source_pap_lost->context, nullptr);
+}
+
+TEST_F(TestMem, ValidInitializedSamplingStartedBuf)
+{
+  DoForEachThread([](sacn_thread_id_t thread) {
+#if SACN_DYNAMIC_MEM
+    // Just test some arbitrary number for the buffer size
+    SamplingStartedNotification* sampling_started_buf = get_sampling_started_buffer(thread, 20);
+    ASSERT_NE(sampling_started_buf, nullptr);
+
+    for (int i = 0; i < 20; ++i)
+    {
+      auto sampling_started = &sampling_started_buf[i];
+      EXPECT_EQ(sampling_started->callback, nullptr);
+      EXPECT_EQ(sampling_started->handle, SACN_RECEIVER_INVALID);
+      EXPECT_EQ(sampling_started->context, nullptr);
+    }
+#else
+    SamplingStartedNotification* sampling_started_buf =
+        get_sampling_started_buffer(thread, SACN_RECEIVER_MAX_UNIVERSES);
+    ASSERT_NE(sampling_started_buf, nullptr);
+
+    // Test up to the maximum capacity
+    for (int i = 0; i < SACN_RECEIVER_MAX_THREADS; ++i)
+    {
+      auto sampling_started = &sampling_started_buf[i];
+      EXPECT_EQ(sampling_started->callback, nullptr);
+      EXPECT_EQ(sampling_started->handle, SACN_RECEIVER_INVALID);
+      EXPECT_EQ(sampling_started->context, nullptr);
+    }
+
+    // Trying to get more than the max capacity should not work
+    sampling_started_buf = get_sampling_started_buffer(thread, SACN_RECEIVER_MAX_UNIVERSES + 1);
+    EXPECT_EQ(sampling_started_buf, nullptr);
+#endif
+  });
+}
+
+TEST_F(TestMem, SamplingStartedIsReZeroedWithEachGet)
+{
+  SamplingStartedNotification* sampling_started = get_sampling_started_buffer(0, 1);
+  ASSERT_NE(sampling_started, nullptr);
+
+  // Modify some elements
+  sampling_started->handle = 2;
+  sampling_started->callback = reinterpret_cast<SacnSamplingPeriodStartedCallback>(kMagicPointerValue);
+  sampling_started->context = reinterpret_cast<void*>(kMagicPointerValue);
+
+  // Now get again and make sure they are re-zeroed
+  sampling_started = get_sampling_started_buffer(0, 1);
+  ASSERT_NE(sampling_started, nullptr);
+
+  EXPECT_EQ(sampling_started->callback, nullptr);
+  EXPECT_EQ(sampling_started->handle, SACN_RECEIVER_INVALID);
+  EXPECT_EQ(sampling_started->context, nullptr);
 }
 
 TEST_F(TestMem, ValidInitializedSamplingEndedBuf)
@@ -594,7 +608,7 @@ TEST_F(TestMem, SamplingEndedIsReZeroedWithEachGet)
 
   // Modify some elements
   sampling_ended->handle = 2;
-  sampling_ended->callback = reinterpret_cast<SacnSamplingEndedCallback>(kMagicPointerValue);
+  sampling_ended->callback = reinterpret_cast<SacnSamplingPeriodEndedCallback>(kMagicPointerValue);
   sampling_ended->context = reinterpret_cast<void*>(kMagicPointerValue);
 
   // Now get again and make sure they are re-zeroed
@@ -649,7 +663,7 @@ TEST_F(TestMem, AddReceiverToListWorks)
   add_receiver_to_list(&rtc, &receiver);
   ASSERT_EQ(rtc.receivers, &receiver);
   EXPECT_EQ(rtc.receivers->next, nullptr);
-  EXPECT_EQ(rtc.num_receivers, 1);
+  EXPECT_EQ(rtc.num_receivers, 1u);
 
 #if SACN_DYNAMIC_MEM
   SacnReceiver receiver2{};
@@ -660,7 +674,7 @@ TEST_F(TestMem, AddReceiverToListWorks)
   ASSERT_EQ(rtc.receivers, &receiver);
   ASSERT_EQ(rtc.receivers->next, &receiver2);
   EXPECT_EQ(rtc.receivers->next->next, nullptr);
-  EXPECT_EQ(rtc.num_receivers, 2);
+  EXPECT_EQ(rtc.num_receivers, 2u);
 }
 
 TEST_F(TestMem, RemoveReceiverFromListWorks)
@@ -687,13 +701,13 @@ TEST_F(TestMem, RemoveReceiverFromListWorks)
   ASSERT_EQ(rtc.receivers, &receiver);
   ASSERT_EQ(rtc.receivers->next, &receiver3);
   EXPECT_EQ(rtc.receivers->next->next, nullptr);
-  EXPECT_EQ(rtc.num_receivers, 2);
+  EXPECT_EQ(rtc.num_receivers, 2u);
   EXPECT_EQ(receiver2.next, nullptr);
 
   // Remove from the head
   remove_receiver_from_list(&rtc, &receiver);
   ASSERT_EQ(rtc.receivers, &receiver3);
   EXPECT_EQ(rtc.receivers->next, nullptr);
-  EXPECT_EQ(rtc.num_receivers, 1);
+  EXPECT_EQ(rtc.num_receivers, 1u);
   EXPECT_EQ(receiver.next, nullptr);
 }

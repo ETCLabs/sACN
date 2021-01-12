@@ -4,4 +4,5 @@ Miscellaneous documentation that does not fit with one particular function or co
 found here.
 
 **Page List:**
-* \subpage data_loss_behavior
+* \subpage source_loss_behavior
+* \subpage per_address_priority

@@ -52,3 +52,9 @@ Thumbs.db
 ######################
 .vscode/
 *.code-workspace
+
+# vim #
+######################
+*~
+*.swp
+*.swo

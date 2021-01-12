@@ -20,10 +20,13 @@
 #include "sacn/private/common.h"
 
 #include "sacn/private/mem.h"
-#include "sacn/private/data_loss.h"
+#include "sacn/private/source_loss.h"
 #include "sacn/private/sockets.h"
 #include "sacn/private/source.h"
 #include "sacn/private/receiver.h"
+#include "sacn/private/dmx_merger.h"
+#include "sacn/private/merge_receiver.h"
+#include "sacn/private/source_detector.h"
 
 /*************************** Private constants *******************************/
 
@@ -46,16 +49,16 @@ static etcpal_mutex_t sacn_mutex;
 
 /*************************** Function definitions ****************************/
 
-/*!
- * \brief Initialize the sACN library.
+/**
+ * @brief Initialize the sACN library.
  *
  * Do all necessary initialization before other sACN API functions can be called.
  *
- * \param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
+ * @param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
  *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
- * \return #kEtcPalErrOk: Initialization successful.
- * \return #kEtcPalErrInvalid: Invalid parameter provided.
- * \return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @return #kEtcPalErrOk: Initialization successful.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
 {
@@ -69,9 +72,12 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     bool mutex_initted = false;
     bool mem_initted = false;
     bool sockets_initted = false;
-    bool data_loss_initted = false;
+    bool source_loss_initted = false;
     bool receiver_initted = false;
     bool source_initted = false;
+    bool merger_initted = false;
+    bool merge_receiver_initted = false;
+    bool source_detector_initted = false;
 
     // Init the log params early so the other modules can log things on initialization
     if (log_params)
@@ -93,11 +99,17 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     if (res == kEtcPalErrOk)
       sockets_initted = ((res = sacn_sockets_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
-      data_loss_initted = ((res = sacn_data_loss_init()) == kEtcPalErrOk);
+      source_loss_initted = ((res = sacn_source_loss_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
       receiver_initted = ((res = sacn_receiver_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
       source_initted = ((res = sacn_source_init()) == kEtcPalErrOk);
+    if ( res == kEtcPalErrOk)
+      merger_initted = ((res = sacn_dmx_merger_init()) == kEtcPalErrOk);
+    if (res == kEtcPalErrOk)
+      merge_receiver_initted = ((res = sacn_merge_receiver_init()) == kEtcPalErrOk);
+    if (res == kEtcPalErrOk)
+      source_detector_initted = ((res = sacn_source_detector_init()) == kEtcPalErrOk);
 
     if (res == kEtcPalErrOk)
     {
@@ -106,12 +118,18 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     else
     {
       // Clean up
+      if (source_detector_initted)
+        sacn_source_detector_deinit();
+      if (merge_receiver_initted)
+        sacn_merge_receiver_deinit();
+      if (merger_initted)
+        sacn_dmx_merger_deinit();
       if (source_initted)
         sacn_source_deinit();
       if (receiver_initted)
         sacn_receiver_deinit();
-      if (data_loss_initted)
-        sacn_data_loss_deinit();
+      if (source_loss_initted)
+        sacn_source_loss_deinit();
       if (sockets_initted)
         sacn_sockets_deinit();
       if (mem_initted)
@@ -128,8 +146,8 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
   return res;
 }
 
-/*!
- * \brief Deinitialize the sACN library.
+/**
+ * @brief Deinitialize the sACN library.
  *
  * Set the sACN library back to an uninitialized state. Calls to other sACN API functions will fail
  * until sacn_init() is called again.
@@ -140,9 +158,11 @@ void sacn_deinit(void)
   {
     sacn_state.initted = false;
 
+    sacn_merge_receiver_deinit();
+    sacn_dmx_merger_deinit();
     sacn_source_deinit();
     sacn_receiver_deinit();
-    sacn_data_loss_deinit();
+    sacn_source_loss_deinit();
     sacn_sockets_deinit();
     sacn_mem_deinit();
     etcpal_mutex_destroy(&sacn_mutex);

@@ -17,30 +17,45 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#ifndef SACN_MOCK_PRIVATE_DATA_LOSS_H_
-#define SACN_MOCK_PRIVATE_DATA_LOSS_H_
+#include "sacn/merge_receiver.h"
 
-#include "sacn/private/data_loss.h"
+#include <limits>
+#include "etcpal_mock/common.h"
+#include "sacn_mock/private/common.h"
+#include "sacn_mock/private/sockets.h"
+#include "sacn/private/mem.h"
+#include "sacn/private/opts.h"
+#include "sacn/private/merge_receiver.h"
+#include "gtest/gtest.h"
 #include "fff.h"
 
-#ifdef __cplusplus
-extern "C" {
+#if SACN_DYNAMIC_MEM
+#define TestMergeReceiver TestMergeReceiverDynamic
+#else
+#define TestMergeReceiver TestMergeReceiverStatic
 #endif
 
-DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_data_loss_init);
-DECLARE_FAKE_VOID_FUNC(sacn_data_loss_deinit);
+class TestMergeReceiver : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    etcpal_reset_all_fakes();
+    sacn_common_reset_all_fakes();
+    sacn_sockets_reset_all_fakes();
 
-DECLARE_FAKE_VOID_FUNC(mark_sources_online, const SacnRemoteSourceInternal*, size_t, TerminationSet*);
-DECLARE_FAKE_VOID_FUNC(mark_sources_offline, const SacnLostSourceInternal*, size_t, const SacnRemoteSourceInternal*,
-                       size_t, TerminationSet**, uint32_t);
-DECLARE_FAKE_VOID_FUNC(get_expired_sources, TerminationSet**, SourcesLostNotification*);
+    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_merge_receiver_init(), kEtcPalErrOk);
+  }
 
-DECLARE_FAKE_VOID_FUNC(clear_term_set_list, TerminationSet*);
+  void TearDown() override
+  {
+    sacn_merge_receiver_deinit();
+    sacn_mem_deinit();
+  }
+};
 
-void sacn_data_loss_reset_all_fakes(void);
-
-#ifdef __cplusplus
+TEST_F(TestMergeReceiver, TestFoo)
+{
+  //CHRISTIAN TODO
 }
-#endif
-
-#endif /* SACN_MOCK_PRIVATE_DATA_LOSS_H_ */

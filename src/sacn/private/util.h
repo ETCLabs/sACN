@@ -17,21 +17,22 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*!
- * \file sacn/private/util.h
- * \brief Utilities used internally by the sACN library
+/**
+ * @file sacn/private/util.h
+ * @brief Utilities used internally by the sACN library
  */
 
 #ifndef SACN_PRIVATE_UTIL_H_
 #define SACN_PRIVATE_UTIL_H_
 
 #include <stdbool.h>
+#include "sacn/common.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef bool (*HandleValueInUseFunction)(int handle_val);
+typedef bool (*HandleValueInUseFunction)(int handle_val, void* cookie);
 
 /* Manage generic integer handle values.
  *
@@ -48,10 +49,15 @@ typedef struct IntHandleManager
   /* Function pointer to determine if a handle value is currently in use. Used only after the handle
    * value has wrapped around once. */
   HandleValueInUseFunction value_in_use;
+  /* A cookie passed to the value in use function. */
+  void* cookie;
 } IntHandleManager;
 
-void init_int_handle_manager(IntHandleManager* manager, HandleValueInUseFunction value_in_use_func);
-int get_next_int_handle(IntHandleManager* manager);
+void init_int_handle_manager(IntHandleManager* manager, HandleValueInUseFunction value_in_use_func, void* cookie);
+int get_next_int_handle(IntHandleManager* manager, int max);
+
+bool supports_ipv4(sacn_ip_support_t support);
+bool supports_ipv6(sacn_ip_support_t support);
 
 #ifdef __cplusplus
 }
