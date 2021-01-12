@@ -21,8 +21,8 @@
   <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
-  <link href="doxygen.css" rel="stylesheet" type="text/css" />
-  <!--BEGIN CUSTOM SCRIPT-->
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
   <script type="text/javascript">
     $(function () {
       $.get('/sACN/versions.txt', function (data) {
@@ -52,6 +52,76 @@
         }
       }, 'text');
     });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
   </script>
   <!--END CUSTOM SCRIPT-->
 </head>
@@ -129,6 +199,7 @@ $(document).ready(function(){initNavTree('common_8h.html','');});
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#define-members">Macros</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">common.h File Reference</div>  </div>
@@ -143,10 +214,8 @@ $(document).ready(function(){initNavTree('common_8h.html','');});
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_header_data.html">SacnHeaderData</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The data present in the header of an sACN data packet.  <a href="struct_sacn_header_data.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_mcast_netint_id.html">SacnMcastNetintId</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of identifying information for a network interface, for multicast purposes.  <a href="struct_sacn_mcast_netint_id.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
@@ -154,15 +223,23 @@ Macros</h2></td></tr>
 <tr class="memitem:ga0a68bef69f737e31072b475521d331c8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8">SACN_SOURCE_NAME_MAX_LEN</a>&#160;&#160;&#160;64</td></tr>
 <tr class="memdesc:ga0a68bef69f737e31072b475521d331c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum length of an sACN source name, including the null-terminator.  <a href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8">More...</a><br /></td></tr>
 <tr class="separator:ga0a68bef69f737e31072b475521d331c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga681f92a30c76ae426e2403a328978abb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>&#160;&#160;&#160;512</td></tr>
+<tr class="separator:ga681f92a30c76ae426e2403a328978abb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
 <tr class="memitem:ga2e6652620c783917abe8e5c6b5d9d8b7"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_header_data.html">SacnHeaderData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga2e6652620c783917abe8e5c6b5d9d8b7">SacnHeaderData</a></td></tr>
-<tr class="memdesc:ga2e6652620c783917abe8e5c6b5d9d8b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The data present in the header of an sACN data packet.  <a href="group__s_a_c_n.html#ga2e6652620c783917abe8e5c6b5d9d8b7">More...</a><br /></td></tr>
 <tr class="separator:ga2e6652620c783917abe8e5c6b5d9d8b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga87bc433314cf2b5d423de73a3d4d98cd"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_mcast_netint_id.html">SacnMcastNetintId</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga87bc433314cf2b5d423de73a3d4d98cd">SacnMcastNetintId</a></td></tr>
-<tr class="memdesc:ga87bc433314cf2b5d423de73a3d4d98cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of identifying information for a network interface, for multicast purposes.  <a href="group__s_a_c_n.html#ga87bc433314cf2b5d423de73a3d4d98cd">More...</a><br /></td></tr>
-<tr class="separator:ga87bc433314cf2b5d423de73a3d4d98cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab240ac59938a557843efa9068b74e1d4"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#gab240ac59938a557843efa9068b74e1d4">SacnMcastInterface</a></td></tr>
+<tr class="separator:gab240ac59938a557843efa9068b74e1d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:ga02f82b9c734e2d2f70a1106d6480833a"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a> { <a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa900230541148a1eb50b457dfbf75a3c4">kSacnIpV4Only</a>, 
+<a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aaa7c7cce56d48e45e33bde272cb0be424">kSacnIpV6Only</a>, 
+<a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2">kSacnIpV4AndIpV6</a>
+ }</td></tr>
+<tr class="separator:ga02f82b9c734e2d2f70a1106d6480833a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>

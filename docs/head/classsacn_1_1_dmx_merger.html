@@ -1,0 +1,837 @@
+<!-- HTML header for doxygen 1.8.14-->
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=9" />
+  <meta name="generator" content="Doxygen 1.8.13" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>sACN: DmxMerger Class Reference</title>
+  <link href="tabs.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="text/javascript" src="dynsections.js"></script>
+  <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript">
+  $(document).ready(initResizable);
+</script>
+  <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
+  <script type="text/javascript">
+    $(function () {
+      $.get('/sACN/versions.txt', function (data) {
+        if (data) {
+          var lines = data.split('\n');
+          if (lines.length > 0) {
+            var version_select = $("#version_select").empty();
+            lines.forEach(function (line) {
+              line = line.trim();
+              if (!line) {
+                return;
+              }
+              line = line.split(':');
+              var option_name = line[0].replace(/^v/, '');
+              if (line.length > 1) {
+                option_name += ' (' + line[1] + ')';
+              }
+              var option_val = '/sACN/docs/' + line[0];
+              var option = $('<option></option>').attr("value", option_val)
+                .text(option_name);
+              if (window.location.pathname.match('docs/' + line[0])) {
+                option = option.attr("selected", "selected");
+              }
+              version_select.append(option);
+            });
+          }
+        }
+      }, 'text');
+    });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
+  </script>
+  <!--END CUSTOM SCRIPT-->
+</head>
+<body>
+  <div id="top">
+    <!-- do not remove this div, it is closed by doxygen! -->
+    <div id="titlearea">
+      <table cellspacing="0" cellpadding="0" style="width: 100%">
+        <tbody>
+          <tr style="height: 56px;">
+            <td id="projectalign" style="padding-left: 0.5em;">
+              <div id="projectname">sACN
+                &#160;<span id="projectnumber">HEAD (unstable)</span>
+              </div>
+              <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+            </td>
+            <!--BEGIN CUSTOM INSERTED SECTION-->
+            <td style="text-align: right; padding-right: 0.5em">
+              <div id="otherversions">
+                View other versions:
+                <select id="version_select" onchange="location = this.value">
+                </select>
+              </div>
+            </td>
+            <!--END CUSTOM INSERTED SECTION-->
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- end header part -->
+<!-- Generated by Doxygen 1.8.13 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "search",false,'Search');
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(document).ready(function(){initNavTree('classsacn_1_1_dmx_merger.html','');});
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#nested-classes">Data Structures</a> &#124;
+<a href="#pub-types">Public Types</a> &#124;
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-attribs">Static Public Attributes</a>  </div>
+  <div class="headertitle">
+<div class="title">DmxMerger Class Reference<div class="ingroups"><a class="el" href="group__sacn__cpp__api.html">sACN C++ Language APIs</a> &raquo; <a class="el" href="group__sacn__dmx__merger__cpp.html">sACN DMX Merger API</a></div></div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>An instance of sACN DMX Merger functionality; see <a class="el" href="using_dmx_merger.html">Using the sACN DMX Merger API</a>.  
+ <a href="classsacn_1_1_dmx_merger.html#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_dmx_merger_1_1_settings.html">Settings</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of configuration settings that a merger needs to initialize.  <a href="structsacn_1_1_dmx_merger_1_1_settings.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a632b10282146049d1f9c5f44d676833e"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#a632b10282146049d1f9c5f44d676833e">Handle</a> = <a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a></td></tr>
+<tr class="separator:a632b10282146049d1f9c5f44d676833e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a366a68351bc07d5517436bbaf7425a62"><td class="memItemLeft" align="right" valign="top"><a id="a366a68351bc07d5517436bbaf7425a62"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>DmxMerger</b> (const <a class="el" href="classsacn_1_1_dmx_merger.html">DmxMerger</a> &amp;other)=delete</td></tr>
+<tr class="separator:a366a68351bc07d5517436bbaf7425a62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4fb609db88ca8c7bdef5174128ba50ca"><td class="memItemLeft" align="right" valign="top"><a id="a4fb609db88ca8c7bdef5174128ba50ca"></a>
+<a class="el" href="classsacn_1_1_dmx_merger.html">DmxMerger</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classsacn_1_1_dmx_merger.html">DmxMerger</a> &amp;other)=delete</td></tr>
+<tr class="separator:a4fb609db88ca8c7bdef5174128ba50ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18d71ec061f6533c49251873b493818f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#a18d71ec061f6533c49251873b493818f">DmxMerger</a> (<a class="el" href="classsacn_1_1_dmx_merger.html">DmxMerger</a> &amp;&amp;other)=default</td></tr>
+<tr class="separator:a18d71ec061f6533c49251873b493818f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95bbd64563cbe066ee91cc07cf85db9b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classsacn_1_1_dmx_merger.html">DmxMerger</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#a95bbd64563cbe066ee91cc07cf85db9b">operator=</a> (<a class="el" href="classsacn_1_1_dmx_merger.html">DmxMerger</a> &amp;&amp;other)=default</td></tr>
+<tr class="separator:a95bbd64563cbe066ee91cc07cf85db9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab263565edc9ebf5ffd6e82a18184e4c3"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#ab263565edc9ebf5ffd6e82a18184e4c3">Startup</a> (const <a class="el" href="structsacn_1_1_dmx_merger_1_1_settings.html">Settings</a> &amp;settings)</td></tr>
+<tr class="memdesc:ab263565edc9ebf5ffd6e82a18184e4c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new merger instance.  <a href="#ab263565edc9ebf5ffd6e82a18184e4c3">More...</a><br /></td></tr>
+<tr class="separator:ab263565edc9ebf5ffd6e82a18184e4c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5f038c2b480cf9ef5e19e3eba8dbaf9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">Shutdown</a> ()</td></tr>
+<tr class="memdesc:ac5f038c2b480cf9ef5e19e3eba8dbaf9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy a merger instance.  <a href="#ac5f038c2b480cf9ef5e19e3eba8dbaf9">More...</a><br /></td></tr>
+<tr class="separator:ac5f038c2b480cf9ef5e19e3eba8dbaf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad5624a399f15ee212a97a6e2701efd02"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_expected.html">etcpal::Expected</a>&lt; <a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#ad5624a399f15ee212a97a6e2701efd02">AddSource</a> ()</td></tr>
+<tr class="memdesc:ad5624a399f15ee212a97a6e2701efd02"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a new source to the merger.  <a href="#ad5624a399f15ee212a97a6e2701efd02">More...</a><br /></td></tr>
+<tr class="separator:ad5624a399f15ee212a97a6e2701efd02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a39e0f1c04ba69399fb72c9027c6a5fbf"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#a39e0f1c04ba69399fb72c9027c6a5fbf">RemoveSource</a> (<a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source)</td></tr>
+<tr class="memdesc:a39e0f1c04ba69399fb72c9027c6a5fbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a source from the merger.  <a href="#a39e0f1c04ba69399fb72c9027c6a5fbf">More...</a><br /></td></tr>
+<tr class="separator:a39e0f1c04ba69399fb72c9027c6a5fbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad96451a546189d4a1dd81c467a078e53"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#ad96451a546189d4a1dd81c467a078e53">GetSourceInfo</a> (<a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source) const</td></tr>
+<tr class="memdesc:ad96451a546189d4a1dd81c467a078e53"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets a read-only view of the source data.  <a href="#ad96451a546189d4a1dd81c467a078e53">More...</a><br /></td></tr>
+<tr class="separator:ad96451a546189d4a1dd81c467a078e53"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afab0b66c920489827f1973db3f323d7c"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#afab0b66c920489827f1973db3f323d7c">UpdateLevels</a> (<a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source, const uint8_t *new_levels, size_t new_levels_count)</td></tr>
+<tr class="memdesc:afab0b66c920489827f1973db3f323d7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates a source's levels and recalculates outputs.  <a href="#afab0b66c920489827f1973db3f323d7c">More...</a><br /></td></tr>
+<tr class="separator:afab0b66c920489827f1973db3f323d7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a682657780d94091923de1b389ee10db2"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#a682657780d94091923de1b389ee10db2">UpdatePaps</a> (<a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source, const uint8_t *paps, size_t paps_count)</td></tr>
+<tr class="memdesc:a682657780d94091923de1b389ee10db2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates a source's per-address priorities (PAPs) and recalculates outputs.  <a href="#a682657780d94091923de1b389ee10db2">More...</a><br /></td></tr>
+<tr class="separator:a682657780d94091923de1b389ee10db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a365f36ba84622e8e5e79874cf29c271a"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#a365f36ba84622e8e5e79874cf29c271a">UpdateUniversePriority</a> (<a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source, uint8_t universe_priority)</td></tr>
+<tr class="memdesc:a365f36ba84622e8e5e79874cf29c271a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates a source's universe priority and recalculates outputs.  <a href="#a365f36ba84622e8e5e79874cf29c271a">More...</a><br /></td></tr>
+<tr class="separator:a365f36ba84622e8e5e79874cf29c271a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae7ebe469f160646c0c59c6f919d47f2"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#aae7ebe469f160646c0c59c6f919d47f2">RemovePaps</a> (<a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source)</td></tr>
+<tr class="memdesc:aae7ebe469f160646c0c59c6f919d47f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the per-address priority (PAP) data from the source and recalculate outputs.  <a href="#aae7ebe469f160646c0c59c6f919d47f2">More...</a><br /></td></tr>
+<tr class="separator:aae7ebe469f160646c0c59c6f919d47f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a9405a7d27a0e79c0cc00f8a7e2e2e7"><td class="memItemLeft" align="right" valign="top">constexpr <a class="el" href="classsacn_1_1_dmx_merger.html#a632b10282146049d1f9c5f44d676833e">Handle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#a7a9405a7d27a0e79c0cc00f8a7e2e2e7">handle</a> () const</td></tr>
+<tr class="memdesc:a7a9405a7d27a0e79c0cc00f8a7e2e2e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current handle to the underlying C sacn_receiver.  <a href="#a7a9405a7d27a0e79c0cc00f8a7e2e2e7">More...</a><br /></td></tr>
+<tr class="separator:a7a9405a7d27a0e79c0cc00f8a7e2e2e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
+Static Public Attributes</h2></td></tr>
+<tr class="memitem:a86c59ec42eb180800c2e554d0f1e1a06"><td class="memItemLeft" align="right" valign="top">static constexpr <a class="el" href="classsacn_1_1_dmx_merger.html#a632b10282146049d1f9c5f44d676833e">Handle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_dmx_merger.html#a86c59ec42eb180800c2e554d0f1e1a06">kInvalidHandle</a> = <a class="el" href="group__sacn__dmx__merger.html#ga4578a59809c13ece174e8dcf59fce26d">SACN_DMX_MERGER_INVALID</a></td></tr>
+<tr class="separator:a86c59ec42eb180800c2e554d0f1e1a06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>An instance of sACN DMX Merger functionality; see <a class="el" href="using_dmx_merger.html">Using the sACN DMX Merger API</a>. </p>
+<p>This class instantiates software mergers for buffers containing DMX512-A start code 0 packets. It also uses buffers containing DMX512-A start code 0xdd packets to support per-address priority.</p>
+<p>When asked to calculate the merge, the merger will evaluate the current source buffers and update two result buffers:</p><ul>
+<li>512 bytes for the merged data levels (i.e. "winning level"). These are calculated by using a Highest-Level-Takes-Precedence(HTP) algorithm for all sources that share the highest per-address priority.</li>
+<li>512 source identifiers (i.e. "winning source") to indicate which source was considered the source of the merged data level, or that no source currently owns this address.</li>
+</ul>
+<p>See <a class="el" href="using_dmx_merger.html">Using the sACN DMX Merger API</a> for a detailed description of how to use this API. </p>
+</div><h2 class="groupheader">Member Typedef Documentation</h2>
+<a id="a632b10282146049d1f9c5f44d676833e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a632b10282146049d1f9c5f44d676833e">&#9670;&nbsp;</a></span>Handle</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="classsacn_1_1_dmx_merger.html#a632b10282146049d1f9c5f44d676833e">Handle</a> =  <a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A handle type used by the sACN library to identify merger instances. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a18d71ec061f6533c49251873b493818f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a18d71ec061f6533c49251873b493818f">&#9670;&nbsp;</a></span>DmxMerger()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classsacn_1_1_dmx_merger.html">DmxMerger</a> </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classsacn_1_1_dmx_merger.html">DmxMerger</a> &amp;&amp;&#160;</td>
+          <td class="paramname"><em>other</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">default</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Move a dmx merger instance. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="ad5624a399f15ee212a97a6e2701efd02"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad5624a399f15ee212a97a6e2701efd02">&#9670;&nbsp;</a></span>AddSource()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_expected.html">etcpal::Expected</a>&lt; <a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> &gt; AddSource </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Adds a new source to the merger. </p>
+<p>Adds a new source to the merger, if the maximum number of sources hasn't been reached. The returned source id is used for two purposes:</p><ul>
+<li>It is the handle for calls that need to access the source data.</li>
+<li>It is the source identifer that is put into the slot_owners buffer that was passed in the DmxMergerUniverseConfig structure when creating the merger.</li>
+</ul>
+<dl class="section return"><dt>Returns</dt><dd>The successfully added source_id. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: The merger was not started correctly. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afad16b0fe51e8664f8b30b740ea1e51599">kEtcPalErrNoMem</a>: No room to allocate memory for this source, or the max number of sources has been reached. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ad96451a546189d4a1dd81c467a078e53"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad96451a546189d4a1dd81c467a078e53">&#9670;&nbsp;</a></span>GetSourceInfo()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a> * GetSourceInfo </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a>&#160;</td>
+          <td class="paramname"><em>source</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Gets a read-only view of the source data. </p>
+<p>Looks up the source data and returns a pointer to the data or nullptr if it doesn't exist. This pointer is owned by the library, and must not be modified by the application. The pointer will only be valid until the source or merger is removed.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>The id of the source. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The reference to the source data, otherwise kEtcPalErrInvalid. </dd></dl>
+
+</div>
+</div>
+<a id="a7a9405a7d27a0e79c0cc00f8a7e2e2e7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a9405a7d27a0e79c0cc00f8a7e2e2e7">&#9670;&nbsp;</a></span>handle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr <a class="el" href="classsacn_1_1_dmx_merger.html#a632b10282146049d1f9c5f44d676833e">DmxMerger::Handle</a> handle </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the current handle to the underlying C sacn_receiver. </p>
+<dl class="section return"><dt>Returns</dt><dd>The handle or <a class="el" href="classsacn_1_1_receiver.html#a86c59ec42eb180800c2e554d0f1e1a06">Receiver::kInvalidHandle</a>. </dd></dl>
+
+</div>
+</div>
+<a id="a95bbd64563cbe066ee91cc07cf85db9b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a95bbd64563cbe066ee91cc07cf85db9b">&#9670;&nbsp;</a></span>operator=()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classsacn_1_1_dmx_merger.html">DmxMerger</a>&amp; operator= </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classsacn_1_1_dmx_merger.html">DmxMerger</a> &amp;&amp;&#160;</td>
+          <td class="paramname"><em>other</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">default</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Move a dmx merger instance. </p>
+
+</div>
+</div>
+<a id="aae7ebe469f160646c0c59c6f919d47f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aae7ebe469f160646c0c59c6f919d47f2">&#9670;&nbsp;</a></span>RemovePaps()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a> RemovePaps </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a>&#160;</td>
+          <td class="paramname"><em>source</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Removes the per-address priority (PAP) data from the source and recalculate outputs. </p>
+<p>Per-address priority data can time out in sACN just like levels. This is a convenience function to immediately turn off the per-address priority data for a source and recalculate the outputs.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>The id of the source to modify. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API. ">Source</a> updated and merge completed. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or merger. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="a39e0f1c04ba69399fb72c9027c6a5fbf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a39e0f1c04ba69399fb72c9027c6a5fbf">&#9670;&nbsp;</a></span>RemoveSource()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a> RemoveSource </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a>&#160;</td>
+          <td class="paramname"><em>source</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Removes a source from the merger. </p>
+<p>Removes the source from the merger. This causes the merger to recalculate the outputs.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>The id of the source to remove. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API. ">Source</a> removed successfully. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ac5f038c2b480cf9ef5e19e3eba8dbaf9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac5f038c2b480cf9ef5e19e3eba8dbaf9">&#9670;&nbsp;</a></span>Shutdown()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Shutdown </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Destroy a merger instance. </p>
+<p>Tears down the merger and cleans up its resources.</p>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Merger destroyed successfully. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid merger. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ab263565edc9ebf5ffd6e82a18184e4c3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab263565edc9ebf5ffd6e82a18184e4c3">&#9670;&nbsp;</a></span>Startup()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a> Startup </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structsacn_1_1_dmx_merger_1_1_settings.html">Settings</a> &amp;&#160;</td>
+          <td class="paramname"><em>settings</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Create a new merger instance. </p>
+<p>Creates a new merger that uses the passed in config data. The application owns all buffers in the config, so be sure to call <a class="el" href="classsacn_1_1_dmx_merger.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9" title="Destroy a merger instance. ">Shutdown()</a> before destroying the buffers.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">settings</td><td>Configuration parameters for the DMX merger to be created. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Merger created successful. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afad16b0fe51e8664f8b30b740ea1e51599">kEtcPalErrNoMem</a>: No room to allocate memory for this merger, or maximum number of mergers has been reached. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="afab0b66c920489827f1973db3f323d7c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afab0b66c920489827f1973db3f323d7c">&#9670;&nbsp;</a></span>UpdateLevels()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a> UpdateLevels </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a>&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_levels</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_levels_count</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Updates a source's levels and recalculates outputs. </p>
+<p>This function updates the levels of the specified source, and then triggers the recalculation of each slot. For each slot, the source will only be included in the merge if it has a level and a priority at that slot.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>The id of the source to modify. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_levels</td><td>The new DMX levels to be copied in. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_levels_count</td><td>The length of new_levels. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API. ">Source</a> updated and merge completed. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or merger. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="a682657780d94091923de1b389ee10db2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a682657780d94091923de1b389ee10db2">&#9670;&nbsp;</a></span>UpdatePaps()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a> UpdatePaps </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a>&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>paps</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>paps_count</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Updates a source's per-address priorities (PAPs) and recalculates outputs. </p>
+<p>This function updates the per-address priorities (PAPs) of the specified source, and then triggers the recalculation of each slot. For each slot, the source will only be included in the merge if it has a level and a priority at that slot.</p>
+<p>If PAPs are not specified for all slots, then the remaining slots will default to a PAP of 0. To remove PAPs for this source and revert to the universe priority, call <a class="el" href="classsacn_1_1_dmx_merger.html#aae7ebe469f160646c0c59c6f919d47f2" title="Removes the per-address priority (PAP) data from the source and recalculate outputs. ">DmxMerger::RemovePaps</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>The id of the source to modify. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">paps</td><td>The per-address priorities to be copied in. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">paps_count</td><td>The length of paps. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API. ">Source</a> updated and merge completed. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or merger. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="a365f36ba84622e8e5e79874cf29c271a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a365f36ba84622e8e5e79874cf29c271a">&#9670;&nbsp;</a></span>UpdateUniversePriority()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a> UpdateUniversePriority </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a>&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>universe_priority</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Updates a source's universe priority and recalculates outputs. </p>
+<p>This function updates the universe priority of the specified source, and then triggers the recalculation of each slot. For each slot, the source will only be included in the merge if it has a level and a priority at that slot.</p>
+<p>If per-address priorities (PAPs) were previously specified for this source with <a class="el" href="classsacn_1_1_dmx_merger.html#a682657780d94091923de1b389ee10db2" title="Updates a source&#39;s per-address priorities (PAPs) and recalculates outputs. ">DmxMerger::UpdatePaps</a>, then the universe priority can have no effect on the merge results until the application calls <a class="el" href="classsacn_1_1_dmx_merger.html#aae7ebe469f160646c0c59c6f919d47f2" title="Removes the per-address priority (PAP) data from the source and recalculate outputs. ">DmxMerger::RemovePaps</a>, at which point the priorities of each slot will revert to the universe priority passed in here.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>The id of the source to modify. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe_priority</td><td>The universe-level priority of the source. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API. ">Source</a> updated and merge completed. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or merger. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Field Documentation</h2>
+<a id="a86c59ec42eb180800c2e554d0f1e1a06"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a86c59ec42eb180800c2e554d0f1e1a06">&#9670;&nbsp;</a></span>kInvalidHandle</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr <a class="el" href="classsacn_1_1_dmx_merger.html#a632b10282146049d1f9c5f44d676833e">Handle</a> kInvalidHandle = <a class="el" href="group__sacn__dmx__merger.html#ga4578a59809c13ece174e8dcf59fce26d">SACN_DMX_MERGER_INVALID</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>An invalid Handle value. </p>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>include/sacn/cpp/<a class="el" href="cpp_2dmx__merger_8h_source.html">dmx_merger.h</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="namespacesacn.html">sacn</a></li><li class="navelem"><a class="el" href="classsacn_1_1_dmx_merger.html">DmxMerger</a></li>
+    <li class="footer">Generated by
+    <a href="http://www.doxygen.org/index.html">
+    <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!-- HTML header for doxygen 1.8.14-->
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=9" />
+  <meta name="generator" content="Doxygen 1.8.13" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>sACN: Using the sACN DMX Merger API</title>
+  <link href="tabs.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="text/javascript" src="dynsections.js"></script>
+  <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript">
+  $(document).ready(initResizable);
+</script>
+  <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
+  <script type="text/javascript">
+    $(function () {
+      $.get('/sACN/versions.txt', function (data) {
+        if (data) {
+          var lines = data.split('\n');
+          if (lines.length > 0) {
+            var version_select = $("#version_select").empty();
+            lines.forEach(function (line) {
+              line = line.trim();
+              if (!line) {
+                return;
+              }
+              line = line.split(':');
+              var option_name = line[0].replace(/^v/, '');
+              if (line.length > 1) {
+                option_name += ' (' + line[1] + ')';
+              }
+              var option_val = '/sACN/docs/' + line[0];
+              var option = $('<option></option>').attr("value", option_val)
+                .text(option_name);
+              if (window.location.pathname.match('docs/' + line[0])) {
+                option = option.attr("selected", "selected");
+              }
+              version_select.append(option);
+            });
+          }
+        }
+      }, 'text');
+    });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
+  </script>
+  <!--END CUSTOM SCRIPT-->
+</head>
+<body>
+  <div id="top">
+    <!-- do not remove this div, it is closed by doxygen! -->
+    <div id="titlearea">
+      <table cellspacing="0" cellpadding="0" style="width: 100%">
+        <tbody>
+          <tr style="height: 56px;">
+            <td id="projectalign" style="padding-left: 0.5em;">
+              <div id="projectname">sACN
+                &#160;<span id="projectnumber">HEAD (unstable)</span>
+              </div>
+              <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+            </td>
+            <!--BEGIN CUSTOM INSERTED SECTION-->
+            <td style="text-align: right; padding-right: 0.5em">
+              <div id="otherversions">
+                View other versions:
+                <select id="version_select" onchange="location = this.value">
+                </select>
+              </div>
+            </td>
+            <!--END CUSTOM INSERTED SECTION-->
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- end header part -->
+<!-- Generated by Doxygen 1.8.13 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "search",false,'Search');
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(document).ready(function(){initNavTree('using_dmx_merger.html','');});
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="headertitle">
+<div class="title">Using the sACN DMX Merger API </div>  </div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p>The sACN DMX Merger API provides a software merger that takes level (NULL start code) and priority data as input and outputs the merged levels, along with source IDs and per-address priorities (PAPs) for each merged level. This API exposes both a C and C++ language interface. The C++ interface is a header-only wrapper around the C interface.</p>
+<p>Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the library is compiled with <a class="el" href="group__sacnopts__global.html#ga59ee3abb2f4eb1554d7be219a9c8028b" title="Enable ETC&#39;s per-address priority extension to sACN. ">SACN_ETC_PRIORITY_EXTENSION</a> set to 0.</p>
+<p> 
+<div class="tab">
+  <button id="button_1_c" class="tablinks" onclick="selectAllC()">Show All C Snippets</button>
+  <button id="button_1_cpp" class="tablinks" onclick="selectAllCpp()">Show All C++ Snippets</button>
+</div>
+</p>
+<h2>Initialization and Destruction</h2>
+<p>The sACN library must be globally initialized before using the DMX Merger API. See <a class="el" href="global_init_and_destroy.html">Global Initialization and Destruction</a>.</p>
+<p>A merger must first be created before it can be used. A separate merger should be created for each universe that needs merging.</p>
+<p>To create a merger, a config needs to be initialized and passed into the create/startup function. In the config, the output array pointer for the merged slot levels must be specified. There are also two optional output array pointers: one for the per-address priority of each slot, and another for the source ID of each slot. These two are set to NULL if not used. The application owns the memory that it points to in the config, and must ensure that the memory provided is valid until the merger is destroyed. The maximum source count (the maximum number of sources the merger will merge when <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87" title="Use dynamic memory allocation. ">SACN_DYNAMIC_MEM</a> is 1) is also specified in the config, and it defaults to <a class="el" href="group__sacn__receiver.html#gadb2ea19692692ca852423d0a9de749ea" title="Constant for &quot;infinite&quot; when listening or merging sACN universes. ">SACN_RECEIVER_INFINITE_SOURCES</a>. If <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87" title="Use dynamic memory allocation. ">SACN_DYNAMIC_MEM</a> is 0, then <a class="el" href="group__sacnopts__dmx__merger.html#gaaeaa9701ec2b290ddfb3b31d8463dca4" title="The maximum number of sources that can be merged on each merger instance. ">SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER</a> is used instead.</p>
+<p>Once the merger is created, the merger's functionality can be used. Mergers can also be destroyed individually with the destroy/shutdown function, although keep in mind that all mergers are destroyed automatically when sACN deinitializes.</p>
+<p> 
+<div class="tab">
+  <button id="button_2_c" class="tablinks" onclick="selectLanguage(event, '2', 'c')">C</button>
+  <button id="button_2_cpp" class="tablinks" onclick="selectLanguage(event, '2', 'cpp')">C++</button>
+</div>
+<div id="div_2_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// These buffers are updated on each merger call with the merge results.</span></div><div class="line">uint8_t slots[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line">uint8_t per_address_priorities[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> slot_owners[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line"></div><div class="line"><span class="comment">// Merger configuration used for the initialization of each merger:</span></div><div class="line"><a class="code" href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a> merger_config = <a class="code" href="group__sacn__dmx__merger.html#ga7431ab2baf3af7e0d1999355c6bcc9d7">SACN_DMX_MERGER_CONFIG_INIT</a>;</div><div class="line">merger_config.<a class="code" href="struct_sacn_dmx_merger_config.html#a08bc75bcabb0a92022eac3a623f32ff6">slots</a> = slots;</div><div class="line">merger_config.<a class="code" href="struct_sacn_dmx_merger_config.html#a6b8790b29687764423319cc2b8f24c30">per_address_priorities</a> = per_address_priorities;</div><div class="line">merger_config.<a class="code" href="struct_sacn_dmx_merger_config.html#a52db3df3a97298a9d96b7559fded9128">slot_owners</a> = slot_owners;</div><div class="line"></div><div class="line"><span class="comment">// Initialize a merger and obtain its handle.</span></div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger_handle;</div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#ga8758dad93531c1a5bbf4643157fe2c72">sacn_dmx_merger_create</a>(&amp;merger_config, &amp;merger_handle);</div><div class="line"></div><div class="line"><span class="comment">// Mergers can later be destroyed individually.</span></div><div class="line"><span class="comment">// Keep in mind that sacn_deinit() will destroy all mergers automatically.</span></div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#ga539b249ea5d0898efce4ee7371fc91ef">sacn_dmx_merger_destroy</a>(merger_handle);</div></div><!-- fragment --><p> 
+</div>
+<div id="div_2_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// These buffers are updated on each merger call with the merge results.</span></div><div class="line"><span class="comment">// They must be valid as long as the merger is using them.</span></div><div class="line">uint8_t slots[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line">uint8_t per_address_priorities[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> slot_owners[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line"></div><div class="line"><span class="comment">// Merger configuration used for the initialization of each merger:</span></div><div class="line"><a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html">sacn::DmxMerger::Settings</a> settings(slots);</div><div class="line">settings.per_address_priorities = per_address_priorities;</div><div class="line">settings.slot_owners = slot_owners;</div><div class="line"></div><div class="line"><span class="comment">// Initialize a merger.</span></div><div class="line"><a class="code" href="classsacn_1_1_dmx_merger.html">sacn::DmxMerger</a> merger;</div><div class="line">merger.<a class="code" href="classsacn_1_1_dmx_merger.html#ab263565edc9ebf5ffd6e82a18184e4c3">Startup</a>(settings);</div><div class="line"></div><div class="line"><span class="comment">// Mergers can later be destroyed individually.</span></div><div class="line"><span class="comment">// Keep in mind that sacn::Deinit() will destroy all mergers automatically.</span></div><div class="line">merger.<a class="code" href="classsacn_1_1_dmx_merger.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">Shutdown</a>();</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>Adding and Removing Sources</h2>
+<p>In order to input data into a merger, each source being merged must first be added to the merger. To do this, use the add source function, which provides a new source handle on success, or an error code on failure. A source can later be removed individually, which also removes it from the merge output.</p>
+<p> 
+<div class="tab">
+  <button id="button_3_c" class="tablinks" onclick="selectLanguage(event, '3', 'c')">C</button>
+  <button id="button_3_cpp" class="tablinks" onclick="selectLanguage(event, '3', 'cpp')">C++</button>
+</div>
+<div id="div_3_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// Add a couple of sources, which are tracked with handles.</span></div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source_1_handle, source_2_handle;</div><div class="line"></div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#ga1c3ed232fc3f7c23c914587fa387cd6b">sacn_dmx_merger_add_source</a>(merger_handle, &amp;source_1_handle);</div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#ga1c3ed232fc3f7c23c914587fa387cd6b">sacn_dmx_merger_add_source</a>(merger_handle, &amp;source_2_handle);</div><div class="line"></div><div class="line"><span class="comment">// Sources can later be removed individually, which updates the merger&#39;s output.</span></div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#gacd441710a3047265429cb1682c50a402">sacn_dmx_merger_remove_source</a>(merger_handle, source_1_handle);</div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#gacd441710a3047265429cb1682c50a402">sacn_dmx_merger_remove_source</a>(merger_handle, source_2_handle);</div></div><!-- fragment --><p> 
+</div>
+<div id="div_3_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// Add a couple of sources, which are tracked with handles.</span></div><div class="line"><span class="comment">// AddSource may also return an error, which is not checked for in this example.</span></div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source_1_handle = merger.<a class="code" href="classsacn_1_1_dmx_merger.html#ad5624a399f15ee212a97a6e2701efd02">AddSource</a>().value();</div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source_2_handle = merger.<a class="code" href="classsacn_1_1_dmx_merger.html#ad5624a399f15ee212a97a6e2701efd02">AddSource</a>().value();</div><div class="line"></div><div class="line"><span class="comment">// Sources can later be removed individually, which updates the merger&#39;s output.</span></div><div class="line">merger.<a class="code" href="classsacn_1_1_dmx_merger.html#a39e0f1c04ba69399fb72c9027c6a5fbf">RemoveSource</a>(source_1_handle);</div><div class="line">merger.<a class="code" href="classsacn_1_1_dmx_merger.html#a39e0f1c04ba69399fb72c9027c6a5fbf">RemoveSource</a>(source_2_handle);</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>Inputting Levels and Priorities</h2>
+<p>Different types of data can be fed into a merger: the NULL start code levels, per-address priorities, and universe priority. Inputting this data into a merger causes its merge output to synchronously update. The merger will prioritize sources with the highest per-address priority (or universe priority if the source doesn't provide per-address priorities). If two sources have the same highest priority, the one with the highest NULL start code level wins (HTP). For each slot, a source can only be included in the merge if it has both a level and a priority at that slot. Otherwise, it will be as if the source were not sourcing that slot.</p>
+<p>There is a key distinction in how the merger interprets the lowest priority. The lowest universe priority is 0, but the lowest per-address priority is 1. This is because a per-address priority of 0 indicates that the source is not sending any levels to the corresponding slot. Therefore, if Source A has a universe priority of 0 and a level of 10, and Source B has a per-address priority of 0 and a level of 50, Source A will still win despite having a lower level. This is because per-address priority 0 indicates that there is no level at this slot at all, whereas universe priority 0 simply indicates the lowest priority. If Source B had a per-address priority of 1, then Source B would win no matter what the levels were.</p>
+<p>The merger may output per-address priorities if configured to do so by initializing per_address_priorities in the merger config/settings. If a universe priority of 1 or above wins a slot, the merger will output the same value for the per-address priority for that slot. However, if a universe priority of 0 wins a slot, the merger will output a per-address priority of 1 for that slot. If a per-address priority wins, that same value is used for the per-address priority output. The merger only outputs a per-address priority of 0 if there is no winner for that slot.</p>
+<p>Also keep in mind that if less than 512 per-address priorities are inputted, then the remaining slots will be treated as if they had a per-address priority of 0.</p>
+<p>The way to input this data for a source is to pass it in directly, using one of the update functions. The application can use these functions to update the levels, universe priority, and/or per-address priorities (PAPs) individually. Keep in mind that both a level and a priority (universe or PAP) must be inputted for a slot before the source can be factored into the merge for that slot.</p>
+<p> 
+<div class="tab">
+  <button id="button_4_c" class="tablinks" onclick="selectLanguage(event, '4', 'c')">C</button>
+  <button id="button_4_cpp" class="tablinks" onclick="selectLanguage(event, '4', 'cpp')">C++</button>
+</div>
+<div id="div_4_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line">uint8_t levels[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line">uint8_t paps[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line">uint8_t universe_priority;</div><div class="line"><span class="comment">// Initialize levels, paps, and universe_priority here...</span></div><div class="line"></div><div class="line"><span class="comment">// To update levels:</span></div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#gafcf58136c0c882d05724ff6bd57f78a8">sacn_dmx_merger_update_levels</a>(merger_handle, source_1_handle, levels, <a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>);</div><div class="line"></div><div class="line"><span class="comment">// Then call one of these to update priority:</span></div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#gaf31312d80e0f9a198e6cb1e27ea4d63c">sacn_dmx_merger_update_universe_priority</a>(merger_handle, source_1_handle, universe_priority);</div><div class="line"><a class="code" href="group__sacn__dmx__merger.html#ga574eeb1eda51e31eb13fe12ccb543d42">sacn_dmx_merger_update_paps</a>(merger_handle, source_1_handle, paps, <a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>);</div><div class="line"></div><div class="line"><span class="comment">// Now the source has been factored into the merge results, which are printed here.</span></div><div class="line"><span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i = 0; i &lt; <a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>; ++i)</div><div class="line">{</div><div class="line">  printf(<span class="stringliteral">&quot;Slot %u:\n Level: %u\n PAP: %u\n Source ID: %u\n&quot;</span>, i, slots[i], per_address_priorities[i], slot_owners[i]);</div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+<div id="div_4_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line">uint8_t levels[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line">uint8_t paps[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line">uint8_t universe_priority;</div><div class="line"><span class="comment">// Initialize levels, paps, and universe_priority here...</span></div><div class="line"></div><div class="line"><span class="comment">// To update levels:</span></div><div class="line">merger.<a class="code" href="classsacn_1_1_dmx_merger.html#afab0b66c920489827f1973db3f323d7c">UpdateLevels</a>(source_1_handle, levels, DMX_ADDRESS_COUNT);</div><div class="line"></div><div class="line"><span class="comment">// Then call one of these to update priority:</span></div><div class="line">merger.<a class="code" href="classsacn_1_1_dmx_merger.html#a365f36ba84622e8e5e79874cf29c271a">UpdateUniversePriority</a>(source_1_handle, universe_priority);</div><div class="line">merger.<a class="code" href="classsacn_1_1_dmx_merger.html#a682657780d94091923de1b389ee10db2">UpdatePaps</a>(source_1_handle, paps, DMX_ADDRESS_COUNT);</div><div class="line"></div><div class="line"><span class="comment">// Now the source has been factored into the merge results, which are printed here.</span></div><div class="line"><span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i = 0; i &lt; <a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>; ++i)</div><div class="line">{</div><div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;Slot &quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot;:\n Level: &quot;</span> &lt;&lt; slots[i] &lt;&lt; <span class="stringliteral">&quot;:\n PAP: &quot;</span> &lt;&lt; per_address_priorities[i] &lt;&lt; <span class="stringliteral">&quot;\n Source ID: &quot;</span></div><div class="line">            &lt;&lt; slot_owners[i] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>Accessing Source Information</h2>
+<p>Each merger provides read-only access to the state of each of its sources, which can be obtained by calling the get source function. The state information includes the source's handle, NULL start code levels, universe priority, and per-address priorities if available.</p>
+<p> 
+<div class="tab">
+  <button id="button_5_c" class="tablinks" onclick="selectLanguage(event, '5', 'c')">C</button>
+  <button id="button_5_cpp" class="tablinks" onclick="selectLanguage(event, '5', 'cpp')">C++</button>
+</div>
+<div id="div_5_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="keyword">const</span> <a class="code" href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a>* source_state = <a class="code" href="group__sacn__dmx__merger.html#gab9f34e5fab687a2d4fdeef43ea3b2af4">sacn_dmx_merger_get_source</a>(merger_handle, source_1_handle);</div><div class="line"></div><div class="line"><span class="keywordflow">if</span> (source_state)</div><div class="line">{</div><div class="line">  <span class="comment">// Do some printouts to demonstrate the fields available</span></div><div class="line">  printf(<span class="stringliteral">&quot;Source data:\n&quot;</span>);</div><div class="line"></div><div class="line">  printf(<span class="stringliteral">&quot; Universe Priority: %u\n&quot;</span>, source_state-&gt;<a class="code" href="struct_sacn_dmx_merger_source.html#aefc54b6cd291e480d6cb7c9b5b98a3f4">universe_priority</a>);</div><div class="line"></div><div class="line">  <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i = 0; i &lt; source_state-&gt;<a class="code" href="struct_sacn_dmx_merger_source.html#a3695ed7e336fa1e6cf75ee3ccbc4937d">valid_level_count</a>; ++i)</div><div class="line">  {</div><div class="line">    printf(<span class="stringliteral">&quot; Level at slot %u: %u\n&quot;</span>, i, source_state-&gt;<a class="code" href="struct_sacn_dmx_merger_source.html#a82f491441fd8ea7e0b36c867797a9ba5">levels</a>[i]);</div><div class="line">  }</div><div class="line"></div><div class="line">  <span class="keywordflow">if</span>(source_state-&gt;<a class="code" href="struct_sacn_dmx_merger_source.html#ab2fb729fbb80e2b480e4466e8cbf9b57">address_priority_valid</a>)</div><div class="line">  {</div><div class="line">    <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i = 0; i &lt; source_state-&gt;<a class="code" href="struct_sacn_dmx_merger_source.html#a3695ed7e336fa1e6cf75ee3ccbc4937d">valid_level_count</a>; ++i)</div><div class="line">    {</div><div class="line">      printf(<span class="stringliteral">&quot; PAP at slot %u: %u\n&quot;</span>, i, source_state-&gt;<a class="code" href="struct_sacn_dmx_merger_source.html#a8e2ad703e06552317b7f47dd0e0ebbea">address_priority</a>[i]);</div><div class="line">    }</div><div class="line">  }</div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+<div id="div_5_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="keyword">const</span> <a class="code" href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a>* source_state = merger.<a class="code" href="classsacn_1_1_dmx_merger.html#ad96451a546189d4a1dd81c467a078e53">GetSourceInfo</a>(source_1_handle);</div><div class="line"></div><div class="line"><span class="keywordflow">if</span> (source_state)</div><div class="line">{</div><div class="line">  <span class="comment">// Do some printouts to demonstrate the fields available</span></div><div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;Source data:\n Universe Priority: &quot;</span> &lt;&lt; source_state-&gt;<a class="code" href="struct_sacn_dmx_merger_source.html#aefc54b6cd291e480d6cb7c9b5b98a3f4">universe_priority</a> &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div><div class="line"></div><div class="line">  <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i = 0; i &lt; source_state-&gt;<a class="code" href="struct_sacn_dmx_merger_source.html#a3695ed7e336fa1e6cf75ee3ccbc4937d">valid_level_count</a>; ++i)</div><div class="line">  {</div><div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot; Level at slot &quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot;: &quot;</span> &lt;&lt; source_state-&gt;<a class="code" href="struct_sacn_dmx_merger_source.html#a82f491441fd8ea7e0b36c867797a9ba5">levels</a>[i] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div><div class="line">  }</div><div class="line"></div><div class="line">  <span class="keywordflow">if</span>(source_state-&gt;<a class="code" href="struct_sacn_dmx_merger_source.html#ab2fb729fbb80e2b480e4466e8cbf9b57">address_priority_valid</a>)</div><div class="line">  {</div><div class="line">    <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i = 0; i &lt; source_state-&gt;<a class="code" href="struct_sacn_dmx_merger_source.html#a3695ed7e336fa1e6cf75ee3ccbc4937d">valid_level_count</a>; ++i)</div><div class="line">    {</div><div class="line">      std::cout &lt;&lt; <span class="stringliteral">&quot; PAP at slot &quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot;: &quot;</span> &lt;&lt; source_state-&gt;<a class="code" href="struct_sacn_dmx_merger_source.html#a8e2ad703e06552317b7f47dd0e0ebbea">address_priority</a>[i] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div><div class="line">    }</div><div class="line">  }</div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+ </p>
+</div></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="getting_started.html">Getting Started with sACN</a></li>
+    <li class="footer">Generated by
+    <a href="http://www.doxygen.org/index.html">
+    <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['uuid_2eh',['uuid.h',['https://etclabs.github.io/EtcPal/docs/head/cpp_2uuid_8h.html',1,'']]]
+  ['receiver_2eh',['receiver.h',['../receiver_8h.html',1,'(Global Namespace)'],['../cpp_2receiver_8h.html',1,'(Global Namespace)']]]
 ];

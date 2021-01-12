@@ -21,8 +21,8 @@
   <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
-  <link href="doxygen.css" rel="stylesheet" type="text/css" />
-  <!--BEGIN CUSTOM SCRIPT-->
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
   <script type="text/javascript">
     $(function () {
       $.get('/sACN/versions.txt', function (data) {
@@ -52,6 +52,76 @@
         }
       }, 'text');
     });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
   </script>
   <!--END CUSTOM SCRIPT-->
 </head>
@@ -153,7 +223,7 @@ Macros</h2></td></tr>
 <tr class="memdesc:gabd4f61db43336221d5947896ef0f2921"><td class="mdescLeft">&#160;</td><td class="mdescRight">The debug assert used by the sACN library.  <a href="group__sacnopts__global.html#gabd4f61db43336221d5947896ef0f2921">More...</a><br /></td></tr>
 <tr class="separator:gabd4f61db43336221d5947896ef0f2921"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga59ee3abb2f4eb1554d7be219a9c8028b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__global.html#ga59ee3abb2f4eb1554d7be219a9c8028b">SACN_ETC_PRIORITY_EXTENSION</a>&#160;&#160;&#160;1</td></tr>
-<tr class="memdesc:ga59ee3abb2f4eb1554d7be219a9c8028b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable ETC's per-channel priority extension to sACN.  <a href="group__sacnopts__global.html#ga59ee3abb2f4eb1554d7be219a9c8028b">More...</a><br /></td></tr>
+<tr class="memdesc:ga59ee3abb2f4eb1554d7be219a9c8028b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable ETC's per-address priority extension to sACN.  <a href="group__sacnopts__global.html#ga59ee3abb2f4eb1554d7be219a9c8028b">More...</a><br /></td></tr>
 <tr class="separator:ga59ee3abb2f4eb1554d7be219a9c8028b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6ae6b1e22f87a5c2e49aefbc95a97256"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__global.html#ga6ae6b1e22f87a5c2e49aefbc95a97256">SACN_LOOPBACK</a>&#160;&#160;&#160;1</td></tr>
 <tr class="memdesc:ga6ae6b1e22f87a5c2e49aefbc95a97256"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allow loopback of sACN to the local host (by setting the relevant socket option).  <a href="group__sacnopts__global.html#ga6ae6b1e22f87a5c2e49aefbc95a97256">More...</a><br /></td></tr>
@@ -170,31 +240,49 @@ Macros</h2></td></tr>
 <tr class="memitem:gae7ae8c07912489f40fa77146cdc93d71"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#gae7ae8c07912489f40fa77146cdc93d71">SACN_RECEIVER_READ_TIMEOUT_MS</a>&#160;&#160;&#160;100</td></tr>
 <tr class="memdesc:gae7ae8c07912489f40fa77146cdc93d71"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum amount of time that a call to sacnrecv_read() will block waiting for data, in milliseconds.  <a href="group__sacnopts__receiver.html#gae7ae8c07912489f40fa77146cdc93d71">More...</a><br /></td></tr>
 <tr class="separator:gae7ae8c07912489f40fa77146cdc93d71"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5d749b5a5b67d89a114aa2409ba6ff62"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga5d749b5a5b67d89a114aa2409ba6ff62">SACN_RECEIVER_MAX_UNIVERSES</a>&#160;&#160;&#160;4</td></tr>
+<tr class="memitem:ga5d749b5a5b67d89a114aa2409ba6ff62"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga5d749b5a5b67d89a114aa2409ba6ff62">SACN_RECEIVER_MAX_UNIVERSES</a>&#160;&#160;&#160;8</td></tr>
 <tr class="memdesc:ga5d749b5a5b67d89a114aa2409ba6ff62"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of sACN universes that can be listened to simultaneously.  <a href="group__sacnopts__receiver.html#ga5d749b5a5b67d89a114aa2409ba6ff62">More...</a><br /></td></tr>
 <tr class="separator:ga5d749b5a5b67d89a114aa2409ba6ff62"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga079b2f51919b9ac76e3b3330040bd20e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e">SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</a>&#160;&#160;&#160;10</td></tr>
+<tr class="memitem:ga079b2f51919b9ac76e3b3330040bd20e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e">SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</a>&#160;&#160;&#160;8</td></tr>
 <tr class="memdesc:ga079b2f51919b9ac76e3b3330040bd20e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of sources that can be tracked on each universe.  <a href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e">More...</a><br /></td></tr>
 <tr class="separator:ga079b2f51919b9ac76e3b3330040bd20e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga055b24b2c72073823f4c92ed32e7ddb0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga055b24b2c72073823f4c92ed32e7ddb0">SACN_RECEIVER_TOTAL_MAX_SOURCES</a>&#160;&#160;&#160;(<a class="el" href="group__sacnopts__receiver.html#ga5d749b5a5b67d89a114aa2409ba6ff62">SACN_RECEIVER_MAX_UNIVERSES</a> * <a class="el" href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e">SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</a>)</td></tr>
 <tr class="memdesc:ga055b24b2c72073823f4c92ed32e7ddb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">The total maximum number of sources that can be tracked.  <a href="group__sacnopts__receiver.html#ga055b24b2c72073823f4c92ed32e7ddb0">More...</a><br /></td></tr>
 <tr class="separator:ga055b24b2c72073823f4c92ed32e7ddb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1d57b20e8b100a0787d286e05683ba9a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga1d57b20e8b100a0787d286e05683ba9a">SACN_RECEIVER_SOCKET_PER_UNIVERSE</a>&#160;&#160;&#160;(!_WIN32 &amp;&amp; !__APPLE__)</td></tr>
-<tr class="memdesc:ga1d57b20e8b100a0787d286e05683ba9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether a new network socket should be created for every sACN universe being listened to.  <a href="group__sacnopts__receiver.html#ga1d57b20e8b100a0787d286e05683ba9a">More...</a><br /></td></tr>
-<tr class="separator:ga1d57b20e8b100a0787d286e05683ba9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6bfc294d941da830fbb9bd562c45f638"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga6bfc294d941da830fbb9bd562c45f638">SACN_RECEIVER_LIMIT_BIND</a>&#160;&#160;&#160;(!_WIN32 &amp;&amp; !__APPLE__)</td></tr>
+<tr class="memdesc:ga6bfc294d941da830fbb9bd562c45f638"><td class="mdescLeft">&#160;</td><td class="mdescRight">If set to 1, bind only two sockets per thread to reduce duplicate multicast traffic.  <a href="group__sacnopts__receiver.html#ga6bfc294d941da830fbb9bd562c45f638">More...</a><br /></td></tr>
+<tr class="separator:ga6bfc294d941da830fbb9bd562c45f638"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab20e9727556f9656a506bb85628f7df8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#gab20e9727556f9656a506bb85628f7df8">SACN_RECEIVER_MAX_SUBS_PER_SOCKET</a>&#160;&#160;&#160;20</td></tr>
 <tr class="memdesc:gab20e9727556f9656a506bb85628f7df8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of multicast subscriptions supported per shared socket.  <a href="group__sacnopts__receiver.html#gab20e9727556f9656a506bb85628f7df8">More...</a><br /></td></tr>
 <tr class="separator:gab20e9727556f9656a506bb85628f7df8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga064a427072df41e909b7d78cdb233c64"><td class="memItemLeft" align="right" valign="top">
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga064a427072df41e909b7d78cdb233c64">SACN_RECEIVER_MAX_THREADS</a>&#160;&#160;&#160;4</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga064a427072df41e909b7d78cdb233c64">SACN_RECEIVER_MAX_THREADS</a>&#160;&#160;&#160;1</td></tr>
 <tr class="memdesc:ga064a427072df41e909b7d78cdb233c64"><td class="mdescLeft">&#160;</td><td class="mdescRight">Currently unused; will be used in the future. <br /></td></tr>
 <tr class="separator:ga064a427072df41e909b7d78cdb233c64"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga841d6f465d02b8d4b9e6a3cbe00d5beb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__send.html#ga841d6f465d02b8d4b9e6a3cbe00d5beb">SACN_SOURCE_MAX_UNIVERSES</a>&#160;&#160;&#160;4</td></tr>
-<tr class="memdesc:ga841d6f465d02b8d4b9e6a3cbe00d5beb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of universes that can be sent on simultaneously.  <a href="group__sacnopts__send.html#ga841d6f465d02b8d4b9e6a3cbe00d5beb">More...</a><br /></td></tr>
+<tr class="memdesc:ga841d6f465d02b8d4b9e6a3cbe00d5beb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of universes that a source can send to simultaneously.  <a href="group__sacnopts__send.html#ga841d6f465d02b8d4b9e6a3cbe00d5beb">More...</a><br /></td></tr>
 <tr class="separator:ga841d6f465d02b8d4b9e6a3cbe00d5beb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga89234d893ef926283cb8cbff5f465380"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__send.html#ga89234d893ef926283cb8cbff5f465380">SACN_SOURCE_MAX_STARTCODES_PER_UNIVERSE</a>&#160;&#160;&#160;2</td></tr>
-<tr class="memdesc:ga89234d893ef926283cb8cbff5f465380"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of start codes that can be added to each sending universe.  <a href="group__sacnopts__send.html#ga89234d893ef926283cb8cbff5f465380">More...</a><br /></td></tr>
-<tr class="separator:ga89234d893ef926283cb8cbff5f465380"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7d15f54f43af8434b4967746f1282fb1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__dmx__merger.html#ga7d15f54f43af8434b4967746f1282fb1">SACN_DMX_MERGER_MAX_MERGERS</a>&#160;&#160;&#160;<a class="el" href="group__sacnopts__receiver.html#ga5d749b5a5b67d89a114aa2409ba6ff62">SACN_RECEIVER_MAX_UNIVERSES</a></td></tr>
+<tr class="memdesc:ga7d15f54f43af8434b4967746f1282fb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of mergers that can be instanced.  <a href="group__sacnopts__dmx__merger.html#ga7d15f54f43af8434b4967746f1282fb1">More...</a><br /></td></tr>
+<tr class="separator:ga7d15f54f43af8434b4967746f1282fb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaaeaa9701ec2b290ddfb3b31d8463dca4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__dmx__merger.html#gaaeaa9701ec2b290ddfb3b31d8463dca4">SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER</a>&#160;&#160;&#160;<a class="el" href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e">SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</a></td></tr>
+<tr class="memdesc:gaaeaa9701ec2b290ddfb3b31d8463dca4"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of sources that can be merged on each merger instance.  <a href="group__sacnopts__dmx__merger.html#gaaeaa9701ec2b290ddfb3b31d8463dca4">More...</a><br /></td></tr>
+<tr class="separator:gaaeaa9701ec2b290ddfb3b31d8463dca4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga75cc0df47297d4051307c283d398d12a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__source__detector.html#ga75cc0df47297d4051307c283d398d12a">SACN_SOURCE_DETECTOR_THREAD_PRIORITY</a>&#160;&#160;&#160;<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__thread.html#ga3539233977b6e793b9b5a4c071fd6e78">ETCPAL_THREAD_DEFAULT_PRIORITY</a></td></tr>
+<tr class="memdesc:ga75cc0df47297d4051307c283d398d12a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The priority of the sACN source detector thread.  <a href="group__sacnopts__source__detector.html#ga75cc0df47297d4051307c283d398d12a">More...</a><br /></td></tr>
+<tr class="separator:ga75cc0df47297d4051307c283d398d12a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae3fd4d040877d49d52ab3b52e64897e5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__source__detector.html#gae3fd4d040877d49d52ab3b52e64897e5">SACN_SOURCE_DETECTOR_THREAD_STACK</a>&#160;&#160;&#160;<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__thread.html#gac4147a48a462f0c5b9758334b41243a9">ETCPAL_THREAD_DEFAULT_STACK</a></td></tr>
+<tr class="memdesc:gae3fd4d040877d49d52ab3b52e64897e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">The stack size of each sACN source detector thread.  <a href="group__sacnopts__source__detector.html#gae3fd4d040877d49d52ab3b52e64897e5">More...</a><br /></td></tr>
+<tr class="separator:gae3fd4d040877d49d52ab3b52e64897e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf49c37ed22894c9db85e376833727ee3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__source__detector.html#gaf49c37ed22894c9db85e376833727ee3">SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS</a>&#160;&#160;&#160;100</td></tr>
+<tr class="memdesc:gaf49c37ed22894c9db85e376833727ee3"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum amount of time the Source Detector thread will block waiting for data, in milliseconds.  <a href="group__sacnopts__source__detector.html#gaf49c37ed22894c9db85e376833727ee3">More...</a><br /></td></tr>
+<tr class="separator:gaf49c37ed22894c9db85e376833727ee3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga872fc4bd419f3cc3d77e7502f0b1ed0e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__source__detector.html#ga872fc4bd419f3cc3d77e7502f0b1ed0e">SACN_SOURCE_DETECTOR_MAX_SOURCES</a>&#160;&#160;&#160;5</td></tr>
+<tr class="memdesc:ga872fc4bd419f3cc3d77e7502f0b1ed0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of sACN sources that can be monitored.  <a href="group__sacnopts__source__detector.html#ga872fc4bd419f3cc3d77e7502f0b1ed0e">More...</a><br /></td></tr>
+<tr class="separator:ga872fc4bd419f3cc3d77e7502f0b1ed0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga24e186592053bd29fbffbfc92825268e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__source__detector.html#ga24e186592053bd29fbffbfc92825268e">SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE</a>&#160;&#160;&#160;5</td></tr>
+<tr class="memdesc:ga24e186592053bd29fbffbfc92825268e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of sACN universes that can be tracked on each source.  <a href="group__sacnopts__source__detector.html#ga24e186592053bd29fbffbfc92825268e">More...</a><br /></td></tr>
+<tr class="separator:ga24e186592053bd29fbffbfc92825268e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>sACN configuration options. </p>

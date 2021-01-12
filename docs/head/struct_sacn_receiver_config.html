@@ -21,8 +21,8 @@
   <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
-  <link href="doxygen.css" rel="stylesheet" type="text/css" />
-  <!--BEGIN CUSTOM SCRIPT-->
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
   <script type="text/javascript">
     $(function () {
       $.get('/sACN/versions.txt', function (data) {
@@ -52,6 +52,76 @@
         }
       }, 'text');
     });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
   </script>
   <!--END CUSTOM SCRIPT-->
 </head>
@@ -131,50 +201,23 @@ $(document).ready(function(){initNavTree('struct_sacn_receiver_config.html','');
 <div class="title">SacnReceiverConfig Struct Reference<div class="ingroups"><a class="el" href="group__s_a_c_n.html">sACN</a> &raquo; <a class="el" href="group__sacn__receiver.html">sACN Receiver</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>A set of configuration information for an sACN receiver.  
- <a href="struct_sacn_receiver_config.html#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr class="memitem:a7e0de4d0f4e4bbd14771257febdf7248"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_receiver_config.html#a7e0de4d0f4e4bbd14771257febdf7248">universe_id</a></td></tr>
-<tr class="memdesc:a7e0de4d0f4e4bbd14771257febdf7248"><td class="mdescLeft">&#160;</td><td class="mdescRight">Universe number on which to listen for sACN.  <a href="#a7e0de4d0f4e4bbd14771257febdf7248">More...</a><br /></td></tr>
 <tr class="separator:a7e0de4d0f4e4bbd14771257febdf7248"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4beb413a7e2291bf1488fc6472af6aa4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__sacn__receiver.html#ga23f7f1621591aca86090172aab798576">SacnReceiverCallbacks</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_receiver_config.html#a4beb413a7e2291bf1488fc6472af6aa4">callbacks</a></td></tr>
-<tr class="memdesc:a4beb413a7e2291bf1488fc6472af6aa4"><td class="mdescLeft">&#160;</td><td class="mdescRight">The callbacks this receiver will use to notify the application of events.  <a href="#a4beb413a7e2291bf1488fc6472af6aa4">More...</a><br /></td></tr>
 <tr class="separator:a4beb413a7e2291bf1488fc6472af6aa4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa56795d5b57bff4910ce11baac4003ba"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_receiver_config.html#aa56795d5b57bff4910ce11baac4003ba">source_count_max</a></td></tr>
+<tr class="separator:aa56795d5b57bff4910ce11baac4003ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac92588540e8c1d014a08cd8a45462b19"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_receiver_config.html#ac92588540e8c1d014a08cd8a45462b19">flags</a></td></tr>
-<tr class="memdesc:ac92588540e8c1d014a08cd8a45462b19"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of option flags.  <a href="#ac92588540e8c1d014a08cd8a45462b19">More...</a><br /></td></tr>
 <tr class="separator:ac92588540e8c1d014a08cd8a45462b19"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67b5953b36108e04f24abe803bc1fe44"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_receiver_config.html#a67b5953b36108e04f24abe803bc1fe44">callback_context</a></td></tr>
-<tr class="memdesc:a67b5953b36108e04f24abe803bc1fe44"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to opaque data passed back with each callback.  <a href="#a67b5953b36108e04f24abe803bc1fe44">More...</a><br /></td></tr>
-<tr class="separator:a67b5953b36108e04f24abe803bc1fe44"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab49037c719a547c372444fe92eba91c8"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="struct_sacn_mcast_netint_id.html">SacnMcastNetintId</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_receiver_config.html#ab49037c719a547c372444fe92eba91c8">netints</a></td></tr>
-<tr class="memdesc:ab49037c719a547c372444fe92eba91c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">(optional) array of network interfaces on which to listen to the specified universe.  <a href="#ab49037c719a547c372444fe92eba91c8">More...</a><br /></td></tr>
-<tr class="separator:ab49037c719a547c372444fe92eba91c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ddc029bb8aba3ead075508554592445"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_receiver_config.html#a6ddc029bb8aba3ead075508554592445">num_netints</a></td></tr>
-<tr class="memdesc:a6ddc029bb8aba3ead075508554592445"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of elements in the netints array.  <a href="#a6ddc029bb8aba3ead075508554592445">More...</a><br /></td></tr>
-<tr class="separator:a6ddc029bb8aba3ead075508554592445"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab619351af6b7a5abcb23e38bdc09e984"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_receiver_config.html#ab619351af6b7a5abcb23e38bdc09e984">ip_supported</a></td></tr>
+<tr class="separator:ab619351af6b7a5abcb23e38bdc09e984"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A set of configuration information for an sACN receiver. </p>
 </div><h2 class="groupheader">Field Documentation</h2>
-<a id="a67b5953b36108e04f24abe803bc1fe44"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a67b5953b36108e04f24abe803bc1fe44">&#9670;&nbsp;</a></span>callback_context</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void* callback_context</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Pointer to opaque data passed back with each callback. </p>
-
-</div>
-</div>
 <a id="a4beb413a7e2291bf1488fc6472af6aa4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4beb413a7e2291bf1488fc6472af6aa4">&#9670;&nbsp;</a></span>callbacks</h2>
 
@@ -186,7 +229,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>The callbacks this receiver will use to notify the application of events. </p>
 
 </div>
@@ -202,42 +244,37 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>A set of option flags. </p>
-<p>See "sACN receiver flags". </p>
+<p>A set of option flags. See "sACN receiver flags". </p>
 
 </div>
 </div>
-<a id="ab49037c719a547c372444fe92eba91c8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab49037c719a547c372444fe92eba91c8">&#9670;&nbsp;</a></span>netints</h2>
+<a id="ab619351af6b7a5abcb23e38bdc09e984"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab619351af6b7a5abcb23e38bdc09e984">&#9670;&nbsp;</a></span>ip_supported</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="struct_sacn_mcast_netint_id.html">SacnMcastNetintId</a>* netints</td>
+          <td class="memname"><a class="el" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a> ip_supported</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>(optional) array of network interfaces on which to listen to the specified universe. </p>
-<p>If NULL, all available network interfaces will be used. </p>
+<p>What IP networking the receiver will support. The default is <a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2">kSacnIpV4AndIpV6</a>. </p>
 
 </div>
 </div>
-<a id="a6ddc029bb8aba3ead075508554592445"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6ddc029bb8aba3ead075508554592445">&#9670;&nbsp;</a></span>num_netints</h2>
+<a id="aa56795d5b57bff4910ce11baac4003ba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa56795d5b57bff4910ce11baac4003ba">&#9670;&nbsp;</a></span>source_count_max</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">size_t num_netints</td>
+          <td class="memname">int source_count_max</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Number of elements in the netints array. </p>
+<p>The maximum number of sources this universe will listen to. May be <a class="el" href="group__sacn__receiver.html#gadb2ea19692692ca852423d0a9de749ea" title="Constant for &quot;infinite&quot; when listening or merging sACN universes. ">SACN_RECEIVER_INFINITE_SOURCES</a>. This parameter is ignored when configured to use static memory &ndash; <a class="el" href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e" title="The maximum number of sources that can be tracked on each universe. ">SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</a> is used instead. </p>
 
 </div>
 </div>
@@ -252,7 +289,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Universe number on which to listen for sACN. </p>
 
 </div>

@@ -21,8 +21,8 @@
   <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
-  <link href="doxygen.css" rel="stylesheet" type="text/css" />
-  <!--BEGIN CUSTOM SCRIPT-->
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
   <script type="text/javascript">
     $(function () {
       $.get('/sACN/versions.txt', function (data) {
@@ -52,6 +52,76 @@
         }
       }, 'text');
     });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
   </script>
   <!--END CUSTOM SCRIPT-->
 </head>
@@ -131,9 +201,6 @@ $(document).ready(function(){initNavTree('group__sacnopts__receiver.html','');})
 <div class="title">sACN Receiver Options<div class="ingroups"><a class="el" href="group__s_a_c_n.html">sACN</a> &raquo; <a class="el" href="group__sacnopts.html">sACN Configuration Options</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Configuration options for the <a class="el" href="group__sacn__receiver.html">sACN Receiver</a> module.  
-<a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -146,29 +213,48 @@ Macros</h2></td></tr>
 <tr class="memitem:gae7ae8c07912489f40fa77146cdc93d71"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#gae7ae8c07912489f40fa77146cdc93d71">SACN_RECEIVER_READ_TIMEOUT_MS</a>&#160;&#160;&#160;100</td></tr>
 <tr class="memdesc:gae7ae8c07912489f40fa77146cdc93d71"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum amount of time that a call to sacnrecv_read() will block waiting for data, in milliseconds.  <a href="#gae7ae8c07912489f40fa77146cdc93d71">More...</a><br /></td></tr>
 <tr class="separator:gae7ae8c07912489f40fa77146cdc93d71"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5d749b5a5b67d89a114aa2409ba6ff62"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga5d749b5a5b67d89a114aa2409ba6ff62">SACN_RECEIVER_MAX_UNIVERSES</a>&#160;&#160;&#160;4</td></tr>
+<tr class="memitem:ga5d749b5a5b67d89a114aa2409ba6ff62"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga5d749b5a5b67d89a114aa2409ba6ff62">SACN_RECEIVER_MAX_UNIVERSES</a>&#160;&#160;&#160;8</td></tr>
 <tr class="memdesc:ga5d749b5a5b67d89a114aa2409ba6ff62"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of sACN universes that can be listened to simultaneously.  <a href="#ga5d749b5a5b67d89a114aa2409ba6ff62">More...</a><br /></td></tr>
 <tr class="separator:ga5d749b5a5b67d89a114aa2409ba6ff62"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga079b2f51919b9ac76e3b3330040bd20e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e">SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</a>&#160;&#160;&#160;10</td></tr>
+<tr class="memitem:ga079b2f51919b9ac76e3b3330040bd20e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e">SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</a>&#160;&#160;&#160;8</td></tr>
 <tr class="memdesc:ga079b2f51919b9ac76e3b3330040bd20e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of sources that can be tracked on each universe.  <a href="#ga079b2f51919b9ac76e3b3330040bd20e">More...</a><br /></td></tr>
 <tr class="separator:ga079b2f51919b9ac76e3b3330040bd20e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga055b24b2c72073823f4c92ed32e7ddb0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga055b24b2c72073823f4c92ed32e7ddb0">SACN_RECEIVER_TOTAL_MAX_SOURCES</a>&#160;&#160;&#160;(<a class="el" href="group__sacnopts__receiver.html#ga5d749b5a5b67d89a114aa2409ba6ff62">SACN_RECEIVER_MAX_UNIVERSES</a> * <a class="el" href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e">SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</a>)</td></tr>
 <tr class="memdesc:ga055b24b2c72073823f4c92ed32e7ddb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">The total maximum number of sources that can be tracked.  <a href="#ga055b24b2c72073823f4c92ed32e7ddb0">More...</a><br /></td></tr>
 <tr class="separator:ga055b24b2c72073823f4c92ed32e7ddb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1d57b20e8b100a0787d286e05683ba9a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga1d57b20e8b100a0787d286e05683ba9a">SACN_RECEIVER_SOCKET_PER_UNIVERSE</a>&#160;&#160;&#160;(!_WIN32 &amp;&amp; !__APPLE__)</td></tr>
-<tr class="memdesc:ga1d57b20e8b100a0787d286e05683ba9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether a new network socket should be created for every sACN universe being listened to.  <a href="#ga1d57b20e8b100a0787d286e05683ba9a">More...</a><br /></td></tr>
-<tr class="separator:ga1d57b20e8b100a0787d286e05683ba9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6bfc294d941da830fbb9bd562c45f638"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga6bfc294d941da830fbb9bd562c45f638">SACN_RECEIVER_LIMIT_BIND</a>&#160;&#160;&#160;(!_WIN32 &amp;&amp; !__APPLE__)</td></tr>
+<tr class="memdesc:ga6bfc294d941da830fbb9bd562c45f638"><td class="mdescLeft">&#160;</td><td class="mdescRight">If set to 1, bind only two sockets per thread to reduce duplicate multicast traffic.  <a href="#ga6bfc294d941da830fbb9bd562c45f638">More...</a><br /></td></tr>
+<tr class="separator:ga6bfc294d941da830fbb9bd562c45f638"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab20e9727556f9656a506bb85628f7df8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#gab20e9727556f9656a506bb85628f7df8">SACN_RECEIVER_MAX_SUBS_PER_SOCKET</a>&#160;&#160;&#160;20</td></tr>
 <tr class="memdesc:gab20e9727556f9656a506bb85628f7df8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of multicast subscriptions supported per shared socket.  <a href="#gab20e9727556f9656a506bb85628f7df8">More...</a><br /></td></tr>
 <tr class="separator:gab20e9727556f9656a506bb85628f7df8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga064a427072df41e909b7d78cdb233c64"><td class="memItemLeft" align="right" valign="top"><a id="ga064a427072df41e909b7d78cdb233c64"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga064a427072df41e909b7d78cdb233c64">SACN_RECEIVER_MAX_THREADS</a>&#160;&#160;&#160;4</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__receiver.html#ga064a427072df41e909b7d78cdb233c64">SACN_RECEIVER_MAX_THREADS</a>&#160;&#160;&#160;1</td></tr>
 <tr class="memdesc:ga064a427072df41e909b7d78cdb233c64"><td class="mdescLeft">&#160;</td><td class="mdescRight">Currently unused; will be used in the future. <br /></td></tr>
 <tr class="separator:ga064a427072df41e909b7d78cdb233c64"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Configuration options for the <a class="el" href="group__sacn__receiver.html">sACN Receiver</a> module. </p>
 <h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="ga6bfc294d941da830fbb9bd562c45f638"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga6bfc294d941da830fbb9bd562c45f638">&#9670;&nbsp;</a></span>SACN_RECEIVER_LIMIT_BIND</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_RECEIVER_LIMIT_BIND&#160;&#160;&#160;(!_WIN32 &amp;&amp; !__APPLE__)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>If set to 1, bind only two sockets per thread to reduce duplicate multicast traffic. </p>
+<p>Each sACN receiver socket joins up to <a class="el" href="group__sacnopts__receiver.html#gab20e9727556f9656a506bb85628f7df8" title="The maximum number of multicast subscriptions supported per shared socket. ">SACN_RECEIVER_MAX_SUBS_PER_SOCKET</a> unique multicast groups. If <a class="el" href="group__sacnopts__receiver.html#ga6bfc294d941da830fbb9bd562c45f638" title="If set to 1, bind only two sockets per thread to reduce duplicate multicast traffic. ">SACN_RECEIVER_LIMIT_BIND</a> is 0, then each socket binds to the wildcard. On certain platforms, this results in multicast traffic being duplicated between sockets. In this case, setting <a class="el" href="group__sacnopts__receiver.html#ga6bfc294d941da830fbb9bd562c45f638" title="If set to 1, bind only two sockets per thread to reduce duplicate multicast traffic. ">SACN_RECEIVER_LIMIT_BIND</a> to 1 will limit sACN to binding (and polling) just two sockets per thread (one for IPv4 and another for IPv6). The purpose is to cause all multicast and unicast traffic to go to the bound sockets and reduce duplication. This has been verified to work on Linux and lwIP.</p>
+<p>Set this to 0 in your sacn_config.h if the default causes packets to be lost on your platform.</p>
+<p>Don't change this option unless you know what you're doing. </p>
+
+</div>
+</div>
 <a id="ga079b2f51919b9ac76e3b3330040bd20e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga079b2f51919b9ac76e3b3330040bd20e">&#9670;&nbsp;</a></span>SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</h2>
 
@@ -176,7 +262,7 @@ Macros</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE&#160;&#160;&#160;10</td>
+          <td class="memname">#define SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE&#160;&#160;&#160;8</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -199,7 +285,7 @@ Macros</h2></td></tr>
 </div><div class="memdoc">
 
 <p>The maximum number of multicast subscriptions supported per shared socket. </p>
-<p>Only meaningful if <a class="el" href="group__sacnopts__receiver.html#ga1d57b20e8b100a0787d286e05683ba9a" title="Whether a new network socket should be created for every sACN universe being listened to...">SACN_RECEIVER_SOCKET_PER_UNIVERSE</a> is defined to 0. For the shared socket model, we cap multicast subscriptions at a certain number to keep it below the system limit.</p>
+<p>We cap multicast subscriptions at a certain number to keep it below the system limit.</p>
 <p>Don't change this option unless you know what you're doing. </p>
 
 </div>
@@ -211,7 +297,7 @@ Macros</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define SACN_RECEIVER_MAX_UNIVERSES&#160;&#160;&#160;4</td>
+          <td class="memname">#define SACN_RECEIVER_MAX_UNIVERSES&#160;&#160;&#160;8</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -235,25 +321,6 @@ Macros</h2></td></tr>
 
 <p>The maximum amount of time that a call to sacnrecv_read() will block waiting for data, in milliseconds. </p>
 <p>It is recommended to keep this time short to avoid delays on shutdown. </p>
-
-</div>
-</div>
-<a id="ga1d57b20e8b100a0787d286e05683ba9a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga1d57b20e8b100a0787d286e05683ba9a">&#9670;&nbsp;</a></span>SACN_RECEIVER_SOCKET_PER_UNIVERSE</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define SACN_RECEIVER_SOCKET_PER_UNIVERSE&#160;&#160;&#160;(!_WIN32 &amp;&amp; !__APPLE__)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Whether a new network socket should be created for every sACN universe being listened to. </p>
-<p>This option exists to account for quirks in different network stacks. On stacks where multicast traffic is not excessively duplicated between sockets, we conserve sockets by sharing a single socket for multiple multicast subscriptions.</p>
-<p>The default value of this option represents the result of testing the code on Windows, macOS, Linux, lwIP, VxWorks and MQX. Some other *nixes, like FreeBSD etc., are not tested but assumed to be similar to Linux (this assumption may be wrong).</p>
-<p>The upshot is: don't change this option unless you know what you're doing. </p>
 
 </div>
 </div>

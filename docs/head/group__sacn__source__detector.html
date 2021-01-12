@@ -1,0 +1,675 @@
+<!-- HTML header for doxygen 1.8.14-->
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=9" />
+  <meta name="generator" content="Doxygen 1.8.13" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>sACN: sACN Source Detector</title>
+  <link href="tabs.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="text/javascript" src="dynsections.js"></script>
+  <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript">
+  $(document).ready(initResizable);
+</script>
+  <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
+  <script type="text/javascript">
+    $(function () {
+      $.get('/sACN/versions.txt', function (data) {
+        if (data) {
+          var lines = data.split('\n');
+          if (lines.length > 0) {
+            var version_select = $("#version_select").empty();
+            lines.forEach(function (line) {
+              line = line.trim();
+              if (!line) {
+                return;
+              }
+              line = line.split(':');
+              var option_name = line[0].replace(/^v/, '');
+              if (line.length > 1) {
+                option_name += ' (' + line[1] + ')';
+              }
+              var option_val = '/sACN/docs/' + line[0];
+              var option = $('<option></option>').attr("value", option_val)
+                .text(option_name);
+              if (window.location.pathname.match('docs/' + line[0])) {
+                option = option.attr("selected", "selected");
+              }
+              version_select.append(option);
+            });
+          }
+        }
+      }, 'text');
+    });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
+  </script>
+  <!--END CUSTOM SCRIPT-->
+</head>
+<body>
+  <div id="top">
+    <!-- do not remove this div, it is closed by doxygen! -->
+    <div id="titlearea">
+      <table cellspacing="0" cellpadding="0" style="width: 100%">
+        <tbody>
+          <tr style="height: 56px;">
+            <td id="projectalign" style="padding-left: 0.5em;">
+              <div id="projectname">sACN
+                &#160;<span id="projectnumber">HEAD (unstable)</span>
+              </div>
+              <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+            </td>
+            <!--BEGIN CUSTOM INSERTED SECTION-->
+            <td style="text-align: right; padding-right: 0.5em">
+              <div id="otherversions">
+                View other versions:
+                <select id="version_select" onchange="location = this.value">
+                </select>
+              </div>
+            </td>
+            <!--END CUSTOM INSERTED SECTION-->
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- end header part -->
+<!-- Generated by Doxygen 1.8.13 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "search",false,'Search');
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(document).ready(function(){initNavTree('group__sacn__source__detector.html','');});
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#nested-classes">Data Structures</a> &#124;
+<a href="#define-members">Macros</a> &#124;
+<a href="#typedef-members">Typedefs</a> &#124;
+<a href="#func-members">Functions</a>  </div>
+  <div class="headertitle">
+<div class="title">sACN Source Detector<div class="ingroups"><a class="el" href="group__s_a_c_n.html">sACN</a></div></div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>The sACN Source Detector API.  
+<a href="#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_detector_callbacks.html">SacnSourceDetectorCallbacks</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_detector_config.html">SacnSourceDetectorConfig</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:gab88bc563fd6b6527aced6f38375d1f34"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#gab88bc563fd6b6527aced6f38375d1f34">SACN_SOURCE_DETECTOR_INVALID</a>&#160;&#160;&#160;-1</td></tr>
+<tr class="separator:gab88bc563fd6b6527aced6f38375d1f34"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga2a1bee1e4fe7a47ee053c8dbae05fbcb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#ga2a1bee1e4fe7a47ee053c8dbae05fbcb">SACN_SOURCE_DETECTOR_INFINITE</a>&#160;&#160;&#160;0</td></tr>
+<tr class="memdesc:ga2a1bee1e4fe7a47ee053c8dbae05fbcb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constant for "infinite" when listening for sources or universes on a source.  <a href="#ga2a1bee1e4fe7a47ee053c8dbae05fbcb">More...</a><br /></td></tr>
+<tr class="separator:ga2a1bee1e4fe7a47ee053c8dbae05fbcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga78fbb7639c835e3b08091fc16e31d6fc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#ga78fbb7639c835e3b08091fc16e31d6fc">SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT</a></td></tr>
+<tr class="separator:ga78fbb7639c835e3b08091fc16e31d6fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:gae5777f528b22a2e6f764998dc1aa7ba3"><td class="memItemLeft" align="right" valign="top">typedef int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a></td></tr>
+<tr class="separator:gae5777f528b22a2e6f764998dc1aa7ba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad26c44cdfdb22ad895f1849c03f06070"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#gad26c44cdfdb22ad895f1849c03f06070">SacnSourceDetectorSourceUpdatedCallback</a>) (<a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> handle, const <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html">EtcPalUuid</a> *cid, const char *name, const uint16_t *sourced_universes, size_t num_sourced_universes, void *context)</td></tr>
+<tr class="memdesc:gad26c44cdfdb22ad895f1849c03f06070"><td class="mdescLeft">&#160;</td><td class="mdescRight">Notify that a source is new or has changed.  <a href="#gad26c44cdfdb22ad895f1849c03f06070">More...</a><br /></td></tr>
+<tr class="separator:gad26c44cdfdb22ad895f1849c03f06070"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8488af2e8e5b637de22792bf273cff27"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#ga8488af2e8e5b637de22792bf273cff27">SacnSourceDetectorSourceExpiredCallback</a>) (<a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> handle, const <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html">EtcPalUuid</a> *cid, const char *name, void *context)</td></tr>
+<tr class="memdesc:ga8488af2e8e5b637de22792bf273cff27"><td class="mdescLeft">&#160;</td><td class="mdescRight">Notify that a source is no longer transmitting Universe Discovery messages.  <a href="#ga8488af2e8e5b637de22792bf273cff27">More...</a><br /></td></tr>
+<tr class="separator:ga8488af2e8e5b637de22792bf273cff27"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac985ddbe48c2d58e0ee11f2ae686c446"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#gac985ddbe48c2d58e0ee11f2ae686c446">SacnSourceDetectorLimitExceededCallback</a>) (<a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> handle, void *context)</td></tr>
+<tr class="memdesc:gac985ddbe48c2d58e0ee11f2ae686c446"><td class="mdescLeft">&#160;</td><td class="mdescRight">Notify that the module has run out of memory to track universes or sources.  <a href="#gac985ddbe48c2d58e0ee11f2ae686c446">More...</a><br /></td></tr>
+<tr class="separator:gac985ddbe48c2d58e0ee11f2ae686c446"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1ec1bb83ff45d6234d4f863e05740b52"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_source_detector_callbacks.html">SacnSourceDetectorCallbacks</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#ga1ec1bb83ff45d6234d4f863e05740b52">SacnSourceDetectorCallbacks</a></td></tr>
+<tr class="separator:ga1ec1bb83ff45d6234d4f863e05740b52"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac3ff53d6617624c7ded56400ecd47986"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_source_detector_config.html">SacnSourceDetectorConfig</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#gac3ff53d6617624c7ded56400ecd47986">SacnSourceDetectorConfig</a></td></tr>
+<tr class="separator:gac3ff53d6617624c7ded56400ecd47986"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:gaaf2f5a453a68df1ed4dcc80e1a94a49a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#gaaf2f5a453a68df1ed4dcc80e1a94a49a">sacn_source_detector_config_init</a> (<a class="el" href="struct_sacn_source_detector_config.html">SacnSourceDetectorConfig</a> *config)</td></tr>
+<tr class="memdesc:gaaf2f5a453a68df1ed4dcc80e1a94a49a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize an sACN Source Detector Config struct to default values.  <a href="#gaaf2f5a453a68df1ed4dcc80e1a94a49a">More...</a><br /></td></tr>
+<tr class="separator:gaaf2f5a453a68df1ed4dcc80e1a94a49a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga69032258ec3566c60bfc4821637b6614"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#ga69032258ec3566c60bfc4821637b6614">sacn_source_detector_create</a> (const <a class="el" href="struct_sacn_source_detector_config.html">SacnSourceDetectorConfig</a> *config, <a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> *handle, <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *netints, size_t num_netints)</td></tr>
+<tr class="memdesc:ga69032258ec3566c60bfc4821637b6614"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new sACN Source Detector.  <a href="#ga69032258ec3566c60bfc4821637b6614">More...</a><br /></td></tr>
+<tr class="separator:ga69032258ec3566c60bfc4821637b6614"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga10b00fba6e711281151ed334e9c3a6f0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#ga10b00fba6e711281151ed334e9c3a6f0">sacn_source_detector_destroy</a> (<a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> handle)</td></tr>
+<tr class="memdesc:ga10b00fba6e711281151ed334e9c3a6f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy a sACN Source Detector instance.  <a href="#ga10b00fba6e711281151ed334e9c3a6f0">More...</a><br /></td></tr>
+<tr class="separator:ga10b00fba6e711281151ed334e9c3a6f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf5d0e57eac28ea91e21e269287ac6135"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#gaf5d0e57eac28ea91e21e269287ac6135">sacn_source_detector_reset_networking</a> (<a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> handle, <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *netints, size_t num_netints)</td></tr>
+<tr class="memdesc:gaf5d0e57eac28ea91e21e269287ac6135"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets and packet receipt state for the sACN Source Detector.  <a href="#gaf5d0e57eac28ea91e21e269287ac6135">More...</a><br /></td></tr>
+<tr class="separator:gaf5d0e57eac28ea91e21e269287ac6135"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaefffadefd645c6ca12fc1fe829209666"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html#gaefffadefd645c6ca12fc1fe829209666">sacn_source_detector_get_network_interfaces</a> (<a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> handle, <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *netints, size_t netints_size)</td></tr>
+<tr class="memdesc:gaefffadefd645c6ca12fc1fe829209666"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain the statuses of a source detector's network interfaces.  <a href="#gaefffadefd645c6ca12fc1fe829209666">More...</a><br /></td></tr>
+<tr class="separator:gaefffadefd645c6ca12fc1fe829209666"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<p>The sACN Source Detector API. </p>
+<p>sACN sources often periodically send Universe Discovery packets to announce what universes they are sourcing. Use this API to monitor such traffic for your own needs.</p>
+<p>Usage: </p><div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="source__detector_8h.html">sacn/source_detector.h</a>&quot;</span></div><div class="line"></div><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_log_params.html">EtcPalLogParams</a> log_params = <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__log.html#ga24911b91f9e4d5043348096a3065cd41">ETCPAL_LOG_PARAMS_INIT</a>;</div><div class="line"><span class="comment">// Initialize log_params...</span></div><div class="line"></div><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> init_result = <a class="code" href="group__s_a_c_n.html#ga06e5eacb42e03b67c65ed299500a8366">sacn_init</a>(&amp;log_params);</div><div class="line"><span class="comment">// Or, to init without worrying about logs from the sACN library...</span></div><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> init_result = <a class="code" href="group__s_a_c_n.html#ga06e5eacb42e03b67c65ed299500a8366">sacn_init</a>(NULL);</div><div class="line"></div><div class="line"><a class="code" href="struct_sacn_source_detector_config.html">SacnSourceDetectorConfig</a> my_config = <a class="code" href="group__sacn__source__detector.html#ga78fbb7639c835e3b08091fc16e31d6fc">SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT</a>;</div><div class="line">my_config.<a class="code" href="struct_sacn_source_detector_config.html#ac7495377d16d49972f79cebbd69f7095">callbacks</a>.<a class="code" href="struct_sacn_source_detector_callbacks.html#ae4d714b0bc64241d5632fe77d013fb45">source_updated</a> = my_source_updated;</div><div class="line">my_config.<a class="code" href="struct_sacn_source_detector_config.html#ac7495377d16d49972f79cebbd69f7095">callbacks</a>.<a class="code" href="struct_sacn_source_detector_callbacks.html#ad53b703dc988168f5b0b5bff06b2d2ff">source_expired</a> = my_source_expired;</div><div class="line">my_config.<a class="code" href="struct_sacn_source_detector_config.html#ac7495377d16d49972f79cebbd69f7095">callbacks</a>.<a class="code" href="struct_sacn_source_detector_callbacks.html#a2a102ec50557c2902e0b43656c0fa33c">limit_exceeded</a> = my_limit_exceeded;</div><div class="line"></div><div class="line"><a class="code" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> my_netints[NUM_MY_NETINTS];</div><div class="line"><span class="comment">// Assuming my_netints and NUM_MY_NETINTS are initialized by the application...</span></div><div class="line"></div><div class="line"><a class="code" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> my_handle;</div><div class="line"></div><div class="line"><span class="comment">// If you want to specify specific network interfaces to use:</span></div><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> create_result = <a class="code" href="group__sacn__source__detector.html#ga69032258ec3566c60bfc4821637b6614">sacn_source_detector_create</a>(&amp;my_config, &amp;my_handle, my_netints, NUM_MY_NETINTS);</div><div class="line"><span class="comment">// Or, if you just want to use all network interfaces:</span></div><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> create_result = <a class="code" href="group__sacn__source__detector.html#ga69032258ec3566c60bfc4821637b6614">sacn_source_detector_create</a>(&amp;my_config, &amp;my_handle, NULL, 0);</div><div class="line"><span class="comment">// Check create_result here...</span></div><div class="line"></div><div class="line"><span class="comment">// Now the thread is running and your callbacks will handle application-side processing.</span></div><div class="line"></div><div class="line"><span class="comment">// What if your network interfaces change? Update my_netints and call this:</span></div><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> reset_result = <a class="code" href="group__sacn__source__detector.html#gaf5d0e57eac28ea91e21e269287ac6135">sacn_source_detector_reset_networking</a>(my_handle, my_netints, NUM_MY_NETINTS);</div><div class="line"><span class="comment">// Check reset_result here...</span></div><div class="line"></div><div class="line"><span class="comment">// To destroy a source detector, call this:</span></div><div class="line"><a class="code" href="group__sacn__source__detector.html#ga10b00fba6e711281151ed334e9c3a6f0">sacn_source_detector_destroy</a>(my_handle);</div><div class="line"></div><div class="line"><span class="comment">// During application shutdown, everything can be cleaned up by calling sacn_deinit.</span></div><div class="line"><a class="code" href="group__s_a_c_n.html#ga7b80ebcafe9eb3240a67785377872f9a">sacn_deinit</a>();</div></div><!-- fragment --><p>Callback demonstrations: </p><div class="fragment"><div class="line"><span class="keywordtype">void</span> my_source_updated(<a class="code" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> handle, <span class="keyword">const</span> <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html">EtcPalUuid</a>* cid, <span class="keyword">const</span> <span class="keywordtype">char</span>* name,</div><div class="line">                       <span class="keyword">const</span> uint16_t* sourced_universes, <span class="keywordtype">size_t</span> num_sourced_universes, <span class="keywordtype">void</span>* context)</div><div class="line">{</div><div class="line">  <span class="keywordflow">if</span> (cid &amp;&amp; name)</div><div class="line">  {</div><div class="line">    <span class="keywordtype">char</span> cid_str[<a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__uuid.html#gabab14207e273082491f7be2a21275092">ETCPAL_UUID_STRING_BYTES</a>];</div><div class="line">    <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__uuid.html#ga479b00b02ab33cf757e9476ad3286336">etcpal_uuid_to_string</a>(cid, cid_str);</div><div class="line">    printf(<span class="stringliteral">&quot;Source Detector (handle %d): Source %s (name %s) &quot;</span>, handle, cid_str, name);</div><div class="line">    <span class="keywordflow">if</span>(sourced_universes)</div><div class="line">    {</div><div class="line">      printf(<span class="stringliteral">&quot;is active on these universes: &quot;</span>);</div><div class="line">      <span class="keywordflow">for</span>(<span class="keywordtype">size_t</span> i = 0; i &lt; num_sourced_universes; ++i)</div><div class="line">        printf(<span class="stringliteral">&quot;%d &quot;</span>, sourced_universes[i]);</div><div class="line">      printf(<span class="stringliteral">&quot;\n&quot;</span>);</div><div class="line">    }</div><div class="line">    <span class="keywordflow">else</span></div><div class="line">    {</div><div class="line">      printf(<span class="stringliteral">&quot;is not active on any universes.\n&quot;</span>);</div><div class="line">    }</div><div class="line">  }</div><div class="line">}</div><div class="line"></div><div class="line"><span class="keywordtype">void</span> my_source_expired(<a class="code" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> handle, <span class="keyword">const</span> <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html">EtcPalUuid</a>* cid, <span class="keyword">const</span> <span class="keywordtype">char</span>* name, <span class="keywordtype">void</span>* context)</div><div class="line">{</div><div class="line">  <span class="keywordflow">if</span> (cid &amp;&amp; name)</div><div class="line">  {</div><div class="line">    <span class="keywordtype">char</span> cid_str[<a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__uuid.html#gabab14207e273082491f7be2a21275092">ETCPAL_UUID_STRING_BYTES</a>];</div><div class="line">    <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__uuid.html#ga479b00b02ab33cf757e9476ad3286336">etcpal_uuid_to_string</a>(cid, cid_str);</div><div class="line">    printf(<span class="stringliteral">&quot;Source Detector (handle %d): Source %s (name %s) has expired.\n&quot;</span>, handle, cid_str, name);</div><div class="line">  }</div><div class="line">}</div><div class="line"></div><div class="line"><span class="keywordtype">void</span> my_limit_exceeded(<a class="code" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> handle, <span class="keywordtype">void</span>* context)</div><div class="line">{</div><div class="line">  printf(<span class="stringliteral">&quot;Source Detector (handle %d): Source/universe limit exceeded!\n&quot;</span>, handle);</div><div class="line">}</div></div><!-- fragment --> <h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="ga78fbb7639c835e3b08091fc16e31d6fc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga78fbb7639c835e3b08091fc16e31d6fc">&#9670;&nbsp;</a></span>SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">{                                                                                                          \</div><div class="line">    {NULL, NULL, NULL, NULL}, <a class="code" href="group__sacn__source__detector.html#ga2a1bee1e4fe7a47ee053c8dbae05fbcb">SACN_SOURCE_DETECTOR_INFINITE</a>, <a class="code" href="group__sacn__source__detector.html#ga2a1bee1e4fe7a47ee053c8dbae05fbcb">SACN_SOURCE_DETECTOR_INFINITE</a>, <a class="code" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2">kSacnIpV4AndIpV6</a> \</div><div class="line">  }</div><div class="ttc" id="group__s_a_c_n_html_gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2"><div class="ttname"><a href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2">kSacnIpV4AndIpV6</a></div><div class="ttdef"><b>Definition:</b> common.h:67</div></div>
+<div class="ttc" id="group__sacn__source__detector_html_ga2a1bee1e4fe7a47ee053c8dbae05fbcb"><div class="ttname"><a href="group__sacn__source__detector.html#ga2a1bee1e4fe7a47ee053c8dbae05fbcb">SACN_SOURCE_DETECTOR_INFINITE</a></div><div class="ttdeci">#define SACN_SOURCE_DETECTOR_INFINITE</div><div class="ttdoc">Constant for &quot;infinite&quot; when listening for sources or universes on a source. </div><div class="ttdef"><b>Definition:</b> source_detector.h:146</div></div>
+</div><!-- fragment --><p>A default-value initializer for an <a class="el" href="struct_sacn_source_detector_config.html">SacnSourceDetectorConfig</a> struct. </p>
+
+</div>
+</div>
+<a id="ga2a1bee1e4fe7a47ee053c8dbae05fbcb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga2a1bee1e4fe7a47ee053c8dbae05fbcb">&#9670;&nbsp;</a></span>SACN_SOURCE_DETECTOR_INFINITE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_SOURCE_DETECTOR_INFINITE&#160;&#160;&#160;0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Constant for "infinite" when listening for sources or universes on a source. </p>
+<p>When using dynamic memory, this constant can be passed in when creating a source detector. It represents an infinite number of sources or universes on a source. </p>
+
+</div>
+</div>
+<a id="gab88bc563fd6b6527aced6f38375d1f34"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab88bc563fd6b6527aced6f38375d1f34">&#9670;&nbsp;</a></span>SACN_SOURCE_DETECTOR_INVALID</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_SOURCE_DETECTOR_INVALID&#160;&#160;&#160;-1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>An invalid sACN source detector handle value. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Typedef Documentation</h2>
+<a id="gae5777f528b22a2e6f764998dc1aa7ba3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gae5777f528b22a2e6f764998dc1aa7ba3">&#9670;&nbsp;</a></span>sacn_source_detector_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef int <a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A handle to an sACN source detector. </p>
+
+</div>
+</div>
+<a id="ga1ec1bb83ff45d6234d4f863e05740b52"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga1ec1bb83ff45d6234d4f863e05740b52">&#9670;&nbsp;</a></span>SacnSourceDetectorCallbacks</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="struct_sacn_source_detector_callbacks.html">SacnSourceDetectorCallbacks</a>  <a class="el" href="struct_sacn_source_detector_callbacks.html">SacnSourceDetectorCallbacks</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A set of callback functions that the library uses to notify the application about source detector events. </p>
+
+</div>
+</div>
+<a id="gac3ff53d6617624c7ded56400ecd47986"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gac3ff53d6617624c7ded56400ecd47986">&#9670;&nbsp;</a></span>SacnSourceDetectorConfig</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="struct_sacn_source_detector_config.html">SacnSourceDetectorConfig</a>  <a class="el" href="struct_sacn_source_detector_config.html">SacnSourceDetectorConfig</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A set of configuration information for a sACN Source Detector. </p>
+
+</div>
+</div>
+<a id="gac985ddbe48c2d58e0ee11f2ae686c446"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gac985ddbe48c2d58e0ee11f2ae686c446">&#9670;&nbsp;</a></span>SacnSourceDetectorLimitExceededCallback</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef void(* SacnSourceDetectorLimitExceededCallback) (<a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> handle, void *context)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Notify that the module has run out of memory to track universes or sources. </p>
+<p>If <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87" title="Use dynamic memory allocation. ">SACN_DYNAMIC_MEM</a> was defined to 1 when sACN was compiled (the default on non-embedded platforms), and the configuration you pass to <a class="el" href="group__sacn__source__detector.html#ga69032258ec3566c60bfc4821637b6614" title="Create a new sACN Source Detector. ">sacn_source_detector_create()</a> has source_count_max and universes_per_source_max set to <a class="el" href="group__sacn__source__detector.html#ga2a1bee1e4fe7a47ee053c8dbae05fbcb" title="Constant for &quot;infinite&quot; when listening for sources or universes on a source. ">SACN_SOURCE_DETECTOR_INFINITE</a>, this callback will never be called and may be set to NULL.</p>
+<p>if <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87" title="Use dynamic memory allocation. ">SACN_DYNAMIC_MEM</a> was defined to 0 when sACN was compiled, source_count_max is ignored and <a class="el" href="group__sacnopts__source__detector.html#ga872fc4bd419f3cc3d77e7502f0b1ed0e" title="The maximum number of sACN sources that can be monitored. ">SACN_SOURCE_DETECTOR_MAX_SOURCES</a> and <a class="el" href="group__sacnopts__source__detector.html#ga24e186592053bd29fbffbfc92825268e" title="The maximum number of sACN universes that can be tracked on each source. ">SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE</a> are used instead.</p>
+<p>This callback is rate-limited: it will only be called when the first universe discovery packet is received that takes the module beyond a memory limit. After that, it will not be called until the number of sources or universes has dropped below the limit and hits it again.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the listening source detector instance. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>Context pointer that was given at the creation of the source detector instance. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga8488af2e8e5b637de22792bf273cff27"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga8488af2e8e5b637de22792bf273cff27">&#9670;&nbsp;</a></span>SacnSourceDetectorSourceExpiredCallback</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef void(* SacnSourceDetectorSourceExpiredCallback) (<a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> handle, const <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html">EtcPalUuid</a> *cid, const char *name, void *context)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Notify that a source is no longer transmitting Universe Discovery messages. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the listening source detector instance. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cid</td><td>The CID of the source. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>The null-terminated UTF-8 string. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>Context pointer that was given at the creation of the source detector instance. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="gad26c44cdfdb22ad895f1849c03f06070"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gad26c44cdfdb22ad895f1849c03f06070">&#9670;&nbsp;</a></span>SacnSourceDetectorSourceUpdatedCallback</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef void(* SacnSourceDetectorSourceUpdatedCallback) (<a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> handle, const <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html">EtcPalUuid</a> *cid, const char *name, const uint16_t *sourced_universes, size_t num_sourced_universes, void *context)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Notify that a source is new or has changed. </p>
+<p>This passes the source's current universe list, but you will only get this callback when the module detects that the source is new or the list has somehow changed.</p>
+<p>The list of sourced universes is guaranteed by the protocol to be numerically sorted.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the listening source detector instance. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cid</td><td>The CID of the source. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>The null-terminated UTF-8 string. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sourced_universes</td><td>Numerically sorted array of the currently sourced universes. Will be NULL if the source is not currently transmitting any universes. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">num_sourced_universes</td><td>Size of the sourced_universes array. Will be 0 if the source is not currently transmitting any universes. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>Context pointer that was given at the creation of the source detector instance. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="gaaf2f5a453a68df1ed4dcc80e1a94a49a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaaf2f5a453a68df1ed4dcc80e1a94a49a">&#9670;&nbsp;</a></span>sacn_source_detector_config_init()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sacn_source_detector_config_init </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct_sacn_source_detector_config.html">SacnSourceDetectorConfig</a> *&#160;</td>
+          <td class="paramname"><em>config</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initialize an sACN Source Detector Config struct to default values. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">config</td><td>Config struct to initialize. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga69032258ec3566c60bfc4821637b6614"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga69032258ec3566c60bfc4821637b6614">&#9670;&nbsp;</a></span>sacn_source_detector_create()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_source_detector_create </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="struct_sacn_source_detector_config.html">SacnSourceDetectorConfig</a> *&#160;</td>
+          <td class="paramname"><em>config</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a> *&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *&#160;</td>
+          <td class="paramname"><em>netints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>num_netints</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a new sACN Source Detector. </p>
+<p>Note that a detector is considered as successfully created if it is able to successfully use any of the network interfaces passed in. This will only return <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">config</td><td>Configuration parameters for the sACN source detector to be created. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">handle</td><td>Filled in on success with a handle to the detector. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If non-NULL, this is the list of interfaces the application wants to use, and the status codes are filled in. If NULL, all available interfaces are tried. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">num_netints</td><td>Optional. The size of netints, or 0 if netints is NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Detector created successfully. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a>: None of the network interfaces provided were usable by the library. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afad16b0fe51e8664f8b30b740ea1e51599">kEtcPalErrNoMem</a>: No room to allocate memory for this detector. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: A network interface ID given was not found on the system. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ga10b00fba6e711281151ed334e9c3a6f0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga10b00fba6e711281151ed334e9c3a6f0">&#9670;&nbsp;</a></span>sacn_source_detector_destroy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sacn_source_detector_destroy </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Destroy a sACN Source Detector instance. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the detector to destroy. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="gaefffadefd645c6ca12fc1fe829209666"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaefffadefd645c6ca12fc1fe829209666">&#9670;&nbsp;</a></span>sacn_source_detector_get_network_interfaces()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t sacn_source_detector_get_network_interfaces </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *&#160;</td>
+          <td class="paramname"><em>netints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>netints_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Obtain the statuses of a source detector's network interfaces. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the source detector for which to obtain the list of network interfaces. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">netints</td><td>A pointer to an application-owned array where the network interface list will be written. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">netints_size</td><td>The size of the provided netints array. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The total number of network interfaces for the source detector. If this is greater than netints_size, then only netints_size addresses were written to the netints array. If the source detector was not found, 0 is returned. </dd></dl>
+
+</div>
+</div>
+<a id="gaf5d0e57eac28ea91e21e269287ac6135"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaf5d0e57eac28ea91e21e269287ac6135">&#9670;&nbsp;</a></span>sacn_source_detector_reset_networking()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_source_detector_reset_networking </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source__detector.html#gae5777f528b22a2e6f764998dc1aa7ba3">sacn_source_detector_t</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *&#160;</td>
+          <td class="paramname"><em>netints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>num_netints</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Resets the underlying network sockets and packet receipt state for the sACN Source Detector. </p>
+<p>This is typically used when the application detects that the list of networking interfaces has changed.</p>
+<p>After this call completes successfully, the detector will continue as if nothing had changed. New sources could be discovered, or old sources could expire. If this call fails, the caller must call sacn_source_detector_destroy for the detector, because the detector may be in an invalid state.</p>
+<p>Note that the networking reset is considered successful if it is able to successfully use any of the network interfaces passed in. This will only return <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the detector for which to reset the networking. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If non-NULL, this is the list of interfaces the application wants to use, and the status codes are filled in. If NULL, all available interfaces are tried. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">num_netints</td><td>Optional. The size of netints, or 0 if netints is NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Network changed successfully. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a>: None of the network interfaces provided were usable by the library. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid detector. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by
+    <a href="http://www.doxygen.org/index.html">
+    <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
+  </ul>
+</div>
+</body>
+</html>

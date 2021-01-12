@@ -21,8 +21,8 @@
   <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
-  <link href="doxygen.css" rel="stylesheet" type="text/css" />
-  <!--BEGIN CUSTOM SCRIPT-->
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
   <script type="text/javascript">
     $(function () {
       $.get('/sACN/versions.txt', function (data) {
@@ -52,6 +52,76 @@
         }
       }, 'text');
     });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
   </script>
   <!--END CUSTOM SCRIPT-->
 </head>
@@ -134,28 +204,112 @@ $(document).ready(function(){initNavTree('struct_sacn_source_config.html','');})
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a4c3f7d9a58af5033f9acd8c942bf81d9"><td class="memItemLeft" align="right" valign="top"><a id="a4c3f7d9a58af5033f9acd8c942bf81d9"></a>
-<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html">EtcPalUuid</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cid</b></td></tr>
+<tr class="memitem:a4c3f7d9a58af5033f9acd8c942bf81d9"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html">EtcPalUuid</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_config.html#a4c3f7d9a58af5033f9acd8c942bf81d9">cid</a></td></tr>
 <tr class="separator:a4c3f7d9a58af5033f9acd8c942bf81d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e0de4d0f4e4bbd14771257febdf7248"><td class="memItemLeft" align="right" valign="top"><a id="a7e0de4d0f4e4bbd14771257febdf7248"></a>
-uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>universe_id</b></td></tr>
-<tr class="separator:a7e0de4d0f4e4bbd14771257febdf7248"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ad043071ccc7a261d79a759dc9c6f0c"><td class="memItemLeft" align="right" valign="top"><a id="a0ad043071ccc7a261d79a759dc9c6f0c"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>priority</b></td></tr>
-<tr class="separator:a0ad043071ccc7a261d79a759dc9c6f0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab49037c719a547c372444fe92eba91c8"><td class="memItemLeft" align="right" valign="top"><a id="ab49037c719a547c372444fe92eba91c8"></a>
-const <a class="el" href="struct_sacn_mcast_netint_id.html">SacnMcastNetintId</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>netints</b></td></tr>
-<tr class="separator:ab49037c719a547c372444fe92eba91c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ddc029bb8aba3ead075508554592445"><td class="memItemLeft" align="right" valign="top"><a id="a6ddc029bb8aba3ead075508554592445"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>num_netints</b></td></tr>
-<tr class="separator:a6ddc029bb8aba3ead075508554592445"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a631d1206624dc91b6c574bf919a7699d"><td class="memItemLeft" align="right" valign="top"><a id="a631d1206624dc91b6c574bf919a7699d"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>preview</b></td></tr>
-<tr class="separator:a631d1206624dc91b6c574bf919a7699d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e3669a12853b82f7d2b7488bb174956"><td class="memItemLeft" align="right" valign="top"><a id="a7e3669a12853b82f7d2b7488bb174956"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><b>name</b> [<a class="el" href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8">SACN_SOURCE_NAME_MAX_LEN</a>]</td></tr>
-<tr class="separator:a7e3669a12853b82f7d2b7488bb174956"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f8f80d37794cde9472343e4487ba3eb"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_config.html#a8f8f80d37794cde9472343e4487ba3eb">name</a></td></tr>
+<tr class="separator:a8f8f80d37794cde9472343e4487ba3eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4a1d1d970b94a6a07b8c612b8d7ad73"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_config.html#af4a1d1d970b94a6a07b8c612b8d7ad73">universe_count_max</a></td></tr>
+<tr class="separator:af4a1d1d970b94a6a07b8c612b8d7ad73"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16ca9a84fb49dbc5b40b8b333a239e2d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_config.html#a16ca9a84fb49dbc5b40b8b333a239e2d">manually_process_source</a></td></tr>
+<tr class="separator:a16ca9a84fb49dbc5b40b8b333a239e2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab619351af6b7a5abcb23e38bdc09e984"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_config.html#ab619351af6b7a5abcb23e38bdc09e984">ip_supported</a></td></tr>
+<tr class="separator:ab619351af6b7a5abcb23e38bdc09e984"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a987c78ebef19e1addb7485ce29ef4dd7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_config.html#a987c78ebef19e1addb7485ce29ef4dd7">keep_alive_interval</a></td></tr>
+<tr class="separator:a987c78ebef19e1addb7485ce29ef4dd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>A set of configuration information for a sACN source. </p>
+</div><h2 class="groupheader">Field Documentation</h2>
+<a id="a4c3f7d9a58af5033f9acd8c942bf81d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c3f7d9a58af5033f9acd8c942bf81d9">&#9670;&nbsp;</a></span>cid</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html">EtcPalUuid</a> cid</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The source's CID. </p>
+
+</div>
+</div>
+<a id="ab619351af6b7a5abcb23e38bdc09e984"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab619351af6b7a5abcb23e38bdc09e984">&#9670;&nbsp;</a></span>ip_supported</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a> ip_supported</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>What IP networking the source will support. The default is <a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2">kSacnIpV4AndIpV6</a>. </p>
+
+</div>
+</div>
+<a id="a987c78ebef19e1addb7485ce29ef4dd7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a987c78ebef19e1addb7485ce29ef4dd7">&#9670;&nbsp;</a></span>keep_alive_interval</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int keep_alive_interval</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The interval at which the source will send keep-alive packets during transmission suppression, in milliseconds. The default is <a class="el" href="group__sacn__source.html#gab3c248f42fcdeccba28617fd2612ce71">SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT</a>. </p>
+
+</div>
+</div>
+<a id="a16ca9a84fb49dbc5b40b8b333a239e2d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a16ca9a84fb49dbc5b40b8b333a239e2d">&#9670;&nbsp;</a></span>manually_process_source</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool manually_process_source</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>If false (default), this source will be added to a background thread that will send sACN updates at a maximum rate of every 23 ms. If true, the source will not be added to the thread and the application must call <a class="el" href="group__sacn__source.html#ga05ae91a74132e84439e18364de2b62d4" title="Trigger the transmision of sACN packets for all universes of sources that were created with manually_...">sacn_source_process_manual()</a> at its maximum DMX rate, typically 23 ms. </p>
+
+</div>
+</div>
+<a id="a8f8f80d37794cde9472343e4487ba3eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f8f80d37794cde9472343e4487ba3eb">&#9670;&nbsp;</a></span>name</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* name</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The source's name, a UTF-8 encoded string. </p>
+
+</div>
+</div>
+<a id="af4a1d1d970b94a6a07b8c612b8d7ad73"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af4a1d1d970b94a6a07b8c612b8d7ad73">&#9670;&nbsp;</a></span>universe_count_max</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t universe_count_max</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The maximum number of universes this source will send to. May be <a class="el" href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d" title="Constant for &quot;infinite&quot; when sending sACN universes. ">SACN_SOURCE_INFINITE_UNIVERSES</a>. This parameter is ignored when configured to use static memory &ndash; <a class="el" href="group__sacnopts__send.html#ga841d6f465d02b8d4b9e6a3cbe00d5beb" title="The maximum number of universes that a source can send to simultaneously. ">SACN_SOURCE_MAX_UNIVERSES</a> is used instead. </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/sacn/<a class="el" href="source_8h_source.html">source.h</a></li>
 </ul>

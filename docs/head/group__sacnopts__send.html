@@ -21,8 +21,8 @@
   <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
-  <link href="doxygen.css" rel="stylesheet" type="text/css" />
-  <!--BEGIN CUSTOM SCRIPT-->
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
   <script type="text/javascript">
     $(function () {
       $.get('/sACN/versions.txt', function (data) {
@@ -52,6 +52,76 @@
         }
       }, 'text');
     });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
   </script>
   <!--END CUSTOM SCRIPT-->
 </head>
@@ -131,39 +201,16 @@ $(document).ready(function(){initNavTree('group__sacnopts__send.html','');});
 <div class="title">sACN Send Options<div class="ingroups"><a class="el" href="group__s_a_c_n.html">sACN</a> &raquo; <a class="el" href="group__sacnopts.html">sACN Configuration Options</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Configuration options for the <a class="el" href="group__sacn__source.html">sACN Source</a> module.  
-<a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:ga841d6f465d02b8d4b9e6a3cbe00d5beb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__send.html#ga841d6f465d02b8d4b9e6a3cbe00d5beb">SACN_SOURCE_MAX_UNIVERSES</a>&#160;&#160;&#160;4</td></tr>
-<tr class="memdesc:ga841d6f465d02b8d4b9e6a3cbe00d5beb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of universes that can be sent on simultaneously.  <a href="#ga841d6f465d02b8d4b9e6a3cbe00d5beb">More...</a><br /></td></tr>
+<tr class="memdesc:ga841d6f465d02b8d4b9e6a3cbe00d5beb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of universes that a source can send to simultaneously.  <a href="#ga841d6f465d02b8d4b9e6a3cbe00d5beb">More...</a><br /></td></tr>
 <tr class="separator:ga841d6f465d02b8d4b9e6a3cbe00d5beb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga89234d893ef926283cb8cbff5f465380"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__send.html#ga89234d893ef926283cb8cbff5f465380">SACN_SOURCE_MAX_STARTCODES_PER_UNIVERSE</a>&#160;&#160;&#160;2</td></tr>
-<tr class="memdesc:ga89234d893ef926283cb8cbff5f465380"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of start codes that can be added to each sending universe.  <a href="#ga89234d893ef926283cb8cbff5f465380">More...</a><br /></td></tr>
-<tr class="separator:ga89234d893ef926283cb8cbff5f465380"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Configuration options for the <a class="el" href="group__sacn__source.html">sACN Source</a> module. </p>
 <h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="ga89234d893ef926283cb8cbff5f465380"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga89234d893ef926283cb8cbff5f465380">&#9670;&nbsp;</a></span>SACN_SOURCE_MAX_STARTCODES_PER_UNIVERSE</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define SACN_SOURCE_MAX_STARTCODES_PER_UNIVERSE&#160;&#160;&#160;2</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>The maximum number of start codes that can be added to each sending universe. </p>
-<p>Meaningful only if <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87" title="Use dynamic memory allocation. ">SACN_DYNAMIC_MEM</a> is defined to 0. </p>
-
-</div>
-</div>
 <a id="ga841d6f465d02b8d4b9e6a3cbe00d5beb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga841d6f465d02b8d4b9e6a3cbe00d5beb">&#9670;&nbsp;</a></span>SACN_SOURCE_MAX_UNIVERSES</h2>
 
@@ -176,7 +223,7 @@ Macros</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>The maximum number of universes that can be sent on simultaneously. </p>
+<p>The maximum number of universes that a source can send to simultaneously. </p>
 <p>Meaningful only if <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87" title="Use dynamic memory allocation. ">SACN_DYNAMIC_MEM</a> is defined to 0. </p>
 
 </div>

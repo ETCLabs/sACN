@@ -21,8 +21,8 @@
   <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
-  <link href="doxygen.css" rel="stylesheet" type="text/css" />
-  <!--BEGIN CUSTOM SCRIPT-->
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
   <script type="text/javascript">
     $(function () {
       $.get('/sACN/versions.txt', function (data) {
@@ -52,6 +52,76 @@
         }
       }, 'text');
     });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
   </script>
   <!--END CUSTOM SCRIPT-->
 </head>
@@ -129,15 +199,26 @@ $(document).ready(function(){initNavTree('classes.html','');});
 <div class="title">Data Structure Index</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="qindex"><a class="qindex" href="#letter_s">s</a></div>
+<div class="qindex"><a class="qindex" href="#letter_d">d</a>&#160;|&#160;<a class="qindex" href="#letter_m">m</a>&#160;|&#160;<a class="qindex" href="#letter_n">n</a>&#160;|&#160;<a class="qindex" href="#letter_r">r</a>&#160;|&#160;<a class="qindex" href="#letter_s">s</a>&#160;|&#160;<a class="qindex" href="#letter_u">u</a></div>
 <table class="classindex">
-<tr><td rowspan="2" valign="bottom"><a name="letter_s"></a><table border="0" cellspacing="0" cellpadding="0"><tr><td><div class="ah">&#160;&#160;s&#160;&#160;</div></td></tr></table>
-</td><td valign="top"><a class="el" href="struct_sacn_lost_source.html">SacnLostSource</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_recv_callbacks.html">SacnRecvCallbacks</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_source_start_code_pair.html">SacnSourceStartCodePair</a>&#160;&#160;&#160;</td></tr>
-<tr><td valign="top"><a class="el" href="struct_sacn_mcast_netint_id.html">SacnMcastNetintId</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_remote_source.html">SacnRemoteSource</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_start_code_config.html">SacnStartCodeConfig</a>&#160;&#160;&#160;</td></tr>
-<tr><td valign="top"><a class="el" href="struct_sacn_header_data.html">SacnHeaderData</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_receiver_config.html">SacnReceiverConfig</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_source_config.html">SacnSourceConfig</a>&#160;&#160;&#160;</td><td></td></tr>
-<tr><td></td><td></td><td></td><td></td></tr>
+<tr><td rowspan="2" valign="bottom"><a name="letter_d"></a><table border="0" cellspacing="0" cellpadding="0"><tr><td><div class="ah">&#160;&#160;d&#160;&#160;</div></td></tr></table>
+</td><td valign="top"><a class="el" href="classsacn_1_1_source_detector_1_1_notify_handler.html">SourceDetector::NotifyHandler</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_remote_source.html">SacnRemoteSource</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="structsacn_1_1_merge_receiver_1_1_settings.html">MergeReceiver::Settings</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td></tr>
+<tr><td valign="top"><a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html">MergeReceiver::NotifyHandler</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_header_data.html">SacnHeaderData</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_source_config.html">SacnSourceConfig</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="structsacn_1_1_dmx_merger_1_1_settings.html">DmxMerger::Settings</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td></tr>
+<tr><td valign="top"><a class="el" href="classsacn_1_1_dmx_merger.html">DmxMerger</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td><td rowspan="2" valign="bottom"><a name="letter_r"></a><table border="0" cellspacing="0" cellpadding="0"><tr><td><div class="ah">&#160;&#160;r&#160;&#160;</div></td></tr></table>
+</td><td valign="top"><a class="el" href="struct_sacn_lost_source.html">SacnLostSource</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_source_detector_callbacks.html">SacnSourceDetectorCallbacks</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="classsacn_1_1_source.html">Source</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td></tr>
+<tr><td rowspan="2" valign="bottom"><a name="letter_m"></a><table border="0" cellspacing="0" cellpadding="0"><tr><td><div class="ah">&#160;&#160;m&#160;&#160;</div></td></tr></table>
+</td><td valign="top"><a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_source_detector_config.html">SacnSourceDetectorConfig</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="classsacn_1_1_source_detector.html">SourceDetector</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td></tr>
+<tr><td valign="top"><a class="el" href="classsacn_1_1_receiver.html">Receiver</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_merge_receiver_callbacks.html">SacnMergeReceiverCallbacks</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a>&#160;&#160;&#160;</td><td rowspan="2" valign="bottom"><a name="letter_u"></a><table border="0" cellspacing="0" cellpadding="0"><tr><td><div class="ah">&#160;&#160;u&#160;&#160;</div></td></tr></table>
+</td></tr>
+<tr><td valign="top"><a class="el" href="classsacn_1_1_merge_receiver.html">MergeReceiver</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td><td rowspan="2" valign="bottom"><a name="letter_s"></a><table border="0" cellspacing="0" cellpadding="0"><tr><td><div class="ah">&#160;&#160;s&#160;&#160;</div></td></tr></table>
+</td><td valign="top"><a class="el" href="struct_sacn_merge_receiver_config.html">SacnMergeReceiverConfig</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="structsacn_1_1_source_1_1_settings.html">Source::Settings</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td></tr>
+<tr><td rowspan="2" valign="bottom"><a name="letter_n"></a><table border="0" cellspacing="0" cellpadding="0"><tr><td><div class="ah">&#160;&#160;n&#160;&#160;</div></td></tr></table>
+</td><td valign="top"><a class="el" href="struct_sacn_receiver_config.html">SacnReceiverConfig</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="structsacn_1_1_receiver_1_1_settings.html">Receiver::Settings</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td><td valign="top"><a class="el" href="structsacn_1_1_source_1_1_universe_settings.html">Source::UniverseSettings</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td></tr>
+<tr><td valign="top"><a class="el" href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="struct_sacn_recv_callbacks.html">SacnRecvCallbacks</a>&#160;&#160;&#160;</td><td valign="top"><a class="el" href="structsacn_1_1_source_detector_1_1_settings.html">SourceDetector::Settings</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td><td></td></tr>
+<tr><td valign="top"><a class="el" href="classsacn_1_1_receiver_1_1_notify_handler.html">Receiver::NotifyHandler</a> (<a class="el" href="namespacesacn.html">sacn</a>)&#160;&#160;&#160;</td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
 </table>
-<div class="qindex"><a class="qindex" href="#letter_s">s</a></div>
+<div class="qindex"><a class="qindex" href="#letter_d">d</a>&#160;|&#160;<a class="qindex" href="#letter_m">m</a>&#160;|&#160;<a class="qindex" href="#letter_n">n</a>&#160;|&#160;<a class="qindex" href="#letter_r">r</a>&#160;|&#160;<a class="qindex" href="#letter_s">s</a>&#160;|&#160;<a class="qindex" href="#letter_u">u</a></div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

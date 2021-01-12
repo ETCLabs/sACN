@@ -1,6 +1,7 @@
 var searchData=
 [
   ['kdefaultmaxcount',['kDefaultMaxCount',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_semaphore.html#a3486903fdf2712a41832d21fdfd5bc0b',1,'etcpal::Semaphore']]],
+  ['keep_5falive_5finterval',['keep_alive_interval',['../struct_sacn_source_config.html#a987c78ebef19e1addb7485ce29ef4dd7',1,'SacnSourceConfig::keep_alive_interval()'],['../structsacn_1_1_source_1_1_settings.html#a987c78ebef19e1addb7485ce29ef4dd7',1,'sacn::Source::Settings::keep_alive_interval()']]],
   ['ketcpalerraddrinuse',['kEtcPalErrAddrInUse',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae27e1c52937b3d1c1993f78160a0a778',1,]]],
   ['ketcpalerraddrnotavail',['kEtcPalErrAddrNotAvail',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa44ede5b2503ce2b1bb4ccd285d676b50',1,]]],
   ['ketcpalerralready',['kEtcPalErrAlready',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afaa9c6c39f7303953a99c50a981f36dff0',1,]]],
@@ -35,9 +36,7 @@ var searchData=
   ['ketcpaliptypeinvalid',['kEtcPalIpTypeInvalid',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__inet.html#gga847282e3fd17bf75ec83292326c455eea0e789a4e187f4a7fdbda7271a754eca8',1,]]],
   ['ketcpaliptypev4',['kEtcPalIpTypeV4',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__inet.html#gga847282e3fd17bf75ec83292326c455eea73ea615eceba61f26d92a63f3738f635',1,]]],
   ['ketcpaliptypev6',['kEtcPalIpTypeV6',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__inet.html#gga847282e3fd17bf75ec83292326c455eead480ed8d686b23bdb2e5bfc06b93d7ae',1,]]],
-  ['ketcpallogcreateboth',['kEtcPalLogCreateBoth',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__log.html#gga10855f3c1f3816d0bd5e4687108ea1c5a8d083dc7d2d4359fd9ce6330b9d4c2bb',1,]]],
-  ['ketcpallogcreatehumanreadable',['kEtcPalLogCreateHumanReadable',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__log.html#gga10855f3c1f3816d0bd5e4687108ea1c5aa0ece7bdc03dd5b29a3be01c212f6b48',1,]]],
-  ['ketcpallogcreatesyslog',['kEtcPalLogCreateSyslog',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__log.html#gga10855f3c1f3816d0bd5e4687108ea1c5a1631725f7a5f65a9fb15767cecec5290',1,]]],
   ['ketcpalnullmacaddr',['kEtcPalNullMacAddr',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__inet.html#gae648df0d068e3335073224fb0fb45512',1,]]],
-  ['ketcpalnulluuid',['kEtcPalNullUuid',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__uuid.html#gae518c32bbc7d2266568ee9a703bb4f5e',1,]]]
+  ['ketcpalnulluuid',['kEtcPalNullUuid',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__uuid.html#gae518c32bbc7d2266568ee9a703bb4f5e',1,]]],
+  ['kinvalidhandle',['kInvalidHandle',['../classsacn_1_1_dmx_merger.html#a86c59ec42eb180800c2e554d0f1e1a06',1,'sacn::DmxMerger::kInvalidHandle()'],['../classsacn_1_1_merge_receiver.html#a86c59ec42eb180800c2e554d0f1e1a06',1,'sacn::MergeReceiver::kInvalidHandle()'],['../classsacn_1_1_receiver.html#a86c59ec42eb180800c2e554d0f1e1a06',1,'sacn::Receiver::kInvalidHandle()'],['../classsacn_1_1_source.html#a86c59ec42eb180800c2e554d0f1e1a06',1,'sacn::Source::kInvalidHandle()'],['../classsacn_1_1_source_detector.html#a86c59ec42eb180800c2e554d0f1e1a06',1,'sacn::SourceDetector::kInvalidHandle()']]]
 ];

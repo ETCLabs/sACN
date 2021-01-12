@@ -21,8 +21,8 @@
   <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
-  <link href="doxygen.css" rel="stylesheet" type="text/css" />
-  <!--BEGIN CUSTOM SCRIPT-->
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
   <script type="text/javascript">
     $(function () {
       $.get('/sACN/versions.txt', function (data) {
@@ -52,6 +52,76 @@
         }
       }, 'text');
     });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
   </script>
   <!--END CUSTOM SCRIPT-->
 </head>
@@ -130,6 +200,7 @@ $(document).ready(function(){initNavTree('group__s_a_c_n.html','');});
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#define-members">Macros</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">sACN</div>  </div>
@@ -141,11 +212,20 @@ $(document).ready(function(){initNavTree('group__s_a_c_n.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="groups"></a>
 Modules</h2></td></tr>
+<tr class="memitem:group__sacn__dmx__merger"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html">sACN DMX Merger</a></td></tr>
+<tr class="memdesc:group__sacn__dmx__merger"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sACN DMX Merger API; see <a class="el" href="using_dmx_merger.html">Using the sACN DMX Merger API</a>. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:group__sacn__merge__receiver"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__merge__receiver.html">sACN Merge Receiver</a></td></tr>
+<tr class="memdesc:group__sacn__merge__receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sACN Merge Receiver API; see <a class="el" href="using_merge_receiver.html">Using the sACN Merge Receiver API</a>. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:group__sacn__receiver"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html">sACN Receiver</a></td></tr>
-<tr class="memdesc:group__sacn__receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sACN Receiver API. <br /></td></tr>
+<tr class="memdesc:group__sacn__receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sACN Receiver API; see <a class="el" href="using_receiver.html">Using the sACN Receiver API</a>. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:group__sacn__source"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html">sACN Source</a></td></tr>
-<tr class="memdesc:group__sacn__source"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sACN Source API. <br /></td></tr>
+<tr class="memdesc:group__sacn__source"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sACN Source API; see <a class="el" href="using_source.html">Using the sACN Source API</a>. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:group__sacn__source__detector"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html">sACN Source Detector</a></td></tr>
+<tr class="memdesc:group__sacn__source__detector"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sACN Source Detector API. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:group__sacnopts"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts.html">sACN Configuration Options</a></td></tr>
 <tr class="memdesc:group__sacnopts"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compile-time configuration options for sACN. <br /></td></tr>
@@ -154,10 +234,8 @@ Modules</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_header_data.html">SacnHeaderData</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The data present in the header of an sACN data packet.  <a href="struct_sacn_header_data.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_mcast_netint_id.html">SacnMcastNetintId</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of identifying information for a network interface, for multicast purposes.  <a href="struct_sacn_mcast_netint_id.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
@@ -165,15 +243,23 @@ Macros</h2></td></tr>
 <tr class="memitem:ga0a68bef69f737e31072b475521d331c8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8">SACN_SOURCE_NAME_MAX_LEN</a>&#160;&#160;&#160;64</td></tr>
 <tr class="memdesc:ga0a68bef69f737e31072b475521d331c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum length of an sACN source name, including the null-terminator.  <a href="#ga0a68bef69f737e31072b475521d331c8">More...</a><br /></td></tr>
 <tr class="separator:ga0a68bef69f737e31072b475521d331c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga681f92a30c76ae426e2403a328978abb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>&#160;&#160;&#160;512</td></tr>
+<tr class="separator:ga681f92a30c76ae426e2403a328978abb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
 <tr class="memitem:ga2e6652620c783917abe8e5c6b5d9d8b7"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_header_data.html">SacnHeaderData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga2e6652620c783917abe8e5c6b5d9d8b7">SacnHeaderData</a></td></tr>
-<tr class="memdesc:ga2e6652620c783917abe8e5c6b5d9d8b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The data present in the header of an sACN data packet.  <a href="#ga2e6652620c783917abe8e5c6b5d9d8b7">More...</a><br /></td></tr>
 <tr class="separator:ga2e6652620c783917abe8e5c6b5d9d8b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga87bc433314cf2b5d423de73a3d4d98cd"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_mcast_netint_id.html">SacnMcastNetintId</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga87bc433314cf2b5d423de73a3d4d98cd">SacnMcastNetintId</a></td></tr>
-<tr class="memdesc:ga87bc433314cf2b5d423de73a3d4d98cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of identifying information for a network interface, for multicast purposes.  <a href="#ga87bc433314cf2b5d423de73a3d4d98cd">More...</a><br /></td></tr>
-<tr class="separator:ga87bc433314cf2b5d423de73a3d4d98cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab240ac59938a557843efa9068b74e1d4"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#gab240ac59938a557843efa9068b74e1d4">SacnMcastInterface</a></td></tr>
+<tr class="separator:gab240ac59938a557843efa9068b74e1d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:ga02f82b9c734e2d2f70a1106d6480833a"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a> { <a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa900230541148a1eb50b457dfbf75a3c4">kSacnIpV4Only</a>, 
+<a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aaa7c7cce56d48e45e33bde272cb0be424">kSacnIpV6Only</a>, 
+<a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2">kSacnIpV4AndIpV6</a>
+ }</td></tr>
+<tr class="separator:ga02f82b9c734e2d2f70a1106d6480833a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -187,16 +273,12 @@ Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="member-group"></a>
 sACN version numbers</h2></td></tr>
 <tr class="memitem:ga3b04b863e88d1bae02133dfb19667e06"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga3b04b863e88d1bae02133dfb19667e06">SACN_VERSION_MAJOR</a>&#160;&#160;&#160;2</td></tr>
-<tr class="memdesc:ga3b04b863e88d1bae02133dfb19667e06"><td class="mdescLeft">&#160;</td><td class="mdescRight">The major version.  <a href="#ga3b04b863e88d1bae02133dfb19667e06">More...</a><br /></td></tr>
 <tr class="separator:ga3b04b863e88d1bae02133dfb19667e06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga234bcbd2198002c6ee8d3caa670ba0ed"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga234bcbd2198002c6ee8d3caa670ba0ed">SACN_VERSION_MINOR</a>&#160;&#160;&#160;0</td></tr>
-<tr class="memdesc:ga234bcbd2198002c6ee8d3caa670ba0ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">The minor version.  <a href="#ga234bcbd2198002c6ee8d3caa670ba0ed">More...</a><br /></td></tr>
 <tr class="separator:ga234bcbd2198002c6ee8d3caa670ba0ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae1d8849ebfa2d27cec433e54f7f7308d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#gae1d8849ebfa2d27cec433e54f7f7308d">SACN_VERSION_PATCH</a>&#160;&#160;&#160;0</td></tr>
-<tr class="memdesc:gae1d8849ebfa2d27cec433e54f7f7308d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The patch version.  <a href="#gae1d8849ebfa2d27cec433e54f7f7308d">More...</a><br /></td></tr>
 <tr class="separator:gae1d8849ebfa2d27cec433e54f7f7308d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab22648c510945c218b806ad28e1e9a86"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#gab22648c510945c218b806ad28e1e9a86">SACN_VERSION_BUILD</a>&#160;&#160;&#160;2</td></tr>
-<tr class="memdesc:gab22648c510945c218b806ad28e1e9a86"><td class="mdescLeft">&#160;</td><td class="mdescRight">The build number.  <a href="#gab22648c510945c218b806ad28e1e9a86">More...</a><br /></td></tr>
 <tr class="separator:gab22648c510945c218b806ad28e1e9a86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="member-group"></a>
@@ -217,6 +299,21 @@ sACN version strings</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>sACN: A Streaming ACN (sACN) implementation. </p>
 <h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="ga681f92a30c76ae426e2403a328978abb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga681f92a30c76ae426e2403a328978abb">&#9670;&nbsp;</a></span>DMX_ADDRESS_COUNT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DMX_ADDRESS_COUNT&#160;&#160;&#160;512</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The number of addresses in a DMX universe. </p>
+
+</div>
+</div>
 <a id="ga0a68bef69f737e31072b475521d331c8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga0a68bef69f737e31072b475521d331c8">&#9670;&nbsp;</a></span>SACN_SOURCE_NAME_MAX_LEN</h2>
 
@@ -245,7 +342,6 @@ sACN version strings</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>The build number. </p>
 
 </div>
@@ -261,7 +357,6 @@ sACN version strings</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>The major version. </p>
 
 </div>
@@ -277,7 +372,6 @@ sACN version strings</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>The minor version. </p>
 
 </div>
@@ -293,7 +387,6 @@ sACN version strings</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>The patch version. </p>
 
 </div>
@@ -310,25 +403,46 @@ sACN version strings</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>The data present in the header of an sACN data packet. </p>
 
 </div>
 </div>
-<a id="ga87bc433314cf2b5d423de73a3d4d98cd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga87bc433314cf2b5d423de73a3d4d98cd">&#9670;&nbsp;</a></span>SacnMcastNetintId</h2>
+<a id="gab240ac59938a557843efa9068b74e1d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab240ac59938a557843efa9068b74e1d4">&#9670;&nbsp;</a></span>SacnMcastInterface</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef struct <a class="el" href="struct_sacn_mcast_netint_id.html">SacnMcastNetintId</a>  <a class="el" href="struct_sacn_mcast_netint_id.html">SacnMcastNetintId</a></td>
+          <td class="memname">typedef struct <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a>  <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>On input, this structure is used to indicate a network interface to use. On output, this structure indicates whether or not the operation was a success. </p>
 
-<p>A set of identifying information for a network interface, for multicast purposes. </p>
-<p>When creating network sockets to use with multicast sACN, the interface IP addresses don't matter and the primary key for a network interface is simply a combination of the interface index and the IP protocol used. </p>
+</div>
+</div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="ga02f82b9c734e2d2f70a1106d6480833a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga02f82b9c734e2d2f70a1106d6480833a">&#9670;&nbsp;</a></span>sacn_ip_support_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>This enum defines how the API module will use IPv4 and IPv6 networking. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga02f82b9c734e2d2f70a1106d6480833aa900230541148a1eb50b457dfbf75a3c4"></a>kSacnIpV4Only&#160;</td><td class="fielddoc"><p>Use IPv4 only. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga02f82b9c734e2d2f70a1106d6480833aaa7c7cce56d48e45e33bde272cb0be424"></a>kSacnIpV6Only&#160;</td><td class="fielddoc"><p>Use IPv6 only. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2"></a>kSacnIpV4AndIpV6&#160;</td><td class="fielddoc"><p>Use both IPv4 and IPv6. </p>
+</td></tr>
+</table>
 
 </div>
 </div>

@@ -21,8 +21,8 @@
   <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
-  <link href="doxygen.css" rel="stylesheet" type="text/css" />
-  <!--BEGIN CUSTOM SCRIPT-->
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
   <script type="text/javascript">
     $(function () {
       $.get('/sACN/versions.txt', function (data) {
@@ -52,6 +52,76 @@
         }
       }, 'text');
     });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
   </script>
   <!--END CUSTOM SCRIPT-->
 </head>
@@ -131,9 +201,6 @@ $(document).ready(function(){initNavTree('group__sacnopts__global.html','');});
 <div class="title">Global Options<div class="ingroups"><a class="el" href="group__s_a_c_n.html">sACN</a> &raquo; <a class="el" href="group__sacnopts.html">sACN Configuration Options</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Options that apply to both <a class="el" href="group__sacn__source.html">sACN Source</a> and <a class="el" href="group__sacn__receiver.html">sACN Receiver</a>.  
-<a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -151,7 +218,7 @@ Macros</h2></td></tr>
 <tr class="memdesc:gabd4f61db43336221d5947896ef0f2921"><td class="mdescLeft">&#160;</td><td class="mdescRight">The debug assert used by the sACN library.  <a href="#gabd4f61db43336221d5947896ef0f2921">More...</a><br /></td></tr>
 <tr class="separator:gabd4f61db43336221d5947896ef0f2921"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga59ee3abb2f4eb1554d7be219a9c8028b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__global.html#ga59ee3abb2f4eb1554d7be219a9c8028b">SACN_ETC_PRIORITY_EXTENSION</a>&#160;&#160;&#160;1</td></tr>
-<tr class="memdesc:ga59ee3abb2f4eb1554d7be219a9c8028b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable ETC's per-channel priority extension to sACN.  <a href="#ga59ee3abb2f4eb1554d7be219a9c8028b">More...</a><br /></td></tr>
+<tr class="memdesc:ga59ee3abb2f4eb1554d7be219a9c8028b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable ETC's per-address priority extension to sACN.  <a href="#ga59ee3abb2f4eb1554d7be219a9c8028b">More...</a><br /></td></tr>
 <tr class="separator:ga59ee3abb2f4eb1554d7be219a9c8028b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6ae6b1e22f87a5c2e49aefbc95a97256"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__global.html#ga6ae6b1e22f87a5c2e49aefbc95a97256">SACN_LOOPBACK</a>&#160;&#160;&#160;1</td></tr>
 <tr class="memdesc:ga6ae6b1e22f87a5c2e49aefbc95a97256"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allow loopback of sACN to the local host (by setting the relevant socket option).  <a href="#ga6ae6b1e22f87a5c2e49aefbc95a97256">More...</a><br /></td></tr>
@@ -213,8 +280,8 @@ Macros</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Enable ETC's per-channel priority extension to sACN. </p>
-<p>If defined nonzero, the logic of <a class="el" href="group__sacn__receiver.html">sACN Receiver</a> changes to handle ETC's per-channel priority sACN extension. An additional callback function is also enabled to be notified that a source has stopped sending per-channel priority. </p>
+<p>Enable ETC's per-address priority extension to sACN. </p>
+<p>If defined nonzero, the logic of <a class="el" href="group__sacn__receiver.html">sACN Receiver</a> changes to handle ETC's per-address priority sACN extension. An additional callback function is also enabled to be notified that a source has stopped sending per-address priority. </p>
 
 </div>
 </div>

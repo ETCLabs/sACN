@@ -1,0 +1,416 @@
+<!-- HTML header for doxygen 1.8.14-->
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=9" />
+  <meta name="generator" content="Doxygen 1.8.13" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>sACN: MergeReceiver::NotifyHandler Class Reference</title>
+  <link href="tabs.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="text/javascript" src="dynsections.js"></script>
+  <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript">
+  $(document).ready(initResizable);
+</script>
+  <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
+  <script type="text/javascript">
+    $(function () {
+      $.get('/sACN/versions.txt', function (data) {
+        if (data) {
+          var lines = data.split('\n');
+          if (lines.length > 0) {
+            var version_select = $("#version_select").empty();
+            lines.forEach(function (line) {
+              line = line.trim();
+              if (!line) {
+                return;
+              }
+              line = line.split(':');
+              var option_name = line[0].replace(/^v/, '');
+              if (line.length > 1) {
+                option_name += ' (' + line[1] + ')';
+              }
+              var option_val = '/sACN/docs/' + line[0];
+              var option = $('<option></option>').attr("value", option_val)
+                .text(option_name);
+              if (window.location.pathname.match('docs/' + line[0])) {
+                option = option.attr("selected", "selected");
+              }
+              version_select.append(option);
+            });
+          }
+        }
+      }, 'text');
+    });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
+  </script>
+  <!--END CUSTOM SCRIPT-->
+</head>
+<body>
+  <div id="top">
+    <!-- do not remove this div, it is closed by doxygen! -->
+    <div id="titlearea">
+      <table cellspacing="0" cellpadding="0" style="width: 100%">
+        <tbody>
+          <tr style="height: 56px;">
+            <td id="projectalign" style="padding-left: 0.5em;">
+              <div id="projectname">sACN
+                &#160;<span id="projectnumber">HEAD (unstable)</span>
+              </div>
+              <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+            </td>
+            <!--BEGIN CUSTOM INSERTED SECTION-->
+            <td style="text-align: right; padding-right: 0.5em">
+              <div id="otherversions">
+                View other versions:
+                <select id="version_select" onchange="location = this.value">
+                </select>
+              </div>
+            </td>
+            <!--END CUSTOM INSERTED SECTION-->
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- end header part -->
+<!-- Generated by Doxygen 1.8.13 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "search",false,'Search');
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(document).ready(function(){initNavTree('classsacn_1_1_merge_receiver_1_1_notify_handler.html','');});
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Public Member Functions</a>  </div>
+  <div class="headertitle">
+<div class="title">MergeReceiver::NotifyHandler Class Reference<span class="mlabels"><span class="mlabel">abstract</span></span><div class="ingroups"><a class="el" href="group__sacn__cpp__api.html">sACN C++ Language APIs</a> &raquo; <a class="el" href="group__sacn__merge__receiver__cpp.html">sACN Merge Receiver API</a></div></div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>A base class for a class that receives notification callbacks from a sACN merge receiver.  
+ <a href="classsacn_1_1_merge_receiver_1_1_notify_handler.html#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a88fabe1242cbbdcecc9bd6a9d6cf619e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html#a88fabe1242cbbdcecc9bd6a9d6cf619e">HandleMergedData</a> (<a class="el" href="classsacn_1_1_merge_receiver.html#a6b2f628cbf2d805f9a8026a02253aa2e">Handle</a> <a class="el" href="classsacn_1_1_merge_receiver.html#aa4a2884ccfef0338bcb1985f86ae89b7">handle</a>, uint16_t universe, const uint8_t *slots, const <a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> *slot_owners)=0</td></tr>
+<tr class="memdesc:a88fabe1242cbbdcecc9bd6a9d6cf619e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Notify that a new data packet has been received and merged.  <a href="#a88fabe1242cbbdcecc9bd6a9d6cf619e">More...</a><br /></td></tr>
+<tr class="separator:a88fabe1242cbbdcecc9bd6a9d6cf619e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11b6b37dc08a31d1360011e85e016956"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html#a11b6b37dc08a31d1360011e85e016956">HandleNonDmxData</a> (<a class="el" href="classsacn_1_1_merge_receiver.html#a6b2f628cbf2d805f9a8026a02253aa2e">Handle</a> <a class="el" href="classsacn_1_1_merge_receiver.html#aa4a2884ccfef0338bcb1985f86ae89b7">handle</a>, uint16_t universe, const <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_sock_addr.html">etcpal::SockAddr</a> &amp;source_addr, const <a class="el" href="struct_sacn_header_data.html">SacnHeaderData</a> &amp;header, const uint8_t *pdata)=0</td></tr>
+<tr class="memdesc:a11b6b37dc08a31d1360011e85e016956"><td class="mdescLeft">&#160;</td><td class="mdescRight">Notify that a non-data packet has been received.  <a href="#a11b6b37dc08a31d1360011e85e016956">More...</a><br /></td></tr>
+<tr class="separator:a11b6b37dc08a31d1360011e85e016956"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab517496e89eb88b7ee7fa383558f725b"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html#ab517496e89eb88b7ee7fa383558f725b">HandleSourceLimitExceeded</a> (<a class="el" href="classsacn_1_1_merge_receiver.html#a6b2f628cbf2d805f9a8026a02253aa2e">Handle</a> <a class="el" href="classsacn_1_1_merge_receiver.html#aa4a2884ccfef0338bcb1985f86ae89b7">handle</a>, uint16_t universe)</td></tr>
+<tr class="memdesc:ab517496e89eb88b7ee7fa383558f725b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Notify that more than the configured maximum number of sources are currently sending on the universe being listened to.  <a href="#ab517496e89eb88b7ee7fa383558f725b">More...</a><br /></td></tr>
+<tr class="separator:ab517496e89eb88b7ee7fa383558f725b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>A base class for a class that receives notification callbacks from a sACN merge receiver. </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a88fabe1242cbbdcecc9bd6a9d6cf619e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a88fabe1242cbbdcecc9bd6a9d6cf619e">&#9670;&nbsp;</a></span>HandleMergedData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void HandleMergedData </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classsacn_1_1_merge_receiver.html#a6b2f628cbf2d805f9a8026a02253aa2e">Handle</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>slots</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> *&#160;</td>
+          <td class="paramname"><em>slot_owners</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Notify that a new data packet has been received and merged. </p>
+<p>This callback will be called in multiple ways:</p><ol type="1">
+<li>When a new non-preview data packet or per-address priority packet is received from the sACN <a class="el" href="classsacn_1_1_receiver.html" title="An instance of sACN Receiver functionality; see Using the sACN Receiver API. ">Receiver</a> module, it is immediately and synchronously passed to the DMX Merger. If the sampling period has not ended, the merged result is not passed to this callback until the sampling period ends. Otherwise, it is immediately and synchronously passed to this callback.</li>
+<li>When a sACN source is no longer sending non-preview data or per-address priority packets, the lost source callback from the sACN <a class="el" href="classsacn_1_1_receiver.html" title="An instance of sACN Receiver functionality; see Using the sACN Receiver API. ">Receiver</a> module will be passed to the merger, after which the merged result is passed to this callback pending the sampling period.</li>
+</ol>
+<p>This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN packets on the universe.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>The merge receiver's handle. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The universe this merge receiver is monitoring. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">slots</td><td>Buffer of <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a> bytes containing the merged levels for the universe. This buffer is owned by the library. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">slot_owners</td><td>Buffer of <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a> source_ids. If a value in the buffer is <a class="el" href="group__sacn__dmx__merger.html#ga1ca9e023e2091c5a8a4e5e2ba426f055">SACN_DMX_MERGER_SOURCE_INVALID</a>, the corresponding slot is not currently controlled. You can also use <a class="el" href="group__sacn__dmx__merger.html#ga7b7762d0e6afca73eb8c31fa55354439" title="Utility to see if a slot_owner is valid. ">SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, index)</a> to check the slot validity. This buffer is owned by the library. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a11b6b37dc08a31d1360011e85e016956"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a11b6b37dc08a31d1360011e85e016956">&#9670;&nbsp;</a></span>HandleNonDmxData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void HandleNonDmxData </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classsacn_1_1_merge_receiver.html#a6b2f628cbf2d805f9a8026a02253aa2e">Handle</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_sock_addr.html">etcpal::SockAddr</a> &amp;&#160;</td>
+          <td class="paramname"><em>source_addr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="struct_sacn_header_data.html">SacnHeaderData</a> &amp;&#160;</td>
+          <td class="paramname"><em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>pdata</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Notify that a non-data packet has been received. </p>
+<p>When an established source sends a sACN data packet that doesn't contain DMX values or priorities, the raw packet is immediately and synchronously passed to this callback.</p>
+<p>This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN packets on the universe.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>The merge receiver's handle. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The universe this merge receiver is monitoring. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">source_addr</td><td>The network address from which the sACN packet originated. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">header</td><td>The header data of the sACN packet. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pdata</td><td>Pointer to the data buffer. Size of the buffer is indicated by header-&gt;slot_count. This buffer is owned by the library. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ab517496e89eb88b7ee7fa383558f725b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab517496e89eb88b7ee7fa383558f725b">&#9670;&nbsp;</a></span>HandleSourceLimitExceeded()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void HandleSourceLimitExceeded </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classsacn_1_1_merge_receiver.html#a6b2f628cbf2d805f9a8026a02253aa2e">Handle</a>&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Notify that more than the configured maximum number of sources are currently sending on the universe being listened to. </p>
+<p>This is a notification that is directly forwarded from the sACN <a class="el" href="classsacn_1_1_receiver.html" title="An instance of sACN Receiver functionality; see Using the sACN Receiver API. ">Receiver</a> module.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>The merge receiver's handle. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The universe this merge receiver is monitoring. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>include/sacn/cpp/<a class="el" href="cpp_2merge__receiver_8h_source.html">merge_receiver.h</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="namespacesacn.html">sacn</a></li><li class="navelem"><a class="el" href="classsacn_1_1_merge_receiver.html">MergeReceiver</a></li><li class="navelem"><a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html">NotifyHandler</a></li>
+    <li class="footer">Generated by
+    <a href="http://www.doxygen.org/index.html">
+    <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
+  </ul>
+</div>
+</body>
+</html>

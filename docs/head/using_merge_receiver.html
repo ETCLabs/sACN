@@ -1,0 +1,332 @@
+<!-- HTML header for doxygen 1.8.14-->
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=9" />
+  <meta name="generator" content="Doxygen 1.8.13" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>sACN: Using the sACN Merge Receiver API</title>
+  <link href="tabs.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="text/javascript" src="dynsections.js"></script>
+  <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript">
+  $(document).ready(initResizable);
+</script>
+  <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
+  <script type="text/javascript">
+    $(function () {
+      $.get('/sACN/versions.txt', function (data) {
+        if (data) {
+          var lines = data.split('\n');
+          if (lines.length > 0) {
+            var version_select = $("#version_select").empty();
+            lines.forEach(function (line) {
+              line = line.trim();
+              if (!line) {
+                return;
+              }
+              line = line.split(':');
+              var option_name = line[0].replace(/^v/, '');
+              if (line.length > 1) {
+                option_name += ' (' + line[1] + ')';
+              }
+              var option_val = '/sACN/docs/' + line[0];
+              var option = $('<option></option>').attr("value", option_val)
+                .text(option_name);
+              if (window.location.pathname.match('docs/' + line[0])) {
+                option = option.attr("selected", "selected");
+              }
+              version_select.append(option);
+            });
+          }
+        }
+      }, 'text');
+    });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
+  </script>
+  <!--END CUSTOM SCRIPT-->
+</head>
+<body>
+  <div id="top">
+    <!-- do not remove this div, it is closed by doxygen! -->
+    <div id="titlearea">
+      <table cellspacing="0" cellpadding="0" style="width: 100%">
+        <tbody>
+          <tr style="height: 56px;">
+            <td id="projectalign" style="padding-left: 0.5em;">
+              <div id="projectname">sACN
+                &#160;<span id="projectnumber">HEAD (unstable)</span>
+              </div>
+              <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+            </td>
+            <!--BEGIN CUSTOM INSERTED SECTION-->
+            <td style="text-align: right; padding-right: 0.5em">
+              <div id="otherversions">
+                View other versions:
+                <select id="version_select" onchange="location = this.value">
+                </select>
+              </div>
+            </td>
+            <!--END CUSTOM INSERTED SECTION-->
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- end header part -->
+<!-- Generated by Doxygen 1.8.13 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "search",false,'Search');
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(document).ready(function(){initNavTree('using_merge_receiver.html','');});
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="headertitle">
+<div class="title">Using the sACN Merge Receiver API </div>  </div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p>The sACN Merge Receiver API combines the functionality of the sACN Receiver and DMX Merger APIs. It provides the application with merged DMX levels, plus data with other start codes from each source, as sACN packets are received. This API exposes both a C and C++ language interface. The C++ interface is a header-only wrapper around the C interface.</p>
+<p> 
+<div class="tab">
+  <button id="button_1_c" class="tablinks" onclick="selectAllC()">Show All C Snippets</button>
+  <button id="button_1_cpp" class="tablinks" onclick="selectAllCpp()">Show All C++ Snippets</button>
+</div>
+</p>
+<h2>Initialization and Destruction</h2>
+<p>The sACN library must be globally initialized before using the Merge Receiver API. See <a class="el" href="global_init_and_destroy.html">Global Initialization and Destruction</a>.</p>
+<p>An sACN merge receiver instance can listen on one universe at a time, but the universe it listens on can be changed at any time. A merge receiver begins listening when it is created. To create an sACN merge receiver instance, use the <code><a class="el" href="group__sacn__merge__receiver.html#ga65a9abaa973d15e06a3d7432702d36fc" title="Create a new sACN Merge Receiver to listen and merge sACN data on a universe. ">sacn_merge_receiver_create()</a></code> function in C, or instantiate an <a class="el" href="classsacn_1_1_merge_receiver.html" title="An instance of sACN Merge Receiver functionality; see Using the sACN Merge Receiver API...">sacn::MergeReceiver</a> and call its <code>Startup()</code> function in C++.</p>
+<p>The sACN Merge Receiver API is an asynchronous, callback-oriented API. Part of the initial configuration for a merge receiver instance is to specify the callbacks for the library to use. In C, these are specified as a set of function pointers. In C++, these are specified as an instance of a class that implements <a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html" title="A base class for a class that receives notification callbacks from a sACN merge receiver. ">sacn::MergeReceiver::NotifyHandler</a>. Callbacks are dispatched from a background thread which is started when the first merge receiver instance is created.</p>
+<p> 
+<div class="tab">
+  <button id="button_2_c" class="tablinks" onclick="selectLanguage(event, '2', 'c')">C</button>
+  <button id="button_2_cpp" class="tablinks" onclick="selectLanguage(event, '2', 'cpp')">C++</button>
+</div>
+<div id="div_2_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><a class="code" href="struct_sacn_merge_receiver_config.html">SacnMergeReceiverConfig</a> config = <a class="code" href="group__sacn__merge__receiver.html#gaeb89255ebd3592d97fe76ed6203913ae">SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT</a>;</div><div class="line"><span class="comment">// Or, to initialize default values at runtime:</span></div><div class="line"><a class="code" href="group__sacn__merge__receiver.html#gab0d6a624f1d44008625335112788eb37">sacn_merge_receiver_config_init</a>(&amp;config);</div><div class="line"></div><div class="line">config.<a class="code" href="struct_sacn_merge_receiver_config.html#a7e0de4d0f4e4bbd14771257febdf7248">universe_id</a> = 1; <span class="comment">// Listen on universe 1</span></div><div class="line"></div><div class="line"><span class="comment">// Set the callback functions - defined elsewhere</span></div><div class="line">config.<a class="code" href="struct_sacn_merge_receiver_config.html#ac1381db71af830c6635c5d2b338217ba">callbacks</a>.<a class="code" href="struct_sacn_merge_receiver_callbacks.html#a1a4295429c025c42d5a54b646f03f62b">universe_data</a> = my_universe_data_callback;</div><div class="line">config.<a class="code" href="struct_sacn_merge_receiver_config.html#ac1381db71af830c6635c5d2b338217ba">callbacks</a>.<a class="code" href="struct_sacn_merge_receiver_callbacks.html#ace7f60e7140c695d729d045abca2ba73">universe_non_dmx</a> = my_universe_non_dmx_callback;</div><div class="line">config.<a class="code" href="struct_sacn_merge_receiver_config.html#ac1381db71af830c6635c5d2b338217ba">callbacks</a>.<a class="code" href="struct_sacn_merge_receiver_callbacks.html#a29e01e068c71bd55dd31d6aeb5483992">source_limit_exceeded</a> = my_source_limit_exceeded_callback; <span class="comment">// optional, can be NULL</span></div><div class="line"></div><div class="line"><a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> my_merge_receiver_handle;</div><div class="line"><a class="code" href="group__sacn__merge__receiver.html#ga65a9abaa973d15e06a3d7432702d36fc">sacn_merge_receiver_create</a>(&amp;config, &amp;my_merge_receiver_handle);</div></div><!-- fragment --><p> 
+</div>
+<div id="div_2_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><a class="code" href="structsacn_1_1_merge_receiver_1_1_settings.html">sacn::MergeReceiver::Settings</a> config(1); <span class="comment">// Instantiate config &amp; listen on universe 1</span></div><div class="line"><a class="code" href="classsacn_1_1_merge_receiver.html">sacn::MergeReceiver</a> merge_receiver; <span class="comment">// Instantiate a merge receiver</span></div><div class="line"></div><div class="line"><span class="comment">// You implement the callbacks by implementing the sacn::MergeReceiver::NotifyHandler interface.</span></div><div class="line"><span class="comment">// The NotifyHandler-derived instance, referred to here as my_notify_handler, must be passed in to Startup:</span></div><div class="line">MyNotifyHandler my_notify_handler;</div><div class="line">merge_receiver.<a class="code" href="classsacn_1_1_merge_receiver.html#ab8a65d7188fcd0074fd757a450a79100">Startup</a>(config, my_notify_handler);</div><div class="line"><span class="comment">// Or do this if Startup is being called within the NotifyHandler-derived class:</span></div><div class="line">merge_receiver.<a class="code" href="classsacn_1_1_merge_receiver.html#ab8a65d7188fcd0074fd757a450a79100">Startup</a>(config, *<span class="keyword">this</span>);</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>Listening on a Universe</h2>
+<p>A merge receiver can listen to one universe at a time. The initial universe being listened to is specified in the config passed into create/Startup. There are functions that allow you to get the current universe being listened to, or to change the universe to listen to.</p>
+<p> 
+<div class="tab">
+  <button id="button_3_c" class="tablinks" onclick="selectLanguage(event, '3', 'c')">C</button>
+  <button id="button_3_cpp" class="tablinks" onclick="selectLanguage(event, '3', 'cpp')">C++</button>
+</div>
+<div id="div_3_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// Get the universe currently being listened to</span></div><div class="line">uint16_t current_universe;</div><div class="line"><a class="code" href="group__sacn__merge__receiver.html#ga7345c390c8b94221b481c3cd1ca37de7">sacn_merge_receiver_get_universe</a>(my_merge_receiver_handle, &amp;current_universe);</div><div class="line"></div><div class="line"><span class="comment">// Change the universe to listen to</span></div><div class="line">uint16_t new_universe = current_universe + 1;</div><div class="line"><a class="code" href="group__sacn__merge__receiver.html#ga821122037b6cd927facd821c11cce970">sacn_merge_receiver_change_universe</a>(my_merge_receiver_handle, new_universe);</div></div><!-- fragment --><p> 
+</div>
+<div id="div_3_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// Get the universe currently being listened to</span></div><div class="line"><span class="keyword">auto</span> result = merge_receiver.<a class="code" href="classsacn_1_1_merge_receiver.html#a3d205f22d3d18f81585fd8d07ea21647">GetUniverse</a>();</div><div class="line"><span class="keywordflow">if</span> (result)</div><div class="line">{</div><div class="line">  <span class="comment">// Change the universe to listen to</span></div><div class="line">  uint16_t new_universe = *result + 1;</div><div class="line">  merge_receiver.<a class="code" href="classsacn_1_1_merge_receiver.html#aa94ae64c11fbb22db3e21fba1e85cc64">ChangeUniverse</a>(new_universe);</div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>Merging</h2>
+<p>Once a merge receiver has been created, it will begin listening for data on the configured universe. When DMX level or priority data arrives, or a source is lost, it performs a merge. This is where it determines the correct DMX level and source for each slot of the universe, since there may be multiple sources transmitting on the same universe. It does this by selecting the source with the highest priority. If there are multiple sources at that priority, then it selects the source with the highest level. That is the Highest Takes Precedence (HTP) merge algorithm.</p>
+<h2>Receiving sACN Data</h2>
+<p>The merged data callback is called whenever there are new merge results for the universe being listened to, pending the sampling period. The sampling period occurs when a receiver starts listening on a new universe or a new set of interfaces. Universe data is merged as it comes in during this period, but the notification of this data doesn't occur until after the sampling period ends. This removes flicker as various sources in the network are discovered.</p>
+<p>This callback will be called in multiple ways:</p>
+<ol type="1">
+<li>When a new non-preview data packet or per-address priority packet is received from the sACN Receiver module, it is immediately and synchronously passed to the DMX Merger. If the sampling period has not ended, the merged result is not passed to this callback until the sampling period ends. Otherwise, it is immediately and synchronously passed to this callback.</li>
+<li>When a sACN source is no longer sending non-preview data or per-address priority packets, the lost source callback from the sACN Receiver module will be passed to the merger, after which the merged result is passed to this callback pending the sampling period.</li>
+</ol>
+<p>Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the library is compiled with <a class="el" href="group__sacnopts__global.html#ga59ee3abb2f4eb1554d7be219a9c8028b" title="Enable ETC&#39;s per-address priority extension to sACN. ">SACN_ETC_PRIORITY_EXTENSION</a> set to 0 (in which case per-address priority packets received have no effect).</p>
+<p>The merger will prioritize sources with the highest per-address priority (or universe priority if the source doesn't provide per-address priorities). If two sources have the same highest priority, the one with the highest NULL start code level wins (HTP).</p>
+<p>There is a key distinction in how the merger interprets the lowest priority. The lowest universe priority is 0, but the lowest per-address priority is 1. This is because a per-address priority of 0 indicates that the source is not sending any levels to the corresponding slot. Therefore, if source A has a universe priority of 0 and a level of 10, and source B has a per-address priority of 0 and a level of 50, source A will still win despite having a lower level. This is because per-address priority 0 indicates that there is no level at this slot at all, whereas universe priority 0 simply indicates the lowest priority. If source B had a per-address priority of 1, then source B would win no matter what the levels were.</p>
+<p>Also keep in mind that if less than 512 per-address priorities are received, then the remaining slots will be treated as if they had a per-address priority of 0.</p>
+<p>This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN packets on the universe.</p>
+<p> 
+<div class="tab">
+  <button id="button_4_c" class="tablinks" onclick="selectLanguage(event, '4', 'c')">C</button>
+  <button id="button_4_cpp" class="tablinks" onclick="selectLanguage(event, '4', 'cpp')">C++</button>
+</div>
+<div id="div_4_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="keywordtype">void</span> my_universe_data_callback(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle, uint16_t universe, <span class="keyword">const</span> uint8_t* slots, </div><div class="line">                               <span class="keyword">const</span> <a class="code" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a>* slot_owners, <span class="keywordtype">void</span>* context)</div><div class="line">{</div><div class="line">  <span class="comment">// Check handle and/or context as necessary...</span></div><div class="line"></div><div class="line">  <span class="comment">// You wouldn&#39;t normally print a message on each sACN update, but this is just to demonstrate the</span></div><div class="line">  <span class="comment">// fields available:</span></div><div class="line">  printf(<span class="stringliteral">&quot;Got new merge results on universe %u\n&quot;</span>, universe);</div><div class="line"></div><div class="line">  <span class="comment">// Example for an sACN-enabled fixture...</span></div><div class="line">  <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; MY_DMX_FOOTPRINT; ++i)</div><div class="line">  {</div><div class="line">    <span class="keywordflow">if</span> (!<a class="code" href="group__sacn__dmx__merger.html#ga7b7762d0e6afca73eb8c31fa55354439">SACN_DMX_MERGER_SOURCE_IS_VALID</a>(slot_owners, my_start_addr + i))</div><div class="line">    {</div><div class="line">      <span class="comment">// One of the slots in my DMX footprint does not have a valid source</span></div><div class="line">      <span class="keywordflow">return</span>;</div><div class="line">    }</div><div class="line">  }</div><div class="line"></div><div class="line">  memcpy(my_data_buf, &amp;slots[my_start_addr], MY_DMX_FOOTPRINT);</div><div class="line">  <span class="comment">// Act on the data somehow</span></div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+<div id="div_4_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="keywordtype">void</span> MyNotifyHandler::HandleMergedData(Handle handle, uint16_t universe, <span class="keyword">const</span> uint8_t* slots,</div><div class="line">                                       <span class="keyword">const</span> <a class="code" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a>* slot_owners)</div><div class="line">{</div><div class="line">  <span class="comment">// You wouldn&#39;t normally print a message on each sACN update, but this is just to demonstrate the</span></div><div class="line">  <span class="comment">// fields available:</span></div><div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;Got new merge results on universe &quot;</span> &lt;&lt; universe &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div><div class="line"></div><div class="line">  <span class="comment">// Example for an sACN-enabled fixture...</span></div><div class="line">  <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; MY_DMX_FOOTPRINT; ++i)</div><div class="line">  {</div><div class="line">    <span class="keywordflow">if</span> (!<a class="code" href="group__sacn__dmx__merger.html#ga7b7762d0e6afca73eb8c31fa55354439">SACN_DMX_MERGER_SOURCE_IS_VALID</a>(slot_owners, my_start_addr + i))</div><div class="line">    {</div><div class="line">      <span class="comment">// One of the slots in my DMX footprint does not have a valid source</span></div><div class="line">      <span class="keywordflow">return</span>;</div><div class="line">    }</div><div class="line">  }</div><div class="line"></div><div class="line">  memcpy(my_data_buf, &amp;slots[my_start_addr], MY_DMX_FOOTPRINT);</div><div class="line">  <span class="comment">// Act on the data somehow</span></div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+</p>
+<p>If non-NULL start code, non-PAP sACN data is received, it is passed through directly to the non-DMX data callback.</p>
+<p> 
+<div class="tab">
+  <button id="button_5_c" class="tablinks" onclick="selectLanguage(event, '5', 'c')">C</button>
+  <button id="button_5_cpp" class="tablinks" onclick="selectLanguage(event, '5', 'cpp')">C++</button>
+</div>
+<div id="div_5_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="keywordtype">void</span> my_universe_non_dmx_callback(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle, uint16_t universe, <span class="keyword">const</span> <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_sock_addr.html">EtcPalSockAddr</a>* source_addr, </div><div class="line">                                  <span class="keyword">const</span> <a class="code" href="struct_sacn_header_data.html">SacnHeaderData</a>* header, <span class="keyword">const</span> uint8_t* pdata, <span class="keywordtype">void</span>* context)</div><div class="line">{</div><div class="line">  <span class="comment">// Check handle and/or context as necessary...</span></div><div class="line"></div><div class="line">  <span class="comment">// You wouldn&#39;t normally print a message on each sACN update, but this is just to demonstrate the</span></div><div class="line">  <span class="comment">// header fields available:</span></div><div class="line">  <span class="keywordtype">char</span> addr_str[<a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__inet.html#gacd7ec0d81e171166483c7629669bf05d">ETCPAL_IP_STRING_BYTES</a>];</div><div class="line">  <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__inet.html#gaf98da0ae21f7960b5e046c55b8d79c4a">etcpal_ip_to_string</a>(&amp;source_addr-&gt;<a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_sock_addr.html#a19cc8016f534a565f984438cfe911a9e">ip</a>, addr_str);</div><div class="line"></div><div class="line">  <span class="keywordtype">char</span> cid_str[<a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__uuid.html#gabab14207e273082491f7be2a21275092">ETCPAL_UUID_STRING_BYTES</a>];</div><div class="line">  <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__uuid.html#ga479b00b02ab33cf757e9476ad3286336">etcpal_uuid_to_string</a>(&amp;header-&gt;<a class="code" href="struct_sacn_header_data.html#a4c3f7d9a58af5033f9acd8c942bf81d9">cid</a>, cid_str);</div><div class="line"></div><div class="line">  printf(<span class="stringliteral">&quot;Got non-DMX sACN update from source %s (address %s:%u, name %s) on universe %u, priority %u, start code %u\n&quot;</span>,</div><div class="line">         cid_str, addr_str, source_addr-&gt;<a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_sock_addr.html#a8e0798404bf2cf5dabb84c5ba9a4f236">port</a>, header-&gt;<a class="code" href="struct_sacn_header_data.html#a176bd2902909dd199b4c4d03c1cae8cd">source_name</a>, universe, header-&gt;<a class="code" href="struct_sacn_header_data.html#a0ad043071ccc7a261d79a759dc9c6f0c">priority</a>, header-&gt;<a class="code" href="struct_sacn_header_data.html#a09df16493b12c991aef309819c8eebab">start_code</a>);</div><div class="line"></div><div class="line">  <span class="comment">// Act on the data somehow</span></div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+<div id="div_5_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="keywordtype">void</span> MyNotifyHandler::HandleNonDmxData(Handle handle, uint16_t universe, <span class="keyword">const</span> <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_sock_addr.html">etcpal::SockAddr</a>&amp; source_addr,</div><div class="line">                                       <span class="keyword">const</span> <a class="code" href="struct_sacn_header_data.html">SacnHeaderData</a>&amp; header, <span class="keyword">const</span> uint8_t* pdata)</div><div class="line">{</div><div class="line">  <span class="comment">// You wouldn&#39;t normally print a message on each sACN update, but this is just to demonstrate the</span></div><div class="line">  <span class="comment">// header fields available:</span></div><div class="line">  std::cout &lt;&lt; <span class="stringliteral">&quot;Got non-DMX sACN update from source &quot;</span> &lt;&lt; <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_uuid.html">etcpal::Uuid</a>(header.<a class="code" href="struct_sacn_header_data.html#a4c3f7d9a58af5033f9acd8c942bf81d9">cid</a>).<a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_uuid.html#a19c380b03cea21d7ac7325136a131ff0">ToString</a>() &lt;&lt; <span class="stringliteral">&quot; (address &quot;</span> </div><div class="line">            &lt;&lt; source_addr.<a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_sock_addr.html#a19c380b03cea21d7ac7325136a131ff0">ToString</a>() &lt;&lt; <span class="stringliteral">&quot;, name &quot;</span> &lt;&lt; header.<a class="code" href="struct_sacn_header_data.html#a176bd2902909dd199b4c4d03c1cae8cd">source_name</a> &lt;&lt; <span class="stringliteral">&quot;) on universe &quot;</span> &lt;&lt; universe </div><div class="line">            &lt;&lt; <span class="stringliteral">&quot;, priority &quot;</span> &lt;&lt; header.<a class="code" href="struct_sacn_header_data.html#a0ad043071ccc7a261d79a759dc9c6f0c">priority</a> &lt;&lt; <span class="stringliteral">&quot;, start code &quot;</span> &lt;&lt; header.<a class="code" href="struct_sacn_header_data.html#a09df16493b12c991aef309819c8eebab">start_code</a> &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div><div class="line"></div><div class="line">  <span class="comment">// Act on the data somehow</span></div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>Tracking Sources</h2>
+<p>The data callbacks include data originating from one or more sources transmitting on the current universe. Each source has a <em>Component Identifier</em> (CID), which is a UUID that is unique to that source. The CID should be used as a primary key to differentiate sources. It is provided directly in the non-DMX callback, in the <a class="el" href="struct_sacn_header_data.html">SacnHeaderData</a> struct. However, in the merged data callback, only the source IDs are passed in. To obtain the CID in this case, use the get source CID function.</p>
+<p> 
+<div class="tab">
+  <button id="button_6_c" class="tablinks" onclick="selectLanguage(event, '6', 'c')">C</button>
+  <button id="button_6_cpp" class="tablinks" onclick="selectLanguage(event, '6', 'cpp')">C++</button>
+</div>
+<div id="div_6_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="keywordtype">void</span> my_universe_data_callback(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle, uint16_t universe, <span class="keyword">const</span> uint8_t* slots, </div><div class="line">                               <span class="keyword">const</span> <a class="code" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a>* slot_owners, <span class="keywordtype">void</span>* context)</div><div class="line">{</div><div class="line">  <span class="comment">// Check handle and/or context as necessary...</span></div><div class="line"></div><div class="line">  <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i = 0; i &lt; <a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>; ++i)</div><div class="line">  {</div><div class="line">    <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html">EtcPalUuid</a> cid;</div><div class="line">    <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> result = <a class="code" href="group__sacn__merge__receiver.html#ga60445acfdd65b2e7fde3f90c25b04b78">sacn_merge_receiver_get_source_cid</a>(handle, slot_owners[i], &amp;cid);</div><div class="line"></div><div class="line">    <span class="keywordflow">if</span>(result == <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>)</div><div class="line">    {</div><div class="line">      <span class="comment">// You wouldn&#39;t normally print a message on each sACN update, but this is just for demonstration:</span></div><div class="line">      <span class="keywordtype">char</span> cid_str[<a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__uuid.html#gabab14207e273082491f7be2a21275092">ETCPAL_UUID_STRING_BYTES</a>];</div><div class="line">      <a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__uuid.html#ga479b00b02ab33cf757e9476ad3286336">etcpal_uuid_to_string</a>(&amp;cid, cid_str);</div><div class="line"></div><div class="line">      printf(<span class="stringliteral">&quot;Slot %u CID: %s\n&quot;</span>, i, cid_str);</div><div class="line">    }</div><div class="line">  }</div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+<div id="div_6_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="keywordtype">void</span> MyNotifyHandler::HandleMergedData(Handle handle, uint16_t universe, <span class="keyword">const</span> uint8_t* slots,</div><div class="line">                                       <span class="keyword">const</span> <a class="code" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a>* slot_owners)</div><div class="line">{</div><div class="line">  <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i = 0; i &lt; <a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>; ++i)</div><div class="line">  {</div><div class="line">    <span class="comment">// merge_receivers_ is a map between handles and merge receiver objects</span></div><div class="line">    <span class="keyword">auto</span> cid = merge_receivers_[handle].GetSourceCid(slot_owners[i]);</div><div class="line"></div><div class="line">    <span class="keywordflow">if</span>(cid)</div><div class="line">    {</div><div class="line">      <span class="comment">// You wouldn&#39;t normally print a message on each sACN update, but this is just for demonstration:</span></div><div class="line">      std::cout &lt;&lt; <span class="stringliteral">&quot;Slot &quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot; CID: &quot;</span> &lt;&lt; cid-&gt;ToString() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div><div class="line">    }</div><div class="line">  }</div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>Source Limit Exceeded Conditions</h2>
+<p>The sACN library will only forward data from sources that it is able to track. When the library is compilied with <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87" title="Use dynamic memory allocation. ">SACN_DYNAMIC_MEM</a> set to 0, this means that it will only track up to <a class="el" href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e" title="The maximum number of sources that can be tracked on each universe. ">SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</a> sources at a time. (You can change these compile options in your sacn_config.h; see <a class="el" href="building_and_integrating.html">Building and Integrating the sACN Library Into Your Project</a>.)</p>
+<p>When the library encounters a source that it does not have room to track, it will send a single source limit exceeded notification. Additional source limit exceeded callbacks will not be delivered until the number of tracked sources falls below the limit and then exceeds it again.</p>
+<p>If sACN was compiled with <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87" title="Use dynamic memory allocation. ">SACN_DYNAMIC_MEM</a> set to 1 (the default on non-embedded platforms), the library will check against the <code>source_count_max</code> value from the merge receiver config/settings, instead of <a class="el" href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e" title="The maximum number of sources that can be tracked on each universe. ">SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</a>. The <code>source_count_max</code> value may be set to <a class="el" href="group__sacn__receiver.html#gadb2ea19692692ca852423d0a9de749ea" title="Constant for &quot;infinite&quot; when listening or merging sACN universes. ">SACN_RECEIVER_INFINITE_SOURCES</a>, in which case the library will track as many sources as it is able to dynamically allocate memory for, and this callback will not be called in normal program operation (in this case it can be set to NULL in the config struct in C).</p>
+<p> 
+<div class="tab">
+  <button id="button_7_c" class="tablinks" onclick="selectLanguage(event, '7', 'c')">C</button>
+  <button id="button_7_cpp" class="tablinks" onclick="selectLanguage(event, '7', 'cpp')">C++</button>
+</div>
+<div id="div_7_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="keywordtype">void</span> my_source_limit_exceeded_callback(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle, uint16_t universe, <span class="keywordtype">void</span>* context)</div><div class="line">{</div><div class="line">  <span class="comment">// Check handle and/or context as necessary...</span></div><div class="line"></div><div class="line">  <span class="comment">// Handle the condition in an application-defined way. Maybe log it?</span></div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+<div id="div_7_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="keywordtype">void</span> MyNotifyHandler::HandleSourceLimitExceeded(Handle handle, uint16_t universe)</div><div class="line">{</div><div class="line">  <span class="comment">// Handle the condition in an application-defined way. Maybe log it?</span></div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+ </p>
+</div></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="getting_started.html">Getting Started with sACN</a></li>
+    <li class="footer">Generated by
+    <a href="http://www.doxygen.org/index.html">
+    <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
+  </ul>
+</div>
+</body>
+</html>

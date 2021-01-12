@@ -1,0 +1,289 @@
+<!-- HTML header for doxygen 1.8.14-->
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=9" />
+  <meta name="generator" content="Doxygen 1.8.13" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>sACN: include/sacn/dmx_merger.h File Reference</title>
+  <link href="tabs.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="text/javascript" src="dynsections.js"></script>
+  <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript">
+  $(document).ready(initResizable);
+</script>
+  <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
+  <script type="text/javascript">
+    $(function () {
+      $.get('/sACN/versions.txt', function (data) {
+        if (data) {
+          var lines = data.split('\n');
+          if (lines.length > 0) {
+            var version_select = $("#version_select").empty();
+            lines.forEach(function (line) {
+              line = line.trim();
+              if (!line) {
+                return;
+              }
+              line = line.split(':');
+              var option_name = line[0].replace(/^v/, '');
+              if (line.length > 1) {
+                option_name += ' (' + line[1] + ')';
+              }
+              var option_val = '/sACN/docs/' + line[0];
+              var option = $('<option></option>').attr("value", option_val)
+                .text(option_name);
+              if (window.location.pathname.match('docs/' + line[0])) {
+                option = option.attr("selected", "selected");
+              }
+              version_select.append(option);
+            });
+          }
+        }
+      }, 'text');
+    });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
+  </script>
+  <!--END CUSTOM SCRIPT-->
+</head>
+<body>
+  <div id="top">
+    <!-- do not remove this div, it is closed by doxygen! -->
+    <div id="titlearea">
+      <table cellspacing="0" cellpadding="0" style="width: 100%">
+        <tbody>
+          <tr style="height: 56px;">
+            <td id="projectalign" style="padding-left: 0.5em;">
+              <div id="projectname">sACN
+                &#160;<span id="projectnumber">HEAD (unstable)</span>
+              </div>
+              <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+            </td>
+            <!--BEGIN CUSTOM INSERTED SECTION-->
+            <td style="text-align: right; padding-right: 0.5em">
+              <div id="otherversions">
+                View other versions:
+                <select id="version_select" onchange="location = this.value">
+                </select>
+              </div>
+            </td>
+            <!--END CUSTOM INSERTED SECTION-->
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- end header part -->
+<!-- Generated by Doxygen 1.8.13 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "search",false,'Search');
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(document).ready(function(){initNavTree('dmx__merger_8h.html','');});
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#nested-classes">Data Structures</a> &#124;
+<a href="#define-members">Macros</a> &#124;
+<a href="#typedef-members">Typedefs</a> &#124;
+<a href="#func-members">Functions</a>  </div>
+  <div class="headertitle">
+<div class="title">dmx_merger.h File Reference</div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>sACN DMX Merger API definitions  
+<a href="#details">More...</a></p>
+
+<p><a href="dmx__merger_8h_source.html">Go to the source code of this file.</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:ga4578a59809c13ece174e8dcf59fce26d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#ga4578a59809c13ece174e8dcf59fce26d">SACN_DMX_MERGER_INVALID</a>&#160;&#160;&#160;-1</td></tr>
+<tr class="separator:ga4578a59809c13ece174e8dcf59fce26d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1ca9e023e2091c5a8a4e5e2ba426f055"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#ga1ca9e023e2091c5a8a4e5e2ba426f055">SACN_DMX_MERGER_SOURCE_INVALID</a>&#160;&#160;&#160;((<a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a>)-1)</td></tr>
+<tr class="separator:ga1ca9e023e2091c5a8a4e5e2ba426f055"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7431ab2baf3af7e0d1999355c6bcc9d7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#ga7431ab2baf3af7e0d1999355c6bcc9d7">SACN_DMX_MERGER_CONFIG_INIT</a></td></tr>
+<tr class="memdesc:ga7431ab2baf3af7e0d1999355c6bcc9d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">An initializer for an <a class="el" href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a> struct.  <a href="group__sacn__dmx__merger.html#ga7431ab2baf3af7e0d1999355c6bcc9d7">More...</a><br /></td></tr>
+<tr class="separator:ga7431ab2baf3af7e0d1999355c6bcc9d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7b7762d0e6afca73eb8c31fa55354439"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#ga7b7762d0e6afca73eb8c31fa55354439">SACN_DMX_MERGER_SOURCE_IS_VALID</a>(slot_owners_array,  slot_index)&#160;&#160;&#160;(slot_owners_array[slot_index] != <a class="el" href="group__sacn__dmx__merger.html#ga1ca9e023e2091c5a8a4e5e2ba426f055">SACN_DMX_MERGER_SOURCE_INVALID</a>)</td></tr>
+<tr class="memdesc:ga7b7762d0e6afca73eb8c31fa55354439"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility to see if a slot_owner is valid.  <a href="group__sacn__dmx__merger.html#ga7b7762d0e6afca73eb8c31fa55354439">More...</a><br /></td></tr>
+<tr class="separator:ga7b7762d0e6afca73eb8c31fa55354439"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:gabee79fb378d5942866adc898cb7da38b"><td class="memItemLeft" align="right" valign="top">typedef int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a></td></tr>
+<tr class="separator:gabee79fb378d5942866adc898cb7da38b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab8d8887ff8ef5fbfa4a39a9db5230a49"><td class="memItemLeft" align="right" valign="top">typedef uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a></td></tr>
+<tr class="separator:gab8d8887ff8ef5fbfa4a39a9db5230a49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga40f96dd6f9ef2598f03b2b757e37f064"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#ga40f96dd6f9ef2598f03b2b757e37f064">SacnDmxMergerConfig</a></td></tr>
+<tr class="separator:ga40f96dd6f9ef2598f03b2b757e37f064"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga2c69b926b913a0baa225106584012459"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#ga2c69b926b913a0baa225106584012459">SacnDmxMergerSource</a></td></tr>
+<tr class="separator:ga2c69b926b913a0baa225106584012459"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ga8758dad93531c1a5bbf4643157fe2c72"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#ga8758dad93531c1a5bbf4643157fe2c72">sacn_dmx_merger_create</a> (const <a class="el" href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a> *config, <a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> *handle)</td></tr>
+<tr class="memdesc:ga8758dad93531c1a5bbf4643157fe2c72"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new merger instance.  <a href="group__sacn__dmx__merger.html#ga8758dad93531c1a5bbf4643157fe2c72">More...</a><br /></td></tr>
+<tr class="separator:ga8758dad93531c1a5bbf4643157fe2c72"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga539b249ea5d0898efce4ee7371fc91ef"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#ga539b249ea5d0898efce4ee7371fc91ef">sacn_dmx_merger_destroy</a> (<a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> handle)</td></tr>
+<tr class="memdesc:ga539b249ea5d0898efce4ee7371fc91ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy a merger instance.  <a href="group__sacn__dmx__merger.html#ga539b249ea5d0898efce4ee7371fc91ef">More...</a><br /></td></tr>
+<tr class="separator:ga539b249ea5d0898efce4ee7371fc91ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1c3ed232fc3f7c23c914587fa387cd6b"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#ga1c3ed232fc3f7c23c914587fa387cd6b">sacn_dmx_merger_add_source</a> (<a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> *source_id)</td></tr>
+<tr class="memdesc:ga1c3ed232fc3f7c23c914587fa387cd6b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a new source to the merger.  <a href="group__sacn__dmx__merger.html#ga1c3ed232fc3f7c23c914587fa387cd6b">More...</a><br /></td></tr>
+<tr class="separator:ga1c3ed232fc3f7c23c914587fa387cd6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gacd441710a3047265429cb1682c50a402"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#gacd441710a3047265429cb1682c50a402">sacn_dmx_merger_remove_source</a> (<a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source)</td></tr>
+<tr class="memdesc:gacd441710a3047265429cb1682c50a402"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a source from the merger.  <a href="group__sacn__dmx__merger.html#gacd441710a3047265429cb1682c50a402">More...</a><br /></td></tr>
+<tr class="separator:gacd441710a3047265429cb1682c50a402"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab9f34e5fab687a2d4fdeef43ea3b2af4"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#gab9f34e5fab687a2d4fdeef43ea3b2af4">sacn_dmx_merger_get_source</a> (<a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source)</td></tr>
+<tr class="memdesc:gab9f34e5fab687a2d4fdeef43ea3b2af4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets a read-only view of the source data.  <a href="group__sacn__dmx__merger.html#gab9f34e5fab687a2d4fdeef43ea3b2af4">More...</a><br /></td></tr>
+<tr class="separator:gab9f34e5fab687a2d4fdeef43ea3b2af4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafcf58136c0c882d05724ff6bd57f78a8"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#gafcf58136c0c882d05724ff6bd57f78a8">sacn_dmx_merger_update_levels</a> (<a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source, const uint8_t *new_levels, size_t new_levels_count)</td></tr>
+<tr class="memdesc:gafcf58136c0c882d05724ff6bd57f78a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates a source's levels and recalculates outputs.  <a href="group__sacn__dmx__merger.html#gafcf58136c0c882d05724ff6bd57f78a8">More...</a><br /></td></tr>
+<tr class="separator:gafcf58136c0c882d05724ff6bd57f78a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga574eeb1eda51e31eb13fe12ccb543d42"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#ga574eeb1eda51e31eb13fe12ccb543d42">sacn_dmx_merger_update_paps</a> (<a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source, const uint8_t *paps, size_t paps_count)</td></tr>
+<tr class="memdesc:ga574eeb1eda51e31eb13fe12ccb543d42"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates a source's per-address priorities (PAPs) and recalculates outputs.  <a href="group__sacn__dmx__merger.html#ga574eeb1eda51e31eb13fe12ccb543d42">More...</a><br /></td></tr>
+<tr class="separator:ga574eeb1eda51e31eb13fe12ccb543d42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf31312d80e0f9a198e6cb1e27ea4d63c"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#gaf31312d80e0f9a198e6cb1e27ea4d63c">sacn_dmx_merger_update_universe_priority</a> (<a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source, uint8_t universe_priority)</td></tr>
+<tr class="memdesc:gaf31312d80e0f9a198e6cb1e27ea4d63c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates a source's universe priority and recalculates outputs.  <a href="group__sacn__dmx__merger.html#gaf31312d80e0f9a198e6cb1e27ea4d63c">More...</a><br /></td></tr>
+<tr class="separator:gaf31312d80e0f9a198e6cb1e27ea4d63c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa3057d877c09ef61ad68813c68b0294f"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html#gaa3057d877c09ef61ad68813c68b0294f">sacn_dmx_merger_remove_paps</a> (<a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="el" href="group__sacn__dmx__merger.html#gab8d8887ff8ef5fbfa4a39a9db5230a49">sacn_source_id_t</a> source)</td></tr>
+<tr class="memdesc:gaa3057d877c09ef61ad68813c68b0294f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the per-address priority (PAP) data from the source and recalculate outputs.  <a href="group__sacn__dmx__merger.html#gaa3057d877c09ef61ad68813c68b0294f">More...</a><br /></td></tr>
+<tr class="separator:gaa3057d877c09ef61ad68813c68b0294f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>sACN DMX Merger API definitions </p>
+<p>Functions and definitions for the <a class="el" href="group__sacn__dmx__merger.html">sACN DMX Merger API</a> are contained in this header. </p>
+</div></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_186c755b36c8c9d823e4f9fe73fe5caf.html">sacn</a></li><li class="navelem"><a class="el" href="dmx__merger_8h.html">dmx_merger.h</a></li>
+    <li class="footer">Generated by
+    <a href="http://www.doxygen.org/index.html">
+    <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
+  </ul>
+</div>
+</body>
+</html>

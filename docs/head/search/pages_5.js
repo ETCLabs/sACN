@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['network_20interface_20indexes',['Network Interface Indexes',['https://etclabs.github.io/EtcPal/docs/head/interface_indexes.html',1,'']]]
+  ['per_20address_20priority',['Per Address Priority',['../per_address_priority.html',1,'additional_documentation']]]
 ];

@@ -1,4 +1,5 @@
 var additional_documentation =
 [
-    [ "Data Loss Behavior", "data_loss_behavior.html", null ]
+    [ "Source Loss Behavior", "source_loss_behavior.html", null ],
+    [ "Per Address Priority", "per_address_priority.html", null ]
 ];

@@ -21,8 +21,8 @@
   <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
-  <link href="doxygen.css" rel="stylesheet" type="text/css" />
-  <!--BEGIN CUSTOM SCRIPT-->
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
   <script type="text/javascript">
     $(function () {
       $.get('/sACN/versions.txt', function (data) {
@@ -52,6 +52,76 @@
         }
       }, 'text');
     });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
   </script>
   <!--END CUSTOM SCRIPT-->
 </head>
@@ -131,20 +201,14 @@ $(document).ready(function(){initNavTree('struct_sacn_lost_source.html','');});
 <div class="title">SacnLostSource Struct Reference<div class="ingroups"><a class="el" href="group__s_a_c_n.html">sACN</a> &raquo; <a class="el" href="group__sacn__receiver.html">sACN Receiver</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Information about a sACN source that was lost.  
- <a href="struct_sacn_lost_source.html#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr class="memitem:a4c3f7d9a58af5033f9acd8c942bf81d9"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html">EtcPalUuid</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_lost_source.html#a4c3f7d9a58af5033f9acd8c942bf81d9">cid</a></td></tr>
-<tr class="memdesc:a4c3f7d9a58af5033f9acd8c942bf81d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Component Identifier (CID) of the source.  <a href="#a4c3f7d9a58af5033f9acd8c942bf81d9">More...</a><br /></td></tr>
 <tr class="separator:a4c3f7d9a58af5033f9acd8c942bf81d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7e3669a12853b82f7d2b7488bb174956"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_lost_source.html#a7e3669a12853b82f7d2b7488bb174956">name</a> [<a class="el" href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8">SACN_SOURCE_NAME_MAX_LEN</a>]</td></tr>
-<tr class="memdesc:a7e3669a12853b82f7d2b7488bb174956"><td class="mdescLeft">&#160;</td><td class="mdescRight">The name of the source.  <a href="#a7e3669a12853b82f7d2b7488bb174956">More...</a><br /></td></tr>
 <tr class="separator:a7e3669a12853b82f7d2b7488bb174956"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1aea42fae01ba0d2917114d189a9d36"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_lost_source.html#ad1aea42fae01ba0d2917114d189a9d36">terminated</a></td></tr>
-<tr class="memdesc:ad1aea42fae01ba0d2917114d189a9d36"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the source was determined to be lost due to the Stream_Terminated bit being set in the sACN data packet.  <a href="#ad1aea42fae01ba0d2917114d189a9d36">More...</a><br /></td></tr>
 <tr class="separator:ad1aea42fae01ba0d2917114d189a9d36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -161,7 +225,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>The Component Identifier (CID) of the source. </p>
 
 </div>
@@ -177,7 +240,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>The name of the source. </p>
 
 </div>
@@ -193,8 +255,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Whether the source was determined to be lost due to the Stream_Terminated bit being set in the sACN data packet. </p>
+<p>If true, the source was determined to be lost due to the Stream_Terminated bit being set in the sACN data packet. If false, the source was lost due to a source loss timeout. </p>
 
 </div>
 </div>
