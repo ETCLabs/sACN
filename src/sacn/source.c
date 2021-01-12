@@ -1595,8 +1595,8 @@ int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* universe_ite
        universe && (num_universes_packed < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE);
        universe = etcpal_rbiter_next(universe_iter))
   {
-    // If this universe has NULL start code data at a bare minimum
-    if (universe->has_null_data)
+    // If this universe has NULL start code data at a bare minimum & is not unicast-only
+    if (universe->has_null_data && !universe->send_unicast_only)
     {
       // Pack the universe ID
       etcpal_pack_u16b(pcur, universe->universe_id);
