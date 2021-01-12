@@ -68,9 +68,9 @@ TEST_F(TestMem, ValidInitializedStatusLists)
     SacnSourceStatusLists* status_lists = get_status_lists(thread);
     ASSERT_NE(status_lists, nullptr);
 
-    EXPECT_EQ(status_lists->num_online, 0);
-    EXPECT_EQ(status_lists->num_offline, 0);
-    EXPECT_EQ(status_lists->num_unknown, 0);
+    EXPECT_EQ(status_lists->num_online, 0u);
+    EXPECT_EQ(status_lists->num_offline, 0u);
+    EXPECT_EQ(status_lists->num_unknown, 0u);
   });
 }
 
@@ -88,9 +88,9 @@ TEST_F(TestMem, StatusListsAreReZeroedWithEachGet)
   status_lists = get_status_lists(0);
   ASSERT_NE(status_lists, nullptr);
 
-  EXPECT_EQ(status_lists->num_online, 0);
-  EXPECT_EQ(status_lists->num_offline, 0);
-  EXPECT_EQ(status_lists->num_unknown, 0);
+  EXPECT_EQ(status_lists->num_online, 0u);
+  EXPECT_EQ(status_lists->num_offline, 0u);
+  EXPECT_EQ(status_lists->num_unknown, 0u);
 }
 
 TEST_F(TestMem, StatusListsAddOfflineWorks)
@@ -101,7 +101,7 @@ TEST_F(TestMem, StatusListsAddOfflineWorks)
 
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
+    for (size_t i = 0; i < 20; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -113,7 +113,7 @@ TEST_F(TestMem, StatusListsAddOfflineWorks)
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
+    for (size_t i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -138,7 +138,7 @@ TEST_F(TestMem, StatusListsAddOnlineWorks)
 
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
+    for (size_t i = 0; i < 20; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -149,7 +149,7 @@ TEST_F(TestMem, StatusListsAddOnlineWorks)
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
+    for (size_t i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -173,7 +173,7 @@ TEST_F(TestMem, StatusListsAddUnknownWorks)
 
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
+    for (size_t i = 0; i < 20; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -184,7 +184,7 @@ TEST_F(TestMem, StatusListsAddUnknownWorks)
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
+    for (size_t i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -248,16 +248,16 @@ TEST_F(TestMem, ValidInitializedRecvThreadContext)
 
     EXPECT_EQ(recv_thread_context->thread_id, thread);
     EXPECT_EQ(recv_thread_context->receivers, nullptr);
-    EXPECT_EQ(recv_thread_context->num_receivers, 0);
+    EXPECT_EQ(recv_thread_context->num_receivers, 0u);
 
 #if SACN_DYNAMIC_MEM
     EXPECT_NE(recv_thread_context->dead_sockets, nullptr);
     EXPECT_NE(recv_thread_context->socket_refs, nullptr);
 #endif
 
-    EXPECT_EQ(recv_thread_context->num_dead_sockets, 0);
-    EXPECT_EQ(recv_thread_context->num_socket_refs, 0);
-    EXPECT_EQ(recv_thread_context->new_socket_refs, 0);
+    EXPECT_EQ(recv_thread_context->num_dead_sockets, 0u);
+    EXPECT_EQ(recv_thread_context->num_socket_refs, 0u);
+    EXPECT_EQ(recv_thread_context->new_socket_refs, 0u);
   });
 }
 
@@ -269,7 +269,7 @@ TEST_F(TestMem, AddDeadSocketWorks)
 
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
+    for (size_t i = 0; i < 20; ++i)
     {
       ASSERT_TRUE(add_dead_socket(recv_thread_context, (etcpal_socket_t)i));
       EXPECT_EQ(recv_thread_context->num_dead_sockets, i + 1);
@@ -277,7 +277,7 @@ TEST_F(TestMem, AddDeadSocketWorks)
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES * 2; ++i)
+    for (size_t i = 0; i < SACN_RECEIVER_MAX_UNIVERSES * 2; ++i)
     {
       ASSERT_TRUE(add_dead_socket(recv_thread_context, (etcpal_socket_t)i));
       EXPECT_EQ(recv_thread_context->num_dead_sockets, i + 1);
@@ -297,23 +297,23 @@ TEST_F(TestMem, AddSocketRefWorks)
 
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
+    for (size_t i = 0; i < 20; ++i)
     {
       ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i, kEtcPalIpTypeInvalid, false));
       EXPECT_EQ(recv_thread_context->num_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->new_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->socket_refs[i].sock, (etcpal_socket_t)i);
-      EXPECT_EQ(recv_thread_context->socket_refs[i].refcount, 1);
+      EXPECT_EQ(recv_thread_context->socket_refs[i].refcount, 1u);
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_SOCKET_REFS; ++i)
+    for (size_t i = 0; i < SACN_RECEIVER_MAX_SOCKET_REFS; ++i)
     {
       ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i, kEtcPalIpTypeInvalid, false));
       EXPECT_EQ(recv_thread_context->num_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->new_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->socket_refs[i].sock, (etcpal_socket_t)i);
-      EXPECT_EQ(recv_thread_context->socket_refs[i].refcount, 1);
+      EXPECT_EQ(recv_thread_context->socket_refs[i].refcount, 1u);
     }
     // And make sure we can't add another
     EXPECT_FALSE(add_socket_ref(recv_thread_context, (etcpal_socket_t)SACN_RECEIVER_MAX_SOCKET_REFS,
@@ -337,18 +337,18 @@ TEST_F(TestMem, RemoveSocketRefWorks)
     // Remove a socket ref that has a refcount of 1, the other ones should be shifted
     ASSERT_TRUE(remove_socket_ref(recv_thread_context, (etcpal_socket_t)0));
 
-    ASSERT_EQ(recv_thread_context->num_socket_refs, 2);
-    EXPECT_EQ(recv_thread_context->new_socket_refs, 1);
+    ASSERT_EQ(recv_thread_context->num_socket_refs, 2u);
+    EXPECT_EQ(recv_thread_context->new_socket_refs, 1u);
     EXPECT_EQ(recv_thread_context->socket_refs[0].sock, (etcpal_socket_t)1);
-    EXPECT_EQ(recv_thread_context->socket_refs[0].refcount, 20);
+    EXPECT_EQ(recv_thread_context->socket_refs[0].refcount, 20u);
     EXPECT_EQ(recv_thread_context->socket_refs[1].sock, (etcpal_socket_t)2);
-    EXPECT_EQ(recv_thread_context->socket_refs[1].refcount, 3);
+    EXPECT_EQ(recv_thread_context->socket_refs[1].refcount, 3u);
 
     // Remove one with multiple references
     for (int i = 0; i < 2; ++i)
       ASSERT_FALSE(remove_socket_ref(recv_thread_context, (etcpal_socket_t)2));
     EXPECT_TRUE(remove_socket_ref(recv_thread_context, (etcpal_socket_t)2));
-    EXPECT_EQ(recv_thread_context->num_socket_refs, 1);
+    EXPECT_EQ(recv_thread_context->num_socket_refs, 1u);
   });
 }
 
@@ -398,7 +398,7 @@ TEST_F(TestMem, ValidInitializedSourcesLostBuf)
       auto sources_lost = &sources_lost_buf[i];
       EXPECT_EQ(sources_lost->callback, nullptr);
       EXPECT_EQ(sources_lost->handle, SACN_RECEIVER_INVALID);
-      EXPECT_EQ(sources_lost->num_lost_sources, 0);
+      EXPECT_EQ(sources_lost->num_lost_sources, 0u);
       EXPECT_EQ(sources_lost->context, nullptr);
     }
 #else
@@ -411,7 +411,7 @@ TEST_F(TestMem, ValidInitializedSourcesLostBuf)
       auto sources_lost = &sources_lost_buf[i];
       EXPECT_EQ(sources_lost->callback, nullptr);
       EXPECT_EQ(sources_lost->handle, SACN_RECEIVER_INVALID);
-      EXPECT_EQ(sources_lost->num_lost_sources, 0);
+      EXPECT_EQ(sources_lost->num_lost_sources, 0u);
       EXPECT_EQ(sources_lost->context, nullptr);
     }
 
@@ -430,7 +430,7 @@ TEST_F(TestMem, AddLostSourceWorks)
 
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (int i = 0; i < 20; ++i)
+    for (size_t i = 0; i < 20; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -442,7 +442,7 @@ TEST_F(TestMem, AddLostSourceWorks)
     }
 #else
     // Test up to the maximum capacity
-    for (int i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
+    for (size_t i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
@@ -476,7 +476,7 @@ TEST_F(TestMem, SourcesLostIsReZeroedWithEachGet)
 
   EXPECT_EQ(sources_lost->callback, nullptr);
   EXPECT_EQ(sources_lost->handle, SACN_RECEIVER_INVALID);
-  EXPECT_EQ(sources_lost->num_lost_sources, 0);
+  EXPECT_EQ(sources_lost->num_lost_sources, 0u);
   EXPECT_EQ(sources_lost->context, nullptr);
 }
 
@@ -663,7 +663,7 @@ TEST_F(TestMem, AddReceiverToListWorks)
   add_receiver_to_list(&rtc, &receiver);
   ASSERT_EQ(rtc.receivers, &receiver);
   EXPECT_EQ(rtc.receivers->next, nullptr);
-  EXPECT_EQ(rtc.num_receivers, 1);
+  EXPECT_EQ(rtc.num_receivers, 1u);
 
 #if SACN_DYNAMIC_MEM
   SacnReceiver receiver2{};
@@ -674,7 +674,7 @@ TEST_F(TestMem, AddReceiverToListWorks)
   ASSERT_EQ(rtc.receivers, &receiver);
   ASSERT_EQ(rtc.receivers->next, &receiver2);
   EXPECT_EQ(rtc.receivers->next->next, nullptr);
-  EXPECT_EQ(rtc.num_receivers, 2);
+  EXPECT_EQ(rtc.num_receivers, 2u);
 }
 
 TEST_F(TestMem, RemoveReceiverFromListWorks)
@@ -701,13 +701,13 @@ TEST_F(TestMem, RemoveReceiverFromListWorks)
   ASSERT_EQ(rtc.receivers, &receiver);
   ASSERT_EQ(rtc.receivers->next, &receiver3);
   EXPECT_EQ(rtc.receivers->next->next, nullptr);
-  EXPECT_EQ(rtc.num_receivers, 2);
+  EXPECT_EQ(rtc.num_receivers, 2u);
   EXPECT_EQ(receiver2.next, nullptr);
 
   // Remove from the head
   remove_receiver_from_list(&rtc, &receiver);
   ASSERT_EQ(rtc.receivers, &receiver3);
   EXPECT_EQ(rtc.receivers->next, nullptr);
-  EXPECT_EQ(rtc.num_receivers, 1);
+  EXPECT_EQ(rtc.num_receivers, 1u);
   EXPECT_EQ(receiver.next, nullptr);
 }

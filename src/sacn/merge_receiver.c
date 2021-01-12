@@ -269,6 +269,10 @@ etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle
 size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, SacnMcastInterface* netints,
                                                   size_t netints_size)
 {
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(netints_size);
+
   return 0;  // TODO
 }
 

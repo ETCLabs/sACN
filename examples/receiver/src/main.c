@@ -392,6 +392,7 @@ static void handle_universe_data(sacn_receiver_t handle, const EtcPalSockAddr* s
 {
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(source_addr);
+  ETCPAL_UNUSED_ARG(is_sampling);
 
   if (etcpal_mutex_lock(&mutex))
   {

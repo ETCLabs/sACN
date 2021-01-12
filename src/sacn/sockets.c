@@ -557,6 +557,10 @@ etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t n
 
 etcpal_error_t test_sacn_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str)
 {
+#if !SACN_LOGGING_ENABLED
+  ETCPAL_UNUSED_ARG(addr_str);
+#endif
+
   // create_send_socket() also tests setting the relevant send socket options and the
   // MULTICAST_IF on the relevant interface.
   etcpal_socket_t test_socket;

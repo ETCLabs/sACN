@@ -534,6 +534,10 @@ etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastI
  */
 size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, SacnMcastInterface* netints, size_t netints_size)
 {
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(netints_size);
+
   return 0;  // TODO
 }
 
@@ -1214,6 +1218,8 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
  */
 void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* notify)
 {
+  ETCPAL_UNUSED_ARG(receiver);
+
   *notify = true;
 
   switch (src->recv_state)

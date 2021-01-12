@@ -183,5 +183,9 @@ etcpal_error_t sacn_source_detector_reset_networking(sacn_source_detector_t hand
 size_t sacn_source_detector_get_network_interfaces(sacn_source_detector_t handle, SacnMcastInterface* netints,
                                                    size_t netints_size)
 {
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(netints_size);
+
   return 0;  // TODO
 }

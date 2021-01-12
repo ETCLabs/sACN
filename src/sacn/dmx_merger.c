@@ -498,6 +498,11 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
 etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_source_id_t source,
                                              const uint8_t* new_levels, size_t new_levels_count)
 {
+  ETCPAL_UNUSED_ARG(merger);
+  ETCPAL_UNUSED_ARG(source);
+  ETCPAL_UNUSED_ARG(new_levels);
+  ETCPAL_UNUSED_ARG(new_levels_count);
+
   return kEtcPalErrNotImpl;  // TODO
 }
 
@@ -524,6 +529,11 @@ etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_sour
 etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_source_id_t source, const uint8_t* paps,
                                            size_t paps_count)
 {
+  ETCPAL_UNUSED_ARG(merger);
+  ETCPAL_UNUSED_ARG(source);
+  ETCPAL_UNUSED_ARG(paps);
+  ETCPAL_UNUSED_ARG(paps_count);
+
   return kEtcPalErrNotImpl;  // TODO
 }
 
@@ -549,6 +559,10 @@ etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_source
 etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger, sacn_source_id_t source,
                                                         uint8_t universe_priority)
 {
+  ETCPAL_UNUSED_ARG(merger);
+  ETCPAL_UNUSED_ARG(source);
+  ETCPAL_UNUSED_ARG(universe_priority);
+
   return kEtcPalErrNotImpl;  // TODO
 }
 

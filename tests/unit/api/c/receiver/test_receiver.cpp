@@ -74,7 +74,7 @@ protected:
     config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
                                         bool, void*) {};
     config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
-    config.callbacks.sampling_period_ended = [](sacn_receiver_t handle, uint16_t universe, void* context) {};
+    config.callbacks.sampling_period_ended = [](sacn_receiver_t, uint16_t, void*) {};
     config.universe_id = CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE;
     config.ip_supported = ip_supported;
 
@@ -249,7 +249,7 @@ TEST_F(TestReceiver, ChangeUniverseErrExistsWorks)
   config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
                                       bool, void*) {};
   config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
-  config.callbacks.sampling_period_ended = [](sacn_receiver_t handle, uint16_t universe, void* context) {};
+  config.callbacks.sampling_period_ended = [](sacn_receiver_t, uint16_t, void*) {};
 
   config.universe_id = CHANGE_UNIVERSE_RECEIVER_EXISTS_UNIVERSE;
 
@@ -280,7 +280,7 @@ TEST_F(TestReceiver, ChangeUniverseErrNotFoundWorks)
   config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
                                       bool, void*) {};
   config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
-  config.callbacks.sampling_period_ended = [](sacn_receiver_t handle, uint16_t universe, void* context) {};
+  config.callbacks.sampling_period_ended = [](sacn_receiver_t, uint16_t, void*) {};
   config.universe_id = CHANGE_UNIVERSE_VALID_UNIVERSE_1;
 
   sacn_receiver_t handle;

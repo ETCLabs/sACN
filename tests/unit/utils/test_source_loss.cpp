@@ -120,7 +120,7 @@ TEST_F(TestSourceLoss, AllSourcesOfflineAtOnce)
 
   // We should now get our notification containing all sources
   get_expired_sources(&term_set_list_, expired_sources_);
-  EXPECT_EQ(expired_sources_->num_lost_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  EXPECT_EQ(expired_sources_->num_lost_sources, static_cast<size_t>(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE));
 
   // Check to make sure the list of sources lost matches our original source list.
   VerifySourcesMatch(expired_sources_->lost_sources, expired_sources_->num_lost_sources, sources_);
@@ -162,7 +162,7 @@ TEST_F(TestSourceLoss, AllSourcesOfflineOneByOne)
 
   // We should now get our one notification containing all sources
   get_expired_sources(&term_set_list_, expired_sources_);
-  ASSERT_EQ(expired_sources_->num_lost_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  ASSERT_EQ(expired_sources_->num_lost_sources, static_cast<size_t>(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE));
 
   // Check to make sure the list of sources lost matches our original source list.
   VerifySourcesMatch(expired_sources_->lost_sources, expired_sources_->num_lost_sources, sources_);
