@@ -84,7 +84,7 @@ typedef struct SourceState
 
   EtcPalRbTree universes;
   size_t num_active_universes;  // Number of universes to include in universe discovery packets.
-  bool universe_list_changed;
+  bool universe_discovery_list_changed;
   EtcPalTimer universe_discovery_timer;
   bool process_manually;
   sacn_ip_support_t ip_supported;
@@ -384,7 +384,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
       etcpal_rbtree_init(&source->universes, universe_state_lookup_compare_func, source_rb_node_alloc_func,
                          source_rb_node_dealloc_func);
       source->num_active_universes = 0;
-      source->universe_list_changed = true;
+      source->universe_discovery_list_changed = true;
       etcpal_timer_start(&source->universe_discovery_timer, UNIVERSE_DISCOVERY_INTERVAL);
       source->process_manually = config->manually_process_source;
       source->ip_supported = config->ip_supported;
@@ -1236,11 +1236,11 @@ int process_internal(bool process_manual)
 
         // If source is not terminating AND either the universe list has changed OR universe discovery timer expired
         if (!source->terminating &&
-            (source->universe_list_changed || etcpal_timer_is_expired(&source->universe_discovery_timer)))
+            (source->universe_discovery_list_changed || etcpal_timer_is_expired(&source->universe_discovery_timer)))
         {
-          // Send universe discovery packet, reset universe discovery timer & universe_list_changed flag
+          // Send universe discovery packet, reset universe discovery timer & universe_discovery_list_changed flag
           send_universe_discovery(source);
-          source->universe_list_changed = false;
+          source->universe_discovery_list_changed = false;
           etcpal_timer_reset(&source->universe_discovery_timer);
         }
 
@@ -1334,11 +1334,11 @@ void remove_universe_state(SourceState* source, UniverseState** universe, EtcPal
 
   if (universe_to_remove)
   {
-    // Update num_active_universes and universe_list_changed if needed
+    // Update num_active_universes and universe_discovery_list_changed if needed
     if (universe_to_remove->has_null_data && !universe_to_remove->send_unicast_only)
     {
       --source->num_active_universes;
-      source->universe_list_changed = true;
+      source->universe_discovery_list_changed = true;
     }
 
     // Update the netints tree
