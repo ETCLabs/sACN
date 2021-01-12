@@ -507,11 +507,43 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
   return kEtcPalErrNotInit;
 #endif
 
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(config);
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(num_netints);
-  return kEtcPalErrNotImpl;
+  etcpal_error_t result = kEtcPalErrOk;
+
+  // Verify module initialized.
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+
+  // Check for invalid arguments.
+  if (result == kEtcPalErrOk)
+  {
+    if (handle == SACN_SOURCE_INVALID)
+      result = kEtcPalErrInvalid;
+    else if (!config)
+      result = kEtcPalErrInvalid;
+    else if (!UNIVERSE_ID_VALID(config->universe) || !UNIVERSE_ID_VALID(config->sync_universe))
+      result = kEtcPalErrInvalid;
+    else if ((config->num_unicast_destinations > 0) && !config->unicast_destinations)
+      result = kEtcPalErrInvalid;
+    else
+    {
+      for (size_t i = 0; i < config->num_unicast_destinations; ++i)
+      {
+        if (ETCPAL_IP_IS_INVALID(&config->unicast_destinations[i]))
+          result = kEtcPalErrInvalid;
+      }
+    }
+  }
+
+  if (sacn_lock())
+  {
+    // Look up the source's state.
+    // Allocate the universe's state.
+    // Initialize the universe's state and add it to the source's universes tree.
+
+    sacn_unlock();
+  }
+
+  return result;
 }
 
 /**
