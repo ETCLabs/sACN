@@ -580,6 +580,20 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
 #endif
       universe->num_unicast_dests = config->num_unicast_destinations;
       universe->send_unicast_only = config->send_unicast_only;
+
+      // Add the state to the universes tree.
+      etcpal_error_t insert_result = etcpal_rbtree_insert(&source->universes, universe);
+
+      // Clean up on failure.
+      if (insert_result != kEtcPalErrOk)
+      {
+        FREE_UNIVERSE_STATE(universe);
+
+        if (insert_result == kEtcPalErrNoMem)
+          result = kEtcPalErrNoMem;
+        else
+          result = kEtcPalErrSys;
+      }
     }
 
     sacn_unlock();
