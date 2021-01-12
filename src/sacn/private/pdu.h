@@ -88,8 +88,15 @@ extern "C" {
       bufptr[SACN_OPTS_OFFSET] &= (uint8_t)(~SACN_OPTVAL_PREVIEW); \
   } while (0)
 #define SET_PRIORITY(bufptr, priority) ((void)(bufptr[SACN_PRI_OFFSET] = priority));
-#define SET_PROPERTY_VALUE_COUNT(bufptr, property_value_count) \
-  (bufptr[SACN_PROPERTY_VALUE_COUNT_OFFSET] = property_value_count)
+#define SET_DATA_SLOT_COUNT(bufptr, slot_count)                                                                      \
+  do                                                                                                                 \
+  {                                                                                                                  \
+    ACN_PDU_PACK_NORMAL_LEN(&bufptr[ACN_UDP_PREAMBLE_SIZE],                                                          \
+                            SACN_DATA_HEADER_SIZE + slot_count - ACN_UDP_PREAMBLE_SIZE);                             \
+    ACN_PDU_PACK_NORMAL_LEN(&bufptr[SACN_FRAMING_OFFSET], SACN_DATA_HEADER_SIZE + slot_count - SACN_FRAMING_OFFSET); \
+    ACN_PDU_PACK_NORMAL_LEN(&bufptr[SACN_DMP_OFFSET], SACN_DATA_HEADER_SIZE + slot_count - SACN_DMP_OFFSET);         \
+    etcpal_pack_u16b(&bufptr[SACN_PROPERTY_VALUE_COUNT_OFFSET], 1 + slot_count);                                     \
+  } while (0)
 #define SET_UNIVERSE_COUNT(bufptr, count)                                                                         \
   do                                                                                                              \
   {                                                                                                               \

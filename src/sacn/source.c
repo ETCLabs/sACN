@@ -1790,8 +1790,8 @@ void update_data(uint8_t* send_buf, const uint8_t* new_data, size_t new_data_siz
   // Set force sync flag
   SET_FORCE_SYNC_OPT(send_buf, force_sync);
 
-  // Set the property value count field (1 + number of slots in packet)
-  SET_PROPERTY_VALUE_COUNT(send_buf, 1 + new_data_size);
+  // Update the size/count fields for the new data size (slot count)
+  SET_DATA_SLOT_COUNT(send_buf, new_data_size);
 
   // Copy data into the send buffer immediately after the start code
   memcpy(&send_buf[SACN_DATA_HEADER_SIZE], new_data, new_data_size);
