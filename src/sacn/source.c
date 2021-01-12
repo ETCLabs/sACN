@@ -557,6 +557,29 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     // Initialize the universe's state and add it to the source's universes tree.
     if (result == kEtcPalErrOk)
     {
+      universe->universe_id = config->universe;
+
+      universe->terminating = false;
+      universe->num_terminations_sent = 0;
+
+      universe->null_packets_sent_before_suppression = 0;
+      memset(universe->null_send_buf, 0, SACN_MTU);
+      universe->has_null_data = false;
+
+#if SACN_ETC_PRIORITY_EXTENSION
+      universe->pap_packets_sent_before_suppression = 0;
+      memset(universe->pap_send_buf, 0, SACN_MTU);
+      universe->has_pap_data = false;
+#endif
+
+#if SACN_DYNAMIC_MEM
+      if (config->num_unicast_destinations > 0)
+        universe->netints = calloc(config->num_unicast_destinations, sizeof(EtcPalMcastNetintId));
+      else
+        universe->netints = NULL;
+#endif
+      universe->num_unicast_dests = config->num_unicast_destinations;
+      universe->send_unicast_only = config->send_unicast_only;
     }
 
     sacn_unlock();
