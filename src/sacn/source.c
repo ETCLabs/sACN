@@ -171,6 +171,9 @@ static int source_state_lookup_compare_func(const EtcPalRbTree* self, const void
 static int universe_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 static int netint_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 
+static etcpal_error_t lookup_state(sacn_source_t source, uint16_t universe, SourceState** source_state,
+                                   UniverseState** universe_state);
+
 static EtcPalRbNode* source_rb_node_alloc_func(void);
 static void source_rb_node_dealloc_func(EtcPalRbNode* node);
 static void free_universes_node(const EtcPalRbTree* self, EtcPalRbNode* node);
@@ -1137,6 +1140,40 @@ int netint_state_lookup_compare_func(const EtcPalRbTree* self, const void* value
 
   return ((a->id.index > b->id.index) || ((a->id.index == b->id.index) && (a->id.ip_type > b->id.ip_type))) -
          ((a->id.index < b->id.index) || ((a->id.index == b->id.index) && (a->id.ip_type < b->id.ip_type)));
+}
+
+etcpal_error_t lookup_state(sacn_source_t source, uint16_t universe, SourceState** source_state,
+                            UniverseState** universe_state)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+
+  SourceState* my_source_state = NULL;
+  UniverseState* my_universe_state = NULL;
+
+  // Look up the source state.
+  my_source_state = etcpal_rbtree_find(&sources, &source);
+
+  if (!my_source_state)
+    result = kEtcPalErrNotFound;
+
+  // Look up the universe state.
+  if ((result == kEtcPalErrOk) && universe_state)
+  {
+    my_universe_state = etcpal_rbtree_find(&my_source_state->universes, &universe);
+
+    if (!my_universe_state)
+      result = kEtcPalErrNotFound;
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    if (source_state)
+      *source_state = my_source_state;
+    if (universe_state)
+      *universe_state = my_universe_state;
+  }
+
+  return result;
 }
 
 static EtcPalRbNode* source_rb_node_alloc_func(void)
