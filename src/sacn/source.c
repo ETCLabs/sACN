@@ -544,6 +544,14 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     if (result == kEtcPalErrOk)
       result = lookup_state(handle, 0, &source, NULL);
 
+    // Confirm that the universe wasn't already added.
+    if (result == kEtcPalErrOk)
+    {
+      UniverseState* tmp; 
+      if (lookup_state(handle, config->universe, &source, &tmp) != kEtcPalErrNotFound)
+        result = kEtcPalErrExists;
+    }
+
     // Allocate the universe's state.
     UniverseState* universe = NULL;
     if (result == kEtcPalErrOk)
