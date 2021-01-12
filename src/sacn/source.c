@@ -540,8 +540,24 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
   if (sacn_lock())
   {
     // Look up the source's state.
+    SourceState* source = NULL;
+    if (result == kEtcPalErrOk)
+      result = lookup_state(handle, 0, &source, NULL);
+
     // Allocate the universe's state.
+    UniverseState* universe = NULL;
+    if (result == kEtcPalErrOk)
+    {
+      universe = ALLOC_UNIVERSE_STATE();
+
+      if (!universe)
+        result = kEtcPalErrNoMem;
+    }
+
     // Initialize the universe's state and add it to the source's universes tree.
+    if (result == kEtcPalErrOk)
+    {
+    }
 
     sacn_unlock();
   }
@@ -1142,6 +1158,7 @@ int netint_state_lookup_compare_func(const EtcPalRbTree* self, const void* value
          ((a->id.index < b->id.index) || ((a->id.index == b->id.index) && (a->id.ip_type < b->id.ip_type)));
 }
 
+// Needs lock
 etcpal_error_t lookup_state(sacn_source_t source, uint16_t universe, SourceState** source_state,
                             UniverseState** universe_state)
 {
