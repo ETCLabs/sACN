@@ -80,6 +80,9 @@ typedef struct SourceState
 {
   sacn_source_t handle;  // This must be the first struct member.
 
+  EtcPalUuid cid;
+  char name[SACN_SOURCE_NAME_MAX_LEN];
+
   bool terminating;  // If in the process of terminating all universes and removing this source.
 
   EtcPalRbTree universes;
@@ -202,6 +205,8 @@ static void send_data_unicast(uint16_t universe_id, etcpal_iptype_t ip_type, con
                               const EtcPalIpAddr* dests, size_t num_dests);
 static int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* universe_iter, int page_number);
 static UniverseState* look_up_universe_state(sacn_source_t handle, uint16_t universe);
+static void init_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid, const char* source_name,
+                          uint8_t priority, uint16_t universe, uint16_t sync_universe, bool send_preview);
 static void update_data(uint8_t* send_buf, const uint8_t* new_data, size_t new_data_size, bool force_sync);
 
 /*************************** Function definitions ****************************/
@@ -339,6 +344,8 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
       result = kEtcPalErrInvalid;
     else if (!config->name)
       result = kEtcPalErrInvalid;
+    else if (strlen(config->name) > SACN_SOURCE_NAME_MAX_LEN)
+      result = kEtcPalErrInvalid;
     else if (config->keep_alive_interval <= 0)
       result = kEtcPalErrInvalid;
     else if (!handle)
@@ -383,6 +390,9 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
 
       // Initialize everything else.
       source->handle = get_next_int_handle(&source_handle_mgr, -1);
+      source->cid = config->cid;
+      memset(source->name, 0, SACN_SOURCE_NAME_MAX_LEN);
+      memcpy(source->name, config->name, strlen(config->name));
       source->terminating = false;
       etcpal_rbtree_init(&source->universes, universe_state_lookup_compare_func, source_rb_node_alloc_func,
                          source_rb_node_dealloc_func);
@@ -547,7 +557,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     // Confirm that the universe wasn't already added.
     if (result == kEtcPalErrOk)
     {
-      UniverseState* tmp; 
+      UniverseState* tmp;
       if (lookup_state(handle, config->universe, &source, &tmp) != kEtcPalErrNotFound)
         result = kEtcPalErrExists;
     }
@@ -571,12 +581,14 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       universe->num_terminations_sent = 0;
 
       universe->null_packets_sent_before_suppression = 0;
-      memset(universe->null_send_buf, 0, SACN_MTU);
+      init_send_buf(universe->null_send_buf, 0x00, &source->cid, source->name, config->priority, config->universe,
+                    config->sync_universe, config->send_preview);
       universe->has_null_data = false;
 
 #if SACN_ETC_PRIORITY_EXTENSION
       universe->pap_packets_sent_before_suppression = 0;
-      memset(universe->pap_send_buf, 0, SACN_MTU);
+      init_send_buf(universe->pap_send_buf, 0xDD, &source->cid, source->name, config->priority, config->universe,
+                    config->sync_universe, config->send_preview);
       universe->has_pap_data = false;
 #endif
 
@@ -1758,6 +1770,17 @@ UniverseState* look_up_universe_state(sacn_source_t handle, uint16_t universe)
 
   // Source not found, return NULL
   return NULL;
+}
+
+void init_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid, const char* source_name,
+                   uint8_t priority, uint16_t universe, uint16_t sync_universe, bool send_preview)
+{
+  memset(send_buf, 0, SACN_MTU);
+  size_t written = 0;
+  written += pack_sacn_root_layer(send_buf, SACN_DATA_HEADER_SIZE, false, &source_cid);
+  written += pack_sacn_data_framing_layer(&send_buf[written], 0, VECTOR_E131_DATA_PACKET, source_name, priority,
+                                          sync_universe, 0, send_preview, false, false, universe);
+  written += pack_sacn_dmp_layer_header(&send_buf[written], start_code, 0);
 }
 
 // Needs lock
