@@ -83,7 +83,7 @@ typedef struct SourceState
   bool terminating;  // If in the process of terminating all universes and removing this source.
 
   EtcPalRbTree universes;
-  size_t num_active_universes;  // Number of universes that actually have NULL start code data.
+  size_t num_active_universes;  // Number of universes to include in universe discovery packets.
   bool universe_list_changed;
   EtcPalTimer universe_discovery_timer;
   bool process_manually;
@@ -1335,7 +1335,7 @@ void remove_universe_state(SourceState* source, UniverseState** universe, EtcPal
   if (universe_to_remove)
   {
     // Update num_active_universes and universe_list_changed if needed
-    if (universe_to_remove->has_null_data)
+    if (universe_to_remove->has_null_data && !universe_to_remove->send_unicast_only)
     {
       --source->num_active_universes;
       source->universe_list_changed = true;
