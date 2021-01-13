@@ -50,17 +50,18 @@
 #define ALLOC_SOURCE_STATE() malloc(sizeof(SourceState))
 #define FREE_SOURCE_STATE(ptr) free(ptr)
 #define ALLOC_UNIVERSE_STATE() malloc(sizeof(UniverseState))
-#define FREE_UNIVERSE_STATE(ptr)                  \
-  do                                              \
-  {                                               \
-    if (((UniverseState*)ptr)->unicast_dests)     \
-      free(((UniverseState*)ptr)->unicast_dests); \
-    if (((UniverseState*)ptr)->netints)           \
-      free(((UniverseState*)ptr)->netints);       \
-    free(ptr);                                    \
+#define FREE_UNIVERSE_STATE(ptr)                                                                 \
+  do                                                                                             \
+  {                                                                                              \
+    etcpal_rbtree_clear_with_cb(&((UniverseState*)ptr)->unicast_dests, free_unicast_dests_node); \
+    if (((UniverseState*)ptr)->netints)                                                          \
+      free(((UniverseState*)ptr)->netints);                                                      \
+    free(ptr);                                                                                   \
   } while (0)
 #define ALLOC_SOURCE_NETINT() malloc(sizeof(NetintState))
 #define FREE_SOURCE_NETINT(ptr) free(ptr)
+#define ALLOC_UNICAST_DESTINATION() malloc(sizeof(EtcPalIpAddr))
+#define FREE_UNICAST_DESTINATION(ptr) free(ptr)
 #define ALLOC_SOURCE_RB_NODE() malloc(sizeof(EtcPalRbNode))
 #define FREE_SOURCE_RB_NODE(ptr) free(ptr)
 #elif SOURCE_ENABLED
@@ -70,6 +71,8 @@
 #define FREE_UNIVERSE_STATE(ptr) etcpal_mempool_free(sacnsource_universe_states, ptr)
 #define ALLOC_SOURCE_NETINT() etcpal_mempool_alloc(sacnsource_netints)
 #define FREE_SOURCE_NETINT(ptr) etcpal_mempool_free(sacnsource_netints, ptr)
+#define ALLOC_UNICAST_DESTINATION() etcpal_mempool_alloc(sacnsource_unicast_dests)
+#define FREE_UNICAST_DESTINATION(ptr) etcpal_mempool_free(sacnsource_unicast_dests, ptr)
 #define ALLOC_SOURCE_RB_NODE() etcpal_mempool_alloc(sacnsource_rb_nodes)
 #define FREE_SOURCE_RB_NODE(ptr) etcpal_mempool_free(sacnsource_rb_nodes, ptr)
 #else
@@ -79,6 +82,8 @@
 #define FREE_UNIVERSE_STATE(ptr)
 #define ALLOC_SOURCE_NETINT() NULL
 #define FREE_SOURCE_NETINT(ptr)
+#define ALLOC_UNICAST_DESTINATION() NULL
+#define FREE_UNICAST_DESTINATION(ptr)
 #define ALLOC_SOURCE_RB_NODE() NULL
 #define FREE_SOURCE_RB_NODE(ptr)
 #endif
@@ -129,12 +134,7 @@ typedef struct UniverseState
   bool has_pap_data;
 #endif
 
-#if SACN_DYNAMIC_MEM
-  EtcPalIpAddr* unicast_dests;
-#elif SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE > 0
-  EtcPalIpAddr unicast_dests[SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE];
-#endif
-  size_t num_unicast_dests;  // Number of elements in the unicast_dests array.
+  EtcPalRbTree unicast_dests;
   bool send_unicast_only;
 
 #if SACN_DYNAMIC_MEM
@@ -158,9 +158,14 @@ ETCPAL_MEMPOOL_DEFINE(sacnsource_source_states, SourceState, SACN_SOURCE_MAX_SOU
 ETCPAL_MEMPOOL_DEFINE(sacnsource_universe_states, UniverseState,
                       (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE));
 ETCPAL_MEMPOOL_DEFINE(sacnsource_netints, NetintState, (SACN_SOURCE_MAX_SOURCES * SACN_MAX_NETINTS));
+ETCPAL_MEMPOOL_DEFINE(sacnsource_unicast_dests, EtcPalIpAddr,
+                      (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE *
+                       SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE));
 ETCPAL_MEMPOOL_DEFINE(sacnsource_rb_nodes, EtcPalRbNode,
                       SACN_SOURCE_MAX_SOURCES + (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE) +
-                          (SACN_SOURCE_MAX_SOURCES * SACN_MAX_NETINTS));
+                          (SACN_SOURCE_MAX_SOURCES * SACN_MAX_NETINTS) +
+                          (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE *
+                           SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE));
 #endif
 
 static IntHandleManager source_handle_mgr;
@@ -183,6 +188,7 @@ static etcpal_error_t init_unicast_socket(etcpal_socket_t* socket, etcpal_iptype
 static int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 static int universe_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 static int netint_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
+static int unicast_dests_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 
 static etcpal_error_t lookup_state(sacn_source_t source, uint16_t universe, SourceState** source_state,
                                    UniverseState** universe_state);
@@ -191,6 +197,7 @@ static EtcPalRbNode* source_rb_node_alloc_func(void);
 static void source_rb_node_dealloc_func(EtcPalRbNode* node);
 static void free_universes_node(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void free_netints_node(const EtcPalRbTree* self, EtcPalRbNode* node);
+static void free_unicast_dests_node(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void free_sources_node(const EtcPalRbTree* self, EtcPalRbNode* node);
 
 static bool source_handle_in_use(int handle_val, void* cookie);
@@ -211,8 +218,7 @@ static void send_termination(const SourceState* source, UniverseState* universe)
 static void send_universe_discovery(SourceState* source);
 static void send_data_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
                                 const EtcPalMcastNetintId* netints, size_t num_netints);
-static void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, const EtcPalIpAddr* dests,
-                              size_t num_dests);
+static void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, EtcPalRbTree* dests);
 static int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* universe_iter, uint8_t page_number);
 static void init_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid, const char* source_name,
                           uint8_t priority, uint16_t universe, uint16_t sync_universe, bool send_preview);
@@ -607,23 +613,40 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       universe->has_pap_data = false;
 #endif
 
-#if SACN_DYNAMIC_MEM
-      if (config->num_unicast_destinations > 0)
-        universe->unicast_dests = calloc(config->num_unicast_destinations, sizeof(EtcPalMcastNetintId));
-      else
-        universe->unicast_dests = NULL;
-#endif
-      universe->num_unicast_dests = config->num_unicast_destinations;
       universe->send_unicast_only = config->send_unicast_only;
 
-      if (universe->unicast_dests)
+      etcpal_rbtree_init(&universe->unicast_dests, unicast_dests_lookup_compare_func, source_rb_node_alloc_func,
+                         source_rb_node_dealloc_func);
+      for (size_t i = 0; (result == kEtcPalErrOk) && (i < config->num_unicast_destinations); ++i)
       {
-        memcpy(universe->unicast_dests, config->unicast_destinations,
-               universe->num_unicast_dests * sizeof(EtcPalIpAddr));
-      }
+        EtcPalIpAddr* dest = ALLOC_UNICAST_DESTINATION();
+        if (dest)
+        {
+          *dest = config->unicast_destinations[i];
 
-      result = sacn_initialize_internal_netints(&universe->netints, &universe->num_netints, netints, num_netints);
+          etcpal_error_t insert_result = etcpal_rbtree_insert(&universe->unicast_dests, dest);
+
+          if (insert_result == kEtcPalErrNoMem)
+            result = kEtcPalErrNoMem;
+          else if (insert_result == kEtcPalErrExists)
+            result = kEtcPalErrOk;  // Duplicates are automatically filtered and not a failure condition.
+          else if (insert_result == kEtcPalErrOk)
+            result = kEtcPalErrOk;
+          else
+            result = kEtcPalErrSys;
+
+          if (insert_result != kEtcPalErrOk)
+            FREE_UNICAST_DESTINATION(dest);
+        }
+        else
+        {
+          result = kEtcPalErrNoMem;
+        }
+      }
     }
+
+    if (result == kEtcPalErrOk)
+      result = sacn_initialize_internal_netints(&universe->netints, &universe->num_netints, netints, num_netints);
 
     // Add the universe's state to the source's universes tree.
     if (result == kEtcPalErrOk)
@@ -1324,6 +1347,13 @@ int netint_state_lookup_compare_func(const EtcPalRbTree* self, const void* value
          ((a->id.index < b->id.index) || ((a->id.index == b->id.index) && (a->id.ip_type < b->id.ip_type)));
 }
 
+int unicast_dests_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
+{
+  ETCPAL_UNUSED_ARG(self);
+
+  return memcmp(value_a, value_b, sizeof(EtcPalIpAddr));
+}
+
 // Needs lock
 etcpal_error_t lookup_state(sacn_source_t source, uint16_t universe, SourceState** source_state,
                             UniverseState** universe_state)
@@ -1382,6 +1412,14 @@ void free_netints_node(const EtcPalRbTree* self, EtcPalRbNode* node)
   ETCPAL_UNUSED_ARG(self);
 
   FREE_SOURCE_NETINT(node->value);
+  FREE_SOURCE_RB_NODE(node);
+}
+
+void free_unicast_dests_node(const EtcPalRbTree* self, EtcPalRbNode* node)
+{
+  ETCPAL_UNUSED_ARG(self);
+
+  FREE_UNICAST_DESTINATION(node->value);
   FREE_SOURCE_RB_NODE(node);
 }
 
@@ -1640,7 +1678,7 @@ void send_null_data(const SourceState* source, UniverseState* universe)
     }
 
 #if UNICAST_ENABLED
-    send_data_unicast(kEtcPalIpTypeV4, universe->null_send_buf, universe->unicast_dests, universe->num_unicast_dests);
+    send_data_unicast(kEtcPalIpTypeV4, universe->null_send_buf, &universe->unicast_dests);
 #endif
   }
 
@@ -1653,7 +1691,7 @@ void send_null_data(const SourceState* source, UniverseState* universe)
     }
 
 #if UNICAST_ENABLED
-    send_data_unicast(kEtcPalIpTypeV6, universe->null_send_buf, universe->unicast_dests, universe->num_unicast_dests);
+    send_data_unicast(kEtcPalIpTypeV6, universe->null_send_buf, &universe->unicast_dests);
 #endif
   }
 
@@ -1681,7 +1719,7 @@ void send_pap_data(const SourceState* source, UniverseState* universe)
     }
 
 #if UNICAST_ENABLED
-    send_data_unicast(kEtcPalIpTypeV4, universe->pap_send_buf, universe->unicast_dests, universe->num_unicast_dests);
+    send_data_unicast(kEtcPalIpTypeV4, universe->pap_send_buf, &universe->unicast_dests);
 #endif
   }
 
@@ -1694,7 +1732,7 @@ void send_pap_data(const SourceState* source, UniverseState* universe)
     }
 
 #if UNICAST_ENABLED
-    send_data_unicast(kEtcPalIpTypeV6, universe->pap_send_buf, universe->unicast_dests, universe->num_unicast_dests);
+    send_data_unicast(kEtcPalIpTypeV6, universe->pap_send_buf, &universe->unicast_dests);
 #endif
   }
 
@@ -1809,28 +1847,34 @@ void send_data_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const ui
 }
 
 // Needs lock
-void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, const EtcPalIpAddr* dests, size_t num_dests)
+void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, EtcPalRbTree* dests)
 {
-  // Determine the socket to use
-  etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
-  if (ip_type == kEtcPalIpTypeV4)
-    sock = ipv4_unicast_sock;
-  else if (ip_type == kEtcPalIpTypeV6)
-    sock = ipv6_unicast_sock;
-
-  // For each unicast destination
-  for (size_t i = 0; dests && (i < num_dests); ++i)
+  if (dests)
   {
-    // If this destination matches the IP type
-    if (dests[i].type == ip_type)
-    {
-      // Convert destination to SockAddr
-      EtcPalSockAddr sockaddr_dest;
-      sockaddr_dest.ip = dests[i];
-      sockaddr_dest.port = SACN_PORT;
+    // Determine the socket to use
+    etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
+    if (ip_type == kEtcPalIpTypeV4)
+      sock = ipv4_unicast_sock;
+    else if (ip_type == kEtcPalIpTypeV6)
+      sock = ipv6_unicast_sock;
 
-      // Try to send the data (ignore errors)
-      etcpal_sendto(sock, send_buf, SACN_MTU, 0, &sockaddr_dest);
+    EtcPalRbIter tree_iter;
+    etcpal_rbiter_init(&tree_iter);
+
+    // For each unicast destination
+    for (EtcPalIpAddr* dest = etcpal_rbiter_first(&tree_iter, dests); dest; etcpal_rbiter_next(&tree_iter))
+    {
+      // If this destination matches the IP type
+      if (dest->type == ip_type)
+      {
+        // Convert destination to SockAddr
+        EtcPalSockAddr sockaddr_dest;
+        sockaddr_dest.ip = *dest;
+        sockaddr_dest.port = SACN_PORT;
+
+        // Try to send the data (ignore errors)
+        etcpal_sendto(sock, send_buf, SACN_MTU, 0, &sockaddr_dest);
+      }
     }
   }
 }
