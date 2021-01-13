@@ -616,6 +616,12 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       universe->num_unicast_dests = config->num_unicast_destinations;
       universe->send_unicast_only = config->send_unicast_only;
 
+      if (universe->unicast_dests)
+      {
+        memcpy(universe->unicast_dests, config->unicast_destinations,
+               universe->num_unicast_dests * sizeof(EtcPalIpAddr));
+      }
+
       result = sacn_initialize_internal_netints(&universe->netints, &universe->num_netints, netints, num_netints);
     }
 
