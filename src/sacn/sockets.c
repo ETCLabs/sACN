@@ -562,6 +562,55 @@ etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t n
   }
 }
 
+etcpal_error_t sacn_initialize_internal_netints(EtcPalMcastNetintId** internal_netints, size_t* num_internal_netints,
+                                                SacnMcastInterface* app_netints, size_t num_app_netints)
+{
+  size_t num_valid_netints = 0u;
+  etcpal_error_t result = sacn_validate_netint_config(app_netints, num_app_netints, &num_valid_netints);
+  if (result != kEtcPalErrOk)
+    return result;
+
+  if (app_netints)
+  {
+#if SACN_DYNAMIC_MEM
+    EtcPalMcastNetintId* calloc_result = calloc(num_valid_netints, sizeof(EtcPalMcastNetintId));
+
+    if (calloc_result)
+      *internal_netints = calloc_result;
+    else
+      result = kEtcPalErrNoMem;
+#else
+    if (num_app_netints > SACN_MAX_NETINTS)
+      result = kEtcPalErrNoMem;
+#endif
+
+    if (result == kEtcPalErrOk)
+    {
+      for (size_t read_index = 0u, write_index = 0u; read_index < num_app_netints; ++read_index)
+      {
+        if (app_netints[read_index].status == kEtcPalErrOk)
+        {
+          memcpy(*internal_netints + write_index, &app_netints[read_index].iface, sizeof(EtcPalMcastNetintId));
+          ++write_index;
+        }
+      }
+    }
+  }
+#if SACN_DYNAMIC_MEM
+  else
+  {
+    *internal_netints = NULL;
+  }
+#endif
+
+  if (result == kEtcPalErrOk)
+  {
+    *num_internal_netints = num_valid_netints;
+  }
+
+  return result;
+}
+
 etcpal_error_t test_sacn_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str)
 {
 #if !SACN_LOGGING_ENABLED

@@ -106,6 +106,8 @@ TEST_F(TestSockets, EmptyNetintConfigValidated)
   EXPECT_EQ(sacn_validate_netint_config(NULL, 0, nullptr), kEtcPalErrOk);
 }
 
+// TODO: Tests for initialize_internal_netints?
+
 TEST_F(TestSockets, SocketCleanedUpOnBindFailure)
 {
   etcpal_bind_fake.return_val = kEtcPalErrAddrNotAvail;
