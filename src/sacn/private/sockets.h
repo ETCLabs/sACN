@@ -42,13 +42,20 @@ etcpal_error_t sacn_sockets_init(void);
 void sacn_sockets_deinit(void);
 
 etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t num_netints, size_t* num_valid_netints);
+#if SACN_DYNAMIC_MEM
 etcpal_error_t sacn_initialize_internal_netints(EtcPalMcastNetintId** internal_netints, size_t* num_internal_netints,
                                                 SacnMcastInterface* app_netints, size_t num_app_netints);
+#else
+etcpal_error_t sacn_initialize_internal_netints(EtcPalMcastNetintId (*internal_netints)[SACN_MAX_NETINTS],
+                                                size_t* num_internal_netints, SacnMcastInterface* app_netints,
+                                                size_t num_app_netints);
+#endif
 
 void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAddr* ip);
 etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
-                                        const EtcPalMcastNetintId* netints, size_t num_netints, etcpal_socket_t* socket);
-void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t *socket, bool close_now);
+                                        const EtcPalMcastNetintId* netints, size_t num_netints,
+                                        etcpal_socket_t* socket);
+void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* socket, bool close_now);
 
 // Functions to be called from the receive thread
 void sacn_add_pending_sockets(SacnRecvThreadContext* recv_thread_context);

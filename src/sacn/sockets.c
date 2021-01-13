@@ -562,8 +562,14 @@ etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t n
   }
 }
 
+#if SACN_DYNAMIC_MEM
 etcpal_error_t sacn_initialize_internal_netints(EtcPalMcastNetintId** internal_netints, size_t* num_internal_netints,
                                                 SacnMcastInterface* app_netints, size_t num_app_netints)
+#else
+etcpal_error_t sacn_initialize_internal_netints(EtcPalMcastNetintId (*internal_netints)[SACN_MAX_NETINTS],
+                                                size_t* num_internal_netints, SacnMcastInterface* app_netints,
+                                                size_t num_app_netints)
+#endif
 {
   size_t num_valid_netints = 0u;
   etcpal_error_t result = sacn_validate_netint_config(app_netints, num_app_netints, &num_valid_netints);

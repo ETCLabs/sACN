@@ -68,7 +68,7 @@ extern "C" {
     if (force_sync)                                                   \
       bufptr[SACN_OPTS_OFFSET] |= SACN_OPTVAL_FORCE_SYNC;             \
     else                                                              \
-      bufptr[SACN_OPTS_OFFSET] &= (uint8_t)(~SACN_OPTVAL_FORCE_SYNC); \
+      bufptr[SACN_OPTS_OFFSET] &= ~(uint8_t)(SACN_OPTVAL_FORCE_SYNC); \
   } while (0)
 #define SET_TERMINATED_OPT(bufptr, terminated)                        \
   do                                                                  \
@@ -76,7 +76,7 @@ extern "C" {
     if (terminated)                                                   \
       bufptr[SACN_OPTS_OFFSET] |= SACN_OPTVAL_TERMINATED;             \
     else                                                              \
-      bufptr[SACN_OPTS_OFFSET] &= (uint8_t)(~SACN_OPTVAL_TERMINATED); \
+      bufptr[SACN_OPTS_OFFSET] &= ~(uint8_t)(SACN_OPTVAL_TERMINATED); \
   } while (0)
 #define TERMINATED_OPT_SET(bufptr) (bufptr[SACN_OPTS_OFFSET] & SACN_OPTVAL_TERMINATED)
 #define SET_PREVIEW_OPT(bufptr, preview)                           \
@@ -85,7 +85,7 @@ extern "C" {
     if (preview)                                                   \
       bufptr[SACN_OPTS_OFFSET] |= SACN_OPTVAL_PREVIEW;             \
     else                                                           \
-      bufptr[SACN_OPTS_OFFSET] &= (uint8_t)(~SACN_OPTVAL_PREVIEW); \
+      bufptr[SACN_OPTS_OFFSET] &= ~(uint8_t)(SACN_OPTVAL_PREVIEW); \
   } while (0)
 #define SET_PRIORITY(bufptr, priority) ((void)(bufptr[SACN_PRI_OFFSET] = priority));
 #define SET_DATA_SLOT_COUNT(bufptr, slot_count)                                                                      \

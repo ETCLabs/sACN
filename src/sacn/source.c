@@ -209,13 +209,13 @@ static void send_termination(const SourceState* source, UniverseState* universe)
 static void send_universe_discovery(SourceState* source);
 static void send_data_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
                                 const EtcPalMcastNetintId* netints, size_t num_netints);
-static void send_data_unicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
-                              const EtcPalIpAddr* dests, size_t num_dests);
-static int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* universe_iter, int page_number);
+static void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, const EtcPalIpAddr* dests,
+                              size_t num_dests);
+static int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* universe_iter, uint8_t page_number);
 static UniverseState* look_up_universe_state(sacn_source_t handle, uint16_t universe);
 static void init_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid, const char* source_name,
                           uint8_t priority, uint16_t universe, uint16_t sync_universe, bool send_preview);
-static void update_data(uint8_t* send_buf, const uint8_t* new_data, size_t new_data_size, bool force_sync);
+static void update_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size, bool force_sync);
 
 /*************************** Function definitions ****************************/
 
@@ -962,19 +962,22 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
                                size_t new_values_size)
 {
 #if SOURCE_ENABLED
-  // Take lock
-  sacn_lock();
-
-  // Look up universe state
-  UniverseState* universe_state = look_up_universe_state(handle, universe);
-  if (universe_state)
+  if (new_values && (new_values_size <= DMX_ADDRESS_COUNT))
   {
-    // Update 0x00 values, no force sync
-    update_data(universe_state->null_send_buf, new_values, new_values_size, false);
-  }
+    // Take lock
+    sacn_lock();
 
-  // Release lock
-  sacn_unlock();
+    // Look up universe state
+    UniverseState* universe_state = look_up_universe_state(handle, universe);
+    if (universe_state)
+    {
+      // Update 0x00 values, no force sync
+      update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, false);
+    }
+
+    // Release lock
+    sacn_unlock();
+  }
 #endif  // SOURCE_ENABLED
 }
 
@@ -1005,23 +1008,27 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
                                        size_t new_priorities_size)
 {
 #if SOURCE_ENABLED
-  // Take lock
-  sacn_lock();
-
-  // Look up universe state
-  UniverseState* universe_state = look_up_universe_state(handle, universe);
-  if (universe_state)
+  if (new_values && new_priorities && (new_values_size <= DMX_ADDRESS_COUNT) &&
+      (new_priorities_size <= DMX_ADDRESS_COUNT))
   {
-    // Update 0x00 values, no force sync
-    update_data(universe_state->null_send_buf, new_values, new_values_size, false);
-#if SACN_ETC_PRIORITY_EXTENSION
-    // Update 0xDD values, no force sync
-    update_data(universe_state->pap_send_buf, new_priorities, new_priorities_size, false);
-#endif
-  }
+    // Take lock
+    sacn_lock();
 
-  // Release lock
-  sacn_unlock();
+    // Look up universe state
+    UniverseState* universe_state = look_up_universe_state(handle, universe);
+    if (universe_state)
+    {
+      // Update 0x00 values, no force sync
+      update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, false);
+#if SACN_ETC_PRIORITY_EXTENSION
+      // Update 0xDD values, no force sync
+      update_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, false);
+#endif
+    }
+
+    // Release lock
+    sacn_unlock();
+  }
 #endif  // SOURCE_ENABLED
 }
 
@@ -1046,19 +1053,22 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
                                               size_t new_values_size)
 {
 #if SOURCE_ENABLED
-  // Take lock
-  sacn_lock();
-
-  // Look up universe state
-  UniverseState* universe_state = look_up_universe_state(handle, universe);
-  if (universe_state)
+  if (new_values && (new_values_size <= DMX_ADDRESS_COUNT))
   {
-    // Update 0x00 values, enable force sync
-    update_data(universe_state->null_send_buf, new_values, new_values_size, true);
-  }
+    // Take lock
+    sacn_lock();
 
-  // Release lock
-  sacn_unlock();
+    // Look up universe state
+    UniverseState* universe_state = look_up_universe_state(handle, universe);
+    if (universe_state)
+    {
+      // Update 0x00 values, enable force sync
+      update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, true);
+    }
+
+    // Release lock
+    sacn_unlock();
+  }
 #endif  // SOURCE_ENABLED
 }
 
@@ -1094,23 +1104,27 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
                                                       const uint8_t* new_priorities, size_t new_priorities_size)
 {
 #if SOURCE_ENABLED
-  // Take lock
-  sacn_lock();
-
-  // Look up universe state
-  UniverseState* universe_state = look_up_universe_state(handle, universe);
-  if (universe_state)
+  if (new_values && new_priorities && (new_values_size <= DMX_ADDRESS_COUNT) &&
+      (new_priorities_size <= DMX_ADDRESS_COUNT))
   {
-    // Update 0x00 values, enable force sync
-    update_data(universe_state->null_send_buf, new_values, new_values_size, true);
-#if SACN_ETC_PRIORITY_EXTENSION
-    // Update 0xDD values, enable force sync
-    update_data(universe_state->pap_send_buf, new_priorities, new_priorities_size, true);
-#endif
-  }
+    // Take lock
+    sacn_lock();
 
-  // Release lock
-  sacn_unlock();
+    // Look up universe state
+    UniverseState* universe_state = look_up_universe_state(handle, universe);
+    if (universe_state)
+    {
+      // Update 0x00 values, enable force sync
+      update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, true);
+#if SACN_ETC_PRIORITY_EXTENSION
+      // Update 0xDD values, enable force sync
+      update_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, true);
+#endif
+    }
+
+    // Release lock
+    sacn_unlock();
+  }
 #endif  // SOURCE_ENABLED
 }
 
@@ -1580,8 +1594,7 @@ void send_null_data(const SourceState* source, UniverseState* universe)
     }
 
 #if UNICAST_ENABLED
-    send_data_unicast(universe->universe_id, kEtcPalIpTypeV4, universe->null_send_buf, universe->unicast_dests,
-                      universe->num_unicast_dests);
+    send_data_unicast(kEtcPalIpTypeV4, universe->null_send_buf, universe->unicast_dests, universe->num_unicast_dests);
 #endif
   }
 
@@ -1594,8 +1607,7 @@ void send_null_data(const SourceState* source, UniverseState* universe)
     }
 
 #if UNICAST_ENABLED
-    send_data_unicast(universe->universe_id, kEtcPalIpTypeV6, universe->null_send_buf, universe->unicast_dests,
-                      universe->num_unicast_dests);
+    send_data_unicast(kEtcPalIpTypeV6, universe->null_send_buf, universe->unicast_dests, universe->num_unicast_dests);
 #endif
   }
 
@@ -1620,8 +1632,7 @@ void send_pap_data(const SourceState* source, UniverseState* universe)
     }
 
 #if UNICAST_ENABLED
-    send_data_unicast(universe->universe_id, kEtcPalIpTypeV4, universe->pap_send_buf, universe->unicast_dests,
-                      universe->num_unicast_dests);
+    send_data_unicast(kEtcPalIpTypeV4, universe->pap_send_buf, universe->unicast_dests, universe->num_unicast_dests);
 #endif
   }
 
@@ -1634,8 +1645,7 @@ void send_pap_data(const SourceState* source, UniverseState* universe)
     }
 
 #if UNICAST_ENABLED
-    send_data_unicast(universe->universe_id, kEtcPalIpTypeV6, universe->pap_send_buf, universe->unicast_dests,
-                      universe->num_unicast_dests);
+    send_data_unicast(kEtcPalIpTypeV6, universe->pap_send_buf, universe->unicast_dests, universe->num_unicast_dests);
 #endif
   }
 
@@ -1747,8 +1757,7 @@ void send_data_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const ui
 }
 
 // Needs lock
-void send_data_unicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
-                       const EtcPalIpAddr* dests, size_t num_dests)
+void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, const EtcPalIpAddr* dests, size_t num_dests)
 {
   // Determine the socket to use
   etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
@@ -1775,7 +1784,7 @@ void send_data_unicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint
 }
 
 // Needs lock
-int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* universe_iter, int page_number)
+int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* universe_iter, uint8_t page_number)
 {
   // Initialize packing pointer and universe counter
   uint8_t* pcur = &source->universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE];
@@ -1827,14 +1836,14 @@ void init_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* sour
 {
   memset(send_buf, 0, SACN_MTU);
   size_t written = 0;
-  written += pack_sacn_root_layer(send_buf, SACN_DATA_HEADER_SIZE, false, &source_cid);
+  written += pack_sacn_root_layer(send_buf, SACN_DATA_HEADER_SIZE, false, source_cid);
   written += pack_sacn_data_framing_layer(&send_buf[written], 0, VECTOR_E131_DATA_PACKET, source_name, priority,
                                           sync_universe, 0, send_preview, false, false, universe);
   written += pack_sacn_dmp_layer_header(&send_buf[written], start_code, 0);
 }
 
 // Needs lock
-void update_data(uint8_t* send_buf, const uint8_t* new_data, size_t new_data_size, bool force_sync)
+void update_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size, bool force_sync)
 {
   // Set force sync flag
   SET_FORCE_SYNC_OPT(send_buf, force_sync);
