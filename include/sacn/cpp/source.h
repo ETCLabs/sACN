@@ -382,8 +382,9 @@ inline std::vector<uint16_t> Source::GetUniverses()
  * @brief Add a unicast destination for a source's universe.
  *
  * Adds a unicast destination for a source's universe.
- * After this call completes, the applicaton must call a variant of UpdateValues() to mark it ready for processing.
-
+ * Transmission suppression logic will remain unaffected unless the application calls a variant of UpdateValues() after
+ * this.
+ *
  * @param[in] universe Universe to change.
  * @param[in] dest The destination IP.
  * @return #kEtcPalErrOk: Address added successfully.

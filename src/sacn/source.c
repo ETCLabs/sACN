@@ -738,8 +738,8 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
  * @brief Add a unicast destination for a source's universe.
  *
  * Adds a unicast destination for a source's universe.
- * After this call completes, the applicaton must call either sacn_source_update_values() or
- * sacn_source_update_values_and_pap() to mark it ready for processing.
+ * Transmission suppression logic will remain unaffected unless the application calls either sacn_source_update_values()
+ * or sacn_source_update_values_and_pap() after this.
  *
  * @param[in] handle Handle to the source to change.
  * @param[in] universe Universe to change.
@@ -756,10 +756,38 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
   return kEtcPalErrNotInit;
 #endif
 
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(dest);
-  return kEtcPalErrNotImpl;
+  etcpal_error_t result = kEtcPalErrOk;
+
+  // Verify module initialized.
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+
+  // Check for invalid arguments.
+  if (result == kEtcPalErrOk)
+  {
+    if (handle == SACN_SOURCE_INVALID)
+      result = kEtcPalErrInvalid;
+    else if (!UNIVERSE_ID_VALID(universe))
+      result = kEtcPalErrInvalid;
+    else if (!dest)
+      result = kEtcPalErrInvalid;
+    else if (ETCPAL_IP_IS_INVALID(dest))
+      result = kEtcPalErrInvalid;
+  }
+
+  if (sacn_lock())
+  {
+    // Look up the universe state
+    UniverseState* universe_state = NULL;
+    if (result == kEtcPalErrOk)
+      result = lookup_state(handle, universe, NULL, &universe_state);
+
+    // TODO: Add unicast destination
+
+    sacn_unlock();
+  }
+
+  return result;
 }
 
 /**
