@@ -217,6 +217,12 @@ static int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* unive
 static void init_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid, const char* source_name,
                           uint8_t priority, uint16_t universe, uint16_t sync_universe, bool send_preview);
 static void update_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size, bool force_sync);
+static void update_levels(SourceState* source_state, UniverseState* universe_state, const uint8_t* new_levels,
+                          size_t new_levels_size, bool force_sync);
+#if SACN_ETC_PRIORITY_EXTENSION
+static void update_paps(SourceState* source_state, UniverseState* universe_state, const uint8_t* new_priorities,
+                        size_t new_priorities_size, bool force_sync);
+#endif
 
 /*************************** Function definitions ****************************/
 
@@ -968,17 +974,11 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
     // Take lock
     if (sacn_lock())
     {
-      // Look up state
+      // Look up state, update 0x00 values, no force sync
       SourceState* source_state = NULL;
       UniverseState* universe_state = NULL;
       if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
-      {
-        // Update 0x00 values, no force sync
-        update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, false);
-        universe_state->has_null_data = true;
-        universe_state->null_packets_sent_before_suppression = 0;
-        etcpal_timer_start(&universe_state->null_keep_alive_timer, source_state->keep_alive_interval);
-      }
+        update_levels(source_state, universe_state, new_values, new_values_size, false);
 
       // Release lock
       sacn_unlock();
@@ -1026,17 +1026,10 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
       if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
       {
         // Update 0x00 values, no force sync
-        update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, false);
-        universe_state->has_null_data = true;
-        universe_state->null_packets_sent_before_suppression = 0;
-        etcpal_timer_start(&universe_state->null_keep_alive_timer, source_state->keep_alive_interval);
-
+        update_levels(source_state, universe_state, new_values, new_values_size, false);
 #if SACN_ETC_PRIORITY_EXTENSION
         // Update 0xDD values, no force sync
-        update_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, false);
-        universe_state->has_pap_data = true;
-        universe_state->pap_packets_sent_before_suppression = 0;
-        etcpal_timer_start(&universe_state->pap_keep_alive_timer, source_state->keep_alive_interval);
+        update_paps(source_state, universe_state, new_priorities, new_priorities_size, false);
 #endif
       }
 
@@ -1073,17 +1066,11 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
     // Take lock
     if (sacn_lock())
     {
-      // Look up state
+      // Look up state, update 0x00 values, enable force sync
       SourceState* source_state = NULL;
       UniverseState* universe_state = NULL;
       if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
-      {
-        // Update 0x00 values, enable force sync
-        update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, true);
-        universe_state->has_null_data = true;
-        universe_state->null_packets_sent_before_suppression = 0;
-        etcpal_timer_start(&universe_state->null_keep_alive_timer, source_state->keep_alive_interval);
-      }
+        update_levels(source_state, universe_state, new_values, new_values_size, true);
 
       // Release lock
       sacn_unlock();
@@ -1136,17 +1123,10 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
       if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
       {
         // Update 0x00 values, enable force sync
-        update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, true);
-        universe_state->has_null_data = true;
-        universe_state->null_packets_sent_before_suppression = 0;
-        etcpal_timer_start(&universe_state->null_keep_alive_timer, source_state->keep_alive_interval);
-
+        update_levels(source_state, universe_state, new_values, new_values_size, true);
 #if SACN_ETC_PRIORITY_EXTENSION
         // Update 0xDD values, enable force sync
-        update_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, true);
-        universe_state->has_pap_data = true;
-        universe_state->pap_packets_sent_before_suppression = 0;
-        etcpal_timer_start(&universe_state->pap_keep_alive_timer, source_state->keep_alive_interval);
+        update_paps(source_state, universe_state, new_priorities, new_priorities_size, true);
 #endif
       }
 
@@ -1877,3 +1857,25 @@ void update_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_s
   // Copy data into the send buffer immediately after the start code
   memcpy(&send_buf[SACN_DATA_HEADER_SIZE], new_data, new_data_size);
 }
+
+// Needs lock
+void update_levels(SourceState* source_state, UniverseState* universe_state, const uint8_t* new_levels,
+                   size_t new_levels_size, bool force_sync)
+{
+  update_data(universe_state->null_send_buf, new_levels, (uint16_t)new_levels_size, force_sync);
+  universe_state->has_null_data = true;
+  universe_state->null_packets_sent_before_suppression = 0;
+  etcpal_timer_start(&universe_state->null_keep_alive_timer, source_state->keep_alive_interval);
+}
+
+#if SACN_ETC_PRIORITY_EXTENSION
+void update_paps(SourceState* source_state, UniverseState* universe_state, const uint8_t* new_priorities,
+                 size_t new_priorities_size, bool force_sync)
+{
+  // Update 0xDD values, enable force sync
+  update_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, force_sync);
+  universe_state->has_pap_data = true;
+  universe_state->pap_packets_sent_before_suppression = 0;
+  etcpal_timer_start(&universe_state->pap_keep_alive_timer, source_state->keep_alive_interval);
+}
+#endif
