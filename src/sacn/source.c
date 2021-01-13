@@ -42,6 +42,7 @@
   ((!SACN_DYNAMIC_MEM && (SACN_SOURCE_MAX_SOURCES > 0) && (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)) || \
    SACN_DYNAMIC_MEM)
 #define UNICAST_ENABLED ((!SACN_DYNAMIC_MEM && (SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE > 0)) || SACN_DYNAMIC_MEM)
+#define IS_PART_OF_UNIVERSE_DISCOVERY(universe) (universe->has_null_data && !universe->send_unicast_only)
 
 /* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
 
@@ -1540,7 +1541,7 @@ void remove_universe_state(SourceState* source, UniverseState** universe, EtcPal
   if (universe_to_remove)
   {
     // Update num_active_universes and universe_discovery_list_changed if needed
-    if (universe_to_remove->has_null_data && !universe_to_remove->send_unicast_only)
+    if (IS_PART_OF_UNIVERSE_DISCOVERY(universe_to_remove))
     {
       --source->num_active_universes;
       source->universe_discovery_list_changed = true;
@@ -1796,7 +1797,7 @@ int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* universe_ite
        universe = etcpal_rbiter_next(universe_iter))
   {
     // If this universe has NULL start code data at a bare minimum & is not unicast-only
-    if (universe->has_null_data && !universe->send_unicast_only)
+    if (IS_PART_OF_UNIVERSE_DISCOVERY(universe))
     {
       // Pack the universe ID
       etcpal_pack_u16b(pcur, universe->universe_id);
