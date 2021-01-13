@@ -572,7 +572,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
         result = kEtcPalErrNoMem;
     }
 
-    // Initialize the universe's state and add it to the source's universes tree.
+    // Initialize the universe's state.
     if (result == kEtcPalErrOk)
     {
       universe->universe_id = config->universe;
@@ -601,20 +601,61 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       universe->num_unicast_dests = config->num_unicast_destinations;
       universe->send_unicast_only = config->send_unicast_only;
 
-      // Add the state to the universes tree.
+      result = sacn_initialize_internal_netints(&universe->netints, &universe->num_netints, netints, num_netints);
+    }
+
+    // Add the universe's state to the source's universes tree.
+    if (result == kEtcPalErrOk)
+    {
       etcpal_error_t insert_result = etcpal_rbtree_insert(&source->universes, universe);
 
-      // Clean up on failure.
-      if (insert_result != kEtcPalErrOk)
-      {
-        FREE_UNIVERSE_STATE(universe);
+      if (insert_result == kEtcPalErrNoMem)
+        result = kEtcPalErrNoMem;
+      else if (insert_result != kEtcPalErrOk)
+        result = kEtcPalErrSys;
+    }
 
-        if (insert_result == kEtcPalErrNoMem)
-          result = kEtcPalErrNoMem;
+    // Update the source's netint tracking.
+    for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->num_netints); ++i)
+    {
+      NetintState* netint = etcpal_rbtree_find(&source->netints, &universe->netints[i]);
+
+      if (netint)
+      {
+        // Update existing netint by incrementing the ref counter.
+        ++netint->num_refs;
+      }
+      else
+      {
+        // Add a new netint with ref counter = 1.
+        netint = ALLOC_SOURCE_NETINT();
+
+        if (netint)
+        {
+          netint->id = universe->netints[i];
+          netint->num_refs = 1;
+
+          etcpal_error_t insert_result = etcpal_rbtree_insert(&source->netints, netint);
+
+          if (insert_result == kEtcPalErrNoMem)
+            result = kEtcPalErrNoMem;
+          else if (insert_result != kEtcPalErrOk)
+            result = kEtcPalErrSys;
+        }
         else
-          result = kEtcPalErrSys;
+        {
+          result = kEtcPalErrNoMem;
+        }
+
+        // Clean up netint on failure.
+        if ((result != kEtcPalErrOk) && netint)
+          FREE_SOURCE_NETINT(netint);
       }
     }
+
+    // Clean up universe on failure.
+    if ((result != kEtcPalErrOk) && universe)
+      FREE_UNIVERSE_STATE(universe);
 
     sacn_unlock();
   }
@@ -661,7 +702,7 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universes);
   ETCPAL_UNUSED_ARG(universes_size);
-  
+
 #if !SOURCE_ENABLED
   return 0;
 #endif
@@ -738,7 +779,7 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(destinations);
   ETCPAL_UNUSED_ARG(destinations_size);
-  
+
 #if !SOURCE_ENABLED
   return 0;
 #endif
@@ -1149,7 +1190,7 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(netints_size);
-  
+
 #if !SOURCE_ENABLED
   return 0;
 #endif
