@@ -780,6 +780,8 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
   return kEtcPalErrNotInit;
 #endif
 
+  // TODO: Re-evaluate documentation & transmission suppression... Unicast dests = universes in terms of state?
+
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
