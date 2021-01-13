@@ -1862,17 +1862,25 @@ void update_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_s
 void update_levels(SourceState* source_state, UniverseState* universe_state, const uint8_t* new_levels,
                    size_t new_levels_size, bool force_sync)
 {
+  bool was_part_of_discovery = IS_PART_OF_UNIVERSE_DISCOVERY(universe_state);
+
   update_data(universe_state->null_send_buf, new_levels, (uint16_t)new_levels_size, force_sync);
   universe_state->has_null_data = true;
   universe_state->null_packets_sent_before_suppression = 0;
   etcpal_timer_start(&universe_state->null_keep_alive_timer, source_state->keep_alive_interval);
+
+  if (!was_part_of_discovery && IS_PART_OF_UNIVERSE_DISCOVERY(universe_state))
+  {
+    ++source_state->num_active_universes;
+    source_state->universe_discovery_list_changed = true;
+  }
 }
 
 #if SACN_ETC_PRIORITY_EXTENSION
+// Needs lock
 void update_paps(SourceState* source_state, UniverseState* universe_state, const uint8_t* new_priorities,
                  size_t new_priorities_size, bool force_sync)
 {
-  // Update 0xDD values, enable force sync
   update_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, force_sync);
   universe_state->has_pap_data = true;
   universe_state->pap_packets_sent_before_suppression = 0;
