@@ -334,7 +334,7 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
   return res;
 }
 
-void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t *socket, bool close_now)
+void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* socket, bool close_now)
 {
   SACN_ASSERT(socket != NULL);
   SACN_ASSERT(*socket != ETCPAL_SOCKET_INVALID);
@@ -567,45 +567,51 @@ etcpal_error_t sacn_initialize_internal_netints(EtcPalMcastNetintId** internal_n
 {
   size_t num_valid_netints = 0u;
   etcpal_error_t result = sacn_validate_netint_config(app_netints, num_app_netints, &num_valid_netints);
-  if (result != kEtcPalErrOk)
-    return result;
 
-  if (app_netints)
+  if (result == kEtcPalErrOk)
   {
+    if (app_netints)
+    {
 #if SACN_DYNAMIC_MEM
-    EtcPalMcastNetintId* calloc_result = calloc(num_valid_netints, sizeof(EtcPalMcastNetintId));
+      *internal_netints = calloc(num_valid_netints, sizeof(EtcPalMcastNetintId));
 
-    if (calloc_result)
-      *internal_netints = calloc_result;
-    else
-      result = kEtcPalErrNoMem;
+      if (!(*internal_netints))
+        result = kEtcPalErrNoMem;
 #else
-    if (num_app_netints > SACN_MAX_NETINTS)
-      result = kEtcPalErrNoMem;
+      if (num_app_netints > SACN_MAX_NETINTS)
+        result = kEtcPalErrNoMem;
 #endif
 
-    if (result == kEtcPalErrOk)
-    {
-      for (size_t read_index = 0u, write_index = 0u; read_index < num_app_netints; ++read_index)
+      if (result == kEtcPalErrOk)
       {
-        if (app_netints[read_index].status == kEtcPalErrOk)
+        for (size_t read_index = 0u, write_index = 0u; read_index < num_app_netints; ++read_index)
         {
-          memcpy(*internal_netints + write_index, &app_netints[read_index].iface, sizeof(EtcPalMcastNetintId));
-          ++write_index;
+          if (app_netints[read_index].status == kEtcPalErrOk)
+          {
+            memcpy(*internal_netints + write_index, &app_netints[read_index].iface, sizeof(EtcPalMcastNetintId));
+            ++write_index;
+          }
         }
       }
     }
-  }
 #if SACN_DYNAMIC_MEM
-  else
-  {
-    *internal_netints = NULL;
-  }
+    else
+    {
+      *internal_netints = NULL;
+    }
 #endif
+  }
 
   if (result == kEtcPalErrOk)
   {
     *num_internal_netints = num_valid_netints;
+  }
+  else
+  {
+#if SACN_DYNAMIC_MEM
+    *internal_netints = NULL;
+#endif
+    *num_internal_netints = 0;
   }
 
   return result;
