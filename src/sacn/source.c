@@ -771,6 +771,7 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
+ * @return #kEtcPalErrExists: The unicast destination was already added to this universe on this source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)
@@ -805,7 +806,32 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
     if (result == kEtcPalErrOk)
       result = lookup_state(handle, universe, NULL, &universe_state);
 
-    // TODO: Add unicast destination
+    // Allocate the unicast destination
+    EtcPalIpAddr* unicast_dest = NULL;
+    if (result == kEtcPalErrOk)
+    {
+      unicast_dest = ALLOC_UNICAST_DESTINATION();
+      if (!unicast_dest)
+        result = kEtcPalErrNoMem;
+    }
+
+    // Add unicast destination
+    if (result == kEtcPalErrOk)
+    {
+      *unicast_dest = *dest;
+
+      etcpal_error_t insert_result = etcpal_rbtree_insert(&universe_state->unicast_dests, unicast_dest);
+
+      if (insert_result == kEtcPalErrExists)
+        result = kEtcPalErrExists;
+      else if (insert_result == kEtcPalErrNoMem)
+        result = kEtcPalErrNoMem;
+      else if (insert_result != kEtcPalErrOk)
+        result = kEtcPalErrSys;
+
+      if (insert_result != kEtcPalErrOk)
+        FREE_UNICAST_DESTINATION(unicast_dest);
+    }
 
     sacn_unlock();
   }
