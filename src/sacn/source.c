@@ -100,6 +100,7 @@ typedef struct SourceState
   EtcPalTimer universe_discovery_timer;
   bool process_manually;
   sacn_ip_support_t ip_supported;
+  int keep_alive_interval;
 
   EtcPalRbTree netints;  // Provides a way to look up netints being used by any universe of this source.
 
@@ -213,7 +214,6 @@ static void send_data_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, c
 static void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, const EtcPalIpAddr* dests,
                               size_t num_dests);
 static int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* universe_iter, uint8_t page_number);
-static UniverseState* look_up_universe_state(sacn_source_t handle, uint16_t universe);
 static void init_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid, const char* source_name,
                           uint8_t priority, uint16_t universe, uint16_t sync_universe, bool send_preview);
 static void update_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size, bool force_sync);
@@ -410,6 +410,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
       etcpal_timer_start(&source->universe_discovery_timer, UNIVERSE_DISCOVERY_INTERVAL);
       source->process_manually = config->manually_process_source;
       source->ip_supported = config->ip_supported;
+      source->keep_alive_interval = config->keep_alive_interval;
       etcpal_rbtree_init(&source->netints, netint_state_lookup_compare_func, source_rb_node_alloc_func,
                          source_rb_node_dealloc_func);
 
@@ -965,18 +966,23 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
   if (new_values && (new_values_size <= DMX_ADDRESS_COUNT))
   {
     // Take lock
-    sacn_lock();
-
-    // Look up universe state
-    UniverseState* universe_state = look_up_universe_state(handle, universe);
-    if (universe_state)
+    if (sacn_lock())
     {
-      // Update 0x00 values, no force sync
-      update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, false);
-    }
+      // Look up state
+      SourceState* source_state = NULL;
+      UniverseState* universe_state = NULL;
+      if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
+      {
+        // Update 0x00 values, no force sync
+        update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, false);
+        universe_state->has_null_data = true;
+        universe_state->null_packets_sent_before_suppression = 0;
+        etcpal_timer_start(&universe_state->null_keep_alive_timer, source_state->keep_alive_interval);
+      }
 
-    // Release lock
-    sacn_unlock();
+      // Release lock
+      sacn_unlock();
+    }
   }
 #endif  // SOURCE_ENABLED
 }
@@ -1012,22 +1018,31 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
       (new_priorities_size <= DMX_ADDRESS_COUNT))
   {
     // Take lock
-    sacn_lock();
-
-    // Look up universe state
-    UniverseState* universe_state = look_up_universe_state(handle, universe);
-    if (universe_state)
+    if (sacn_lock())
     {
-      // Update 0x00 values, no force sync
-      update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, false);
-#if SACN_ETC_PRIORITY_EXTENSION
-      // Update 0xDD values, no force sync
-      update_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, false);
-#endif
-    }
+      // Look up state
+      SourceState* source_state = NULL;
+      UniverseState* universe_state = NULL;
+      if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
+      {
+        // Update 0x00 values, no force sync
+        update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, false);
+        universe_state->has_null_data = true;
+        universe_state->null_packets_sent_before_suppression = 0;
+        etcpal_timer_start(&universe_state->null_keep_alive_timer, source_state->keep_alive_interval);
 
-    // Release lock
-    sacn_unlock();
+#if SACN_ETC_PRIORITY_EXTENSION
+        // Update 0xDD values, no force sync
+        update_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, false);
+        universe_state->has_pap_data = true;
+        universe_state->pap_packets_sent_before_suppression = 0;
+        etcpal_timer_start(&universe_state->pap_keep_alive_timer, source_state->keep_alive_interval);
+#endif
+      }
+
+      // Release lock
+      sacn_unlock();
+    }
   }
 #endif  // SOURCE_ENABLED
 }
@@ -1056,18 +1071,23 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
   if (new_values && (new_values_size <= DMX_ADDRESS_COUNT))
   {
     // Take lock
-    sacn_lock();
-
-    // Look up universe state
-    UniverseState* universe_state = look_up_universe_state(handle, universe);
-    if (universe_state)
+    if (sacn_lock())
     {
-      // Update 0x00 values, enable force sync
-      update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, true);
-    }
+      // Look up state
+      SourceState* source_state = NULL;
+      UniverseState* universe_state = NULL;
+      if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
+      {
+        // Update 0x00 values, enable force sync
+        update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, true);
+        universe_state->has_null_data = true;
+        universe_state->null_packets_sent_before_suppression = 0;
+        etcpal_timer_start(&universe_state->null_keep_alive_timer, source_state->keep_alive_interval);
+      }
 
-    // Release lock
-    sacn_unlock();
+      // Release lock
+      sacn_unlock();
+    }
   }
 #endif  // SOURCE_ENABLED
 }
@@ -1108,22 +1128,31 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
       (new_priorities_size <= DMX_ADDRESS_COUNT))
   {
     // Take lock
-    sacn_lock();
-
-    // Look up universe state
-    UniverseState* universe_state = look_up_universe_state(handle, universe);
-    if (universe_state)
+    if (sacn_lock())
     {
-      // Update 0x00 values, enable force sync
-      update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, true);
-#if SACN_ETC_PRIORITY_EXTENSION
-      // Update 0xDD values, enable force sync
-      update_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, true);
-#endif
-    }
+      // Look up state
+      SourceState* source_state = NULL;
+      UniverseState* universe_state = NULL;
+      if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
+      {
+        // Update 0x00 values, enable force sync
+        update_data(universe_state->null_send_buf, new_values, (uint16_t)new_values_size, true);
+        universe_state->has_null_data = true;
+        universe_state->null_packets_sent_before_suppression = 0;
+        etcpal_timer_start(&universe_state->null_keep_alive_timer, source_state->keep_alive_interval);
 
-    // Release lock
-    sacn_unlock();
+#if SACN_ETC_PRIORITY_EXTENSION
+        // Update 0xDD values, enable force sync
+        update_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, true);
+        universe_state->has_pap_data = true;
+        universe_state->pap_packets_sent_before_suppression = 0;
+        etcpal_timer_start(&universe_state->pap_keep_alive_timer, source_state->keep_alive_interval);
+#endif
+      }
+
+      // Release lock
+      sacn_unlock();
+    }
   }
 #endif  // SOURCE_ENABLED
 }
@@ -1616,6 +1645,9 @@ void send_null_data(const SourceState* source, UniverseState* universe)
 #if SACN_ETC_PRIORITY_EXTENSION
   ++universe->pap_send_buf[SACN_SEQ_OFFSET];
 #endif
+
+  if (universe->null_packets_sent_before_suppression < 3)
+    ++universe->null_packets_sent_before_suppression;
 }
 
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -1652,6 +1684,9 @@ void send_pap_data(const SourceState* source, UniverseState* universe)
   // Increment sequence numbers
   ++universe->null_send_buf[SACN_SEQ_OFFSET];
   ++universe->pap_send_buf[SACN_SEQ_OFFSET];
+
+  if (universe->pap_packets_sent_before_suppression < 3)
+    ++universe->pap_packets_sent_before_suppression;
 }
 #endif
 
@@ -1816,18 +1851,6 @@ int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* universe_ite
 
   // Return number of universes packed
   return num_universes_packed;
-}
-
-// Needs lock
-UniverseState* look_up_universe_state(sacn_source_t handle, uint16_t universe)
-{
-  // Look up source state and universe state
-  SourceState* source_state = etcpal_rbtree_find(&sources, &handle);
-  if (source_state)
-    return (UniverseState*)etcpal_rbtree_find(&source_state->universes, &universe);
-
-  // Source not found, return NULL
-  return NULL;
 }
 
 // Needs lock
