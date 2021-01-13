@@ -687,26 +687,29 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
 /**
  * @brief Remove a universe from a source.
  *
- * This queues the source for removal. The destruction actually occurs either on the thread or on a call to
+ * This queues the universe for removal. The destruction actually occurs either on the thread or on a call to
  * sacn_source_process_manual() after an additional three packets have been sent with the "Stream_Terminated" option
  * set.
  *
  * The source will also stop transmitting sACN universe discovery packets for that universe.
- *
- * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
- * or values_buffer you passed in on your call to sacn_source_add_universe().
  *
  * @param[in] handle Handle to the source from which to remove the universe.
  * @param[in] universe Universe to remove.
  */
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 {
-#if !SOURCE_ENABLED
-  return;
-#endif
+#if SOURCE_ENABLED
+  if (sacn_lock())
+  {
+    UniverseState* universe_state = NULL;
+    lookup_state(handle, universe, NULL, &universe_state);
 
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
+    if (universe_state)
+      universe_state->terminating = true;  // Thread or ProcessManual takes over from here.
+
+    sacn_unlock();
+  }
+#endif
 }
 
 /**

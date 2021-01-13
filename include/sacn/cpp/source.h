@@ -343,13 +343,10 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings, std::
 /**
  * @brief Remove a universe from a source.
  *
- * This queues the source for removal. The destruction actually occurs either on the thread or on a call to
+ * This queues the universe for removal. The destruction actually occurs either on the thread or on a call to
  * ProcessManual() after an additional three packets have been sent with the "Stream_Terminated" option set.
  *
  * The source will also stop transmitting sACN universe discovery packets for that universe.
- *
- * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
- * or values_buffer you passed in on your call to AddUniverse().
  *
  * @param[in] universe Universe to remove.
  */
