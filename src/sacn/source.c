@@ -49,7 +49,15 @@
 #define ALLOC_SOURCE_STATE() malloc(sizeof(SourceState))
 #define FREE_SOURCE_STATE(ptr) free(ptr)
 #define ALLOC_UNIVERSE_STATE() malloc(sizeof(UniverseState))
-#define FREE_UNIVERSE_STATE(ptr) free(ptr)
+#define FREE_UNIVERSE_STATE(ptr)                  \
+  do                                              \
+  {                                               \
+    if (((UniverseState*)ptr)->unicast_dests)     \
+      free(((UniverseState*)ptr)->unicast_dests); \
+    if (((UniverseState*)ptr)->netints)           \
+      free(((UniverseState*)ptr)->netints);       \
+    free(ptr);                                    \
+  } while (0)
 #define ALLOC_SOURCE_NETINT() malloc(sizeof(NetintState))
 #define FREE_SOURCE_NETINT(ptr) free(ptr)
 #define ALLOC_SOURCE_RB_NODE() malloc(sizeof(EtcPalRbNode))
@@ -1543,8 +1551,8 @@ void remove_universe_state(SourceState* source, UniverseState** universe, EtcPal
     }
 
     // Now clean up the universe state
-    if (etcpal_rbtree_remove(&source->universes, universe_to_remove) == kEtcPalErrOk)
-      FREE_UNIVERSE_STATE(universe_to_remove);
+    etcpal_rbtree_remove(&source->universes, universe_to_remove);
+    FREE_UNIVERSE_STATE(universe_to_remove);
   }
 }
 
