@@ -326,8 +326,7 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings)
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrExists: Universe given was already added to this source.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or a network interface ID given was not
- * found on the system.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
  * @return #kEtcPalErrNoMem: No room to allocate additional universe.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
