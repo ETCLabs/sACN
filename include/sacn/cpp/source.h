@@ -266,6 +266,9 @@ inline void Source::Shutdown()
  * packet for use in displaying the identity of a source to a user." Only up to
  * #SACN_SOURCE_NAME_MAX_LEN characters will be used.
  *
+ * If a universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
+ * reset the logic that slows down packet transmission due to inactivity.
+ *
  * @param[in] new_name New name to use for this universe.
  * @return #kEtcPalErrOk: Name set successfully.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -449,6 +452,9 @@ inline std::vector<etcpal::IpAddr> Source::GetUnicastDestinations(uint16_t unive
 /**
  * @brief Change the priority of a universe on a sACN source.
  *
+ * If this universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
+ * reset the logic that slows down packet transmission due to inactivity.
+ *
  * @param[in] universe Universe to change.
  * @param[in] new_priority New priority of the data sent from this source. Valid range is 0 to 200,
  *                         inclusive.
@@ -470,6 +476,9 @@ inline etcpal::Error Source::ChangePriority(uint16_t universe, uint8_t new_prior
  * E1.31) "intended for use in visualization or media server preview applications and shall not be
  * used to generate live output."
  *
+ * If this universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
+ * reset the logic that slows down packet transmission due to inactivity.
+ *
  * @param[in] universe The universe to change.
  * @param[in] new_preview_flag The new send_preview option.
  * @return #kEtcPalErrOk: send_preview option set successfully.
@@ -488,6 +497,9 @@ inline etcpal::Error Source::ChangePreviewFlag(uint16_t universe, bool new_previ
  *
  * This will change the synchronization universe used by a sACN universe on the source.
  * If this value is 0, synchronization is turned off for that universe.
+ *
+ * If this universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
+ * reset the logic that slows down packet transmission due to inactivity.
  *
  * TODO: At this time, synchronization is not supported by this library.
  *

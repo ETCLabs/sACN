@@ -518,6 +518,9 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
  * packet for use in displaying the identity of a source to a user." Only up to
  * #SACN_SOURCE_NAME_MAX_LEN characters will be used.
  *
+ * If a universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
+ * reset the logic that slows down packet transmission due to inactivity.
+ *
  * @param[in] handle Handle to the source to change.
  * @param[in] new_name New name to use for this universe.
  * @return #kEtcPalErrOk: Name set successfully.
@@ -971,6 +974,9 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
 /**
  * @brief Change the priority of a universe on a sACN source.
  *
+ * If this universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
+ * reset the logic that slows down packet transmission due to inactivity.
+ *
  * @param[in] handle Handle to the source for which to set the priority.
  * @param[in] universe Universe to change.
  * @param[in] new_priority New priority of the data sent from this source. Valid range is 0 to 200,
@@ -1000,6 +1006,9 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
  * E1.31) "intended for use in visualization or media server preview applications and shall not be
  * used to generate live output."
  *
+ * If this universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
+ * reset the logic that slows down packet transmission due to inactivity.
+ *
  * @param[in] handle Handle to the source for which to set the Preview_Data option.
  * @param[in] universe The universe to change.
  * @param[in] new_preview_flag The new send_preview option.
@@ -1026,6 +1035,9 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
  *
  * This will change the synchronization universe used by a sACN universe on the source.
  * If this value is 0, synchronization is turned off for that universe.
+ *
+ * If this universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
+ * reset the logic that slows down packet transmission due to inactivity.
  *
  * TODO: At this time, synchronization is not supported by this library.
  *
