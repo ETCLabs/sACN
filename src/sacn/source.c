@@ -46,6 +46,7 @@
 
 /* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
 
+// TODO: Move remaining etcpal_rbtree_clear_with_cb calls into these FREE macros
 #if SACN_DYNAMIC_MEM
 #define ALLOC_SOURCE_STATE() malloc(sizeof(SourceState))
 #define FREE_SOURCE_STATE(ptr) free(ptr)
