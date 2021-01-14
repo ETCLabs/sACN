@@ -88,8 +88,13 @@
   } while (0)
 #define ALLOC_SOURCE_NETINT() etcpal_mempool_alloc(sacnsource_netints)
 #define FREE_SOURCE_NETINT(ptr) etcpal_mempool_free(sacnsource_netints, ptr)
+#if UNICAST_ENABLED
 #define ALLOC_UNICAST_DESTINATION() etcpal_mempool_alloc(sacnsource_unicast_dests)
 #define FREE_UNICAST_DESTINATION(ptr) etcpal_mempool_free(sacnsource_unicast_dests, ptr)
+#else
+#define ALLOC_UNICAST_DESTINATION() NULL
+#define FREE_UNICAST_DESTINATION(ptr)
+#endif
 #define ALLOC_SOURCE_RB_NODE() etcpal_mempool_alloc(sacnsource_rb_nodes)
 #define FREE_SOURCE_RB_NODE(ptr) etcpal_mempool_free(sacnsource_rb_nodes, ptr)
 #else
@@ -172,6 +177,8 @@ typedef struct UnicastDestination
 {
   EtcPalIpAddr dest_addr;  // This must be the first struct member.
   bool ready_for_processing;
+  bool terminating;
+  int num_terminations_sent;
 } UnicastDestination;
 
 /**************************** Private variables ******************************/
@@ -181,9 +188,11 @@ ETCPAL_MEMPOOL_DEFINE(sacnsource_source_states, SourceState, SACN_SOURCE_MAX_SOU
 ETCPAL_MEMPOOL_DEFINE(sacnsource_universe_states, UniverseState,
                       (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE));
 ETCPAL_MEMPOOL_DEFINE(sacnsource_netints, NetintState, (SACN_SOURCE_MAX_SOURCES * SACN_MAX_NETINTS));
+#if UNICAST_ENABLED
 ETCPAL_MEMPOOL_DEFINE(sacnsource_unicast_dests, UnicastDestination,
                       (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE *
                        SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE));
+#endif
 ETCPAL_MEMPOOL_DEFINE(sacnsource_rb_nodes, EtcPalRbNode,
                       SACN_SOURCE_MAX_SOURCES + (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE) +
                           (SACN_SOURCE_MAX_SOURCES * SACN_MAX_NETINTS) +
@@ -215,6 +224,8 @@ static int unicast_dests_lookup_compare_func(const EtcPalRbTree* self, const voi
 
 static etcpal_error_t lookup_state(sacn_source_t source, uint16_t universe, SourceState** source_state,
                                    UniverseState** universe_state);
+static etcpal_error_t lookup_unicast_dest(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* addr,
+                                          UnicastDestination** unicast_dest);
 
 static EtcPalRbNode* source_rb_node_alloc_func(void);
 static void source_rb_node_dealloc_func(EtcPalRbNode* node);
@@ -231,17 +242,30 @@ static void stop_tick_thread();
 static void source_thread_function(void* arg);
 
 static int process_internal(bool process_manual);
+static int process_sources(bool process_manual);
+static void process_universe_discovery(SourceState* source);
+static void process_universes(SourceState* source);
+static void process_unicast_dests(SourceState* source, UniverseState* universe);
+static void process_universe_null_pap_transmission(SourceState* source, UniverseState* universe);
+static void remove_unicast_dest(UniverseState* universe, UnicastDestination** dest, EtcPalRbIter* unicast_iter);
 static void remove_universe_state(SourceState* source, UniverseState** universe, EtcPalRbIter* universe_iter);
 static void remove_source_state(SourceState** source, EtcPalRbIter* source_iter);
-static void send_null_data(const SourceState* source, UniverseState* universe);
+static void send_null_data_multicast(const SourceState* source, UniverseState* universe);
+static void send_null_data_unicast(const SourceState* source, UniverseState* universe);
+static void process_null_sent(UniverseState* universe);
 #if SACN_ETC_PRIORITY_EXTENSION
-static void send_pap_data(const SourceState* source, UniverseState* universe);
+static void send_pap_data_multicast(const SourceState* source, UniverseState* universe);
+static void send_pap_data_unicast(const SourceState* source, UniverseState* universe);
+static void process_pap_sent(UniverseState* universe);
 #endif
-static void send_termination(const SourceState* source, UniverseState* universe);
+static void send_termination_multicast(const SourceState* source, UniverseState* universe);
+static void send_termination_unicast(const SourceState* source, UniverseState* universe, UnicastDestination* dest);
 static void send_universe_discovery(SourceState* source);
 static void send_data_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
                                 const EtcPalMcastNetintId* netints, size_t num_netints);
 static void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, EtcPalRbTree* dests);
+static void send_data_to_single_unicast_dest(etcpal_iptype_t ip_type, const uint8_t* send_buf,
+                                             const UnicastDestination* dest);
 static int pack_universe_discovery_page(SourceState* source, EtcPalRbIter* universe_iter, uint8_t page_number);
 static void init_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid, const char* source_name,
                           uint8_t priority, uint16_t universe, uint16_t sync_universe, bool send_preview);
@@ -253,6 +277,9 @@ static void update_paps(SourceState* source_state, UniverseState* universe_state
                         size_t new_priorities_size, bool force_sync);
 #endif
 static void set_unicast_dests_ready(UniverseState* universe_state);
+static void set_source_terminating(SourceState* source);
+static void set_universe_terminating(UniverseState* universe);
+static void set_unicast_dest_terminating(UnicastDestination* dest);
 
 /*************************** Function definitions ****************************/
 
@@ -522,9 +549,9 @@ void sacn_source_destroy(sacn_source_t handle)
     // Try to find the source's state.
     SourceState* source = etcpal_rbtree_find(&sources, &handle);
 
-    // If the source was found, set the terminating flag to initiate termination.
+    // If the source was found, initiate termination.
     if (source)
-      source->terminating = true;
+      set_source_terminating(source);
 
     sacn_unlock();
   }
@@ -648,6 +675,8 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
         {
           dest->dest_addr = config->unicast_destinations[i];
           dest->ready_for_processing = false;  // Calling an Update Values function sets this to true.
+          dest->terminating = false;
+          dest->num_terminations_sent = 0;
 
           etcpal_error_t insert_result = etcpal_rbtree_insert(&universe->unicast_dests, dest);
 
@@ -753,7 +782,7 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
     lookup_state(handle, universe, NULL, &universe_state);
 
     if (universe_state)
-      universe_state->terminating = true;  // Thread or ProcessManual takes over from here.
+      set_universe_terminating(universe_state);
 
     sacn_unlock();
   }
@@ -845,6 +874,8 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
     {
       unicast_dest->dest_addr = *dest;
       unicast_dest->ready_for_processing = false;  // Calling an Update Values function sets this to true.
+      unicast_dest->terminating = false;
+      unicast_dest->num_terminations_sent = 0;
 
       etcpal_error_t insert_result = etcpal_rbtree_insert(&universe_state->unicast_dests, unicast_dest);
 
@@ -879,13 +910,21 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
  */
 void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)
 {
-#if !SOURCE_ENABLED
-  return;
-#endif
+#if SOURCE_ENABLED
+  // Validate & lock
+  if (dest && sacn_lock())
+  {
+    // Look up unicast destination
+    UnicastDestination* unicast_dest = NULL;
+    lookup_unicast_dest(handle, universe, dest, &unicast_dest);
 
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(dest);
+    // Initiate termination
+    if (unicast_dest)
+      set_unicast_dest_terminating(unicast_dest);
+
+    sacn_unlock();
+  }
+#endif
 }
 
 /**
@@ -1484,6 +1523,37 @@ etcpal_error_t lookup_state(sacn_source_t source, uint16_t universe, SourceState
   return result;
 }
 
+// Needs lock
+etcpal_error_t lookup_unicast_dest(sacn_source_t source, uint16_t universe, const EtcPalIpAddr* addr,
+                                   UnicastDestination** unicast_dest)
+{
+  // Look up universe
+  UniverseState* universe_state = NULL;
+  etcpal_error_t result = lookup_state(source, universe, NULL, &universe_state);
+
+  // Validate
+  if ((result == kEtcPalErrOk) && (!addr || !unicast_dest))
+    result = kEtcPalErrSys;
+
+  // Look up unicast destination
+  UnicastDestination* found = NULL;
+  if (result == kEtcPalErrOk)
+  {
+    found = etcpal_rbtree_find(&universe_state->unicast_dests, addr);
+
+    if (!found)
+      result = kEtcPalErrNotFound;
+  }
+
+  // Pass back to application
+  if (result == kEtcPalErrOk)
+  {
+    *unicast_dest = found;
+  }
+
+  return result;
+}
+
 static EtcPalRbNode* source_rb_node_alloc_func(void)
 {
   return ALLOC_SOURCE_RB_NODE();
@@ -1594,113 +1664,169 @@ int process_internal(bool process_manual)
 
   if (sacn_lock())
   {
-    // For each source
-    EtcPalRbIter source_iter;
-    etcpal_rbiter_init(&source_iter);
-    SourceState* source = etcpal_rbiter_first(&source_iter, &sources);
-    while (source)
-    {
-      bool source_incremented = false;
-
-      // If the Source API is shutting down, cause this source to terminate (if thread-based)
-      if (!process_manual && shutting_down)
-        source->terminating = true;
-
-      // If this is the kind of source we want to process (manual vs. thread-based)
-      if (source->process_manually == process_manual)
-      {
-        // Increment num_sources_tracked (which only counts either manual or thread-based sources)
-        ++num_sources_tracked;
-
-        // If source is not terminating AND either the universe list has changed OR universe discovery timer expired
-        if (!source->terminating &&
-            (source->universe_discovery_list_changed || etcpal_timer_is_expired(&source->universe_discovery_timer)))
-        {
-          // Send universe discovery packet, reset universe discovery timer & universe_discovery_list_changed flag
-          send_universe_discovery(source);
-          source->universe_discovery_list_changed = false;
-          etcpal_timer_reset(&source->universe_discovery_timer);
-        }
-
-        // For each universe of this source
-        EtcPalRbIter universe_iter;
-        etcpal_rbiter_init(&universe_iter);
-        UniverseState* universe = etcpal_rbiter_first(&universe_iter, &source->universes);
-        while (universe)
-        {
-          bool universe_incremented = false;
-
-          // If terminating on this universe
-          if (source->terminating || universe->terminating)
-          {
-            // If termination packet has been sent less than 3 times and we have data
-            if ((universe->num_terminations_sent < 3) && universe->has_null_data)
-            {
-              // Send termination packet
-              send_termination(source, universe);
-            }
-
-            // If at least 3 terminations were sent, or this universe doesn't have data
-            if ((universe->num_terminations_sent >= 3) || !universe->has_null_data)
-            {
-              // Remove universe state
-              remove_universe_state(source, &universe, &universe_iter);
-              universe_incremented = true;
-
-              // If this source is terminating & there are no longer any universes for this source
-              if (source->terminating && (etcpal_rbtree_size(&source->universes) == 0))
-              {
-                // Remove source state
-                remove_source_state(&source, &source_iter);
-                source_incremented = true;
-              }
-            }
-          }
-          else
-          {
-            // If most recent 0x00 data sent < 3 times OR 0x00 keep-alive timer expired
-            if ((universe->null_packets_sent_before_suppression < 3) ||
-                etcpal_timer_is_expired(&universe->null_keep_alive_timer))
-            {
-              // If we have 0x00 data
-              if (universe->has_null_data)
-              {
-                // Send 0x00 data & reset the keep-alive timer
-                send_null_data(source, universe);
-                etcpal_timer_reset(&universe->null_keep_alive_timer);
-              }
-            }
-#if SACN_ETC_PRIORITY_EXTENSION
-            // If most recent 0xDD data sent < 3 times OR 0xDD keep-alive timer expired
-            if ((universe->pap_packets_sent_before_suppression < 3) ||
-                etcpal_timer_is_expired(&universe->pap_keep_alive_timer))
-            {
-              // If we have 0xDD data
-              if (universe->has_pap_data)
-              {
-                // Send 0xDD data & reset the keep-alive timer
-                send_pap_data(source, universe);
-                etcpal_timer_reset(&universe->pap_keep_alive_timer);
-              }
-            }
-#endif
-          }
-
-          if (source_incremented)
-            universe = NULL;  // Stop iterating through old source's universes.
-          else if (!universe_incremented)
-            universe = etcpal_rbiter_next(&universe_iter);
-        }
-      }
-
-      if (!source_incremented)
-        source = etcpal_rbiter_next(&source_iter);
-    }
-
+    num_sources_tracked = process_sources(process_manual);
     sacn_unlock();
   }
 
   return num_sources_tracked;
+}
+
+// Needs lock
+int process_sources(bool process_manual)
+{
+  int num_sources_tracked = 0;
+
+  // For each source
+  EtcPalRbIter source_iter;
+  etcpal_rbiter_init(&source_iter);
+  SourceState* source = etcpal_rbiter_first(&source_iter, &sources);
+  while (source)
+  {
+    bool source_incremented = false;
+
+    // If the Source API is shutting down, cause this source to terminate (if thread-based)
+    if (!process_manual && shutting_down)
+      set_source_terminating(source);
+
+    // If this is the kind of source we want to process (manual vs. thread-based)
+    if (source->process_manually == process_manual)
+    {
+      // Count the sources of the kind being processed by this function
+      ++num_sources_tracked;
+
+      // Universe processing
+      process_universe_discovery(source);
+      process_universes(source);
+
+      // Clean up this source if needed
+      if (source->terminating && (etcpal_rbtree_size(&source->universes) == 0))
+      {
+        remove_source_state(&source, &source_iter);
+        source_incremented = true;
+      }
+    }
+
+    if (!source_incremented)
+      source = etcpal_rbiter_next(&source_iter);
+  }
+
+  return num_sources_tracked;
+}
+
+// Needs lock
+void process_universe_discovery(SourceState* source)
+{
+  // Send another universe discovery packet if it's time
+  if (!source->terminating &&
+      (source->universe_discovery_list_changed || etcpal_timer_is_expired(&source->universe_discovery_timer)))
+  {
+    send_universe_discovery(source);
+    source->universe_discovery_list_changed = false;
+    etcpal_timer_reset(&source->universe_discovery_timer);
+  }
+}
+
+// Needs lock
+void process_universes(SourceState* source)
+{
+  // For each universe of this source
+  EtcPalRbIter universe_iter;
+  etcpal_rbiter_init(&universe_iter);
+  UniverseState* universe = etcpal_rbiter_first(&universe_iter, &source->universes);
+  while (universe)
+  {
+    bool universe_incremented = false;
+
+    // Unicast destination-specific processing
+    process_unicast_dests(source, universe);
+
+    // Terminate and clean up this universe if needed
+    if (universe->terminating)
+    {
+      if ((universe->num_terminations_sent < 3) && universe->has_null_data)
+        send_termination_multicast(source, universe);
+
+      if (((universe->num_terminations_sent >= 3) && (etcpal_rbtree_size(&universe->unicast_dests) == 0)) ||
+          !universe->has_null_data)
+      {
+        remove_universe_state(source, &universe, &universe_iter);
+        universe_incremented = true;
+      }
+    }
+    else
+    {
+      // Process non-termination transmission of start codes 0x00 and 0xDD
+      process_universe_null_pap_transmission(source, universe);
+    }
+
+    if (!universe_incremented)
+      universe = etcpal_rbiter_next(&universe_iter);
+  }
+}
+
+// Needs lock
+void process_unicast_dests(SourceState* source, UniverseState* universe)
+{
+  // For each unicast destination of this universe
+  EtcPalRbIter unicast_iter;
+  etcpal_rbiter_init(&unicast_iter);
+  UnicastDestination* dest = etcpal_rbiter_first(&unicast_iter, &universe->unicast_dests);
+  while (dest)
+  {
+    bool dest_incremented = false;
+
+    // Terminate and clean up this unicast destination if needed
+    if (dest->terminating)
+    {
+      if ((dest->num_terminations_sent < 3) && universe->has_null_data)
+        send_termination_unicast(source, universe, dest);
+
+      if ((dest->num_terminations_sent >= 3) || !universe->has_null_data)
+      {
+        remove_unicast_dest(universe, &dest, &unicast_iter);
+        dest_incremented = true;
+      }
+    }
+
+    if (!dest_incremented)
+      dest = etcpal_rbiter_next(&unicast_iter);
+  }
+}
+
+// Needs lock
+void process_universe_null_pap_transmission(SourceState* source, UniverseState* universe)
+{
+  // If 0x00 data is ready to send
+  if (universe->has_null_data && ((universe->null_packets_sent_before_suppression < 3) ||
+                                  etcpal_timer_is_expired(&universe->null_keep_alive_timer)))
+  {
+    // Send 0x00 data & reset the keep-alive timer
+    send_null_data_multicast(source, universe);
+    send_null_data_unicast(source, universe);
+    process_null_sent(universe);
+    etcpal_timer_reset(&universe->null_keep_alive_timer);
+  }
+#if SACN_ETC_PRIORITY_EXTENSION
+  // If 0xDD data is ready to send
+  if (universe->has_pap_data &&
+      ((universe->pap_packets_sent_before_suppression < 3) || etcpal_timer_is_expired(&universe->pap_keep_alive_timer)))
+  {
+    // Send 0xDD data & reset the keep-alive timer
+    send_pap_data_multicast(source, universe);
+    send_pap_data_unicast(source, universe);
+    process_pap_sent(universe);
+    etcpal_timer_reset(&universe->pap_keep_alive_timer);
+  }
+#endif
+}
+
+// Needs lock
+void remove_unicast_dest(UniverseState* universe, UnicastDestination** dest, EtcPalRbIter* unicast_iter)
+{
+  UnicastDestination* dest_to_remove = *dest;
+  *dest = etcpal_rbiter_next(unicast_iter);
+  etcpal_rbtree_remove(&universe->unicast_dests, dest_to_remove);
+  FREE_UNICAST_DESTINATION(dest_to_remove);
 }
 
 // Needs lock
@@ -1752,35 +1878,38 @@ void remove_source_state(SourceState** source, EtcPalRbIter* source_iter)
 }
 
 // Needs lock
-void send_null_data(const SourceState* source, UniverseState* universe)
+void send_null_data_multicast(const SourceState* source, UniverseState* universe)
 {
-  // Send multicast and unicast on IPv4 and/or IPv6
-  if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+  // Send multicast on IPv4 and/or IPv6
+  if (!universe->send_unicast_only)
   {
-    if (!universe->send_unicast_only)
+    if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
     {
       send_data_multicast(universe->universe_id, kEtcPalIpTypeV4, universe->null_send_buf, universe->netints,
                           universe->num_netints);
     }
 
-#if UNICAST_ENABLED
-    send_data_unicast(kEtcPalIpTypeV4, universe->null_send_buf, &universe->unicast_dests);
-#endif
-  }
-
-  if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-  {
-    if (!universe->send_unicast_only)
+    if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
     {
       send_data_multicast(universe->universe_id, kEtcPalIpTypeV6, universe->null_send_buf, universe->netints,
                           universe->num_netints);
     }
-
-#if UNICAST_ENABLED
-    send_data_unicast(kEtcPalIpTypeV6, universe->null_send_buf, &universe->unicast_dests);
-#endif
   }
+}
 
+// Needs lock
+void send_null_data_unicast(const SourceState* source, UniverseState* universe)
+{
+  // Send unicast on IPv4 and/or IPv6
+  if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+    send_data_unicast(kEtcPalIpTypeV4, universe->null_send_buf, &universe->unicast_dests);
+  if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+    send_data_unicast(kEtcPalIpTypeV6, universe->null_send_buf, &universe->unicast_dests);
+}
+
+// Needs lock
+void process_null_sent(UniverseState* universe)
+{
   // Increment sequence number(s)
   ++universe->null_send_buf[SACN_SEQ_OFFSET];
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -1793,35 +1922,39 @@ void send_null_data(const SourceState* source, UniverseState* universe)
 
 #if SACN_ETC_PRIORITY_EXTENSION
 // Needs lock
-void send_pap_data(const SourceState* source, UniverseState* universe)
+void send_pap_data_multicast(const SourceState* source, UniverseState* universe)
 {
   // Send multicast and unicast on IPv4 and/or IPv6
-  if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+
+  if (!universe->send_unicast_only)
   {
-    if (!universe->send_unicast_only)
+    if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
     {
       send_data_multicast(universe->universe_id, kEtcPalIpTypeV4, universe->pap_send_buf, universe->netints,
                           universe->num_netints);
     }
 
-#if UNICAST_ENABLED
-    send_data_unicast(kEtcPalIpTypeV4, universe->pap_send_buf, &universe->unicast_dests);
-#endif
-  }
-
-  if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-  {
-    if (!universe->send_unicast_only)
+    if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
     {
       send_data_multicast(universe->universe_id, kEtcPalIpTypeV6, universe->pap_send_buf, universe->netints,
                           universe->num_netints);
     }
-
-#if UNICAST_ENABLED
-    send_data_unicast(kEtcPalIpTypeV6, universe->pap_send_buf, &universe->unicast_dests);
-#endif
   }
+}
 
+// Needs lock
+void send_pap_data_unicast(const SourceState* source, UniverseState* universe)
+{
+  // Send multicast and unicast on IPv4 and/or IPv6
+  if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+    send_data_unicast(kEtcPalIpTypeV4, universe->pap_send_buf, &universe->unicast_dests);
+  if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+    send_data_unicast(kEtcPalIpTypeV6, universe->pap_send_buf, &universe->unicast_dests);
+}
+
+// Needs lock
+void process_pap_sent(UniverseState* universe)
+{
   // Increment sequence numbers
   ++universe->null_send_buf[SACN_SEQ_OFFSET];
   ++universe->pap_send_buf[SACN_SEQ_OFFSET];
@@ -1832,16 +1965,43 @@ void send_pap_data(const SourceState* source, UniverseState* universe)
 #endif
 
 // Needs lock
-void send_termination(const SourceState* source, UniverseState* universe)
+void send_termination_multicast(const SourceState* source, UniverseState* universe)
 {
   // Repurpose null_send_buf for the termination packet
+  bool old_terminated_opt = TERMINATED_OPT_SET(universe->null_send_buf);
   SET_TERMINATED_OPT(universe->null_send_buf, true);
 
-  // Send the termination packet
-  send_null_data(source, universe);
+  // Send the termination packet on multicast only
+  send_null_data_multicast(source, universe);
+  process_null_sent(universe);
 
   // Increment the termination counter
   ++universe->num_terminations_sent;
+
+  // Revert terminated flag
+  SET_TERMINATED_OPT(universe->null_send_buf, old_terminated_opt);
+}
+
+// Needs lock
+void send_termination_unicast(const SourceState* source, UniverseState* universe, UnicastDestination* dest)
+{
+  // Repurpose null_send_buf for the termination packet
+  bool old_terminated_opt = TERMINATED_OPT_SET(universe->null_send_buf);
+  SET_TERMINATED_OPT(universe->null_send_buf, true);
+
+  // Send the termination packet on unicast only
+  if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+    send_data_to_single_unicast_dest(kEtcPalIpTypeV4, universe->null_send_buf, dest);
+  if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+    send_data_to_single_unicast_dest(kEtcPalIpTypeV6, universe->null_send_buf, dest);
+
+  process_null_sent(universe);
+
+  // Increment the termination counter
+  ++dest->num_terminations_sent;
+
+  // Revert terminated flag
+  SET_TERMINATED_OPT(universe->null_send_buf, old_terminated_opt);
 }
 
 // Needs lock
@@ -1937,6 +2097,20 @@ void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, EtcPalR
 {
   if (dests)
   {
+    EtcPalRbIter tree_iter;
+    etcpal_rbiter_init(&tree_iter);
+
+    // For each unicast destination, send the data
+    for (UnicastDestination* dest = etcpal_rbiter_first(&tree_iter, dests); dest; dest = etcpal_rbiter_next(&tree_iter))
+      send_data_to_single_unicast_dest(ip_type, send_buf, dest);
+  }
+}
+
+// Needs lock
+void send_data_to_single_unicast_dest(etcpal_iptype_t ip_type, const uint8_t* send_buf, const UnicastDestination* dest)
+{
+  if (dest)
+  {
     // Determine the socket to use
     etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
     if (ip_type == kEtcPalIpTypeV4)
@@ -1944,23 +2118,16 @@ void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, EtcPalR
     else if (ip_type == kEtcPalIpTypeV6)
       sock = ipv6_unicast_sock;
 
-    EtcPalRbIter tree_iter;
-    etcpal_rbiter_init(&tree_iter);
-
-    // For each unicast destination
-    for (UnicastDestination* dest = etcpal_rbiter_first(&tree_iter, dests); dest; etcpal_rbiter_next(&tree_iter))
+    // If this destination is ready for processing and matches the IP type
+    if (dest->ready_for_processing && (dest->dest_addr.type == ip_type))
     {
-      // If this destination is ready for processing and matches the IP type
-      if (dest->ready_for_processing && (dest->dest_addr.type == ip_type))
-      {
-        // Convert destination to SockAddr
-        EtcPalSockAddr sockaddr_dest;
-        sockaddr_dest.ip = dest->dest_addr;
-        sockaddr_dest.port = SACN_PORT;
+      // Convert destination to SockAddr
+      EtcPalSockAddr sockaddr_dest;
+      sockaddr_dest.ip = dest->dest_addr;
+      sockaddr_dest.port = SACN_PORT;
 
-        // Try to send the data (ignore errors)
-        etcpal_sendto(sock, send_buf, SACN_MTU, 0, &sockaddr_dest);
-      }
+      // Try to send the data (ignore errors)
+      etcpal_sendto(sock, send_buf, SACN_MTU, 0, &sockaddr_dest);
     }
   }
 }
@@ -2063,9 +2230,64 @@ void set_unicast_dests_ready(UniverseState* universe_state)
   etcpal_rbiter_init(&tree_iter);
 
   for (UnicastDestination* dest = etcpal_rbiter_first(&tree_iter, &universe_state->unicast_dests); dest;
-       etcpal_rbiter_next(&tree_iter))
+       dest = etcpal_rbiter_next(&tree_iter))
   {
     // Indicate that this unicast destination is ready for processing.
     dest->ready_for_processing = true;
+  }
+}
+
+// Needs lock
+void set_source_terminating(SourceState* source)
+{
+  // If the source isn't already terminating
+  if (source && !source->terminating)
+  {
+    // Set the source's terminating flag
+    source->terminating = true;
+
+    // Set terminating for each universe of this source
+    EtcPalRbIter tree_iter;
+    etcpal_rbiter_init(&tree_iter);
+
+    for (UniverseState* universe = etcpal_rbiter_first(&tree_iter, &source->universes); universe;
+         universe = etcpal_rbiter_next(&tree_iter))
+    {
+      set_universe_terminating(universe);
+    }
+  }
+}
+
+// Needs lock
+void set_universe_terminating(UniverseState* universe)
+{
+  // If the universe isn't already terminating
+  if (universe && !universe->terminating)
+  {
+    // Set the universe's terminating flag and termination counter
+    universe->terminating = true;
+    universe->num_terminations_sent = 0;
+
+    // Set terminating for each unicast destination of this universe
+    EtcPalRbIter tree_iter;
+    etcpal_rbiter_init(&tree_iter);
+
+    for (UnicastDestination* dest = etcpal_rbiter_first(&tree_iter, &universe->unicast_dests); dest;
+         dest = etcpal_rbiter_next(&tree_iter))
+    {
+      set_unicast_dest_terminating(dest);
+    }
+  }
+}
+
+// Needs lock
+void set_unicast_dest_terminating(UnicastDestination* dest)
+{
+  // If the unicast destination isn't already terminating
+  if (dest && !dest->terminating)
+  {
+    // Set the unicast destination's terminating flag and termination counter
+    dest->terminating = true;
+    dest->num_terminations_sent = 0;
   }
 }
