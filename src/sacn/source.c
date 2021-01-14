@@ -60,7 +60,7 @@
   } while (0)
 #define ALLOC_SOURCE_NETINT() malloc(sizeof(NetintState))
 #define FREE_SOURCE_NETINT(ptr) free(ptr)
-#define ALLOC_UNICAST_DESTINATION() malloc(sizeof(EtcPalIpAddr))
+#define ALLOC_UNICAST_DESTINATION() malloc(sizeof(UnicastDestination))
 #define FREE_UNICAST_DESTINATION(ptr) free(ptr)
 #define ALLOC_SOURCE_RB_NODE() malloc(sizeof(EtcPalRbNode))
 #define FREE_SOURCE_RB_NODE(ptr) free(ptr)
@@ -151,6 +151,12 @@ typedef struct NetintState
   size_t num_refs;         // Number of universes using this netint.
 } NetintState;
 
+typedef struct UnicastDestination
+{
+  EtcPalIpAddr dest_addr;  // This must be the first struct member.
+  bool ready_for_processing;
+} UnicastDestination;
+
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM && SOURCE_ENABLED
@@ -158,7 +164,7 @@ ETCPAL_MEMPOOL_DEFINE(sacnsource_source_states, SourceState, SACN_SOURCE_MAX_SOU
 ETCPAL_MEMPOOL_DEFINE(sacnsource_universe_states, UniverseState,
                       (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE));
 ETCPAL_MEMPOOL_DEFINE(sacnsource_netints, NetintState, (SACN_SOURCE_MAX_SOURCES * SACN_MAX_NETINTS));
-ETCPAL_MEMPOOL_DEFINE(sacnsource_unicast_dests, EtcPalIpAddr,
+ETCPAL_MEMPOOL_DEFINE(sacnsource_unicast_dests, UnicastDestination,
                       (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE *
                        SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE));
 ETCPAL_MEMPOOL_DEFINE(sacnsource_rb_nodes, EtcPalRbNode,
@@ -229,6 +235,7 @@ static void update_levels(SourceState* source_state, UniverseState* universe_sta
 static void update_paps(SourceState* source_state, UniverseState* universe_state, const uint8_t* new_priorities,
                         size_t new_priorities_size, bool force_sync);
 #endif
+static void set_unicast_dests_ready(UniverseState* universe_state);
 
 /*************************** Function definitions ****************************/
 
@@ -619,10 +626,11 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
                          source_rb_node_dealloc_func);
       for (size_t i = 0; (result == kEtcPalErrOk) && (i < config->num_unicast_destinations); ++i)
       {
-        EtcPalIpAddr* dest = ALLOC_UNICAST_DESTINATION();
+        UnicastDestination* dest = ALLOC_UNICAST_DESTINATION();
         if (dest)
         {
-          *dest = config->unicast_destinations[i];
+          dest->dest_addr = config->unicast_destinations[i];
+          dest->ready_for_processing = false;  // Calling an Update Values function sets this to true.
 
           etcpal_error_t insert_result = etcpal_rbtree_insert(&universe->unicast_dests, dest);
 
@@ -780,8 +788,6 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
   return kEtcPalErrNotInit;
 #endif
 
-  // TODO: Re-evaluate documentation & transmission suppression... Unicast dests = universes in terms of state?
-
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
@@ -809,7 +815,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
       result = lookup_state(handle, universe, NULL, &universe_state);
 
     // Allocate the unicast destination
-    EtcPalIpAddr* unicast_dest = NULL;
+    UnicastDestination* unicast_dest = NULL;
     if (result == kEtcPalErrOk)
     {
       unicast_dest = ALLOC_UNICAST_DESTINATION();
@@ -820,7 +826,8 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
     // Add unicast destination
     if (result == kEtcPalErrOk)
     {
-      *unicast_dest = *dest;
+      unicast_dest->dest_addr = *dest;
+      unicast_dest->ready_for_processing = false;  // Calling an Update Values function sets this to true.
 
       etcpal_error_t insert_result = etcpal_rbtree_insert(&universe_state->unicast_dests, unicast_dest);
 
@@ -1062,11 +1069,17 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
     // Take lock
     if (sacn_lock())
     {
-      // Look up state, update 0x00 values, no force sync
+      // Look up state
       SourceState* source_state = NULL;
       UniverseState* universe_state = NULL;
       if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
+      {
+        // Update 0x00 values, no force sync
         update_levels(source_state, universe_state, new_values, new_values_size, false);
+
+        // Enable new unicast destinations
+        set_unicast_dests_ready(universe_state);
+      }
 
       // Release lock
       sacn_unlock();
@@ -1119,6 +1132,8 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
         // Update 0xDD values, no force sync
         update_paps(source_state, universe_state, new_priorities, new_priorities_size, false);
 #endif
+        // Enable new unicast destinations
+        set_unicast_dests_ready(universe_state);
       }
 
       // Release lock
@@ -1154,11 +1169,17 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
     // Take lock
     if (sacn_lock())
     {
-      // Look up state, update 0x00 values, enable force sync
+      // Look up state
       SourceState* source_state = NULL;
       UniverseState* universe_state = NULL;
       if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
+      {
+        // Update 0x00 values, enable force sync
         update_levels(source_state, universe_state, new_values, new_values_size, true);
+
+        // Enable new unicast destinations
+        set_unicast_dests_ready(universe_state);
+      }
 
       // Release lock
       sacn_unlock();
@@ -1216,6 +1237,8 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
         // Update 0xDD values, enable force sync
         update_paps(source_state, universe_state, new_priorities, new_priorities_size, true);
 #endif
+        // Enable new unicast destinations
+        set_unicast_dests_ready(universe_state);
       }
 
       // Release lock
@@ -1379,7 +1402,34 @@ int unicast_dests_lookup_compare_func(const EtcPalRbTree* self, const void* valu
 {
   ETCPAL_UNUSED_ARG(self);
 
-  return memcmp(value_a, value_b, sizeof(EtcPalIpAddr));
+  const EtcPalIpAddr* a = (const EtcPalIpAddr*)value_a;
+  const EtcPalIpAddr* b = (const EtcPalIpAddr*)value_b;
+
+  bool greater_than = a->type > b->type;
+  bool less_than = a->type < b->type;
+
+  if (a->type == b->type)
+  {
+    if (a->type == kEtcPalIpTypeV4)
+    {
+      greater_than = a->addr.v4 > b->addr.v4;
+      less_than = a->addr.v4 < b->addr.v4;
+    }
+    else if (a->type == kEtcPalIpTypeV6)
+    {
+      int cmp = memcmp(a->addr.v6.addr_buf, b->addr.v6.addr_buf, ETCPAL_IPV6_BYTES);
+      greater_than = (cmp > 0);
+      less_than = (cmp < 0);
+
+      if (cmp == 0)
+      {
+        greater_than = a->addr.v6.scope_id > b->addr.v6.scope_id;
+        less_than = a->addr.v6.scope_id < b->addr.v6.scope_id;
+      }
+    }
+  }
+
+  return (int)greater_than - (int)less_than;
 }
 
 // Needs lock
@@ -1890,14 +1940,14 @@ void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, EtcPalR
     etcpal_rbiter_init(&tree_iter);
 
     // For each unicast destination
-    for (EtcPalIpAddr* dest = etcpal_rbiter_first(&tree_iter, dests); dest; etcpal_rbiter_next(&tree_iter))
+    for (UnicastDestination* dest = etcpal_rbiter_first(&tree_iter, dests); dest; etcpal_rbiter_next(&tree_iter))
     {
-      // If this destination matches the IP type
-      if (dest->type == ip_type)
+      // If this destination is ready for processing and matches the IP type
+      if (dest->ready_for_processing && (dest->dest_addr.type == ip_type))
       {
         // Convert destination to SockAddr
         EtcPalSockAddr sockaddr_dest;
-        sockaddr_dest.ip = *dest;
+        sockaddr_dest.ip = dest->dest_addr;
         sockaddr_dest.port = SACN_PORT;
 
         // Try to send the data (ignore errors)
@@ -1996,3 +2046,18 @@ void update_paps(SourceState* source_state, UniverseState* universe_state, const
   etcpal_timer_start(&universe_state->pap_keep_alive_timer, source_state->keep_alive_interval);
 }
 #endif
+
+// Needs lock
+void set_unicast_dests_ready(UniverseState* universe_state)
+{
+  // For each unicast destination
+  EtcPalRbIter tree_iter;
+  etcpal_rbiter_init(&tree_iter);
+
+  for (UnicastDestination* dest = etcpal_rbiter_first(&tree_iter, &universe_state->unicast_dests); dest;
+       etcpal_rbiter_next(&tree_iter))
+  {
+    // Indicate that this unicast destination is ready for processing.
+    dest->ready_for_processing = true;
+  }
+}
