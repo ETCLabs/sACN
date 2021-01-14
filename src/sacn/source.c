@@ -46,10 +46,15 @@
 
 /* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
 
-// TODO: Move remaining etcpal_rbtree_clear_with_cb calls into these FREE macros
 #if SACN_DYNAMIC_MEM
 #define ALLOC_SOURCE_STATE() malloc(sizeof(SourceState))
-#define FREE_SOURCE_STATE(ptr) free(ptr)
+#define FREE_SOURCE_STATE(ptr)                                                         \
+  do                                                                                   \
+  {                                                                                    \
+    etcpal_rbtree_clear_with_cb(&((SourceState*)ptr)->universes, free_universes_node); \
+    etcpal_rbtree_clear_with_cb(&((SourceState*)ptr)->netints, free_netints_node);     \
+    free(ptr);                                                                         \
+  } while (0)
 #define ALLOC_UNIVERSE_STATE() malloc(sizeof(UniverseState))
 #define FREE_UNIVERSE_STATE(ptr)                                                                 \
   do                                                                                             \
@@ -1508,11 +1513,6 @@ void free_sources_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 
   SourceState* source_state = (SourceState*)node->value;
 
-  // Clear the trees within merger state, using callbacks to free memory.
-  etcpal_rbtree_clear_with_cb(&source_state->universes, free_universes_node);
-  etcpal_rbtree_clear_with_cb(&source_state->netints, free_netints_node);
-
-  // Now free the memory for the merger state and node.
   FREE_SOURCE_STATE(source_state);
   FREE_SOURCE_RB_NODE(node);
 }
@@ -1737,11 +1737,9 @@ void remove_universe_state(SourceState* source, UniverseState** universe, EtcPal
 void remove_source_state(SourceState** source, EtcPalRbIter* source_iter)
 {
   SourceState* source_to_remove = *source;
-  etcpal_rbtree_clear_with_cb(&(*source)->universes, free_universes_node);
-  etcpal_rbtree_clear_with_cb(&(*source)->netints, free_netints_node);
   *source = etcpal_rbiter_next(source_iter);
-  if (etcpal_rbtree_remove(&sources, source_to_remove) == kEtcPalErrOk)
-    FREE_SOURCE_STATE(source_to_remove);
+  etcpal_rbtree_remove(&sources, source_to_remove);
+  FREE_SOURCE_STATE(source_to_remove);
 }
 
 // Needs lock
