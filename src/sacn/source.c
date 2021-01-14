@@ -289,6 +289,9 @@ static void set_unicast_dests_ready(UniverseState* universe_state);
 static void set_source_terminating(SourceState* source);
 static void set_universe_terminating(UniverseState* universe);
 static void set_unicast_dest_terminating(UnicastDestination* dest);
+static void reset_transmission_suppression(SourceState* source, UniverseState* universe, bool reset_null,
+                                           bool reset_pap);
+static void set_source_name(SourceState* source, const char* new_name);
 
 /*************************** Function definitions ****************************/
 
@@ -535,9 +538,36 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
   return kEtcPalErrNotInit;
 #endif
 
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(new_name);
-  return kEtcPalErrNotImpl;
+  etcpal_error_t result = kEtcPalErrOk;
+
+  // Verify module initialized.
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+
+  // Check for invalid arguments.
+  if (result == kEtcPalErrOk)
+  {
+    if (handle == SACN_SOURCE_INVALID)
+      result = kEtcPalErrInvalid;
+    else if (!new_name)
+      result = kEtcPalErrInvalid;
+  }
+
+  if (sacn_lock())
+  {
+    // Look up the source's state.
+    SourceState* source = NULL;
+    if (result == kEtcPalErrOk)
+      result = lookup_state(handle, 0, &source, NULL);
+
+    // Set this source's name.
+    if (result == kEtcPalErrOk)
+      set_source_name(source, new_name);
+
+    sacn_unlock();
+  }
+
+  return result;
 }
 
 /**
@@ -2256,8 +2286,7 @@ void update_levels(SourceState* source_state, UniverseState* universe_state, con
 
   update_data(universe_state->null_send_buf, new_levels, (uint16_t)new_levels_size, force_sync);
   universe_state->has_null_data = true;
-  universe_state->null_packets_sent_before_suppression = 0;
-  etcpal_timer_start(&universe_state->null_keep_alive_timer, source_state->keep_alive_interval);
+  reset_transmission_suppression(source_state, universe_state, true, false);
 
   if (!was_part_of_discovery && IS_PART_OF_UNIVERSE_DISCOVERY(universe_state))
   {
@@ -2273,8 +2302,7 @@ void update_paps(SourceState* source_state, UniverseState* universe_state, const
 {
   update_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, force_sync);
   universe_state->has_pap_data = true;
-  universe_state->pap_packets_sent_before_suppression = 0;
-  etcpal_timer_start(&universe_state->pap_keep_alive_timer, source_state->keep_alive_interval);
+  reset_transmission_suppression(source_state, universe_state, false, true);
 }
 #endif
 
@@ -2345,5 +2373,47 @@ void set_unicast_dest_terminating(UnicastDestination* dest)
     // Set the unicast destination's terminating flag and termination counter
     dest->terminating = true;
     dest->num_terminations_sent = 0;
+  }
+}
+
+// Needs lock
+void reset_transmission_suppression(SourceState* source, UniverseState* universe, bool reset_null, bool reset_pap)
+{
+  if (reset_null)
+  {
+    universe->null_packets_sent_before_suppression = 0;
+
+    if (universe->has_null_data)
+      etcpal_timer_start(&universe->null_keep_alive_timer, source->keep_alive_interval);
+  }
+
+  if (reset_pap)
+  {
+    universe->pap_packets_sent_before_suppression = 0;
+
+    if (universe->has_pap_data)
+      etcpal_timer_start(&universe->pap_keep_alive_timer, source->keep_alive_interval);
+  }
+}
+
+// Needs lock
+void set_source_name(SourceState* source, const char* new_name)
+{
+  // Update the name in the source state
+  strncpy(source->name, new_name, SACN_SOURCE_NAME_MAX_LEN);
+
+  // For each universe:
+  EtcPalRbIter tree_iter;
+  etcpal_rbiter_init(&tree_iter);
+  for (UniverseState* universe = etcpal_rbiter_first(&tree_iter, &source->universes); universe;
+       universe = etcpal_rbiter_next(&tree_iter))
+
+  {
+    // Update the source name in this universe's send buffers
+    strncpy((char*)(&universe->null_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
+    strncpy((char*)(&universe->pap_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
+
+    // Reset transmission suppression for start codes 0x00 and 0xDD
+    reset_transmission_suppression(source, universe, true, true);
   }
 }
