@@ -1511,9 +1511,7 @@ void free_sources_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
 
-  SourceState* source_state = (SourceState*)node->value;
-
-  FREE_SOURCE_STATE(source_state);
+  FREE_SOURCE_STATE(node->value);
   FREE_SOURCE_RB_NODE(node);
 }
 
