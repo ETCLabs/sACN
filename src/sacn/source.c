@@ -72,9 +72,20 @@
 #define FREE_SOURCE_RB_NODE(ptr) free(ptr)
 #elif SOURCE_ENABLED
 #define ALLOC_SOURCE_STATE() etcpal_mempool_alloc(sacnsource_source_states)
-#define FREE_SOURCE_STATE(ptr) etcpal_mempool_free(sacnsource_source_states, ptr)
+#define FREE_SOURCE_STATE(ptr)                                                         \
+  do                                                                                   \
+  {                                                                                    \
+    etcpal_rbtree_clear_with_cb(&((SourceState*)ptr)->universes, free_universes_node); \
+    etcpal_rbtree_clear_with_cb(&((SourceState*)ptr)->netints, free_netints_node);     \
+    etcpal_mempool_free(sacnsource_source_states, ptr);                                \
+  } while (0)
 #define ALLOC_UNIVERSE_STATE() etcpal_mempool_alloc(sacnsource_universe_states)
-#define FREE_UNIVERSE_STATE(ptr) etcpal_mempool_free(sacnsource_universe_states, ptr)
+#define FREE_UNIVERSE_STATE(ptr)                                                                 \
+  do                                                                                             \
+  {                                                                                              \
+    etcpal_rbtree_clear_with_cb(&((UniverseState*)ptr)->unicast_dests, free_unicast_dests_node); \
+    etcpal_mempool_free(sacnsource_universe_states, ptr);                                        \
+  } while (0)
 #define ALLOC_SOURCE_NETINT() etcpal_mempool_alloc(sacnsource_netints)
 #define FREE_SOURCE_NETINT(ptr) etcpal_mempool_free(sacnsource_netints, ptr)
 #define ALLOC_UNICAST_DESTINATION() etcpal_mempool_alloc(sacnsource_unicast_dests)
