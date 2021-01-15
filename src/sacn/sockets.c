@@ -543,6 +543,50 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
   return poll_res;
 }
 
+void sacn_send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
+                         const EtcPalMcastNetintId* netints, size_t num_netints)
+{
+  // Determine the multicast destination
+  EtcPalSockAddr dest;
+  sacn_get_mcast_addr(ip_type, universe_id, &dest.ip);
+  dest.port = SACN_PORT;
+
+  // For each network interface
+  for (size_t i = 0; netints && (i < num_netints); ++i)
+  {
+    // Determine the socket to use
+    etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
+    int sys_netint_index = netint_id_index_in_array(&netints[i], sys_netints, num_sys_netints);
+    if ((sys_netint_index >= 0) && (sys_netint_index < (int)num_sys_netints))
+      sock = multicast_send_sockets[sys_netint_index];
+
+    // Try to send the data (ignore errors)
+    if (sock != ETCPAL_SOCKET_INVALID)
+      etcpal_sendto(sock, send_buf, SACN_MTU, 0, &dest);
+  }
+}
+
+void sacn_send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr)
+{
+  // Determine the socket to use
+  etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
+  if (dest_addr->type == kEtcPalIpTypeV4)
+    sock = ipv4_unicast_send_socket;
+  else if (dest_addr->type == kEtcPalIpTypeV6)
+    sock = ipv6_unicast_send_socket;
+
+  if (sock != ETCPAL_SOCKET_INVALID)
+  {
+    // Convert destination to SockAddr
+    EtcPalSockAddr sockaddr_dest;
+    sockaddr_dest.ip = *dest_addr;
+    sockaddr_dest.port = SACN_PORT;
+
+    // Try to send the data (ignore errors)
+    etcpal_sendto(sock, send_buf, SACN_MTU, 0, &sockaddr_dest);
+  }
+}
+
 etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t num_netints, size_t* num_valid_netints)
 {
   if (num_valid_netints)

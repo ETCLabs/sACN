@@ -214,19 +214,11 @@ ETCPAL_MEMPOOL_DEFINE(sacnsource_rb_nodes, EtcPalRbNode,
 static IntHandleManager source_handle_mgr;
 static EtcPalRbTree sources;
 static bool sources_initialized = false;
-// TODO: Consider reusing the send sockets in sockets.c, or replace them with these sockets
-static etcpal_socket_t ipv4_multicast_sock = ETCPAL_SOCKET_INVALID;
-static etcpal_socket_t ipv6_multicast_sock = ETCPAL_SOCKET_INVALID;
-static etcpal_socket_t ipv4_unicast_sock = ETCPAL_SOCKET_INVALID;
-static etcpal_socket_t ipv6_unicast_sock = ETCPAL_SOCKET_INVALID;
 static bool shutting_down = false;
 static etcpal_thread_t source_thread_handle;
 static bool thread_initialized = false;
 
 /*********************** Private function prototypes *************************/
-
-static etcpal_error_t init_multicast_socket(etcpal_socket_t* socket, etcpal_iptype_t ip_type);
-static etcpal_error_t init_unicast_socket(etcpal_socket_t* socket, etcpal_iptype_t ip_type);
 
 static int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
 static int universe_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
@@ -275,8 +267,6 @@ static void process_pap_sent(UniverseState* universe);
 static void send_termination_multicast(const SourceState* source, UniverseState* universe);
 static void send_termination_unicast(const SourceState* source, UniverseState* universe, UnicastDestination* dest);
 static void send_universe_discovery(SourceState* source);
-static void send_data_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
-                                const EtcPalMcastNetintId* netints, size_t num_netints);
 static void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, EtcPalRbTree* dests);
 static void send_data_to_single_unicast_dest(etcpal_iptype_t ip_type, const uint8_t* send_buf,
                                              const UnicastDestination* dest);
@@ -321,15 +311,6 @@ etcpal_error_t sacn_source_init(void)
 #endif
 
   if (res == kEtcPalErrOk)
-    res = init_multicast_socket(&ipv4_multicast_sock, kEtcPalIpTypeV4);
-  if (res == kEtcPalErrOk)
-    res = init_multicast_socket(&ipv6_multicast_sock, kEtcPalIpTypeV6);
-  if (res == kEtcPalErrOk)
-    res = init_unicast_socket(&ipv4_unicast_sock, kEtcPalIpTypeV4);
-  if (res == kEtcPalErrOk)
-    res = init_unicast_socket(&ipv6_unicast_sock, kEtcPalIpTypeV6);
-
-  if (res == kEtcPalErrOk)
   {
     etcpal_rbtree_init(&sources, source_state_lookup_compare_func, source_rb_node_alloc_func,
                        source_rb_node_dealloc_func);
@@ -366,15 +347,6 @@ void sacn_source_deinit(void)
       etcpal_rbtree_clear_with_cb(&sources, free_sources_node);
       sources_initialized = false;
     }
-
-    if (ipv4_multicast_sock != ETCPAL_SOCKET_INVALID)
-      etcpal_close(ipv4_multicast_sock);
-    if (ipv6_multicast_sock != ETCPAL_SOCKET_INVALID)
-      etcpal_close(ipv6_multicast_sock);
-    if (ipv4_unicast_sock != ETCPAL_SOCKET_INVALID)
-      etcpal_close(ipv4_unicast_sock);
-    if (ipv6_unicast_sock != ETCPAL_SOCKET_INVALID)
-      etcpal_close(ipv6_unicast_sock);
 
     sacn_unlock();
   }
@@ -1572,33 +1544,6 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
   return 0;  // TODO
 }
 
-etcpal_error_t init_multicast_socket(etcpal_socket_t* socket, etcpal_iptype_t ip_type)
-{
-  etcpal_error_t result = kEtcPalErrOk;
-
-  result = etcpal_socket(ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET, ETCPAL_SOCK_DGRAM, socket);
-
-  int sockopt_ip_level = (ip_type == kEtcPalIpTypeV6 ? ETCPAL_IPPROTO_IPV6 : ETCPAL_IPPROTO_IP);
-  if (result == kEtcPalErrOk)
-  {
-    const int value = 64;
-    result = etcpal_setsockopt(*socket, sockopt_ip_level, ETCPAL_IP_MULTICAST_TTL, &value, sizeof value);
-  }
-
-  if (result == kEtcPalErrOk)
-  {
-    int intval = 1;
-    result = etcpal_setsockopt(*socket, sockopt_ip_level, ETCPAL_IP_MULTICAST_LOOP, &intval, sizeof intval);
-  }
-
-  return result;
-}
-
-etcpal_error_t init_unicast_socket(etcpal_socket_t* socket, etcpal_iptype_t ip_type)
-{
-  return etcpal_socket(ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET, ETCPAL_SOCK_DGRAM, socket);
-}
-
 static int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
 {
   ETCPAL_UNUSED_ARG(self);
@@ -2060,9 +2005,9 @@ void send_data_multicast_ipv4_ipv6(const SourceState* source, UniverseState* uni
   if (!universe->send_unicast_only)
   {
     if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-      send_data_multicast(universe->universe_id, kEtcPalIpTypeV4, send_buf, universe->netints, universe->num_netints);
+      sacn_send_multicast(universe->universe_id, kEtcPalIpTypeV4, send_buf, universe->netints, universe->num_netints);
     if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-      send_data_multicast(universe->universe_id, kEtcPalIpTypeV6, send_buf, universe->netints, universe->num_netints);
+      sacn_send_multicast(universe->universe_id, kEtcPalIpTypeV6, send_buf, universe->netints, universe->num_netints);
   }
 }
 
@@ -2207,13 +2152,13 @@ void send_universe_discovery(SourceState* source)
       // Send multicast on IPv4 and/or IPv6
       if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
       {
-        send_data_multicast(SACN_DISCOVERY_UNIVERSE, kEtcPalIpTypeV4, source->universe_discovery_send_buf, netints,
+        sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, kEtcPalIpTypeV4, source->universe_discovery_send_buf, netints,
                             num_netints);
       }
 
       if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
       {
-        send_data_multicast(SACN_DISCOVERY_UNIVERSE, kEtcPalIpTypeV6, source->universe_discovery_send_buf, netints,
+        sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, kEtcPalIpTypeV6, source->universe_discovery_send_buf, netints,
                             num_netints);
       }
 
@@ -2227,35 +2172,6 @@ void send_universe_discovery(SourceState* source)
   if (netints)
     free(netints);
 #endif
-}
-
-// Needs lock
-void send_data_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
-                         const EtcPalMcastNetintId* netints, size_t num_netints)
-{
-  // Determine the multicast destination
-  EtcPalSockAddr dest;
-  sacn_get_mcast_addr(ip_type, universe_id, &dest.ip);
-  dest.port = SACN_PORT;
-
-  // Determine the socket to use
-  etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
-  if (ip_type == kEtcPalIpTypeV4)
-    sock = ipv4_multicast_sock;
-  else if (ip_type == kEtcPalIpTypeV6)
-    sock = ipv6_multicast_sock;
-
-  // For each network interface
-  for (size_t i = 0; netints && (i < num_netints); ++i)
-  {
-    // If we're able to set this interface as the socket's multicast interface
-    if (etcpal_setsockopt(sock, (ip_type == kEtcPalIpTypeV6 ? ETCPAL_IPPROTO_IPV6 : ETCPAL_IPPROTO_IP),
-                          ETCPAL_IP_MULTICAST_IF, &netints[i].index, sizeof netints[i].index) == kEtcPalErrOk)
-    {
-      // Try to send the data (ignore errors)
-      etcpal_sendto(sock, send_buf, SACN_MTU, 0, &dest);
-    }
-  }
 }
 
 // Needs lock
@@ -2275,27 +2191,9 @@ void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, EtcPalR
 // Needs lock
 void send_data_to_single_unicast_dest(etcpal_iptype_t ip_type, const uint8_t* send_buf, const UnicastDestination* dest)
 {
-  if (dest)
-  {
-    // Determine the socket to use
-    etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
-    if (ip_type == kEtcPalIpTypeV4)
-      sock = ipv4_unicast_sock;
-    else if (ip_type == kEtcPalIpTypeV6)
-      sock = ipv6_unicast_sock;
-
-    // If this destination is ready for processing and matches the IP type
-    if (dest->ready_for_processing && (dest->dest_addr.type == ip_type))
-    {
-      // Convert destination to SockAddr
-      EtcPalSockAddr sockaddr_dest;
-      sockaddr_dest.ip = dest->dest_addr;
-      sockaddr_dest.port = SACN_PORT;
-
-      // Try to send the data (ignore errors)
-      etcpal_sendto(sock, send_buf, SACN_MTU, 0, &sockaddr_dest);
-    }
-  }
+  // If this destination is ready for processing and matches the IP type, then send to it.
+  if (dest && dest->ready_for_processing && (dest->dest_addr.type == ip_type))
+    sacn_send_unicast(send_buf, &dest->dest_addr);
 }
 
 // Needs lock

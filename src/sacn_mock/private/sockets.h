@@ -45,6 +45,9 @@ DECLARE_FAKE_VOID_FUNC(sacn_remove_receiver_socket, sacn_thread_id_t, etcpal_soc
 DECLARE_FAKE_VOID_FUNC(sacn_add_pending_sockets, SacnRecvThreadContext*);
 DECLARE_FAKE_VOID_FUNC(sacn_cleanup_dead_sockets, SacnRecvThreadContext*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_read, SacnRecvThreadContext*, SacnReadResult*);
+DECLARE_FAKE_VOID_FUNC(sacn_send_multicast, uint16_t, etcpal_iptype_t, const uint8_t*, const EtcPalMcastNetintId*,
+                       size_t);
+DECLARE_FAKE_VOID_FUNC(sacn_send_unicast, const uint8_t*, const EtcPalIpAddr*);
 
 void sacn_sockets_reset_all_fakes(void);
 
