@@ -34,6 +34,11 @@
 #include "etcpal/mempool.h"
 #endif
 
+// Suppress strncpy() warning on Windows/MSVC.
+#ifdef _MSC_VER
+#pragma warning(disable : 4996)
+#endif
+
 /****************************** Private macros *******************************/
 
 #define SOURCE_THREAD_INTERVAL 23
@@ -289,9 +294,11 @@ static void set_unicast_dests_ready(UniverseState* universe_state);
 static void set_source_terminating(SourceState* source);
 static void set_universe_terminating(UniverseState* universe);
 static void set_unicast_dest_terminating(UnicastDestination* dest);
-static void reset_transmission_suppression(SourceState* source, UniverseState* universe, bool reset_null,
+static void reset_transmission_suppression(const SourceState* source, UniverseState* universe, bool reset_null,
                                            bool reset_pap);
 static void set_source_name(SourceState* source, const char* new_name);
+static void set_universe_priority(const SourceState* source, UniverseState* universe, uint8_t priority);
+static void set_preview_flag(const SourceState* source, UniverseState* universe, bool preview);
 
 /*************************** Function definitions ****************************/
 
@@ -586,7 +593,7 @@ void sacn_source_destroy(sacn_source_t handle)
 {
   // Validate and lock.
 #if SOURCE_ENABLED
-  if (sacn_initialized() && (handle != SACN_DMX_MERGER_INVALID) && sacn_lock())
+  if (sacn_initialized() && (handle != SACN_SOURCE_INVALID) && sacn_lock())
   {
     // Try to find the source's state.
     SourceState* source = etcpal_rbtree_find(&sources, &handle);
@@ -1023,10 +1030,39 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
   return kEtcPalErrNotInit;
 #endif
 
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(new_priority);
-  return kEtcPalErrNotImpl;
+  etcpal_error_t result = kEtcPalErrOk;
+
+  // Verify module initialized.
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+
+  // Check for invalid arguments.
+  if (result == kEtcPalErrOk)
+  {
+    if (handle == SACN_SOURCE_INVALID)
+      result = kEtcPalErrInvalid;
+    else if (!UNIVERSE_ID_VALID(universe))
+      result = kEtcPalErrInvalid;
+    else if (new_priority > 200)
+      result = kEtcPalErrInvalid;
+  }
+
+  if (sacn_lock())
+  {
+    // Look up the source and universe state.
+    SourceState* source_state = NULL;
+    UniverseState* universe_state = NULL;
+    if (result == kEtcPalErrOk)
+      result = lookup_state(handle, universe, &source_state, &universe_state);
+
+    // Set the priority.
+    if (result == kEtcPalErrOk)
+      set_universe_priority(source_state, universe_state, new_priority);
+
+    sacn_unlock();
+  }
+
+  return result;
 }
 
 /**
@@ -1054,10 +1090,37 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
   return kEtcPalErrNotInit;
 #endif
 
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(new_preview_flag);
-  return kEtcPalErrNotImpl;
+  etcpal_error_t result = kEtcPalErrOk;
+
+  // Verify module initialized.
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+
+  // Check for invalid arguments.
+  if (result == kEtcPalErrOk)
+  {
+    if (handle == SACN_SOURCE_INVALID)
+      result = kEtcPalErrInvalid;
+    else if (!UNIVERSE_ID_VALID(universe))
+      result = kEtcPalErrInvalid;
+  }
+
+  if (sacn_lock())
+  {
+    // Look up the source and universe state.
+    SourceState* source_state = NULL;
+    UniverseState* universe_state = NULL;
+    if (result == kEtcPalErrOk)
+      result = lookup_state(handle, universe, &source_state, &universe_state);
+
+    // Set the preview flag.
+    if (result == kEtcPalErrOk)
+      set_preview_flag(source_state, universe_state, new_preview_flag);
+
+    sacn_unlock();
+  }
+
+  return result;
 }
 
 /**
@@ -2377,7 +2440,7 @@ void set_unicast_dest_terminating(UnicastDestination* dest)
 }
 
 // Needs lock
-void reset_transmission_suppression(SourceState* source, UniverseState* universe, bool reset_null, bool reset_pap)
+void reset_transmission_suppression(const SourceState* source, UniverseState* universe, bool reset_null, bool reset_pap)
 {
   if (reset_null)
   {
@@ -2416,4 +2479,22 @@ void set_source_name(SourceState* source, const char* new_name)
     // Reset transmission suppression for start codes 0x00 and 0xDD
     reset_transmission_suppression(source, universe, true, true);
   }
+}
+
+// Needs lock
+void set_universe_priority(const SourceState* source, UniverseState* universe, uint8_t priority)
+{
+  universe->priority = priority;
+  universe->null_send_buf[SACN_PRI_OFFSET] = priority;
+  universe->pap_send_buf[SACN_PRI_OFFSET] = priority;
+  reset_transmission_suppression(source, universe, true, true);
+}
+
+// Needs lock
+void set_preview_flag(const SourceState* source, UniverseState* universe, bool preview)
+{
+  universe->send_preview = preview;
+  SET_PREVIEW_OPT(universe->null_send_buf, preview);
+  SET_PREVIEW_OPT(universe->pap_send_buf, preview);
+  reset_transmission_suppression(source, universe, true, true);
 }
