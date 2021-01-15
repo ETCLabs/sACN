@@ -106,8 +106,6 @@ TEST_F(TestSockets, EmptyNetintConfigValidated)
   EXPECT_EQ(sacn_validate_netint_config(NULL, 0, nullptr), kEtcPalErrOk);
 }
 
-// TODO: Tests for initialize_internal_netints?
-
 TEST_F(TestSockets, SocketCleanedUpOnBindFailure)
 {
   etcpal_bind_fake.return_val = kEtcPalErrAddrNotAvail;
@@ -129,3 +127,5 @@ TEST_F(TestSockets, SocketCleanedUpOnSubscribeFailure)
   EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV6, 1, NULL, 0, &sock), kEtcPalErrAddrNotAvail);
   EXPECT_EQ(etcpal_socket_fake.call_count, etcpal_close_fake.call_count);
 }
+
+// TODO: Tests for sockets.h functions currently not covered here?
