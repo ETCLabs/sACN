@@ -32,20 +32,16 @@
 
 /******************************* Private types *******************************/
 
-typedef struct McastSendSocket
-{
-  etcpal_socket_t socket;
-  size_t ref_count;
-} McastSendSocket;
+
 
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
 static SacnMcastInterface* sys_netints;
-static McastSendSocket* send_sockets;
+static etcpal_socket_t* multicast_send_sockets;
 #else
 static SacnMcastInterface sys_netints[SACN_MAX_NETINTS];
-static McastSendSocket send_sockets[SACN_MAX_NETINTS];
+static etcpal_socket_t multicast_send_sockets[SACN_MAX_NETINTS];
 #endif
 static size_t num_sys_netints;
 
@@ -55,7 +51,7 @@ static etcpal_error_t test_sacn_netint(const EtcPalMcastNetintId* netint_id, con
 static void add_sacn_netint(const EtcPalMcastNetintId* netint_id, etcpal_error_t status);
 static int netint_id_index_in_array(const EtcPalMcastNetintId* id, const SacnMcastInterface* array, size_t array_size);
 
-static etcpal_error_t create_send_socket(const EtcPalMcastNetintId* netint_id, etcpal_socket_t* socket);
+static etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id, etcpal_socket_t* socket);
 static etcpal_error_t create_receiver_socket(etcpal_iptype_t ip_type, const EtcPalSockAddr* bind_addr,
                                              bool set_sockopts, etcpal_socket_t* socket);
 static etcpal_error_t subscribe_receiver_socket(etcpal_socket_t sock, const EtcPalIpAddr* group,
@@ -74,13 +70,13 @@ etcpal_error_t sacn_sockets_init(void)
     return kEtcPalErrNoNetints;
 
 #if SACN_DYNAMIC_MEM
-  send_sockets = calloc(total_sys_netints, sizeof(McastSendSocket));
-  if (!send_sockets)
+  multicast_send_sockets = calloc(total_sys_netints, sizeof(etcpal_socket_t));
+  if (!multicast_send_sockets)
     return kEtcPalErrNoMem;
   sys_netints = calloc(total_sys_netints, sizeof(SacnMcastInterface));
   if (!sys_netints)
   {
-    free(send_sockets);
+    free(multicast_send_sockets);
     return kEtcPalErrNoMem;
   }
 #else
@@ -124,11 +120,11 @@ void sacn_sockets_deinit(void)
 {
   for (size_t i = 0; i < num_sys_netints; ++i)
   {
-    if (send_sockets[i].ref_count)
-      etcpal_close(send_sockets[i].socket);
+    if (multicast_send_sockets[i] != ETCPAL_SOCKET_INVALID)
+      etcpal_close(multicast_send_sockets[i]);
   }
 #if SACN_DYNAMIC_MEM
-  free(send_sockets);
+  free(multicast_send_sockets);
   free(sys_netints);
 #endif
   num_sys_netints = 0;
@@ -159,7 +155,7 @@ static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_so
  * [out] new_sock Filled in with new socket descriptor.
  * Returns kEtcPalErrOk (success) or a relevant error code on failure.
  */
-etcpal_error_t create_send_socket(const EtcPalMcastNetintId* netint_id, etcpal_socket_t* socket)
+etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id, etcpal_socket_t* socket)
 {
   int sockopt_ip_level = (netint_id->ip_type == kEtcPalIpTypeV6 ? ETCPAL_IPPROTO_IPV6 : ETCPAL_IPPROTO_IP);
 
@@ -629,10 +625,10 @@ etcpal_error_t test_sacn_netint(const EtcPalMcastNetintId* netint_id, const char
   ETCPAL_UNUSED_ARG(addr_str);
 #endif
 
-  // create_send_socket() also tests setting the relevant send socket options and the
+  // create_multicast_send_socket() also tests setting the relevant send socket options and the
   // MULTICAST_IF on the relevant interface.
   etcpal_socket_t test_socket;
-  etcpal_error_t test_res = create_send_socket(netint_id, &test_socket);
+  etcpal_error_t test_res = create_multicast_send_socket(netint_id, &test_socket);
   if (test_res == kEtcPalErrOk)
   {
     etcpal_close(test_socket);
@@ -675,8 +671,12 @@ void add_sacn_netint(const EtcPalMcastNetintId* netint_id, etcpal_error_t status
   {
     sys_netints[num_sys_netints].iface = *netint_id;
     sys_netints[num_sys_netints].status = status;
-    send_sockets[num_sys_netints].ref_count = 0;
-    send_sockets[num_sys_netints].socket = ETCPAL_SOCKET_INVALID;
+
+    if (status == kEtcPalErrOk)
+      create_multicast_send_socket(netint_id, &multicast_send_sockets[num_sys_netints]);
+    else
+      multicast_send_sockets[num_sys_netints] = ETCPAL_SOCKET_INVALID;
+
     ++num_sys_netints;
   }
   // Else already added - don't add it again
