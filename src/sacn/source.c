@@ -387,7 +387,15 @@ void sacn_source_deinit(void)
  */
 void sacn_source_config_init(SacnSourceConfig* config)
 {
-  ETCPAL_UNUSED_ARG(config);
+  if (config)
+  {
+    config->cid = kEtcPalNullUuid;
+    config->name = NULL;
+    config->universe_count_max = SACN_SOURCE_INFINITE_UNIVERSES;
+    config->manually_process_source = false;
+    config->ip_supported = kSacnIpV4AndIpV6;
+    config->keep_alive_interval = SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT;
+  }
 }
 
 /**
@@ -397,7 +405,16 @@ void sacn_source_config_init(SacnSourceConfig* config)
  */
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
 {
-  ETCPAL_UNUSED_ARG(config);
+  if (config)
+  {
+    config->universe = 0;
+    config->priority = 100;
+    config->send_preview = false;
+    config->send_unicast_only = false;
+    config->unicast_destinations = NULL;
+    config->num_unicast_destinations = 0;
+    config->sync_universe = 0;
+  }
 }
 
 /**
