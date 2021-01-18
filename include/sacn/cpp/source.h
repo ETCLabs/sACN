@@ -166,7 +166,7 @@ public:
   etcpal::Error ResetNetworking(uint16_t universe);
   etcpal::Error ResetNetworking(uint16_t universe, std::vector<SacnMcastInterface>& netints);
 
-  std::vector<SacnMcastInterface> GetNetworkInterfaces(uint16_t universe);
+  std::vector<EtcPalMcastNetintId> GetNetworkInterfaces(uint16_t universe);
 
   constexpr Handle handle() const;
 
@@ -743,15 +743,15 @@ inline etcpal::Error Source::ResetNetworking(uint16_t universe, std::vector<Sacn
 }
 
 /**
- * @brief Obtain the statuses of a universe's network interfaces.
+ * @brief Obtain a vector of a universe's network interfaces.
  *
- * @param[in] universe The universe for which to obtain the list of network interfaces.
- * @return A vector of the universe's network interfaces and their statuses.
+ * @param[in] universe The universe for which to obtain the vector of network interfaces.
+ * @return A vector of the universe's network interfaces.
  */
-inline std::vector<SacnMcastInterface> Source::GetNetworkInterfaces(uint16_t universe)
+inline std::vector<EtcPalMcastNetintId> Source::GetNetworkInterfaces(uint16_t universe)
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<SacnMcastInterface> netints;
+  std::vector<EtcPalMcastNetintId> netints;
   size_t size_guess = 4u;
   size_t num_netints = 0u;
 

@@ -1520,7 +1520,7 @@ etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t unive
 }
 
 /**
- * @brief Obtain the statuses of a universe's network interfaces.
+ * @brief Obtain a list of a universe's network interfaces.
  *
  * @param[in] handle Handle to the source that includes the universe.
  * @param[in] universe The universe for which to obtain the list of network interfaces.
@@ -1529,37 +1529,24 @@ etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t unive
  * @return The total number of network interfaces for the universe. If this is greater than netints_size, then only
  * netints_size addresses were written to the netints array. If the source or universe were not found, 0 is returned.
  */
-size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
+size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, EtcPalMcastNetintId* netints,
                                           size_t netints_size)
 {
   size_t result = 0;
-  bool invalid_argument = false;
 
 #if SOURCE_ENABLED
-  // Validate
-  if (handle == SACN_SOURCE_INVALID)
-    invalid_argument = true;
-  else if (!UNIVERSE_ID_VALID(universe))
-    invalid_argument = true;
-  else if (!netints)
-    invalid_argument = true;
-  else if (netints_size == 0)
-    invalid_argument = true;
-
-  // Only proceed if all arguments are valid
-  if (!invalid_argument && sacn_lock())
+  if (sacn_lock())
   {
-    // Look up state
-    SourceState* source_state = NULL;
+    // Look up universe state
     UniverseState* universe_state = NULL;
-    if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
+    if (lookup_state(handle, universe, NULL, &universe_state) == kEtcPalErrOk)
     {
-      for (size_t i = 0; (i < netints_size) && (i < universe_state->num_netints); ++i)
-      {
-        netints[i].iface = universe_state->netints[i];
-        // TODO: netints[i].status
-        ++result;
-      }
+      // Use total number of netints as the return value
+      result = universe_state->num_netints;
+
+      // Copy out the netints
+      for (size_t i = 0; netints && (i < netints_size) && (i < universe_state->num_netints); ++i)
+        netints[i] = universe_state->netints[i];
     }
 
     sacn_unlock();
