@@ -1004,16 +1004,34 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
 size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t universe, EtcPalIpAddr* destinations,
                                             size_t destinations_size)
 {
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(destinations);
-  ETCPAL_UNUSED_ARG(destinations_size);
+  size_t total_num_dests = 0;
 
-#if !SOURCE_ENABLED
-  return 0;
+#if SOURCE_ENABLED
+  if (sacn_lock())
+  {
+    // Look up universe state
+    UniverseState* universe_state = NULL;
+    if (lookup_state(handle, universe, NULL, &universe_state) == kEtcPalErrOk)
+    {
+      // Use total number of destinations as the return value
+      total_num_dests = etcpal_rbtree_size(&universe_state->unicast_dests);
+
+      // Copy out the destinations
+      EtcPalRbIter tree_iter;
+      etcpal_rbiter_init(&tree_iter);
+      EtcPalIpAddr* dest = etcpal_rbiter_first(&tree_iter, &universe_state->unicast_dests);
+      for (size_t i = 0; dest && destinations && (i < destinations_size); ++i)
+      {
+        destinations[i] = *dest;
+        dest = etcpal_rbiter_next(&tree_iter);
+      }
+    }
+
+    sacn_unlock();
+  }
 #endif
 
-  return 0;  // TODO
+  return total_num_dests;
 }
 
 /**
