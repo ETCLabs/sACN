@@ -844,15 +844,34 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
  */
 size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size_t universes_size)
 {
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universes);
-  ETCPAL_UNUSED_ARG(universes_size);
+  size_t total_num_universes = 0;
 
-#if !SOURCE_ENABLED
-  return 0;
+#if SOURCE_ENABLED
+  if (sacn_lock())
+  {
+    // Look up source state
+    SourceState* source = NULL;
+    if (lookup_state(handle, 0, &source, NULL) == kEtcPalErrOk)
+    {
+      // Use total number of universes as the return value
+      total_num_universes = etcpal_rbtree_size(&source->universes);
+
+      // Copy out the universes
+      EtcPalRbIter tree_iter;
+      etcpal_rbiter_init(&tree_iter);
+      uint16_t* universe = etcpal_rbiter_first(&tree_iter, &source->universes);
+      for (size_t i = 0; universe && universes && (i < universes_size); ++i)
+      {
+        universes[i] = *universe;
+        universe = etcpal_rbiter_next(&tree_iter);
+      }
+    }
+
+    sacn_unlock();
+  }
 #endif
 
-  return 0;  // TODO
+  return total_num_universes;
 }
 
 /**
@@ -1532,7 +1551,7 @@ etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t unive
 size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, EtcPalMcastNetintId* netints,
                                           size_t netints_size)
 {
-  size_t result = 0;
+  size_t total_num_network_interfaces = 0;
 
 #if SOURCE_ENABLED
   if (sacn_lock())
@@ -1541,11 +1560,10 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
     UniverseState* universe_state = NULL;
     if (lookup_state(handle, universe, NULL, &universe_state) == kEtcPalErrOk)
     {
-      // Use total number of netints as the return value
-      result = universe_state->num_netints;
+      total_num_network_interfaces = universe_state->num_netints;
 
       // Copy out the netints
-      for (size_t i = 0; netints && (i < netints_size) && (i < universe_state->num_netints); ++i)
+      for (size_t i = 0; netints && (i < netints_size) && (i < total_num_network_interfaces); ++i)
         netints[i] = universe_state->netints[i];
     }
 
@@ -1553,7 +1571,7 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
   }
 #endif
 
-  return result;
+  return total_num_network_interfaces;
 }
 
 static int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
