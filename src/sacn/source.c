@@ -1532,16 +1532,41 @@ etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t unive
 size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
                                           size_t netints_size)
 {
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(netints_size);
+  size_t result = 0;
+  bool invalid_argument = false;
 
-#if !SOURCE_ENABLED
-  return 0;
+#if SOURCE_ENABLED
+  // Validate
+  if (handle == SACN_SOURCE_INVALID)
+    invalid_argument = true;
+  else if (!UNIVERSE_ID_VALID(universe))
+    invalid_argument = true;
+  else if (!netints)
+    invalid_argument = true;
+  else if (netints_size == 0)
+    invalid_argument = true;
+
+  // Only proceed if all arguments are valid
+  if (!invalid_argument && sacn_lock())
+  {
+    // Look up state
+    SourceState* source_state = NULL;
+    UniverseState* universe_state = NULL;
+    if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
+    {
+      for (size_t i = 0; (i < netints_size) && (i < universe_state->num_netints); ++i)
+      {
+        netints[i].iface = universe_state->netints[i];
+        // TODO: netints[i].status
+        ++result;
+      }
+    }
+
+    sacn_unlock();
+  }
 #endif
 
-  return 0;  // TODO
+  return result;
 }
 
 static int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
