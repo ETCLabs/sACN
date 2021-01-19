@@ -394,8 +394,9 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
 /**
  * @brief Create a new sACN source to send sACN data.
  *
- * This creates the instance of the source, but no data is sent until sacn_source_add_universe() and
- * either sacn_source_update_values() or sacn_source_update_values_and_pap() are called.
+ * This creates the instance of the source and begins sending universe discovery packets for it (which will list no
+ * universes until start code data begins transmitting). No start code data is sent until sacn_source_add_universe() and
+ * a variant of sacn_source_update_values() is called.
  *
  * @param[in] config Configuration parameters for the sACN source to be created.
  * @param[out] handle Filled in on success with a handle to the sACN source.

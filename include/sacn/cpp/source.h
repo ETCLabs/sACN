@@ -227,8 +227,9 @@ inline bool Source::UniverseSettings::IsValid() const
 /**
  * @brief Create a new sACN source to send sACN data.
  *
- * This creates the instance of the source, but no data is sent until AddUniverse() and a variant of UpdateValues() is
- * called.
+ * This creates the instance of the source and begins sending universe discovery packets for it (which will list no
+ * universes until start code data begins transmitting). No start code data is sent until AddUniverse() and a variant of
+ * UpdateValues() is called.
  *
  * @param[in] settings Configuration parameters for the sACN source to be created.
  * @return #kEtcPalErrOk: Source successfully created.
