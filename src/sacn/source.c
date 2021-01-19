@@ -878,8 +878,8 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
  * @brief Add a unicast destination for a source's universe.
  *
  * Adds a unicast destination for a source's universe.
- * After this call completes, the applicaton must call either sacn_source_update_values() or
- * sacn_source_update_values_and_pap() to mark it ready for processing.
+ * After this call completes, the applicaton must call a variant of sacn_source_update_values() to mark it ready for
+ * processing.
  *
  * @param[in] handle Handle to the source to change.
  * @param[in] universe Universe to change.
