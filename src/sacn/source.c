@@ -524,7 +524,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
  * reset the logic that slows down packet transmission due to inactivity.
  *
  * @param[in] handle Handle to the source to change.
- * @param[in] new_name New name to use for this universe.
+ * @param[in] new_name New name to use for this source.
  * @return #kEtcPalErrOk: Name set successfully.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.

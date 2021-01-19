@@ -270,7 +270,7 @@ inline void Source::Shutdown()
  * If a universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
  * reset the logic that slows down packet transmission due to inactivity.
  *
- * @param[in] new_name New name to use for this universe.
+ * @param[in] new_name New name to use for this source.
  * @return #kEtcPalErrOk: Name set successfully.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
