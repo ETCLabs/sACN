@@ -295,8 +295,7 @@ static void set_preview_flag(const SourceState* source, UniverseState* universe,
 
 /*************************** Function definitions ****************************/
 
-/* Initialize the sACN Source module. Internal function called from sacn_init().
-   This also starts up the module-provided Tick thread. */
+/* Initialize the sACN Source module. Internal function called from sacn_init(). */
 etcpal_error_t sacn_source_init(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
