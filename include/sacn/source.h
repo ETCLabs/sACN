@@ -171,7 +171,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
                                     size_t buflen);
 etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t universe);
 
-// TODO: Make sure these update functions satisfy their documentation.
+// TODO: Make sure these update functions satisfy their documentation (set level to 0 for each 0 PAP in the correct order).
 void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
                                size_t new_values_size);
 void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,

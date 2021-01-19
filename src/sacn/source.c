@@ -280,9 +280,10 @@ static void update_levels(SourceState* source_state, UniverseState* universe_sta
 static void update_paps(SourceState* source_state, UniverseState* universe_state, const uint8_t* new_priorities,
                         size_t new_priorities_size, bool force_sync);
 #endif
-static void update_levels_and_or_paps(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
+static void update_levels_and_or_paps(SourceState* source, UniverseState* universe, const uint8_t* new_values,
                                       size_t new_values_size, const uint8_t* new_priorities,
                                       size_t new_priorities_size, bool force_sync);
+static void disable_paps(SourceState* source, UniverseState* universe);
 static void set_unicast_dests_ready(UniverseState* universe_state);
 static void set_source_terminating(SourceState* source);
 static void set_universe_terminating(UniverseState* universe);
@@ -1310,7 +1311,10 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
 #if SOURCE_ENABLED
   if (new_values && (new_values_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
-    update_levels_and_or_paps(handle, universe, new_values, new_values_size, NULL, 0, false);
+    SourceState* source_state = NULL;
+    UniverseState* universe_state = NULL;
+    lookup_state(handle, universe, &source_state, &universe_state);
+    update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, false);
     sacn_unlock();
   }
 #endif  // SOURCE_ENABLED
@@ -1343,11 +1347,18 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
                                        size_t new_priorities_size)
 {
 #if SOURCE_ENABLED
-  if (new_values && new_priorities && (new_values_size <= DMX_ADDRESS_COUNT) &&
-      (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if (new_values && (new_values_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
-    update_levels_and_or_paps(handle, universe, new_values, new_values_size, new_priorities, new_priorities_size,
-                              false);
+    SourceState* source_state = NULL;
+    UniverseState* universe_state = NULL;
+    lookup_state(handle, universe, &source_state, &universe_state);
+
+    update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
+                              new_priorities_size, false);
+
+    if (!new_priorities)
+      disable_paps(source_state, universe_state);
+
     sacn_unlock();
   }
 #endif  // SOURCE_ENABLED
@@ -1376,7 +1387,10 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
 #if SOURCE_ENABLED
   if (new_values && (new_values_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
-    update_levels_and_or_paps(handle, universe, new_values, new_values_size, NULL, 0, true);
+    SourceState* source_state = NULL;
+    UniverseState* universe_state = NULL;
+    lookup_state(handle, universe, &source_state, &universe_state);
+    update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, true);
     sacn_unlock();
   }
 #endif  // SOURCE_ENABLED
@@ -1414,10 +1428,19 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
                                                       const uint8_t* new_priorities, size_t new_priorities_size)
 {
 #if SOURCE_ENABLED
-  if (new_values && new_priorities && (new_values_size <= DMX_ADDRESS_COUNT) &&
-      (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if (new_values && (new_values_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
-    update_levels_and_or_paps(handle, universe, new_values, new_values_size, new_priorities, new_priorities_size, true);
+    SourceState* source_state = NULL;
+    UniverseState* universe_state = NULL;
+    lookup_state(handle, universe, &source_state, &universe_state);
+
+    update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
+                              new_priorities_size, true);
+
+    if (!new_priorities)
+      disable_paps(source_state, universe_state);
+
+    
     sacn_unlock();
   }
 #endif  // SOURCE_ENABLED
@@ -2267,26 +2290,29 @@ void update_paps(SourceState* source_state, UniverseState* universe_state, const
 #endif
 
 // Needs lock
-void update_levels_and_or_paps(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
+void update_levels_and_or_paps(SourceState* source, UniverseState* universe, const uint8_t* new_levels,
                                size_t new_levels_size, const uint8_t* new_priorities, size_t new_priorities_size,
                                bool force_sync)
 {
-  // Look up state
-  SourceState* source_state = NULL;
-  UniverseState* universe_state = NULL;
-  if (lookup_state(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
+  if (source && universe)
   {
     // Update 0x00 values
     if (new_levels)
-      update_levels(source_state, universe_state, new_levels, new_levels_size, force_sync);
+      update_levels(source, universe, new_levels, new_levels_size, force_sync);
 #if SACN_ETC_PRIORITY_EXTENSION
     // Update 0xDD values
     if (new_priorities)
-      update_paps(source_state, universe_state, new_priorities, new_priorities_size, force_sync);
+      update_paps(source, universe, new_priorities, new_priorities_size, force_sync);
 #endif
     // Enable new unicast destinations
-    set_unicast_dests_ready(universe_state);
+    set_unicast_dests_ready(universe);
   }
+}
+
+// Needs lock
+void disable_paps(SourceState* source, UniverseState* universe)
+{
+  // TODO
 }
 
 // Needs lock
