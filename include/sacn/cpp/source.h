@@ -250,9 +250,6 @@ inline etcpal::Error Source::Startup(const Settings& settings)
  * Stops sending all universes for this source. The destruction is queued, and actually occurs either on the thread or
  * on a call to ProcessManual() after an additional three packets have been sent with the "Stream_Terminated" option
  * set. The source will also stop transmitting sACN universe discovery packets.
- *
- * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
- * or values_buffer you passed in on your call to AddUniverse().
  */
 inline void Source::Shutdown()
 {
@@ -289,7 +286,7 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
  * After this call completes, the applicaton must call a variant of UpdateValues() to mark it ready for processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
- * Discovery packets.
+ * Discovery packets once a variant of UpdateValues() is called.
  *
  * Note that a universe is considered as successfully added if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -317,11 +314,11 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings)
  * After this call completes, the applicaton must call a variant of UpdateValues() to mark it ready for processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
- * Discovery packets.
+ * Discovery packets once a variant of UpdateValues() is called.
  *
  * Note that a universe is considered as successfully added if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
-
+ *
  * @param[in] settings Configuration parameters for the universe to be added.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.

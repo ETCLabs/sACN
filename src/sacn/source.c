@@ -576,9 +576,6 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
  * on a call to sacn_source_process_manual() after an additional three packets have been sent with the
  * "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.
  *
- * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
- * or values_buffer you passed in on your call to sacn_source_add_universe().
- *
  * @param[in] handle Handle to the source to destroy.
  */
 void sacn_source_destroy(sacn_source_t handle)
@@ -603,11 +600,11 @@ void sacn_source_destroy(sacn_source_t handle)
  * @brief Add a universe to an sACN source.
  *
  * Adds a universe to a source.
- * After this call completes, the applicaton must call either sacn_source_update_values() or
- * sacn_source_update_values_and_pap() to mark it ready for processing.
+ * After this call completes, the applicaton must call a variant of sacn_source_update_values() to mark it ready for
+ * processing.
  *
- * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
- * Discovery packets.
+ * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe Discovery packets
+ * once a variant of sacn_source_update_values() is called.
  *
  * Note that a universe is considered as successfully added if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
