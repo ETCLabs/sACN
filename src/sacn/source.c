@@ -991,15 +991,15 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
 }
 
 /**
- * @brief Obtain a list of unicast destinations to which this source is transmitting a universe.
+ * @brief Obtain a list of a universe's unicast destinations.
  *
- * @param[in] handle Handle to the source that is transmitting on the universe in question.
+ * @param[in] handle Handle to the source of the universe in question.
  * @param[in] universe The universe for which to obtain the list of unicast destinations.
  * @param[out] destinations A pointer to an application-owned array where the unicast destination list will be written.
  * @param[in] destinations_size The size of the provided destinations array.
- * @return The total number of unicast destinations being transmitted by the source for the given universe. If this is
- * greater than destinations_size, then only destinations_size addresses were written to the destinations array. If the
- * source was not found, 0 is returned.
+ * @return The total number of unicast destinations for the given universe. If this is greater than destinations_size,
+ * then only destinations_size addresses were written to the destinations array. If the source was not found, 0 is
+ * returned.
  */
 size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t universe, EtcPalIpAddr* destinations,
                                             size_t destinations_size)
@@ -1037,8 +1037,8 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
 /**
  * @brief Change the priority of a universe on a sACN source.
  *
- * If this universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
- * reset the logic that slows down packet transmission due to inactivity.
+ * This function will update the packet buffers with the new priority. If this universe is transmitting NULL start code
+ * or PAP data, the logic that slows down packet transmission due to inactivity will be reset.
  *
  * @param[in] handle Handle to the source for which to set the priority.
  * @param[in] universe Universe to change.
@@ -1098,8 +1098,8 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
  * E1.31) "intended for use in visualization or media server preview applications and shall not be
  * used to generate live output."
  *
- * If this universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
- * reset the logic that slows down packet transmission due to inactivity.
+ * This function will update the packet buffers with the new option. If this universe is transmitting NULL start code
+ * or PAP data, the logic that slows down packet transmission due to inactivity will be reset.
  *
  * @param[in] handle Handle to the source for which to set the Preview_Data option.
  * @param[in] universe The universe to change.
@@ -1150,13 +1150,13 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
 }
 
 /**
- * @brief Changes the synchronize uinverse for a universe of a sACN source.
+ * @brief Changes the synchronization universe for a universe of a sACN source.
  *
  * This will change the synchronization universe used by a sACN universe on the source.
  * If this value is 0, synchronization is turned off for that universe.
  *
- * If this universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
- * reset the logic that slows down packet transmission due to inactivity.
+ * This function will update the packet buffers with the new sync universe. If this universe is transmitting NULL start
+ * code or PAP data, the logic that slows down packet transmission due to inactivity will be reset.
  *
  * TODO: At this time, synchronization is not supported by this library.
  *
@@ -1441,7 +1441,7 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 }
 
 /**
- * @brief Trigger the transmision of sACN packets for all universes of sources that were created with
+ * @brief Trigger the transmission of sACN packets for all universes of sources that were created with
  * manually_process_source set to true.
  *
  * Note: Unless you created the source with manually_process_source set to true, similar functionality will be
@@ -1488,8 +1488,8 @@ int sacn_source_process_manual(void)
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or a network interface ID given was not
- * found on the system.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
+ *                              source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
