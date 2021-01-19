@@ -628,8 +628,8 @@ inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* n
  * @brief Like UpdateValues(), but also sets the force_sync flag on the packet.
  *
  * This function will update the outgoing packet values to be sent on the next threaded or manual update, and will reset
- * the logic that slows down packet transmission due to inactivity. Additionally, the final packet to be sent by this
- * call will have its force_synchronization option flag set.
+ * the logic that slows down packet transmission due to inactivity. Additionally, both packets to be sent by this call
+ * will have their force_synchronization option flags set.
  *
  * Per-address priority support has specific rules about when to send value changes vs. pap changes.  These rules are
  * documented in https://etclabs.github.io/sACN/docs/head/per_address_priority.html, and are triggered by the use of
