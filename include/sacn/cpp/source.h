@@ -569,8 +569,7 @@ inline etcpal::Error Source::SendSynchronization(uint16_t sync_universe)
  * the version of UpdateValues() that takes a per-address priority buffer.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
- * values will be used.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size)
@@ -592,8 +591,7 @@ inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, s
  * "release control" of the corresponding DMX values.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
- * values will be used.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
  * per-address priorities or want to stop using per-address priorities.
@@ -618,8 +616,7 @@ inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, s
  * TODO: At this time, synchronization is not supported by this library.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
- * values will be used.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size)
@@ -646,8 +643,7 @@ inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* n
  * TODO: At this time, synchronization is not supported by this library.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
- * values will be used.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
  * per-address priorities or want to stop using per-address priorities.

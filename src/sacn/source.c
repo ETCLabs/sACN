@@ -283,7 +283,6 @@ static void update_paps(SourceState* source_state, UniverseState* universe_state
 static void update_levels_and_or_paps(SourceState* source, UniverseState* universe, const uint8_t* new_values,
                                       size_t new_values_size, const uint8_t* new_priorities,
                                       size_t new_priorities_size, bool force_sync);
-static void disable_paps(SourceState* source, UniverseState* universe);
 static void set_unicast_dests_ready(UniverseState* universe_state);
 static void set_source_terminating(SourceState* source);
 static void set_universe_terminating(UniverseState* universe);
@@ -1301,8 +1300,7 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t s
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
- * values will be used.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
@@ -1335,8 +1333,7 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
- * values will be used.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
  * per-address priorities or want to stop using per-address priorities.
@@ -1356,8 +1353,9 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
     update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
                               new_priorities_size, false);
 
+    // Stop using PAPs if new_priorities is NULL
     if (!new_priorities)
-      disable_paps(source_state, universe_state);
+      universe_state->has_pap_data = false;
 
     sacn_unlock();
   }
@@ -1377,8 +1375,7 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
- * values will be used.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
@@ -1416,8 +1413,7 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
- * values will be used.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
  * per-address priorities or want to stop using per-address priorities.
@@ -1437,8 +1433,9 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
     update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
                               new_priorities_size, true);
 
+    // Stop using PAPs if new_priorities is NULL
     if (!new_priorities)
-      disable_paps(source_state, universe_state);
+      universe_state->has_pap_data = false;
 
     
     sacn_unlock();
@@ -2307,12 +2304,6 @@ void update_levels_and_or_paps(SourceState* source, UniverseState* universe, con
     // Enable new unicast destinations
     set_unicast_dests_ready(universe);
   }
-}
-
-// Needs lock
-void disable_paps(SourceState* source, UniverseState* universe)
-{
-  // TODO
 }
 
 // Needs lock
