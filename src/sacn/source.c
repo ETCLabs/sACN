@@ -1302,7 +1302,7 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t s
  * @param[in] universe Universe to update.
  * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
  * values will be used.
- * @param[in] new_values_size Size of new_values.
+ * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
                                size_t new_values_size)
@@ -1333,10 +1333,10 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
  * @param[in] universe Universe to update.
  * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
  * values will be used.
- * @param[in] new_values_size Size of new_values.
+ * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
  * per-address priorities or want to stop using per-address priorities.
- * @param[in] new_priorities_size Size of new_priorities.
+ * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
                                        size_t new_values_size, const uint8_t* new_priorities,
@@ -1368,7 +1368,7 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
  * @param[in] universe Universe to update.
  * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
  * values will be used.
- * @param[in] new_values_size Size of new_values.
+ * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
                                               size_t new_values_size)
@@ -1404,10 +1404,10 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
  * @param[in] universe Universe to update.
  * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
  * values will be used.
- * @param[in] new_values_size Size of new_values.
+ * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
  * per-address priorities or want to stop using per-address priorities.
- * @param[in] new_priorities_size Size of new_priorities.
+ * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe,
                                                       const uint8_t* new_values, size_t new_values_size,
