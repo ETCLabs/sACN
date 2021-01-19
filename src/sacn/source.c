@@ -834,13 +834,13 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 }
 
 /**
- * @brief Obtain a list of universes this source is transmitting on.
+ * @brief Obtain a list of a source's universes.
  *
  * @param[in] handle Handle to the source for which to obtain the list of universes.
  * @param[out] universes A pointer to an application-owned array where the universe list will be written.
  * @param[in] universes_size The size of the provided universes array.
- * @return The total number of universes being transmitted by the source. If this is greater than universes_size, then
- * only universes_size universes were written to the universes array. If the source was not found, 0 is returned.
+ * @return The total number of the source's universes. If this is greater than universes_size, then only universes_size
+ * universes were written to the universes array. If the source was not found, 0 is returned.
  */
 size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size_t universes_size)
 {

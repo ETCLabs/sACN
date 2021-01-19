@@ -357,9 +357,9 @@ inline void Source::RemoveUniverse(uint16_t universe)
 }
 
 /**
- * @brief Obtain a vector of universes this source is transmitting on.
+ * @brief Obtain a vector of this source's universes.
  *
- * @return A vector of universes the source is transmitting on.
+ * @return A vector of this source's universes.
  */
 inline std::vector<uint16_t> Source::GetUniverses()
 {
