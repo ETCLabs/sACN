@@ -221,7 +221,7 @@ inline Source::UniverseSettings::UniverseSettings(uint16_t universe_id) : univer
  */
 inline bool Source::UniverseSettings::IsValid() const
 {
-  return universe > 0;
+  return ((universe != 0) && (universe < 64000));
 }
 
 /**
