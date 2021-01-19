@@ -520,8 +520,9 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
  * packet for use in displaying the identity of a source to a user." Only up to
  * #SACN_SOURCE_NAME_MAX_LEN characters will be used.
  *
- * If a universe is transmitting NULL start code or PAP data, this function will update the outgoing packets, and
- * reset the logic that slows down packet transmission due to inactivity.
+ * This function will update the packet buffers of all this source's universes with the new name. For each universe that
+ * is transmitting NULL start code or PAP data, the logic that slows down packet transmission due to inactivity will be
+ * reset.
  *
  * @param[in] handle Handle to the source to change.
  * @param[in] new_name New name to use for this source.
@@ -1260,7 +1261,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
 /**
  * @brief Indicate that a new synchronization packet should be sent on the given synchronization universe.
  *
- * This will cause the transmission of a synchronization packet for the source on the given synchronization universe.
+ * This will cause the source to transmit a synchronization packet on the given synchronization universe.
  *
  * TODO: At this time, synchronization is not supported by this library, so this function is not implemented.
  *
