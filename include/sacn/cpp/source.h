@@ -64,7 +64,7 @@ public:
 
     /** The source's CID. */
     etcpal::Uuid cid;
-    /** The source's name, a UTF-8 encoded string. Up to #SACN_SOURCE_NAME_MAX_LEN characters will be used. */
+    /** The source's name, a UTF-8 encoded string. */
     std::string name;
 
     /********* Optional values **********/
@@ -119,7 +119,8 @@ public:
         Source::AddUnicastDestination() and Source::RemoveUnicastDestination(). */
     const std::vector<etcpal::IpAddr> unicast_destinations;
 
-    /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
+    /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0.
+        TODO: At this time, synchronization is not supported by this library. */
     uint16_t sync_universe{0};
 
     /** Create an empty, invalid data structure by default. */
