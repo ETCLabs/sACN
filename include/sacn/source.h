@@ -134,7 +134,8 @@ typedef struct SacnSourceUniverseConfig
   /** The size of unicast_destinations. */
   size_t num_unicast_destinations;
 
-  /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
+  /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0.
+      TODO: At this time, synchronization is not supported by this library. */
   uint16_t sync_universe;
 
 } SacnSourceUniverseConfig;
