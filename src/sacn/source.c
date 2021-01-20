@@ -398,7 +398,9 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
  * universes until start code data begins transmitting). No start code data is sent until sacn_source_add_universe() and
  * a variant of sacn_source_update_values() is called.
  *
- * @param[in] config Configuration parameters for the sACN source to be created.
+ * @param[in] config Configuration parameters for the sACN source to be created. If any of these parameters are invalid,
+ * #kEtcPalErrInvalid will be returned. This includes if the source name's length (including the null terminator) is
+ * beyond #SACN_SOURCE_NAME_MAX_LEN.
  * @param[out] handle Filled in on success with a handle to the sACN source.
  * @return #kEtcPalErrOk: Source successfully created.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -427,7 +429,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
       result = kEtcPalErrInvalid;
     else if (!config->name)
       result = kEtcPalErrInvalid;
-    else if (strlen(config->name) > SACN_SOURCE_NAME_MAX_LEN)
+    else if (strlen(config->name) > (SACN_SOURCE_NAME_MAX_LEN - 1))  // Max length includes null terminator
       result = kEtcPalErrInvalid;
     else if (config->keep_alive_interval <= 0)
       result = kEtcPalErrInvalid;
@@ -516,9 +518,9 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
 /**
  * @brief Change the name of an sACN source.
  *
- * The name is a UTF-8 string representing "a user-assigned name provided by the source of the
- * packet for use in displaying the identity of a source to a user." Only up to
- * #SACN_SOURCE_NAME_MAX_LEN characters will be used.
+ * The name is a UTF-8 string representing "a user-assigned name provided by the source of the packet for use in
+ * displaying the identity of a source to a user." If its length (including the null terminator) is longer than
+ * #SACN_SOURCE_NAME_MAX_LEN, then #kEtcPalErrInvalid will be returned.
  *
  * This function will update the packet buffers of all this source's universes with the new name. For each universe that
  * is transmitting NULL start code or PAP data, the logic that slows down packet transmission due to inactivity will be
@@ -550,6 +552,8 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
     if (handle == SACN_SOURCE_INVALID)
       result = kEtcPalErrInvalid;
     else if (!new_name)
+      result = kEtcPalErrInvalid;
+    else if (strlen(new_name) > (SACN_SOURCE_NAME_MAX_LEN - 1))  // Max length includes null terminator
       result = kEtcPalErrInvalid;
   }
 

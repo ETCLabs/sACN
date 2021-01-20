@@ -231,7 +231,9 @@ inline bool Source::UniverseSettings::IsValid() const
  * universes until start code data begins transmitting). No start code data is sent until AddUniverse() and a variant of
  * UpdateValues() is called.
  *
- * @param[in] settings Configuration parameters for the sACN source to be created.
+ * @param[in] settings Configuration parameters for the sACN source to be created. If any of these parameters are invalid,
+ * #kEtcPalErrInvalid will be returned. This includes if the source name's length (including the null terminator) is
+ * beyond #SACN_SOURCE_NAME_MAX_LEN.
  * @return #kEtcPalErrOk: Source successfully created.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -260,9 +262,9 @@ inline void Source::Shutdown()
 /**
  * @brief Change the name of an sACN source.
  *
- * The name is a UTF-8 string representing "a user-assigned name provided by the source of the
- * packet for use in displaying the identity of a source to a user." Only up to
- * #SACN_SOURCE_NAME_MAX_LEN characters will be used.
+ * The name is a UTF-8 string representing "a user-assigned name provided by the source of the packet for use in
+ * displaying the identity of a source to a user." If its length (including the null terminator) is longer than
+ * #SACN_SOURCE_NAME_MAX_LEN, then #kEtcPalErrInvalid will be returned.
  *
  * This function will update the packet buffers of all this source's universes with the new name. For each universe that
  * is transmitting NULL start code or PAP data, the logic that slows down packet transmission due to inactivity will be
