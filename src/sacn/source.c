@@ -149,7 +149,6 @@ typedef struct UniverseState
   int num_terminations_sent;
 
   uint8_t priority;
-  uint16_t universe;
   uint16_t sync_universe;
   bool send_preview;
   uint8_t seq_num;
@@ -710,7 +709,6 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       universe->num_terminations_sent = 0;
 
       universe->priority = config->priority;
-      universe->universe = config->universe;
       universe->sync_universe = config->sync_universe;
       universe->send_preview = config->send_preview;
       universe->seq_num = 0;
