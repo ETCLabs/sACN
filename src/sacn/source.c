@@ -128,7 +128,6 @@ typedef struct SourceState
 
   EtcPalRbTree universes;
   size_t num_active_universes;  // Number of universes to include in universe discovery packets.
-  bool universe_discovery_updated;
   EtcPalTimer universe_discovery_timer;
   bool process_manually;
   sacn_ip_support_t ip_supported;
@@ -482,7 +481,6 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
       etcpal_rbtree_init(&source->universes, universe_state_lookup_compare_func, source_rb_node_alloc_func,
                          source_rb_node_dealloc_func);
       source->num_active_universes = 0;
-      source->universe_discovery_updated = true;
       etcpal_timer_start(&source->universe_discovery_timer, UNIVERSE_DISCOVERY_INTERVAL);
       source->process_manually = config->manually_process_source;
       source->ip_supported = config->ip_supported;
@@ -1854,11 +1852,9 @@ int process_sources(bool process_manual)
 void process_universe_discovery(SourceState* source)
 {
   // Send another universe discovery packet if it's time
-  if (!source->terminating &&
-      (source->universe_discovery_updated || etcpal_timer_is_expired(&source->universe_discovery_timer)))
+  if (!source->terminating && etcpal_timer_is_expired(&source->universe_discovery_timer))
   {
     send_universe_discovery(source);
-    source->universe_discovery_updated = false;
     etcpal_timer_reset(&source->universe_discovery_timer);
   }
 }
@@ -1975,12 +1971,9 @@ void remove_universe_state(SourceState* source, UniverseState** universe, EtcPal
 
   if (universe_to_remove)
   {
-    // Update num_active_universes and universe_discovery_updated if needed
+    // Update num_active_universes if needed
     if (IS_PART_OF_UNIVERSE_DISCOVERY(universe_to_remove))
-    {
       --source->num_active_universes;
-      source->universe_discovery_updated = true;
-    }
 
     // Update the netints tree
     for (size_t i = 0; i < universe_to_remove->num_netints; ++i)
@@ -2285,10 +2278,7 @@ void update_levels(SourceState* source_state, UniverseState* universe_state, con
   reset_transmission_suppression(source_state, universe_state, true, false);
 
   if (!was_part_of_discovery && IS_PART_OF_UNIVERSE_DISCOVERY(universe_state))
-  {
     ++source_state->num_active_universes;
-    source_state->universe_discovery_updated = true;
-  }
 }
 
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -2418,7 +2408,6 @@ void set_source_name(SourceState* source, const char* new_name)
   // Update the name in the source state and universe discovery buffer
   strncpy(source->name, new_name, SACN_SOURCE_NAME_MAX_LEN);
   strncpy((char*)(&source->universe_discovery_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
-  source->universe_discovery_updated = true;  // Cause a new universe discovery packet to go out
 
   // For each universe:
   EtcPalRbIter tree_iter;
