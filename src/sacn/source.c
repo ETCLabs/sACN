@@ -1823,13 +1823,13 @@ int process_sources(bool process_manual)
   {
     bool source_incremented = false;
 
-    // If the Source API is shutting down, cause this source to terminate (if thread-based)
-    if (!process_manual && shutting_down)
-      set_source_terminating(source);
-
     // If this is the kind of source we want to process (manual vs. thread-based)
     if (source->process_manually == process_manual)
     {
+      // If the Source API is shutting down, cause this source to terminate (if thread-based)
+      if (!process_manual && shutting_down)
+        set_source_terminating(source);
+
       // Count the sources of the kind being processed by this function
       ++num_sources_tracked;
 
