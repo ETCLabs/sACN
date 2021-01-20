@@ -134,6 +134,9 @@ size_t pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t 
                                     uint8_t priority, uint16_t sync_address, uint8_t seq_num, bool preview,
                                     bool terminated, bool force_sync, uint16_t universe_id)
 {
+  ETCPAL_UNUSED_ARG(sync_address);  // TODO sacn_sync
+  ETCPAL_UNUSED_ARG(force_sync);    // TODO sacn_sync
+
   uint8_t* pcur = buf;
 
   // Framing layer flags and length
@@ -152,7 +155,7 @@ size_t pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t 
   pcur += SACN_SOURCE_NAME_MAX_LEN;
   *pcur = priority;
   ++pcur;
-  etcpal_pack_u16b(pcur, sync_address);
+  etcpal_pack_u16b(pcur, 0 /* TODO sync_address */);
   pcur += 2;
   *pcur = seq_num;
   ++pcur;
@@ -161,8 +164,8 @@ size_t pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t 
     *pcur |= SACN_OPTVAL_PREVIEW;
   if (terminated)
     *pcur |= SACN_OPTVAL_TERMINATED;
-  if (force_sync)
-    *pcur |= SACN_OPTVAL_FORCE_SYNC;
+  // TODO if (force_sync)
+  // TODO  *pcur |= SACN_OPTVAL_FORCE_SYNC;
   ++pcur;
   etcpal_pack_u16b(pcur, universe_id);
   pcur += 2;

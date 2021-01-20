@@ -2262,6 +2262,8 @@ void init_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* sour
 // Needs lock
 void update_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size, bool force_sync)
 {
+  ETCPAL_UNUSED_ARG(force_sync);  // TODO sacn_sync
+
   // Set force sync flag
   SET_FORCE_SYNC_OPT(send_buf, force_sync);
 
