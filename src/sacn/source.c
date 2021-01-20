@@ -133,6 +133,7 @@ typedef struct SourceState
   bool process_manually;
   sacn_ip_support_t ip_supported;
   int keep_alive_interval;
+  size_t universe_count_max;
 
   EtcPalRbTree netints;  // Provides a way to look up netints being used by any universe of this source.
 
@@ -487,6 +488,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
       source->process_manually = config->manually_process_source;
       source->ip_supported = config->ip_supported;
       source->keep_alive_interval = config->keep_alive_interval;
+      source->universe_count_max = config->universe_count_max;
       etcpal_rbtree_init(&source->netints, netint_state_lookup_compare_func, source_rb_node_alloc_func,
                          source_rb_node_dealloc_func);
 
@@ -676,6 +678,18 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       if (lookup_state(handle, config->universe, &source, &tmp) != kEtcPalErrNotFound)
         result = kEtcPalErrExists;
     }
+
+#if SACN_DYNAMIC_MEM
+    // Make sure to check against universe_count_max.
+    if (result == kEtcPalErrOk)
+    {
+      if ((source->universe_count_max != SACN_SOURCE_INFINITE_UNIVERSES) &&
+          (etcpal_rbtree_size(&source->universes) >= source->universe_count_max))
+      {
+        result = kEtcPalErrNoMem;  // No room to allocate additional universe.
+      }
+    }
+#endif
 
     // Allocate the universe's state.
     UniverseState* universe = NULL;
