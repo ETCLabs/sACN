@@ -169,17 +169,14 @@ sources can also transmit to one or more unicast addresses in addition to multic
 unicast destination for a universe, call the Add Unicast Destination function. There's also a
 Remove Unicast Destination function. The universe configuration also has a send_unicast_only
 setting, which disables the transmission of multicast altogether. Once you change the unicast
-configuration, call Update Values to reset transmission suppression and enable newly added unicast
-destinations.
+configuration, transmission suppression is reset and the newly added unicast destinations will have
+data transmitted to them.
 
 <!-- CODE_BLOCK_START -->
 ```c
 // Unicast can be sent to one or more addresses, in addition to multicast.
 EtcPalIpAddr custom_destination;  // Application initializes custom_destination...
 sacn_source_add_unicast_destination(my_handle, my_universe, &custom_destination);
-// Resend the data as if it has changed, causing the values to be sent to via multicast
-// and unicast depending on SacnSourceUniverseConfig.send_unicast_only.
-sacn_source_update_values(my_handle, my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
 
 // You can remove a unicast destination previously added:
 sacn_source_remove_unicast_destination(my_handle, my_universe, &custom_destination);
@@ -189,9 +186,6 @@ sacn_source_remove_unicast_destination(my_handle, my_universe, &custom_destinati
 // Unicast can be sent to one or more addresses, in addition to multicast.
 etcpal::IpAddr custom_destination;  // Application initializes custom_destination...
 my_source.AddUnicastDestination(my_universe, custom_destination);
-// Resend the data as if it has changed, causing the values to be sent to via multicast
-// and unicast depending on SacnSourceUniverseConfig.send_unicast_only.
-my_source.UpdateValues(my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
 
 // You can remove a unicast destination previously added:
 my_source.RemoveUnicastDestination(my_universe, custom_destination);

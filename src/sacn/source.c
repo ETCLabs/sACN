@@ -187,7 +187,6 @@ typedef struct NetintState
 typedef struct UnicastDestination
 {
   EtcPalIpAddr dest_addr;  // This must be the first struct member.
-  bool ready_for_processing;
   bool terminating;
   int num_terminations_sent;
 } UnicastDestination;
@@ -281,9 +280,8 @@ static void update_paps(SourceState* source_state, UniverseState* universe_state
                         size_t new_priorities_size, bool force_sync);
 #endif
 static void update_levels_and_or_paps(SourceState* source, UniverseState* universe, const uint8_t* new_values,
-                                      size_t new_values_size, const uint8_t* new_priorities,
-                                      size_t new_priorities_size, bool force_sync);
-static void set_unicast_dests_ready(UniverseState* universe_state);
+                                      size_t new_values_size, const uint8_t* new_priorities, size_t new_priorities_size,
+                                      bool force_sync);
 static void set_source_terminating(SourceState* source);
 static void set_universe_terminating(UniverseState* universe);
 static void set_unicast_dest_terminating(UnicastDestination* dest);
@@ -734,7 +732,6 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
         if (dest)
         {
           dest->dest_addr = config->unicast_destinations[i];
-          dest->ready_for_processing = false;  // Calling an Update Values function sets this to true.
           dest->terminating = false;
           dest->num_terminations_sent = 0;
 
@@ -893,9 +890,7 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
 /**
  * @brief Add a unicast destination for a source's universe.
  *
- * Adds a unicast destination for a source's universe.
- * After this call completes, the applicaton must call a variant of sacn_source_update_values() to mark it ready for
- * processing.
+ * This will reset transmission suppression and include the new unicast destination in transmissions for the universe.
  *
  * @param[in] handle Handle to the source to change.
  * @param[in] universe Universe to change.
@@ -934,10 +929,11 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
 
   if (sacn_lock())
   {
-    // Look up the universe state
+    // Look up the state
+    SourceState* source_state = NULL;
     UniverseState* universe_state = NULL;
     if (result == kEtcPalErrOk)
-      result = lookup_state(handle, universe, NULL, &universe_state);
+      result = lookup_state(handle, universe, &source_state, &universe_state);
 
     // Allocate the unicast destination
     UnicastDestination* unicast_dest = NULL;
@@ -952,7 +948,6 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
     if (result == kEtcPalErrOk)
     {
       unicast_dest->dest_addr = *dest;
-      unicast_dest->ready_for_processing = false;  // Calling an Update Values function sets this to true.
       unicast_dest->terminating = false;
       unicast_dest->num_terminations_sent = 0;
 
@@ -965,7 +960,9 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
       else if (insert_result != kEtcPalErrOk)
         result = kEtcPalErrSys;
 
-      if (insert_result != kEtcPalErrOk)
+      if (insert_result == kEtcPalErrOk)
+        reset_transmission_suppression(source_state, universe_state, true, true);
+      else
         FREE_UNICAST_DESTINATION(unicast_dest);
     }
 
@@ -1450,7 +1447,6 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
     if (!new_priorities)
       universe_state->has_pap_data = false;
 
-    
     sacn_unlock();
   }
 #endif  // SOURCE_ENABLED
@@ -2201,8 +2197,8 @@ void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, EtcPalR
 // Needs lock
 void send_data_to_single_unicast_dest(etcpal_iptype_t ip_type, const uint8_t* send_buf, const UnicastDestination* dest)
 {
-  // If this destination is ready for processing and matches the IP type, then send to it.
-  if (dest && dest->ready_for_processing && (dest->dest_addr.type == ip_type))
+  // If this destination matches the IP type, then send to it.
+  if (dest && (dest->dest_addr.type == ip_type))
     sacn_send_unicast(send_buf, &dest->dest_addr);
 }
 
@@ -2308,23 +2304,6 @@ void update_levels_and_or_paps(SourceState* source, UniverseState* universe, con
     if (new_priorities)
       update_paps(source, universe, new_priorities, new_priorities_size, force_sync);
 #endif
-    // Enable new unicast destinations
-    set_unicast_dests_ready(universe);
-  }
-}
-
-// Needs lock
-void set_unicast_dests_ready(UniverseState* universe_state)
-{
-  // For each unicast destination
-  EtcPalRbIter tree_iter;
-  etcpal_rbiter_init(&tree_iter);
-
-  for (UnicastDestination* dest = etcpal_rbiter_first(&tree_iter, &universe_state->unicast_dests); dest;
-       dest = etcpal_rbiter_next(&tree_iter))
-  {
-    // Indicate that this unicast destination is ready for processing.
-    dest->ready_for_processing = true;
   }
 }
 
