@@ -43,6 +43,7 @@
 
 #define SOURCE_THREAD_INTERVAL 23
 #define UNIVERSE_DISCOVERY_INTERVAL 10000
+#define NUM_PRE_SUPPRESSION_PACKETS 4
 #define SOURCE_ENABLED                                                                                   \
   ((!SACN_DYNAMIC_MEM && (SACN_SOURCE_MAX_SOURCES > 0) && (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)) || \
    SACN_DYNAMIC_MEM)
@@ -1930,7 +1931,7 @@ void process_unicast_dests(SourceState* source, UniverseState* universe)
 void process_universe_null_pap_transmission(SourceState* source, UniverseState* universe)
 {
   // If 0x00 data is ready to send
-  if (universe->has_null_data && ((universe->null_packets_sent_before_suppression < 3) ||
+  if (universe->has_null_data && ((universe->null_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
                                   etcpal_timer_is_expired(&universe->null_keep_alive_timer)))
   {
     // Send 0x00 data & reset the keep-alive timer
@@ -1941,8 +1942,8 @@ void process_universe_null_pap_transmission(SourceState* source, UniverseState* 
   }
 #if SACN_ETC_PRIORITY_EXTENSION
   // If 0xDD data is ready to send
-  if (universe->has_pap_data &&
-      ((universe->pap_packets_sent_before_suppression < 3) || etcpal_timer_is_expired(&universe->pap_keep_alive_timer)))
+  if (universe->has_pap_data && ((universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
+                                 etcpal_timer_is_expired(&universe->pap_keep_alive_timer)))
   {
     // Send 0xDD data & reset the keep-alive timer
     send_pap_data_multicast(source, universe);
@@ -2057,7 +2058,7 @@ void process_null_sent(UniverseState* universe)
 {
   increment_sequence_number(universe);
 
-  if (universe->null_packets_sent_before_suppression < 3)
+  if (universe->null_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
     ++universe->null_packets_sent_before_suppression;
 }
 
@@ -2079,7 +2080,7 @@ void process_pap_sent(UniverseState* universe)
 {
   increment_sequence_number(universe);
 
-  if (universe->pap_packets_sent_before_suppression < 3)
+  if (universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
     ++universe->pap_packets_sent_before_suppression;
 }
 #endif
