@@ -19,6 +19,7 @@
 
 #include "sacn/source.h"
 #include "sacn/private/common.h"
+#include "sacn/private/mem.h"
 #include "sacn/private/pdu.h"
 #include "sacn/private/sockets.h"
 #include "sacn/private/source.h"
@@ -27,12 +28,6 @@
 #include "etcpal/pack.h"
 #include "etcpal/rbtree.h"
 #include "etcpal/timer.h"
-
-#if SACN_DYNAMIC_MEM
-#include <stdlib.h>
-#else
-#include "etcpal/mempool.h"
-#endif
 
 // Suppress strncpy() warning on Windows/MSVC.
 #ifdef _MSC_VER
@@ -44,96 +39,9 @@
 #define SOURCE_THREAD_INTERVAL 23
 #define UNIVERSE_DISCOVERY_INTERVAL 10000
 #define NUM_PRE_SUPPRESSION_PACKETS 4
-#define SOURCE_ENABLED                                                                                   \
-  ((!SACN_DYNAMIC_MEM && (SACN_SOURCE_MAX_SOURCES > 0) && (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)) || \
-   SACN_DYNAMIC_MEM)
-#define UNICAST_ENABLED ((!SACN_DYNAMIC_MEM && (SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE > 0)) || SACN_DYNAMIC_MEM)
 #define IS_PART_OF_UNIVERSE_DISCOVERY(universe) (universe->has_null_data && !universe->send_unicast_only)
 
-/* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
-
-#if SACN_DYNAMIC_MEM
-#define ALLOC_SOURCE_STATE() malloc(sizeof(SacnSource))
-#define FREE_SOURCE_STATE(ptr)                                                        \
-  do                                                                                  \
-  {                                                                                   \
-    etcpal_rbtree_clear_with_cb(&((SacnSource*)ptr)->universes, free_universes_node); \
-    etcpal_rbtree_clear_with_cb(&((SacnSource*)ptr)->netints, free_netints_node);     \
-    free(ptr);                                                                        \
-  } while (0)
-#define ALLOC_UNIVERSE_STATE() malloc(sizeof(SacnSourceUniverse))
-#define FREE_UNIVERSE_STATE(ptr)                                                                      \
-  do                                                                                                  \
-  {                                                                                                   \
-    etcpal_rbtree_clear_with_cb(&((SacnSourceUniverse*)ptr)->unicast_dests, free_unicast_dests_node); \
-    if (((SacnSourceUniverse*)ptr)->netints)                                                          \
-      free(((SacnSourceUniverse*)ptr)->netints);                                                      \
-    free(ptr);                                                                                        \
-  } while (0)
-#define ALLOC_SOURCE_NETINT() malloc(sizeof(SacnSourceNetintState))
-#define FREE_SOURCE_NETINT(ptr) free(ptr)
-#define ALLOC_UNICAST_DESTINATION() malloc(sizeof(SacnUnicastDestination))
-#define FREE_UNICAST_DESTINATION(ptr) free(ptr)
-#define ALLOC_SOURCE_RB_NODE() malloc(sizeof(EtcPalRbNode))
-#define FREE_SOURCE_RB_NODE(ptr) free(ptr)
-#elif SOURCE_ENABLED
-#define ALLOC_SOURCE_STATE() etcpal_mempool_alloc(sacnsource_source_states)
-#define FREE_SOURCE_STATE(ptr)                                                        \
-  do                                                                                  \
-  {                                                                                   \
-    etcpal_rbtree_clear_with_cb(&((SacnSource*)ptr)->universes, free_universes_node); \
-    etcpal_rbtree_clear_with_cb(&((SacnSource*)ptr)->netints, free_netints_node);     \
-    etcpal_mempool_free(sacnsource_source_states, ptr);                               \
-  } while (0)
-#define ALLOC_UNIVERSE_STATE() etcpal_mempool_alloc(sacnsource_universe_states)
-#define FREE_UNIVERSE_STATE(ptr)                                                                      \
-  do                                                                                                  \
-  {                                                                                                   \
-    etcpal_rbtree_clear_with_cb(&((SacnSourceUniverse*)ptr)->unicast_dests, free_unicast_dests_node); \
-    etcpal_mempool_free(sacnsource_universe_states, ptr);                                             \
-  } while (0)
-#define ALLOC_SOURCE_NETINT() etcpal_mempool_alloc(sacnsource_netints)
-#define FREE_SOURCE_NETINT(ptr) etcpal_mempool_free(sacnsource_netints, ptr)
-#if UNICAST_ENABLED
-#define ALLOC_UNICAST_DESTINATION() etcpal_mempool_alloc(sacnsource_unicast_dests)
-#define FREE_UNICAST_DESTINATION(ptr) etcpal_mempool_free(sacnsource_unicast_dests, ptr)
-#else
-#define ALLOC_UNICAST_DESTINATION() NULL
-#define FREE_UNICAST_DESTINATION(ptr)
-#endif
-#define ALLOC_SOURCE_RB_NODE() etcpal_mempool_alloc(sacnsource_rb_nodes)
-#define FREE_SOURCE_RB_NODE(ptr) etcpal_mempool_free(sacnsource_rb_nodes, ptr)
-#else
-#define ALLOC_SOURCE_STATE() NULL
-#define FREE_SOURCE_STATE(ptr)
-#define ALLOC_UNIVERSE_STATE() NULL
-#define FREE_UNIVERSE_STATE(ptr)
-#define ALLOC_SOURCE_NETINT() NULL
-#define FREE_SOURCE_NETINT(ptr)
-#define ALLOC_UNICAST_DESTINATION() NULL
-#define FREE_UNICAST_DESTINATION(ptr)
-#define ALLOC_SOURCE_RB_NODE() NULL
-#define FREE_SOURCE_RB_NODE(ptr)
-#endif
-
 /**************************** Private variables ******************************/
-
-#if !SACN_DYNAMIC_MEM && SOURCE_ENABLED
-ETCPAL_MEMPOOL_DEFINE(sacnsource_source_states, SacnSource, SACN_SOURCE_MAX_SOURCES);
-ETCPAL_MEMPOOL_DEFINE(sacnsource_universe_states, SacnSourceUniverse,
-                      (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE));
-ETCPAL_MEMPOOL_DEFINE(sacnsource_netints, SacnSourceNetintState, (SACN_SOURCE_MAX_SOURCES * SACN_MAX_NETINTS));
-#if UNICAST_ENABLED
-ETCPAL_MEMPOOL_DEFINE(sacnsource_unicast_dests, SacnUnicastDestination,
-                      (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE *
-                       SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE));
-#endif
-ETCPAL_MEMPOOL_DEFINE(sacnsource_rb_nodes, EtcPalRbNode,
-                      SACN_SOURCE_MAX_SOURCES + (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE) +
-                          (SACN_SOURCE_MAX_SOURCES * SACN_MAX_NETINTS) +
-                          (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE *
-                           SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE));
-#endif
 
 static IntHandleManager source_handle_mgr;
 static EtcPalRbTree sources;
@@ -227,7 +135,7 @@ etcpal_error_t sacn_source_init(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
 
-#if SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED
 #if !SACN_DYNAMIC_MEM
   if (res == kEtcPalErrOk)
     res = etcpal_mempool_init(sacnsource_source_states);
@@ -250,7 +158,7 @@ etcpal_error_t sacn_source_init(void)
 
   if (res != kEtcPalErrOk)
     sacn_source_deinit();  // Clean up
-#endif                     // SOURCE_ENABLED
+#endif                     // SACN_SOURCE_ENABLED
 
   return res;
 }
@@ -337,7 +245,7 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
  */
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle)
 {
-#if !SOURCE_ENABLED
+#if !SACN_SOURCE_ENABLED
   return kEtcPalErrNotInit;
 #endif
 
@@ -382,7 +290,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
     SacnSource* source = NULL;
     if (result == kEtcPalErrOk)
     {
-      source = ALLOC_SOURCE_STATE();
+      source = ALLOC_SACN_SOURCE();
 
       if (!source)
         result = kEtcPalErrNoMem;
@@ -423,7 +331,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
       // Clean up on failure.
       if (insert_result != kEtcPalErrOk)
       {
-        FREE_SOURCE_STATE(source);
+        FREE_SACN_SOURCE(source);
 
         if (insert_result == kEtcPalErrNoMem)
           result = kEtcPalErrNoMem;
@@ -463,7 +371,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
  */
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name)
 {
-#if !SOURCE_ENABLED
+#if !SACN_SOURCE_ENABLED
   return kEtcPalErrNotInit;
 #endif
 
@@ -513,7 +421,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
 void sacn_source_destroy(sacn_source_t handle)
 {
   // Validate and lock.
-#if SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED
   if (sacn_initialized() && (handle != SACN_SOURCE_INVALID) && sacn_lock())
   {
     // Try to find the source's state.
@@ -558,7 +466,7 @@ void sacn_source_destroy(sacn_source_t handle)
 etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config,
                                         SacnMcastInterface* netints, size_t num_netints)
 {
-#if !SOURCE_ENABLED
+#if !SACN_SOURCE_ENABLED
   return kEtcPalErrNotInit;
 #endif
 
@@ -620,7 +528,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     SacnSourceUniverse* universe = NULL;
     if (result == kEtcPalErrOk)
     {
-      universe = ALLOC_UNIVERSE_STATE();
+      universe = ALLOC_SACN_SOURCE_UNIVERSE();
 
       if (!universe)
         result = kEtcPalErrNoMem;
@@ -657,7 +565,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
                          source_rb_node_dealloc_func);
       for (size_t i = 0; (result == kEtcPalErrOk) && (i < config->num_unicast_destinations); ++i)
       {
-        SacnUnicastDestination* dest = ALLOC_UNICAST_DESTINATION();
+        SacnUnicastDestination* dest = ALLOC_SACN_UNICAST_DESTINATION();
         if (dest)
         {
           dest->dest_addr = config->unicast_destinations[i];
@@ -676,7 +584,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
             result = kEtcPalErrSys;
 
           if (insert_result != kEtcPalErrOk)
-            FREE_UNICAST_DESTINATION(dest);
+            FREE_SACN_UNICAST_DESTINATION(dest);
         }
         else
         {
@@ -702,7 +610,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     // Update the source's netint tracking.
     for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->num_netints); ++i)
     {
-      SacnSourceNetintState* netint = etcpal_rbtree_find(&source->netints, &universe->netints[i]);
+      SacnSourceNetint* netint = etcpal_rbtree_find(&source->netints, &universe->netints[i]);
 
       if (netint)
       {
@@ -712,7 +620,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       else
       {
         // Add a new netint with ref counter = 1.
-        netint = ALLOC_SOURCE_NETINT();
+        netint = ALLOC_SACN_SOURCE_NETINT();
 
         if (netint)
         {
@@ -733,13 +641,13 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
 
         // Clean up netint on failure.
         if ((result != kEtcPalErrOk) && netint)
-          FREE_SOURCE_NETINT(netint);
+          FREE_SACN_SOURCE_NETINT(netint);
       }
     }
 
     // Clean up universe on failure.
     if ((result != kEtcPalErrOk) && universe)
-      FREE_UNIVERSE_STATE(universe);
+      FREE_SACN_SOURCE_UNIVERSE(universe);
 
     sacn_unlock();
   }
@@ -761,7 +669,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
  */
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 {
-#if SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED
   if (sacn_lock())
   {
     SacnSourceUniverse* universe_state = NULL;
@@ -788,7 +696,7 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
 {
   size_t total_num_universes = 0;
 
-#if SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED
   if (sacn_lock())
   {
     // Look up source state
@@ -833,7 +741,7 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
  */
 etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)
 {
-#if !SOURCE_ENABLED
+#if !SACN_SOURCE_ENABLED
   return kEtcPalErrNotInit;
 #endif
 
@@ -868,7 +776,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
     SacnUnicastDestination* unicast_dest = NULL;
     if (result == kEtcPalErrOk)
     {
-      unicast_dest = ALLOC_UNICAST_DESTINATION();
+      unicast_dest = ALLOC_SACN_UNICAST_DESTINATION();
       if (!unicast_dest)
         result = kEtcPalErrNoMem;
     }
@@ -892,7 +800,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
       if (insert_result == kEtcPalErrOk)
         reset_transmission_suppression(source_state, universe_state, true, true);
       else
-        FREE_UNICAST_DESTINATION(unicast_dest);
+        FREE_SACN_UNICAST_DESTINATION(unicast_dest);
     }
 
     sacn_unlock();
@@ -915,7 +823,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
  */
 void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)
 {
-#if SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED
   // Validate & lock
   if (dest && sacn_lock())
   {
@@ -948,7 +856,7 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
 {
   size_t total_num_dests = 0;
 
-#if SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED
   if (sacn_lock())
   {
     // Look up universe state
@@ -994,7 +902,7 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
  */
 etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t universe, uint8_t new_priority)
 {
-#if !SOURCE_ENABLED
+#if !SACN_SOURCE_ENABLED
   return kEtcPalErrNotInit;
 #endif
 
@@ -1054,7 +962,7 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
  */
 etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t universe, bool new_preview_flag)
 {
-#if !SOURCE_ENABLED
+#if !SACN_SOURCE_ENABLED
   return kEtcPalErrNotInit;
 #endif
 
@@ -1114,7 +1022,7 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
 etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle, uint16_t universe,
                                                            uint16_t new_sync_universe)
 {
-#if !SOURCE_ENABLED
+#if !SACN_SOURCE_ENABLED
   return kEtcPalErrNotInit;
 #endif
 
@@ -1148,7 +1056,7 @@ etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
 etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uint8_t start_code, const uint8_t* buffer,
                                     size_t buflen)
 {
-#if !SOURCE_ENABLED
+#if !SACN_SOURCE_ENABLED
   return kEtcPalErrNotInit;
 #endif
 
@@ -1217,7 +1125,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
  */
 etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t sync_universe)
 {
-#if !SOURCE_ENABLED
+#if !SACN_SOURCE_ENABLED
   return kEtcPalErrNotInit;
 #endif
 
@@ -1245,7 +1153,7 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t s
 void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
                                size_t new_values_size)
 {
-#if SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED
   if (new_values && (new_values_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
     SacnSource* source_state = NULL;
@@ -1254,7 +1162,7 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
     update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, false);
     sacn_unlock();
   }
-#endif  // SOURCE_ENABLED
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -1282,7 +1190,7 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
                                        size_t new_values_size, const uint8_t* new_priorities,
                                        size_t new_priorities_size)
 {
-#if SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED
   if (new_values && (new_values_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
     SacnSource* source_state = NULL;
@@ -1298,7 +1206,7 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
 
     sacn_unlock();
   }
-#endif  // SOURCE_ENABLED
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -1320,7 +1228,7 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
 void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
                                               size_t new_values_size)
 {
-#if SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED
   if (new_values && (new_values_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
     SacnSource* source_state = NULL;
@@ -1329,7 +1237,7 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
     update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, true);
     sacn_unlock();
   }
-#endif  // SOURCE_ENABLED
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -1362,7 +1270,7 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
                                                       const uint8_t* new_values, size_t new_values_size,
                                                       const uint8_t* new_priorities, size_t new_priorities_size)
 {
-#if SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED
   if (new_values && (new_values_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
     SacnSource* source_state = NULL;
@@ -1378,7 +1286,7 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 
     sacn_unlock();
   }
-#endif  // SOURCE_ENABLED
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -1399,7 +1307,7 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
  */
 int sacn_source_process_manual(void)
 {
-#if !SOURCE_ENABLED
+#if !SACN_SOURCE_ENABLED
   return 0;
 #endif
 
@@ -1436,7 +1344,7 @@ int sacn_source_process_manual(void)
 etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
                                             size_t num_netints)
 {
-#if !SOURCE_ENABLED
+#if !SACN_SOURCE_ENABLED
   return kEtcPalErrNotInit;
 #endif
 
@@ -1463,7 +1371,7 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
 {
   size_t total_num_network_interfaces = 0;
 
-#if SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED
   if (sacn_lock())
   {
     // Look up universe state
@@ -1508,8 +1416,8 @@ int netint_state_lookup_compare_func(const EtcPalRbTree* self, const void* value
 {
   ETCPAL_UNUSED_ARG(self);
 
-  const SacnSourceNetintState* a = (const SacnSourceNetintState*)value_a;
-  const SacnSourceNetintState* b = (const SacnSourceNetintState*)value_b;
+  const SacnSourceNetint* a = (const SacnSourceNetint*)value_a;
+  const SacnSourceNetint* b = (const SacnSourceNetint*)value_b;
 
   return ((a->id.index > b->id.index) || ((a->id.index == b->id.index) && (a->id.ip_type > b->id.ip_type))) -
          ((a->id.index < b->id.index) || ((a->id.index == b->id.index) && (a->id.ip_type < b->id.ip_type)));
@@ -1617,44 +1525,44 @@ etcpal_error_t lookup_unicast_dest(sacn_source_t source, uint16_t universe, cons
 
 static EtcPalRbNode* source_rb_node_alloc_func(void)
 {
-  return ALLOC_SOURCE_RB_NODE();
+  return ALLOC_SACN_SOURCE_RB_NODE();
 }
 
 void source_rb_node_dealloc_func(EtcPalRbNode* node)
 {
-  FREE_SOURCE_RB_NODE(node);
+  FREE_SACN_SOURCE_RB_NODE(node);
 }
 
 void free_universes_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
 
-  FREE_UNIVERSE_STATE(node->value);
-  FREE_SOURCE_RB_NODE(node);
+  FREE_SACN_SOURCE_UNIVERSE(node->value);
+  FREE_SACN_SOURCE_RB_NODE(node);
 }
 
 void free_netints_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
 
-  FREE_SOURCE_NETINT(node->value);
-  FREE_SOURCE_RB_NODE(node);
+  FREE_SACN_SOURCE_NETINT(node->value);
+  FREE_SACN_SOURCE_RB_NODE(node);
 }
 
 void free_unicast_dests_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
 
-  FREE_UNICAST_DESTINATION(node->value);
-  FREE_SOURCE_RB_NODE(node);
+  FREE_SACN_UNICAST_DESTINATION(node->value);
+  FREE_SACN_SOURCE_RB_NODE(node);
 }
 
 void free_sources_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
 
-  FREE_SOURCE_STATE(node->value);
-  FREE_SOURCE_RB_NODE(node);
+  FREE_SACN_SOURCE(node->value);
+  FREE_SACN_SOURCE_RB_NODE(node);
 }
 
 bool source_handle_in_use(int handle_val, void* cookie)
@@ -1885,7 +1793,7 @@ void remove_unicast_dest(SacnSourceUniverse* universe, SacnUnicastDestination** 
   SacnUnicastDestination* dest_to_remove = *dest;
   *dest = etcpal_rbiter_next(unicast_iter);
   etcpal_rbtree_remove(&universe->unicast_dests, dest_to_remove);
-  FREE_UNICAST_DESTINATION(dest_to_remove);
+  FREE_SACN_UNICAST_DESTINATION(dest_to_remove);
 }
 
 // Needs lock
@@ -1904,7 +1812,7 @@ void remove_universe_state(SacnSource* source, SacnSourceUniverse** universe, Et
     // Update the netints tree
     for (size_t i = 0; i < universe_to_remove->num_netints; ++i)
     {
-      SacnSourceNetintState* netint_state = etcpal_rbtree_find(&source->netints, &universe_to_remove->netints[i]);
+      SacnSourceNetint* netint_state = etcpal_rbtree_find(&source->netints, &universe_to_remove->netints[i]);
       if (netint_state)
       {
         if (netint_state->num_refs > 0)
@@ -1913,14 +1821,14 @@ void remove_universe_state(SacnSource* source, SacnSourceUniverse** universe, Et
         if (netint_state->num_refs == 0)
         {
           if (etcpal_rbtree_remove(&source->netints, netint_state) == kEtcPalErrOk)
-            FREE_SOURCE_NETINT(netint_state);
+            FREE_SACN_SOURCE_NETINT(netint_state);
         }
       }
     }
 
     // Now clean up the universe state
     etcpal_rbtree_remove(&source->universes, universe_to_remove);
-    FREE_UNIVERSE_STATE(universe_to_remove);
+    FREE_SACN_SOURCE_UNIVERSE(universe_to_remove);
   }
 }
 
@@ -1930,7 +1838,7 @@ void remove_source_state(SacnSource** source, EtcPalRbIter* source_iter)
   SacnSource* source_to_remove = *source;
   *source = etcpal_rbiter_next(source_iter);
   etcpal_rbtree_remove(&sources, source_to_remove);
-  FREE_SOURCE_STATE(source_to_remove);
+  FREE_SACN_SOURCE(source_to_remove);
 }
 
 // Needs lock

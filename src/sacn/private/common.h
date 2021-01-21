@@ -65,6 +65,12 @@ typedef unsigned int sacn_thread_id_t;
 
 #define UNIVERSE_ID_VALID(universe_id) ((universe_id != 0) && (universe_id < 64000))
 
+#define SACN_SOURCE_ENABLED                                                                              \
+  ((!SACN_DYNAMIC_MEM && (SACN_SOURCE_MAX_SOURCES > 0) && (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)) || \
+   SACN_DYNAMIC_MEM)
+#define SACN_SOURCE_UNICAST_ENABLED \
+  ((!SACN_DYNAMIC_MEM && (SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE > 0)) || SACN_DYNAMIC_MEM)
+
 /*
  * The SACN_DECLARE_BUF() macro declares one of two different types of contiguous arrays, depending
  * on the value of SACN_DYNAMIC_MEM.
@@ -320,11 +326,11 @@ typedef struct SourceLimitExceededNotification
 /* For the shared-socket model, this represents a shared socket. */
 typedef struct SocketRef
 {
-  etcpal_socket_t sock;     /* The socket descriptor. */
-  size_t refcount;          /* How many addresses the socket is subscribed to. */
-  etcpal_iptype_t ip_type;  /* The IP type used in multicast subscriptions and the bind address. */
+  etcpal_socket_t sock;    /* The socket descriptor. */
+  size_t refcount;         /* How many addresses the socket is subscribed to. */
+  etcpal_iptype_t ip_type; /* The IP type used in multicast subscriptions and the bind address. */
 #if SACN_RECEIVER_LIMIT_BIND
-  bool bound;               /* True if bind was called on this socket, false otherwise. */
+  bool bound; /* True if bind was called on this socket, false otherwise. */
 #endif
 } SocketRef;
 
@@ -422,11 +428,11 @@ struct SacnSourceUniverse
   size_t num_netints;  // Number of elements in the netints array.
 };
 
-typedef struct SacnSourceNetintState
+typedef struct SacnSourceNetint
 {
   EtcPalMcastNetintId id;  // This must be the first struct member.
   size_t num_refs;         // Number of universes using this netint.
-} SacnSourceNetintState;
+} SacnSourceNetint;
 
 typedef struct SacnUnicastDestination
 {

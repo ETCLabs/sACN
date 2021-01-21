@@ -99,6 +99,23 @@ typedef struct ToEraseBuf
 
 /**************************** Private variables ******************************/
 
+#if !SACN_DYNAMIC_MEM && SACN_SOURCE_ENABLED
+ETCPAL_MEMPOOL_DEFINE(sacnsource_source_states, SacnSource, SACN_SOURCE_MAX_SOURCES);
+ETCPAL_MEMPOOL_DEFINE(sacnsource_universe_states, SacnSourceUniverse,
+                      (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE));
+ETCPAL_MEMPOOL_DEFINE(sacnsource_netints, SacnSourceNetint, (SACN_SOURCE_MAX_SOURCES * SACN_MAX_NETINTS));
+#if SACN_SOURCE_UNICAST_ENABLED
+ETCPAL_MEMPOOL_DEFINE(sacnsource_unicast_dests, SacnUnicastDestination,
+                      (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE *
+                       SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE));
+#endif
+ETCPAL_MEMPOOL_DEFINE(sacnsource_rb_nodes, EtcPalRbNode,
+                      SACN_SOURCE_MAX_SOURCES + (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE) +
+                          (SACN_SOURCE_MAX_SOURCES * SACN_MAX_NETINTS) +
+                          (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE *
+                           SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE));
+#endif
+
 static struct SacnMemBufs
 {
   unsigned int num_threads;

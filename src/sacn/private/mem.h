@@ -31,6 +31,98 @@
 #include "sacn/private/sockets.h"
 #include "sacn/private/opts.h"
 
+#if SACN_DYNAMIC_MEM
+#include <stdlib.h>
+#else
+#include "etcpal/mempool.h"
+#endif
+
+/******************************************************************************
+ * Memory constants, macros, types, etc.
+ *****************************************************************************/
+
+/* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
+
+#if SACN_DYNAMIC_MEM
+#define ALLOC_SACN_SOURCE() malloc(sizeof(SacnSource))
+#define FREE_SACN_SOURCE(ptr)                                                         \
+  do                                                                                  \
+  {                                                                                   \
+    etcpal_rbtree_clear_with_cb(&((SacnSource*)ptr)->universes, free_universes_node); \
+    etcpal_rbtree_clear_with_cb(&((SacnSource*)ptr)->netints, free_netints_node);     \
+    free(ptr);                                                                        \
+  } while (0)
+#define ALLOC_SACN_SOURCE_UNIVERSE() malloc(sizeof(SacnSourceUniverse))
+#define FREE_SACN_SOURCE_UNIVERSE(ptr)                                                                \
+  do                                                                                                  \
+  {                                                                                                   \
+    etcpal_rbtree_clear_with_cb(&((SacnSourceUniverse*)ptr)->unicast_dests, free_unicast_dests_node); \
+    if (((SacnSourceUniverse*)ptr)->netints)                                                          \
+      free(((SacnSourceUniverse*)ptr)->netints);                                                      \
+    free(ptr);                                                                                        \
+  } while (0)
+#define ALLOC_SACN_SOURCE_NETINT() malloc(sizeof(SacnSourceNetint))
+#define FREE_SACN_SOURCE_NETINT(ptr) free(ptr)
+#define ALLOC_SACN_UNICAST_DESTINATION() malloc(sizeof(SacnUnicastDestination))
+#define FREE_SACN_UNICAST_DESTINATION(ptr) free(ptr)
+#define ALLOC_SACN_SOURCE_RB_NODE() malloc(sizeof(EtcPalRbNode))
+#define FREE_SACN_SOURCE_RB_NODE(ptr) free(ptr)
+#elif SACN_SOURCE_ENABLED
+#define ALLOC_SACN_SOURCE() etcpal_mempool_alloc(sacnsource_source_states)
+#define FREE_SACN_SOURCE(ptr)                                                         \
+  do                                                                                  \
+  {                                                                                   \
+    etcpal_rbtree_clear_with_cb(&((SacnSource*)ptr)->universes, free_universes_node); \
+    etcpal_rbtree_clear_with_cb(&((SacnSource*)ptr)->netints, free_netints_node);     \
+    etcpal_mempool_free(sacnsource_source_states, ptr);                               \
+  } while (0)
+#define ALLOC_SACN_SOURCE_UNIVERSE() etcpal_mempool_alloc(sacnsource_universe_states)
+#define FREE_SACN_SOURCE_UNIVERSE(ptr)                                                                \
+  do                                                                                                  \
+  {                                                                                                   \
+    etcpal_rbtree_clear_with_cb(&((SacnSourceUniverse*)ptr)->unicast_dests, free_unicast_dests_node); \
+    etcpal_mempool_free(sacnsource_universe_states, ptr);                                             \
+  } while (0)
+#define ALLOC_SACN_SOURCE_NETINT() etcpal_mempool_alloc(sacnsource_netints)
+#define FREE_SACN_SOURCE_NETINT(ptr) etcpal_mempool_free(sacnsource_netints, ptr)
+#if SACN_SOURCE_UNICAST_ENABLED
+#define ALLOC_SACN_UNICAST_DESTINATION() etcpal_mempool_alloc(sacnsource_unicast_dests)
+#define FREE_SACN_UNICAST_DESTINATION(ptr) etcpal_mempool_free(sacnsource_unicast_dests, ptr)
+#else
+#define ALLOC_SACN_UNICAST_DESTINATION() NULL
+#define FREE_SACN_UNICAST_DESTINATION(ptr)
+#endif
+#define ALLOC_SACN_SOURCE_RB_NODE() etcpal_mempool_alloc(sacnsource_rb_nodes)
+#define FREE_SACN_SOURCE_RB_NODE(ptr) etcpal_mempool_free(sacnsource_rb_nodes, ptr)
+#else
+#define ALLOC_SACN_SOURCE() NULL
+#define FREE_SACN_SOURCE(ptr)
+#define ALLOC_SACN_SOURCE_UNIVERSE() NULL
+#define FREE_SACN_SOURCE_UNIVERSE(ptr)
+#define ALLOC_SACN_SOURCE_NETINT() NULL
+#define FREE_SACN_SOURCE_NETINT(ptr)
+#define ALLOC_SACN_UNICAST_DESTINATION() NULL
+#define FREE_SACN_UNICAST_DESTINATION(ptr)
+#define ALLOC_SACN_SOURCE_RB_NODE() NULL
+#define FREE_SACN_SOURCE_RB_NODE(ptr)
+#endif
+
+/* Memory pool declarations. */
+
+#if !SACN_DYNAMIC_MEM && SACN_SOURCE_ENABLED
+ETCPAL_MEMPOOL_DECLARE(sacnsource_source_states);
+ETCPAL_MEMPOOL_DECLARE(sacnsource_universe_states);
+ETCPAL_MEMPOOL_DECLARE(sacnsource_netints);
+#if SACN_SOURCE_UNICAST_ENABLED
+ETCPAL_MEMPOOL_DECLARE(sacnsource_unicast_dests);
+#endif
+ETCPAL_MEMPOOL_DECLARE(sacnsource_rb_nodes);
+#endif
+
+/******************************************************************************
+ * Memory functions
+ *****************************************************************************/
+
 #ifdef __cplusplus
 extern "C" {
 #endif
