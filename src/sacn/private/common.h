@@ -35,6 +35,7 @@
 #include "etcpal/socket.h"
 #include "etcpal/timer.h"
 #include "sacn/receiver.h"
+#include "sacn/source.h"
 #include "sacn/dmx_merger.h"
 #include "sacn/private/opts.h"
 
@@ -61,6 +62,8 @@ extern "C" {
 
 typedef unsigned int sacn_thread_id_t;
 #define SACN_THREAD_ID_INVALID UINT_MAX
+
+#define UNIVERSE_ID_VALID(universe_id) ((universe_id != 0) && (universe_id < 64000))
 
 /*
  * The SACN_DECLARE_BUF() macro declares one of two different types of contiguous arrays, depending
@@ -117,8 +120,6 @@ typedef unsigned int sacn_thread_id_t;
 
 #define SACN_CAN_LOG(pri) false
 #endif
-
-#define UNIVERSE_ID_VALID(universe_id) ((universe_id != 0) && (universe_id < 64000))
 
 /******************************************************************************
  * Types used by the source loss module
@@ -355,6 +356,84 @@ typedef struct SacnRecvThreadContext
   EtcPalPollContext poll_context;
   uint8_t recv_buf[SACN_MTU];
 } SacnRecvThreadContext;
+
+/******************************************************************************
+ * Types used by the sACN Source module
+ *****************************************************************************/
+
+typedef struct SacnSource SacnSource;
+struct SacnSource
+{
+  sacn_source_t handle;  // This must be the first struct member.
+
+  EtcPalUuid cid;
+  char name[SACN_SOURCE_NAME_MAX_LEN];
+
+  bool terminating;  // If in the process of terminating all universes and removing this source.
+
+  EtcPalRbTree universes;
+  size_t num_active_universes;  // Number of universes to include in universe discovery packets.
+  EtcPalTimer universe_discovery_timer;
+  bool process_manually;
+  sacn_ip_support_t ip_supported;
+  int keep_alive_interval;
+  size_t universe_count_max;
+
+  EtcPalRbTree netints;  // Provides a way to look up netints being used by any universe of this source.
+
+  uint8_t universe_discovery_send_buf[SACN_MTU];
+};
+
+typedef struct SacnSourceUniverse SacnSourceUniverse;
+struct SacnSourceUniverse
+{
+  uint16_t universe_id;  // This must be the first struct member.
+
+  bool terminating;
+  int num_terminations_sent;
+
+  uint8_t priority;
+  uint16_t sync_universe;
+  bool send_preview;
+  uint8_t seq_num;
+
+  // Start code 0x00 state
+  int null_packets_sent_before_suppression;
+  EtcPalTimer null_keep_alive_timer;
+  uint8_t null_send_buf[SACN_MTU];
+  bool has_null_data;
+
+#if SACN_ETC_PRIORITY_EXTENSION
+  // Start code 0xDD state
+  int pap_packets_sent_before_suppression;
+  EtcPalTimer pap_keep_alive_timer;
+  uint8_t pap_send_buf[SACN_MTU];
+  bool has_pap_data;
+#endif
+
+  EtcPalRbTree unicast_dests;
+  bool send_unicast_only;
+
+#if SACN_DYNAMIC_MEM
+  EtcPalMcastNetintId* netints;
+#else
+  EtcPalMcastNetintId netints[SACN_MAX_NETINTS];
+#endif
+  size_t num_netints;  // Number of elements in the netints array.
+};
+
+typedef struct SacnSourceNetintState
+{
+  EtcPalMcastNetintId id;  // This must be the first struct member.
+  size_t num_refs;         // Number of universes using this netint.
+} SacnSourceNetintState;
+
+typedef struct SacnUnicastDestination
+{
+  EtcPalIpAddr dest_addr;  // This must be the first struct member.
+  bool terminating;
+  int num_terminations_sent;
+} SacnUnicastDestination;
 
 /******************************************************************************
  * Global variables, functions, and state tracking
