@@ -37,7 +37,6 @@
 /****************************** Private macros *******************************/
 
 #define SOURCE_THREAD_INTERVAL 23
-#define UNIVERSE_DISCOVERY_INTERVAL 10000
 #define NUM_PRE_SUPPRESSION_PACKETS 4
 #define IS_PART_OF_UNIVERSE_DISCOVERY(universe) (universe->has_null_data && !universe->send_unicast_only)
 
@@ -230,40 +229,14 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
       }
     }
 
-    // Allocate the source's state.
+    // Initialize the source's state.
     SacnSource* source = NULL;
     if (result == kEtcPalErrOk)
-    {
-      source = add_sacn_source(get_next_int_handle(&source_handle_mgr, -1));
+      result = add_sacn_source(get_next_int_handle(&source_handle_mgr, -1), config, &source);
 
-      if (!source)
-        result = kEtcPalErrNoMem;
-    }
-
+    // Initialize the handle on success.
     if (result == kEtcPalErrOk)
-    {
-      // Initialize the universe discovery send buffer.
-      size_t written = 0;
-      written += pack_sacn_root_layer(source->universe_discovery_send_buf, SACN_UNIVERSE_DISCOVERY_HEADER_SIZE, true,
-                                      &config->cid);
-      written +=
-          pack_sacn_universe_discovery_framing_layer(&source->universe_discovery_send_buf[written], 0, config->name);
-      written += pack_sacn_universe_discovery_layer_header(&source->universe_discovery_send_buf[written], 0, 0, 0);
-
-      // Initialize everything else.
-      source->cid = config->cid;
-      memcpy(source->name, config->name, strlen(config->name));
-      source->terminating = false;
-      source->num_active_universes = 0;
-      etcpal_timer_start(&source->universe_discovery_timer, UNIVERSE_DISCOVERY_INTERVAL);
-      source->process_manually = config->manually_process_source;
-      source->ip_supported = config->ip_supported;
-      source->keep_alive_interval = config->keep_alive_interval;
-      source->universe_count_max = config->universe_count_max;
-
-      // Initialize the handle on success.
       *handle = source->handle;
-    }
 
     sacn_unlock();
   }
@@ -426,14 +399,6 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     if (result == kEtcPalErrOk)
       result = lookup_source_state(handle, 0, &source, NULL);
 
-    // Confirm that the universe wasn't already added.
-    if (result == kEtcPalErrOk)
-    {
-      SacnSourceUniverse* tmp;
-      if (lookup_source_state(handle, config->universe, &source, &tmp) != kEtcPalErrNotFound)
-        result = kEtcPalErrExists;
-    }
-
 #if SACN_DYNAMIC_MEM
     // Make sure to check against universe_count_max.
     if (result == kEtcPalErrOk)
@@ -446,61 +411,10 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     }
 #endif
 
-    // Allocate the universe's state.
+    // Initialize the universe's state.
     SacnSourceUniverse* universe = NULL;
     if (result == kEtcPalErrOk)
-    {
-      universe = add_sacn_source_universe(source, config->universe);
-
-      if (!universe)
-        result = kEtcPalErrNoMem;
-    }
-
-    // Initialize the universe's state.
-    if (result == kEtcPalErrOk)
-    {
-      universe->terminating = false;
-      universe->num_terminations_sent = 0;
-
-      universe->priority = config->priority;
-      universe->sync_universe = config->sync_universe;
-      universe->send_preview = config->send_preview;
-      universe->seq_num = 0;
-
-      universe->null_packets_sent_before_suppression = 0;
-      init_send_buf(universe->null_send_buf, 0x00, &source->cid, source->name, config->priority, config->universe,
-                    config->sync_universe, config->send_preview);
-      universe->has_null_data = false;
-
-#if SACN_ETC_PRIORITY_EXTENSION
-      universe->pap_packets_sent_before_suppression = 0;
-      init_send_buf(universe->pap_send_buf, 0xDD, &source->cid, source->name, config->priority, config->universe,
-                    config->sync_universe, config->send_preview);
-      universe->has_pap_data = false;
-#endif
-
-      universe->send_unicast_only = config->send_unicast_only;
-
-      for (size_t i = 0; (result == kEtcPalErrOk) && (i < config->num_unicast_destinations); ++i)
-      {
-        SacnUnicastDestination* dest = add_sacn_unicast_dest(universe, &config->unicast_destinations[i]);
-        if (dest)
-        {
-          dest->terminating = false;
-          dest->num_terminations_sent = 0;
-        }
-        else
-        {
-          if (lookup_unicast_dest(handle, config->universe, &config->unicast_destinations[i], NULL) == kEtcPalErrOk)
-            result = kEtcPalErrOk;  // Duplicates are automatically filtered and not a failure condition.
-          else
-            result = kEtcPalErrNoMem;
-        }
-      }
-    }
-
-    if (result == kEtcPalErrOk)
-      result = sacn_initialize_internal_netints(&universe->netints, &universe->num_netints, netints, num_netints);
+      result = add_sacn_source_universe(source, config->universe, netints, num_netints, &universe);
 
     // Update the source's netint tracking.
     for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->num_netints); ++i)
@@ -508,20 +422,9 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       SacnSourceNetint* netint = lookup_source_netint(source, &universe->netints[i]);
 
       if (netint)
-      {
-        // Update existing netint by incrementing the ref counter.
         ++netint->num_refs;
-      }
       else
-      {
-        // Add a new netint with ref counter = 1.
-        netint = add_sacn_source_netint(source, &universe->netints[i]);
-
-        if (netint)
-          netint->num_refs = 1;
-        else
-          result = kEtcPalErrNoMem;
-      }
+        result = add_sacn_source_netint(source, &universe->netints[i], &netint);
     }
 
     sacn_unlock();
@@ -650,24 +553,11 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
     // Add unicast destination
     SacnUnicastDestination* unicast_dest = NULL;
     if (result == kEtcPalErrOk)
-    {
-      unicast_dest = add_sacn_unicast_dest(universe_state, dest);
-      if (!unicast_dest)
-      {
-        if (lookup_unicast_dest(handle, universe, dest, NULL) == kEtcPalErrOk)
-          result = kEtcPalErrExists;
-        else
-          result = kEtcPalErrNoMem;
-      }
-    }
+      result = add_sacn_unicast_dest(universe_state, dest, &unicast_dest);
 
     // Initialize & reset transmission suppression
     if (result == kEtcPalErrOk)
-    {
-      unicast_dest->terminating = false;
-      unicast_dest->num_terminations_sent = 0;
       reset_transmission_suppression(source_state, universe_state, true, true);
-    }
 
     sacn_unlock();
   }
