@@ -920,6 +920,12 @@ etcpal_error_t lookup_unicast_dest(sacn_source_t source, uint16_t universe, cons
 }
 
 // Needs lock
+SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNetintId* id)
+{
+  return (SacnSourceNetint*)etcpal_rbtree_find(&source->netints, id);
+}
+
+// Needs lock
 EtcPalRbTree* get_sacn_sources()
 {
   return &sources;

@@ -75,6 +75,7 @@ etcpal_error_t lookup_source_state(sacn_source_t source, uint16_t universe, Sacn
                                    SacnSourceUniverse** universe_state);
 etcpal_error_t lookup_unicast_dest(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* addr,
                                    SacnUnicastDestination** unicast_dest);
+SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNetintId* id);
 EtcPalRbTree* get_sacn_sources();
 void remove_sacn_source_netint(SacnSource* source, SacnSourceNetint** netint);
 void remove_sacn_unicast_dest(SacnSourceUniverse* universe, SacnUnicastDestination** dest, EtcPalRbIter* unicast_iter);

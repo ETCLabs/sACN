@@ -505,7 +505,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     // Update the source's netint tracking.
     for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->num_netints); ++i)
     {
-      SacnSourceNetint* netint = etcpal_rbtree_find(&source->netints, &universe->netints[i]);
+      SacnSourceNetint* netint = lookup_source_netint(source, &universe->netints[i]);
 
       if (netint)
       {
@@ -1458,7 +1458,8 @@ bool process_universe_termination(SacnSource* source, SacnSourceUniverse* univer
     // Update the netints tree
     for (size_t i = 0; i < universe->num_netints; ++i)
     {
-      SacnSourceNetint* netint_state = etcpal_rbtree_find(&source->netints, &universe->netints[i]);
+      SacnSourceNetint* netint_state = lookup_source_netint(source, &universe->netints[i]);
+
       if (netint_state)
       {
         if (netint_state->num_refs > 0)
