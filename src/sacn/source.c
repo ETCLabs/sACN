@@ -406,10 +406,10 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       result = add_sacn_source_universe(source, config, netints, num_netints, &universe);
 
     // Update the source's netint tracking.
-    for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->num_netints); ++i)
+    for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->netints.num_netints); ++i)
     {
       SacnSourceNetint* netint = NULL;
-      result = add_sacn_source_netint(source, &universe->netints[i], &netint);
+      result = add_sacn_source_netint(source, &universe->netints.netints[i], &netint);
 
       if (result == kEtcPalErrExists)
       {
@@ -1123,11 +1123,11 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
     SacnSourceUniverse* universe_state = NULL;
     if (lookup_source_and_universe(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
     {
-      total_num_network_interfaces = universe_state->num_netints;
+      total_num_network_interfaces = universe_state->netints.num_netints;
 
       // Copy out the netints
       for (size_t i = 0; netints && (i < netints_size) && (i < total_num_network_interfaces); ++i)
-        netints[i] = universe_state->netints[i];
+        netints[i] = universe_state->netints.netints[i];
     }
 
     sacn_unlock();
@@ -1314,10 +1314,11 @@ void process_universe_termination(SacnSource* source, size_t index)
       --source->num_active_universes;
 
     // Update the netints tree
-    for (size_t i = 0; i < universe->num_netints; ++i)
+    for (size_t i = 0; i < universe->netints.num_netints; ++i)
     {
       size_t netint_index = 0;
-      SacnSourceNetint* netint_state = lookup_source_netint_and_index(source, &universe->netints[i], &netint_index);
+      SacnSourceNetint* netint_state =
+          lookup_source_netint_and_index(source, &universe->netints.netints[i], &netint_index);
 
       if (netint_state)
       {
@@ -1458,8 +1459,8 @@ void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
 {
   if (!universe->send_unicast_only)
   {
-    for (size_t i = 0; i < universe->num_netints; ++i)
-      sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints[i]);
+    for (size_t i = 0; i < universe->netints.num_netints; ++i)
+      sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]);
   }
 }
 

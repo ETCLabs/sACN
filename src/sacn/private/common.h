@@ -128,6 +128,16 @@ typedef unsigned int sacn_thread_id_t;
 #endif
 
 /******************************************************************************
+ * Common types
+ *****************************************************************************/
+
+typedef struct SacnInternalNetintArray
+{
+  SACN_DECLARE_BUF(EtcPalMcastNetintId, netints, SACN_MAX_NETINTS);
+  size_t num_netints;
+} SacnInternalNetintArray;
+
+/******************************************************************************
  * Types used by the source loss module
  *****************************************************************************/
 
@@ -188,13 +198,7 @@ struct SacnReceiver
   etcpal_socket_t ipv6_socket;
   /* (optional) array of network interfaces on which to listen to the specified universe. If num_netints = 0,
    * all available network interfaces will be used. */
-#if SACN_DYNAMIC_MEM
-  EtcPalMcastNetintId* netints;
-#else
-  EtcPalMcastNetintId netints[SACN_MAX_NETINTS];
-#endif
-  /* Number of elements in the netints array. */
-  size_t num_netints;
+  SacnInternalNetintArray netints;
 
   // State tracking
   bool sampling;
@@ -411,8 +415,7 @@ struct SacnSourceUniverse
   size_t num_unicast_dests;
   bool send_unicast_only;
 
-  SACN_DECLARE_BUF(EtcPalMcastNetintId, netints, SACN_MAX_NETINTS);
-  size_t num_netints;
+  SacnInternalNetintArray netints;
 };
 
 typedef struct SacnSource SacnSource;

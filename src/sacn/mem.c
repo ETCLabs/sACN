@@ -818,19 +818,12 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
   }
 
   if (result == kEtcPalErrOk)
-    result = sacn_initialize_internal_netints(&universe->netints, &universe->num_netints, netints, num_netints);
+    result = sacn_initialize_internal_netints(&universe->netints, netints, num_netints);
 
   if (result == kEtcPalErrOk)
-  {
-#if SACN_DYNAMIC_MEM
-    universe->netints_capacity = universe->num_netints;
-#endif
     ++source->num_universes;
-  }
-  else if (universe->netints)
-  {
-    free(universe->netints);
-  }
+  else if (universe->netints.netints)
+    free(universe->netints.netints);
 
   *universe_state = universe;
 

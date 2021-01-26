@@ -29,15 +29,8 @@ extern "C" {
 
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_init);
 DECLARE_FAKE_VOID_FUNC(sacn_sockets_deinit);
-DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_validate_netint_config, SacnMcastInterface*, size_t, size_t*);
-#if SACN_DYNAMIC_MEM
-DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_internal_netints, EtcPalMcastNetintId**, size_t*,
-                        SacnMcastInterface*, size_t);
-#else
-typedef EtcPalMcastNetintId (*internal_netint_array_t)[SACN_MAX_NETINTS];
-DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_internal_netints, internal_netint_array_t, size_t*,
-                        SacnMcastInterface*, size_t);
-#endif
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_internal_netints, SacnInternalNetintArray*, SacnMcastInterface*,
+                        size_t);
 DECLARE_FAKE_VOID_FUNC(sacn_get_mcast_addr, etcpal_iptype_t, uint16_t, EtcPalIpAddr*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_add_receiver_socket, sacn_thread_id_t, etcpal_iptype_t, uint16_t,
                         const EtcPalMcastNetintId*, size_t, etcpal_socket_t*);

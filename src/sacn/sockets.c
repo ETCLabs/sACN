@@ -32,8 +32,6 @@
 
 /******************************* Private types *******************************/
 
-
-
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
@@ -49,6 +47,8 @@ static etcpal_socket_t ipv6_unicast_send_socket;
 
 /*********************** Private function prototypes *************************/
 
+static etcpal_error_t validate_netint_config(SacnMcastInterface* netints, size_t num_netints,
+                                             size_t* num_valid_netints);
 static etcpal_error_t test_sacn_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str);
 static void add_sacn_netint(const EtcPalMcastNetintId* netint_id, etcpal_error_t status);
 static int netint_id_index_in_array(const EtcPalMcastNetintId* id, const SacnMcastInterface* array, size_t array_size);
@@ -463,41 +463,23 @@ etcpal_error_t subscribe_receiver_socket(etcpal_socket_t sock, const EtcPalIpAdd
 {
   SACN_ASSERT(sock != ETCPAL_SOCKET_INVALID);
   SACN_ASSERT(group);
+  SACN_ASSERT(netints);
+  SACN_ASSERT(num_netints > 0);
 
-  etcpal_error_t res = kEtcPalErrOk;
+  etcpal_error_t res = kEtcPalErrNoNetints;
 
   EtcPalGroupReq greq;
   greq.group = *group;
 
-  if (!netints)
+  for (const EtcPalMcastNetintId* netint = netints; netint < netints + num_netints; ++netint)
   {
-    res = kEtcPalErrNoNetints;
-    for (SacnMcastInterface* netint = sys_netints; netint < sys_netints + num_sys_netints; ++netint)
+    if (netint->ip_type == group->type)
     {
-      if ((netint->status == kEtcPalErrOk) && (netint->iface.ip_type == group->type))
-      {
-        greq.ifindex = netint->iface.index;
-        res = subscribe_on_single_interface(sock, &greq);
-        if (res != kEtcPalErrOk)
-          break;
-      }
-    }
-  }
-  else
-  {
-    SACN_ASSERT(num_netints > 0);
-
-    for (const EtcPalMcastNetintId* netint = netints; netint < netints + num_netints; ++netint)
-    {
-      if (netint->ip_type == group->type)
-      {
-        greq.ifindex = netint->index;
-        // If the user specified a list of network interfaces, failing to subscribe on any of them
-        // is a failure.
-        res = subscribe_on_single_interface(sock, &greq);
-        if (res != kEtcPalErrOk)
-          break;
-      }
+      greq.ifindex = netint->index;
+      // Failing to subscribe on any network interface is a failure.
+      res = subscribe_on_single_interface(sock, &greq);
+      if (res != kEtcPalErrOk)
+        break;
     }
   }
 
@@ -603,19 +585,62 @@ void sacn_send_unicast(sacn_ip_support_t ip_supported, const uint8_t* send_buf, 
     send_unicast(send_buf, dest_addr);
 }
 
-etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t num_netints, size_t* num_valid_netints)
+etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* internal_netints,
+                                                SacnMcastInterface* app_netints, size_t num_app_netints)
 {
-  if (num_valid_netints)
-    *num_valid_netints = 0u;
+  size_t num_valid_netints = 0u;
+  etcpal_error_t result = validate_netint_config(app_netints, num_app_netints, &num_valid_netints);
 
-  if (netints && (num_netints > 0u))
+  SacnMcastInterface* netints_to_use = app_netints ? app_netints : sys_netints;
+  size_t num_netints_to_use = app_netints ? num_app_netints : num_sys_netints;
+
+  if (result == kEtcPalErrOk)
+  {
+#if SACN_DYNAMIC_MEM
+    internal_netints->netints = calloc(num_valid_netints, sizeof(EtcPalMcastNetintId));
+
+    if (!internal_netints->netints)
+      result = kEtcPalErrNoMem;
+    else
+      internal_netints->netints_capacity = num_valid_netints;
+#endif
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    for (size_t read_index = 0u, write_index = 0u; read_index < num_netints_to_use; ++read_index)
+    {
+      if (netints_to_use[read_index].status == kEtcPalErrOk)
+      {
+        memcpy(&internal_netints->netints[write_index], &netints_to_use[read_index].iface, sizeof(EtcPalMcastNetintId));
+        ++write_index;
+      }
+    }
+
+    internal_netints->num_netints = num_valid_netints;
+  }
+  else
+  {
+#if SACN_DYNAMIC_MEM
+    internal_netints->netints = NULL;
+    internal_netints->netints_capacity = 0;
+#endif
+    internal_netints->num_netints = 0;
+  }
+
+  return result;
+}
+
+etcpal_error_t validate_netint_config(SacnMcastInterface* netints, size_t num_netints, size_t* num_valid_netints)
+{
+  *num_valid_netints = 0u;
+
+  if (netints)
   {
 #if !SACN_DYNAMIC_MEM
     if (num_netints > SACN_MAX_NETINTS)
       return kEtcPalErrNoMem;
 #endif
-
-    bool all_interfaces_invalid = true;
 
     for (SacnMcastInterface* netint = netints; netint < (netints + num_netints); ++netint)
     {
@@ -631,89 +656,22 @@ etcpal_error_t sacn_validate_netint_config(SacnMcastInterface* netints, size_t n
           netint->status = kEtcPalErrNotFound;
         else
           netint->status = sys_netints[sys_netint_index].status;
-
-        if (netint->status == kEtcPalErrOk)
-        {
-          all_interfaces_invalid = false;
-
-          if (num_valid_netints)
-            ++(*num_valid_netints);
-        }
       }
-    }
 
-    return all_interfaces_invalid ? kEtcPalErrNoNetints : kEtcPalErrOk;
-  }
-  else if (netints || num_netints > 0)
-  {
-    // Mismatched
-    return kEtcPalErrInvalid;
+      if (netint->status == kEtcPalErrOk)
+        ++(*num_valid_netints);
+    }
   }
   else
   {
-    return kEtcPalErrOk;
-  }
-}
-
-#if SACN_DYNAMIC_MEM
-etcpal_error_t sacn_initialize_internal_netints(EtcPalMcastNetintId** internal_netints, size_t* num_internal_netints,
-                                                SacnMcastInterface* app_netints, size_t num_app_netints)
-#else
-etcpal_error_t sacn_initialize_internal_netints(EtcPalMcastNetintId (*internal_netints)[SACN_MAX_NETINTS],
-                                                size_t* num_internal_netints, SacnMcastInterface* app_netints,
-                                                size_t num_app_netints)
-#endif
-{
-  size_t num_valid_netints = 0u;
-  etcpal_error_t result = sacn_validate_netint_config(app_netints, num_app_netints, &num_valid_netints);
-
-  if (result == kEtcPalErrOk)
-  {
-    if (app_netints)
+    for (SacnMcastInterface* netint = sys_netints; netint < (sys_netints + num_sys_netints); ++netint)
     {
-#if SACN_DYNAMIC_MEM
-      *internal_netints = calloc(num_valid_netints, sizeof(EtcPalMcastNetintId));
-
-      if (!(*internal_netints))
-        result = kEtcPalErrNoMem;
-#else
-      if (num_app_netints > SACN_MAX_NETINTS)
-        result = kEtcPalErrNoMem;
-#endif
-
-      if (result == kEtcPalErrOk)
-      {
-        for (size_t read_index = 0u, write_index = 0u; read_index < num_app_netints; ++read_index)
-        {
-          if (app_netints[read_index].status == kEtcPalErrOk)
-          {
-            memcpy(*internal_netints + write_index, &app_netints[read_index].iface, sizeof(EtcPalMcastNetintId));
-            ++write_index;
-          }
-        }
-      }
+      if (netint->status == kEtcPalErrOk)
+        ++(*num_valid_netints);
     }
-#if SACN_DYNAMIC_MEM
-    else
-    {
-      *internal_netints = NULL;
-    }
-#endif
   }
 
-  if (result == kEtcPalErrOk)
-  {
-    *num_internal_netints = num_valid_netints;
-  }
-  else
-  {
-#if SACN_DYNAMIC_MEM
-    *internal_netints = NULL;
-#endif
-    *num_internal_netints = 0;
-  }
-
-  return result;
+  return (*num_valid_netints > 0) ? kEtcPalErrOk : kEtcPalErrNoNetints;
 }
 
 etcpal_error_t test_sacn_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str)
