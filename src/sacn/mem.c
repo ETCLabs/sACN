@@ -739,18 +739,30 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->netints_capacity = source->netints ? INITIAL_CAPACITY : 0;
 
     if (!source->universes || !source->netints)
-    {
-      if (source->universes)
-        free(source->universes);
-      if (source->netints)
-        free(source->netints);
       result = kEtcPalErrNoMem;
-    }
 #endif
   }
 
   if (result == kEtcPalErrOk)
+  {
     ++mem_bufs.num_sources;
+  }
+  else
+  {
+#if SACN_DYNAMIC_MEM
+    if (source->universes)
+    {
+      free(source->universes);
+      source->universes = NULL;
+    }
+
+    if (source->netints)
+    {
+      free(source->netints);
+      source->netints = NULL;
+    }
+#endif
+  }
 
   *source_state = source;
 
@@ -821,9 +833,25 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     result = sacn_initialize_internal_netints(&universe->netints, netints, num_netints);
 
   if (result == kEtcPalErrOk)
+  {
     ++source->num_universes;
-  else if (universe->netints.netints)
-    free(universe->netints.netints);
+  }
+  else
+  {
+#if SACN_DYNAMIC_MEM
+    if (universe->netints.netints)
+    {
+      free(universe->netints.netints);
+      universe->netints.netints = NULL;
+    }
+
+    if (universe->unicast_dests)
+    {
+      free(universe->unicast_dests);
+      universe->unicast_dests = NULL;
+    }
+#endif
+  }
 
   *universe_state = universe;
 
@@ -961,12 +989,24 @@ void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index)
 // Needs lock
 void remove_sacn_source_universe(SacnSource* source, size_t index)
 {
+#if SACN_DYNAMIC_MEM
+  if (source->universes[index].unicast_dests)
+    free(source->universes[index].unicast_dests);
+  if (source->universes[index].netints.netints)
+    free(source->universes[index].netints.netints);
+#endif
   REMOVE_AT_INDEX(source, universes, index);
 }
 
 // Needs lock
 void remove_sacn_source(size_t index)
 {
+#if SACN_DYNAMIC_MEM
+  if (mem_bufs.sources[index].universes)
+    free(mem_bufs.sources[index].universes);
+  if (mem_bufs.sources[index].netints)
+    free(mem_bufs.sources[index].netints);
+#endif
   REMOVE_AT_INDEX((&mem_bufs), sources, index);
 }
 
