@@ -129,7 +129,7 @@ static struct SacnMemBufs
   SamplingStartedNotificationBuf* sampling_started;
   SamplingEndedNotificationBuf* sampling_ended;
   SourceLimitExceededNotification* source_limit_exceeded;
-#else
+#else  // SACN_DYNAMIC_MEM
   SacnSourceStatusLists status_lists[SACN_RECEIVER_MAX_THREADS];
   ToEraseBuf to_erase[SACN_RECEIVER_MAX_THREADS];
   SacnRecvThreadContext recv_thread_context[SACN_RECEIVER_MAX_THREADS];
@@ -140,7 +140,7 @@ static struct SacnMemBufs
   SamplingStartedNotificationBuf sampling_started[SACN_RECEIVER_MAX_THREADS];
   SamplingEndedNotificationBuf sampling_ended[SACN_RECEIVER_MAX_THREADS];
   SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_THREADS];
-#endif
+#endif  // SACN_DYNAMIC_MEM
 
   SACN_DECLARE_BUF(SacnSource, sources, SACN_SOURCE_MAX_SOURCES);
   size_t num_sources;
@@ -431,10 +431,10 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
         return NULL;
       }
     }
-#else
+#else  // SACN_DYNAMIC_MEM
     if (size > SACN_RECEIVER_MAX_UNIVERSES)
       return NULL;
-#endif
+#endif  // SACN_DYNAMIC_MEM
 
     zero_sources_lost_array(notifications->buf, size);
     return notifications->buf;
