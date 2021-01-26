@@ -1184,6 +1184,9 @@ void source_thread_function(void* arg)
   EtcPalTimer interval_timer;
   etcpal_timer_start(&interval_timer, SOURCE_THREAD_INTERVAL);
 
+  // This thread will keep running as long as sACN is initialized (while keep_running_thread is true). On
+  // deinitialization, the thread keeps running until there are no more thread-based sources (while
+  // num_thread_based_sources > 0).
   while (keep_running_thread || (num_thread_based_sources > 0))
   {
     num_thread_based_sources = process_internal(false);
