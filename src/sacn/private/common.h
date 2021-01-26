@@ -434,7 +434,8 @@ struct SacnSource
   int keep_alive_interval;
   size_t universe_count_max;
 
-  // Provides a way to look up netints being used by any universe of this source.
+  // This is the set of unique netints used by all universes of this source, to be used when transmitting universe
+  // discovery packets.
   SACN_DECLARE_BUF(SacnSourceNetint, netints, SACN_MAX_NETINTS);
   size_t num_netints;
 
