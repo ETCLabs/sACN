@@ -544,26 +544,22 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
 }
 
 void sacn_send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
-                         const EtcPalMcastNetintId* netints, size_t num_netints)
+                         const EtcPalMcastNetintId* netint)
 {
   // Determine the multicast destination
   EtcPalSockAddr dest;
   sacn_get_mcast_addr(ip_type, universe_id, &dest.ip);
   dest.port = SACN_PORT;
 
-  // For each network interface
-  for (size_t i = 0; netints && (i < num_netints); ++i)
-  {
-    // Determine the socket to use
-    etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
-    int sys_netint_index = netint_id_index_in_array(&netints[i], sys_netints, num_sys_netints);
-    if ((sys_netint_index >= 0) && (sys_netint_index < (int)num_sys_netints))
-      sock = multicast_send_sockets[sys_netint_index];
+  // Determine the socket to use
+  etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
+  int sys_netint_index = netint_id_index_in_array(netint, sys_netints, num_sys_netints);
+  if ((sys_netint_index >= 0) && (sys_netint_index < (int)num_sys_netints))
+    sock = multicast_send_sockets[sys_netint_index];
 
-    // Try to send the data (ignore errors)
-    if (sock != ETCPAL_SOCKET_INVALID)
-      etcpal_sendto(sock, send_buf, SACN_MTU, 0, &dest);
-  }
+  // Try to send the data (ignore errors)
+  if (sock != ETCPAL_SOCKET_INVALID)
+    etcpal_sendto(sock, send_buf, SACN_MTU, 0, &dest);
 }
 
 void sacn_send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr)

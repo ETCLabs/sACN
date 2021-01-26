@@ -377,7 +377,8 @@ struct SacnSource
 
   bool terminating;  // If in the process of terminating all universes and removing this source.
 
-  EtcPalRbTree universes;
+  SACN_DECLARE_BUF(SacnSourceUniverse, universes, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE);
+  size_t num_universes;
   size_t num_active_universes;  // Number of universes to include in universe discovery packets.
   EtcPalTimer universe_discovery_timer;
   bool process_manually;
@@ -385,7 +386,9 @@ struct SacnSource
   int keep_alive_interval;
   size_t universe_count_max;
 
-  EtcPalRbTree netints;  // Provides a way to look up netints being used by any universe of this source.
+  // Provides a way to look up netints being used by any universe of this source.
+  SACN_DECLARE_BUF(SacnSourceNetint, netints, SACN_MAX_NETINTS);
+  size_t num_netints;
 
   uint8_t universe_discovery_send_buf[SACN_MTU];
 };
@@ -417,15 +420,12 @@ struct SacnSourceUniverse
   bool has_pap_data;
 #endif
 
-  EtcPalRbTree unicast_dests;
+  SACN_DECLARE_BUF(SacnUnicastDestination, unicast_dests, SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE);
+  size_t num_unicast_dests;
   bool send_unicast_only;
 
-#if SACN_DYNAMIC_MEM
-  EtcPalMcastNetintId* netints;
-#else
-  EtcPalMcastNetintId netints[SACN_MAX_NETINTS];
-#endif
-  size_t num_netints;  // Number of elements in the netints array.
+  SACN_DECLARE_BUF(EtcPalMcastNetintId, netints, SACN_MAX_NETINTS);
+  size_t num_netints;
 };
 
 typedef struct SacnSourceNetint

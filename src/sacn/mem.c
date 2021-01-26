@@ -28,8 +28,6 @@
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>
-#else
-#include "etcpal/mempool.h"
 #endif
 
 /**************************** Private constants ******************************/
@@ -38,72 +36,6 @@
 #define UNIVERSE_DISCOVERY_INTERVAL 10000
 
 /****************************** Private macros *******************************/
-
-/* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
-
-#if SACN_DYNAMIC_MEM
-#define ALLOC_SACN_SOURCE() malloc(sizeof(SacnSource))
-#define FREE_SACN_SOURCE(ptr)                                                         \
-  do                                                                                  \
-  {                                                                                   \
-    etcpal_rbtree_clear_with_cb(&((SacnSource*)ptr)->universes, free_universes_node); \
-    etcpal_rbtree_clear_with_cb(&((SacnSource*)ptr)->netints, free_netints_node);     \
-    free(ptr);                                                                        \
-  } while (0)
-#define ALLOC_SACN_SOURCE_UNIVERSE() malloc(sizeof(SacnSourceUniverse))
-#define FREE_SACN_SOURCE_UNIVERSE(ptr)                                                                \
-  do                                                                                                  \
-  {                                                                                                   \
-    etcpal_rbtree_clear_with_cb(&((SacnSourceUniverse*)ptr)->unicast_dests, free_unicast_dests_node); \
-    if (((SacnSourceUniverse*)ptr)->netints)                                                          \
-      free(((SacnSourceUniverse*)ptr)->netints);                                                      \
-    free(ptr);                                                                                        \
-  } while (0)
-#define ALLOC_SACN_SOURCE_NETINT() malloc(sizeof(SacnSourceNetint))
-#define FREE_SACN_SOURCE_NETINT(ptr) free(ptr)
-#define ALLOC_SACN_UNICAST_DESTINATION() malloc(sizeof(SacnUnicastDestination))
-#define FREE_SACN_UNICAST_DESTINATION(ptr) free(ptr)
-#define ALLOC_SACN_SOURCE_RB_NODE() malloc(sizeof(EtcPalRbNode))
-#define FREE_SACN_SOURCE_RB_NODE(ptr) free(ptr)
-#elif SACN_SOURCE_ENABLED
-#define ALLOC_SACN_SOURCE() etcpal_mempool_alloc(sacnsource_source_states)
-#define FREE_SACN_SOURCE(ptr)                                                         \
-  do                                                                                  \
-  {                                                                                   \
-    etcpal_rbtree_clear_with_cb(&((SacnSource*)ptr)->universes, free_universes_node); \
-    etcpal_rbtree_clear_with_cb(&((SacnSource*)ptr)->netints, free_netints_node);     \
-    etcpal_mempool_free(sacnsource_source_states, ptr);                               \
-  } while (0)
-#define ALLOC_SACN_SOURCE_UNIVERSE() etcpal_mempool_alloc(sacnsource_universe_states)
-#define FREE_SACN_SOURCE_UNIVERSE(ptr)                                                                \
-  do                                                                                                  \
-  {                                                                                                   \
-    etcpal_rbtree_clear_with_cb(&((SacnSourceUniverse*)ptr)->unicast_dests, free_unicast_dests_node); \
-    etcpal_mempool_free(sacnsource_universe_states, ptr);                                             \
-  } while (0)
-#define ALLOC_SACN_SOURCE_NETINT() etcpal_mempool_alloc(sacnsource_netints)
-#define FREE_SACN_SOURCE_NETINT(ptr) etcpal_mempool_free(sacnsource_netints, ptr)
-#if SACN_SOURCE_UNICAST_ENABLED
-#define ALLOC_SACN_UNICAST_DESTINATION() etcpal_mempool_alloc(sacnsource_unicast_dests)
-#define FREE_SACN_UNICAST_DESTINATION(ptr) etcpal_mempool_free(sacnsource_unicast_dests, ptr)
-#else
-#define ALLOC_SACN_UNICAST_DESTINATION() NULL
-#define FREE_SACN_UNICAST_DESTINATION(ptr)
-#endif
-#define ALLOC_SACN_SOURCE_RB_NODE() etcpal_mempool_alloc(sacnsource_rb_nodes)
-#define FREE_SACN_SOURCE_RB_NODE(ptr) etcpal_mempool_free(sacnsource_rb_nodes, ptr)
-#else
-#define ALLOC_SACN_SOURCE() NULL
-#define FREE_SACN_SOURCE(ptr)
-#define ALLOC_SACN_SOURCE_UNIVERSE() NULL
-#define FREE_SACN_SOURCE_UNIVERSE(ptr)
-#define ALLOC_SACN_SOURCE_NETINT() NULL
-#define FREE_SACN_SOURCE_NETINT(ptr)
-#define ALLOC_SACN_UNICAST_DESTINATION() NULL
-#define FREE_SACN_UNICAST_DESTINATION(ptr)
-#define ALLOC_SACN_SOURCE_RB_NODE() NULL
-#define FREE_SACN_SOURCE_RB_NODE(ptr)
-#endif
 
 #if SACN_DYNAMIC_MEM
 
@@ -145,6 +77,17 @@
 
 #endif  // SACN_DYNAMIC_MEM
 
+#define REMOVE_AT_INDEX(container, buffer, index)                                                         \
+  do                                                                                                      \
+  {                                                                                                       \
+    --container->num_##buffer;                                                                            \
+                                                                                                          \
+    if (index < container->num_##buffer)                                                                  \
+    {                                                                                                     \
+      memmove(&container->buffer[index], &container->buffer[index + 1], container->num_##buffer - index); \
+    }                                                                                                     \
+  } while (0)
+
 /****************************** Private types ********************************/
 
 typedef struct SourcesLostNotificationBuf
@@ -169,24 +112,6 @@ typedef struct ToEraseBuf
 
 /**************************** Private variables ******************************/
 
-#if !SACN_DYNAMIC_MEM && SACN_SOURCE_ENABLED
-ETCPAL_MEMPOOL_DEFINE(sacnsource_source_states, SacnSource, SACN_SOURCE_MAX_SOURCES);
-ETCPAL_MEMPOOL_DEFINE(sacnsource_universe_states, SacnSourceUniverse,
-                      (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE));
-ETCPAL_MEMPOOL_DEFINE(sacnsource_netints, SacnSourceNetint, (SACN_SOURCE_MAX_SOURCES * SACN_MAX_NETINTS));
-#if SACN_SOURCE_UNICAST_ENABLED
-ETCPAL_MEMPOOL_DEFINE(sacnsource_unicast_dests, SacnUnicastDestination,
-                      (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE *
-                       SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE));
-#endif
-ETCPAL_MEMPOOL_DEFINE(sacnsource_rb_nodes, EtcPalRbNode,
-                      SACN_SOURCE_MAX_SOURCES + (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE) +
-                          (SACN_SOURCE_MAX_SOURCES * SACN_MAX_NETINTS) +
-                          (SACN_SOURCE_MAX_SOURCES * SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE *
-                           SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE));
-#endif
-
-static EtcPalRbTree sources;
 static bool sources_initialized = false;
 
 static struct SacnMemBufs
@@ -216,24 +141,20 @@ static struct SacnMemBufs
   SamplingEndedNotificationBuf sampling_ended[SACN_RECEIVER_MAX_THREADS];
   SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_THREADS];
 #endif
+
+  SACN_DECLARE_BUF(SacnSource, sources, SACN_SOURCE_MAX_SOURCES);
+  size_t num_sources;
 } mem_bufs;
 
 /*********************** Private function prototypes *************************/
 
-static int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
-static int universe_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
-static int netint_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
-static int unicast_dests_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b);
-
-static EtcPalRbNode* source_rb_node_alloc_func(void);
-static void source_rb_node_dealloc_func(EtcPalRbNode* node);
-static void free_universes_node(const EtcPalRbTree* self, EtcPalRbNode* node);
-static void free_netints_node(const EtcPalRbTree* self, EtcPalRbNode* node);
-static void free_unicast_dests_node(const EtcPalRbTree* self, EtcPalRbNode* node);
-static void free_sources_node(const EtcPalRbTree* self, EtcPalRbNode* node);
-
 static void zero_status_lists(SacnSourceStatusLists* status_lists);
 static void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t size);
+
+static size_t get_source_index(sacn_source_t handle, bool* found);
+static size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found);
+static size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found);
+static size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found);
 
 #if SACN_DYNAMIC_MEM
 static size_t grow_capacity(size_t old_capacity, size_t capacity_requested);
@@ -775,10 +696,16 @@ void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnR
 etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state)
 {
   etcpal_error_t result = kEtcPalErrOk;
-  SacnSource* source = ALLOC_SACN_SOURCE();
+  SacnSource* source = NULL;
+  if (lookup_source(handle, &source) == kEtcPalErrOk)
+    result = kEtcPalErrExists;
 
-  if (source)
+  if (result == kEtcPalErrOk)
   {
+    CHECK_ROOM_FOR_ONE_MORE((&mem_bufs), sources, SacnSource, SACN_SOURCE_MAX_SOURCES, kEtcPalErrNoMem);
+
+    source = &mem_bufs.sources[mem_bufs.num_sources];
+
     source->handle = handle;
 
     // Initialize the universe discovery send buffer.
@@ -803,22 +730,29 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->keep_alive_interval = config->keep_alive_interval;
     source->universe_count_max = config->universe_count_max;
 
-    etcpal_rbtree_init(&source->universes, universe_state_lookup_compare_func, source_rb_node_alloc_func,
-                       source_rb_node_dealloc_func);
-    etcpal_rbtree_init(&source->netints, netint_state_lookup_compare_func, source_rb_node_alloc_func,
-                       source_rb_node_dealloc_func);
+    source->num_universes = 0;
+    source->num_netints = 0;
+#if SACN_DYNAMIC_MEM
+    source->universes = calloc(INITIAL_CAPACITY, sizeof(SacnSourceUniverse));
+    source->universes_capacity = source->universes ? INITIAL_CAPACITY : 0;
+    source->netints = calloc(INITIAL_CAPACITY, sizeof(SacnSourceNetint));
+    source->netints_capacity = source->netints ? INITIAL_CAPACITY : 0;
 
-    result = etcpal_rbtree_insert(&sources, source);
-  }
-  else
-  {
-    result = kEtcPalErrNoMem;
+    if (!source->universes || !source->netints)
+    {
+      if (source->universes)
+        free(source->universes);
+      if (source->netints)
+        free(source->netints);
+      result = kEtcPalErrNoMem;
+    }
+#endif
   }
 
   if (result == kEtcPalErrOk)
-    *source_state = source;
-  else if (source)
-    FREE_SACN_SOURCE(source);
+    ++mem_bufs.num_sources;
+
+  *source_state = source;
 
   return result;
 }
@@ -829,14 +763,18 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
                                         SacnSourceUniverse** universe_state)
 {
   etcpal_error_t result = kEtcPalErrOk;
-  SacnSourceUniverse* universe = ALLOC_SACN_SOURCE_UNIVERSE();
+  SacnSourceUniverse* universe = NULL;
+  if (lookup_universe(source, config->universe, &universe) == kEtcPalErrOk)
+    result = kEtcPalErrExists;
 
-  if (universe)
+  if (result == kEtcPalErrOk)
   {
-    // Initialize the universe's state.
+    CHECK_ROOM_FOR_ONE_MORE(source, universes, SacnSourceUniverse, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE,
+                            kEtcPalErrNoMem);
+
+    universe = &source->universes[source->num_universes];
+
     universe->universe_id = config->universe;
-    etcpal_rbtree_init(&universe->unicast_dests, unicast_dests_lookup_compare_func, source_rb_node_alloc_func,
-                       source_rb_node_dealloc_func);
 
     universe->terminating = false;
     universe->num_terminations_sent = 0;
@@ -860,30 +798,41 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 
     universe->send_unicast_only = config->send_unicast_only;
 
-    for (size_t i = 0; (result == kEtcPalErrOk) && (i < config->num_unicast_destinations); ++i)
-    {
-      SacnUnicastDestination* dest = NULL;
-      result = add_sacn_unicast_dest(universe, &config->unicast_destinations[i], &dest);
+    universe->num_unicast_dests = 0;
+#if SACN_DYNAMIC_MEM
+    universe->unicast_dests = calloc(INITIAL_CAPACITY, sizeof(SacnUnicastDestination));
+    universe->unicast_dests_capacity = universe->unicast_dests ? INITIAL_CAPACITY : 0;
 
-      if (result == kEtcPalErrExists)
-        result = kEtcPalErrOk;  // Duplicates are automatically filtered and not a failure condition.
-    }
+    if (!universe->unicast_dests)
+      result = kEtcPalErrNoMem;
+#endif
   }
-  else
+
+  for (size_t i = 0; (result == kEtcPalErrOk) && (i < config->num_unicast_destinations); ++i)
   {
-    result = kEtcPalErrNoMem;
+    SacnUnicastDestination* dest = NULL;
+    result = add_sacn_unicast_dest(universe, &config->unicast_destinations[i], &dest);
+
+    if (result == kEtcPalErrExists)
+      result = kEtcPalErrOk;  // Duplicates are automatically filtered and not a failure condition.
   }
 
   if (result == kEtcPalErrOk)
     result = sacn_initialize_internal_netints(&universe->netints, &universe->num_netints, netints, num_netints);
 
   if (result == kEtcPalErrOk)
-    result = etcpal_rbtree_insert(&source->universes, universe);
+  {
+#if SACN_DYNAMIC_MEM
+    universe->netints_capacity = universe->num_netints;
+#endif
+    ++source->num_universes;
+  }
+  else if (universe->netints)
+  {
+    free(universe->netints);
+  }
 
-  if (result == kEtcPalErrOk)
-    *universe_state = universe;
-  else if (universe)
-    FREE_SACN_SOURCE_UNIVERSE(universe);
+  *universe_state = universe;
 
   return result;
 }
@@ -893,24 +842,23 @@ etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalI
                                      SacnUnicastDestination** dest_state)
 {
   etcpal_error_t result = kEtcPalErrOk;
-  SacnUnicastDestination* dest = ALLOC_SACN_UNICAST_DESTINATION();
+  SacnUnicastDestination* dest = NULL;
 
-  if (dest)
+  if (lookup_unicast_dest(universe, addr, &dest) == kEtcPalErrOk)
+    result = kEtcPalErrExists;
+
+  if (result == kEtcPalErrOk)
   {
+    CHECK_ROOM_FOR_ONE_MORE(universe, unicast_dests, SacnUnicastDestination, SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE,
+                            kEtcPalErrNoMem);
+
+    dest = &universe->unicast_dests[universe->num_unicast_dests++];
     dest->dest_addr = *addr;
     dest->terminating = false;
     dest->num_terminations_sent = 0;
-    result = etcpal_rbtree_insert(&universe->unicast_dests, dest);
-  }
-  else
-  {
-    result = kEtcPalErrNoMem;
   }
 
-  if (result == kEtcPalErrOk)
-    *dest_state = dest;
-  else if (dest)
-    FREE_SACN_UNICAST_DESTINATION(dest);
+  *dest_state = dest;
 
   return result;
 }
@@ -920,245 +868,113 @@ etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetin
                                       SacnSourceNetint** netint_state)
 {
   etcpal_error_t result = kEtcPalErrOk;
-  SacnSourceNetint* netint = ALLOC_SACN_SOURCE_NETINT();
+  SacnSourceNetint* netint = lookup_source_netint(source, id);
 
   if (netint)
+    result = kEtcPalErrExists;
+
+  if (result == kEtcPalErrOk)
   {
+    CHECK_ROOM_FOR_ONE_MORE(source, netints, SacnSourceNetint, SACN_MAX_NETINTS, kEtcPalErrNoMem);
+
+    netint = &source->netints[source->num_netints++];
     netint->id = *id;
     netint->num_refs = 1;
-    result = etcpal_rbtree_insert(&source->netints, netint);
-  }
-  else
-  {
-    result = kEtcPalErrNoMem;
   }
 
-  if (result == kEtcPalErrOk)
-    *netint_state = netint;
-  else if (netint)
-    FREE_SACN_SOURCE_NETINT(netint);
+  *netint_state = netint;
 
   return result;
 }
 
 // Needs lock
-etcpal_error_t lookup_source_state(sacn_source_t source, uint16_t universe, SacnSource** source_state,
-                                   SacnSourceUniverse** universe_state)
+etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t universe, SacnSource** source_state,
+                                          SacnSourceUniverse** universe_state)
 {
-  etcpal_error_t result = kEtcPalErrOk;
-
-  SacnSource* my_source_state = NULL;
-  SacnSourceUniverse* my_universe_state = NULL;
-
-  // Look up the source state.
-  my_source_state = etcpal_rbtree_find(&sources, &source);
-
-  if (!my_source_state)
-    result = kEtcPalErrNotFound;
-
-  // Look up the universe state.
-  if ((result == kEtcPalErrOk) && universe_state)
-  {
-    my_universe_state = etcpal_rbtree_find(&my_source_state->universes, &universe);
-
-    if (!my_universe_state)
-      result = kEtcPalErrNotFound;
-  }
+  etcpal_error_t result = lookup_source(source, source_state);
 
   if (result == kEtcPalErrOk)
-  {
-    if (source_state)
-      *source_state = my_source_state;
-    if (universe_state)
-      *universe_state = my_universe_state;
-  }
+    result = lookup_universe(*source_state, universe, universe_state);
 
   return result;
 }
 
 // Needs lock
-etcpal_error_t lookup_unicast_dest(sacn_source_t source, uint16_t universe, const EtcPalIpAddr* addr,
+etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state)
+{
+  bool found = false;
+  size_t index = get_source_index(handle, &found);
+  *source_state = found ? &mem_bufs.sources[index] : NULL;
+  return found ? kEtcPalErrOk : kEtcPalErrNotFound;
+}
+
+// Needs lock
+etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSourceUniverse** universe_state)
+{
+  bool found = false;
+  size_t index = get_source_universe_index(source, universe, &found);
+  *universe_state = found ? &source->universes[index] : NULL;
+  return found ? kEtcPalErrOk : kEtcPalErrNotFound;
+}
+
+// Needs lock
+etcpal_error_t lookup_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
                                    SacnUnicastDestination** unicast_dest)
 {
-  // Look up universe
-  SacnSourceUniverse* universe_state = NULL;
-  etcpal_error_t result = lookup_source_state(source, universe, NULL, &universe_state);
-
-  // Validate
-  if ((result == kEtcPalErrOk) && (!addr))
-    result = kEtcPalErrSys;
-
-  // Look up unicast destination
-  SacnUnicastDestination* found = NULL;
-  if (result == kEtcPalErrOk)
-  {
-    found = etcpal_rbtree_find(&universe_state->unicast_dests, addr);
-
-    if (!found)
-      result = kEtcPalErrNotFound;
-  }
-
-  // Pass back to application
-  if ((result == kEtcPalErrOk) && unicast_dest)
-    *unicast_dest = found;
-
-  return result;
+  bool found = false;
+  size_t index = get_unicast_dest_index(universe, addr, &found);
+  *unicast_dest = found ? &universe->unicast_dests[index] : NULL;
+  return found ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
 
 // Needs lock
 SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNetintId* id)
 {
-  return (SacnSourceNetint*)etcpal_rbtree_find(&source->netints, id);
+  bool found = false;
+  size_t index = get_source_netint_index(source, id, &found);
+  return found ? &source->netints[index] : NULL;
 }
 
 // Needs lock
-EtcPalRbTree* get_sacn_sources()
+SacnSourceNetint* lookup_source_netint_and_index(SacnSource* source, const EtcPalMcastNetintId* id, size_t* index)
 {
-  return &sources;
+  bool found = false;
+  *index = get_source_netint_index(source, id, &found);
+  return found ? &source->netints[*index] : NULL;
+}
+
+SacnSource* get_source(size_t index)
+{
+  return (index < mem_bufs.num_sources) ? &mem_bufs.sources[index] : NULL;
+}
+
+size_t get_num_sources()
+{
+  return mem_bufs.num_sources;
 }
 
 // Needs lock
-void remove_sacn_source_netint(SacnSource* source, SacnSourceNetint** netint)
+void remove_sacn_source_netint(SacnSource* source, size_t index)
 {
-  if (etcpal_rbtree_remove(&source->netints, *netint) == kEtcPalErrOk)
-  {
-    FREE_SACN_SOURCE_NETINT(*netint);
-    *netint = NULL;
-  }
+  REMOVE_AT_INDEX(source, netints, index);
 }
 
 // Needs lock
-void remove_sacn_unicast_dest(SacnSourceUniverse* universe, SacnUnicastDestination** dest, EtcPalRbIter* unicast_iter)
+void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index)
 {
-  SacnUnicastDestination* dest_to_remove = *dest;
-  *dest = etcpal_rbiter_next(unicast_iter);
-  etcpal_rbtree_remove(&universe->unicast_dests, dest_to_remove);
-  FREE_SACN_UNICAST_DESTINATION(dest_to_remove);
+  REMOVE_AT_INDEX(universe, unicast_dests, index);
 }
 
 // Needs lock
-void remove_sacn_source_universe(SacnSource* source, SacnSourceUniverse** universe, EtcPalRbIter* universe_iter)
+void remove_sacn_source_universe(SacnSource* source, size_t index)
 {
-  SacnSourceUniverse* universe_to_remove = *universe;
-  *universe = etcpal_rbiter_next(universe_iter);
-  etcpal_rbtree_remove(&source->universes, universe_to_remove);
-  FREE_SACN_SOURCE_UNIVERSE(universe_to_remove);
+  REMOVE_AT_INDEX(source, universes, index);
 }
 
 // Needs lock
-void remove_sacn_source(SacnSource** source, EtcPalRbIter* source_iter)
+void remove_sacn_source(size_t index)
 {
-  SacnSource* source_to_remove = *source;
-  *source = etcpal_rbiter_next(source_iter);
-  etcpal_rbtree_remove(&sources, source_to_remove);
-  FREE_SACN_SOURCE(source_to_remove);
-}
-
-int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
-{
-  ETCPAL_UNUSED_ARG(self);
-
-  const SacnSource* a = (const SacnSource*)value_a;
-  const SacnSource* b = (const SacnSource*)value_b;
-
-  return (a->handle > b->handle) - (a->handle < b->handle);  // Just compare the handles.
-}
-
-int universe_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
-{
-  ETCPAL_UNUSED_ARG(self);
-
-  const SacnSourceUniverse* a = (const SacnSourceUniverse*)value_a;
-  const SacnSourceUniverse* b = (const SacnSourceUniverse*)value_b;
-
-  return (a->universe_id > b->universe_id) - (a->universe_id < b->universe_id);  // Just compare the IDs.
-}
-
-int netint_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
-{
-  ETCPAL_UNUSED_ARG(self);
-
-  const SacnSourceNetint* a = (const SacnSourceNetint*)value_a;
-  const SacnSourceNetint* b = (const SacnSourceNetint*)value_b;
-
-  return ((a->id.index > b->id.index) || ((a->id.index == b->id.index) && (a->id.ip_type > b->id.ip_type))) -
-         ((a->id.index < b->id.index) || ((a->id.index == b->id.index) && (a->id.ip_type < b->id.ip_type)));
-}
-
-int unicast_dests_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
-{
-  ETCPAL_UNUSED_ARG(self);
-
-  const EtcPalIpAddr* a = (const EtcPalIpAddr*)value_a;
-  const EtcPalIpAddr* b = (const EtcPalIpAddr*)value_b;
-
-  bool greater_than = a->type > b->type;
-  bool less_than = a->type < b->type;
-
-  if (a->type == b->type)
-  {
-    if (a->type == kEtcPalIpTypeV4)
-    {
-      greater_than = a->addr.v4 > b->addr.v4;
-      less_than = a->addr.v4 < b->addr.v4;
-    }
-    else if (a->type == kEtcPalIpTypeV6)
-    {
-      int cmp = memcmp(a->addr.v6.addr_buf, b->addr.v6.addr_buf, ETCPAL_IPV6_BYTES);
-      greater_than = (cmp > 0);
-      less_than = (cmp < 0);
-
-      if (cmp == 0)
-      {
-        greater_than = a->addr.v6.scope_id > b->addr.v6.scope_id;
-        less_than = a->addr.v6.scope_id < b->addr.v6.scope_id;
-      }
-    }
-  }
-
-  return (int)greater_than - (int)less_than;
-}
-
-EtcPalRbNode* source_rb_node_alloc_func(void)
-{
-  return ALLOC_SACN_SOURCE_RB_NODE();
-}
-
-void source_rb_node_dealloc_func(EtcPalRbNode* node)
-{
-  FREE_SACN_SOURCE_RB_NODE(node);
-}
-
-void free_universes_node(const EtcPalRbTree* self, EtcPalRbNode* node)
-{
-  ETCPAL_UNUSED_ARG(self);
-
-  FREE_SACN_SOURCE_UNIVERSE(node->value);
-  FREE_SACN_SOURCE_RB_NODE(node);
-}
-
-void free_netints_node(const EtcPalRbTree* self, EtcPalRbNode* node)
-{
-  ETCPAL_UNUSED_ARG(self);
-
-  FREE_SACN_SOURCE_NETINT(node->value);
-  FREE_SACN_SOURCE_RB_NODE(node);
-}
-
-void free_unicast_dests_node(const EtcPalRbTree* self, EtcPalRbNode* node)
-{
-  ETCPAL_UNUSED_ARG(self);
-
-  FREE_SACN_UNICAST_DESTINATION(node->value);
-  FREE_SACN_SOURCE_RB_NODE(node);
-}
-
-void free_sources_node(const EtcPalRbTree* self, EtcPalRbNode* node)
-{
-  ETCPAL_UNUSED_ARG(self);
-
-  FREE_SACN_SOURCE(node->value);
-  FREE_SACN_SOURCE_RB_NODE(node);
+  REMOVE_AT_INDEX((&mem_bufs), sources, index);
 }
 
 void zero_status_lists(SacnSourceStatusLists* status_lists)
@@ -1179,6 +995,70 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
     sources_lost->num_lost_sources = 0;
     sources_lost->context = NULL;
   }
+}
+
+size_t get_source_index(sacn_source_t handle, bool* found)
+{
+  *found = false;
+  size_t index = 0;
+
+  while (!(*found) && (index < mem_bufs.num_sources))
+  {
+    if (mem_bufs.sources[index].handle == handle)
+      *found = true;
+    else
+      ++index;
+  }
+
+  return index;
+}
+
+size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found)
+{
+  *found = false;
+  size_t index = 0;
+
+  while (!(*found) && (index < source->num_universes))
+  {
+    if (source->universes[index].universe_id == universe)
+      *found = true;
+    else
+      ++index;
+  }
+
+  return index;
+}
+
+size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found)
+{
+  *found = false;
+  size_t index = 0;
+
+  while (!(*found) && (index < universe->num_unicast_dests))
+  {
+    if (etcpal_ip_cmp(&universe->unicast_dests[index].dest_addr, addr) == 0)
+      *found = true;
+    else
+      ++index;
+  }
+
+  return index;
+}
+
+size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found)
+{
+  *found = false;
+  size_t index = 0;
+
+  while (!(*found) && (index < source->num_netints))
+  {
+    if ((source->netints[index].id.index == id->index) && (source->netints[index].id.ip_type == id->ip_type))
+      *found = true;
+    else
+      ++index;
+  }
+
+  return index;
 }
 
 #if SACN_DYNAMIC_MEM
@@ -1587,25 +1467,16 @@ etcpal_error_t init_sources(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
 
-#if SACN_SOURCE_ENABLED
-#if !SACN_DYNAMIC_MEM
-  if (res == kEtcPalErrOk)
-    res = etcpal_mempool_init(sacnsource_source_states);
-  if (res == kEtcPalErrOk)
-    res = etcpal_mempool_init(sacnsource_universe_states);
-  if (res == kEtcPalErrOk)
-    res = etcpal_mempool_init(sacnsource_netints);
-  if (res == kEtcPalErrOk)
-    res = etcpal_mempool_init(sacnsource_rb_nodes);
+#if SACN_SOURCE_ENABLED && SACN_DYNAMIC_MEM
+  mem_bufs.sources = calloc(INITIAL_CAPACITY, sizeof(SacnSource));
+  mem_bufs.sources_capacity = mem_bufs.sources ? INITIAL_CAPACITY : 0;
+  if (!mem_bufs.sources)
+    res = kEtcPalErrNoMem;
 #endif
+  mem_bufs.num_sources = 0;
 
   if (res == kEtcPalErrOk)
-  {
-    etcpal_rbtree_init(&sources, source_state_lookup_compare_func, source_rb_node_alloc_func,
-                       source_rb_node_dealloc_func);
     sources_initialized = true;
-  }
-#endif
 
   return res;
 }
@@ -1617,7 +1488,11 @@ void deinit_sources(void)
   {
     if (sources_initialized)
     {
-      etcpal_rbtree_clear_with_cb(&sources, free_sources_node);
+#if SACN_DYNAMIC_MEM
+      free(mem_bufs.sources);
+      mem_bufs.sources_capacity = 0;
+#endif
+      mem_bufs.num_sources = 0;
       sources_initialized = false;
     }
 

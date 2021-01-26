@@ -61,7 +61,7 @@ static int process_sources(bool process_manual);
 static void process_universe_discovery(SacnSource* source);
 static void process_universes(SacnSource* source);
 static void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe);
-static bool process_universe_termination(SacnSource* source, SacnSourceUniverse* universe, EtcPalRbIter* universe_iter);
+static void process_universe_termination(SacnSource* source, size_t index);
 static void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniverse* universe);
 static void send_data_multicast_ipv4_ipv6(const SacnSource* source, SacnSourceUniverse* universe,
                                           const uint8_t* send_buf);
@@ -80,10 +80,11 @@ static void send_termination_multicast(const SacnSource* source, SacnSourceUnive
 static void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe,
                                      SacnUnicastDestination* dest);
 static void send_universe_discovery(SacnSource* source);
-static void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, EtcPalRbTree* dests);
+static void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, SacnUnicastDestination* dests,
+                              size_t num_dests);
 static void send_data_to_single_unicast_dest(etcpal_iptype_t ip_type, const uint8_t* send_buf,
                                              const SacnUnicastDestination* dest);
-static int pack_universe_discovery_page(SacnSource* source, EtcPalRbIter* universe_iter, uint8_t page_number);
+static int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uint8_t page_number);
 static void init_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid, const char* source_name,
                           uint8_t priority, uint16_t universe, uint16_t sync_universe, bool send_preview);
 static void update_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size, bool force_sync);
@@ -291,7 +292,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
     // Look up the source's state.
     SacnSource* source = NULL;
     if (result == kEtcPalErrOk)
-      result = lookup_source_state(handle, 0, &source, NULL);
+      result = lookup_source(handle, &source);
 
     // Set this source's name.
     if (result == kEtcPalErrOk)
@@ -320,7 +321,7 @@ void sacn_source_destroy(sacn_source_t handle)
   {
     // Try to find the source's state.
     SacnSource* source = NULL;
-    lookup_source_state(handle, 0, &source, NULL);
+    lookup_source(handle, &source);
 
     // If the source was found, initiate termination.
     if (source)
@@ -397,14 +398,14 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     // Look up the source's state.
     SacnSource* source = NULL;
     if (result == kEtcPalErrOk)
-      result = lookup_source_state(handle, 0, &source, NULL);
+      result = lookup_source(handle, &source);
 
 #if SACN_DYNAMIC_MEM
     // Make sure to check against universe_count_max.
     if (result == kEtcPalErrOk)
     {
       if ((source->universe_count_max != SACN_SOURCE_INFINITE_UNIVERSES) &&
-          (etcpal_rbtree_size(&source->universes) >= source->universe_count_max))
+          (source->num_universes >= source->universe_count_max))
       {
         result = kEtcPalErrNoMem;  // No room to allocate additional universe.
       }
@@ -419,12 +420,14 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     // Update the source's netint tracking.
     for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->num_netints); ++i)
     {
-      SacnSourceNetint* netint = lookup_source_netint(source, &universe->netints[i]);
+      SacnSourceNetint* netint = NULL;
+      result = add_sacn_source_netint(source, &universe->netints[i], &netint);
 
-      if (netint)
+      if (result == kEtcPalErrExists)
+      {
         ++netint->num_refs;
-      else
-        result = add_sacn_source_netint(source, &universe->netints[i], &netint);
+        result = kEtcPalErrOk;
+      }
     }
 
     sacn_unlock();
@@ -450,8 +453,9 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 #if SACN_SOURCE_ENABLED
   if (sacn_lock())
   {
+    SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
-    lookup_source_state(handle, universe, NULL, &universe_state);
+    lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
     if (universe_state)
       set_universe_terminating(universe_state);
@@ -479,20 +483,14 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
   {
     // Look up source state
     SacnSource* source = NULL;
-    if (lookup_source_state(handle, 0, &source, NULL) == kEtcPalErrOk)
+    if (lookup_source(handle, &source) == kEtcPalErrOk)
     {
       // Use total number of universes as the return value
-      total_num_universes = etcpal_rbtree_size(&source->universes);
+      total_num_universes = source->num_universes;
 
       // Copy out the universes
-      EtcPalRbIter tree_iter;
-      etcpal_rbiter_init(&tree_iter);
-      uint16_t* universe = etcpal_rbiter_first(&tree_iter, &source->universes);
-      for (size_t i = 0; universe && universes && (i < universes_size); ++i)
-      {
-        universes[i] = *universe;
-        universe = etcpal_rbiter_next(&tree_iter);
-      }
+      for (size_t i = 0; (i < source->num_universes) && universes && (i < universes_size); ++i)
+        universes[i] = source->universes[i].universe_id;
     }
 
     sacn_unlock();
@@ -548,7 +546,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     if (result == kEtcPalErrOk)
-      result = lookup_source_state(handle, universe, &source_state, &universe_state);
+      result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
     // Add unicast destination
     SacnUnicastDestination* unicast_dest = NULL;
@@ -584,12 +582,19 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
   if (dest && sacn_lock())
   {
     // Look up unicast destination
-    SacnUnicastDestination* unicast_dest = NULL;
-    lookup_unicast_dest(handle, universe, dest, &unicast_dest);
+    SacnSource* source = NULL;
+    SacnSourceUniverse* universe = NULL;
+    lookup_source_and_universe(handle, universe, &source, &universe);
 
-    // Initiate termination
-    if (unicast_dest)
-      set_unicast_dest_terminating(unicast_dest);
+    if (universe)
+    {
+      SacnUnicastDestination* unicast_dest = NULL;
+      lookup_unicast_dest(universe, dest, &unicast_dest);
+
+      // Initiate termination
+      if (unicast_dest)
+        set_unicast_dest_terminating(unicast_dest);
+    }
 
     sacn_unlock();
   }
@@ -616,21 +621,16 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
   if (sacn_lock())
   {
     // Look up universe state
+    SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
-    if (lookup_source_state(handle, universe, NULL, &universe_state) == kEtcPalErrOk)
+    if (lookup_source_and_universe(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
     {
       // Use total number of destinations as the return value
-      total_num_dests = etcpal_rbtree_size(&universe_state->unicast_dests);
+      total_num_dests = universe_state->num_unicast_dests;
 
       // Copy out the destinations
-      EtcPalRbIter tree_iter;
-      etcpal_rbiter_init(&tree_iter);
-      EtcPalIpAddr* dest = etcpal_rbiter_first(&tree_iter, &universe_state->unicast_dests);
-      for (size_t i = 0; dest && destinations && (i < destinations_size); ++i)
-      {
-        destinations[i] = *dest;
-        dest = etcpal_rbiter_next(&tree_iter);
-      }
+      for (size_t i = 0; (i < universe_state->num_unicast_dests) && destinations && (i < destinations_size); ++i)
+        destinations[i] = universe_state->unicast_dests[i].dest_addr;
     }
 
     sacn_unlock();
@@ -685,7 +685,7 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     if (result == kEtcPalErrOk)
-      result = lookup_source_state(handle, universe, &source_state, &universe_state);
+      result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
     // Set the priority.
     if (result == kEtcPalErrOk)
@@ -743,7 +743,7 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     if (result == kEtcPalErrOk)
-      result = lookup_source_state(handle, universe, &source_state, &universe_state);
+      result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
     // Set the preview flag.
     if (result == kEtcPalErrOk)
@@ -841,7 +841,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     if (result == kEtcPalErrOk)
-      result = lookup_source_state(handle, universe, &source_state, &universe_state);
+      result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
     if (result == kEtcPalErrOk)
     {
@@ -914,7 +914,7 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
-    lookup_source_state(handle, universe, &source_state, &universe_state);
+    lookup_source_and_universe(handle, universe, &source_state, &universe_state);
     update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, false);
     sacn_unlock();
   }
@@ -951,7 +951,7 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
-    lookup_source_state(handle, universe, &source_state, &universe_state);
+    lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
     update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
                               new_priorities_size, false);
@@ -989,7 +989,7 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
-    lookup_source_state(handle, universe, &source_state, &universe_state);
+    lookup_source_and_universe(handle, universe, &source_state, &universe_state);
     update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, true);
     sacn_unlock();
   }
@@ -1031,7 +1031,7 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
-    lookup_source_state(handle, universe, &source_state, &universe_state);
+    lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
     update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
                               new_priorities_size, true);
@@ -1131,8 +1131,9 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
   if (sacn_lock())
   {
     // Look up universe state
+    SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
-    if (lookup_source_state(handle, universe, NULL, &universe_state) == kEtcPalErrOk)
+    if (lookup_source_and_universe(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
     {
       total_num_network_interfaces = universe_state->num_netints;
 
@@ -1152,7 +1153,8 @@ bool source_handle_in_use(int handle_val, void* cookie)
 {
   ETCPAL_UNUSED_ARG(cookie);
 
-  return (handle_val == SACN_SOURCE_INVALID) || (lookup_source_state(handle_val, 0, NULL, NULL) == kEtcPalErrOk);
+  SacnSource* tmp = NULL;
+  return (handle_val == SACN_SOURCE_INVALID) || (lookup_source(handle_val, &tmp) == kEtcPalErrOk);
 }
 
 // Needs lock
@@ -1228,13 +1230,10 @@ int process_sources(bool process_manual)
 {
   int num_sources_tracked = 0;
 
-  // For each source
-  EtcPalRbIter source_iter;
-  etcpal_rbiter_init(&source_iter);
-  SacnSource* source = etcpal_rbiter_first(&source_iter, get_sacn_sources());
-  while (source)
+  // Iterate the sources backwards to allow for removals
+  for (size_t i = get_num_sources() - 1; i >= 0; --i)
   {
-    bool source_incremented = false;
+    SacnSource* source = get_source(i);
 
     // If this is the kind of source we want to process (manual vs. thread-based)
     if (source->process_manually == process_manual)
@@ -1251,15 +1250,9 @@ int process_sources(bool process_manual)
       process_universes(source);
 
       // Clean up this source if needed
-      if (source->terminating && (etcpal_rbtree_size(&source->universes) == 0))
-      {
-        remove_sacn_source(&source, &source_iter);
-        source_incremented = true;
-      }
+      if (source->terminating && (source->num_universes == 0))
+        remove_sacn_source(i);
     }
-
-    if (!source_incremented)
-      source = etcpal_rbiter_next(&source_iter);
   }
 
   return num_sources_tracked;
@@ -1279,38 +1272,29 @@ void process_universe_discovery(SacnSource* source)
 // Needs lock
 void process_universes(SacnSource* source)
 {
-  // For each universe of this source
-  EtcPalRbIter universe_iter;
-  etcpal_rbiter_init(&universe_iter);
-  SacnSourceUniverse* universe = etcpal_rbiter_first(&universe_iter, &source->universes);
-  while (universe)
+  // Iterate the universes backwards to allow for removals
+  for (size_t i = source->num_universes - 1; i >= 0; --i)
   {
-    bool universe_incremented = false;
+    SacnSourceUniverse* universe = &source->universes[i];
 
     // Unicast destination-specific processing
     process_unicast_dests(source, universe);
 
     // Either transmit start codes 0x00 & 0xDD, or terminate and clean up universe
     if (universe->terminating)
-      process_universe_termination(source, universe, &universe_iter);
+      process_universe_termination(source, i);
     else
       process_universe_null_pap_transmission(source, universe);
-
-    if (!universe_incremented)
-      universe = etcpal_rbiter_next(&universe_iter);
   }
 }
 
 // Needs lock
 void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe)
 {
-  // For each unicast destination of this universe
-  EtcPalRbIter unicast_iter;
-  etcpal_rbiter_init(&unicast_iter);
-  SacnUnicastDestination* dest = etcpal_rbiter_first(&unicast_iter, &universe->unicast_dests);
-  while (dest)
+  // Iterate unicast destinations backwards to allow for removals
+  for (size_t i = universe->num_unicast_dests - 1; i >= 0; --i)
   {
-    bool dest_incremented = false;
+    SacnUnicastDestination* dest = &universe->unicast_dests[i];
 
     // Terminate and clean up this unicast destination if needed
     if (dest->terminating)
@@ -1319,27 +1303,20 @@ void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe)
         send_termination_unicast(source, universe, dest);
 
       if ((dest->num_terminations_sent >= 3) || !universe->has_null_data)
-      {
-        remove_sacn_unicast_dest(universe, &dest, &unicast_iter);
-        dest_incremented = true;
-      }
+        remove_sacn_unicast_dest(universe, i);
     }
-
-    if (!dest_incremented)
-      dest = etcpal_rbiter_next(&unicast_iter);
   }
 }
 
 // Needs lock
-bool process_universe_termination(SacnSource* source, SacnSourceUniverse* universe, EtcPalRbIter* universe_iter)
+void process_universe_termination(SacnSource* source, size_t index)
 {
-  bool universe_incremented = false;
+  SacnSourceUniverse* universe = &source->universes[index];
 
   if ((universe->num_terminations_sent < 3) && universe->has_null_data)
     send_termination_multicast(source, universe);
 
-  if (((universe->num_terminations_sent >= 3) && (etcpal_rbtree_size(&universe->unicast_dests) == 0)) ||
-      !universe->has_null_data)
+  if (((universe->num_terminations_sent >= 3) && (universe->num_unicast_dests == 0)) || !universe->has_null_data)
   {
     // Update num_active_universes if needed
     if (IS_PART_OF_UNIVERSE_DISCOVERY(universe))
@@ -1348,7 +1325,8 @@ bool process_universe_termination(SacnSource* source, SacnSourceUniverse* univer
     // Update the netints tree
     for (size_t i = 0; i < universe->num_netints; ++i)
     {
-      SacnSourceNetint* netint_state = lookup_source_netint(source, &universe->netints[i]);
+      size_t netint_index = 0;
+      SacnSourceNetint* netint_state = lookup_source_netint_and_index(source, &universe->netints[i], &netint_index);
 
       if (netint_state)
       {
@@ -1356,15 +1334,12 @@ bool process_universe_termination(SacnSource* source, SacnSourceUniverse* univer
           --netint_state->num_refs;
 
         if (netint_state->num_refs == 0)
-          remove_sacn_source_netint(source, &netint_state);
+          remove_sacn_source_netint(source, netint_index);
       }
     }
 
-    remove_sacn_source_universe(source, &universe, universe_iter);
-    universe_incremented = true;
+    remove_sacn_source_universe(source, index);
   }
-
-  return universe_incremented;
 }
 
 // Needs lock
@@ -1400,10 +1375,13 @@ void send_data_multicast_ipv4_ipv6(const SacnSource* source, SacnSourceUniverse*
   // Send multicast on IPv4 and/or IPv6
   if (!universe->send_unicast_only)
   {
-    if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-      sacn_send_multicast(universe->universe_id, kEtcPalIpTypeV4, send_buf, universe->netints, universe->num_netints);
-    if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-      sacn_send_multicast(universe->universe_id, kEtcPalIpTypeV6, send_buf, universe->netints, universe->num_netints);
+    for (size_t i = 0; i < universe->num_netints; ++i)
+    {
+      if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+        sacn_send_multicast(universe->universe_id, kEtcPalIpTypeV4, send_buf, &universe->netints[i]);
+      if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+        sacn_send_multicast(universe->universe_id, kEtcPalIpTypeV6, send_buf, &universe->netints[i]);
+    }
   }
 }
 
@@ -1412,9 +1390,9 @@ void send_data_unicast_ipv4_ipv6(const SacnSource* source, SacnSourceUniverse* u
 {
   // Send unicast on IPv4 and/or IPv6
   if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-    send_data_unicast(kEtcPalIpTypeV4, send_buf, &universe->unicast_dests);
+    send_data_unicast(kEtcPalIpTypeV4, send_buf, universe->unicast_dests, universe->num_unicast_dests);
   if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-    send_data_unicast(kEtcPalIpTypeV6, send_buf, &universe->unicast_dests);
+    send_data_unicast(kEtcPalIpTypeV6, send_buf, universe->unicast_dests, universe->num_unicast_dests);
 }
 
 // Needs lock
@@ -1514,48 +1492,30 @@ void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
 // Needs lock
 void send_universe_discovery(SacnSource* source)
 {
-  // Determine the set of network interfaces used by all universes of this source
-#if SACN_DYNAMIC_MEM
-  size_t netints_size = etcpal_rbtree_size(&source->netints);
-  EtcPalMcastNetintId* netints = netints_size ? calloc(netints_size, sizeof(EtcPalMcastNetintId)) : NULL;
-#else
-  EtcPalMcastNetintId netints[SACN_MAX_NETINTS];
-  size_t netints_size = SACN_MAX_NETINTS;
-#endif
-
-  size_t num_netints = 0;
-  EtcPalRbIter netint_iter;
-  etcpal_rbiter_init(&netint_iter);
-  EtcPalMcastNetintId* netint = etcpal_rbiter_first(&netint_iter, &source->netints);
-  while (netints && netint && (num_netints < netints_size))
-  {
-    netints[num_netints] = *netint;
-    ++num_netints;
-    netint = etcpal_rbiter_next(&netint_iter);
-  }
-
   // If there are network interfaces to send on
-  if (netints && (num_netints > 0))
+  if (source->num_netints > 0)
   {
-    // Initialize universe iterator and page number
-    EtcPalRbIter universe_iter;
-    etcpal_rbiter_init(&universe_iter);
-    uint8_t page_number = 0u;
+    // Initialize universe index and page number
+    size_t universe_index = 0;
+    uint8_t page_number = 0;
 
     // Pack the next page & loop while there's a page to send
-    while (pack_universe_discovery_page(source, &universe_iter, page_number) > 0)
+    while (pack_universe_discovery_page(source, &universe_index, page_number) > 0)
     {
       // Send multicast on IPv4 and/or IPv6
-      if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+      for (size_t i = 0; i < source->num_netints; ++i)
       {
-        sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, kEtcPalIpTypeV4, source->universe_discovery_send_buf, netints,
-                            num_netints);
-      }
+        if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+        {
+          sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, kEtcPalIpTypeV4, source->universe_discovery_send_buf,
+                              &source->netints[i].id);
+        }
 
-      if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-      {
-        sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, kEtcPalIpTypeV6, source->universe_discovery_send_buf, netints,
-                            num_netints);
+        if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
+        {
+          sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, kEtcPalIpTypeV6, source->universe_discovery_send_buf,
+                              &source->netints[i].id);
+        }
       }
 
       // Increment sequence number & page number
@@ -1563,25 +1523,17 @@ void send_universe_discovery(SacnSource* source)
       ++page_number;
     }
   }
-
-#if SACN_DYNAMIC_MEM
-  if (netints)
-    free(netints);
-#endif
 }
 
 // Needs lock
-void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, EtcPalRbTree* dests)
+void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, SacnUnicastDestination* dests,
+                       size_t num_dests)
 {
   if (dests)
   {
-    EtcPalRbIter tree_iter;
-    etcpal_rbiter_init(&tree_iter);
-
     // For each unicast destination, send the data
-    for (SacnUnicastDestination* dest = etcpal_rbiter_first(&tree_iter, dests); dest;
-         dest = etcpal_rbiter_next(&tree_iter))
-      send_data_to_single_unicast_dest(ip_type, send_buf, dest);
+    for (size_t i = 0; i < num_dests; ++i)
+      send_data_to_single_unicast_dest(ip_type, send_buf, &dests[i]);
   }
 }
 
@@ -1595,18 +1547,18 @@ void send_data_to_single_unicast_dest(etcpal_iptype_t ip_type, const uint8_t* se
 }
 
 // Needs lock
-int pack_universe_discovery_page(SacnSource* source, EtcPalRbIter* universe_iter, uint8_t page_number)
+int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uint8_t page_number)
 {
   // Initialize packing pointer and universe counter
   uint8_t* pcur = &source->universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE];
   int num_universes_packed = 0;
 
   // Iterate up to 512 universes (sorted)
-  for (const SacnSourceUniverse* universe = (page_number == 0) ? etcpal_rbiter_first(universe_iter, &source->universes)
-                                                               : etcpal_rbiter_next(universe_iter);
-       universe && (num_universes_packed < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE);
-       universe = etcpal_rbiter_next(universe_iter))
+  while ((*universe_index < source->num_universes) &&
+         (num_universes_packed < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE))
   {
+    const SacnSourceUniverse* universe = &source->universes[*universe_index];
+
     // If this universe has NULL start code data at a bare minimum & is not unicast-only
     if (IS_PART_OF_UNIVERSE_DISCOVERY(universe))
     {
@@ -1617,6 +1569,8 @@ int pack_universe_discovery_page(SacnSource* source, EtcPalRbIter* universe_iter
       // Increment number of universes packed
       ++num_universes_packed;
     }
+
+    ++(*universe_index);
   }
 
   // Update universe count, page, and last page PDU fields
@@ -1709,14 +1663,8 @@ void set_source_terminating(SacnSource* source)
     source->terminating = true;
 
     // Set terminating for each universe of this source
-    EtcPalRbIter tree_iter;
-    etcpal_rbiter_init(&tree_iter);
-
-    for (SacnSourceUniverse* universe = etcpal_rbiter_first(&tree_iter, &source->universes); universe;
-         universe = etcpal_rbiter_next(&tree_iter))
-    {
-      set_universe_terminating(universe);
-    }
+    for (size_t i = 0; i < source->num_universes; ++i)
+      set_universe_terminating(&source->universes[i]);
   }
 }
 
@@ -1731,14 +1679,8 @@ void set_universe_terminating(SacnSourceUniverse* universe)
     universe->num_terminations_sent = 0;
 
     // Set terminating for each unicast destination of this universe
-    EtcPalRbIter tree_iter;
-    etcpal_rbiter_init(&tree_iter);
-
-    for (SacnUnicastDestination* dest = etcpal_rbiter_first(&tree_iter, &universe->unicast_dests); dest;
-         dest = etcpal_rbiter_next(&tree_iter))
-    {
-      set_unicast_dest_terminating(dest);
-    }
+    for (size_t i = 0; i < universe->num_unicast_dests; ++i)
+      set_unicast_dest_terminating(&universe->unicast_dests[i]);
   }
 }
 
@@ -1783,12 +1725,10 @@ void set_source_name(SacnSource* source, const char* new_name)
   strncpy((char*)(&source->universe_discovery_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
 
   // For each universe:
-  EtcPalRbIter tree_iter;
-  etcpal_rbiter_init(&tree_iter);
-  for (SacnSourceUniverse* universe = etcpal_rbiter_first(&tree_iter, &source->universes); universe;
-       universe = etcpal_rbiter_next(&tree_iter))
-
+  for (size_t i = 0; i < source->num_universes; ++i)
   {
+    SacnSourceUniverse* universe = &source->universes[i];
+
     // Update the source name in this universe's send buffers
     strncpy((char*)(&universe->null_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
     strncpy((char*)(&universe->pap_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);

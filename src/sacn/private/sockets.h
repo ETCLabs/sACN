@@ -62,7 +62,7 @@ void sacn_add_pending_sockets(SacnRecvThreadContext* recv_thread_context);
 void sacn_cleanup_dead_sockets(SacnRecvThreadContext* recv_thread_context);
 etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadResult* read_result);
 void sacn_send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
-                         const EtcPalMcastNetintId* netints, size_t num_netints);
+                         const EtcPalMcastNetintId* netint);
 void sacn_send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr);
 
 #ifdef __cplusplus
