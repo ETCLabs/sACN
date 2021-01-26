@@ -190,18 +190,11 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if (!config)
+    if (!config || ETCPAL_UUID_IS_NULL(&config->cid) || !config->name ||
+        (strlen(config->name) > (SACN_SOURCE_NAME_MAX_LEN - 1)) || (config->keep_alive_interval <= 0) || !handle)
+    {
       result = kEtcPalErrInvalid;
-    else if (ETCPAL_UUID_IS_NULL(&config->cid))
-      result = kEtcPalErrInvalid;
-    else if (!config->name)
-      result = kEtcPalErrInvalid;
-    else if (strlen(config->name) > (SACN_SOURCE_NAME_MAX_LEN - 1))  // Max length includes null terminator
-      result = kEtcPalErrInvalid;
-    else if (config->keep_alive_interval <= 0)
-      result = kEtcPalErrInvalid;
-    else if (!handle)
-      result = kEtcPalErrInvalid;
+    }
   }
 
   if (sacn_lock())
@@ -267,11 +260,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if (handle == SACN_SOURCE_INVALID)
-      result = kEtcPalErrInvalid;
-    else if (!new_name)
-      result = kEtcPalErrInvalid;
-    else if (strlen(new_name) > (SACN_SOURCE_NAME_MAX_LEN - 1))  // Max length includes null terminator
+    if ((handle == SACN_SOURCE_INVALID) || !new_name || (strlen(new_name) > (SACN_SOURCE_NAME_MAX_LEN - 1)))
       result = kEtcPalErrInvalid;
   }
 
@@ -363,14 +352,12 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if (handle == SACN_SOURCE_INVALID)
+    if ((handle == SACN_SOURCE_INVALID) || !config || !UNIVERSE_ID_VALID(config->universe) ||
+        !UNIVERSE_ID_VALID(config->sync_universe) ||
+        ((config->num_unicast_destinations > 0) && !config->unicast_destinations))
+    {
       result = kEtcPalErrInvalid;
-    else if (!config)
-      result = kEtcPalErrInvalid;
-    else if (!UNIVERSE_ID_VALID(config->universe) || !UNIVERSE_ID_VALID(config->sync_universe))
-      result = kEtcPalErrInvalid;
-    else if ((config->num_unicast_destinations > 0) && !config->unicast_destinations)
-      result = kEtcPalErrInvalid;
+    }
     else
     {
       for (size_t i = 0; i < config->num_unicast_destinations; ++i)
@@ -518,13 +505,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if (handle == SACN_SOURCE_INVALID)
-      result = kEtcPalErrInvalid;
-    else if (!UNIVERSE_ID_VALID(universe))
-      result = kEtcPalErrInvalid;
-    else if (!dest)
-      result = kEtcPalErrInvalid;
-    else if (ETCPAL_IP_IS_INVALID(dest))
+    if ((handle == SACN_SOURCE_INVALID) || !UNIVERSE_ID_VALID(universe) || !dest || ETCPAL_IP_IS_INVALID(dest))
       result = kEtcPalErrInvalid;
   }
 
@@ -659,11 +640,7 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if (handle == SACN_SOURCE_INVALID)
-      result = kEtcPalErrInvalid;
-    else if (!UNIVERSE_ID_VALID(universe))
-      result = kEtcPalErrInvalid;
-    else if (new_priority > 200)
+    if ((handle == SACN_SOURCE_INVALID) || !UNIVERSE_ID_VALID(universe) || (new_priority > 200))
       result = kEtcPalErrInvalid;
   }
 
@@ -719,9 +696,7 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if (handle == SACN_SOURCE_INVALID)
-      result = kEtcPalErrInvalid;
-    else if (!UNIVERSE_ID_VALID(universe))
+    if ((handle == SACN_SOURCE_INVALID) || !UNIVERSE_ID_VALID(universe))
       result = kEtcPalErrInvalid;
   }
 
@@ -813,14 +788,11 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if (handle == SACN_SOURCE_INVALID)
+    if ((handle == SACN_SOURCE_INVALID) || !UNIVERSE_ID_VALID(universe) || (buflen > DMX_ADDRESS_COUNT) || !buffer ||
+        (buflen == 0))
+    {
       result = kEtcPalErrInvalid;
-    else if (!UNIVERSE_ID_VALID(universe))
-      result = kEtcPalErrInvalid;
-    else if (buflen > DMX_ADDRESS_COUNT)
-      result = kEtcPalErrInvalid;
-    else if (!buffer || (buflen == 0))
-      result = kEtcPalErrInvalid;
+    }
   }
 
   if (sacn_lock())
