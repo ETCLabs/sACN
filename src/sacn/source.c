@@ -63,27 +63,17 @@ static void process_universes(SacnSource* source);
 static void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe);
 static void process_universe_termination(SacnSource* source, size_t index);
 static void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniverse* universe);
-static void send_data_multicast_ipv4_ipv6(const SacnSource* source, SacnSourceUniverse* universe,
-                                          const uint8_t* send_buf);
-static void send_data_unicast_ipv4_ipv6(const SacnSource* source, SacnSourceUniverse* universe,
-                                        const uint8_t* send_buf);
 static void increment_sequence_number(SacnSourceUniverse* universe);
-static void send_null_data_multicast(const SacnSource* source, SacnSourceUniverse* universe);
-static void send_null_data_unicast(const SacnSource* source, SacnSourceUniverse* universe);
 static void process_null_sent(SacnSourceUniverse* universe);
 #if SACN_ETC_PRIORITY_EXTENSION
-static void send_pap_data_multicast(const SacnSource* source, SacnSourceUniverse* universe);
-static void send_pap_data_unicast(const SacnSource* source, SacnSourceUniverse* universe);
 static void process_pap_sent(SacnSourceUniverse* universe);
 #endif
 static void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe);
 static void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe,
                                      SacnUnicastDestination* dest);
 static void send_universe_discovery(SacnSource* source);
-static void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, SacnUnicastDestination* dests,
-                              size_t num_dests);
-static void send_data_to_single_unicast_dest(etcpal_iptype_t ip_type, const uint8_t* send_buf,
-                                             const SacnUnicastDestination* dest);
+static void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
+static void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
 static int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uint8_t page_number);
 static void update_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size, bool force_sync);
 static void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_levels,
@@ -850,8 +840,8 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
       update_data(send_buf, buffer, (uint16_t)buflen, false);
 
       // Send on the network
-      send_data_multicast_ipv4_ipv6(source_state, universe_state, send_buf);
-      send_data_unicast_ipv4_ipv6(source_state, universe_state, send_buf);
+      send_universe_multicast(source_state, universe_state, send_buf);
+      send_universe_unicast(source_state, universe_state, send_buf);
       increment_sequence_number(universe_state);
     }
 
@@ -1348,8 +1338,8 @@ void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniver
                                   etcpal_timer_is_expired(&universe->null_keep_alive_timer)))
   {
     // Send 0x00 data & reset the keep-alive timer
-    send_null_data_multicast(source, universe);
-    send_null_data_unicast(source, universe);
+    send_universe_multicast(source, universe, universe->null_send_buf);
+    send_universe_unicast(source, universe, universe->null_send_buf);
     process_null_sent(universe);
     etcpal_timer_reset(&universe->null_keep_alive_timer);
   }
@@ -1359,38 +1349,12 @@ void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniver
                                  etcpal_timer_is_expired(&universe->pap_keep_alive_timer)))
   {
     // Send 0xDD data & reset the keep-alive timer
-    send_pap_data_multicast(source, universe);
-    send_pap_data_unicast(source, universe);
+    send_universe_multicast(source, universe, universe->pap_send_buf);
+    send_universe_unicast(source, universe, universe->pap_send_buf);
     process_pap_sent(universe);
     etcpal_timer_reset(&universe->pap_keep_alive_timer);
   }
 #endif
-}
-
-// Needs lock
-void send_data_multicast_ipv4_ipv6(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
-{
-  // Send multicast on IPv4 and/or IPv6
-  if (!universe->send_unicast_only)
-  {
-    for (size_t i = 0; i < universe->num_netints; ++i)
-    {
-      if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-        sacn_send_multicast(universe->universe_id, kEtcPalIpTypeV4, send_buf, &universe->netints[i]);
-      if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-        sacn_send_multicast(universe->universe_id, kEtcPalIpTypeV6, send_buf, &universe->netints[i]);
-    }
-  }
-}
-
-// Needs lock
-void send_data_unicast_ipv4_ipv6(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
-{
-  // Send unicast on IPv4 and/or IPv6
-  if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-    send_data_unicast(kEtcPalIpTypeV4, send_buf, universe->unicast_dests, universe->num_unicast_dests);
-  if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-    send_data_unicast(kEtcPalIpTypeV6, send_buf, universe->unicast_dests, universe->num_unicast_dests);
 }
 
 // Needs lock
@@ -1404,18 +1368,6 @@ void increment_sequence_number(SacnSourceUniverse* universe)
 }
 
 // Needs lock
-void send_null_data_multicast(const SacnSource* source, SacnSourceUniverse* universe)
-{
-  send_data_multicast_ipv4_ipv6(source, universe, universe->null_send_buf);
-}
-
-// Needs lock
-void send_null_data_unicast(const SacnSource* source, SacnSourceUniverse* universe)
-{
-  send_data_unicast_ipv4_ipv6(source, universe, universe->null_send_buf);
-}
-
-// Needs lock
 void process_null_sent(SacnSourceUniverse* universe)
 {
   increment_sequence_number(universe);
@@ -1425,18 +1377,6 @@ void process_null_sent(SacnSourceUniverse* universe)
 }
 
 #if SACN_ETC_PRIORITY_EXTENSION
-// Needs lock
-void send_pap_data_multicast(const SacnSource* source, SacnSourceUniverse* universe)
-{
-  send_data_multicast_ipv4_ipv6(source, universe, universe->pap_send_buf);
-}
-
-// Needs lock
-void send_pap_data_unicast(const SacnSource* source, SacnSourceUniverse* universe)
-{
-  send_data_unicast_ipv4_ipv6(source, universe, universe->pap_send_buf);
-}
-
 // Needs lock
 void process_pap_sent(SacnSourceUniverse* universe)
 {
@@ -1455,7 +1395,7 @@ void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* un
   SET_TERMINATED_OPT(universe->null_send_buf, true);
 
   // Send the termination packet on multicast only
-  send_null_data_multicast(source, universe);
+  send_universe_multicast(source, universe, universe->null_send_buf);
   process_null_sent(universe);
 
   // Increment the termination counter
@@ -1473,11 +1413,7 @@ void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
   SET_TERMINATED_OPT(universe->null_send_buf, true);
 
   // Send the termination packet on unicast only
-  if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-    send_data_to_single_unicast_dest(kEtcPalIpTypeV4, universe->null_send_buf, dest);
-  if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-    send_data_to_single_unicast_dest(kEtcPalIpTypeV6, universe->null_send_buf, dest);
-
+  sacn_send_unicast(source->ip_supported, universe->null_send_buf, &dest->dest_addr);
   process_null_sent(universe);
 
   // Increment the termination counter
@@ -1503,17 +1439,8 @@ void send_universe_discovery(SacnSource* source)
       // Send multicast on IPv4 and/or IPv6
       for (size_t i = 0; i < source->num_netints; ++i)
       {
-        if ((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-        {
-          sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, kEtcPalIpTypeV4, source->universe_discovery_send_buf,
-                              &source->netints[i].id);
-        }
-
-        if ((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6))
-        {
-          sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, kEtcPalIpTypeV6, source->universe_discovery_send_buf,
-                              &source->netints[i].id);
-        }
+        sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, source->ip_supported, source->universe_discovery_send_buf,
+                            &source->netints[i].id);
       }
 
       // Increment sequence number & page number
@@ -1524,24 +1451,20 @@ void send_universe_discovery(SacnSource* source)
 }
 
 // Needs lock
-void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, SacnUnicastDestination* dests,
-                       size_t num_dests)
+void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
 {
-  if (dests)
+  if (!universe->send_unicast_only)
   {
-    // For each unicast destination, send the data
-    for (size_t i = 0; i < num_dests; ++i)
-      send_data_to_single_unicast_dest(ip_type, send_buf, &dests[i]);
+    for (size_t i = 0; i < universe->num_netints; ++i)
+      sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints[i]);
   }
 }
 
 // Needs lock
-void send_data_to_single_unicast_dest(etcpal_iptype_t ip_type, const uint8_t* send_buf,
-                                      const SacnUnicastDestination* dest)
+void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
 {
-  // If this destination matches the IP type, then send to it.
-  if (dest && (dest->dest_addr.type == ip_type))
-    sacn_send_unicast(send_buf, &dest->dest_addr);
+  for (size_t i = 0; i < universe->num_unicast_dests; ++i)
+    sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr);
 }
 
 // Needs lock
