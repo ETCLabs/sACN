@@ -367,31 +367,18 @@ typedef struct SacnRecvThreadContext
  * Types used by the sACN Source module
  *****************************************************************************/
 
-typedef struct SacnSource SacnSource;
-struct SacnSource
+typedef struct SacnSourceNetint
 {
-  sacn_source_t handle;  // This must be the first struct member.
+  EtcPalMcastNetintId id;  // This must be the first struct member.
+  size_t num_refs;         // Number of universes using this netint.
+} SacnSourceNetint;
 
-  EtcPalUuid cid;
-  char name[SACN_SOURCE_NAME_MAX_LEN];
-
-  bool terminating;  // If in the process of terminating all universes and removing this source.
-
-  SACN_DECLARE_BUF(SacnSourceUniverse, universes, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE);
-  size_t num_universes;
-  size_t num_active_universes;  // Number of universes to include in universe discovery packets.
-  EtcPalTimer universe_discovery_timer;
-  bool process_manually;
-  sacn_ip_support_t ip_supported;
-  int keep_alive_interval;
-  size_t universe_count_max;
-
-  // Provides a way to look up netints being used by any universe of this source.
-  SACN_DECLARE_BUF(SacnSourceNetint, netints, SACN_MAX_NETINTS);
-  size_t num_netints;
-
-  uint8_t universe_discovery_send_buf[SACN_MTU];
-};
+typedef struct SacnUnicastDestination
+{
+  EtcPalIpAddr dest_addr;  // This must be the first struct member.
+  bool terminating;
+  int num_terminations_sent;
+} SacnUnicastDestination;
 
 typedef struct SacnSourceUniverse SacnSourceUniverse;
 struct SacnSourceUniverse
@@ -428,18 +415,31 @@ struct SacnSourceUniverse
   size_t num_netints;
 };
 
-typedef struct SacnSourceNetint
+typedef struct SacnSource SacnSource;
+struct SacnSource
 {
-  EtcPalMcastNetintId id;  // This must be the first struct member.
-  size_t num_refs;         // Number of universes using this netint.
-} SacnSourceNetint;
+  sacn_source_t handle;  // This must be the first struct member.
 
-typedef struct SacnUnicastDestination
-{
-  EtcPalIpAddr dest_addr;  // This must be the first struct member.
-  bool terminating;
-  int num_terminations_sent;
-} SacnUnicastDestination;
+  EtcPalUuid cid;
+  char name[SACN_SOURCE_NAME_MAX_LEN];
+
+  bool terminating;  // If in the process of terminating all universes and removing this source.
+
+  SACN_DECLARE_BUF(SacnSourceUniverse, universes, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE);
+  size_t num_universes;
+  size_t num_active_universes;  // Number of universes to include in universe discovery packets.
+  EtcPalTimer universe_discovery_timer;
+  bool process_manually;
+  sacn_ip_support_t ip_supported;
+  int keep_alive_interval;
+  size_t universe_count_max;
+
+  // Provides a way to look up netints being used by any universe of this source.
+  SACN_DECLARE_BUF(SacnSourceNetint, netints, SACN_MAX_NETINTS);
+  size_t num_netints;
+
+  uint8_t universe_discovery_send_buf[SACN_MTU];
+};
 
 /******************************************************************************
  * Global variables, functions, and state tracking

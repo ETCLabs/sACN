@@ -124,6 +124,9 @@ size_t pack_sacn_sync_framing_layer(uint8_t* buf, uint8_t seq_num, uint16_t sync
 size_t pack_sacn_universe_discovery_framing_layer(uint8_t* buf, uint16_t universe_count, const char* source_name);
 size_t pack_sacn_universe_discovery_layer_header(uint8_t* buf, uint16_t universe_count, uint8_t page,
                                                  uint8_t last_page);
+void init_sacn_data_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid,
+                             const char* source_name, uint8_t priority, uint16_t universe, uint16_t sync_universe,
+                             bool send_preview);
 
 #ifdef __cplusplus
 }

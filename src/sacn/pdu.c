@@ -17,6 +17,7 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
+#include "sacn/private/common.h"
 #include "sacn/private/pdu.h"
 
 #include <string.h>
@@ -273,4 +274,17 @@ size_t pack_sacn_universe_discovery_layer_header(uint8_t* buf, uint16_t universe
   ++pcur;
 
   return (size_t)(pcur - buf);
+}
+
+void init_sacn_data_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid,
+                             const char* source_name, uint8_t priority, uint16_t universe, uint16_t sync_universe,
+                             bool send_preview)
+
+{
+  memset(send_buf, 0, SACN_MTU);
+  size_t written = 0;
+  written += pack_sacn_root_layer(send_buf, SACN_DATA_HEADER_SIZE, false, source_cid);
+  written += pack_sacn_data_framing_layer(&send_buf[written], 0, VECTOR_E131_DATA_PACKET, source_name, priority,
+                                          sync_universe, 0, send_preview, false, false, universe);
+  written += pack_sacn_dmp_layer_header(&send_buf[written], start_code, 0);
 }

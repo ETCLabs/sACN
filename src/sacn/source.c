@@ -85,8 +85,6 @@ static void send_data_unicast(etcpal_iptype_t ip_type, const uint8_t* send_buf, 
 static void send_data_to_single_unicast_dest(etcpal_iptype_t ip_type, const uint8_t* send_buf,
                                              const SacnUnicastDestination* dest);
 static int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uint8_t page_number);
-static void init_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid, const char* source_name,
-                          uint8_t priority, uint16_t universe, uint16_t sync_universe, bool send_preview);
 static void update_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size, bool force_sync);
 static void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_levels,
                           size_t new_levels_size, bool force_sync);
@@ -415,7 +413,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     // Initialize the universe's state.
     SacnSourceUniverse* universe = NULL;
     if (result == kEtcPalErrOk)
-      result = add_sacn_source_universe(source, config->universe, netints, num_netints, &universe);
+      result = add_sacn_source_universe(source, config, netints, num_netints, &universe);
 
     // Update the source's netint tracking.
     for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->num_netints); ++i)
@@ -582,14 +580,14 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
   if (dest && sacn_lock())
   {
     // Look up unicast destination
-    SacnSource* source = NULL;
-    SacnSourceUniverse* universe = NULL;
-    lookup_source_and_universe(handle, universe, &source, &universe);
+    SacnSource* source_state = NULL;
+    SacnSourceUniverse* universe_state = NULL;
+    lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if (universe)
+    if (universe_state)
     {
       SacnUnicastDestination* unicast_dest = NULL;
-      lookup_unicast_dest(universe, dest, &unicast_dest);
+      lookup_unicast_dest(universe_state, dest, &unicast_dest);
 
       // Initiate termination
       if (unicast_dest)
@@ -847,8 +845,8 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
     {
       // Initialize send buffer
       uint8_t send_buf[SACN_MTU];
-      init_send_buf(send_buf, start_code, &source_state->cid, source_state->name, universe_state->priority,
-                    universe_state->universe_id, universe_state->sync_universe, universe_state->send_preview);
+      init_sacn_data_send_buf(send_buf, start_code, &source_state->cid, source_state->name, universe_state->priority,
+                              universe_state->universe_id, universe_state->sync_universe, universe_state->send_preview);
       update_data(send_buf, buffer, (uint16_t)buflen, false);
 
       // Send on the network
@@ -1581,18 +1579,6 @@ int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uin
 
   // Return number of universes packed
   return num_universes_packed;
-}
-
-// Needs lock
-void init_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid, const char* source_name,
-                   uint8_t priority, uint16_t universe, uint16_t sync_universe, bool send_preview)
-{
-  memset(send_buf, 0, SACN_MTU);
-  size_t written = 0;
-  written += pack_sacn_root_layer(send_buf, SACN_DATA_HEADER_SIZE, false, source_cid);
-  written += pack_sacn_data_framing_layer(&send_buf[written], 0, VECTOR_E131_DATA_PACKET, source_name, priority,
-                                          sync_universe, 0, send_preview, false, false, universe);
-  written += pack_sacn_dmp_layer_header(&send_buf[written], start_code, 0);
 }
 
 // Needs lock
