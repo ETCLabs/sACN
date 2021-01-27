@@ -174,6 +174,7 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNoMem: No room to allocate an additional source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @return Other codes translated from system error codes are possible.
  */
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle)
 {
@@ -1124,10 +1125,7 @@ etcpal_error_t start_tick_thread()
   shutting_down = false;
   EtcPalThreadParams params = ETCPAL_THREAD_PARAMS_INIT;
 
-  if (etcpal_thread_create(&source_thread_handle, &params, source_thread_function, NULL) != kEtcPalErrOk)
-    return kEtcPalErrSys;
-
-  return kEtcPalErrOk;
+  return etcpal_thread_create(&source_thread_handle, &params, source_thread_function, NULL);
 }
 
 // Takes lock
