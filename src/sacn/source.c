@@ -177,10 +177,7 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
  */
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle)
 {
-#if !SACN_SOURCE_ENABLED
-  return kEtcPalErrNotInit;
-#endif
-
+#if SACN_SOURCE_ENABLED
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
@@ -224,6 +221,9 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
   }
 
   return result;
+#else  // SACN_SOURCE_ENABLED
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -247,9 +247,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
  */
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name)
 {
-#if !SACN_SOURCE_ENABLED
-  return kEtcPalErrNotInit;
-#endif
+#if SACN_SOURCE_ENABLED
 
   etcpal_error_t result = kEtcPalErrOk;
 
@@ -279,6 +277,9 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
   }
 
   return result;
+#else  // SACN_SOURCE_ENABLED
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -339,10 +340,7 @@ void sacn_source_destroy(sacn_source_t handle)
 etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config,
                                         SacnMcastInterface* netints, size_t num_netints)
 {
-#if !SACN_SOURCE_ENABLED
-  return kEtcPalErrNotInit;
-#endif
-
+#if SACN_SOURCE_ENABLED
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
@@ -409,6 +407,9 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
   }
 
   return result;
+#else   // SACN_SOURCE_ENABLED
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -492,10 +493,7 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
  */
 etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)
 {
-#if !SACN_SOURCE_ENABLED
-  return kEtcPalErrNotInit;
-#endif
-
+#if SACN_SOURCE_ENABLED
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
@@ -530,6 +528,9 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
   }
 
   return result;
+#else   // SACN_SOURCE_ENABLED
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -627,10 +628,7 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
  */
 etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t universe, uint8_t new_priority)
 {
-#if !SACN_SOURCE_ENABLED
-  return kEtcPalErrNotInit;
-#endif
-
+#if SACN_SOURCE_ENABLED
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
@@ -660,6 +658,9 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
   }
 
   return result;
+#else   // SACN_SOURCE_ENABLED
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -683,10 +684,7 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
  */
 etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t universe, bool new_preview_flag)
 {
-#if !SACN_SOURCE_ENABLED
-  return kEtcPalErrNotInit;
-#endif
-
+#if SACN_SOURCE_ENABLED
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
@@ -716,6 +714,9 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
   }
 
   return result;
+#else   // SACN_SOURCE_ENABLED
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -741,16 +742,16 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
 etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle, uint16_t universe,
                                                            uint16_t new_sync_universe)
 {
-#if !SACN_SOURCE_ENABLED
-  return kEtcPalErrNotInit;
-#endif
-
+#if SACN_SOURCE_ENABLED
   // TODO
 
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(new_sync_universe);
   return kEtcPalErrNotImpl;
+#else   // SACN_SOURCE_ENABLED
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -775,10 +776,7 @@ etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
 etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uint8_t start_code, const uint8_t* buffer,
                                     size_t buflen)
 {
-#if !SACN_SOURCE_ENABLED
-  return kEtcPalErrNotInit;
-#endif
-
+#if SACN_SOURCE_ENABLED
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
@@ -821,6 +819,9 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
   }
 
   return result;
+#else   // SACN_SOURCE_ENABLED
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -841,15 +842,15 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
  */
 etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t sync_universe)
 {
-#if !SACN_SOURCE_ENABLED
-  return kEtcPalErrNotInit;
-#endif
-
+#if SACN_SOURCE_ENABLED
   // TODO
 
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(sync_universe);
   return kEtcPalErrNotImpl;
+#else   // SACN_SOURCE_ENABLED
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
@@ -1023,11 +1024,11 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
  */
 int sacn_source_process_manual(void)
 {
-#if !SACN_SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED
+  return process_internal(true);
+#else
   return 0;
 #endif
-
-  return process_internal(true);
 }
 
 /**
@@ -1060,16 +1061,16 @@ int sacn_source_process_manual(void)
 etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
                                             size_t num_netints)
 {
-#if !SACN_SOURCE_ENABLED
-  return kEtcPalErrNotInit;
-#endif
-
+#if SACN_SOURCE_ENABLED
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
 
   return kEtcPalErrNotImpl;
+#else   // SACN_SOURCE_ENABLED
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
 }
 
 /**
