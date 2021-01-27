@@ -56,7 +56,7 @@ static void stop_tick_thread();
 
 static void source_thread_function(void* arg);
 
-static int process_internal(bool process_manual);
+static int take_lock_and_process_sources(bool process_manual);
 static int process_sources(bool process_manual);
 static void process_universe_discovery(SacnSource* source);
 static void process_universes(SacnSource* source);
@@ -1026,7 +1026,7 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 int sacn_source_process_manual(void)
 {
 #if SACN_SOURCE_ENABLED
-  return process_internal(true);
+  return take_lock_and_process_sources(true);
 #else
   return 0;
 #endif
@@ -1160,7 +1160,7 @@ void source_thread_function(void* arg)
   // num_thread_based_sources > 0).
   while (keep_running_thread || (num_thread_based_sources > 0))
   {
-    num_thread_based_sources = process_internal(false);
+    num_thread_based_sources = take_lock_and_process_sources(false);
 
     etcpal_thread_sleep(etcpal_timer_remaining(&interval_timer));
     etcpal_timer_reset(&interval_timer);
@@ -1174,7 +1174,7 @@ void source_thread_function(void* arg)
 }
 
 // Takes lock
-int process_internal(bool process_manual)
+int take_lock_and_process_sources(bool process_manual)
 {
   int num_sources_tracked = 0;
 
