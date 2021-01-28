@@ -34,7 +34,7 @@ var group__sacn__source =
     [ "sacn_source_config_init", "group__sacn__source.html#ga4d115a7b828b0f45444ac36f0b946e64", null ],
     [ "sacn_source_create", "group__sacn__source.html#ga37f43cd2ec265e3052eea6d5f1b68233", null ],
     [ "sacn_source_destroy", "group__sacn__source.html#gaeb8a9797368aabad696c81225b4c8aaa", null ],
-    [ "sacn_source_get_network_interfaces", "group__sacn__source.html#ga4949e798ade12169166ec4da8461bf26", null ],
+    [ "sacn_source_get_network_interfaces", "group__sacn__source.html#gae8c8d77375ea48b26fc069c9068aec69", null ],
     [ "sacn_source_get_unicast_destinations", "group__sacn__source.html#ga12f792b85add6af90ba2560f287b630c", null ],
     [ "sacn_source_get_universes", "group__sacn__source.html#ga90b2e59fa6709ee72042778a60c93330", null ],
     [ "sacn_source_process_manual", "group__sacn__source.html#ga05ae91a74132e84439e18364de2b62d4", null ],

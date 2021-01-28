@@ -276,7 +276,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>If false (default), this source will be added to a background thread that will send sACN updates at a maximum rate of every 23 ms. If true, the source will not be added to the thread and the application must call <a class="el" href="group__sacn__source.html#ga05ae91a74132e84439e18364de2b62d4" title="Trigger the transmision of sACN packets for all universes of sources that were created with manually_...">sacn_source_process_manual()</a> at its maximum DMX rate, typically 23 ms. </p>
+<p>If false (default), this source will be added to a background thread that will send sACN updates at a maximum rate of every 23 ms. If true, the source will not be added to the thread and the application must call <a class="el" href="group__sacn__source.html#ga05ae91a74132e84439e18364de2b62d4" title="Trigger the transmission of sACN packets for all universes of sources that were created with manually...">sacn_source_process_manual()</a> at its maximum DMX rate, typically 23 ms. </p>
 
 </div>
 </div>
@@ -306,7 +306,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>The maximum number of universes this source will send to. May be <a class="el" href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d" title="Constant for &quot;infinite&quot; when sending sACN universes. ">SACN_SOURCE_INFINITE_UNIVERSES</a>. This parameter is ignored when configured to use static memory &ndash; <a class="el" href="group__sacnopts__send.html#ga841d6f465d02b8d4b9e6a3cbe00d5beb" title="The maximum number of universes that a source can send to simultaneously. ">SACN_SOURCE_MAX_UNIVERSES</a> is used instead. </p>
+<p>The maximum number of universes this source will send to. May be <a class="el" href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d" title="Constant for &quot;infinite&quot; when sending sACN universes. ">SACN_SOURCE_INFINITE_UNIVERSES</a>. This parameter is ignored when configured to use static memory &ndash; <a class="el" href="group__sacnopts__send.html#gaac75390f2990b299303bfbce89e5f7ef" title="The maximum number of universes that a source can send to simultaneously. ">SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE</a> is used instead. </p>
 
 </div>
 </div>

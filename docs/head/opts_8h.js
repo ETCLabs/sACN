@@ -9,6 +9,7 @@ var opts_8h =
     [ "SACN_LOGGING_ENABLED", "group__sacnopts__global.html#ga5b77f40b283fa0f754576a64ff6f3d4c", null ],
     [ "SACN_LOOPBACK", "group__sacnopts__global.html#ga6ae6b1e22f87a5c2e49aefbc95a97256", null ],
     [ "SACN_MAX_NETINTS", "group__sacnopts__global.html#ga2dd2edc6a9d13618baaf6d02b4d86e81", null ],
+    [ "SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE", "group__sacnopts__send.html#ga53a3e7e498368c3311403912d7c01515", null ],
     [ "SACN_RECEIVER_LIMIT_BIND", "group__sacnopts__receiver.html#ga6bfc294d941da830fbb9bd562c45f638", null ],
     [ "SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE", "group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e", null ],
     [ "SACN_RECEIVER_MAX_SUBS_PER_SOCKET", "group__sacnopts__receiver.html#gab20e9727556f9656a506bb85628f7df8", null ],
@@ -23,5 +24,6 @@ var opts_8h =
     [ "SACN_SOURCE_DETECTOR_READ_TIMEOUT_MS", "group__sacnopts__source__detector.html#gaf49c37ed22894c9db85e376833727ee3", null ],
     [ "SACN_SOURCE_DETECTOR_THREAD_PRIORITY", "group__sacnopts__source__detector.html#ga75cc0df47297d4051307c283d398d12a", null ],
     [ "SACN_SOURCE_DETECTOR_THREAD_STACK", "group__sacnopts__source__detector.html#gae3fd4d040877d49d52ab3b52e64897e5", null ],
-    [ "SACN_SOURCE_MAX_UNIVERSES", "group__sacnopts__send.html#ga841d6f465d02b8d4b9e6a3cbe00d5beb", null ]
+    [ "SACN_SOURCE_MAX_SOURCES", "group__sacnopts__send.html#gaa08afe863ab6922c173055d4239184c4", null ],
+    [ "SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE", "group__sacnopts__send.html#gaac75390f2990b299303bfbce89e5f7ef", null ]
 ];

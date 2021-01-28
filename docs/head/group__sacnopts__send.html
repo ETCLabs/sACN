@@ -204,27 +204,69 @@ $(document).ready(function(){initNavTree('group__sacnopts__send.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:ga841d6f465d02b8d4b9e6a3cbe00d5beb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__send.html#ga841d6f465d02b8d4b9e6a3cbe00d5beb">SACN_SOURCE_MAX_UNIVERSES</a>&#160;&#160;&#160;4</td></tr>
-<tr class="memdesc:ga841d6f465d02b8d4b9e6a3cbe00d5beb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of universes that a source can send to simultaneously.  <a href="#ga841d6f465d02b8d4b9e6a3cbe00d5beb">More...</a><br /></td></tr>
-<tr class="separator:ga841d6f465d02b8d4b9e6a3cbe00d5beb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa08afe863ab6922c173055d4239184c4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__send.html#gaa08afe863ab6922c173055d4239184c4">SACN_SOURCE_MAX_SOURCES</a>&#160;&#160;&#160;1</td></tr>
+<tr class="memdesc:gaa08afe863ab6922c173055d4239184c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of sources that can be created.  <a href="#gaa08afe863ab6922c173055d4239184c4">More...</a><br /></td></tr>
+<tr class="separator:gaa08afe863ab6922c173055d4239184c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaac75390f2990b299303bfbce89e5f7ef"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__send.html#gaac75390f2990b299303bfbce89e5f7ef">SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE</a>&#160;&#160;&#160;4</td></tr>
+<tr class="memdesc:gaac75390f2990b299303bfbce89e5f7ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of universes that a source can send to simultaneously.  <a href="#gaac75390f2990b299303bfbce89e5f7ef">More...</a><br /></td></tr>
+<tr class="separator:gaac75390f2990b299303bfbce89e5f7ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga53a3e7e498368c3311403912d7c01515"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts__send.html#ga53a3e7e498368c3311403912d7c01515">SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE</a>&#160;&#160;&#160;4</td></tr>
+<tr class="memdesc:ga53a3e7e498368c3311403912d7c01515"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of unicast destinations per universe that a source can send to simultaneously.  <a href="#ga53a3e7e498368c3311403912d7c01515">More...</a><br /></td></tr>
+<tr class="separator:ga53a3e7e498368c3311403912d7c01515"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Configuration options for the <a class="el" href="group__sacn__source.html">sACN Source</a> module. </p>
 <h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="ga841d6f465d02b8d4b9e6a3cbe00d5beb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga841d6f465d02b8d4b9e6a3cbe00d5beb">&#9670;&nbsp;</a></span>SACN_SOURCE_MAX_UNIVERSES</h2>
+<a id="ga53a3e7e498368c3311403912d7c01515"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga53a3e7e498368c3311403912d7c01515">&#9670;&nbsp;</a></span>SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define SACN_SOURCE_MAX_UNIVERSES&#160;&#160;&#160;4</td>
+          <td class="memname">#define SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE&#160;&#160;&#160;4</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The maximum number of unicast destinations per universe that a source can send to simultaneously. </p>
+<p>Meaningful only if <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87" title="Use dynamic memory allocation. ">SACN_DYNAMIC_MEM</a> is defined to 0. </p>
+
+</div>
+</div>
+<a id="gaa08afe863ab6922c173055d4239184c4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaa08afe863ab6922c173055d4239184c4">&#9670;&nbsp;</a></span>SACN_SOURCE_MAX_SOURCES</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_SOURCE_MAX_SOURCES&#160;&#160;&#160;1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The maximum number of sources that can be created. </p>
+<p>Meaningful only if <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87" title="Use dynamic memory allocation. ">SACN_DYNAMIC_MEM</a> is defined to 0.</p>
+<p>If this is set to 0, no memory pools are allocated, and the Source API is disabled. </p>
+
+</div>
+</div>
+<a id="gaac75390f2990b299303bfbce89e5f7ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaac75390f2990b299303bfbce89e5f7ef">&#9670;&nbsp;</a></span>SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE&#160;&#160;&#160;4</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>The maximum number of universes that a source can send to simultaneously. </p>
-<p>Meaningful only if <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87" title="Use dynamic memory allocation. ">SACN_DYNAMIC_MEM</a> is defined to 0. </p>
+<p>Meaningful only if <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87" title="Use dynamic memory allocation. ">SACN_DYNAMIC_MEM</a> is defined to 0.</p>
+<p>If this is set to 0, no memory pools are allocated, and the Source API is disabled. </p>
 
 </div>
 </div>

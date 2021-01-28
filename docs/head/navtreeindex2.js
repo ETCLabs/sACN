@@ -1,5 +1,9 @@
 var NAVTREEINDEX2 =
 {
+"group__sacnopts__source__detector.html#gae3fd4d040877d49d52ab3b52e64897e5":[6,0,1,0,0,0,23],
+"group__sacnopts__source__detector.html#gae3fd4d040877d49d52ab3b52e64897e5":[3,0,5,4,4],
+"group__sacnopts__source__detector.html#gaf49c37ed22894c9db85e376833727ee3":[6,0,1,0,0,0,21],
+"group__sacnopts__source__detector.html#gaf49c37ed22894c9db85e376833727ee3":[3,0,5,4,2],
 "index.html":[],
 "index.html":[0],
 "merge__receiver_8h.html":[6,0,0,0,3],
