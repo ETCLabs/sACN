@@ -53,14 +53,14 @@ static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PR
 #if SACN_DYNAMIC_MEM
 #define ALLOC_RECEIVER() malloc(sizeof(SacnReceiver))
 #define ALLOC_TRACKED_SOURCE() malloc(sizeof(SacnTrackedSource))
-#define FREE_RECEIVER(ptr) \
-  do                       \
-  {                        \
-    if (ptr->netints)      \
-    {                      \
-      free(ptr->netints);  \
-    }                      \
-    free(ptr);             \
+#define FREE_RECEIVER(ptr)        \
+  do                              \
+  {                               \
+    if (ptr->netints.netints)     \
+    {                             \
+      free(ptr->netints.netints); \
+    }                             \
+    free(ptr);                    \
   } while (0)
 #define FREE_TRACKED_SOURCE(ptr) free(ptr)
 #else
@@ -104,8 +104,6 @@ static struct SacnRecvState
 
 // Receiver creation and destruction
 static etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config);
-static etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, SacnMcastInterface* netints,
-                                                  size_t num_netints);
 static etcpal_error_t create_new_receiver(const SacnReceiverConfig* config, SacnMcastInterface* netints,
                                           size_t num_netints, SacnReceiver** new_receiver);
 static etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnReceiverConfig* config);
@@ -442,8 +440,8 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
 
       if (supports_ipv4(receiver->ip_supported))
       {
-        res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, new_universe_id, receiver->netints,
-                                       receiver->num_netints, &receiver->ipv4_socket);
+        res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, new_universe_id, receiver->netints.netints,
+                                       receiver->netints.num_netints, &receiver->ipv4_socket);
 
         if ((res == kEtcPalErrNoNetints) && supports_ipv6(receiver->ip_supported))
           res = kEtcPalErrOk;  // Try IPv6.
@@ -454,8 +452,8 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
     {
       if (supports_ipv6(receiver->ip_supported))
       {
-        res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, new_universe_id, receiver->netints,
-                                       receiver->num_netints, &receiver->ipv6_socket);
+        res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, new_universe_id, receiver->netints.netints,
+                                       receiver->netints.num_netints, &receiver->ipv6_socket);
       }
     }
 
@@ -647,63 +645,6 @@ etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config)
 }
 
 /*
- * Initialize a SacnReceiver's network interface data.
- */
-etcpal_error_t initialize_receiver_netints(SacnReceiver* receiver, SacnMcastInterface* netints, size_t num_netints)
-{
-  size_t num_valid_netints = 0u;
-  etcpal_error_t result = sacn_validate_netint_config(netints, num_netints, &num_valid_netints);
-  if (result != kEtcPalErrOk)
-    return result;
-
-  if (netints)
-  {
-#if SACN_DYNAMIC_MEM
-    EtcPalMcastNetintId* calloc_result = calloc(num_valid_netints, sizeof(EtcPalMcastNetintId));
-
-    if (calloc_result)
-    {
-      receiver->netints = calloc_result;
-    }
-    else
-    {
-      result = kEtcPalErrNoMem;
-    }
-#else
-    if (num_netints > SACN_MAX_NETINTS)
-    {
-      result = kEtcPalErrNoMem;
-    }
-#endif
-
-    if (result == kEtcPalErrOk)
-    {
-      for (size_t read_index = 0u, write_index = 0u; read_index < num_netints; ++read_index)
-      {
-        if (netints[read_index].status == kEtcPalErrOk)
-        {
-          memcpy(&receiver->netints[write_index], &netints[read_index].iface, sizeof(EtcPalMcastNetintId));
-          ++write_index;
-        }
-      }
-    }
-  }
-#if SACN_DYNAMIC_MEM
-  else
-  {
-    receiver->netints = NULL;
-  }
-#endif
-
-  if (result == kEtcPalErrOk)
-  {
-    receiver->num_netints = num_valid_netints;
-  }
-
-  return result;
-}
-
-/*
  * Allocate a new receiver instances and do essential first initialization, in preparation for
  * creating the sockets and subscriptions.
  *
@@ -730,7 +671,8 @@ etcpal_error_t create_new_receiver(const SacnReceiverConfig* config, SacnMcastIn
   receiver->ipv4_socket = ETCPAL_SOCKET_INVALID;
   receiver->ipv6_socket = ETCPAL_SOCKET_INVALID;
 
-  etcpal_error_t initialize_receiver_netints_result = initialize_receiver_netints(receiver, netints, num_netints);
+  etcpal_error_t initialize_receiver_netints_result =
+      sacn_initialize_internal_netints(&receiver->netints, netints, num_netints);
   if (initialize_receiver_netints_result != kEtcPalErrOk)
   {
     FREE_RECEIVER(receiver);
@@ -791,8 +733,8 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
 
   if (supports_ipv4(receiver->ip_supported))
   {
-    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, config->universe_id, receiver->netints,
-                                   receiver->num_netints, &receiver->ipv4_socket);
+    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, config->universe_id, receiver->netints.netints,
+                                   receiver->netints.num_netints, &receiver->ipv4_socket);
 
     if ((res == kEtcPalErrNoNetints) && supports_ipv6(receiver->ip_supported))
       res = kEtcPalErrOk;  // Try IPv6.
@@ -800,8 +742,8 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
 
   if ((res == kEtcPalErrOk) && supports_ipv6(receiver->ip_supported))
   {
-    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, config->universe_id, receiver->netints,
-                                   receiver->num_netints, &receiver->ipv6_socket);
+    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, config->universe_id, receiver->netints.netints,
+                                   receiver->netints.num_netints, &receiver->ipv6_socket);
   }
 
   if ((res == kEtcPalErrOk) && !assigned_thread->running)

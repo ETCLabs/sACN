@@ -79,6 +79,12 @@ protected:
       return kEtcPalErrOk;
     };
 
+    fake_netint_ids_.reserve(fake_netints_.size());
+    std::transform(fake_netints_.data(), fake_netints_.data() + fake_netints_.size(),
+                   std::back_inserter(fake_netint_ids_), [](const EtcPalNetintInfo& netint) {
+                     return EtcPalMcastNetintId{netint.addr.type, netint.index};
+                   });
+
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_sockets_init(), kEtcPalErrOk);
   }
@@ -90,40 +96,43 @@ protected:
   }
 
   std::vector<EtcPalNetintInfo> fake_netints_;
+  std::vector<EtcPalMcastNetintId> fake_netint_ids_;
 };
-
-TEST_F(TestSockets, GoodNetintConfigValidated)
-{
-  std::vector<SacnMcastInterface> netints;
-  netints.push_back({{kEtcPalIpTypeV4, 1}, kEtcPalErrOk});
-  netints.push_back({{kEtcPalIpTypeV6, 30}, kEtcPalErrOk});
-  netints.push_back({{kEtcPalIpTypeV4, 1000}, kEtcPalErrOk});
-  EXPECT_EQ(sacn_validate_netint_config(netints.data(), netints.size(), nullptr), kEtcPalErrOk);
-}
-
-TEST_F(TestSockets, EmptyNetintConfigValidated)
-{
-  EXPECT_EQ(sacn_validate_netint_config(NULL, 0, nullptr), kEtcPalErrOk);
-}
 
 TEST_F(TestSockets, SocketCleanedUpOnBindFailure)
 {
   etcpal_bind_fake.return_val = kEtcPalErrAddrNotAvail;
 
+  unsigned int initial_socket_call_count = etcpal_socket_fake.call_count;
+  unsigned int initial_close_call_count = etcpal_close_fake.call_count;
+
   etcpal_socket_t sock;
-  EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV4, 1, NULL, 0, &sock), kEtcPalErrAddrNotAvail);
-  EXPECT_EQ(etcpal_socket_fake.call_count, etcpal_close_fake.call_count);
-  EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV6, 1, NULL, 0, &sock), kEtcPalErrAddrNotAvail);
-  EXPECT_EQ(etcpal_socket_fake.call_count, etcpal_close_fake.call_count);
+  EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV4, 1, fake_netint_ids_.data(), fake_netint_ids_.size(), &sock),
+            kEtcPalErrAddrNotAvail);
+  EXPECT_EQ(etcpal_socket_fake.call_count - initial_socket_call_count,
+            etcpal_close_fake.call_count - initial_close_call_count);
+  EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV6, 1, fake_netint_ids_.data(), fake_netint_ids_.size(), &sock),
+            kEtcPalErrAddrNotAvail);
+  EXPECT_EQ(etcpal_socket_fake.call_count - initial_socket_call_count,
+            etcpal_close_fake.call_count - initial_close_call_count);
 }
 
 TEST_F(TestSockets, SocketCleanedUpOnSubscribeFailure)
 {
   etcpal_setsockopt_fake.return_val = kEtcPalErrAddrNotAvail;
 
+  unsigned int initial_socket_call_count = etcpal_socket_fake.call_count;
+  unsigned int initial_close_call_count = etcpal_close_fake.call_count;
+
   etcpal_socket_t sock;
-  EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV4, 1, NULL, 0, &sock), kEtcPalErrAddrNotAvail);
-  EXPECT_EQ(etcpal_socket_fake.call_count, etcpal_close_fake.call_count);
-  EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV6, 1, NULL, 0, &sock), kEtcPalErrAddrNotAvail);
-  EXPECT_EQ(etcpal_socket_fake.call_count, etcpal_close_fake.call_count);
+  EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV4, 1, fake_netint_ids_.data(), fake_netint_ids_.size(), &sock),
+            kEtcPalErrAddrNotAvail);
+  EXPECT_EQ(etcpal_socket_fake.call_count - initial_socket_call_count,
+            etcpal_close_fake.call_count - initial_close_call_count);
+  EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV6, 1, fake_netint_ids_.data(), fake_netint_ids_.size(), &sock),
+            kEtcPalErrAddrNotAvail);
+  EXPECT_EQ(etcpal_socket_fake.call_count - initial_socket_call_count,
+            etcpal_close_fake.call_count - initial_close_call_count);
 }
+
+// TODO: Tests for sockets.h functions currently not covered here?

@@ -24,6 +24,7 @@
 #include "etcpal/common.h"
 #include "sacn/private/common.h"
 #include "sacn/private/opts.h"
+#include "sacn/private/pdu.h"
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>
@@ -32,6 +33,7 @@
 /**************************** Private constants ******************************/
 
 #define INITIAL_CAPACITY 8
+#define UNIVERSE_DISCOVERY_INTERVAL 10000
 
 /****************************** Private macros *******************************/
 
@@ -75,6 +77,17 @@
 
 #endif  // SACN_DYNAMIC_MEM
 
+#define REMOVE_AT_INDEX(container, buffer, index)                                                         \
+  do                                                                                                      \
+  {                                                                                                       \
+    --container->num_##buffer;                                                                            \
+                                                                                                          \
+    if (index < container->num_##buffer)                                                                  \
+    {                                                                                                     \
+      memmove(&container->buffer[index], &container->buffer[index + 1], container->num_##buffer - index); \
+    }                                                                                                     \
+  } while (0)
+
 /****************************** Private types ********************************/
 
 typedef struct SourcesLostNotificationBuf
@@ -99,6 +112,8 @@ typedef struct ToEraseBuf
 
 /**************************** Private variables ******************************/
 
+static bool sources_initialized = false;
+
 static struct SacnMemBufs
 {
   unsigned int num_threads;
@@ -114,7 +129,7 @@ static struct SacnMemBufs
   SamplingStartedNotificationBuf* sampling_started;
   SamplingEndedNotificationBuf* sampling_ended;
   SourceLimitExceededNotification* source_limit_exceeded;
-#else
+#else  // SACN_DYNAMIC_MEM
   SacnSourceStatusLists status_lists[SACN_RECEIVER_MAX_THREADS];
   ToEraseBuf to_erase[SACN_RECEIVER_MAX_THREADS];
   SacnRecvThreadContext recv_thread_context[SACN_RECEIVER_MAX_THREADS];
@@ -125,13 +140,21 @@ static struct SacnMemBufs
   SamplingStartedNotificationBuf sampling_started[SACN_RECEIVER_MAX_THREADS];
   SamplingEndedNotificationBuf sampling_ended[SACN_RECEIVER_MAX_THREADS];
   SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_THREADS];
-#endif
+#endif  // SACN_DYNAMIC_MEM
+
+  SACN_DECLARE_BUF(SacnSource, sources, SACN_SOURCE_MAX_SOURCES);
+  size_t num_sources;
 } mem_bufs;
 
 /*********************** Private function prototypes *************************/
 
 static void zero_status_lists(SacnSourceStatusLists* status_lists);
 static void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t size);
+
+static size_t get_source_index(sacn_source_t handle, bool* found);
+static size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found);
+static size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found);
+static size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found);
 
 #if SACN_DYNAMIC_MEM
 static size_t grow_capacity(size_t old_capacity, size_t capacity_requested);
@@ -189,6 +212,10 @@ static void deinit_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_end
 static void deinit_source_limit_exceeded_buf(void);
 #endif  // SACN_DYNAMIC_MEM
 
+// Sources initialization/deinitialization
+static etcpal_error_t init_sources(void);
+static void deinit_sources(void);
+
 /*************************** Function definitions ****************************/
 
 /*
@@ -224,6 +251,9 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
     res = init_source_limit_exceeded_buf(num_threads);
 #endif
 
+  if (res == kEtcPalErrOk)
+    res = init_sources();
+
   // Clean up
   if (res != kEtcPalErrOk)
     sacn_mem_deinit();
@@ -236,6 +266,8 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
  */
 void sacn_mem_deinit(void)
 {
+  deinit_sources();
+
 #if SACN_DYNAMIC_MEM
   deinit_source_limit_exceeded_buf();
   deinit_sampling_ended_bufs();
@@ -399,10 +431,10 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
         return NULL;
       }
     }
-#else
+#else  // SACN_DYNAMIC_MEM
     if (size > SACN_RECEIVER_MAX_UNIVERSES)
       return NULL;
-#endif
+#endif  // SACN_DYNAMIC_MEM
 
     zero_sources_lost_array(notifications->buf, size);
     return notifications->buf;
@@ -660,6 +692,324 @@ void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnR
   }
 }
 
+// Needs lock
+etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+  SacnSource* source = NULL;
+  if (lookup_source(handle, &source) == kEtcPalErrOk)
+    result = kEtcPalErrExists;
+
+  if (result == kEtcPalErrOk)
+  {
+    CHECK_ROOM_FOR_ONE_MORE((&mem_bufs), sources, SacnSource, SACN_SOURCE_MAX_SOURCES, kEtcPalErrNoMem);
+
+    source = &mem_bufs.sources[mem_bufs.num_sources];
+
+    source->handle = handle;
+
+    // Initialize the universe discovery send buffer.
+    memset(source->universe_discovery_send_buf, 0, SACN_MTU);
+
+    size_t written = 0;
+    written += pack_sacn_root_layer(source->universe_discovery_send_buf, SACN_UNIVERSE_DISCOVERY_HEADER_SIZE, true,
+                                    &config->cid);
+    written +=
+        pack_sacn_universe_discovery_framing_layer(&source->universe_discovery_send_buf[written], 0, config->name);
+    written += pack_sacn_universe_discovery_layer_header(&source->universe_discovery_send_buf[written], 0, 0, 0);
+
+    // Initialize everything else.
+    source->cid = config->cid;
+    memset(source->name, 0, SACN_SOURCE_NAME_MAX_LEN);
+    memcpy(source->name, config->name, strlen(config->name));
+    source->terminating = false;
+    source->num_active_universes = 0;
+    etcpal_timer_start(&source->universe_discovery_timer, UNIVERSE_DISCOVERY_INTERVAL);
+    source->process_manually = config->manually_process_source;
+    source->ip_supported = config->ip_supported;
+    source->keep_alive_interval = config->keep_alive_interval;
+    source->universe_count_max = config->universe_count_max;
+
+    source->num_universes = 0;
+    source->num_netints = 0;
+#if SACN_DYNAMIC_MEM
+    source->universes = calloc(INITIAL_CAPACITY, sizeof(SacnSourceUniverse));
+    source->universes_capacity = source->universes ? INITIAL_CAPACITY : 0;
+    source->netints = calloc(INITIAL_CAPACITY, sizeof(SacnSourceNetint));
+    source->netints_capacity = source->netints ? INITIAL_CAPACITY : 0;
+
+    if (!source->universes || !source->netints)
+      result = kEtcPalErrNoMem;
+#endif
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    ++mem_bufs.num_sources;
+  }
+  else
+  {
+#if SACN_DYNAMIC_MEM
+    if (source->universes)
+    {
+      free(source->universes);
+      source->universes = NULL;
+    }
+
+    if (source->netints)
+    {
+      free(source->netints);
+      source->netints = NULL;
+    }
+#endif
+  }
+
+  *source_state = source;
+
+  return result;
+}
+
+// Needs lock
+etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniverseConfig* config,
+                                        SacnMcastInterface* netints, size_t num_netints,
+                                        SacnSourceUniverse** universe_state)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+  SacnSourceUniverse* universe = NULL;
+  if (lookup_universe(source, config->universe, &universe) == kEtcPalErrOk)
+    result = kEtcPalErrExists;
+
+  if (result == kEtcPalErrOk)
+  {
+    CHECK_ROOM_FOR_ONE_MORE(source, universes, SacnSourceUniverse, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE,
+                            kEtcPalErrNoMem);
+
+    universe = &source->universes[source->num_universes];
+
+    universe->universe_id = config->universe;
+
+    universe->terminating = false;
+    universe->num_terminations_sent = 0;
+
+    universe->priority = config->priority;
+    universe->sync_universe = config->sync_universe;
+    universe->send_preview = config->send_preview;
+    universe->seq_num = 0;
+
+    universe->null_packets_sent_before_suppression = 0;
+    init_sacn_data_send_buf(universe->null_send_buf, 0x00, &source->cid, source->name, config->priority,
+                            config->universe, config->sync_universe, config->send_preview);
+    universe->has_null_data = false;
+
+#if SACN_ETC_PRIORITY_EXTENSION
+    universe->pap_packets_sent_before_suppression = 0;
+    init_sacn_data_send_buf(universe->pap_send_buf, 0xDD, &source->cid, source->name, config->priority,
+                            config->universe, config->sync_universe, config->send_preview);
+    universe->has_pap_data = false;
+#endif
+
+    universe->send_unicast_only = config->send_unicast_only;
+
+    universe->num_unicast_dests = 0;
+#if SACN_DYNAMIC_MEM
+    universe->unicast_dests = calloc(INITIAL_CAPACITY, sizeof(SacnUnicastDestination));
+    universe->unicast_dests_capacity = universe->unicast_dests ? INITIAL_CAPACITY : 0;
+
+    if (!universe->unicast_dests)
+      result = kEtcPalErrNoMem;
+#endif
+  }
+
+  for (size_t i = 0; (result == kEtcPalErrOk) && (i < config->num_unicast_destinations); ++i)
+  {
+    SacnUnicastDestination* dest = NULL;
+    result = add_sacn_unicast_dest(universe, &config->unicast_destinations[i], &dest);
+
+    if (result == kEtcPalErrExists)
+      result = kEtcPalErrOk;  // Duplicates are automatically filtered and not a failure condition.
+  }
+
+  if (result == kEtcPalErrOk)
+    result = sacn_initialize_internal_netints(&universe->netints, netints, num_netints);
+
+  if (result == kEtcPalErrOk)
+  {
+    ++source->num_universes;
+  }
+  else
+  {
+#if SACN_DYNAMIC_MEM
+    if (universe->netints.netints)
+    {
+      free(universe->netints.netints);
+      universe->netints.netints = NULL;
+    }
+
+    if (universe->unicast_dests)
+    {
+      free(universe->unicast_dests);
+      universe->unicast_dests = NULL;
+    }
+#endif
+  }
+
+  *universe_state = universe;
+
+  return result;
+}
+
+// Needs lock
+etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
+                                     SacnUnicastDestination** dest_state)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+  SacnUnicastDestination* dest = NULL;
+
+  if (lookup_unicast_dest(universe, addr, &dest) == kEtcPalErrOk)
+    result = kEtcPalErrExists;
+
+  if (result == kEtcPalErrOk)
+  {
+    CHECK_ROOM_FOR_ONE_MORE(universe, unicast_dests, SacnUnicastDestination, SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE,
+                            kEtcPalErrNoMem);
+
+    dest = &universe->unicast_dests[universe->num_unicast_dests++];
+    dest->dest_addr = *addr;
+    dest->terminating = false;
+    dest->num_terminations_sent = 0;
+  }
+
+  *dest_state = dest;
+
+  return result;
+}
+
+// Needs lock
+etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetintId* id,
+                                      SacnSourceNetint** netint_state)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+  SacnSourceNetint* netint = lookup_source_netint(source, id);
+
+  if (netint)
+    result = kEtcPalErrExists;
+
+  if (result == kEtcPalErrOk)
+  {
+    CHECK_ROOM_FOR_ONE_MORE(source, netints, SacnSourceNetint, SACN_MAX_NETINTS, kEtcPalErrNoMem);
+
+    netint = &source->netints[source->num_netints++];
+    netint->id = *id;
+    netint->num_refs = 1;
+  }
+
+  *netint_state = netint;
+
+  return result;
+}
+
+// Needs lock
+etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t universe, SacnSource** source_state,
+                                          SacnSourceUniverse** universe_state)
+{
+  etcpal_error_t result = lookup_source(source, source_state);
+
+  if (result == kEtcPalErrOk)
+    result = lookup_universe(*source_state, universe, universe_state);
+
+  return result;
+}
+
+// Needs lock
+etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state)
+{
+  bool found = false;
+  size_t index = get_source_index(handle, &found);
+  *source_state = found ? &mem_bufs.sources[index] : NULL;
+  return found ? kEtcPalErrOk : kEtcPalErrNotFound;
+}
+
+// Needs lock
+etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSourceUniverse** universe_state)
+{
+  bool found = false;
+  size_t index = get_source_universe_index(source, universe, &found);
+  *universe_state = found ? &source->universes[index] : NULL;
+  return found ? kEtcPalErrOk : kEtcPalErrNotFound;
+}
+
+// Needs lock
+etcpal_error_t lookup_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
+                                   SacnUnicastDestination** unicast_dest)
+{
+  bool found = false;
+  size_t index = get_unicast_dest_index(universe, addr, &found);
+  *unicast_dest = found ? &universe->unicast_dests[index] : NULL;
+  return found ? kEtcPalErrOk : kEtcPalErrNotFound;
+}
+
+// Needs lock
+SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNetintId* id)
+{
+  bool found = false;
+  size_t index = get_source_netint_index(source, id, &found);
+  return found ? &source->netints[index] : NULL;
+}
+
+// Needs lock
+SacnSourceNetint* lookup_source_netint_and_index(SacnSource* source, const EtcPalMcastNetintId* id, size_t* index)
+{
+  bool found = false;
+  *index = get_source_netint_index(source, id, &found);
+  return found ? &source->netints[*index] : NULL;
+}
+
+SacnSource* get_source(size_t index)
+{
+  return (index < mem_bufs.num_sources) ? &mem_bufs.sources[index] : NULL;
+}
+
+size_t get_num_sources()
+{
+  return mem_bufs.num_sources;
+}
+
+// Needs lock
+void remove_sacn_source_netint(SacnSource* source, size_t index)
+{
+  REMOVE_AT_INDEX(source, netints, index);
+}
+
+// Needs lock
+void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index)
+{
+  REMOVE_AT_INDEX(universe, unicast_dests, index);
+}
+
+// Needs lock
+void remove_sacn_source_universe(SacnSource* source, size_t index)
+{
+#if SACN_DYNAMIC_MEM
+  if (source->universes[index].unicast_dests)
+    free(source->universes[index].unicast_dests);
+  if (source->universes[index].netints.netints)
+    free(source->universes[index].netints.netints);
+#endif
+  REMOVE_AT_INDEX(source, universes, index);
+}
+
+// Needs lock
+void remove_sacn_source(size_t index)
+{
+#if SACN_DYNAMIC_MEM
+  if (mem_bufs.sources[index].universes)
+    free(mem_bufs.sources[index].universes);
+  if (mem_bufs.sources[index].netints)
+    free(mem_bufs.sources[index].netints);
+#endif
+  REMOVE_AT_INDEX((&mem_bufs), sources, index);
+}
+
 void zero_status_lists(SacnSourceStatusLists* status_lists)
 {
   SACN_ASSERT(status_lists);
@@ -678,6 +1028,70 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
     sources_lost->num_lost_sources = 0;
     sources_lost->context = NULL;
   }
+}
+
+size_t get_source_index(sacn_source_t handle, bool* found)
+{
+  *found = false;
+  size_t index = 0;
+
+  while (!(*found) && (index < mem_bufs.num_sources))
+  {
+    if (mem_bufs.sources[index].handle == handle)
+      *found = true;
+    else
+      ++index;
+  }
+
+  return index;
+}
+
+size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found)
+{
+  *found = false;
+  size_t index = 0;
+
+  while (!(*found) && (index < source->num_universes))
+  {
+    if (source->universes[index].universe_id == universe)
+      *found = true;
+    else
+      ++index;
+  }
+
+  return index;
+}
+
+size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found)
+{
+  *found = false;
+  size_t index = 0;
+
+  while (!(*found) && (index < universe->num_unicast_dests))
+  {
+    if (etcpal_ip_cmp(&universe->unicast_dests[index].dest_addr, addr) == 0)
+      *found = true;
+    else
+      ++index;
+  }
+
+  return index;
+}
+
+size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found)
+{
+  *found = false;
+  size_t index = 0;
+
+  while (!(*found) && (index < source->num_netints))
+  {
+    if ((source->netints[index].id.index == id->index) && (source->netints[index].id.ip_type == id->ip_type))
+      *found = true;
+    else
+      ++index;
+  }
+
+  return index;
 }
 
 #if SACN_DYNAMIC_MEM
@@ -913,7 +1327,6 @@ etcpal_error_t init_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_en
   return kEtcPalErrOk;
 }
 
-
 etcpal_error_t init_source_pap_lost_buf(unsigned int num_threads)
 {
   mem_bufs.source_pap_lost = calloc(num_threads, sizeof(SourcePapLostNotification));
@@ -1082,3 +1495,40 @@ void deinit_source_limit_exceeded_buf(void)
 }
 
 #endif  // SACN_DYNAMIC_MEM
+
+etcpal_error_t init_sources(void)
+{
+  etcpal_error_t res = kEtcPalErrOk;
+
+#if SACN_SOURCE_ENABLED && SACN_DYNAMIC_MEM
+  mem_bufs.sources = calloc(INITIAL_CAPACITY, sizeof(SacnSource));
+  mem_bufs.sources_capacity = mem_bufs.sources ? INITIAL_CAPACITY : 0;
+  if (!mem_bufs.sources)
+    res = kEtcPalErrNoMem;
+#endif
+  mem_bufs.num_sources = 0;
+
+  if (res == kEtcPalErrOk)
+    sources_initialized = true;
+
+  return res;
+}
+
+// Takes lock
+void deinit_sources(void)
+{
+  if (sacn_lock())
+  {
+    if (sources_initialized)
+    {
+#if SACN_DYNAMIC_MEM
+      free(mem_bufs.sources);
+      mem_bufs.sources_capacity = 0;
+#endif
+      mem_bufs.num_sources = 0;
+      sources_initialized = false;
+    }
+
+    sacn_unlock();
+  }
+}

@@ -58,6 +58,16 @@ protected:
     sacn_source_loss_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
 
+    sacn_initialize_internal_netints_fake.custom_fake = [](SacnInternalNetintArray* internal_netints,
+                                                           SacnMcastInterface*, size_t) {
+#if SACN_DYNAMIC_MEM
+      internal_netints->netints = NULL;
+      internal_netints->netints_capacity = 0;
+#endif
+      internal_netints->num_netints = 0;
+      return kEtcPalErrOk;
+    };
+
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_receiver_init(), kEtcPalErrOk);
   }

@@ -64,7 +64,7 @@ public:
 
     /** The source's CID. */
     etcpal::Uuid cid;
-    /** The source's name, a UTF-8 encoded string. Up to #SACN_SOURCE_NAME_MAX_LEN characters will be used. */
+    /** The source's name, a UTF-8 encoded string. */
     std::string name;
 
     /********* Optional values **********/
@@ -119,7 +119,8 @@ public:
         Source::AddUnicastDestination() and Source::RemoveUnicastDestination(). */
     const std::vector<etcpal::IpAddr> unicast_destinations;
 
-    /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
+    /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0.
+        TODO: At this time, synchronization is not supported by this library. */
     uint16_t sync_universe{0};
 
     /** Create an empty, invalid data structure by default. */
@@ -166,7 +167,7 @@ public:
   etcpal::Error ResetNetworking(uint16_t universe);
   etcpal::Error ResetNetworking(uint16_t universe, std::vector<SacnMcastInterface>& netints);
 
-  std::vector<SacnMcastInterface> GetNetworkInterfaces(uint16_t universe);
+  std::vector<EtcPalMcastNetintId> GetNetworkInterfaces(uint16_t universe);
 
   constexpr Handle handle() const;
 
@@ -221,16 +222,19 @@ inline Source::UniverseSettings::UniverseSettings(uint16_t universe_id) : univer
  */
 inline bool Source::UniverseSettings::IsValid() const
 {
-  return universe > 0;
+  return ((universe != 0) && (universe < 64000));
 }
 
 /**
  * @brief Create a new sACN source to send sACN data.
  *
- * This creates the instance of the source, but no data is sent until AddUniverse() and a variant of UpdateValues() is
- * called.
+ * This creates the instance of the source and begins sending universe discovery packets for it (which will list no
+ * universes until start code data begins transmitting). No start code data is sent until AddUniverse() and a variant of
+ * UpdateValues() is called.
  *
- * @param[in] settings Configuration parameters for the sACN source to be created.
+ * @param[in] settings Configuration parameters for the sACN source to be created. If any of these parameters are invalid,
+ * #kEtcPalErrInvalid will be returned. This includes if the source name's length (including the null terminator) is
+ * beyond #SACN_SOURCE_NAME_MAX_LEN.
  * @return #kEtcPalErrOk: Source successfully created.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -246,12 +250,9 @@ inline etcpal::Error Source::Startup(const Settings& settings)
 /**
  * @brief Destroy an sACN source instance.
  *
- * Stops sending all universes for this source. The destruction is queued, and actually occurs
- * on a call to ProcessAll() after an additional three packets have been sent with the
- * "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.
- *
- * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
- * or values_buffer you passed in on your call to AddUniverse().
+ * Stops sending all universes for this source. The destruction is queued, and actually occurs either on the thread or
+ * on a call to ProcessManual() after an additional three packets have been sent with the "Stream_Terminated" option
+ * set. The source will also stop transmitting sACN universe discovery packets.
  */
 inline void Source::Shutdown()
 {
@@ -262,11 +263,15 @@ inline void Source::Shutdown()
 /**
  * @brief Change the name of an sACN source.
  *
- * The name is a UTF-8 string representing "a user-assigned name provided by the source of the
- * packet for use in displaying the identity of a source to a user." Only up to
- * #SACN_SOURCE_NAME_MAX_LEN characters will be used.
+ * The name is a UTF-8 string representing "a user-assigned name provided by the source of the packet for use in
+ * displaying the identity of a source to a user." If its length (including the null terminator) is longer than
+ * #SACN_SOURCE_NAME_MAX_LEN, then #kEtcPalErrInvalid will be returned.
  *
- * @param[in] new_name New name to use for this universe.
+ * This function will update the packet buffers of all this source's universes with the new name. For each universe that
+ * is transmitting NULL start code or PAP data, the logic that slows down packet transmission due to inactivity will be
+ * reset.
+ *
+ * @param[in] new_name New name to use for this source.
  * @return #kEtcPalErrOk: Name set successfully.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -285,7 +290,7 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
  * After this call completes, the applicaton must call a variant of UpdateValues() to mark it ready for processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
- * Discovery packets.
+ * Discovery packets once a variant of UpdateValues() is called.
  *
  * Note that a universe is considered as successfully added if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -313,11 +318,11 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings)
  * After this call completes, the applicaton must call a variant of UpdateValues() to mark it ready for processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
- * Discovery packets.
+ * Discovery packets once a variant of UpdateValues() is called.
  *
  * Note that a universe is considered as successfully added if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
-
+ *
  * @param[in] settings Configuration parameters for the universe to be added.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
@@ -326,8 +331,7 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings)
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrExists: Universe given was already added to this source.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or a network interface ID given was not
- * found on the system.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
  * @return #kEtcPalErrNoMem: No room to allocate additional universe.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
@@ -344,14 +348,10 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings, std::
 /**
  * @brief Remove a universe from a source.
  *
- * This queues the source for removal. The destruction actually occurs
- * on a call to ProcessAll() after an additional three packets have been sent with the
- * "Stream_Terminated" option set.
+ * This queues the universe for removal. The destruction actually occurs either on the thread or on a call to
+ * ProcessManual() after an additional three packets have been sent with the "Stream_Terminated" option set.
  *
  * The source will also stop transmitting sACN universe discovery packets for that universe.
- *
- * Even though the destruction is queued, after this call the library will no longer use the priorities_buffer
- * or values_buffer you passed in on your call to AddUniverse().
  *
  * @param[in] universe Universe to remove.
  */
@@ -361,9 +361,9 @@ inline void Source::RemoveUniverse(uint16_t universe)
 }
 
 /**
- * @brief Obtain a vector of universes this source is transmitting on.
+ * @brief Obtain a vector of this source's universes.
  *
- * @return A vector of universes the source is transmitting on.
+ * @return A vector of this source's universes.
  */
 inline std::vector<uint16_t> Source::GetUniverses()
 {
@@ -384,17 +384,17 @@ inline std::vector<uint16_t> Source::GetUniverses()
 }
 
 /**
- * @brief Add a unicast destination for a source's universe.
+ * @brief Add a unicast destination for a universe.
  *
- * Adds a unicast destination for a source's universe.
- * After this call completes, the applicaton must call a variant of UpdateValues() to mark it ready for processing.
-
+ * This will reset transmission suppression and include the new unicast destination in transmissions for the universe.
+ *
  * @param[in] universe Universe to change.
  * @param[in] dest The destination IP.
  * @return #kEtcPalErrOk: Address added successfully.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
+ * @return #kEtcPalErrExists: The unicast destination was already added to this universe on this source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error Source::AddUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest)
@@ -403,11 +403,10 @@ inline etcpal::Error Source::AddUnicastDestination(uint16_t universe, const etcp
 }
 
 /**
- * @brief Remove a unicast destination on a source's universe.
+ * @brief Remove a unicast destination on a universe.
  *
- * This queues the address for removal. The removal actually occurs
- * on a call to ProcessAll() after an additional three packets have been sent with the
- * "Stream_Terminated" option set.
+ * This queues the address for removal. The removal actually occurs either on the thread or on a call to ProcessManual()
+ * after an additional three packets have been sent with the "Stream_Terminated" option set.
  *
  * @param[in] universe Universe to change.
  * @param[in] dest The destination IP.  Must match the address passed to AddUnicastDestination().
@@ -418,10 +417,10 @@ inline void Source::RemoveUnicastDestination(uint16_t universe, const etcpal::Ip
 }
 
 /**
- * @brief Obtain a vector of unicast destinations to which this source is transmitting a universe.
+ * @brief Obtain a vector of a universe's unicast destinations.
  *
  * @param[in] universe The universe for which to obtain the list of unicast destinations.
- * @return A vector of unicast destinations the source is transmitting on for the given universe.
+ * @return A vector of unicast destinations for the given universe.
  */
 inline std::vector<etcpal::IpAddr> Source::GetUnicastDestinations(uint16_t universe)
 {
@@ -452,7 +451,10 @@ inline std::vector<etcpal::IpAddr> Source::GetUnicastDestinations(uint16_t unive
 }
 
 /**
- * @brief Change the priority of a universe on a sACN source.
+ * @brief Change the priority of a universe.
+ *
+ * This function will update the packet buffers with the new priority. If this universe is transmitting NULL start code
+ * or PAP data, the logic that slows down packet transmission due to inactivity will be reset.
  *
  * @param[in] universe Universe to change.
  * @param[in] new_priority New priority of the data sent from this source. Valid range is 0 to 200,
@@ -469,11 +471,14 @@ inline etcpal::Error Source::ChangePriority(uint16_t universe, uint8_t new_prior
 }
 
 /**
- * @brief Change the send_preview option on a universe of a sACN source.
+ * @brief Change the send_preview option on a universe.
  *
  * Sets the state of a flag in the outgoing sACN packets that indicates that the data is (from
  * E1.31) "intended for use in visualization or media server preview applications and shall not be
  * used to generate live output."
+ *
+ * This function will update the packet buffers with the new option. If this universe is transmitting NULL start code
+ * or PAP data, the logic that slows down packet transmission due to inactivity will be reset.
  *
  * @param[in] universe The universe to change.
  * @param[in] new_preview_flag The new send_preview option.
@@ -489,10 +494,13 @@ inline etcpal::Error Source::ChangePreviewFlag(uint16_t universe, bool new_previ
 }
 
 /**
- * @brief Changes the synchronize uinverse for a universe of a sACN source.
+ * @brief Changes the synchronization universe for a universe.
  *
- * This will change the synchronization universe used by a sACN universe on the source.
+ * This will change the synchronization universe used by a sACN universe on this source.
  * If this value is 0, synchronization is turned off for that universe.
+ *
+ * This function will update the packet buffers with the new sync universe. If this universe is transmitting NULL start
+ * code or PAP data, the logic that slows down packet transmission due to inactivity will be reset.
  *
  * TODO: At this time, synchronization is not supported by this library.
  *
@@ -513,8 +521,8 @@ inline etcpal::Error Source::ChangeSynchronizationUniverse(uint16_t universe, ui
  * @brief Immediately sends the provided sACN start code & data.
  *
  * Immediately sends a sACN packet with the provided start code and data.
- * This function is intended for sACN packets that have a startcode other than 0 or 0xdd, since those
- * start codes are taken care of by ProcessAll().
+ * This function is intended for sACN packets that have a startcode other than 0 or 0xdd, since those start codes are
+ * taken care of by either the thread or ProcessManual().
  *
  * @param[in] universe Universe to send on.
  * @param[in] start_code The start code to send.
@@ -535,7 +543,7 @@ inline etcpal::Error Source::SendNow(uint16_t universe, uint8_t start_code, cons
 /**
  * @brief Indicate that a new synchronization packet should be sent on the given synchronization universe.
  *
- * This will cause the transmission of a synchronization packet for the source on the given synchronization universe.
+ * This will cause this source to transmit a synchronization packet on the given synchronization universe.
  *
  * TODO: At this time, synchronization is not supported by this library, so this function is not implemented.
  *
@@ -553,7 +561,7 @@ inline etcpal::Error Source::SendSynchronization(uint16_t sync_universe)
 }
 
 /**
- * @brief Copies the universe's dmx values into the packet to be sent on the next call to ProcessAll()
+ * @brief Copies the universe's dmx values into the packet to be sent on the next threaded or manual update.
  *
  * This function will update the outgoing packet values, and reset the logic that slows down packet transmission due to
  * inactivity.
@@ -562,9 +570,8 @@ inline etcpal::Error Source::SendSynchronization(uint16_t sync_universe)
  * the version of UpdateValues() that takes a per-address priority buffer.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
- * values will be used.
- * @param[in] new_values_size Size of new_values.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
+ * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size)
 {
@@ -572,8 +579,8 @@ inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, s
 }
 
 /**
- * @brief Copies the universe's dmx values and per-address priorities into packets that are sent on the next call to
- * ProcessAll()
+ * @brief Copies the universe's dmx values and per-address priorities into packets that are sent on the next threaded or
+ * manual update.
  *
  * This function will update the outgoing packet values for both DMX and per-address priority data, and reset the logic
  * that slows down packet transmission due to inactivity.
@@ -585,12 +592,11 @@ inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, s
  * "release control" of the corresponding DMX values.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
- * values will be used.
- * @param[in] new_values_size Size of new_values.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
+ * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
  * per-address priorities or want to stop using per-address priorities.
- * @param[in] new_priorities_size Size of new_priorities.
+ * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size,
                                  const uint8_t* new_priorities, size_t new_priorities_size)
@@ -602,18 +608,17 @@ inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, s
 /**
  * @brief Like UpdateValues(), but also sets the force_sync flag on the packet.
  *
- * This function will update the outgoing packet values to be sent on the next call to ProcessAll(), and
- * will reset the logic that slows down packet transmission due to inactivity. Additionally, the packet to be sent will
- * have its force_synchronization option flag set.
+ * This function will update the outgoing packet values to be sent on the next threaded or manual update, and will reset
+ * the logic that slows down packet transmission due to inactivity. Additionally, the packet to be sent will have its
+ * force_synchronization option flag set.
  *
  * If no synchronization universe is configured, this function acts like a direct call to UpdateValues().
  *
  * TODO: At this time, synchronization is not supported by this library.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
- * values will be used.
- * @param[in] new_values_size Size of new_values.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
+ * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size)
 {
@@ -623,9 +628,9 @@ inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* n
 /**
  * @brief Like UpdateValues(), but also sets the force_sync flag on the packet.
  *
- * This function will update the outgoing packet values to be sent on the next call to ProcessAll(), and
- * will reset the logic that slows down packet transmission due to inactivity. Additionally, the final packet to be sent
- * by this call will have its force_synchronization option flag set.
+ * This function will update the outgoing packet values to be sent on the next threaded or manual update, and will reset
+ * the logic that slows down packet transmission due to inactivity. Additionally, both packets to be sent by this call
+ * will have their force_synchronization option flags set.
  *
  * Per-address priority support has specific rules about when to send value changes vs. pap changes.  These rules are
  * documented in https://etclabs.github.io/sACN/docs/head/per_address_priority.html, and are triggered by the use of
@@ -633,18 +638,16 @@ inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* n
  * or passing in NULL/non-NULL for the priorities will cause this library to do the necessary tasks to "take control" or
  * "release control" of the corresponding DMX values.
  *
- * If no synchronization universe is configured, this function acts like a direct call to
- * sacn_source_update_values_and_pap().
+ * If no synchronization universe is configured, this function acts like a direct call to UpdateValues().
  *
  * TODO: At this time, synchronization is not supported by this library.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL, and only the first 512
- * values will be used.
- * @param[in] new_values_size Size of new_values.
+ * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
+ * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
  * per-address priorities or want to stop using per-address priorities.
- * @param[in] new_priorities_size Size of new_priorities.
+ * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size,
                                              const uint8_t* new_priorities, size_t new_priorities_size)
@@ -654,7 +657,7 @@ inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* n
 }
 
 /**
- * @brief Trigger the transmision of sACN packets for all universes of sources that were created with
+ * @brief Trigger the transmission of sACN packets for all universes of sources that were created with
  * manually_process_source set to true.
  *
  * Note: Unless you created the source with manually_process_source set to true, similar functionality will be
@@ -665,7 +668,7 @@ inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* n
  * haven't been updated. Also destroys sources & universes that have been marked for termination after sending the
  * required three terminated packets.
  *
- * @return Current number of sources tracked by the library. This can be useful on shutdown to
+ * @return Current number of manual sources tracked by the library. This can be useful on shutdown to
  *         track when destroyed sources have finished sending the terminated packets and actually
  *         been destroyed.
  */
@@ -690,11 +693,12 @@ inline int Source::ProcessManual()
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] universe Universe to reset network interfaces for.
- * @return #kEtcPalErrOk: Source changed successfully.
+ * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
+ *                              source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error Source::ResetNetworking(uint16_t universe)
@@ -716,15 +720,15 @@ inline etcpal::Error Source::ResetNetworking(uint16_t universe)
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in] universe Universe to reset netowrk interfaces for.
+ * @param[in] universe Universe to reset network interfaces for.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
- * @return #kEtcPalErrOk: Source changed successfully.
+ * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or a network interface ID given was not
- * found on the system.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
+ *                              source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error Source::ResetNetworking(uint16_t universe, std::vector<SacnMcastInterface>& netints)
@@ -736,15 +740,15 @@ inline etcpal::Error Source::ResetNetworking(uint16_t universe, std::vector<Sacn
 }
 
 /**
- * @brief Obtain the statuses of a universe's network interfaces.
+ * @brief Obtain a vector of a universe's network interfaces.
  *
- * @param[in] universe The universe for which to obtain the list of network interfaces.
- * @return A vector of the universe's network interfaces and their statuses.
+ * @param[in] universe The universe for which to obtain the vector of network interfaces.
+ * @return A vector of the universe's network interfaces.
  */
-inline std::vector<SacnMcastInterface> Source::GetNetworkInterfaces(uint16_t universe)
+inline std::vector<EtcPalMcastNetintId> Source::GetNetworkInterfaces(uint16_t universe)
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<SacnMcastInterface> netints;
+  std::vector<EtcPalMcastNetintId> netints;
   size_t size_guess = 4u;
   size_t num_netints = 0u;
 

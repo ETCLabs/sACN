@@ -81,7 +81,8 @@ typedef struct SacnSourceConfig
   /********* Optional values **********/
 
   /** The maximum number of universes this source will send to.  May be #SACN_SOURCE_INFINITE_UNIVERSES.
-      This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES is used instead. */
+      This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE is used
+      instead. */
   size_t universe_count_max;
 
   /** If false (default), this source will be added to a background thread that will send sACN updates at a
@@ -133,7 +134,8 @@ typedef struct SacnSourceUniverseConfig
   /** The size of unicast_destinations. */
   size_t num_unicast_destinations;
 
-  /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
+  /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0.
+      TODO: At this time, synchronization is not supported by this library. */
   uint16_t sync_universe;
 
 } SacnSourceUniverseConfig;
@@ -186,7 +188,7 @@ int sacn_source_process_manual(void);
 etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
                                             size_t num_netints);
 
-size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
+size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, EtcPalMcastNetintId* netints,
                                           size_t netints_size);
 
 #ifdef __cplusplus

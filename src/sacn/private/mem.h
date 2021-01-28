@@ -67,6 +67,29 @@ bool remove_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket
 void add_receiver_to_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver);
 void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver);
 
+etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state);
+etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniverseConfig* config,
+                                        SacnMcastInterface* netints, size_t num_netints,
+                                        SacnSourceUniverse** universe_state);
+etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
+                                     SacnUnicastDestination** dest_state);
+etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetintId* id,
+                                      SacnSourceNetint** netint_state);
+etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t universe, SacnSource** source_state,
+                                          SacnSourceUniverse** universe_state);
+etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state);
+etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSourceUniverse** universe_state);
+etcpal_error_t lookup_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
+                                   SacnUnicastDestination** unicast_dest);
+SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNetintId* id);
+SacnSourceNetint* lookup_source_netint_and_index(SacnSource* source, const EtcPalMcastNetintId* id, size_t* index);
+SacnSource* get_source(size_t index);
+size_t get_num_sources();
+void remove_sacn_source_netint(SacnSource* source, size_t index);
+void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index);
+void remove_sacn_source_universe(SacnSource* source, size_t index);
+void remove_sacn_source(size_t index);
+
 #ifdef __cplusplus
 }
 #endif

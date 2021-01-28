@@ -35,6 +35,7 @@
 #include "etcpal/socket.h"
 #include "etcpal/timer.h"
 #include "sacn/receiver.h"
+#include "sacn/source.h"
 #include "sacn/dmx_merger.h"
 #include "sacn/private/opts.h"
 
@@ -49,6 +50,9 @@ extern "C" {
 #define SACN_MTU 1472
 #define SACN_PORT 5568
 
+#define SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE 512
+#define SACN_DISCOVERY_UNIVERSE 64214
+
 /*
  * This ensures there are always enough SocketRefs. This is multiplied by 2 because SocketRefs come in pairs - one for
  * IPv4, and another for IPv6. This is because a single SocketRef cannot intermix IPv4 and IPv6.
@@ -58,6 +62,14 @@ extern "C" {
 
 typedef unsigned int sacn_thread_id_t;
 #define SACN_THREAD_ID_INVALID UINT_MAX
+
+#define UNIVERSE_ID_VALID(universe_id) ((universe_id != 0) && (universe_id < 64000))
+
+#define SACN_SOURCE_ENABLED                                                                              \
+  ((!SACN_DYNAMIC_MEM && (SACN_SOURCE_MAX_SOURCES > 0) && (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)) || \
+   SACN_DYNAMIC_MEM)
+#define SACN_SOURCE_UNICAST_ENABLED \
+  ((!SACN_DYNAMIC_MEM && (SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE > 0)) || SACN_DYNAMIC_MEM)
 
 /*
  * The SACN_DECLARE_BUF() macro declares one of two different types of contiguous arrays, depending
@@ -115,7 +127,15 @@ typedef unsigned int sacn_thread_id_t;
 #define SACN_CAN_LOG(pri) false
 #endif
 
-#define UNIVERSE_ID_VALID(universe_id) ((universe_id != 0) && (universe_id <= 64000))
+/******************************************************************************
+ * Common types
+ *****************************************************************************/
+
+typedef struct SacnInternalNetintArray
+{
+  SACN_DECLARE_BUF(EtcPalMcastNetintId, netints, SACN_MAX_NETINTS);
+  size_t num_netints;
+} SacnInternalNetintArray;
 
 /******************************************************************************
  * Types used by the source loss module
@@ -178,13 +198,7 @@ struct SacnReceiver
   etcpal_socket_t ipv6_socket;
   /* (optional) array of network interfaces on which to listen to the specified universe. If num_netints = 0,
    * all available network interfaces will be used. */
-#if SACN_DYNAMIC_MEM
-  EtcPalMcastNetintId* netints;
-#else
-  EtcPalMcastNetintId netints[SACN_MAX_NETINTS];
-#endif
-  /* Number of elements in the netints array. */
-  size_t num_netints;
+  SacnInternalNetintArray netints;
 
   // State tracking
   bool sampling;
@@ -316,11 +330,11 @@ typedef struct SourceLimitExceededNotification
 /* For the shared-socket model, this represents a shared socket. */
 typedef struct SocketRef
 {
-  etcpal_socket_t sock;     /* The socket descriptor. */
-  size_t refcount;          /* How many addresses the socket is subscribed to. */
-  etcpal_iptype_t ip_type;  /* The IP type used in multicast subscriptions and the bind address. */
+  etcpal_socket_t sock;    /* The socket descriptor. */
+  size_t refcount;         /* How many addresses the socket is subscribed to. */
+  etcpal_iptype_t ip_type; /* The IP type used in multicast subscriptions and the bind address. */
 #if SACN_RECEIVER_LIMIT_BIND
-  bool bound;               /* True if bind was called on this socket, false otherwise. */
+  bool bound; /* True if bind was called on this socket, false otherwise. */
 #endif
 } SocketRef;
 
@@ -352,6 +366,84 @@ typedef struct SacnRecvThreadContext
   EtcPalPollContext poll_context;
   uint8_t recv_buf[SACN_MTU];
 } SacnRecvThreadContext;
+
+/******************************************************************************
+ * Types used by the sACN Source module
+ *****************************************************************************/
+
+typedef struct SacnSourceNetint
+{
+  EtcPalMcastNetintId id;  // This must be the first struct member.
+  size_t num_refs;         // Number of universes using this netint.
+} SacnSourceNetint;
+
+typedef struct SacnUnicastDestination
+{
+  EtcPalIpAddr dest_addr;  // This must be the first struct member.
+  bool terminating;
+  int num_terminations_sent;
+} SacnUnicastDestination;
+
+typedef struct SacnSourceUniverse SacnSourceUniverse;
+struct SacnSourceUniverse
+{
+  uint16_t universe_id;  // This must be the first struct member.
+
+  bool terminating;
+  int num_terminations_sent;
+
+  uint8_t priority;
+  uint16_t sync_universe;
+  bool send_preview;
+  uint8_t seq_num;
+
+  // Start code 0x00 state
+  int null_packets_sent_before_suppression;
+  EtcPalTimer null_keep_alive_timer;
+  uint8_t null_send_buf[SACN_MTU];
+  bool has_null_data;
+
+#if SACN_ETC_PRIORITY_EXTENSION
+  // Start code 0xDD state
+  int pap_packets_sent_before_suppression;
+  EtcPalTimer pap_keep_alive_timer;
+  uint8_t pap_send_buf[SACN_MTU];
+  bool has_pap_data;
+#endif
+
+  SACN_DECLARE_BUF(SacnUnicastDestination, unicast_dests, SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE);
+  size_t num_unicast_dests;
+  bool send_unicast_only;
+
+  SacnInternalNetintArray netints;
+};
+
+typedef struct SacnSource SacnSource;
+struct SacnSource
+{
+  sacn_source_t handle;  // This must be the first struct member.
+
+  EtcPalUuid cid;
+  char name[SACN_SOURCE_NAME_MAX_LEN];
+
+  bool terminating;  // If in the process of terminating all universes and removing this source.
+
+  SACN_DECLARE_BUF(SacnSourceUniverse, universes, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE);
+  size_t num_universes;
+  size_t num_active_universes;  // Number of universes to include in universe discovery packets.
+  EtcPalTimer universe_discovery_timer;
+  bool process_manually;
+  sacn_ip_support_t ip_supported;
+  int keep_alive_interval;
+  size_t universe_count_max;
+
+  // This is the set of unique netints used by all universes of this source, to be used when transmitting universe
+  // discovery packets.
+  SACN_DECLARE_BUF(SacnSourceNetint, netints, SACN_MAX_NETINTS);
+  size_t num_netints;
+
+  uint8_t universe_discovery_send_buf[SACN_MTU];
+};
 
 /******************************************************************************
  * Global variables, functions, and state tracking

@@ -21,22 +21,29 @@
 
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_init);
 DEFINE_FAKE_VOID_FUNC(sacn_sockets_deinit);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_validate_netint_config, SacnMcastInterface*, size_t, size_t*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_internal_netints, SacnInternalNetintArray*, SacnMcastInterface*,
+                       size_t);
+DEFINE_FAKE_VOID_FUNC(sacn_get_mcast_addr, etcpal_iptype_t, uint16_t, EtcPalIpAddr*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_add_receiver_socket, sacn_thread_id_t, etcpal_iptype_t, uint16_t,
                        const EtcPalMcastNetintId*, size_t, etcpal_socket_t*);
 DEFINE_FAKE_VOID_FUNC(sacn_remove_receiver_socket, sacn_thread_id_t, etcpal_socket_t*, bool);
 DEFINE_FAKE_VOID_FUNC(sacn_add_pending_sockets, SacnRecvThreadContext*);
 DEFINE_FAKE_VOID_FUNC(sacn_cleanup_dead_sockets, SacnRecvThreadContext*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_read, SacnRecvThreadContext*, SacnReadResult*);
+DEFINE_FAKE_VOID_FUNC(sacn_send_multicast, uint16_t, sacn_ip_support_t, const uint8_t*, const EtcPalMcastNetintId*);
+DEFINE_FAKE_VOID_FUNC(sacn_send_unicast, sacn_ip_support_t, const uint8_t*, const EtcPalIpAddr*);
 
 void sacn_sockets_reset_all_fakes(void)
 {
   RESET_FAKE(sacn_sockets_init);
   RESET_FAKE(sacn_sockets_deinit);
-  RESET_FAKE(sacn_validate_netint_config);
+  RESET_FAKE(sacn_initialize_internal_netints);
+  RESET_FAKE(sacn_get_mcast_addr);
   RESET_FAKE(sacn_add_receiver_socket);
   RESET_FAKE(sacn_remove_receiver_socket);
   RESET_FAKE(sacn_add_pending_sockets);
   RESET_FAKE(sacn_cleanup_dead_sockets);
   RESET_FAKE(sacn_read);
+  RESET_FAKE(sacn_send_multicast);
+  RESET_FAKE(sacn_send_unicast);
 }

@@ -58,14 +58,11 @@ on the other end can choose which universes they want to listen on. Thus, univer
 organization of DMX traffic.
 
 A source can transmit on one or more universes. Each universe has a configuration, which includes
-the universe number, values buffer, and optionally the per-address priority buffer, in addition to
-other optional settings. Once you create this configuration, you can simply pass it into the Add
-Universe function. In this function, you can also specify specific network interfaces for the
-source to use for this universe. You can also indicate that all network interfaces should be used.
-When you're done transmitting on that universe, you can call the Remove Universe function.
-
-Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
-library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0.
+the universe number and other optional settings. Once you create this configuration, you can
+simply pass it into the Add Universe function. In this function, you can also specify specific
+network interfaces for the source to use for this universe. You can also indicate that all network
+interfaces should be used. When you're done transmitting on that universe, you can call the Remove
+Universe function.
 
 <!-- CODE_BLOCK_START -->
 ```c
@@ -110,7 +107,7 @@ The application can also obtain the list of universes that a source is currently
 
 <!-- CODE_BLOCK_START -->
 ```c
-uint16_t *universes;  // This points to an array with UNIVERSES_SIZE (perhaps SACN_SOURCE_MAX_UNIVERSES) elements.
+uint16_t *universes;  // Points to an array with UNIVERSES_SIZE (perhaps SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE) elements.
 size_t num_universes = sacn_source_get_universes(handle_, universes, UNIVERSES_SIZE);
 if(num_universes > UNIVERSES_SIZE)
 {
@@ -129,12 +126,14 @@ std::vector<uint16_t> universes = my_source.GetUniverses();
 
 ## Update Values 
 
-At this point, once you have the desired data in your configured buffer(s), you can use the Update
-Values functionality to copy in the data that should be transmitted on the network. Assuming you didn't
-set the manually_process_source setting to true, the source thread will take care of actually
-sending the data. Otherwise, you'll need to call the Process All function at your DMX rate
-(typically 23 ms). Ultimately, you should call Update Values whenever the data in your buffer(s)
-changes and you want that change transmitted to the network.
+At this point, once you have new data to transmit, you can use the Update Values functionality to
+copy in the NULL start code or per-address priority (PAP) data that should be transmitted on the
+network. Assuming you didn't set the manually_process_source setting to true, the source thread
+will take care of actually sending the data. Otherwise, you'll need to call the Process Manual
+function at your DMX rate (typically 23 ms).
+
+Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
+library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0.
 
 <!-- CODE_BLOCK_START -->
 ```c
@@ -170,16 +169,14 @@ sources can also transmit to one or more unicast addresses in addition to multic
 unicast destination for a universe, call the Add Unicast Destination function. There's also a
 Remove Unicast Destination function. The universe configuration also has a send_unicast_only
 setting, which disables the transmission of multicast altogether. Once you change the unicast
-configuration, call Update Values to transmit using that new configuration.
+configuration, transmission suppression is reset and the newly added unicast destinations will have
+data transmitted to them.
 
 <!-- CODE_BLOCK_START -->
 ```c
 // Unicast can be sent to one or more addresses, in addition to multicast.
 EtcPalIpAddr custom_destination;  // Application initializes custom_destination...
 sacn_source_add_unicast_destination(my_handle, my_universe, &custom_destination);
-// Resend the data as if it has changed, causing the values to be sent to via multicast
-// and unicast depending on SacnSourceUniverseConfig.send_unicast_only.
-sacn_source_update_values(my_handle, my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
 
 // You can remove a unicast destination previously added:
 sacn_source_remove_unicast_destination(my_handle, my_universe, &custom_destination);
@@ -189,9 +186,6 @@ sacn_source_remove_unicast_destination(my_handle, my_universe, &custom_destinati
 // Unicast can be sent to one or more addresses, in addition to multicast.
 etcpal::IpAddr custom_destination;  // Application initializes custom_destination...
 my_source.AddUnicastDestination(my_universe, custom_destination);
-// Resend the data as if it has changed, causing the values to be sent to via multicast
-// and unicast depending on SacnSourceUniverseConfig.send_unicast_only.
-my_source.UpdateValues(my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
 
 // You can remove a unicast destination previously added:
 my_source.RemoveUnicastDestination(my_universe, custom_destination);
@@ -226,24 +220,24 @@ std::vector<etcpal::IpAddr> unicast_dests = my_source.GetUnicastDestinations(my_
 
 ## Custom Start Codes
 
-The buffers in the universe configuration only allow you to send start code 0x00 (NULL) and 0xDD
-(PAP) data. If you want to send data for a different start code, you'll need to use the Send Now
-function to transmit that data synchronously.
+The Update Values functions only allow you to send start code 0x00 (NULL) and 0xDD (PAP) data. If
+you want to send data for a different start code, you'll need to use the Send Now function to
+transmit that data synchronously.
 
 <!-- CODE_BLOCK_START -->
 ```c
-// Custom start code data can also be sent immediately:
 uint8_t my_custom_start_code;
 uint8_t my_custom_start_code_data[DMX_ADDRESS_COUNT];
 // Initialize start code and data...
+
 sacn_source_send_now(my_handle, my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-// Custom start code data can also be sent immediately:
 uint8_t my_custom_start_code;
 uint8_t my_custom_start_code_data[DMX_ADDRESS_COUNT];
 // Initialize start code and data...
+
 my_source.SendNow(my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);
 ```
 <!-- CODE_BLOCK_END -->
@@ -278,10 +272,14 @@ my_source.SendSynchronization(my_universe);
 ```
 <!-- CODE_BLOCK_END -->
 
+The initial setting for sync universe can also be specified with the universe configuration's
+optional sync_universe setting.
+
 ## Changing Preview Flag, Universe Priority, or Source Name
 
 The preview flag, universe priority, and/or source name can be changed at any time using the
-appropriate Change function, followed by a call to Update Values to transmit the changes to the network.
+appropriate Change function. This will also update the data being sent on the network and reset
+transmission suppression.
 
 <!-- CODE_BLOCK_START -->
 ```c
@@ -292,8 +290,6 @@ uint8_t new_priority = 50;
 sacn_source_change_priority(my_handle, my_universe, new_priority);
 bool new_preview_flag = true;
 sacn_source_change_preview_flag(my_handle, my_universe, new_preview_flag);
-// Indicate new data should be transmitted.
-sacn_source_update_values(my_handle, my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
@@ -304,7 +300,5 @@ uint8_t new_priority = 50;
 my_source.ChangePriority(my_universe, new_priority);
 bool new_preview_flag = true;
 my_source.ChangePreviewFlag(my_universe, new_preview_flag);
-// Indicate new data should be transmitted.
-my_source.UpdateValues(my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
 ```
 <!-- CODE_BLOCK_END -->
