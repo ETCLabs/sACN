@@ -1033,25 +1033,60 @@ int sacn_source_process_manual(void)
 }
 
 /**
- * @brief Resets the underlying network sockets for a universe.
+ * @brief Resets the underlying network sockets for all universes of all sources.
  *
- * This is typically used when the application detects that the list of networking interfaces has changed.
+ * This is typically used when the application detects that the list of networking interfaces has changed, and wants
+ * every universe to use the same network interfaces.
  *
- * After this call completes successfully, the universe is considered to be updated and have new values and priorities.
- * It's as if the source just started sending values on that universe.
+ * After this call completes successfully, all universes of all sources are considered to be updated and have new values
+ * and priorities. It's as if every source just started sending values on all their universes.
  *
- * If this call fails, the caller must call sacn_source_destroy(), because the source may be in an
+ * If this call fails, the caller must call sacn_source_destroy() on all sources, because the source API may be in an
  * invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in] handle Handle to the source for which to reset the networking.
- * @param[in] universe Universe to reset netowrk interfaces for.
- * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * status codes are filled in.  If NULL, all available interfaces are tried.
- * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
- * @return #kEtcPalErrOk: Source changed successfully.
+ * @param[in, out] netints If non-NULL, this is the list of interfaces the application wants to use, and the status
+ * codes are filled in.  If NULL, all available interfaces are tried.
+ * @param[in] num_netints The size of netints, or 0 if netints is NULL.
+ * @return #kEtcPalErrOk: Networking reset successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_source_reset_networking(SacnMcastInterface* netints, size_t num_netints)
+{
+#if SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(num_netints);
+
+  return kEtcPalErrNotImpl;
+#else   // SACN_SOURCE_ENABLED
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
+}
+
+/**
+ * @brief Resets the underlying network sockets and determines network interfaces for each universe of each source.
+ *
+ * This is typically used when the application detects that the list of networking interfaces has changed, and wants to
+ * determine what the new network interfaces should be for each universe of each source.
+ *
+ * After this call completes successfully, all universes of all sources are considered to be updated and have new values
+ * and priorities. It's as if every source just started sending values on all their universes.
+ *
+ * If this call fails, the caller must call sacn_source_destroy() on all sources, because the source API may be in an
+ * invalid state.
+ *
+ * Note that the networking reset is considered successful if it is able to successfully use any of the
+ * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
+ * @param[in, out] netint_lists Lists of interfaces the application wants to use for each universe, and the
+ * status codes are filled in. Must not be NULL. Must include all universes of all sources.
+ * @param[in] num_netint_lists The size of netint_lists.
+ * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -1059,14 +1094,12 @@ int sacn_source_process_manual(void)
  *                              source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
-                                            size_t num_netints)
+etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUniverseNetintList* netint_lists,
+                                                         size_t num_netint_lists)
 {
 #if SACN_SOURCE_ENABLED
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(num_netints);
+  ETCPAL_UNUSED_ARG(netint_lists);
+  ETCPAL_UNUSED_ARG(num_netint_lists);
 
   return kEtcPalErrNotImpl;
 #else   // SACN_SOURCE_ENABLED
