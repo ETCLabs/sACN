@@ -1166,7 +1166,7 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUnivers
 
     for (size_t i = 0; (result == kEtcPalErrOk) && (i < num_netint_lists); ++i)
     {
-      SacnSourceUniverseNetintList* netint_list = &netint_lists[i];
+      const SacnSourceUniverseNetintList* netint_list = &netint_lists[i];
 
       SacnSource* source;
       SacnSourceUniverse* universe;

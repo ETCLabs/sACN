@@ -151,7 +151,7 @@ typedef struct SacnSourceUniverseNetintList
 {
   /** The source's handle. */
   sacn_source_t handle;
-  /* The ID of the universe. */
+  /** The ID of the universe. */
   uint16_t universe;
 
   /** If non-NULL, this is the list of interfaces the application wants to use, and the status codes are filled in. If
