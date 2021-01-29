@@ -130,6 +130,26 @@ public:
     bool IsValid() const;
   };
 
+  /**
+   * @ingroup sacn_source_cpp
+   * @brief A set of network interfaces for a particular universe.
+   */
+  struct UniverseNetintList
+  {
+    /** The source's handle. */
+    sacn_source_t handle;
+    /** The ID of the universe. */
+    uint16_t universe;
+
+    /** If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If
+        empty, all available interfaces are tried. */
+    std::vector<SacnMcastInterface> netints;
+
+    /** Create an empty, invalid data structure by default. */
+    UniverseNetintList() = default;
+    UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id);
+  };
+
   Source() = default;
   Source(const Source& other) = delete;
   Source& operator=(const Source& other) = delete;
@@ -164,14 +184,15 @@ public:
   void UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size,
                                 const uint8_t* new_priorities, size_t new_priorities_size);
 
-  etcpal::Error ResetNetworking(uint16_t universe);
-  etcpal::Error ResetNetworking(uint16_t universe, std::vector<SacnMcastInterface>& netints);
-
   std::vector<EtcPalMcastNetintId> GetNetworkInterfaces(uint16_t universe);
 
   constexpr Handle handle() const;
 
   static int ProcessManual();
+
+  static etcpal::Error ResetNetworking();
+  static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
+  static etcpal::Error ResetNetworking(std::vector<UniverseNetintList>& netints);
 
 private:
   class TranslatedUniverseConfig
@@ -226,15 +247,25 @@ inline bool Source::UniverseSettings::IsValid() const
 }
 
 /**
+ * @brief Create a Universe Netint List instance by passing the required members explicitly.
+ *
+ * Optional members can be modified directly in the struct.
+ */
+inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id)
+    : handle(source_handle), universe(universe_id)
+{
+}
+
+/**
  * @brief Create a new sACN source to send sACN data.
  *
  * This creates the instance of the source and begins sending universe discovery packets for it (which will list no
  * universes until start code data begins transmitting). No start code data is sent until AddUniverse() and a variant of
  * UpdateValues() is called.
  *
- * @param[in] settings Configuration parameters for the sACN source to be created. If any of these parameters are invalid,
- * #kEtcPalErrInvalid will be returned. This includes if the source name's length (including the null terminator) is
- * beyond #SACN_SOURCE_NAME_MAX_LEN.
+ * @param[in] settings Configuration parameters for the sACN source to be created. If any of these parameters are
+ * invalid, #kEtcPalErrInvalid will be returned. This includes if the source name's length (including the null
+ * terminator) is beyond #SACN_SOURCE_NAME_MAX_LEN.
  * @return #kEtcPalErrOk: Source successfully created.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -432,7 +463,8 @@ inline std::vector<etcpal::IpAddr> Source::GetUnicastDestinations(uint16_t unive
   do
   {
     destinations.resize(size_guess);
-    num_destinations = sacn_source_get_unicast_destinations(handle_, universe, destinations.data(), destinations.size());
+    num_destinations =
+        sacn_source_get_unicast_destinations(handle_, universe, destinations.data(), destinations.size());
     size_guess = num_destinations + 4u;
   } while (num_destinations > destinations.size());
 
@@ -678,65 +710,107 @@ inline int Source::ProcessManual()
 }
 
 /**
- * @brief Resets the underlying network sockets for a universe.
+ * @brief Resets the underlying network sockets for all universes of all sources.
  *
- * This is the overload of ResetNetworking that uses all network interfaces.
+ * This is the overload of
+ * ResetNetworking that uses all network interfaces.
  *
- * This is typically used when the application detects that the list of networking interfaces has changed.
+ * This is typically used when the application detects that the list of networking interfaces has changed, and wants
+ * every universe to use all system network interfaces.
  *
- * After this call completes successfully, the universe is considered to be updated and have new values and priorities.
- * It's as if the source just started sending values on that universe.
+ * After this call completes successfully, all universes of all sources are considered to be updated and have new values
+ * and priorities. It's as if every source just started sending values on all their universes.
  *
- * If this call fails, the caller must call Shutdown(), because the source may be in an invalid state.
+ * If this call fails, the caller must call Shutdown() on all sources, because the source API may be in an
+ * invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in] universe Universe to reset network interfaces for.
  * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
- *                              source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking(uint16_t universe)
+inline etcpal::Error Source::ResetNetworking()
 {
   std::vector<SacnMcastInterface> netints;
-  return ResetNetworking(universe, netints);
+  return ResetNetworking(netints);
 }
 
 /**
- * @brief Resets the underlying network sockets for a universe.
+ * @brief Resets the underlying network sockets for all universes of all sources.
  *
- * This is typically used when the application detects that the list of networking interfaces has changed.
+ * This is typically used when the application detects that the list of networking interfaces has changed, and wants
+ * every universe to use the same network interfaces.
  *
- * After this call completes successfully, the universe is considered to be updated and have new values and priorities.
- * It's as if the source just started sending values on that universe.
+ * After this call completes successfully, all universes of all sources are considered to be updated and have new values
+ * and priorities. It's as if every source just started sending values on all their universes.
  *
- * If this call fails, the caller must call Shutdown(), because the source may be in an invalid state.
+ * If this call fails, the caller must call Shutdown() on all sources, because the source API may be in an
+ * invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in] universe Universe to reset network interfaces for.
- * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
+ * @param[in, out] netints If !empty, this is the list of interfaces the application wants to use, and the status codes
+ * are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
- *                              source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking(uint16_t universe, std::vector<SacnMcastInterface>& netints)
+inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& netints)
 {
   if (netints.empty())
-    return sacn_source_reset_networking(handle_, universe, nullptr, 0);
+    return sacn_source_reset_networking(nullptr, 0);
 
-  return sacn_source_reset_networking(handle_, universe, netints.data(), netints.size());
+  return sacn_source_reset_networking(netints.data(), netints.size());
+}
+
+/**
+ * @brief Resets the underlying network sockets and determines network interfaces for each universe of each source.
+ *
+ * This is typically used when the application detects that the list of networking interfaces has changed, and wants to
+ * determine what the new network interfaces should be for each universe of each source.
+ *
+ * After this call completes successfully, all universes of all sources are considered to be updated and have new values
+ * and priorities. It's as if every source just started sending values on all their universes.
+ *
+ * If this call fails, the caller must call Shutdown() on all sources, because the source API may be in an
+ * invalid state.
+ *
+ * Note that the networking reset is considered successful if it is able to successfully use any of the
+ * network interfaces passed in for each universe.  This will only return #kEtcPalErrNoNetints if none of the interfaces
+ * work for a universe.
+ *
+ * @param[in, out] netint_lists Vector of lists of interfaces the application wants to use for each universe. Must not
+ * be empty. Must include all universes of all sources, and nothing more. The status codes are filled in whenever
+ * UniverseNetintList::netints is !empty.
+ * @return #kEtcPalErrOk: Networking reset successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided for a universe were usable by the library.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+inline etcpal::Error Source::ResetNetworking(std::vector<UniverseNetintList>& netint_lists)
+{
+  std::vector<SacnSourceUniverseNetintList> netint_lists_c;
+  netint_lists_c.reserve(netint_lists.size());
+  std::transform(netint_lists.begin(), netint_lists.end(), std::back_inserter(netint_lists_c),
+                 [](UniverseNetintList& list) {
+        // clang-format off
+        SacnSourceUniverseNetintList c_list = {
+          list.handle,
+          list.universe,
+          list.netints.data(),
+          list.netints.size()
+        };
+        // clang-format on
+
+        return c_list;
+      });
+  return sacn_source_reset_networking_per_universe(netint_lists_c.data(), netint_lists_c.size());
 }
 
 /**
