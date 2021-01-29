@@ -100,23 +100,11 @@ etcpal_error_t sacn_sockets_init(void)
 
 void sacn_sockets_deinit(void)
 {
-  if (ipv4_unicast_send_socket != ETCPAL_SOCKET_INVALID)
-    etcpal_close(ipv4_unicast_send_socket);
-  if (ipv6_unicast_send_socket != ETCPAL_SOCKET_INVALID)
-    etcpal_close(ipv6_unicast_send_socket);
-
-  for (size_t i = 0; i < num_source_sys_netints; ++i)
-  {
-    if (multicast_send_sockets[i] != ETCPAL_SOCKET_INVALID)
-      etcpal_close(multicast_send_sockets[i]);
-  }
+  clear_source_networking();
 #if SACN_DYNAMIC_MEM
-  free(multicast_send_sockets);
   free(receiver_sys_netints);
-  free(source_sys_netints);
 #endif
   num_receiver_sys_netints = 0;
-  num_source_sys_netints = 0;
 }
 
 etcpal_error_t sacn_sockets_reset_source(void)
@@ -684,6 +672,11 @@ etcpal_error_t receiver_sockets_init()
 
 void clear_source_networking()
 {
+  if (ipv4_unicast_send_socket != ETCPAL_SOCKET_INVALID)
+    etcpal_close(ipv4_unicast_send_socket);
+  if (ipv6_unicast_send_socket != ETCPAL_SOCKET_INVALID)
+    etcpal_close(ipv6_unicast_send_socket);
+
   if (multicast_send_sockets)
   {
     for (size_t i = 0; i < num_source_sys_netints; ++i)
