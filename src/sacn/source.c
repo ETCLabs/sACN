@@ -93,7 +93,7 @@ static void reset_transmission_suppression(const SacnSource* source, SacnSourceU
 static void set_source_name(SacnSource* source, const char* new_name);
 static void set_universe_priority(const SacnSource* source, SacnSourceUniverse* universe, uint8_t priority);
 static void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bool preview);
-static void add_to_source_netints(SacnSource* source, const EtcPalMcastNetintId* id);
+static etcpal_error_t add_to_source_netints(SacnSource* source, const EtcPalMcastNetintId* id);
 static void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id);
 
 /*************************** Function definitions ****************************/
@@ -394,11 +394,8 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       result = add_sacn_source_universe(source, config, netints, num_netints, &universe);
 
     // Update the source's netint tracking.
-    if (result == kEtcPalErrOk)
-    {
-      for (size_t i = 0; i < universe->netints.num_netints; ++i)
-        add_to_source_netints(source, &universe->netints.netints[i]);
-    }
+    for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->netints.num_netints); ++i)
+      result = add_to_source_netints(source, &universe->netints.netints[i]);
 
     sacn_unlock();
   }
@@ -1048,17 +1045,46 @@ int sacn_source_process_manual(void)
  * @param[in] num_netints The size of netints, or 0 if netints is NULL.
  * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_reset_networking(SacnMcastInterface* netints, size_t num_netints)
 {
 #if SACN_SOURCE_ENABLED
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(num_netints);
+  etcpal_error_t result = kEtcPalErrOk;
 
-  return kEtcPalErrNotImpl;
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+
+  if ((result == kEtcPalErrOk) && sacn_lock())
+  {
+    sacn_sockets_reset_source();
+
+    for (size_t i = 0; (result == kEtcPalErrOk) && (i < get_num_sources()); ++i)
+    {
+      SacnSource* source = get_source(i);
+
+      source->num_netints = 0;  // Clear source netints, will be reconstructed when netints are re-added.
+
+      for (size_t j = 0; (result == kEtcPalErrOk) && (j < source->num_universes); ++j)
+      {
+        SacnSourceUniverse* universe = &source->universes[j];
+
+        universe->netints.num_netints = 0;
+        result = sacn_initialize_source_netints(&universe->netints, netints, num_netints);
+
+        for (size_t k = 0; (result == kEtcPalErrOk) && (k < universe->netints.num_netints); ++k)
+          result = add_to_source_netints(source, &universe->netints.netints[k]);
+
+        if (result == kEtcPalErrOk)
+          reset_transmission_suppression(source, universe, true, true);
+      }
+    }
+
+    sacn_unlock();
+  }
+
+  return result;
 #else   // SACN_SOURCE_ENABLED
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
@@ -1077,27 +1103,89 @@ etcpal_error_t sacn_source_reset_networking(SacnMcastInterface* netints, size_t 
  * invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
- * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ * network interfaces passed in for each universe.  This will only return #kEtcPalErrNoNetints if none of the interfaces
+ * work for a universe.
  *
- * @param[in, out] netint_lists Lists of interfaces the application wants to use for each universe, and the
- * status codes are filled in. Must not be NULL. Must include all universes of all sources.
- * @param[in] num_netint_lists The size of netint_lists.
+ * @param[in, out] netint_lists Lists of interfaces the application wants to use for each universe. Must not be NULL.
+ * Must include all universes of all sources, and nothing more. The status codes are filled in whenever
+ * SacnSourceUniverseNetintList::netints is non-NULL.
+ * @param[in] num_netint_lists The size of netint_lists. Must not be 0.
  * @return #kEtcPalErrOk: Networking reset successfully.
- * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided for a universe were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
- *                              source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUniverseNetintList* netint_lists,
                                                          size_t num_netint_lists)
 {
 #if SACN_SOURCE_ENABLED
-  ETCPAL_UNUSED_ARG(netint_lists);
-  ETCPAL_UNUSED_ARG(num_netint_lists);
+  etcpal_error_t result = kEtcPalErrOk;
 
-  return kEtcPalErrNotImpl;
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+
+  if ((netint_lists == NULL) || (num_netint_lists == 0))
+    result = kEtcPalErrInvalid;
+
+  if (sacn_lock())
+  {
+    // Validate netint_lists. It must include all universes of all sources and nothing more.
+    size_t total_num_universes = 0;
+    for (size_t i = 0; (result == kEtcPalErrOk) && (i < get_num_sources()); ++i)
+    {
+      for (size_t j = 0; (result == kEtcPalErrOk) && (j < get_source(i)->num_universes); ++j)
+      {
+        ++total_num_universes;
+
+        bool found = false;
+        for (size_t k = 0; !found && (k < num_netint_lists); ++k)
+        {
+          found = ((get_source(i)->handle == netint_lists[k].handle) &&
+                   (get_source(i)->universes[j].universe_id == netint_lists[k].universe));
+        }
+
+        if (!found)
+          result = kEtcPalErrInvalid;
+      }
+    }
+
+    if (result == kEtcPalErrOk)
+    {
+      if (num_netint_lists != total_num_universes)
+        result = kEtcPalErrInvalid;
+    }
+
+    if (result == kEtcPalErrOk)
+    {
+      sacn_sockets_reset_source();
+
+      for (size_t i = 0; i < get_num_sources(); ++i)
+        get_source(i)->num_netints = 0;  // Clear source netints, will be reconstructed when netints are re-added.
+    }
+
+    for (size_t i = 0; (result == kEtcPalErrOk) && (i < num_netint_lists); ++i)
+    {
+      SacnSourceUniverseNetintList* netint_list = &netint_lists[i];
+
+      SacnSource* source;
+      SacnSourceUniverse* universe;
+      lookup_source_and_universe(netint_list->handle, netint_list->universe, &source, &universe);
+
+      universe->netints.num_netints = 0;
+      result = sacn_initialize_source_netints(&universe->netints, netint_list->netints, netint_list->num_netints);
+
+      for (size_t j = 0; (result == kEtcPalErrOk) && (j < universe->netints.num_netints); ++j)
+        result = add_to_source_netints(source, &universe->netints.netints[j]);
+
+      if (result == kEtcPalErrOk)
+        reset_transmission_suppression(source, universe, true, true);
+    }
+
+    sacn_unlock();
+  }
+
+  return result;
 #else   // SACN_SOURCE_ENABLED
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
@@ -1656,11 +1744,17 @@ void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bo
   reset_transmission_suppression(source, universe, true, true);
 }
 
-void add_to_source_netints(SacnSource* source, const EtcPalMcastNetintId* id)
+etcpal_error_t add_to_source_netints(SacnSource* source, const EtcPalMcastNetintId* id)
 {
   SacnSourceNetint* netint = NULL;
-  if (add_sacn_source_netint(source, id, &netint) == kEtcPalErrExists)
+  etcpal_error_t result = add_sacn_source_netint(source, id, &netint);
+  if (result == kEtcPalErrExists)
+  {
     ++netint->num_refs;
+    result = kEtcPalErrOk;
+  }
+
+  return result;
 }
 
 void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id)
