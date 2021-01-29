@@ -35,22 +35,30 @@
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
-static SacnMcastInterface* sys_netints;
+static SacnMcastInterface* receiver_sys_netints;
+static SacnMcastInterface* source_sys_netints;
 static etcpal_socket_t* multicast_send_sockets;
 #else
-static SacnMcastInterface sys_netints[SACN_MAX_NETINTS];
+static SacnMcastInterface receiver_sys_netints[SACN_MAX_NETINTS];
+static SacnMcastInterface source_sys_netints[SACN_MAX_NETINTS];
 static etcpal_socket_t multicast_send_sockets[SACN_MAX_NETINTS];
 #endif
-static size_t num_sys_netints;
+static size_t num_receiver_sys_netints;
+static size_t num_source_sys_netints;
 static etcpal_socket_t ipv4_unicast_send_socket;
 static etcpal_socket_t ipv6_unicast_send_socket;
 
 /*********************** Private function prototypes *************************/
 
 static etcpal_error_t validate_netint_config(SacnMcastInterface* netints, size_t num_netints,
+                                             const SacnMcastInterface* sys_netints, size_t num_sys_netints,
                                              size_t* num_valid_netints);
+static etcpal_error_t init_internal_netints(SacnInternalNetintArray* internal_netints, SacnMcastInterface* app_netints,
+                                            size_t num_app_netints, const SacnMcastInterface* sys_netints,
+                                            size_t num_sys_netints);
 static etcpal_error_t test_sacn_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str);
-static void add_sacn_netint(const EtcPalMcastNetintId* netint_id, etcpal_error_t status);
+static void add_sacn_receiver_netint(const EtcPalMcastNetintId* netint_id, etcpal_error_t status);
+static void add_sacn_source_netint(const EtcPalMcastNetintId* netint_id, etcpal_error_t status);
 static int netint_id_index_in_array(const EtcPalMcastNetintId* id, const SacnMcastInterface* array, size_t array_size);
 
 static etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id, etcpal_socket_t* socket);
@@ -69,7 +77,8 @@ static void send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr)
 
 etcpal_error_t sacn_sockets_init(void)
 {
-  SACN_ASSERT(num_sys_netints == 0);
+  SACN_ASSERT(num_receiver_sys_netints == 0);
+  SACN_ASSERT(num_source_sys_netints == 0);
 
   size_t total_sys_netints = etcpal_netint_get_num_interfaces();
   if (total_sys_netints == 0)
@@ -77,12 +86,16 @@ etcpal_error_t sacn_sockets_init(void)
 
 #if SACN_DYNAMIC_MEM
   multicast_send_sockets = calloc(total_sys_netints, sizeof(etcpal_socket_t));
-  if (!multicast_send_sockets)
-    return kEtcPalErrNoMem;
-  sys_netints = calloc(total_sys_netints, sizeof(SacnMcastInterface));
-  if (!sys_netints)
+  receiver_sys_netints = calloc(total_sys_netints, sizeof(SacnMcastInterface));
+  source_sys_netints = calloc(total_sys_netints, sizeof(SacnMcastInterface));
+  if (!multicast_send_sockets || !receiver_sys_netints || !source_sys_netints)
   {
-    free(multicast_send_sockets);
+    if (multicast_send_sockets)
+      free(multicast_send_sockets);
+    if (receiver_sys_netints)
+      free(receiver_sys_netints);
+    if (source_sys_netints)
+      free(source_sys_netints);
     return kEtcPalErrNoMem;
   }
 #else
@@ -146,16 +159,18 @@ void sacn_sockets_deinit(void)
   if (ipv6_unicast_send_socket != ETCPAL_SOCKET_INVALID)
     etcpal_close(ipv6_unicast_send_socket);
 
-  for (size_t i = 0; i < num_sys_netints; ++i)
+  for (size_t i = 0; i < num_source_sys_netints; ++i)
   {
     if (multicast_send_sockets[i] != ETCPAL_SOCKET_INVALID)
       etcpal_close(multicast_send_sockets[i]);
   }
 #if SACN_DYNAMIC_MEM
   free(multicast_send_sockets);
-  free(sys_netints);
+  free(receiver_sys_netints);
+  free(source_sys_netints);
 #endif
-  num_sys_netints = 0;
+  num_receiver_sys_netints = 0;
+  num_source_sys_netints = 0;
 }
 
 static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket, bool close_now)
@@ -185,8 +200,8 @@ void send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t
 
   // Determine the socket to use
   etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
-  int sys_netint_index = netint_id_index_in_array(netint, sys_netints, num_sys_netints);
-  if ((sys_netint_index >= 0) && (sys_netint_index < (int)num_sys_netints))
+  int sys_netint_index = netint_id_index_in_array(netint, source_sys_netints, num_source_sys_netints);
+  if ((sys_netint_index >= 0) && (sys_netint_index < (int)num_source_sys_netints))
     sock = multicast_send_sockets[sys_netint_index];
 
   // Try to send the data (ignore errors)
@@ -585,53 +600,23 @@ void sacn_send_unicast(sacn_ip_support_t ip_supported, const uint8_t* send_buf, 
     send_unicast(send_buf, dest_addr);
 }
 
-etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* internal_netints,
+etcpal_error_t sacn_initialize_receiver_netints(SacnInternalNetintArray* receiver_netints,
                                                 SacnMcastInterface* app_netints, size_t num_app_netints)
 {
-  size_t num_valid_netints = 0u;
-  etcpal_error_t result = validate_netint_config(app_netints, num_app_netints, &num_valid_netints);
-
-  SacnMcastInterface* netints_to_use = app_netints ? app_netints : sys_netints;
-  size_t num_netints_to_use = app_netints ? num_app_netints : num_sys_netints;
-
-  if (result == kEtcPalErrOk)
-  {
-#if SACN_DYNAMIC_MEM
-    internal_netints->netints = calloc(num_valid_netints, sizeof(EtcPalMcastNetintId));
-
-    if (!internal_netints->netints)
-      result = kEtcPalErrNoMem;
-    else
-      internal_netints->netints_capacity = num_valid_netints;
-#endif
-  }
-
-  if (result == kEtcPalErrOk)
-  {
-    for (size_t read_index = 0u, write_index = 0u; read_index < num_netints_to_use; ++read_index)
-    {
-      if (netints_to_use[read_index].status == kEtcPalErrOk)
-      {
-        memcpy(&internal_netints->netints[write_index], &netints_to_use[read_index].iface, sizeof(EtcPalMcastNetintId));
-        ++write_index;
-      }
-    }
-
-    internal_netints->num_netints = num_valid_netints;
-  }
-  else
-  {
-#if SACN_DYNAMIC_MEM
-    internal_netints->netints = NULL;
-    internal_netints->netints_capacity = 0;
-#endif
-    internal_netints->num_netints = 0;
-  }
-
-  return result;
+  return init_internal_netints(receiver_netints, app_netints, num_app_netints, receiver_sys_netints,
+                               num_receiver_sys_netints);
 }
 
-etcpal_error_t validate_netint_config(SacnMcastInterface* netints, size_t num_netints, size_t* num_valid_netints)
+etcpal_error_t sacn_initialize_source_netints(SacnInternalNetintArray* source_netints, SacnMcastInterface* app_netints,
+                                              size_t num_app_netints)
+{
+  return init_internal_netints(source_netints, app_netints, num_app_netints, source_sys_netints,
+                               num_source_sys_netints);
+}
+
+etcpal_error_t validate_netint_config(SacnMcastInterface* netints, size_t num_netints,
+                                      const SacnMcastInterface* sys_netints, size_t num_sys_netints,
+                                      size_t* num_valid_netints)
 {
   *num_valid_netints = 0u;
 
@@ -674,6 +659,54 @@ etcpal_error_t validate_netint_config(SacnMcastInterface* netints, size_t num_ne
   return (*num_valid_netints > 0) ? kEtcPalErrOk : kEtcPalErrNoNetints;
 }
 
+etcpal_error_t init_internal_netints(SacnInternalNetintArray* internal_netints, SacnMcastInterface* app_netints,
+                                     size_t num_app_netints, const SacnMcastInterface* sys_netints,
+                                     size_t num_sys_netints)
+{
+  size_t num_valid_netints = 0u;
+  etcpal_error_t result =
+      validate_netint_config(app_netints, num_app_netints, sys_netints, num_sys_netints, &num_valid_netints);
+
+  SacnMcastInterface* netints_to_use = app_netints ? app_netints : sys_netints;
+  size_t num_netints_to_use = app_netints ? num_app_netints : num_sys_netints;
+
+  if (result == kEtcPalErrOk)
+  {
+#if SACN_DYNAMIC_MEM
+    internal_netints->netints = calloc(num_valid_netints, sizeof(EtcPalMcastNetintId));
+
+    if (!internal_netints->netints)
+      result = kEtcPalErrNoMem;
+    else
+      internal_netints->netints_capacity = num_valid_netints;
+#endif
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    for (size_t read_index = 0u, write_index = 0u; read_index < num_netints_to_use; ++read_index)
+    {
+      if (netints_to_use[read_index].status == kEtcPalErrOk)
+      {
+        memcpy(&internal_netints->netints[write_index], &netints_to_use[read_index].iface, sizeof(EtcPalMcastNetintId));
+        ++write_index;
+      }
+    }
+
+    internal_netints->num_netints = num_valid_netints;
+  }
+  else
+  {
+#if SACN_DYNAMIC_MEM
+    internal_netints->netints = NULL;
+    internal_netints->netints_capacity = 0;
+#endif
+    internal_netints->num_netints = 0;
+  }
+
+  return result;
+}
+
 etcpal_error_t test_sacn_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str)
 {
 #if !SACN_LOGGING_ENABLED
@@ -684,55 +717,80 @@ etcpal_error_t test_sacn_netint(const EtcPalMcastNetintId* netint_id, const char
   // MULTICAST_IF on the relevant interface.
   etcpal_socket_t test_socket;
   etcpal_error_t test_res = create_multicast_send_socket(netint_id, &test_socket);
+
   if (test_res == kEtcPalErrOk)
-  {
     etcpal_close(test_socket);
 
-    // Try creating and subscribing a multicast receive socket.
-    // Test receive sockets using an sACN multicast address.
-    EtcPalGroupReq greq;
-    greq.ifindex = netint_id->index;
-    sacn_get_mcast_addr(netint_id->ip_type, 1, &greq.group);
-
-    test_res = create_receiver_socket(netint_id->ip_type, NULL, false, &test_socket);
-
-    if (test_res == kEtcPalErrOk)
-    {
-      test_res = subscribe_on_single_interface(test_socket, &greq);
-      etcpal_close(test_socket);
-    }
-  }
-
-  add_sacn_netint(netint_id, test_res);
+  add_sacn_source_netint(netint_id, test_res);
 
   if (test_res != kEtcPalErrOk)
   {
     SACN_LOG_WARNING(
-        "Error creating multicast test socket on network interface %s: '%s'. This network interface will not be used "
-        "for sACN.",
+        "Error creating multicast test send socket on network interface %s: '%s'. This network interface will not be "
+        "used for the sACN Source.",
+        addr_str, etcpal_strerror(test_res));
+  }
+
+  // Try creating and subscribing a multicast receive socket.
+  // Test receive sockets using an sACN multicast address.
+  EtcPalGroupReq greq;
+  greq.ifindex = netint_id->index;
+  sacn_get_mcast_addr(netint_id->ip_type, 1, &greq.group);
+
+  test_res = create_receiver_socket(netint_id->ip_type, NULL, false, &test_socket);
+
+  if (test_res == kEtcPalErrOk)
+  {
+    test_res = subscribe_on_single_interface(test_socket, &greq);
+    etcpal_close(test_socket);
+  }
+
+  add_sacn_receiver_netint(netint_id, test_res);
+
+  if (test_res != kEtcPalErrOk)
+  {
+    SACN_LOG_WARNING(
+        "Error creating multicast test receive socket on network interface %s: '%s'. This network interface will not "
+        "be used for the sACN Receiver.",
         addr_str, etcpal_strerror(test_res));
   }
 
   return test_res;
 }
 
-void add_sacn_netint(const EtcPalMcastNetintId* netint_id, etcpal_error_t status)
+void add_sacn_receiver_netint(const EtcPalMcastNetintId* netint_id, etcpal_error_t status)
 {
 #if !SACN_DYNAMIC_MEM
-  SACN_ASSERT(num_sys_netints < SACN_MAX_NETINTS);
+  SACN_ASSERT(num_receiver_sys_netints < SACN_MAX_NETINTS);
 #endif
 
-  if (netint_id_index_in_array(netint_id, sys_netints, num_sys_netints) == -1)
+  if (netint_id_index_in_array(netint_id, receiver_sys_netints, num_receiver_sys_netints) == -1)
   {
-    sys_netints[num_sys_netints].iface = *netint_id;
-    sys_netints[num_sys_netints].status = status;
+    receiver_sys_netints[num_receiver_sys_netints].iface = *netint_id;
+    receiver_sys_netints[num_receiver_sys_netints].status = status;
+
+    ++num_receiver_sys_netints;
+  }
+  // Else already added - don't add it again
+}
+
+void add_sacn_source_netint(const EtcPalMcastNetintId* netint_id, etcpal_error_t status)
+{
+#if !SACN_DYNAMIC_MEM
+  SACN_ASSERT(num_source_sys_netints < SACN_MAX_NETINTS);
+#endif
+
+  if (netint_id_index_in_array(netint_id, source_sys_netints, num_source_sys_netints) == -1)
+  {
+    source_sys_netints[num_source_sys_netints].iface = *netint_id;
+    source_sys_netints[num_source_sys_netints].status = status;
 
     if (status == kEtcPalErrOk)
-      create_multicast_send_socket(netint_id, &multicast_send_sockets[num_sys_netints]);
+      create_multicast_send_socket(netint_id, &multicast_send_sockets[num_source_sys_netints]);
     else
-      multicast_send_sockets[num_sys_netints] = ETCPAL_SOCKET_INVALID;
+      multicast_send_sockets[num_source_sys_netints] = ETCPAL_SOCKET_INVALID;
 
-    ++num_sys_netints;
+    ++num_source_sys_netints;
   }
   // Else already added - don't add it again
 }

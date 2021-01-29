@@ -41,8 +41,10 @@ typedef struct SacnReadResult
 etcpal_error_t sacn_sockets_init(void);
 void sacn_sockets_deinit(void);
 
-etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* internal_netints,
+etcpal_error_t sacn_initialize_receiver_netints(SacnInternalNetintArray* receiver_netints,
                                                 SacnMcastInterface* app_netints, size_t num_app_netints);
+etcpal_error_t sacn_initialize_source_netints(SacnInternalNetintArray* source_netints, SacnMcastInterface* app_netints,
+                                              size_t num_app_netints);
 
 void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAddr* ip);
 etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
