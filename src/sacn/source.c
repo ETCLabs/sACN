@@ -93,6 +93,8 @@ static void reset_transmission_suppression(const SacnSource* source, SacnSourceU
 static void set_source_name(SacnSource* source, const char* new_name);
 static void set_universe_priority(const SacnSource* source, SacnSourceUniverse* universe, uint8_t priority);
 static void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bool preview);
+static void add_to_source_netints(SacnSource* source, const EtcPalMcastNetintId* id);
+static void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id);
 
 /*************************** Function definitions ****************************/
 
@@ -222,7 +224,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
   }
 
   return result;
-#else  // SACN_SOURCE_ENABLED
+#else   // SACN_SOURCE_ENABLED
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -278,7 +280,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
   }
 
   return result;
-#else  // SACN_SOURCE_ENABLED
+#else   // SACN_SOURCE_ENABLED
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -392,16 +394,10 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       result = add_sacn_source_universe(source, config, netints, num_netints, &universe);
 
     // Update the source's netint tracking.
-    for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->netints.num_netints); ++i)
+    if (result == kEtcPalErrOk)
     {
-      SacnSourceNetint* netint = NULL;
-      result = add_sacn_source_netint(source, &universe->netints.netints[i], &netint);
-
-      if (result == kEtcPalErrExists)
-      {
-        ++netint->num_refs;
-        result = kEtcPalErrOk;
-      }
+      for (size_t i = 0; i < universe->netints.num_netints; ++i)
+        add_to_source_netints(source, &universe->netints.netints[i]);
     }
 
     sacn_unlock();
@@ -1319,20 +1315,7 @@ void process_universe_termination(SacnSource* source, size_t index)
 
     // Update the netints tree
     for (size_t i = 0; i < universe->netints.num_netints; ++i)
-    {
-      size_t netint_index = 0;
-      SacnSourceNetint* netint_state =
-          lookup_source_netint_and_index(source, &universe->netints.netints[i], &netint_index);
-
-      if (netint_state)
-      {
-        if (netint_state->num_refs > 0)
-          --netint_state->num_refs;
-
-        if (netint_state->num_refs == 0)
-          remove_sacn_source_netint(source, netint_index);
-      }
-    }
+      remove_from_source_netints(source, &universe->netints.netints[i]);
 
     remove_sacn_source_universe(source, index);
   }
@@ -1671,4 +1654,26 @@ void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bo
   SET_PREVIEW_OPT(universe->null_send_buf, preview);
   SET_PREVIEW_OPT(universe->pap_send_buf, preview);
   reset_transmission_suppression(source, universe, true, true);
+}
+
+void add_to_source_netints(SacnSource* source, const EtcPalMcastNetintId* id)
+{
+  SacnSourceNetint* netint = NULL;
+  if (add_sacn_source_netint(source, id, &netint) == kEtcPalErrExists)
+    ++netint->num_refs;
+}
+
+void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id)
+{
+  size_t netint_index = 0;
+  SacnSourceNetint* netint_state = lookup_source_netint_and_index(source, id, &netint_index);
+
+  if (netint_state)
+  {
+    if (netint_state->num_refs > 0)
+      --netint_state->num_refs;
+
+    if (netint_state->num_refs == 0)
+      remove_sacn_source_netint(source, netint_index);
+  }
 }
