@@ -119,6 +119,12 @@ void sacn_sockets_deinit(void)
   num_source_sys_netints = 0;
 }
 
+etcpal_error_t sacn_sockets_reset_source(void)
+{
+  clear_source_networking();
+  return source_sockets_init();
+}
+
 static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket, bool close_now)
 {
   if (remove_socket_ref(recv_thread_context, socket))
