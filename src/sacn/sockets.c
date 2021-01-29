@@ -52,6 +52,7 @@ static etcpal_socket_t ipv6_unicast_send_socket;
 
 static etcpal_error_t source_sockets_init();
 static etcpal_error_t receiver_sockets_init();
+static void clear_source_networking();
 static etcpal_error_t validate_netint_config(SacnMcastInterface* netints, size_t num_netints,
                                              const SacnMcastInterface* sys_netints, size_t num_sys_netints,
                                              size_t* num_valid_netints);
@@ -86,13 +87,11 @@ etcpal_error_t sacn_sockets_init(void)
 
   if (res != kEtcPalErrOk)
   {
+    clear_source_networking();
+
 #if SACN_DYNAMIC_MEM
-    if (multicast_send_sockets)
-      free(multicast_send_sockets);
     if (receiver_sys_netints)
       free(receiver_sys_netints);
-    if (source_sys_netints)
-      free(source_sys_netints);
 #endif
   }
 
@@ -675,6 +674,27 @@ etcpal_error_t receiver_sockets_init()
   }
 
   return kEtcPalErrOk;
+}
+
+void clear_source_networking()
+{
+  if (multicast_send_sockets)
+  {
+    for (size_t i = 0; i < num_source_sys_netints; ++i)
+    {
+      if (multicast_send_sockets[i] != ETCPAL_SOCKET_INVALID)
+        etcpal_close(multicast_send_sockets[i]);
+    }
+  }
+
+#if SACN_DYNAMIC_MEM
+  if (source_sys_netints)
+    free(source_sys_netints);
+  if (multicast_send_sockets)
+    free(multicast_send_sockets);
+#endif
+
+  num_source_sys_netints = 0;
 }
 
 etcpal_error_t validate_netint_config(SacnMcastInterface* netints, size_t num_netints,
