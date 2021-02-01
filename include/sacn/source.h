@@ -146,6 +146,21 @@ typedef struct SacnSourceUniverseConfig
     0, 100, false, false, NULL, 0, 0             \
   }
 
+/** A set of network interfaces for a particular universe. */
+typedef struct SacnSourceUniverseNetintList
+{
+  /** The source's handle. */
+  sacn_source_t handle;
+  /** The ID of the universe. */
+  uint16_t universe;
+
+  /** If non-NULL, this is the list of interfaces the application wants to use, and the status codes are filled in. If
+      NULL, all available interfaces are tried. */
+  SacnMcastInterface* netints;
+  /** The size of netints, or 0 if netints is NULL. */
+  size_t num_netints;
+} SacnSourceUniverseNetintList;
+
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config);
 
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle);
@@ -185,8 +200,9 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 
 int sacn_source_process_manual(void);
 
-etcpal_error_t sacn_source_reset_networking(sacn_source_t handle, uint16_t universe, SacnMcastInterface* netints,
-                                            size_t num_netints);
+etcpal_error_t sacn_source_reset_networking(SacnMcastInterface* netints, size_t num_netints);
+etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUniverseNetintList* netint_lists,
+                                                         size_t num_netint_lists);
 
 size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, EtcPalMcastNetintId* netints,
                                           size_t netints_size);

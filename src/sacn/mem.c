@@ -830,7 +830,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
   }
 
   if (result == kEtcPalErrOk)
-    result = sacn_initialize_internal_netints(&universe->netints, netints, num_netints);
+    result = sacn_initialize_source_netints(&universe->netints, netints, num_netints);
 
   if (result == kEtcPalErrOk)
   {

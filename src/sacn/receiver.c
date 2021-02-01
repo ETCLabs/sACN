@@ -672,7 +672,7 @@ etcpal_error_t create_new_receiver(const SacnReceiverConfig* config, SacnMcastIn
   receiver->ipv6_socket = ETCPAL_SOCKET_INVALID;
 
   etcpal_error_t initialize_receiver_netints_result =
-      sacn_initialize_internal_netints(&receiver->netints, netints, num_netints);
+      sacn_initialize_receiver_netints(&receiver->netints, netints, num_netints);
   if (initialize_receiver_netints_result != kEtcPalErrOk)
   {
     FREE_RECEIVER(receiver);
