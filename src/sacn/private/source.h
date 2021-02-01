@@ -35,6 +35,8 @@ extern "C" {
 etcpal_error_t sacn_source_init(void);
 void sacn_source_deinit(void);
 
+int take_lock_and_process_sources(bool process_manual);
+
 #ifdef __cplusplus
 }
 #endif

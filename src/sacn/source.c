@@ -56,7 +56,6 @@ static void stop_tick_thread();
 
 static void source_thread_function(void* arg);
 
-static int take_lock_and_process_sources(bool process_manual);
 static int process_sources(bool process_manual);
 static void process_universe_discovery(SacnSource* source);
 static void process_universes(SacnSource* source);
