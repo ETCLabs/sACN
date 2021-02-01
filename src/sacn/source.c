@@ -1069,8 +1069,6 @@ etcpal_error_t sacn_source_reset_networking(SacnMcastInterface* netints, size_t 
       for (size_t j = 0; (result == kEtcPalErrOk) && (j < source->num_universes); ++j)
       {
         SacnSourceUniverse* universe = &source->universes[j];
-
-        universe->netints.num_netints = 0;
         result = sacn_initialize_source_netints(&universe->netints, netints, num_netints);
 
         for (size_t k = 0; (result == kEtcPalErrOk) && (k < universe->netints.num_netints); ++k)
@@ -1172,7 +1170,6 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUnivers
       SacnSourceUniverse* universe;
       lookup_source_and_universe(netint_list->handle, netint_list->universe, &source, &universe);
 
-      universe->netints.num_netints = 0;
       result = sacn_initialize_source_netints(&universe->netints, netint_list->netints, netint_list->num_netints);
 
       for (size_t j = 0; (result == kEtcPalErrOk) && (j < universe->netints.num_netints); ++j)

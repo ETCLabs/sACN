@@ -755,6 +755,9 @@ etcpal_error_t init_internal_netints(SacnInternalNetintArray* internal_netints, 
   if (result == kEtcPalErrOk)
   {
 #if SACN_DYNAMIC_MEM
+    if (internal_netints->netints)
+      free(internal_netints->netints);
+
     internal_netints->netints = calloc(num_valid_netints, sizeof(EtcPalMcastNetintId));
 
     if (!internal_netints->netints)
