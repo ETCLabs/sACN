@@ -22,6 +22,13 @@ var group__sacn__source__cpp =
       [ "unicast_destinations", "structsacn_1_1_source_1_1_universe_settings.html#a9cf8b7c7691e8c1634ae68b495659650", null ],
       [ "universe", "structsacn_1_1_source_1_1_universe_settings.html#a0cf34824f8777f28b50f62b7870d6f8c", null ]
     ] ],
+    [ "UniverseNetintList", "structsacn_1_1_source_1_1_universe_netint_list.html", [
+      [ "UniverseNetintList", "structsacn_1_1_source_1_1_universe_netint_list.html#a73644ddd63df91014c177680f2336e47", null ],
+      [ "UniverseNetintList", "structsacn_1_1_source_1_1_universe_netint_list.html#a830547cfb51426350144edd9c028bc14", null ],
+      [ "handle", "structsacn_1_1_source_1_1_universe_netint_list.html#aee044b8551b82b1058427bbb17e74528", null ],
+      [ "netints", "structsacn_1_1_source_1_1_universe_netint_list.html#a2a0cd7263bacb4663085d28599867b12", null ],
+      [ "universe", "structsacn_1_1_source_1_1_universe_netint_list.html#a0cf34824f8777f28b50f62b7870d6f8c", null ]
+    ] ],
     [ "Source", "classsacn_1_1_source.html", [
       [ "Handle", "classsacn_1_1_source.html#a6c08b4f270d0515441eb0eeef16776d0", null ],
       [ "Source", "classsacn_1_1_source.html#afcba8c9f647eab467be20bcf54000c21", null ],
@@ -42,8 +49,6 @@ var group__sacn__source__cpp =
       [ "operator=", "classsacn_1_1_source.html#a70ca8a75288ff8b02f7674f8feea7940", null ],
       [ "RemoveUnicastDestination", "classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966", null ],
       [ "RemoveUniverse", "classsacn_1_1_source.html#aa0293c6689075dd5cb9692f036c8540f", null ],
-      [ "ResetNetworking", "classsacn_1_1_source.html#a0cbc9eb4d3c1e660f91def9adf46be69", null ],
-      [ "ResetNetworking", "classsacn_1_1_source.html#ac4614a5903b7e476bf8f9f8fffc8de2b", null ],
       [ "SendNow", "classsacn_1_1_source.html#a22cf560eca13a3cbc4c8384bad438897", null ],
       [ "SendSynchronization", "classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f", null ],
       [ "Shutdown", "classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9", null ],

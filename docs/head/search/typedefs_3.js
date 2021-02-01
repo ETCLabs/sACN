@@ -31,5 +31,6 @@ var searchData=
   ['sacnsourcepaplostcallback',['SacnSourcePapLostCallback',['../group__sacn__receiver.html#ga7608a394e455465e56c789957f3f3214',1,'receiver.h']]],
   ['sacnsourceslostcallback',['SacnSourcesLostCallback',['../group__sacn__receiver.html#ga80326cc324898e1faebe2da1339bd0b3',1,'receiver.h']]],
   ['sacnsourceuniverseconfig',['SacnSourceUniverseConfig',['../group__sacn__source.html#gae16dae7e0b7d303f0d8c3c98bf6a8dfd',1,'source.h']]],
+  ['sacnsourceuniversenetintlist',['SacnSourceUniverseNetintList',['../group__sacn__source.html#gacde2cf9a54a647fb398f01bc81df69ba',1,'source.h']]],
   ['sacnuniversedatacallback',['SacnUniverseDataCallback',['../group__sacn__receiver.html#ga7bbce89033bafcde13e1c4a413555acf',1,'receiver.h']]]
 ];

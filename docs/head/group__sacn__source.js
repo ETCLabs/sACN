@@ -17,6 +17,12 @@ var group__sacn__source =
       [ "unicast_destinations", "struct_sacn_source_universe_config.html#a42ef84da1b2dc4f0e993432d4a7be8a3", null ],
       [ "universe", "struct_sacn_source_universe_config.html#a0cf34824f8777f28b50f62b7870d6f8c", null ]
     ] ],
+    [ "SacnSourceUniverseNetintList", "struct_sacn_source_universe_netint_list.html", [
+      [ "handle", "struct_sacn_source_universe_netint_list.html#aee044b8551b82b1058427bbb17e74528", null ],
+      [ "netints", "struct_sacn_source_universe_netint_list.html#add0da5313d4b1d06a67bda5508b848e1", null ],
+      [ "num_netints", "struct_sacn_source_universe_netint_list.html#a6ddc029bb8aba3ead075508554592445", null ],
+      [ "universe", "struct_sacn_source_universe_netint_list.html#a0cf34824f8777f28b50f62b7870d6f8c", null ]
+    ] ],
     [ "SACN_SOURCE_CONFIG_DEFAULT_INIT", "group__sacn__source.html#ga1fc88ea9a51c4a935ec87630a0b177f1", null ],
     [ "SACN_SOURCE_INFINITE_UNIVERSES", "group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d", null ],
     [ "SACN_SOURCE_INVALID", "group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153", null ],
@@ -25,6 +31,7 @@ var group__sacn__source =
     [ "sacn_source_t", "group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8", null ],
     [ "SacnSourceConfig", "group__sacn__source.html#ga831d00887301c3f23e83b6d28c89c1d9", null ],
     [ "SacnSourceUniverseConfig", "group__sacn__source.html#gae16dae7e0b7d303f0d8c3c98bf6a8dfd", null ],
+    [ "SacnSourceUniverseNetintList", "group__sacn__source.html#gacde2cf9a54a647fb398f01bc81df69ba", null ],
     [ "sacn_source_add_unicast_destination", "group__sacn__source.html#ga2b7d3fb6a2d252eee7c051acfe97d242", null ],
     [ "sacn_source_add_universe", "group__sacn__source.html#gaa26374ff40861d221d4f0f863d17793d", null ],
     [ "sacn_source_change_name", "group__sacn__source.html#ga0c44cd3dba2627779bfb65ea8349fe1c", null ],
@@ -40,7 +47,8 @@ var group__sacn__source =
     [ "sacn_source_process_manual", "group__sacn__source.html#ga05ae91a74132e84439e18364de2b62d4", null ],
     [ "sacn_source_remove_unicast_destination", "group__sacn__source.html#ga4ebe5d509af8c963c104f2dd96a3ac76", null ],
     [ "sacn_source_remove_universe", "group__sacn__source.html#ga7f8233fae115142c2e2a9488faa12d5d", null ],
-    [ "sacn_source_reset_networking", "group__sacn__source.html#ga74dd59b7b316f6dea1f398713f19758f", null ],
+    [ "sacn_source_reset_networking", "group__sacn__source.html#gad2f7ed83fdf05329c1aa1e0ae497404c", null ],
+    [ "sacn_source_reset_networking_per_universe", "group__sacn__source.html#ga4ce6ceb1bd9f0edac10a45381fe10126", null ],
     [ "sacn_source_send_now", "group__sacn__source.html#ga6e7cea16d61ae355bc313452f0b47e48", null ],
     [ "sacn_source_send_synchronization", "group__sacn__source.html#ga0e07a954dab245c7d6f323d9bdeb2df3", null ],
     [ "sacn_source_universe_config_init", "group__sacn__source.html#ga79d292e6589859e52e82834c611311ea", null ],

@@ -7,7 +7,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=9" />
   <meta name="generator" content="Doxygen 1.8.13" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>sACN: sACN Source API</title>
+  <title>sACN: Source::UniverseNetintList Struct Reference</title>
   <link href="tabs.css" rel="stylesheet" type="text/css" />
   <script type="text/javascript" src="jquery.js"></script>
   <script type="text/javascript" src="dynsections.js"></script>
@@ -177,7 +177,7 @@ $(function() {
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('group__sacn__source__cpp.html','');});
+$(document).ready(function(){initNavTree('structsacn_1_1_source_1_1_universe_netint_list.html','');});
 </script>
 <div id="doc-content">
 <!-- window showing the filter options -->
@@ -196,37 +196,156 @@ $(document).ready(function(){initNavTree('group__sacn__source__cpp.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Data Structures</a>  </div>
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-attribs">Data Fields</a>  </div>
   <div class="headertitle">
-<div class="title">sACN Source API<div class="ingroups"><a class="el" href="group__sacn__cpp__api.html">sACN C++ Language APIs</a></div></div>  </div>
+<div class="title">Source::UniverseNetintList Struct Reference<div class="ingroups"><a class="el" href="group__sacn__cpp__api.html">sACN C++ Language APIs</a> &raquo; <a class="el" href="group__sacn__source__cpp.html">sACN Source API</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>A C++ wrapper for the sACN Source API.  
-<a href="#details">More...</a></p>
+<p>A set of network interfaces for a particular universe.  
+ <a href="structsacn_1_1_source_1_1_universe_netint_list.html#details">More...</a></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
-Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_settings.html">Source::Settings</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of configuration settings that a source needs to initialize.  <a href="structsacn_1_1_source_1_1_settings.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_settings.html">Source::UniverseSettings</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of configuration settings for a new universe on a source.  <a href="structsacn_1_1_source_1_1_universe_settings.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html">Source::UniverseNetintList</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of network interfaces for a particular universe.  <a href="structsacn_1_1_source_1_1_universe_netint_list.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html">Source</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An instance of sACN <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API. ">Source</a> functionality; see <a class="el" href="using_source.html">Using the sACN Source API</a>.  <a href="classsacn_1_1_source.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a73644ddd63df91014c177680f2336e47"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#a73644ddd63df91014c177680f2336e47">UniverseNetintList</a> ()=default</td></tr>
+<tr class="separator:a73644ddd63df91014c177680f2336e47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a830547cfb51426350144edd9c028bc14"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#a830547cfb51426350144edd9c028bc14">UniverseNetintList</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> source_handle, uint16_t universe_id)</td></tr>
+<tr class="memdesc:a830547cfb51426350144edd9c028bc14"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a Universe Netint List instance by passing the required members explicitly.  <a href="#a830547cfb51426350144edd9c028bc14">More...</a><br /></td></tr>
+<tr class="separator:a830547cfb51426350144edd9c028bc14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Data Fields</h2></td></tr>
+<tr class="memitem:aee044b8551b82b1058427bbb17e74528"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#aee044b8551b82b1058427bbb17e74528">handle</a></td></tr>
+<tr class="separator:aee044b8551b82b1058427bbb17e74528"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0cf34824f8777f28b50f62b7870d6f8c"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#a0cf34824f8777f28b50f62b7870d6f8c">universe</a></td></tr>
+<tr class="separator:a0cf34824f8777f28b50f62b7870d6f8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a0cd7263bacb4663085d28599867b12"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#a2a0cd7263bacb4663085d28599867b12">netints</a></td></tr>
+<tr class="separator:a2a0cd7263bacb4663085d28599867b12"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>A C++ wrapper for the sACN Source API. </p>
+<div class="textblock"><p>A set of network interfaces for a particular universe. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a73644ddd63df91014c177680f2336e47"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a73644ddd63df91014c177680f2336e47">&#9670;&nbsp;</a></span>UniverseNetintList() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">default</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Create an empty, invalid data structure by default. </p>
+
+</div>
+</div>
+<a id="a830547cfb51426350144edd9c028bc14"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a830547cfb51426350144edd9c028bc14">&#9670;&nbsp;</a></span>UniverseNetintList() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a> </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>source_handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe_id</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Create a Universe Netint List instance by passing the required members explicitly. </p>
+<p>Optional members can be modified directly in the struct. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Field Documentation</h2>
+<a id="aee044b8551b82b1058427bbb17e74528"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee044b8551b82b1058427bbb17e74528">&#9670;&nbsp;</a></span>handle</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The source's handle. </p>
+
+</div>
+</div>
+<a id="a2a0cd7263bacb4663085d28599867b12"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a0cd7263bacb4663085d28599867b12">&#9670;&nbsp;</a></span>netints</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a>&gt; netints</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If empty, all available interfaces are tried. </p>
+
+</div>
+</div>
+<a id="a0cf34824f8777f28b50f62b7870d6f8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0cf34824f8777f28b50f62b7870d6f8c">&#9670;&nbsp;</a></span>universe</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t universe</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The ID of the universe. </p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
+<li>include/sacn/cpp/<a class="el" href="cpp_2source_8h_source.html">source.h</a></li>
+</ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
+    <li class="navelem"><a class="el" href="namespacesacn.html">sacn</a></li><li class="navelem"><a class="el" href="classsacn_1_1_source.html">Source</a></li><li class="navelem"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>

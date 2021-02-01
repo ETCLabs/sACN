@@ -19,8 +19,6 @@ var classsacn_1_1_source =
     [ "operator=", "classsacn_1_1_source.html#a70ca8a75288ff8b02f7674f8feea7940", null ],
     [ "RemoveUnicastDestination", "classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966", null ],
     [ "RemoveUniverse", "classsacn_1_1_source.html#aa0293c6689075dd5cb9692f036c8540f", null ],
-    [ "ResetNetworking", "classsacn_1_1_source.html#a0cbc9eb4d3c1e660f91def9adf46be69", null ],
-    [ "ResetNetworking", "classsacn_1_1_source.html#ac4614a5903b7e476bf8f9f8fffc8de2b", null ],
     [ "SendNow", "classsacn_1_1_source.html#a22cf560eca13a3cbc4c8384bad438897", null ],
     [ "SendSynchronization", "classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f", null ],
     [ "Shutdown", "classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9", null ],
