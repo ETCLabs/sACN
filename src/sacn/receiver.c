@@ -484,34 +484,68 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
 }
 
 /**
- * @brief Resets the underlying network sockets and packet receipt state for the sACN receiver..
+ * @brief Resets the underlying network sockets and packet receipt state for all sACN receivers.
  *
- * This is typically used when the application detects that the list of networking interfaces has changed.
+ * This is typically used when the application detects that the list of networking interfaces has changed, and wants
+ * every receiver to use the same network interfaces.
  *
- * After this call completes successfully, the receiver is in a sampling period for the universe and will provide
+ * After this call completes successfully, every receiver is in a sampling period for their universes and will provide
  * SamplingPeriodStarted() and SamplingPeriodEnded() notifications, as well as UniverseData() notifications as packets
- * are received for the universe. If this call fails, the caller must call sacn_receiver_destroy for the receiver,
- * because the receiver may be in an invalid state.
+ * are received for their universes. If this call fails, the caller must call sacn_receiver_destroy for each receiver,
+ * because the receivers may be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in. This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in] handle Handle to the receiver for which to reset the networking.
- * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * status codes are filled in.  If NULL, all available interfaces are tried.
- * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
- * @return #kEtcPalErrOk: Universe changed successfully.
+ * @param[in, out] netints If non-NULL, this is the list of interfaces the application wants to use, and the status
+ * codes are filled in.  If NULL, all available interfaces are tried.
+ * @param[in, out] num_netints The size of netints, or 0 if netints is NULL.
+ * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_receiver_reset_networking(sacn_receiver_t handle, SacnMcastInterface* netints, size_t num_netints)
+etcpal_error_t sacn_receiver_reset_networking(SacnMcastInterface* netints, size_t num_netints)
 {
-  ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
+
+  if (!sacn_initialized())
+    return kEtcPalErrNotInit;
+
+  return kEtcPalErrNotImpl;
+}
+
+/**
+ * @brief Resets underlying network sockets and packet receipt state, determines network interfaces for each receiver.
+ *
+ * This is typically used when the application detects that the list of networking interfaces has changed, and wants to
+ * determine what the new network interfaces should be for each receiver.
+ *
+ * After this call completes successfully, every receiver is in a sampling period for their universes and will provide
+ * SamplingPeriodStarted() and SamplingPeriodEnded() notifications, as well as UniverseData() notifications as packets
+ * are received for their universes. If this call fails, the caller must call sacn_receiver_destroy for each receiver,
+ * because the receivers may be in an invalid state.
+ *
+ * Note that the networking reset is considered successful if it is able to successfully use any of the network
+ * interfaces passed in for each receiver. This will only return #kEtcPalErrNoNetints if none of the interfaces work for
+ * a receiver.
+ *
+ * @param[in, out] netint_lists Lists of interfaces the application wants to use for each receiver. Must not be NULL.
+ * Must include all receivers, and nothing more. The status codes are filled in whenever SacnReceiverNetintList::netints
+ * is non-NULL.
+ * @param[in] num_netint_lists The size of netint_lists. Must not be 0.
+ * @return #kEtcPalErrOk: Networking reset successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided for a receiver were usable by the library.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnReceiverNetintList* netint_lists,
+                                                           size_t num_netint_lists)
+{
+  ETCPAL_UNUSED_ARG(netint_lists);
+  ETCPAL_UNUSED_ARG(num_netint_lists);
 
   if (!sacn_initialized())
     return kEtcPalErrNotInit;
