@@ -196,8 +196,7 @@ struct SacnReceiver
   // Sockets / network interface info
   etcpal_socket_t ipv4_socket;
   etcpal_socket_t ipv6_socket;
-  /* (optional) array of network interfaces on which to listen to the specified universe. If num_netints = 0,
-   * all available network interfaces will be used. */
+  /* Array of network interfaces on which to listen to the specified universe. */
   SacnInternalNetintArray netints;
 
   // State tracking

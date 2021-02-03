@@ -102,7 +102,8 @@ void sacn_sockets_deinit(void)
 {
   clear_source_networking();
 #if SACN_DYNAMIC_MEM
-  free(receiver_sys_netints);
+  if (receiver_sys_netints)
+    free(receiver_sys_netints);
 #endif
   num_receiver_sys_netints = 0;
 }
@@ -111,6 +112,17 @@ etcpal_error_t sacn_sockets_reset_source(void)
 {
   clear_source_networking();
   return source_sockets_init();
+}
+
+etcpal_error_t sacn_sockets_reset_receiver(void)
+{
+#if SACN_DYNAMIC_MEM
+  if (receiver_sys_netints)
+    free(receiver_sys_netints);
+#endif
+  num_receiver_sys_netints = 0;
+
+  return receiver_sockets_init();
 }
 
 static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket, bool close_now)

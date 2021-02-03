@@ -106,14 +106,19 @@ static struct SacnRecvState
 static etcpal_error_t validate_receiver_config(const SacnReceiverConfig* config);
 static etcpal_error_t create_new_receiver(const SacnReceiverConfig* config, SacnMcastInterface* netints,
                                           size_t num_netints, SacnReceiver** new_receiver);
-static etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnReceiverConfig* config);
+static etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver);
 static etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver);
 static etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context);
+
+static etcpal_error_t add_receiver_sockets(SacnReceiver* receiver);
+
+static etcpal_error_t reset_receiver_state(SacnReceiver* receiver);
 
 static void remove_receiver_from_thread(SacnReceiver* receiver, bool close_socket_now);
 static void remove_receiver_from_maps(SacnReceiver* receiver);
 
 static void remove_receiver_sockets(SacnReceiver* receiver, bool close_now);
+static void remove_all_receiver_sockets(bool close_now);
 
 static void sacn_receive_thread(void* arg);
 
@@ -277,7 +282,7 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
       res = create_new_receiver(config, netints, num_netints, &receiver);
 
     if (res == kEtcPalErrOk)
-      res = assign_receiver_to_thread(receiver, config);
+      res = assign_receiver_to_thread(receiver);
 
     // Insert the new universe into the map.
     if (res == kEtcPalErrOk)
@@ -433,36 +438,19 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
       res = etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
     }
 
-    // Update the receiver's socket and subscription.
-    if (res == kEtcPalErrOk)
-    {
-      remove_receiver_sockets(receiver, false);
-
-      if (supports_ipv4(receiver->ip_supported))
-      {
-        res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, new_universe_id, receiver->netints.netints,
-                                       receiver->netints.num_netints, &receiver->ipv4_socket);
-
-        if ((res == kEtcPalErrNoNetints) && supports_ipv6(receiver->ip_supported))
-          res = kEtcPalErrOk;  // Try IPv6.
-      }
-    }
-
-    if (res == kEtcPalErrOk)
-    {
-      if (supports_ipv6(receiver->ip_supported))
-      {
-        res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, new_universe_id, receiver->netints.netints,
-                                       receiver->netints.num_netints, &receiver->ipv6_socket);
-      }
-    }
-
     // Update receiver key and position in receiver_state.receivers_by_universe.
     if (res == kEtcPalErrOk)
     {
       etcpal_rbtree_remove(&receiver_state.receivers_by_universe, receiver);
       receiver->keys.universe = new_universe_id;
       res = etcpal_rbtree_insert(&receiver_state.receivers_by_universe, receiver);
+    }
+
+    // Update the receiver's socket and subscription.
+    if (res == kEtcPalErrOk)
+    {
+      remove_receiver_sockets(receiver, false);
+      res = add_receiver_sockets(receiver);
     }
 
     // Begin the sampling period.
@@ -507,13 +495,37 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
  */
 etcpal_error_t sacn_receiver_reset_networking(SacnMcastInterface* netints, size_t num_netints)
 {
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(num_netints);
+  etcpal_error_t res = kEtcPalErrOk;
 
   if (!sacn_initialized())
-    return kEtcPalErrNotInit;
+    res = kEtcPalErrNotInit;
 
-  return kEtcPalErrNotImpl;
+  if (sacn_lock())
+  {
+    if (res == kEtcPalErrOk)
+      res = sacn_sockets_reset_receiver();
+
+    if (res == kEtcPalErrOk)
+    {
+      remove_all_receiver_sockets(false);  // All current sockets need to be removed before adding new ones.
+
+      EtcPalRbIter iter;
+      etcpal_rbiter_init(&iter);
+      for (SacnReceiver* receiver = etcpal_rbiter_first(&iter, &receiver_state.receivers);
+           (res == kEtcPalErrOk) && receiver; receiver = etcpal_rbiter_next(&iter))
+      {
+        res = sacn_initialize_receiver_netints(&receiver->netints, netints, num_netints);
+        if (res == kEtcPalErrOk)
+          res = add_receiver_sockets(receiver);
+        if (res == kEtcPalErrOk)
+          res = reset_receiver_state(receiver);
+      }
+    }
+
+    sacn_unlock();
+  }
+
+  return res;
 }
 
 /**
@@ -544,13 +556,63 @@ etcpal_error_t sacn_receiver_reset_networking(SacnMcastInterface* netints, size_
 etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnReceiverNetintList* netint_lists,
                                                            size_t num_netint_lists)
 {
-  ETCPAL_UNUSED_ARG(netint_lists);
-  ETCPAL_UNUSED_ARG(num_netint_lists);
+  etcpal_error_t res = kEtcPalErrOk;
 
   if (!sacn_initialized())
-    return kEtcPalErrNotInit;
+    res = kEtcPalErrNotInit;
 
-  return kEtcPalErrNotImpl;
+  if ((netint_lists == NULL) || (num_netint_lists == 0))
+    res = kEtcPalErrInvalid;
+
+  if (sacn_lock())
+  {
+    // Validate netint_lists. It must include all receivers and nothing more.
+    size_t total_num_receivers = 0;
+    EtcPalRbIter iter;
+    etcpal_rbiter_init(&iter);
+    for (SacnReceiver* receiver = etcpal_rbiter_first(&iter, &receiver_state.receivers);
+         (res == kEtcPalErrOk) && receiver; receiver = etcpal_rbiter_next(&iter))
+    {
+      ++total_num_receivers;
+
+      bool found = false;
+      for (size_t i = 0; !found && (i < num_netint_lists); ++i)
+        found = (receiver->keys.handle == netint_lists[i].handle);
+
+      if (!found)
+        res = kEtcPalErrInvalid;
+    }
+
+    if (res == kEtcPalErrOk)
+    {
+      if (num_netint_lists != total_num_receivers)
+        res = kEtcPalErrInvalid;
+    }
+
+    if (res == kEtcPalErrOk)
+      res = sacn_sockets_reset_receiver();
+
+    if (res == kEtcPalErrOk)
+    {
+      remove_all_receiver_sockets(false);  // All current sockets need to be removed before adding new ones.
+
+      // After the old sockets have been removed, initialize the new netints, sockets, and state.
+      for (size_t i = 0; (res == kEtcPalErrOk) && (i < num_netint_lists); ++i)
+      {
+        SacnReceiver* receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers, &netint_lists[i].handle);
+        res =
+            sacn_initialize_receiver_netints(&receiver->netints, netint_lists[i].netints, netint_lists[i].num_netints);
+        if (res == kEtcPalErrOk)
+          res = add_receiver_sockets(receiver);
+        if (res == kEtcPalErrOk)
+          res = reset_receiver_state(receiver);
+      }
+    }
+
+    sacn_unlock();
+  }
+
+  return res;
 }
 
 /**
@@ -739,11 +801,10 @@ etcpal_error_t create_new_receiver(const SacnReceiverConfig* config, SacnMcastIn
  * Pick a thread for the receiver based on current load balancing, create the receiver's sockets,
  * and assign it to that thread.
  *
- * [in,out] receiver Receiver instance to assign.
- * [in] config Config that was used to create the receiver instance.
+ * [in,out] receiver Receiver instance to assign. Make sure the universe ID is up-to-date.
  * Returns error code indicating the result of the operations.
  */
-etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnReceiverConfig* config)
+etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver)
 {
   SacnRecvThreadContext* assigned_thread = NULL;
 
@@ -763,22 +824,7 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver, const SacnRecei
 
   SACN_ASSERT(assigned_thread);
 
-  etcpal_error_t res = kEtcPalErrOk;
-
-  if (supports_ipv4(receiver->ip_supported))
-  {
-    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, config->universe_id, receiver->netints.netints,
-                                   receiver->netints.num_netints, &receiver->ipv4_socket);
-
-    if ((res == kEtcPalErrNoNetints) && supports_ipv6(receiver->ip_supported))
-      res = kEtcPalErrOk;  // Try IPv6.
-  }
-
-  if ((res == kEtcPalErrOk) && supports_ipv6(receiver->ip_supported))
-  {
-    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, config->universe_id, receiver->netints.netints,
-                                   receiver->netints.num_netints, &receiver->ipv6_socket);
-  }
+  etcpal_error_t res = add_receiver_sockets(receiver);
 
   if ((res == kEtcPalErrOk) && !assigned_thread->running)
   {
@@ -836,6 +882,54 @@ etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
 }
 
 /*
+ * Initialize a receiver's IPv4 and IPv6 sockets. Make sure to take the sACN lock before calling.
+ *
+ * [in] receiver Receiver to add sockets for. Make sure the universe ID, thread ID, IP supported, and netints are
+ * initialized.
+ * Returns error code indicating the result of adding the sockets.
+ */
+etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
+{
+  etcpal_error_t res = kEtcPalErrOk;
+
+  if (supports_ipv4(receiver->ip_supported))
+  {
+    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, receiver->keys.universe,
+                                   receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv4_socket);
+
+    if ((res == kEtcPalErrNoNetints) && supports_ipv6(receiver->ip_supported))
+      res = kEtcPalErrOk;  // Try IPv6.
+  }
+
+  if ((res == kEtcPalErrOk) && supports_ipv6(receiver->ip_supported))
+  {
+    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, receiver->keys.universe,
+                                   receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv6_socket);
+  }
+
+  return res;
+}
+
+/*
+ * Reset a receiver's state. Make sure to take the sACN lock before calling.
+ *
+ * [in,out] receiver Receiver to reset state for.
+ * Returns error code indicating the result of the reset.
+ */
+etcpal_error_t reset_receiver_state(SacnReceiver* receiver)
+{
+  receiver->sampling = true;
+  receiver->notified_sampling_started = false;
+  etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
+  receiver->suppress_limit_exceeded_notification = false;
+
+  clear_term_set_list(receiver->term_sets);
+  receiver->term_sets = NULL;
+
+  return etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
+}
+
+/*
  * Remove a receiver instance from a receiver thread. After this completes, the thread will no
  * longer process timeouts for that receiver.
  *
@@ -877,6 +971,24 @@ void remove_receiver_sockets(SacnReceiver* receiver, bool close_now)
     sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, close_now);
   if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
     sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, close_now);
+}
+
+/*
+ * Remove all receiver sockets, choosing whether to close them now or wait until the next thread cycle.
+ *
+ * The sACN lock should be locked before calling this.
+ *
+ * [in] close_now Whether to close the sockets now or wait until the next thread cycle.
+ */
+void remove_all_receiver_sockets(bool close_now)
+{
+  EtcPalRbIter iter;
+  etcpal_rbiter_init(&iter);
+  for (SacnReceiver* receiver = etcpal_rbiter_first(&iter, &receiver_state.receivers); receiver;
+       receiver = etcpal_rbiter_next(&iter))
+  {
+    remove_receiver_sockets(receiver, close_now);
+  }
 }
 
 /*
