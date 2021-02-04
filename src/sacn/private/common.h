@@ -262,6 +262,12 @@ typedef struct SacnTrackedSource
 #endif
 } SacnTrackedSource;
 
+typedef enum
+{
+  kCloseSocketNow,
+  kQueueSocketForClose
+} socket_close_behavior_t;
+
 /******************************************************************************
  * Notifications delivered by the sACN receive module
  *****************************************************************************/

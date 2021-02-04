@@ -114,11 +114,11 @@ static etcpal_error_t add_receiver_sockets(SacnReceiver* receiver);
 
 static etcpal_error_t reset_receiver_state(SacnReceiver* receiver);
 
-static void remove_receiver_from_thread(SacnReceiver* receiver, bool close_socket_now);
+static void remove_receiver_from_thread(SacnReceiver* receiver, socket_close_behavior_t socket_close_behavior);
 static void remove_receiver_from_maps(SacnReceiver* receiver);
 
-static void remove_receiver_sockets(SacnReceiver* receiver, bool close_now);
-static void remove_all_receiver_sockets(bool close_now);
+static void remove_receiver_sockets(SacnReceiver* receiver, socket_close_behavior_t close_behavior);
+static void remove_all_receiver_sockets(socket_close_behavior_t close_behavior);
 
 static void sacn_receive_thread(void* arg);
 
@@ -297,7 +297,7 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
       if (receiver)
       {
         remove_receiver_from_maps(receiver);
-        remove_receiver_from_thread(receiver, true);
+        remove_receiver_from_thread(receiver, kCloseSocketNow);
         FREE_RECEIVER(receiver);
       }
     }
@@ -334,7 +334,7 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
     SacnReceiver* receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers, &handle);
     if (receiver)
     {
-      remove_receiver_from_thread(receiver, false);
+      remove_receiver_from_thread(receiver, kQueueSocketForClose);
       etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
       remove_receiver_from_maps(receiver);
       FREE_RECEIVER(receiver);
@@ -449,7 +449,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
     // Update the receiver's socket and subscription.
     if (res == kEtcPalErrOk)
     {
-      remove_receiver_sockets(receiver, false);
+      remove_receiver_sockets(receiver, kQueueSocketForClose);
       res = add_receiver_sockets(receiver);
     }
 
@@ -507,7 +507,8 @@ etcpal_error_t sacn_receiver_reset_networking(SacnMcastInterface* netints, size_
 
     if (res == kEtcPalErrOk)
     {
-      remove_all_receiver_sockets(false);  // All current sockets need to be removed before adding new ones.
+      // All current sockets need to be removed before adding new ones.
+      remove_all_receiver_sockets(kQueueSocketForClose);
 
       EtcPalRbIter iter;
       etcpal_rbiter_init(&iter);
@@ -594,7 +595,8 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnReceiverNet
 
     if (res == kEtcPalErrOk)
     {
-      remove_all_receiver_sockets(false);  // All current sockets need to be removed before adding new ones.
+      // All current sockets need to be removed before adding new ones.
+      remove_all_receiver_sockets(kQueueSocketForClose);
 
       // After the old sockets have been removed, initialize the new netints, sockets, and state.
       for (size_t i = 0; (res == kEtcPalErrOk) && (i < num_netint_lists); ++i)
@@ -831,7 +833,7 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver)
     res = start_receiver_thread(assigned_thread);
     if (res != kEtcPalErrOk)
     {
-      remove_receiver_sockets(receiver, true);
+      remove_receiver_sockets(receiver, kCloseSocketNow);
     }
   }
 
@@ -934,15 +936,15 @@ etcpal_error_t reset_receiver_state(SacnReceiver* receiver)
  * longer process timeouts for that receiver.
  *
  * [in,out] receiver Receiver to remove.
- * [in] close_socket_now Whether to close the socket immediately (e.g. on full library shutdown).
+ * [in] socket_close_behavior Whether to close the socket immediately (e.g. on full library shutdown).
  * Returns error code indicating the result of the removal operation.
  */
-void remove_receiver_from_thread(SacnReceiver* receiver, bool close_socket_now)
+void remove_receiver_from_thread(SacnReceiver* receiver, socket_close_behavior_t socket_close_behavior)
 {
   SacnRecvThreadContext* context = get_recv_thread_context(receiver->thread_id);
   if (context)
   {
-    remove_receiver_sockets(receiver, close_socket_now);
+    remove_receiver_sockets(receiver, socket_close_behavior);
 
     remove_receiver_from_list(context, receiver);
   }
@@ -963,14 +965,14 @@ void remove_receiver_from_maps(SacnReceiver* receiver)
  * Remove a receiver's sockets, choosing whether to close them now or wait until the next thread cycle.
  *
  * [in/out] receiver Receiver whose sockets to remove. Socket handles are set to invalid.
- * [in] close_now Whether to close the sockets now or wait until the next thread cycle.
+ * [in] close_behavior Whether to close the sockets now or wait until the next thread cycle.
  */
-void remove_receiver_sockets(SacnReceiver* receiver, bool close_now)
+void remove_receiver_sockets(SacnReceiver* receiver, socket_close_behavior_t close_behavior)
 {
   if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, close_now);
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, close_behavior);
   if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, close_now);
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, close_behavior);
 }
 
 /*
@@ -978,16 +980,16 @@ void remove_receiver_sockets(SacnReceiver* receiver, bool close_now)
  *
  * The sACN lock should be locked before calling this.
  *
- * [in] close_now Whether to close the sockets now or wait until the next thread cycle.
+ * [in] close_behavior Whether to close the sockets now or wait until the next thread cycle.
  */
-void remove_all_receiver_sockets(bool close_now)
+void remove_all_receiver_sockets(socket_close_behavior_t close_behavior)
 {
   EtcPalRbIter iter;
   etcpal_rbiter_init(&iter);
   for (SacnReceiver* receiver = etcpal_rbiter_first(&iter, &receiver_state.receivers); receiver;
        receiver = etcpal_rbiter_next(&iter))
   {
-    remove_receiver_sockets(receiver, close_now);
+    remove_receiver_sockets(receiver, close_behavior);
   }
 }
 
@@ -1788,7 +1790,7 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
 
   SacnReceiver* receiver = (SacnReceiver*)node->value;
   etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
-  remove_receiver_sockets(receiver, true);
+  remove_receiver_sockets(receiver, kCloseSocketNow);
   FREE_RECEIVER(receiver);
   node_dealloc(node);
 }
