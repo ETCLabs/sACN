@@ -300,9 +300,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga0b14f40eaf24a866fed007bc18674ec7"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#ga0b14f40eaf24a866fed007bc18674ec7">sacn_receiver_reset_networking_per_receiver</a> (const <a class="el" href="struct_sacn_receiver_netint_list.html">SacnReceiverNetintList</a> *netint_lists, size_t num_netint_lists)</td></tr>
 <tr class="memdesc:ga0b14f40eaf24a866fed007bc18674ec7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets underlying network sockets and packet receipt state, determines network interfaces for each receiver.  <a href="#ga0b14f40eaf24a866fed007bc18674ec7">More...</a><br /></td></tr>
 <tr class="separator:ga0b14f40eaf24a866fed007bc18674ec7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga44139d6ad5b61268f2db2a089caf02d7"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#ga44139d6ad5b61268f2db2a089caf02d7">sacn_receiver_get_network_interfaces</a> (<a class="el" href="group__sacn__receiver.html#gafc1e3c92911f567bed81bbd04f3f34f6">sacn_receiver_t</a> handle, <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *netints, size_t netints_size)</td></tr>
-<tr class="memdesc:ga44139d6ad5b61268f2db2a089caf02d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain the statuses of a receiver's network interfaces.  <a href="#ga44139d6ad5b61268f2db2a089caf02d7">More...</a><br /></td></tr>
-<tr class="separator:ga44139d6ad5b61268f2db2a089caf02d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6ce5c1c8e4fafe2f339c6d3084dacfc4"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#ga6ce5c1c8e4fafe2f339c6d3084dacfc4">sacn_receiver_get_network_interfaces</a> (<a class="el" href="group__sacn__receiver.html#gafc1e3c92911f567bed81bbd04f3f34f6">sacn_receiver_t</a> handle, EtcPalMcastNetintId *netints, size_t netints_size)</td></tr>
+<tr class="memdesc:ga6ce5c1c8e4fafe2f339c6d3084dacfc4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain a list of a receiver's network interfaces.  <a href="#ga6ce5c1c8e4fafe2f339c6d3084dacfc4">More...</a><br /></td></tr>
+<tr class="separator:ga6ce5c1c8e4fafe2f339c6d3084dacfc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4cb36b56dd22b9122f491182a7315e8c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#ga4cb36b56dd22b9122f491182a7315e8c">sacn_receiver_set_standard_version</a> (<a class="el" href="group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0">sacn_standard_version_t</a> version)</td></tr>
 <tr class="memdesc:ga4cb36b56dd22b9122f491182a7315e8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the current version of the sACN standard to which the module is listening.  <a href="#ga4cb36b56dd22b9122f491182a7315e8c">More...</a><br /></td></tr>
 <tr class="separator:ga4cb36b56dd22b9122f491182a7315e8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -885,8 +885,8 @@ sACN receiver flags</h2></td></tr>
 
 </div>
 </div>
-<a id="ga44139d6ad5b61268f2db2a089caf02d7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga44139d6ad5b61268f2db2a089caf02d7">&#9670;&nbsp;</a></span>sacn_receiver_get_network_interfaces()</h2>
+<a id="ga6ce5c1c8e4fafe2f339c6d3084dacfc4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga6ce5c1c8e4fafe2f339c6d3084dacfc4">&#9670;&nbsp;</a></span>sacn_receiver_get_network_interfaces()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -900,7 +900,7 @@ sACN receiver flags</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> *&#160;</td>
+          <td class="paramtype">EtcPalMcastNetintId *&#160;</td>
           <td class="paramname"><em>netints</em>, </td>
         </tr>
         <tr>
@@ -917,7 +917,7 @@ sACN receiver flags</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Obtain the statuses of a receiver's network interfaces. </p>
+<p>Obtain a list of a receiver's network interfaces. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>Handle to the receiver for which to obtain the list of network interfaces. </td></tr>
@@ -926,7 +926,7 @@ sACN receiver flags</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The total number of network interfaces for the receiver. If this is greater than netints_size, then only netints_size addresses were written to the netints array. If the receiver was not found, 0 is returned. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The total number of network interfaces for the receiver. If this is greater than netints_size, then only netints_size entries were written to the netints array. If the receiver was not found, 0 is returned. </dd></dl>
 
 </div>
 </div>

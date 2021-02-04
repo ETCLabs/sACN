@@ -58,7 +58,7 @@ var group__sacn__receiver =
     [ "sacn_receiver_create", "group__sacn__receiver.html#ga7c6f216bef2361a0e097f22fe69cba1a", null ],
     [ "sacn_receiver_destroy", "group__sacn__receiver.html#ga43f99a2447364832c9ab135ac3d8b6ae", null ],
     [ "sacn_receiver_get_expired_wait", "group__sacn__receiver.html#gabd632f80d5da75c47c1f08103a42a391", null ],
-    [ "sacn_receiver_get_network_interfaces", "group__sacn__receiver.html#ga44139d6ad5b61268f2db2a089caf02d7", null ],
+    [ "sacn_receiver_get_network_interfaces", "group__sacn__receiver.html#ga6ce5c1c8e4fafe2f339c6d3084dacfc4", null ],
     [ "sacn_receiver_get_standard_version", "group__sacn__receiver.html#gaecb775f60463e32ddb4ce2c7b2281249", null ],
     [ "sacn_receiver_get_universe", "group__sacn__receiver.html#gae77eea445ebb380fb4d47c63c0f3ba32", null ],
     [ "sacn_receiver_reset_networking", "group__sacn__receiver.html#ga3cb970c236a7f37064988f72d760d47b", null ],
