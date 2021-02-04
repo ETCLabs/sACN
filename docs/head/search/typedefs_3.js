@@ -18,6 +18,7 @@ var searchData=
   ['sacnmergereceiversourcelimitexceededcallback',['SacnMergeReceiverSourceLimitExceededCallback',['../group__sacn__merge__receiver.html#ga47ccc08a4f5812e26ecf694fa0cb0ff0',1,'merge_receiver.h']]],
   ['sacnreceivercallbacks',['SacnReceiverCallbacks',['../group__sacn__receiver.html#ga23f7f1621591aca86090172aab798576',1,'receiver.h']]],
   ['sacnreceiverconfig',['SacnReceiverConfig',['../group__sacn__receiver.html#ga3c5b4aec7e1c6fbfc7255c282b7ccf1d',1,'receiver.h']]],
+  ['sacnreceivernetintlist',['SacnReceiverNetintList',['../group__sacn__receiver.html#ga5ce1e4d9da4807b53d71869f0e39950a',1,'receiver.h']]],
   ['sacnremotesource',['SacnRemoteSource',['../group__sacn__receiver.html#ga606572d0bec7d4ce5e711c34996e137c',1,'receiver.h']]],
   ['sacnsamplingperiodendedcallback',['SacnSamplingPeriodEndedCallback',['../group__sacn__receiver.html#gac9ac2e788bf69c6da712dfcd67269e67',1,'receiver.h']]],
   ['sacnsamplingperiodstartedcallback',['SacnSamplingPeriodStartedCallback',['../group__sacn__receiver.html#ga5a47a2560a7aba67637d3a5b7ad22ef5',1,'receiver.h']]],

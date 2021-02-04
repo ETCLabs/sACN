@@ -211,6 +211,9 @@ $(document).ready(function(){initNavTree('classsacn_1_1_receiver.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_receiver_1_1_netint_list.html">NetintList</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of network interfaces for a particular receiver.  <a href="structsacn_1_1_receiver_1_1_netint_list.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver_1_1_notify_handler.html">NotifyHandler</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A base class for a class that receives notification callbacks from a sACN receiver.  <a href="classsacn_1_1_receiver_1_1_notify_handler.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -250,12 +253,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa94ae64c11fbb22db3e21fba1e85cc64"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#aa94ae64c11fbb22db3e21fba1e85cc64">ChangeUniverse</a> (uint16_t new_universe_id)</td></tr>
 <tr class="memdesc:aa94ae64c11fbb22db3e21fba1e85cc64"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the universe this class is listening to.  <a href="#aa94ae64c11fbb22db3e21fba1e85cc64">More...</a><br /></td></tr>
 <tr class="separator:aa94ae64c11fbb22db3e21fba1e85cc64"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a164496f7cd6035473d44731924b7e48a"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#a164496f7cd6035473d44731924b7e48a">ResetNetworking</a> ()</td></tr>
-<tr class="memdesc:a164496f7cd6035473d44731924b7e48a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets and packet receipt state for this class..  <a href="#a164496f7cd6035473d44731924b7e48a">More...</a><br /></td></tr>
-<tr class="separator:a164496f7cd6035473d44731924b7e48a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a26dd2b3b95dbaac498bfc0ba231f42e6"><td class="memItemLeft" align="right" valign="top"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#a26dd2b3b95dbaac498bfc0ba231f42e6">ResetNetworking</a> (std::vector&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;netints)</td></tr>
-<tr class="memdesc:a26dd2b3b95dbaac498bfc0ba231f42e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets and packet receipt state for this class..  <a href="#a26dd2b3b95dbaac498bfc0ba231f42e6">More...</a><br /></td></tr>
-<tr class="separator:a26dd2b3b95dbaac498bfc0ba231f42e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9cd869d8b5938879aa5b876bacb9b7bc"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#a9cd869d8b5938879aa5b876bacb9b7bc">GetNetworkInterfaces</a> ()</td></tr>
 <tr class="memdesc:a9cd869d8b5938879aa5b876bacb9b7bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain the statuses of this receiver's network interfaces.  <a href="#a9cd869d8b5938879aa5b876bacb9b7bc">More...</a><br /></td></tr>
 <tr class="separator:a9cd869d8b5938879aa5b876bacb9b7bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -277,6 +274,15 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a042c03773822b8aeada4ea92ee3c3a8a"><td class="memItemLeft" align="right" valign="top">static uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#a042c03773822b8aeada4ea92ee3c3a8a">GetExpiredWait</a> ()</td></tr>
 <tr class="memdesc:a042c03773822b8aeada4ea92ee3c3a8a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current value of the expired notification wait time.  <a href="#a042c03773822b8aeada4ea92ee3c3a8a">More...</a><br /></td></tr>
 <tr class="separator:a042c03773822b8aeada4ea92ee3c3a8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a164496f7cd6035473d44731924b7e48a"><td class="memItemLeft" align="right" valign="top">static <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#a164496f7cd6035473d44731924b7e48a">ResetNetworking</a> ()</td></tr>
+<tr class="memdesc:a164496f7cd6035473d44731924b7e48a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets and packet receipt state for all sACN receivers.  <a href="#a164496f7cd6035473d44731924b7e48a">More...</a><br /></td></tr>
+<tr class="separator:a164496f7cd6035473d44731924b7e48a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26dd2b3b95dbaac498bfc0ba231f42e6"><td class="memItemLeft" align="right" valign="top">static <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#a26dd2b3b95dbaac498bfc0ba231f42e6">ResetNetworking</a> (std::vector&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;netints)</td></tr>
+<tr class="memdesc:a26dd2b3b95dbaac498bfc0ba231f42e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets and packet receipt state for all sACN receivers.  <a href="#a26dd2b3b95dbaac498bfc0ba231f42e6">More...</a><br /></td></tr>
+<tr class="separator:a26dd2b3b95dbaac498bfc0ba231f42e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9d32297e300fdf489dd388c3fc5e2b5"><td class="memItemLeft" align="right" valign="top">static <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#ad9d32297e300fdf489dd388c3fc5e2b5">ResetNetworking</a> (std::vector&lt; <a class="el" href="structsacn_1_1_receiver_1_1_netint_list.html">NetintList</a> &gt; &amp;netint_lists)</td></tr>
+<tr class="memdesc:ad9d32297e300fdf489dd388c3fc5e2b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets underlying network sockets and packet receipt state, determines network interfaces for each receiver.  <a href="#ad9d32297e300fdf489dd388c3fc5e2b5">More...</a><br /></td></tr>
+<tr class="separator:ad9d32297e300fdf489dd388c3fc5e2b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
@@ -540,7 +546,7 @@ Static Public Attributes</h2></td></tr>
 </div>
 </div>
 <a id="a164496f7cd6035473d44731924b7e48a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a164496f7cd6035473d44731924b7e48a">&#9670;&nbsp;</a></span>ResetNetworking() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a164496f7cd6035473d44731924b7e48a">&#9670;&nbsp;</a></span>ResetNetworking() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -557,32 +563,28 @@ Static Public Attributes</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Resets the underlying network sockets and packet receipt state for this class.. </p>
+<p>Resets the underlying network sockets and packet receipt state for all sACN receivers. </p>
 <p>This is the overload of ResetNetworking that uses all network interfaces.</p>
-<p>This is typically used when the application detects that the list of networking interfaces has changed.</p>
-<p>After this call completes successfully, the receiver is in a sampling period for the universe and will provide HandleSamplingPeriodStarted() and HandleSamplingPeriodEnded() notifications, as well as HandleUniverseData() notifications as packets are received for the universe. If this call fails, the caller must call <a class="el" href="classsacn_1_1_receiver.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9" title="Stop listening for sACN data on a universe. ">Shutdown()</a> on this class, because it may be in an invalid state.</p>
+<p>This is typically used when the application detects that the list of networking interfaces has changed, and wants every receiver to use all system network interfaces.</p>
+<p>After this call completes successfully, every receiver is in a sampling period for their universes and will provide SamplingPeriodStarted() and SamplingPeriodEnded() notifications, as well as UniverseData() notifications as packets are received for their universes. If this call fails, the caller must call <a class="el" href="classsacn_1_1_receiver.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9" title="Stop listening for sACN data on a universe. ">Shutdown()</a> for each receiver, because the receivers may be in an invalid state.</p>
 <p>Note that the networking reset is considered successful if it is able to successfully use any of the network interfaces. This will only return <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
-<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Universe changed successfully. </dd>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Networking reset successfully. </dd>
 <dd>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a>: None of the network interfaces were usable by the library. </dd>
 <dd>
-<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
-<dd>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
-<dd>
-<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid receiver. </dd>
 <dd>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
 
 </div>
 </div>
 <a id="a26dd2b3b95dbaac498bfc0ba231f42e6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a26dd2b3b95dbaac498bfc0ba231f42e6">&#9670;&nbsp;</a></span>ResetNetworking() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a26dd2b3b95dbaac498bfc0ba231f42e6">&#9670;&nbsp;</a></span>ResetNetworking() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -600,30 +602,72 @@ Static Public Attributes</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Resets the underlying network sockets and packet receipt state for this class.. </p>
-<p>This is typically used when the application detects that the list of networking interfaces has changed.</p>
-<p>After this call completes successfully, the receiver is in a sampling period for the universe and will provide HandleSamplingPeriodStarted() and HandleSamplingPeriodEnded() notifications, as well as HandleUniverseData() notifications as packets are received for the universe. If this call fails, the caller must call <a class="el" href="classsacn_1_1_receiver.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9" title="Stop listening for sACN data on a universe. ">Shutdown()</a> on this class, because it may be in an invalid state.</p>
+<p>Resets the underlying network sockets and packet receipt state for all sACN receivers. </p>
+<p>This is typically used when the application detects that the list of networking interfaces has changed, and wants every receiver to use the same network interfaces.</p>
+<p>After this call completes successfully, every receiver is in a sampling period for their universes and will provide SamplingPeriodStarted() and SamplingPeriodEnded() notifications, as well as UniverseData() notifications as packets are received for their universes. If this call fails, the caller must call <a class="el" href="classsacn_1_1_receiver.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9" title="Stop listening for sACN data on a universe. ">Shutdown()</a> for each receiver, because the receivers may be in an invalid state.</p>
 <p>Note that the networking reset is considered successful if it is able to successfully use any of the network interfaces passed in. This will only return <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If empty, all available interfaces are tried and this vector isn't modified. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If empty, all available interfaces are tried and this vector isn't modified. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Universe changed successfully. </dd>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Networking reset successfully. </dd>
 <dd>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a>: None of the network interfaces provided were usable by the library. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ad9d32297e300fdf489dd388c3fc5e2b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad9d32297e300fdf489dd388c3fc5e2b5">&#9670;&nbsp;</a></span>ResetNetworking() <span class="overload">[3/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a> ResetNetworking </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structsacn_1_1_receiver_1_1_netint_list.html">NetintList</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>netint_lists</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Resets underlying network sockets and packet receipt state, determines network interfaces for each receiver. </p>
+<p>This is typically used when the application detects that the list of networking interfaces has changed, and wants to determine what the new network interfaces should be for each receiver.</p>
+<p>After this call completes successfully, every receiver is in a sampling period for their universes and will provide SamplingPeriodStarted() and SamplingPeriodEnded() notifications, as well as UniverseData() notifications as packets are received for their universes. If this call fails, the caller must call <a class="el" href="classsacn_1_1_receiver.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9" title="Stop listening for sACN data on a universe. ">Shutdown()</a> for each receiver, because the receivers may be in an invalid state.</p>
+<p>Note that the networking reset is considered successful if it is able to successfully use any of the network interfaces passed in for each receiver. This will only return <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work for a receiver.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netint_lists</td><td>Vector of lists of of interfaces the application wants to use for each receiver. Must not be empty. Must include all receivers, and nothing more. The status codes are filled in whenever <a class="el" href="struct_sacn_receiver_netint_list.html#add0da5313d4b1d06a67bda5508b848e1">SacnReceiverNetintList::netints</a> is !empty. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Networking reset successfully. </dd>
+<dd>
+<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a>: None of the network interfaces provided for a receiver were usable by the library. </dd>
 <dd>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
 <dd>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
-<dd>
-<a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid receiver. </dd>
 <dd>
 <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
 

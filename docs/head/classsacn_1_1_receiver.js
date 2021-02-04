@@ -10,8 +10,6 @@ var classsacn_1_1_receiver =
     [ "handle", "classsacn_1_1_receiver.html#af5825bc604b5bf0316732a4db412e1f8", null ],
     [ "operator=", "classsacn_1_1_receiver.html#ad12ee05fea085da2b0fe8d7982d869e5", null ],
     [ "operator=", "classsacn_1_1_receiver.html#a9312079cda8a73e44f853bd361239f39", null ],
-    [ "ResetNetworking", "classsacn_1_1_receiver.html#a164496f7cd6035473d44731924b7e48a", null ],
-    [ "ResetNetworking", "classsacn_1_1_receiver.html#a26dd2b3b95dbaac498bfc0ba231f42e6", null ],
     [ "Shutdown", "classsacn_1_1_receiver.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9", null ],
     [ "Startup", "classsacn_1_1_receiver.html#ab8a65d7188fcd0074fd757a450a79100", null ],
     [ "Startup", "classsacn_1_1_receiver.html#abb65535d2f1ed30a79014d81eb7f6807", null ]

@@ -9,6 +9,7 @@ var receiver_8h =
     [ "SacnLostSource", "group__sacn__receiver.html#gab6014a06f428313d58eb316a50209af3", null ],
     [ "SacnReceiverCallbacks", "group__sacn__receiver.html#ga23f7f1621591aca86090172aab798576", null ],
     [ "SacnReceiverConfig", "group__sacn__receiver.html#ga3c5b4aec7e1c6fbfc7255c282b7ccf1d", null ],
+    [ "SacnReceiverNetintList", "group__sacn__receiver.html#ga5ce1e4d9da4807b53d71869f0e39950a", null ],
     [ "SacnRemoteSource", "group__sacn__receiver.html#ga606572d0bec7d4ce5e711c34996e137c", null ],
     [ "SacnSamplingPeriodEndedCallback", "group__sacn__receiver.html#gac9ac2e788bf69c6da712dfcd67269e67", null ],
     [ "SacnSamplingPeriodStartedCallback", "group__sacn__receiver.html#ga5a47a2560a7aba67637d3a5b7ad22ef5", null ],
@@ -30,7 +31,8 @@ var receiver_8h =
     [ "sacn_receiver_get_network_interfaces", "group__sacn__receiver.html#ga44139d6ad5b61268f2db2a089caf02d7", null ],
     [ "sacn_receiver_get_standard_version", "group__sacn__receiver.html#gaecb775f60463e32ddb4ce2c7b2281249", null ],
     [ "sacn_receiver_get_universe", "group__sacn__receiver.html#gae77eea445ebb380fb4d47c63c0f3ba32", null ],
-    [ "sacn_receiver_reset_networking", "group__sacn__receiver.html#gab51edc90f392363d88c4777e09de840b", null ],
+    [ "sacn_receiver_reset_networking", "group__sacn__receiver.html#ga3cb970c236a7f37064988f72d760d47b", null ],
+    [ "sacn_receiver_reset_networking_per_receiver", "group__sacn__receiver.html#ga0b14f40eaf24a866fed007bc18674ec7", null ],
     [ "sacn_receiver_set_expired_wait", "group__sacn__receiver.html#gabea27e71ae23c9176832f883a8ad7f06", null ],
     [ "sacn_receiver_set_standard_version", "group__sacn__receiver.html#ga4cb36b56dd22b9122f491182a7315e8c", null ]
 ];

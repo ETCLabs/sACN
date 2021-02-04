@@ -18,6 +18,12 @@ var group__sacn__receiver__cpp =
       [ "source_count_max", "structsacn_1_1_receiver_1_1_settings.html#aa56795d5b57bff4910ce11baac4003ba", null ],
       [ "universe_id", "structsacn_1_1_receiver_1_1_settings.html#a7e0de4d0f4e4bbd14771257febdf7248", null ]
     ] ],
+    [ "NetintList", "structsacn_1_1_receiver_1_1_netint_list.html", [
+      [ "NetintList", "structsacn_1_1_receiver_1_1_netint_list.html#aab5d1e8b9c2879521f59b7a50388e1a3", null ],
+      [ "NetintList", "structsacn_1_1_receiver_1_1_netint_list.html#a38636a756b1d972f2ccd147f6eff840a", null ],
+      [ "handle", "structsacn_1_1_receiver_1_1_netint_list.html#a0d237fd6d38af257c8ab2a14a64a76e0", null ],
+      [ "netints", "structsacn_1_1_receiver_1_1_netint_list.html#a2a0cd7263bacb4663085d28599867b12", null ]
+    ] ],
     [ "Receiver", "classsacn_1_1_receiver.html", [
       [ "Handle", "classsacn_1_1_receiver.html#aa9f5bbfb2d5e01f2239d38c052c1b909", null ],
       [ "Receiver", "classsacn_1_1_receiver.html#a96590ef9bb15aaa2d157193314684c3d", null ],
@@ -29,8 +35,6 @@ var group__sacn__receiver__cpp =
       [ "handle", "classsacn_1_1_receiver.html#af5825bc604b5bf0316732a4db412e1f8", null ],
       [ "operator=", "classsacn_1_1_receiver.html#ad12ee05fea085da2b0fe8d7982d869e5", null ],
       [ "operator=", "classsacn_1_1_receiver.html#a9312079cda8a73e44f853bd361239f39", null ],
-      [ "ResetNetworking", "classsacn_1_1_receiver.html#a164496f7cd6035473d44731924b7e48a", null ],
-      [ "ResetNetworking", "classsacn_1_1_receiver.html#a26dd2b3b95dbaac498bfc0ba231f42e6", null ],
       [ "Shutdown", "classsacn_1_1_receiver.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9", null ],
       [ "Startup", "classsacn_1_1_receiver.html#ab8a65d7188fcd0074fd757a450a79100", null ],
       [ "Startup", "classsacn_1_1_receiver.html#abb65535d2f1ed30a79014d81eb7f6807", null ]
