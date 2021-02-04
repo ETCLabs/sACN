@@ -26,6 +26,7 @@
 #include "etcpal_mock/common.h"
 #include "sacn_mock/private/common.h"
 #include "sacn_mock/private/sockets.h"
+#include "sacn_mock/private/source_state.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
 #include "sacn/private/source.h"
@@ -117,8 +118,14 @@ protected:
   }
 };
 
-TEST_F(TestSource, DeinitTriggersTerminate)
+TEST_F(TestSource, SourceConfigInitWorks)
 {
-  sacn_source_t source = AddSource().value_or(SACN_SOURCE_INVALID);
-  uint16_t universe = AddUniverse(source).value_or(0);
+  SacnSourceConfig config;
+  sacn_source_config_init(&config);
+  EXPECT_EQ(ETCPAL_UUID_CMP(&config.cid, &kEtcPalNullUuid), 0);
+  EXPECT_EQ(config.name, (char*)NULL);
+  EXPECT_EQ(config.universe_count_max, (size_t)SACN_SOURCE_INFINITE_UNIVERSES);
+  EXPECT_EQ(config.manually_process_source, false);
+  EXPECT_EQ(config.ip_supported, kSacnIpV4AndIpV6);
+  EXPECT_EQ(config.keep_alive_interval, SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
 }
