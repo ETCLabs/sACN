@@ -199,8 +199,9 @@ TEST_F(TestSource, SourceDestroyWorks)
 
   sacn_source_t handle = SACN_SOURCE_INVALID;
   EXPECT_EQ(sacn_source_create(&config, &handle), kEtcPalErrOk);
+  unsigned int previous_lock_count = sacn_lock_fake.call_count;
   sacn_source_destroy(handle);
-  EXPECT_NE(sacn_lock_fake.call_count, 0u);
+  EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
   EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
   EXPECT_EQ(set_source_terminating_fake.call_count, 1u);
 }
