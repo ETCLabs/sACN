@@ -146,6 +146,8 @@ typedef struct SacnSourceUniverseConfig
     0, 100, false, false, NULL, 0, 0             \
   }
 
+void sacn_source_universe_config_init(SacnSourceUniverseConfig* config);
+
 /** A set of network interfaces for a particular universe. */
 typedef struct SacnSourceUniverseNetintList
 {
@@ -160,8 +162,6 @@ typedef struct SacnSourceUniverseNetintList
   /** The size of netints, or 0 if netints is NULL. */
   size_t num_netints;
 } SacnSourceUniverseNetintList;
-
-void sacn_source_universe_config_init(SacnSourceUniverseConfig* config);
 
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle);
 void sacn_source_destroy(sacn_source_t handle);
