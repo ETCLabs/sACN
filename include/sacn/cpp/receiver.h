@@ -208,7 +208,7 @@ public:
   void Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
-  std::vector<SacnMcastInterface> GetNetworkInterfaces();
+  std::vector<EtcPalMcastNetintId> GetNetworkInterfaces();
 
   // Lesser used functions.  These apply to all instances of this class.
   static void SetStandardVersion(sacn_standard_version_t version);
@@ -435,14 +435,14 @@ inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
 }
 
 /**
- * @brief Obtain the statuses of this receiver's network interfaces.
+ * @brief Obtain a vector of this receiver's network interfaces.
  *
- * @return A vector of this receiver's network interfaces and their statuses.
+ * @return A vector of this receiver's network interfaces.
  */
-inline std::vector<SacnMcastInterface> Receiver::GetNetworkInterfaces()
+inline std::vector<EtcPalMcastNetintId> Receiver::GetNetworkInterfaces()
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<SacnMcastInterface> netints;
+  std::vector<EtcPalMcastNetintId> netints;
   size_t size_guess = 4u;
   size_t num_netints = 0u;
 

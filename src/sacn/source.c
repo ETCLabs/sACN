@@ -1196,7 +1196,7 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUnivers
  * @param[out] netints A pointer to an application-owned array where the network interface list will be written.
  * @param[in] netints_size The size of the provided netints array.
  * @return The total number of network interfaces for the universe. If this is greater than netints_size, then only
- * netints_size addresses were written to the netints array. If the source or universe were not found, 0 is returned.
+ * netints_size entries were written to the netints array. If the source or universe were not found, 0 is returned.
  */
 size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, EtcPalMcastNetintId* netints,
                                           size_t netints_size)
