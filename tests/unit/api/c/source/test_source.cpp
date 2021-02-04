@@ -41,6 +41,7 @@
 
 static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
 static const std::string kTestLocalName = std::string("Test Source");
+static const std::string kTestLocalName2 = std::string("Test Source 2");
 static const etcpal::SockAddr kTestRemoteAddrV4(etcpal::IpAddr::FromString("10.101.1.1"), 8888);
 static const etcpal::SockAddr kTestRemoteAddrV6(etcpal::IpAddr::FromString("2001:db8::1234:5678"), 8888);
 static const sacn_source_t kTestHandle = 123u;
@@ -206,4 +207,26 @@ TEST_F(TestSource, SourceDestroyWorks)
   EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
   EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
   EXPECT_EQ(set_source_terminating_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceChangeNameWorks)
+{
+  SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+  config.cid = kTestLocalCid.get();
+  config.name = kTestLocalName.c_str();
+
+  get_next_source_handle_fake.return_val = kTestHandle;
+  set_source_name_fake.custom_fake = [](SacnSource* source, const char* new_name) {
+    ASSERT_NE(source, nullptr);
+    EXPECT_EQ(source->handle, kTestHandle);
+    EXPECT_EQ(strcmp(new_name, kTestLocalName2.c_str()), 0);
+  };
+
+  sacn_source_t handle = SACN_SOURCE_INVALID;
+  EXPECT_EQ(sacn_source_create(&config, &handle), kEtcPalErrOk);
+  unsigned int previous_lock_count = sacn_lock_fake.call_count;
+  EXPECT_EQ(sacn_source_change_name(handle, kTestLocalName2.c_str()), kEtcPalErrOk);
+  EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
+  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+  EXPECT_EQ(set_source_name_fake.call_count, 1u);
 }
