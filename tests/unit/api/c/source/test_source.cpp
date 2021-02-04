@@ -129,3 +129,16 @@ TEST_F(TestSource, SourceConfigInitWorks)
   EXPECT_EQ(config.ip_supported, kSacnIpV4AndIpV6);
   EXPECT_EQ(config.keep_alive_interval, SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
 }
+
+TEST_F(TestSource, SourceUniverseConfigInitWorks)
+{
+  SacnSourceUniverseConfig config;
+  sacn_source_universe_config_init(&config);
+  EXPECT_EQ(config.universe, 0u);
+  EXPECT_EQ(config.priority, 100u);
+  EXPECT_EQ(config.send_preview, false);
+  EXPECT_EQ(config.send_unicast_only, false);
+  EXPECT_EQ(config.unicast_destinations, (EtcPalIpAddr*)NULL);
+  EXPECT_EQ(config.num_unicast_destinations, 0u);
+  EXPECT_EQ(config.sync_universe, 0u);
+}
