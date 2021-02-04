@@ -43,6 +43,7 @@ static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44b
 static const std::string kTestLocalName = std::string("Test Source");
 static const etcpal::SockAddr kTestRemoteAddrV4(etcpal::IpAddr::FromString("10.101.1.1"), 8888);
 static const etcpal::SockAddr kTestRemoteAddrV6(etcpal::IpAddr::FromString("2001:db8::1234:5678"), 8888);
+static const sacn_source_t kTestHandle = 123u;
 
 class TestSource : public ::testing::Test
 {
@@ -52,6 +53,7 @@ protected:
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
+    sacn_source_state_reset_all_fakes();
 
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_source_init(), kEtcPalErrOk);
@@ -141,4 +143,42 @@ TEST_F(TestSource, SourceUniverseConfigInitWorks)
   EXPECT_EQ(config.unicast_destinations, (EtcPalIpAddr*)NULL);
   EXPECT_EQ(config.num_unicast_destinations, 0u);
   EXPECT_EQ(config.sync_universe, 0u);
+}
+
+TEST_F(TestSource, ThreadedSourceCreateWorks)
+{
+  SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+  config.cid = kTestLocalCid.get();
+  config.name = kTestLocalName.c_str();
+  config.manually_process_source = false;
+
+  get_next_source_handle_fake.return_val = kTestHandle;
+
+  sacn_source_t handle = SACN_SOURCE_INVALID;
+  SacnSource* source_state = nullptr;
+  EXPECT_EQ(sacn_source_create(&config, &handle), kEtcPalErrOk);
+  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+  EXPECT_EQ(initialize_source_thread_fake.call_count, 1u);
+  EXPECT_EQ(get_next_source_handle_fake.call_count, 1u);
+  EXPECT_EQ(lookup_source(kTestHandle, &source_state), kEtcPalErrOk);
+  EXPECT_EQ(handle, kTestHandle);
+}
+
+TEST_F(TestSource, ManualSourceCreateWorks)
+{
+  SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+  config.cid = kTestLocalCid.get();
+  config.name = kTestLocalName.c_str();
+  config.manually_process_source = true;
+
+  get_next_source_handle_fake.return_val = kTestHandle;
+
+  sacn_source_t handle = SACN_SOURCE_INVALID;
+  SacnSource* source_state = nullptr;
+  EXPECT_EQ(sacn_source_create(&config, &handle), kEtcPalErrOk);
+  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+  EXPECT_EQ(initialize_source_thread_fake.call_count, 0u);  // This should not be called for manual sources.
+  EXPECT_EQ(get_next_source_handle_fake.call_count, 1u);
+  EXPECT_EQ(lookup_source(kTestHandle, &source_state), kEtcPalErrOk);
+  EXPECT_EQ(handle, kTestHandle);
 }
