@@ -435,9 +435,9 @@ inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
 }
 
 /**
- * @brief Obtain the statuses of this receiver's network interfaces.
+ * @brief Obtain a vector of this receiver's network interfaces.
  *
- * @return A vector of this receiver's network interfaces and their statuses.
+ * @return A vector of this receiver's network interfaces.
  */
 inline std::vector<EtcPalMcastNetintId> Receiver::GetNetworkInterfaces()
 {
