@@ -618,15 +618,15 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnReceiverNet
 }
 
 /**
- * @brief Obtain the statuses of a receiver's network interfaces.
+ * @brief Obtain a list of a receiver's network interfaces.
  *
  * @param[in] handle Handle to the receiver for which to obtain the list of network interfaces.
  * @param[out] netints A pointer to an application-owned array where the network interface list will be written.
  * @param[in] netints_size The size of the provided netints array.
  * @return The total number of network interfaces for the receiver. If this is greater than netints_size, then only
- * netints_size addresses were written to the netints array. If the receiver was not found, 0 is returned.
+ * netints_size entries were written to the netints array. If the receiver was not found, 0 is returned.
  */
-size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, SacnMcastInterface* netints, size_t netints_size)
+size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, EtcPalMcastNetintId* netints, size_t netints_size)
 {
   size_t total_num_network_interfaces = 0;
 

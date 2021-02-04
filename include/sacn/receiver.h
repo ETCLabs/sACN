@@ -282,7 +282,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
 etcpal_error_t sacn_receiver_reset_networking(SacnMcastInterface* netints, size_t num_netints);
 etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnReceiverNetintList* netint_lists,
                                                            size_t num_netint_lists);
-size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, SacnMcastInterface* netints, size_t netints_size);
+size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, EtcPalMcastNetintId* netints, size_t netints_size);
 
 void sacn_receiver_set_standard_version(sacn_standard_version_t version);
 sacn_standard_version_t sacn_receiver_get_standard_version();
