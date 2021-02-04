@@ -182,3 +182,21 @@ TEST_F(TestSource, ManualSourceCreateWorks)
   EXPECT_EQ(lookup_source(kTestHandle, &source_state), kEtcPalErrOk);
   EXPECT_EQ(handle, kTestHandle);
 }
+
+TEST_F(TestSource, SourceDestroyWorks)
+{
+  SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+  config.cid = kTestLocalCid.get();
+  config.name = kTestLocalName.c_str();
+
+  get_next_source_handle_fake.return_val = kTestHandle;
+  set_source_terminating_fake.custom_fake = [](SacnSource* source) {
+    ASSERT_NE(source, nullptr);
+    EXPECT_EQ(source->handle, kTestHandle);
+  };
+
+  sacn_source_t handle = SACN_SOURCE_INVALID;
+  EXPECT_EQ(sacn_source_create(&config, &handle), kEtcPalErrOk);
+  sacn_source_destroy(handle);
+  EXPECT_EQ(set_source_terminating_fake.call_count, 1u);
+}
