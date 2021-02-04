@@ -72,7 +72,8 @@ static etcpal_error_t create_receiver_socket(etcpal_iptype_t ip_type, const EtcP
 static etcpal_error_t subscribe_receiver_socket(etcpal_socket_t sock, const EtcPalIpAddr* group,
                                                 const EtcPalMcastNetintId* netints, size_t num_netints);
 static etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
-static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket, bool close_now);
+static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket,
+                           socket_close_behavior_t close_behavior);
 static void send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
                            const EtcPalMcastNetintId* netint);
 static void send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr);
@@ -102,7 +103,8 @@ void sacn_sockets_deinit(void)
 {
   clear_source_networking();
 #if SACN_DYNAMIC_MEM
-  free(receiver_sys_netints);
+  if (receiver_sys_netints)
+    free(receiver_sys_netints);
 #endif
   num_receiver_sys_netints = 0;
 }
@@ -113,19 +115,32 @@ etcpal_error_t sacn_sockets_reset_source(void)
   return source_sockets_init();
 }
 
-static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket, bool close_now)
+etcpal_error_t sacn_sockets_reset_receiver(void)
+{
+#if SACN_DYNAMIC_MEM
+  if (receiver_sys_netints)
+    free(receiver_sys_netints);
+#endif
+  num_receiver_sys_netints = 0;
+
+  return receiver_sockets_init();
+}
+
+static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket,
+                           socket_close_behavior_t close_behavior)
 {
   if (remove_socket_ref(recv_thread_context, socket))
   {
-    if (close_now)
+    switch (close_behavior)
     {
-      etcpal_close(socket);
-    }
-    else
-    {
-      // We don't close the socket here, due to potential thread safety issues.
-      // It gets added to a queue and closed from the socket read thread.
-      add_dead_socket(recv_thread_context, socket);
+      case kCloseSocketNow:
+        etcpal_close(socket);
+        break;
+      case kQueueSocketForClose:
+        // We don't close the socket here, due to potential thread safety issues.
+        // It gets added to a queue and closed from the socket read thread.
+        add_dead_socket(recv_thread_context, socket);
+        break;
     }
   }
 }
@@ -360,12 +375,13 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
   if (res == kEtcPalErrOk)
     *socket = new_socket;
   else if (new_socket != ETCPAL_SOCKET_INVALID)
-    cleanup_socket(context, new_socket, true);
+    cleanup_socket(context, new_socket, kCloseSocketNow);
 
   return res;
 }
 
-void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* socket, bool close_now)
+void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* socket,
+                                 socket_close_behavior_t close_behavior)
 {
   SACN_ASSERT(socket != NULL);
   SACN_ASSERT(*socket != ETCPAL_SOCKET_INVALID);
@@ -373,7 +389,7 @@ void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* so
   SacnRecvThreadContext* context = get_recv_thread_context(thread_id);
   SACN_ASSERT(context);
 
-  cleanup_socket(context, *socket, close_now);
+  cleanup_socket(context, *socket, close_behavior);
 
   *socket = ETCPAL_SOCKET_INVALID;
 }

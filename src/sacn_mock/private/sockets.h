@@ -30,6 +30,7 @@ extern "C" {
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_init);
 DECLARE_FAKE_VOID_FUNC(sacn_sockets_deinit);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_source);
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_receiver);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_receiver_netints, SacnInternalNetintArray*, SacnMcastInterface*,
                         size_t);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_source_netints, SacnInternalNetintArray*, SacnMcastInterface*,
@@ -37,7 +38,7 @@ DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_source_netints, SacnInte
 DECLARE_FAKE_VOID_FUNC(sacn_get_mcast_addr, etcpal_iptype_t, uint16_t, EtcPalIpAddr*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_add_receiver_socket, sacn_thread_id_t, etcpal_iptype_t, uint16_t,
                         const EtcPalMcastNetintId*, size_t, etcpal_socket_t*);
-DECLARE_FAKE_VOID_FUNC(sacn_remove_receiver_socket, sacn_thread_id_t, etcpal_socket_t*, bool);
+DECLARE_FAKE_VOID_FUNC(sacn_remove_receiver_socket, sacn_thread_id_t, etcpal_socket_t*, socket_close_behavior_t);
 DECLARE_FAKE_VOID_FUNC(sacn_add_pending_sockets, SacnRecvThreadContext*);
 DECLARE_FAKE_VOID_FUNC(sacn_cleanup_dead_sockets, SacnRecvThreadContext*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_read, SacnRecvThreadContext*, SacnReadResult*);
