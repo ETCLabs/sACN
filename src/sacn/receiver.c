@@ -628,11 +628,23 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnReceiverNet
  */
 size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, SacnMcastInterface* netints, size_t netints_size)
 {
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(netints_size);
+  size_t total_num_network_interfaces = 0;
 
-  return 0;  // TODO
+  if (sacn_lock())
+  {
+    SacnReceiver* receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers, &handle);
+    if (receiver)
+    {
+      total_num_network_interfaces = receiver->netints.num_netints;
+
+      for (size_t i = 0; netints && (i < netints_size) && (i < total_num_network_interfaces); ++i)
+        netints[i] = receiver->netints.netints[i];
+    }
+
+    sacn_unlock();
+  }
+
+  return total_num_network_interfaces;
 }
 
 /**
