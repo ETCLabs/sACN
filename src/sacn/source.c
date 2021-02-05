@@ -953,20 +953,10 @@ etcpal_error_t sacn_source_reset_networking(SacnMcastInterface* netints, size_t 
     for (size_t i = 0; (result == kEtcPalErrOk) && (i < get_num_sources()); ++i)
     {
       SacnSource* source = get_source(i);
-
-      source->num_netints = 0;  // Clear source netints, will be reconstructed when netints are re-added.
+      clear_source_netints(source);
 
       for (size_t j = 0; (result == kEtcPalErrOk) && (j < source->num_universes); ++j)
-      {
-        SacnSourceUniverse* universe = &source->universes[j];
-        result = sacn_initialize_source_netints(&universe->netints, netints, num_netints);
-
-        for (size_t k = 0; (result == kEtcPalErrOk) && (k < universe->netints.num_netints); ++k)
-          result = add_sacn_source_netint(source, &universe->netints.netints[k]);
-
-        if (result == kEtcPalErrOk)
-          reset_transmission_suppression(source, universe, kResetNullAndPap);
-      }
+        result = reset_source_universe_networking(source, &source->universes[j], netints, num_netints);
     }
 
     sacn_unlock();
@@ -1049,7 +1039,7 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUnivers
       sacn_sockets_reset_source();
 
       for (size_t i = 0; i < get_num_sources(); ++i)
-        get_source(i)->num_netints = 0;  // Clear source netints, will be reconstructed when netints are re-added.
+        clear_source_netints(get_source(i));
     }
 
     for (size_t i = 0; (result == kEtcPalErrOk) && (i < num_netint_lists); ++i)
@@ -1060,13 +1050,7 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUnivers
       SacnSourceUniverse* universe;
       lookup_source_and_universe(netint_list->handle, netint_list->universe, &source, &universe);
 
-      result = sacn_initialize_source_netints(&universe->netints, netint_list->netints, netint_list->num_netints);
-
-      for (size_t j = 0; (result == kEtcPalErrOk) && (j < universe->netints.num_netints); ++j)
-        result = add_sacn_source_netint(source, &universe->netints.netints[j]);
-
-      if (result == kEtcPalErrOk)
-        reset_transmission_suppression(source, universe, kResetNullAndPap);
+      result = reset_source_universe_networking(source, universe, netint_list->netints, netint_list->num_netints);
     }
 
     sacn_unlock();

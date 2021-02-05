@@ -63,6 +63,9 @@ size_t get_source_universes(const SacnSource* source, uint16_t* universes, size_
 size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr* destinations,
                                 size_t destinations_size);
 void disable_pap_data(SacnSourceUniverse* universe);
+void clear_source_netints(SacnSource* source);
+etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUniverse* universe,
+                                                SacnMcastInterface* netints, size_t num_netints);
 
 #ifdef __cplusplus
 }

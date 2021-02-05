@@ -637,6 +637,27 @@ void disable_pap_data(SacnSourceUniverse* universe)
 }
 
 // Needs lock
+void clear_source_netints(SacnSource* source)
+{
+  source->num_netints = 0;  // Clear source netints, will be reconstructed when netints are re-added.
+}
+
+// Needs lock
+etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUniverse* universe,
+                                                SacnMcastInterface* netints, size_t num_netints)
+{
+  etcpal_error_t result = sacn_initialize_source_netints(&universe->netints, netints, num_netints);
+
+  for (size_t k = 0; (result == kEtcPalErrOk) && (k < universe->netints.num_netints); ++k)
+    result = add_sacn_source_netint(source, &universe->netints.netints[k]);
+
+  if (result == kEtcPalErrOk)
+    reset_transmission_suppression(source, universe, kResetNullAndPap);
+
+  return result;
+}
+
+// Needs lock
 void set_universe_priority(const SacnSource* source, SacnSourceUniverse* universe, uint8_t priority)
 {
   universe->priority = priority;
