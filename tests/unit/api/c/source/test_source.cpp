@@ -287,3 +287,22 @@ TEST_F(TestSource, SourceAddUniverseWorks)
     }
   }
 }
+
+TEST_F(TestSource, SourceRemoveUniverseWorks)
+{
+  SacnSourceConfig source_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+  source_config.cid = kTestLocalCid.get();
+  source_config.name = kTestLocalName.c_str();
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  sacn_source_t handle = SACN_SOURCE_INVALID;
+  EXPECT_EQ(sacn_source_create(&source_config, &handle), kEtcPalErrOk);
+  EXPECT_EQ(sacn_source_add_universe(handle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
+  unsigned int previous_lock_count = sacn_lock_fake.call_count;
+  sacn_source_remove_universe(handle, kTestUniverse);
+  EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
+  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+  EXPECT_EQ(set_universe_terminating_fake.call_count, 1u);
+}
