@@ -100,60 +100,6 @@ protected:
     sacn_mem_deinit();
   }
 
-  etcpal::Expected<sacn_source_t> AddSource()
-  {
-    SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
-    config.cid = kTestLocalCid.get();
-    config.name = kTestLocalName.c_str();
-
-    sacn_source_t handle;
-    etcpal_error_t err = sacn_source_create(&config, &handle);
-
-    if (err == kEtcPalErrOk)
-      return handle;
-    else
-      return err;
-  }
-
-  etcpal::Expected<uint16_t> AddUniverse(sacn_source_t source)
-  {
-    SacnSourceUniverseConfig config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
-
-    SacnSource* source_state;
-    etcpal_error_t error = lookup_source(source, &source_state);
-
-    if (error == kEtcPalErrOk)
-    {
-      config.universe = static_cast<uint16_t>((source_state->num_universes + 1));
-      error = sacn_source_add_universe(source, &config, NULL, 0);
-    }
-
-    if (error == kEtcPalErrOk)
-      return config.universe;
-    else
-      return error;
-  }
-
-  etcpal::Expected<etcpal::IpAddr> AddUnicastDestination(sacn_source_t source, uint16_t universe)
-  {
-    EtcPalIpAddr test_ip = kTestRemoteAddrV4;
-
-    SacnSource* source_state;
-    SacnSourceUniverse* universe_state;
-    etcpal_error_t error = lookup_source_and_universe(source, universe, &source_state, &universe_state);
-
-    if (error == kEtcPalErrOk)
-    {
-      test_ip.addr.v4 += universe_state->num_unicast_dests;
-      error = sacn_source_add_unicast_destination(source, universe, &test_ip);
-    }
-
-    if (error == kEtcPalErrOk)
-      return etcpal::IpAddr(test_ip);
-    else
-      return error;
-  }
-
   void SetUpSource(sacn_source_t source_handle)
   {
     SacnSourceConfig source_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
