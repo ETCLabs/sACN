@@ -126,6 +126,28 @@ protected:
     else
       return error;
   }
+
+  void SetUpSource(sacn_source_t source_handle)
+  {
+    SacnSourceConfig source_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+    source_config.cid = kTestLocalCid.get();
+    source_config.name = kTestLocalName.c_str();
+
+    get_next_source_handle_fake.return_val = source_handle;
+
+    sacn_source_t handle = SACN_SOURCE_INVALID;
+    EXPECT_EQ(sacn_source_create(&source_config, &handle), kEtcPalErrOk);
+  }
+
+  void SetUpSourceAndUniverse(sacn_source_t source_handle, uint16_t universe_id)
+  {
+    SetUpSource(source_handle);
+
+    SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+    universe_config.universe = universe_id;
+
+    EXPECT_EQ(sacn_source_add_universe(source_handle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
+  }
 };
 
 TEST_F(TestSource, SourceConfigInitWorks)
@@ -197,20 +219,15 @@ TEST_F(TestSource, ManualSourceCreateWorks)
 
 TEST_F(TestSource, SourceDestroyWorks)
 {
-  SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
-  config.cid = kTestLocalCid.get();
-  config.name = kTestLocalName.c_str();
+  SetUpSource(kTestHandle);
 
-  get_next_source_handle_fake.return_val = kTestHandle;
   set_source_terminating_fake.custom_fake = [](SacnSource* source) {
     ASSERT_NE(source, nullptr);
     EXPECT_EQ(source->handle, kTestHandle);
   };
 
-  sacn_source_t handle = SACN_SOURCE_INVALID;
-  EXPECT_EQ(sacn_source_create(&config, &handle), kEtcPalErrOk);
   unsigned int previous_lock_count = sacn_lock_fake.call_count;
-  sacn_source_destroy(handle);
+  sacn_source_destroy(kTestHandle);
   EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
   EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
   EXPECT_EQ(set_source_terminating_fake.call_count, 1u);
@@ -218,11 +235,7 @@ TEST_F(TestSource, SourceDestroyWorks)
 
 TEST_F(TestSource, SourceChangeNameWorks)
 {
-  SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
-  config.cid = kTestLocalCid.get();
-  config.name = kTestLocalName.c_str();
-
-  get_next_source_handle_fake.return_val = kTestHandle;
+  SetUpSource(kTestHandle);
 
   set_source_name_fake.custom_fake = [](SacnSource* source, const char* new_name) {
     ASSERT_NE(source, nullptr);
@@ -230,10 +243,8 @@ TEST_F(TestSource, SourceChangeNameWorks)
     EXPECT_EQ(strcmp(new_name, kTestLocalName2.c_str()), 0);
   };
 
-  sacn_source_t handle = SACN_SOURCE_INVALID;
-  EXPECT_EQ(sacn_source_create(&config, &handle), kEtcPalErrOk);
   unsigned int previous_lock_count = sacn_lock_fake.call_count;
-  EXPECT_EQ(sacn_source_change_name(handle, kTestLocalName2.c_str()), kEtcPalErrOk);
+  EXPECT_EQ(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrOk);
   EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
   EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
   EXPECT_EQ(set_source_name_fake.call_count, 1u);
@@ -241,14 +252,10 @@ TEST_F(TestSource, SourceChangeNameWorks)
 
 TEST_F(TestSource, SourceAddUniverseWorks)
 {
-  SacnSourceConfig source_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
-  source_config.cid = kTestLocalCid.get();
-  source_config.name = kTestLocalName.c_str();
+  SetUpSource(kTestHandle);
 
   SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
   universe_config.universe = kTestUniverse;
-
-  get_next_source_handle_fake.return_val = kTestHandle;
 
   sacn_initialize_source_netints_fake.custom_fake = [](SacnInternalNetintArray* source_netints,
                                                        SacnMcastInterface* app_netints, size_t num_app_netints) {
@@ -269,10 +276,8 @@ TEST_F(TestSource, SourceAddUniverseWorks)
     return kEtcPalErrOk;
   };
 
-  sacn_source_t handle = SACN_SOURCE_INVALID;
-  EXPECT_EQ(sacn_source_create(&source_config, &handle), kEtcPalErrOk);
   unsigned int previous_lock_count = sacn_lock_fake.call_count;
-  EXPECT_EQ(sacn_source_add_universe(handle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
+  EXPECT_EQ(sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
   EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
   EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
 
@@ -292,24 +297,14 @@ TEST_F(TestSource, SourceAddUniverseWorks)
 
 TEST_F(TestSource, SourceRemoveUniverseWorks)
 {
-  SacnSourceConfig source_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
-  source_config.cid = kTestLocalCid.get();
-  source_config.name = kTestLocalName.c_str();
-
-  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
-  universe_config.universe = kTestUniverse;
-
-  get_next_source_handle_fake.return_val = kTestHandle;
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
   set_universe_terminating_fake.custom_fake = [](SacnSourceUniverse* universe) {
     EXPECT_EQ(universe->universe_id, kTestUniverse);
   };
 
-  sacn_source_t handle = SACN_SOURCE_INVALID;
-  EXPECT_EQ(sacn_source_create(&source_config, &handle), kEtcPalErrOk);
-  EXPECT_EQ(sacn_source_add_universe(handle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
   unsigned int previous_lock_count = sacn_lock_fake.call_count;
-  sacn_source_remove_universe(handle, kTestUniverse);
+  sacn_source_remove_universe(kTestHandle, kTestUniverse);
   EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
   EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
   EXPECT_EQ(set_universe_terminating_fake.call_count, 1u);
@@ -317,14 +312,7 @@ TEST_F(TestSource, SourceRemoveUniverseWorks)
 
 TEST_F(TestSource, SourceGetUniversesWorks)
 {
-  SacnSourceConfig source_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
-  source_config.cid = kTestLocalCid.get();
-  source_config.name = kTestLocalName.c_str();
-
-  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
-  universe_config.universe = kTestUniverse;
-
-  get_next_source_handle_fake.return_val = kTestHandle;
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
   get_source_universes_fake.custom_fake = [](SacnSource* source, uint16_t* universes, size_t universes_size) {
     EXPECT_EQ(source->handle, kTestHandle);
@@ -333,11 +321,8 @@ TEST_F(TestSource, SourceGetUniversesWorks)
     return kTestReturnSize;
   };
 
-  sacn_source_t handle = SACN_SOURCE_INVALID;
-  EXPECT_EQ(sacn_source_create(&source_config, &handle), kEtcPalErrOk);
-  EXPECT_EQ(sacn_source_add_universe(handle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
   unsigned int previous_lock_count = sacn_lock_fake.call_count;
-  EXPECT_EQ(sacn_source_get_universes(handle, nullptr, 0u), kTestReturnSize);
+  EXPECT_EQ(sacn_source_get_universes(kTestHandle, nullptr, 0u), kTestReturnSize);
   EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
   EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
   EXPECT_EQ(get_source_universes_fake.call_count, 1u);
