@@ -40,6 +40,22 @@
 #endif
 
 #define NUM_TEST_NETINTS 3
+#define VERIFY_LOCKING(function_call)                                  \
+  do                                                                   \
+  {                                                                    \
+    unsigned int previous_lock_count = sacn_lock_fake.call_count;      \
+    function_call;                                                     \
+    EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);         \
+    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count); \
+  } while (0)
+#define VERIFY_LOCKING_AND_RETURN_VALUE(function_call, expected_return_value) \
+  do                                                                          \
+  {                                                                           \
+    unsigned int previous_lock_count = sacn_lock_fake.call_count;             \
+    EXPECT_EQ(function_call, expected_return_value);                          \
+    EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);                \
+    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);        \
+  } while (0)
 
 static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
 static const std::string kTestLocalName = std::string("Test Source");
@@ -186,10 +202,7 @@ TEST_F(TestSource, ThreadedSourceCreateWorks)
 
   sacn_source_t handle = SACN_SOURCE_INVALID;
   SacnSource* source_state = nullptr;
-  unsigned int previous_lock_count = sacn_lock_fake.call_count;
-  EXPECT_EQ(sacn_source_create(&config, &handle), kEtcPalErrOk);
-  EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
-  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&config, &handle), kEtcPalErrOk);
   EXPECT_EQ(initialize_source_thread_fake.call_count, 1u);
   EXPECT_EQ(get_next_source_handle_fake.call_count, 1u);
   EXPECT_EQ(lookup_source(kTestHandle, &source_state), kEtcPalErrOk);
@@ -207,10 +220,7 @@ TEST_F(TestSource, ManualSourceCreateWorks)
 
   sacn_source_t handle = SACN_SOURCE_INVALID;
   SacnSource* source_state = nullptr;
-  unsigned int previous_lock_count = sacn_lock_fake.call_count;
-  EXPECT_EQ(sacn_source_create(&config, &handle), kEtcPalErrOk);
-  EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
-  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&config, &handle), kEtcPalErrOk);
   EXPECT_EQ(initialize_source_thread_fake.call_count, 0u);  // This should not be called for manual sources.
   EXPECT_EQ(get_next_source_handle_fake.call_count, 1u);
   EXPECT_EQ(lookup_source(kTestHandle, &source_state), kEtcPalErrOk);
@@ -226,10 +236,7 @@ TEST_F(TestSource, SourceDestroyWorks)
     EXPECT_EQ(source->handle, kTestHandle);
   };
 
-  unsigned int previous_lock_count = sacn_lock_fake.call_count;
-  sacn_source_destroy(kTestHandle);
-  EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
-  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+  VERIFY_LOCKING(sacn_source_destroy(kTestHandle));
   EXPECT_EQ(set_source_terminating_fake.call_count, 1u);
 }
 
@@ -243,10 +250,7 @@ TEST_F(TestSource, SourceChangeNameWorks)
     EXPECT_EQ(strcmp(new_name, kTestLocalName2.c_str()), 0);
   };
 
-  unsigned int previous_lock_count = sacn_lock_fake.call_count;
-  EXPECT_EQ(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrOk);
-  EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
-  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrOk);
   EXPECT_EQ(set_source_name_fake.call_count, 1u);
 }
 
@@ -276,10 +280,8 @@ TEST_F(TestSource, SourceAddUniverseWorks)
     return kEtcPalErrOk;
   };
 
-  unsigned int previous_lock_count = sacn_lock_fake.call_count;
-  EXPECT_EQ(sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
-  EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
-  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
 
   SacnSource* source = nullptr;
   SacnSourceUniverse* universe = nullptr;
@@ -303,10 +305,7 @@ TEST_F(TestSource, SourceRemoveUniverseWorks)
     EXPECT_EQ(universe->universe_id, kTestUniverse);
   };
 
-  unsigned int previous_lock_count = sacn_lock_fake.call_count;
-  sacn_source_remove_universe(kTestHandle, kTestUniverse);
-  EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
-  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+  VERIFY_LOCKING(sacn_source_remove_universe(kTestHandle, kTestUniverse));
   EXPECT_EQ(set_universe_terminating_fake.call_count, 1u);
 }
 
@@ -321,9 +320,6 @@ TEST_F(TestSource, SourceGetUniversesWorks)
     return kTestReturnSize;
   };
 
-  unsigned int previous_lock_count = sacn_lock_fake.call_count;
-  EXPECT_EQ(sacn_source_get_universes(kTestHandle, nullptr, 0u), kTestReturnSize);
-  EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
-  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_get_universes(kTestHandle, nullptr, 0u), kTestReturnSize);
   EXPECT_EQ(get_source_universes_fake.call_count, 1u);
 }
