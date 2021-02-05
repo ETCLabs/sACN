@@ -65,6 +65,7 @@ static const EtcPalIpAddr kTestRemoteAddrV6 = etcpal::IpAddr::FromString("2001:d
 static const sacn_source_t kTestHandle = 123u;
 static const uint16_t kTestUniverse = 456u;
 static const uint8_t kTestPriority = 77u;
+static const bool kTestPreviewFlag = true;
 static SacnMcastInterface kTestNetints[NUM_TEST_NETINTS] = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                             {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
                                                             {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
@@ -392,4 +393,19 @@ TEST_F(TestSource, SourceChangePriorityWorks)
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority),
                                   kEtcPalErrOk);
   EXPECT_EQ(set_universe_priority_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceChangePreviewFlagWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  set_preview_flag_fake.custom_fake = [](const SacnSource* source, SacnSourceUniverse* universe, bool preview) {
+    EXPECT_EQ(source->handle, kTestHandle);
+    EXPECT_EQ(universe->universe_id, kTestUniverse);
+    EXPECT_EQ(preview, kTestPreviewFlag);
+  };
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, kTestPreviewFlag),
+                                  kEtcPalErrOk);
+  EXPECT_EQ(set_preview_flag_fake.call_count, 1u);
 }
