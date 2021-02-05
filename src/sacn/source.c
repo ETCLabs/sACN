@@ -691,7 +691,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
       uint8_t send_buf[SACN_MTU];
       init_sacn_data_send_buf(send_buf, start_code, &source_state->cid, source_state->name, universe_state->priority,
                               universe_state->universe_id, universe_state->sync_universe, universe_state->send_preview);
-      update_send_buf(send_buf, buffer, (uint16_t)buflen, kDisableForceSync);
+      update_send_buf_data(send_buf, buffer, (uint16_t)buflen, kDisableForceSync);
 
       // Send on the network
       send_universe_multicast(source_state, universe_state, send_buf);

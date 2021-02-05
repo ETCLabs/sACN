@@ -484,28 +484,12 @@ int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uin
 }
 
 // Needs lock
-void update_send_buf(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size,
-                     force_sync_behavior_t force_sync)
-{
-  ETCPAL_UNUSED_ARG(force_sync);  // TODO sacn_sync
-
-  // Set force sync flag
-  SET_FORCE_SYNC_OPT(send_buf, (force_sync == kEnableForceSync));
-
-  // Update the size/count fields for the new data size (slot count)
-  SET_DATA_SLOT_COUNT(send_buf, new_data_size);
-
-  // Copy data into the send buffer immediately after the start code
-  memcpy(&send_buf[SACN_DATA_HEADER_SIZE], new_data, new_data_size);
-}
-
-// Needs lock
 void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_levels,
                    size_t new_levels_size, force_sync_behavior_t force_sync)
 {
   bool was_part_of_discovery = IS_PART_OF_UNIVERSE_DISCOVERY(universe_state);
 
-  update_send_buf(universe_state->null_send_buf, new_levels, (uint16_t)new_levels_size, force_sync);
+  update_send_buf_data(universe_state->null_send_buf, new_levels, (uint16_t)new_levels_size, force_sync);
   universe_state->has_null_data = true;
   reset_transmission_suppression(source_state, universe_state, kResetNull);
 
@@ -518,7 +502,7 @@ void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state,
 void update_paps(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_priorities,
                  size_t new_priorities_size, force_sync_behavior_t force_sync)
 {
-  update_send_buf(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, force_sync);
+  update_send_buf_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, force_sync);
   universe_state->has_pap_data = true;
   reset_transmission_suppression(source_state, universe_state, kResetPap);
 }

@@ -30,7 +30,6 @@ DEFINE_FAKE_VOID_FUNC(update_levels_and_or_paps, SacnSource*, SacnSourceUniverse
 DEFINE_FAKE_VOID_FUNC(increment_sequence_number, SacnSourceUniverse*);
 DEFINE_FAKE_VOID_FUNC(send_universe_unicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*);
 DEFINE_FAKE_VOID_FUNC(send_universe_multicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*);
-DEFINE_FAKE_VOID_FUNC(update_send_buf, uint8_t*, const uint8_t*, uint16_t, force_sync_behavior_t);
 DEFINE_FAKE_VOID_FUNC(set_preview_flag, const SacnSource*, SacnSourceUniverse*, bool);
 DEFINE_FAKE_VOID_FUNC(set_universe_priority, const SacnSource*, SacnSourceUniverse*, uint8_t);
 DEFINE_FAKE_VOID_FUNC(set_unicast_dest_terminating, SacnUnicastDestination*);
@@ -53,7 +52,6 @@ void sacn_source_state_reset_all_fakes(void)
   RESET_FAKE(increment_sequence_number);
   RESET_FAKE(send_universe_unicast);
   RESET_FAKE(send_universe_multicast);
-  RESET_FAKE(update_send_buf);
   RESET_FAKE(set_preview_flag);
   RESET_FAKE(set_universe_priority);
   RESET_FAKE(set_unicast_dest_terminating);

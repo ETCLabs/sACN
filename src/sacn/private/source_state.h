@@ -30,12 +30,6 @@ typedef enum
 
 typedef enum
 {
-  kEnableForceSync,
-  kDisableForceSync
-} force_sync_behavior_t;
-
-typedef enum
-{
   kResetNull,
   kResetPap,
   kResetNullAndPap
@@ -57,8 +51,6 @@ void update_levels_and_or_paps(SacnSource* source, SacnSourceUniverse* universe,
 void increment_sequence_number(SacnSourceUniverse* universe);
 void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
 void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
-void update_send_buf(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size,
-                     force_sync_behavior_t force_sync);
 void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bool preview);
 void set_universe_priority(const SacnSource* source, SacnSourceUniverse* universe, uint8_t priority);
 void set_unicast_dest_terminating(SacnUnicastDestination* dest);
