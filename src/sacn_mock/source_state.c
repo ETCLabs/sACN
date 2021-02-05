@@ -36,7 +36,6 @@ DEFINE_FAKE_VOID_FUNC(set_universe_priority, const SacnSource*, SacnSourceUniver
 DEFINE_FAKE_VOID_FUNC(set_unicast_dest_terminating, SacnUnicastDestination*);
 DEFINE_FAKE_VOID_FUNC(reset_transmission_suppression, const SacnSource*, SacnSourceUniverse*, bool, bool);
 DEFINE_FAKE_VOID_FUNC(set_universe_terminating, SacnSourceUniverse*);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, add_to_source_netints, SacnSource*, const EtcPalMcastNetintId*);
 DEFINE_FAKE_VOID_FUNC(set_source_terminating, SacnSource*);
 DEFINE_FAKE_VOID_FUNC(set_source_name, SacnSource*, const char*);
 
@@ -57,7 +56,6 @@ void sacn_source_state_reset_all_fakes(void)
   RESET_FAKE(set_unicast_dest_terminating);
   RESET_FAKE(reset_transmission_suppression);
   RESET_FAKE(set_universe_terminating);
-  RESET_FAKE(add_to_source_netints);
   RESET_FAKE(set_source_terminating);
   RESET_FAKE(set_source_name);
 }

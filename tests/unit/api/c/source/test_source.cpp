@@ -39,12 +39,18 @@
 #define TestSource TestSourceStatic
 #endif
 
+#define NUM_TEST_NETINTS 3
+
 static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
 static const std::string kTestLocalName = std::string("Test Source");
 static const std::string kTestLocalName2 = std::string("Test Source 2");
 static const etcpal::SockAddr kTestRemoteAddrV4(etcpal::IpAddr::FromString("10.101.1.1"), 8888);
 static const etcpal::SockAddr kTestRemoteAddrV6(etcpal::IpAddr::FromString("2001:db8::1234:5678"), 8888);
 static const sacn_source_t kTestHandle = 123u;
+static const uint16_t kTestUniverse = 456u;
+static SacnMcastInterface kTestNetints[NUM_TEST_NETINTS] = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
+                                                            {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
+                                                            {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
 
 class TestSource : public ::testing::Test
 {
@@ -229,4 +235,55 @@ TEST_F(TestSource, SourceChangeNameWorks)
   EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
   EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
   EXPECT_EQ(set_source_name_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceAddUniverseWorks)
+{
+  SacnSourceConfig source_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+  source_config.cid = kTestLocalCid.get();
+  source_config.name = kTestLocalName.c_str();
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  get_next_source_handle_fake.return_val = kTestHandle;
+
+  sacn_initialize_source_netints_fake.custom_fake = [](SacnInternalNetintArray* source_netints,
+                                                       SacnMcastInterface* app_netints, size_t num_app_netints) {
+#if SACN_DYNAMIC_MEM
+    source_netints->netints = (EtcPalMcastNetintId*)calloc(NUM_TEST_NETINTS, sizeof(EtcPalMcastNetintId));
+    source_netints->netints_capacity = NUM_TEST_NETINTS;
+#endif
+    source_netints->num_netints = NUM_TEST_NETINTS;
+
+    for (size_t i = 0u; i < num_app_netints; ++i)
+    {
+      EXPECT_EQ(app_netints[i].iface.index, kTestNetints[i].iface.index);
+      EXPECT_EQ(app_netints[i].iface.ip_type, kTestNetints[i].iface.ip_type);
+      EXPECT_EQ(app_netints[i].status, kTestNetints[i].status);
+      source_netints->netints[i] = app_netints[i].iface;
+    }
+
+    return kEtcPalErrOk;
+  };
+
+  sacn_source_t handle = SACN_SOURCE_INVALID;
+  EXPECT_EQ(sacn_source_create(&source_config, &handle), kEtcPalErrOk);
+  unsigned int previous_lock_count = sacn_lock_fake.call_count;
+  EXPECT_EQ(sacn_source_add_universe(handle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
+  EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
+  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+
+  SacnSource* source = nullptr;
+  SacnSourceUniverse* universe = nullptr;
+  EXPECT_EQ(lookup_source_and_universe(kTestHandle, kTestUniverse, &source, &universe), kEtcPalErrOk);
+  if (source)
+  {
+    EXPECT_EQ(source->num_netints, (size_t)NUM_TEST_NETINTS);
+    for (size_t i = 0; (i < NUM_TEST_NETINTS) && (i < source->num_netints); ++i)
+    {
+      EXPECT_EQ(source->netints[i].id.index, kTestNetints[i].iface.index);
+      EXPECT_EQ(source->netints[i].id.ip_type, kTestNetints[i].iface.ip_type);
+    }
+  }
 }

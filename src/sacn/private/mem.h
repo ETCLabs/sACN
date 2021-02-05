@@ -73,8 +73,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
                                         SacnSourceUniverse** universe_state);
 etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
                                      SacnUnicastDestination** dest_state);
-etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetintId* id,
-                                      SacnSourceNetint** netint_state);
+etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetintId* id);
 etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t universe, SacnSource** source_state,
                                           SacnSourceUniverse** universe_state);
 etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state);

@@ -643,19 +643,6 @@ void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bo
   reset_transmission_suppression(source, universe, true, true);
 }
 
-etcpal_error_t add_to_source_netints(SacnSource* source, const EtcPalMcastNetintId* id)
-{
-  SacnSourceNetint* netint = NULL;
-  etcpal_error_t result = add_sacn_source_netint(source, id, &netint);
-  if (result == kEtcPalErrExists)
-  {
-    ++netint->num_refs;
-    result = kEtcPalErrOk;
-  }
-
-  return result;
-}
-
 void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id)
 {
   size_t netint_index = 0;

@@ -44,7 +44,6 @@ DECLARE_FAKE_VOID_FUNC(set_universe_priority, const SacnSource*, SacnSourceUnive
 DECLARE_FAKE_VOID_FUNC(set_unicast_dest_terminating, SacnUnicastDestination*);
 DECLARE_FAKE_VOID_FUNC(reset_transmission_suppression, const SacnSource*, SacnSourceUniverse*, bool, bool);
 DECLARE_FAKE_VOID_FUNC(set_universe_terminating, SacnSourceUniverse*);
-DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, add_to_source_netints, SacnSource*, const EtcPalMcastNetintId*);
 DECLARE_FAKE_VOID_FUNC(set_source_terminating, SacnSource*);
 DECLARE_FAKE_VOID_FUNC(set_source_name, SacnSource*, const char*);
 

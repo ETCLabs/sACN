@@ -270,7 +270,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
   if (result == kEtcPalErrOk)
   {
     if ((handle == SACN_SOURCE_INVALID) || !config || !UNIVERSE_ID_VALID(config->universe) ||
-        !UNIVERSE_ID_VALID(config->sync_universe) ||
+        (config->sync_universe && !UNIVERSE_ID_VALID(config->sync_universe)) ||
         ((config->num_unicast_destinations > 0) && !config->unicast_destinations))
     {
       result = kEtcPalErrInvalid;
@@ -292,18 +292,6 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     if (result == kEtcPalErrOk)
       result = lookup_source(handle, &source);
 
-#if SACN_DYNAMIC_MEM
-    // Make sure to check against universe_count_max.
-    if (result == kEtcPalErrOk)
-    {
-      if ((source->universe_count_max != SACN_SOURCE_INFINITE_UNIVERSES) &&
-          (source->num_universes >= source->universe_count_max))
-      {
-        result = kEtcPalErrNoMem;  // No room to allocate additional universe.
-      }
-    }
-#endif
-
     // Initialize the universe's state.
     SacnSourceUniverse* universe = NULL;
     if (result == kEtcPalErrOk)
@@ -311,7 +299,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
 
     // Update the source's netint tracking.
     for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->netints.num_netints); ++i)
-      result = add_to_source_netints(source, &universe->netints.netints[i]);
+      result = add_sacn_source_netint(source, &universe->netints.netints[i]);
 
     sacn_unlock();
   }
@@ -988,7 +976,7 @@ etcpal_error_t sacn_source_reset_networking(SacnMcastInterface* netints, size_t 
         result = sacn_initialize_source_netints(&universe->netints, netints, num_netints);
 
         for (size_t k = 0; (result == kEtcPalErrOk) && (k < universe->netints.num_netints); ++k)
-          result = add_to_source_netints(source, &universe->netints.netints[k]);
+          result = add_sacn_source_netint(source, &universe->netints.netints[k]);
 
         if (result == kEtcPalErrOk)
           reset_transmission_suppression(source, universe, true, true);
@@ -1089,7 +1077,7 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUnivers
       result = sacn_initialize_source_netints(&universe->netints, netint_list->netints, netint_list->num_netints);
 
       for (size_t j = 0; (result == kEtcPalErrOk) && (j < universe->netints.num_netints); ++j)
-        result = add_to_source_netints(source, &universe->netints.netints[j]);
+        result = add_sacn_source_netint(source, &universe->netints.netints[j]);
 
       if (result == kEtcPalErrOk)
         reset_transmission_suppression(source, universe, true, true);

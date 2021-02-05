@@ -45,7 +45,6 @@ void set_unicast_dest_terminating(SacnUnicastDestination* dest);
 void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse* universe, bool reset_null,
                                     bool reset_pap);
 void set_universe_terminating(SacnSourceUniverse* universe);
-etcpal_error_t add_to_source_netints(SacnSource* source, const EtcPalMcastNetintId* id);
 void set_source_terminating(SacnSource* source);
 void set_source_name(SacnSource* source, const char* new_name);
 
