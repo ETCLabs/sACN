@@ -22,12 +22,12 @@
 #include "sacn/private/mem.h"
 #include "sacn/private/pdu.h"
 #include "sacn/private/sockets.h"
+#include "sacn/private/source_state.h"
 #include "sacn/private/util.h"
 #include "etcpal/netint.h"
 #include "etcpal/pack.h"
 #include "etcpal/rbtree.h"
 #include "etcpal/timer.h"
-#include "private\source_state.h"
 
 // Suppress strncpy() warning on Windows/MSVC.
 #ifdef _MSC_VER
