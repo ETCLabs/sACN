@@ -68,8 +68,10 @@ static const uint16_t kTestUniverse = 456u;
 static const uint8_t kTestPriority = 77u;
 static const bool kTestPreviewFlag = true;
 static const uint8_t kTestStartCode = 0x12u;
-static const uint8_t* kTestBuffer = (uint8_t*)"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static const uint8_t* kTestBuffer = (uint8_t*)"ABCDEFGHIJKL";
 static const size_t kTestBufferLength = strlen((char*)kTestBuffer);
+static const uint8_t* kTestBuffer2 = (uint8_t*)"MNOPQRSTUVWXYZ";
+static const size_t kTestBuffer2Length = strlen((char*)kTestBuffer);
 static SacnMcastInterface kTestNetints[NUM_TEST_NETINTS] = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                             {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
                                                             {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
@@ -435,4 +437,24 @@ TEST_F(TestSource, SourceSendNowWorks)
   EXPECT_EQ(send_universe_multicast_fake.call_count, 1u);
   EXPECT_EQ(send_universe_unicast_fake.call_count, 1u);
   EXPECT_EQ(increment_sequence_number_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceUpdateValuesWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  update_levels_and_or_paps_fake.custom_fake =
+      [](SacnSource* source, SacnSourceUniverse* universe, const uint8_t* new_levels, size_t new_levels_size,
+         const uint8_t* new_priorities, size_t new_priorities_size, force_sync_behavior_t force_sync) {
+        EXPECT_EQ(source->handle, kTestHandle);
+        EXPECT_EQ(universe->universe_id, kTestUniverse);
+        EXPECT_EQ(memcmp(new_levels, kTestBuffer, kTestBufferLength), 0);
+        EXPECT_EQ(new_levels_size, kTestBufferLength);
+        EXPECT_EQ(new_priorities, nullptr);
+        EXPECT_EQ(new_priorities_size, 0u);
+        EXPECT_EQ(force_sync, kDisableForceSync);
+      };
+
+  VERIFY_LOCKING(sacn_source_update_values(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
 }
