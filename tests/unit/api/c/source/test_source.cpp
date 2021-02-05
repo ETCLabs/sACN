@@ -491,3 +491,57 @@ TEST_F(TestSource, SourceUpdateValuesAndPapWorks)
   EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 2u);
   EXPECT_EQ(disable_pap_data_fake.call_count, 1u);
 }
+
+TEST_F(TestSource, SourceUpdateValuesAndForceSyncWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  update_levels_and_or_paps_fake.custom_fake =
+      [](SacnSource* source, SacnSourceUniverse* universe, const uint8_t* new_levels, size_t new_levels_size,
+         const uint8_t* new_priorities, size_t new_priorities_size, force_sync_behavior_t force_sync) {
+        EXPECT_EQ(source->handle, kTestHandle);
+        EXPECT_EQ(universe->universe_id, kTestUniverse);
+        EXPECT_EQ(memcmp(new_levels, kTestBuffer, kTestBufferLength), 0);
+        EXPECT_EQ(new_levels_size, kTestBufferLength);
+        EXPECT_EQ(new_priorities, nullptr);
+        EXPECT_EQ(new_priorities_size, 0u);
+        EXPECT_EQ(force_sync, kEnableForceSync);
+      };
+
+  VERIFY_LOCKING(sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceUpdateValuesAndPapAndForceSyncWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  update_levels_and_or_paps_fake.custom_fake =
+      [](SacnSource* source, SacnSourceUniverse* universe, const uint8_t* new_levels, size_t new_levels_size,
+         const uint8_t* new_priorities, size_t new_priorities_size, force_sync_behavior_t force_sync) {
+        EXPECT_EQ(source->handle, kTestHandle);
+        EXPECT_EQ(universe->universe_id, kTestUniverse);
+        EXPECT_EQ(memcmp(new_levels, kTestBuffer, kTestBufferLength), 0);
+        EXPECT_EQ(new_levels_size, kTestBufferLength);
+        if (new_priorities)
+        {
+          EXPECT_EQ(memcmp(new_priorities, kTestBuffer2, kTestBuffer2Length), 0);
+          EXPECT_EQ(new_priorities_size, kTestBuffer2Length);
+        }
+        EXPECT_EQ(force_sync, kEnableForceSync);
+      };
+
+  VERIFY_LOCKING(sacn_source_update_values_and_pap_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer,
+                                                                  kTestBufferLength, kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
+  EXPECT_EQ(disable_pap_data_fake.call_count, 0u);
+
+  // Check disabling PAP as well
+  disable_pap_data_fake.custom_fake = [](SacnSourceUniverse* universe) {
+    EXPECT_EQ(universe->universe_id, kTestUniverse);
+  };
+  VERIFY_LOCKING(sacn_source_update_values_and_pap_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer,
+                                                                  kTestBufferLength, nullptr, 0u));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 2u);
+  EXPECT_EQ(disable_pap_data_fake.call_count, 1u);
+}
