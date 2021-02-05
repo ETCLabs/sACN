@@ -77,6 +77,8 @@ static SacnMcastInterface kTestNetints[NUM_TEST_NETINTS] = {{{kEtcPalIpTypeV4, 1
                                                             {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
 static const size_t kTestReturnSize = 1234u;
 static const int kTestReturnInt = 5678;
+static const SacnSourceUniverseNetintList kTestNetintList = {kTestHandle, kTestUniverse, kTestNetints,
+                                                             NUM_TEST_NETINTS};
 
 class TestSource : public ::testing::Test
 {
@@ -579,6 +581,33 @@ TEST_F(TestSource, SourceResetNetworkingWorks)
   };
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking(kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
+
+  EXPECT_EQ(sacn_sockets_reset_source_fake.call_count, 1u);
+  EXPECT_EQ(clear_source_netints_fake.call_count, 1u);
+  EXPECT_EQ(reset_source_universe_networking_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceResetNetworkingPerUniverseWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  clear_source_netints_fake.custom_fake = [](SacnSource* source) { EXPECT_EQ(source->handle, kTestHandle); };
+  reset_source_universe_networking_fake.custom_fake = [](SacnSource* source, SacnSourceUniverse* universe,
+                                                         SacnMcastInterface* netints, size_t num_netints) {
+    EXPECT_EQ(source->handle, kTestHandle);
+    EXPECT_EQ(universe->universe_id, kTestUniverse);
+
+    for (size_t i = 0u; i < num_netints; ++i)
+    {
+      EXPECT_EQ(netints[i].iface.index, kTestNetints[i].iface.index);
+      EXPECT_EQ(netints[i].iface.ip_type, kTestNetints[i].iface.ip_type);
+      EXPECT_EQ(netints[i].status, kTestNetints[i].status);
+    }
+
+    return kEtcPalErrOk;
+  };
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking_per_universe(&kTestNetintList, 1u), kEtcPalErrOk);
 
   EXPECT_EQ(sacn_sockets_reset_source_fake.call_count, 1u);
   EXPECT_EQ(clear_source_netints_fake.call_count, 1u);
