@@ -299,6 +299,12 @@ TEST_F(TestSource, SourceRemoveUniverseWorks)
   SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
   universe_config.universe = kTestUniverse;
 
+  get_next_source_handle_fake.return_val = kTestHandle;
+
+  set_universe_terminating_fake.custom_fake = [](SacnSourceUniverse* universe) {
+    EXPECT_EQ(universe->universe_id, kTestUniverse);
+  };
+
   sacn_source_t handle = SACN_SOURCE_INVALID;
   EXPECT_EQ(sacn_source_create(&source_config, &handle), kEtcPalErrOk);
   EXPECT_EQ(sacn_source_add_universe(handle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
