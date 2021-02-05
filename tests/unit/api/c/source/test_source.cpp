@@ -613,3 +613,20 @@ TEST_F(TestSource, SourceResetNetworkingPerUniverseWorks)
   EXPECT_EQ(clear_source_netints_fake.call_count, 1u);
   EXPECT_EQ(reset_source_universe_networking_fake.call_count, 1u);
 }
+
+TEST_F(TestSource, SourceGetNetintsWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  get_source_universe_netints_fake.custom_fake = [](const SacnSourceUniverse* universe, EtcPalMcastNetintId* netints,
+                                                    size_t netints_size) {
+    EXPECT_EQ(universe->universe_id, kTestUniverse);
+    EXPECT_EQ(netints, nullptr);
+    EXPECT_EQ(netints_size, 0u);
+    return kTestReturnSize;
+  };
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_get_network_interfaces(kTestHandle, kTestUniverse, nullptr, 0u),
+                                  kTestReturnSize);
+  EXPECT_EQ(get_source_universe_netints_fake.call_count, 1u);
+}

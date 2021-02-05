@@ -631,6 +631,16 @@ size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr
 }
 
 // Needs lock
+size_t get_source_universe_netints(const SacnSourceUniverse* universe, EtcPalMcastNetintId* netints,
+                                   size_t netints_size)
+{
+  for (size_t i = 0; netints && (i < netints_size) && (i < universe->netints.num_netints); ++i)
+    netints[i] = universe->netints.netints[i];
+
+  return universe->netints.num_netints;
+}
+
+// Needs lock
 void disable_pap_data(SacnSourceUniverse* universe)
 {
   universe->has_pap_data = false;

@@ -1084,13 +1084,7 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     if (lookup_source_and_universe(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
-    {
-      total_num_network_interfaces = universe_state->netints.num_netints;
-
-      // Copy out the netints
-      for (size_t i = 0; netints && (i < netints_size) && (i < total_num_network_interfaces); ++i)
-        netints[i] = universe_state->netints.netints[i];
-    }
+      total_num_network_interfaces = get_source_universe_netints(universe_state, netints, netints_size);
 
     sacn_unlock();
   }
