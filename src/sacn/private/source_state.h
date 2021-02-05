@@ -62,6 +62,7 @@ void set_source_name(SacnSource* source, const char* new_name);
 size_t get_source_universes(const SacnSource* source, uint16_t* universes, size_t universes_size);
 size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr* destinations,
                                 size_t destinations_size);
+void disable_pap_data(SacnSourceUniverse* universe);
 
 #ifdef __cplusplus
 }

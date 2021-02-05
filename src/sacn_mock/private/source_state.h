@@ -48,6 +48,7 @@ DECLARE_FAKE_VOID_FUNC(set_source_terminating, SacnSource*);
 DECLARE_FAKE_VOID_FUNC(set_source_name, SacnSource*, const char*);
 DECLARE_FAKE_VALUE_FUNC(size_t, get_source_universes, const SacnSource*, uint16_t*, size_t);
 DECLARE_FAKE_VALUE_FUNC(size_t, get_source_unicast_dests, const SacnSourceUniverse*, EtcPalIpAddr*, size_t);
+DECLARE_FAKE_VOID_FUNC(disable_pap_data, SacnSourceUniverse*);
 
 void sacn_source_state_reset_all_fakes(void);
 

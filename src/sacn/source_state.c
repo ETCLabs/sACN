@@ -631,6 +631,12 @@ size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr
 }
 
 // Needs lock
+void disable_pap_data(SacnSourceUniverse* universe)
+{
+  universe->has_pap_data = false;
+}
+
+// Needs lock
 void set_universe_priority(const SacnSource* source, SacnSourceUniverse* universe, uint8_t priority)
 {
   universe->priority = priority;

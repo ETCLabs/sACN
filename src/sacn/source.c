@@ -803,7 +803,7 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
 
     // Stop using PAPs if new_priorities is NULL
     if (!new_priorities)
-      universe_state->has_pap_data = false;
+      disable_pap_data(universe_state);
 
     sacn_unlock();
   }
@@ -883,7 +883,7 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 
     // Stop using PAPs if new_priorities is NULL
     if (!new_priorities)
-      universe_state->has_pap_data = false;
+      disable_pap_data(universe_state);
 
     sacn_unlock();
   }
