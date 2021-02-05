@@ -485,14 +485,7 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     if (lookup_source_and_universe(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
-    {
-      // Use total number of destinations as the return value
-      total_num_dests = universe_state->num_unicast_dests;
-
-      // Copy out the destinations
-      for (size_t i = 0; (i < universe_state->num_unicast_dests) && destinations && (i < destinations_size); ++i)
-        destinations[i] = universe_state->unicast_dests[i].dest_addr;
-    }
+      total_num_dests = get_source_unicast_dests(universe_state, destinations, destinations_size);
 
     sacn_unlock();
   }

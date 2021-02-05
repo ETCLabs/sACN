@@ -313,7 +313,7 @@ TEST_F(TestSource, SourceGetUniversesWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
-  get_source_universes_fake.custom_fake = [](SacnSource* source, uint16_t* universes, size_t universes_size) {
+  get_source_universes_fake.custom_fake = [](const SacnSource* source, uint16_t* universes, size_t universes_size) {
     EXPECT_EQ(source->handle, kTestHandle);
     EXPECT_EQ(universes, nullptr);
     EXPECT_EQ(universes_size, 0u);
@@ -358,4 +358,21 @@ TEST_F(TestSource, SourceRemoveUnicastDestinationWorks)
   EXPECT_EQ(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4), kEtcPalErrOk);
   VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4));
   EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceGetUnicastDestinationsWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  get_source_unicast_dests_fake.custom_fake = [](const SacnSourceUniverse* universe, EtcPalIpAddr* destinations,
+                                                 size_t destinations_size) {
+    EXPECT_EQ(universe->universe_id, kTestUniverse);
+    EXPECT_EQ(destinations, nullptr);
+    EXPECT_EQ(destinations_size, 0u);
+    return kTestReturnSize;
+  };
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_get_unicast_destinations(kTestHandle, kTestUniverse, nullptr, 0u),
+                                  kTestReturnSize);
+  EXPECT_EQ(get_source_unicast_dests_fake.call_count, 1u);
 }

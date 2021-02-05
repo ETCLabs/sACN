@@ -67,7 +67,9 @@ void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse
 void set_universe_terminating(SacnSourceUniverse* universe);
 void set_source_terminating(SacnSource* source);
 void set_source_name(SacnSource* source, const char* new_name);
-size_t get_source_universes(SacnSource* source, uint16_t* universes, size_t universes_size);
+size_t get_source_universes(const SacnSource* source, uint16_t* universes, size_t universes_size);
+size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr* destinations,
+                                size_t destinations_size);
 
 #ifdef __cplusplus
 }
