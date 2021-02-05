@@ -22,6 +22,25 @@
 
 #include "sacn/private/common.h"
 
+typedef enum
+{
+  kProcessManualSources,
+  kProcessThreadedSources
+} process_sources_behavior_t;
+
+typedef enum
+{
+  kEnableForceSync,
+  kDisableForceSync
+} force_sync_behavior_t;
+
+typedef enum
+{
+  kResetNull,
+  kResetPap,
+  kResetNullAndPap
+} reset_transmission_suppression_behavior_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -29,21 +48,22 @@ extern "C" {
 etcpal_error_t sacn_source_state_init(void);
 void sacn_source_state_deinit(void);
 
-int take_lock_and_process_sources(bool process_manual);
+int take_lock_and_process_sources(process_sources_behavior_t behavior);
 etcpal_error_t initialize_source_thread();
 sacn_source_t get_next_source_handle();
 void update_levels_and_or_paps(SacnSource* source, SacnSourceUniverse* universe, const uint8_t* new_values,
                                size_t new_values_size, const uint8_t* new_priorities, size_t new_priorities_size,
-                               bool force_sync);
+                               force_sync_behavior_t force_sync);
 void increment_sequence_number(SacnSourceUniverse* universe);
 void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
 void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
-void update_send_buf(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size, bool force_sync);
+void update_send_buf(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size,
+                     force_sync_behavior_t force_sync);
 void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bool preview);
 void set_universe_priority(const SacnSource* source, SacnSourceUniverse* universe, uint8_t priority);
 void set_unicast_dest_terminating(SacnUnicastDestination* dest);
-void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse* universe, bool reset_null,
-                                    bool reset_pap);
+void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse* universe,
+                                    reset_transmission_suppression_behavior_t behavior);
 void set_universe_terminating(SacnSourceUniverse* universe);
 void set_source_terminating(SacnSource* source);
 void set_source_name(SacnSource* source, const char* new_name);

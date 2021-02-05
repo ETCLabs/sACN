@@ -413,7 +413,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
 
     // Initialize & reset transmission suppression
     if (result == kEtcPalErrOk)
-      reset_transmission_suppression(source_state, universe_state, true, true);
+      reset_transmission_suppression(source_state, universe_state, kResetNullAndPap);
 
     sacn_unlock();
   }
@@ -698,7 +698,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
       uint8_t send_buf[SACN_MTU];
       init_sacn_data_send_buf(send_buf, start_code, &source_state->cid, source_state->name, universe_state->priority,
                               universe_state->universe_id, universe_state->sync_universe, universe_state->send_preview);
-      update_send_buf(send_buf, buffer, (uint16_t)buflen, false);
+      update_send_buf(send_buf, buffer, (uint16_t)buflen, kDisableForceSync);
 
       // Send on the network
       send_universe_multicast(source_state, universe_state, send_buf);
@@ -767,7 +767,7 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
-    update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, false);
+    update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, kDisableForceSync);
     sacn_unlock();
   }
 #endif  // SACN_SOURCE_ENABLED
@@ -806,7 +806,7 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
     update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
-                              new_priorities_size, false);
+                              new_priorities_size, kDisableForceSync);
 
     // Stop using PAPs if new_priorities is NULL
     if (!new_priorities)
@@ -842,7 +842,7 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
-    update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, true);
+    update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, kEnableForceSync);
     sacn_unlock();
   }
 #endif  // SACN_SOURCE_ENABLED
@@ -886,7 +886,7 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
     update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
-                              new_priorities_size, true);
+                              new_priorities_size, kEnableForceSync);
 
     // Stop using PAPs if new_priorities is NULL
     if (!new_priorities)
@@ -916,7 +916,7 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 int sacn_source_process_manual(void)
 {
 #if SACN_SOURCE_ENABLED
-  return take_lock_and_process_sources(true);
+  return take_lock_and_process_sources(kProcessManualSources);
 #else
   return 0;
 #endif
@@ -972,7 +972,7 @@ etcpal_error_t sacn_source_reset_networking(SacnMcastInterface* netints, size_t 
           result = add_sacn_source_netint(source, &universe->netints.netints[k]);
 
         if (result == kEtcPalErrOk)
-          reset_transmission_suppression(source, universe, true, true);
+          reset_transmission_suppression(source, universe, kResetNullAndPap);
       }
     }
 
@@ -1073,7 +1073,7 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUnivers
         result = add_sacn_source_netint(source, &universe->netints.netints[j]);
 
       if (result == kEtcPalErrOk)
-        reset_transmission_suppression(source, universe, true, true);
+        reset_transmission_suppression(source, universe, kResetNullAndPap);
     }
 
     sacn_unlock();

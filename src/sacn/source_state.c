@@ -56,7 +56,7 @@ static void stop_tick_thread();
 
 static void source_thread_function(void* arg);
 
-static int process_sources(bool process_manual);
+static int process_sources(process_sources_behavior_t behavior);
 static void process_universe_discovery(SacnSource* source);
 static void process_universes(SacnSource* source);
 static void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe);
@@ -72,10 +72,10 @@ static void send_termination_unicast(const SacnSource* source, SacnSourceUnivers
 static void send_universe_discovery(SacnSource* source);
 static int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uint8_t page_number);
 static void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_levels,
-                          size_t new_levels_size, bool force_sync);
+                          size_t new_levels_size, force_sync_behavior_t force_sync);
 #if SACN_ETC_PRIORITY_EXTENSION
 static void update_paps(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_priorities,
-                        size_t new_priorities_size, bool force_sync);
+                        size_t new_priorities_size, force_sync_behavior_t force_sync);
 #endif
 static void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id);
 
@@ -154,7 +154,7 @@ void source_thread_function(void* arg)
   // num_thread_based_sources > 0).
   while (keep_running_thread || (num_thread_based_sources > 0))
   {
-    num_thread_based_sources = take_lock_and_process_sources(false);
+    num_thread_based_sources = take_lock_and_process_sources(kProcessThreadedSources);
 
     etcpal_thread_sleep(etcpal_timer_remaining(&interval_timer));
     etcpal_timer_reset(&interval_timer);
@@ -168,13 +168,13 @@ void source_thread_function(void* arg)
 }
 
 // Takes lock
-int take_lock_and_process_sources(bool process_manual)
+int take_lock_and_process_sources(process_sources_behavior_t behavior)
 {
   int num_sources_tracked = 0;
 
   if (sacn_lock())
   {
-    num_sources_tracked = process_sources(process_manual);
+    num_sources_tracked = process_sources(behavior);
     sacn_unlock();
   }
 
@@ -204,7 +204,7 @@ sacn_source_t get_next_source_handle()
 }
 
 // Needs lock
-int process_sources(bool process_manual)
+int process_sources(process_sources_behavior_t behavior)
 {
   int num_sources_tracked = 0;
 
@@ -214,6 +214,7 @@ int process_sources(bool process_manual)
     SacnSource* source = get_source(i);
 
     // If this is the kind of source we want to process (manual vs. thread-based)
+    bool process_manual = (behavior == kProcessManualSources);
     if (source->process_manually == process_manual)
     {
       // If the Source API is shutting down, cause this source to terminate (if thread-based)
@@ -483,12 +484,13 @@ int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uin
 }
 
 // Needs lock
-void update_send_buf(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size, bool force_sync)
+void update_send_buf(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size,
+                     force_sync_behavior_t force_sync)
 {
   ETCPAL_UNUSED_ARG(force_sync);  // TODO sacn_sync
 
   // Set force sync flag
-  SET_FORCE_SYNC_OPT(send_buf, force_sync);
+  SET_FORCE_SYNC_OPT(send_buf, (force_sync == kEnableForceSync));
 
   // Update the size/count fields for the new data size (slot count)
   SET_DATA_SLOT_COUNT(send_buf, new_data_size);
@@ -499,13 +501,13 @@ void update_send_buf(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_da
 
 // Needs lock
 void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_levels,
-                   size_t new_levels_size, bool force_sync)
+                   size_t new_levels_size, force_sync_behavior_t force_sync)
 {
   bool was_part_of_discovery = IS_PART_OF_UNIVERSE_DISCOVERY(universe_state);
 
   update_send_buf(universe_state->null_send_buf, new_levels, (uint16_t)new_levels_size, force_sync);
   universe_state->has_null_data = true;
-  reset_transmission_suppression(source_state, universe_state, true, false);
+  reset_transmission_suppression(source_state, universe_state, kResetNull);
 
   if (!was_part_of_discovery && IS_PART_OF_UNIVERSE_DISCOVERY(universe_state))
     ++source_state->num_active_universes;
@@ -514,18 +516,18 @@ void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state,
 #if SACN_ETC_PRIORITY_EXTENSION
 // Needs lock
 void update_paps(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_priorities,
-                 size_t new_priorities_size, bool force_sync)
+                 size_t new_priorities_size, force_sync_behavior_t force_sync)
 {
   update_send_buf(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, force_sync);
   universe_state->has_pap_data = true;
-  reset_transmission_suppression(source_state, universe_state, false, true);
+  reset_transmission_suppression(source_state, universe_state, kResetPap);
 }
 #endif
 
 // Needs lock
 void update_levels_and_or_paps(SacnSource* source, SacnSourceUniverse* universe, const uint8_t* new_levels,
                                size_t new_levels_size, const uint8_t* new_priorities, size_t new_priorities_size,
-                               bool force_sync)
+                               force_sync_behavior_t force_sync)
 {
   if (source && universe)
   {
@@ -584,10 +586,10 @@ void set_unicast_dest_terminating(SacnUnicastDestination* dest)
 }
 
 // Needs lock
-void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse* universe, bool reset_null,
-                                    bool reset_pap)
+void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse* universe,
+                                    reset_transmission_suppression_behavior_t behavior)
 {
-  if (reset_null)
+  if ((behavior == kResetNull) || (behavior == kResetNullAndPap))
   {
     universe->null_packets_sent_before_suppression = 0;
 
@@ -595,7 +597,7 @@ void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse
       etcpal_timer_start(&universe->null_keep_alive_timer, source->keep_alive_interval);
   }
 
-  if (reset_pap)
+  if ((behavior == kResetPap) || (behavior == kResetNullAndPap))
   {
     universe->pap_packets_sent_before_suppression = 0;
 
@@ -621,7 +623,7 @@ void set_source_name(SacnSource* source, const char* new_name)
     strncpy((char*)(&universe->pap_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
 
     // Reset transmission suppression for start codes 0x00 and 0xDD
-    reset_transmission_suppression(source, universe, true, true);
+    reset_transmission_suppression(source, universe, kResetNullAndPap);
   }
 }
 
@@ -640,7 +642,7 @@ void set_universe_priority(const SacnSource* source, SacnSourceUniverse* univers
   universe->priority = priority;
   universe->null_send_buf[SACN_PRI_OFFSET] = priority;
   universe->pap_send_buf[SACN_PRI_OFFSET] = priority;
-  reset_transmission_suppression(source, universe, true, true);
+  reset_transmission_suppression(source, universe, kResetNullAndPap);
 }
 
 // Needs lock
@@ -649,7 +651,7 @@ void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bo
   universe->send_preview = preview;
   SET_PREVIEW_OPT(universe->null_send_buf, preview);
   SET_PREVIEW_OPT(universe->pap_send_buf, preview);
-  reset_transmission_suppression(source, universe, true, true);
+  reset_transmission_suppression(source, universe, kResetNullAndPap);
 }
 
 void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id)

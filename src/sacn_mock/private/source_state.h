@@ -30,19 +30,20 @@ extern "C" {
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_state_init);
 DECLARE_FAKE_VOID_FUNC(sacn_source_state_deinit);
 
-DECLARE_FAKE_VALUE_FUNC(int, take_lock_and_process_sources, bool);
+DECLARE_FAKE_VALUE_FUNC(int, take_lock_and_process_sources, process_sources_behavior_t);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, initialize_source_thread);
 DECLARE_FAKE_VALUE_FUNC(sacn_source_t, get_next_source_handle);
 DECLARE_FAKE_VOID_FUNC(update_levels_and_or_paps, SacnSource*, SacnSourceUniverse*, const uint8_t*, size_t,
-                       const uint8_t*, size_t, bool);
+                       const uint8_t*, size_t, force_sync_behavior_t);
 DECLARE_FAKE_VOID_FUNC(increment_sequence_number, SacnSourceUniverse*);
 DECLARE_FAKE_VOID_FUNC(send_universe_unicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*);
 DECLARE_FAKE_VOID_FUNC(send_universe_multicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*);
-DECLARE_FAKE_VOID_FUNC(update_send_buf, uint8_t*, const uint8_t*, uint16_t, bool);
+DECLARE_FAKE_VOID_FUNC(update_send_buf, uint8_t*, const uint8_t*, uint16_t, force_sync_behavior_t);
 DECLARE_FAKE_VOID_FUNC(set_preview_flag, const SacnSource*, SacnSourceUniverse*, bool);
 DECLARE_FAKE_VOID_FUNC(set_universe_priority, const SacnSource*, SacnSourceUniverse*, uint8_t);
 DECLARE_FAKE_VOID_FUNC(set_unicast_dest_terminating, SacnUnicastDestination*);
-DECLARE_FAKE_VOID_FUNC(reset_transmission_suppression, const SacnSource*, SacnSourceUniverse*, bool, bool);
+DECLARE_FAKE_VOID_FUNC(reset_transmission_suppression, const SacnSource*, SacnSourceUniverse*,
+                       reset_transmission_suppression_behavior_t);
 DECLARE_FAKE_VOID_FUNC(set_universe_terminating, SacnSourceUniverse*);
 DECLARE_FAKE_VOID_FUNC(set_source_terminating, SacnSource*);
 DECLARE_FAKE_VOID_FUNC(set_source_name, SacnSource*, const char*);
