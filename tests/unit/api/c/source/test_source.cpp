@@ -51,6 +51,7 @@ static const uint16_t kTestUniverse = 456u;
 static SacnMcastInterface kTestNetints[NUM_TEST_NETINTS] = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                             {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
                                                             {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
+static const size_t kTestReturnSize = 1234u;
 
 class TestSource : public ::testing::Test
 {
@@ -222,6 +223,7 @@ TEST_F(TestSource, SourceChangeNameWorks)
   config.name = kTestLocalName.c_str();
 
   get_next_source_handle_fake.return_val = kTestHandle;
+
   set_source_name_fake.custom_fake = [](SacnSource* source, const char* new_name) {
     ASSERT_NE(source, nullptr);
     EXPECT_EQ(source->handle, kTestHandle);
@@ -305,4 +307,32 @@ TEST_F(TestSource, SourceRemoveUniverseWorks)
   EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
   EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
   EXPECT_EQ(set_universe_terminating_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceGetUniversesWorks)
+{
+  SacnSourceConfig source_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+  source_config.cid = kTestLocalCid.get();
+  source_config.name = kTestLocalName.c_str();
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  get_next_source_handle_fake.return_val = kTestHandle;
+
+  get_source_universes_fake.custom_fake = [](SacnSource* source, uint16_t* universes, size_t universes_size) {
+    EXPECT_EQ(source->handle, kTestHandle);
+    EXPECT_EQ(universes, nullptr);
+    EXPECT_EQ(universes_size, 0u);
+    return kTestReturnSize;
+  };
+
+  sacn_source_t handle = SACN_SOURCE_INVALID;
+  EXPECT_EQ(sacn_source_create(&source_config, &handle), kEtcPalErrOk);
+  EXPECT_EQ(sacn_source_add_universe(handle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
+  unsigned int previous_lock_count = sacn_lock_fake.call_count;
+  EXPECT_EQ(sacn_source_get_universes(handle, nullptr, 0u), kTestReturnSize);
+  EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);
+  EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+  EXPECT_EQ(get_source_universes_fake.call_count, 1u);
 }

@@ -358,14 +358,7 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
     // Look up source state
     SacnSource* source = NULL;
     if (lookup_source(handle, &source) == kEtcPalErrOk)
-    {
-      // Use total number of universes as the return value
-      total_num_universes = source->num_universes;
-
-      // Copy out the universes
-      for (size_t i = 0; (i < source->num_universes) && universes && (i < universes_size); ++i)
-        universes[i] = source->universes[i].universe_id;
-    }
+      total_num_universes = get_source_universes(source, universes, universes_size);
 
     sacn_unlock();
   }

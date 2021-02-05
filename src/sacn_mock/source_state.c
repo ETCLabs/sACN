@@ -38,6 +38,7 @@ DEFINE_FAKE_VOID_FUNC(reset_transmission_suppression, const SacnSource*, SacnSou
 DEFINE_FAKE_VOID_FUNC(set_universe_terminating, SacnSourceUniverse*);
 DEFINE_FAKE_VOID_FUNC(set_source_terminating, SacnSource*);
 DEFINE_FAKE_VOID_FUNC(set_source_name, SacnSource*, const char*);
+DEFINE_FAKE_VALUE_FUNC(size_t, get_source_universes, SacnSource*, uint16_t*, size_t);
 
 void sacn_source_state_reset_all_fakes(void)
 {
@@ -58,4 +59,5 @@ void sacn_source_state_reset_all_fakes(void)
   RESET_FAKE(set_universe_terminating);
   RESET_FAKE(set_source_terminating);
   RESET_FAKE(set_source_name);
+  RESET_FAKE(get_source_universes);
 }

@@ -626,6 +626,15 @@ void set_source_name(SacnSource* source, const char* new_name)
 }
 
 // Needs lock
+size_t get_source_universes(SacnSource* source, uint16_t* universes, size_t universes_size)
+{
+  for (size_t i = 0; (i < source->num_universes) && universes && (i < universes_size); ++i)
+    universes[i] = source->universes[i].universe_id;
+
+  return source->num_universes;
+}
+
+// Needs lock
 void set_universe_priority(const SacnSource* source, SacnSourceUniverse* universe, uint8_t priority)
 {
   universe->priority = priority;
