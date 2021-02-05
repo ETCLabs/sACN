@@ -346,3 +346,16 @@ TEST_F(TestSource, SourceAddUnicastDestinationWorks)
 
   EXPECT_EQ(reset_transmission_suppression_fake.call_count, 1u);
 }
+
+TEST_F(TestSource, SourceRemoveUnicastDestinationWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  set_unicast_dest_terminating_fake.custom_fake = [](SacnUnicastDestination* dest) {
+    EXPECT_EQ(etcpal_ip_cmp(&dest->dest_addr, &kTestRemoteAddrV4), 0);
+  };
+
+  EXPECT_EQ(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4), kEtcPalErrOk);
+  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4));
+  EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 1u);
+}
