@@ -344,5 +344,5 @@ TEST_F(TestSource, SourceAddUnicastDestinationWorks)
   EXPECT_EQ(lookup_source_and_universe(kTestHandle, kTestUniverse, &source_state, &universe_state), kEtcPalErrOk);
   EXPECT_EQ(lookup_unicast_dest(universe_state, &kTestRemoteAddrV4, &unicast_dest), kEtcPalErrOk);
 
-  reset_transmission_suppression_fake.call_count = 1u;
+  EXPECT_EQ(reset_transmission_suppression_fake.call_count, 1u);
 }
