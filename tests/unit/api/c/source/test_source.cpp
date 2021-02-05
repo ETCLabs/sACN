@@ -76,6 +76,7 @@ static SacnMcastInterface kTestNetints[NUM_TEST_NETINTS] = {{{kEtcPalIpTypeV4, 1
                                                             {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
                                                             {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
 static const size_t kTestReturnSize = 1234u;
+static const int kTestReturnInt = 5678;
 
 class TestSource : public ::testing::Test
 {
@@ -544,4 +545,15 @@ TEST_F(TestSource, SourceUpdateValuesAndPapAndForceSyncWorks)
                                                                   kTestBufferLength, nullptr, 0u));
   EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 2u);
   EXPECT_EQ(disable_pap_data_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceProcessManualWorks)
+{
+  take_lock_and_process_sources_fake.custom_fake = [](process_sources_behavior_t behavior) {
+    EXPECT_EQ(behavior, kProcessManualSources);
+    return kTestReturnInt;
+  };
+
+  EXPECT_EQ(sacn_source_process_manual(), kTestReturnInt);
+  EXPECT_EQ(take_lock_and_process_sources_fake.call_count, 1u);
 }
