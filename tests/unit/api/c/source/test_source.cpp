@@ -60,8 +60,8 @@
 static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
 static const std::string kTestLocalName = std::string("Test Source");
 static const std::string kTestLocalName2 = std::string("Test Source 2");
-static const etcpal::SockAddr kTestRemoteAddrV4(etcpal::IpAddr::FromString("10.101.1.1"), 8888);
-static const etcpal::SockAddr kTestRemoteAddrV6(etcpal::IpAddr::FromString("2001:db8::1234:5678"), 8888);
+static const EtcPalIpAddr kTestRemoteAddrV4 = etcpal::IpAddr::FromString("10.101.1.1").get();
+static const EtcPalIpAddr kTestRemoteAddrV6 = etcpal::IpAddr::FromString("2001:db8::1234:5678").get();
 static const sacn_source_t kTestHandle = 123u;
 static const uint16_t kTestUniverse = 456u;
 static SacnMcastInterface kTestNetints[NUM_TEST_NETINTS] = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
@@ -125,7 +125,7 @@ protected:
 
   etcpal::Expected<etcpal::IpAddr> AddUnicastDestination(sacn_source_t source, uint16_t universe)
   {
-    EtcPalIpAddr test_ip = kTestRemoteAddrV4.ip().get();
+    EtcPalIpAddr test_ip = kTestRemoteAddrV4;
 
     SacnSource* source_state;
     SacnSourceUniverse* universe_state;
@@ -322,4 +322,27 @@ TEST_F(TestSource, SourceGetUniversesWorks)
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_get_universes(kTestHandle, nullptr, 0u), kTestReturnSize);
   EXPECT_EQ(get_source_universes_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceAddUnicastDestinationWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  reset_transmission_suppression_fake.custom_fake = [](const SacnSource* source, SacnSourceUniverse* universe,
+                                                       reset_transmission_suppression_behavior_t behavior) {
+    EXPECT_EQ(source->handle, kTestHandle);
+    EXPECT_EQ(universe->universe_id, kTestUniverse);
+    EXPECT_EQ(behavior, kResetNullAndPap);
+  };
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4),
+                                  kEtcPalErrOk);
+
+  SacnSource* source_state = nullptr;
+  SacnSourceUniverse* universe_state = nullptr;
+  SacnUnicastDestination* unicast_dest = nullptr;
+  EXPECT_EQ(lookup_source_and_universe(kTestHandle, kTestUniverse, &source_state, &universe_state), kEtcPalErrOk);
+  EXPECT_EQ(lookup_unicast_dest(universe_state, &kTestRemoteAddrV4, &unicast_dest), kEtcPalErrOk);
+
+  reset_transmission_suppression_fake.call_count = 1u;
 }
