@@ -129,7 +129,7 @@ static struct SacnMemBufs
   SamplingStartedNotificationBuf* sampling_started;
   SamplingEndedNotificationBuf* sampling_ended;
   SourceLimitExceededNotification* source_limit_exceeded;
-#else  // SACN_DYNAMIC_MEM
+#else   // SACN_DYNAMIC_MEM
   SacnSourceStatusLists status_lists[SACN_RECEIVER_MAX_THREADS];
   ToEraseBuf to_erase[SACN_RECEIVER_MAX_THREADS];
   SacnRecvThreadContext recv_thread_context[SACN_RECEIVER_MAX_THREADS];
@@ -431,7 +431,7 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
         return NULL;
       }
     }
-#else  // SACN_DYNAMIC_MEM
+#else   // SACN_DYNAMIC_MEM
     if (size > SACN_RECEIVER_MAX_UNIVERSES)
       return NULL;
 #endif  // SACN_DYNAMIC_MEM
@@ -775,9 +775,22 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
                                         SacnSourceUniverse** universe_state)
 {
   etcpal_error_t result = kEtcPalErrOk;
+
+#if SACN_DYNAMIC_MEM
+  // Make sure to check against universe_count_max.
+  if ((source->universe_count_max != SACN_SOURCE_INFINITE_UNIVERSES) &&
+      (source->num_universes >= source->universe_count_max))
+  {
+    result = kEtcPalErrNoMem;  // No room to allocate additional universe.
+  }
+#endif
+
   SacnSourceUniverse* universe = NULL;
-  if (lookup_universe(source, config->universe, &universe) == kEtcPalErrOk)
-    result = kEtcPalErrExists;
+  if (result == kEtcPalErrOk)
+  {
+    if (lookup_universe(source, config->universe, &universe) == kEtcPalErrOk)
+      result = kEtcPalErrExists;
+  }
 
   if (result == kEtcPalErrOk)
   {
@@ -885,16 +898,15 @@ etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalI
 }
 
 // Needs lock
-etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetintId* id,
-                                      SacnSourceNetint** netint_state)
+etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetintId* id)
 {
-  etcpal_error_t result = kEtcPalErrOk;
   SacnSourceNetint* netint = lookup_source_netint(source, id);
 
   if (netint)
-    result = kEtcPalErrExists;
-
-  if (result == kEtcPalErrOk)
+  {
+    ++netint->num_refs;
+  }
+  else
   {
     CHECK_ROOM_FOR_ONE_MORE(source, netints, SacnSourceNetint, SACN_MAX_NETINTS, kEtcPalErrNoMem);
 
@@ -903,9 +915,7 @@ etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetin
     netint->num_refs = 1;
   }
 
-  *netint_state = netint;
-
-  return result;
+  return kEtcPalErrOk;
 }
 
 // Needs lock

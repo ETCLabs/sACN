@@ -450,6 +450,12 @@ struct SacnSource
   uint8_t universe_discovery_send_buf[SACN_MTU];
 };
 
+typedef enum
+{
+  kEnableForceSync,
+  kDisableForceSync
+} force_sync_behavior_t;
+
 /******************************************************************************
  * Global variables, functions, and state tracking
  *****************************************************************************/

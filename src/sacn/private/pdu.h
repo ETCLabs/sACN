@@ -127,6 +127,8 @@ size_t pack_sacn_universe_discovery_layer_header(uint8_t* buf, uint16_t universe
 void init_sacn_data_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid,
                              const char* source_name, uint8_t priority, uint16_t universe, uint16_t sync_universe,
                              bool send_preview);
+void update_send_buf_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size,
+                          force_sync_behavior_t force_sync);
 
 #ifdef __cplusplus
 }
