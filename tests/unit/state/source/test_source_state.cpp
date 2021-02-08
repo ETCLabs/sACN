@@ -20,6 +20,7 @@
 #include "sacn/private/source_state.h"
 
 #include <limits>
+#include "etcpal/cpp/uuid.h"
 #include "etcpal_mock/common.h"
 #include "sacn_mock/private/common.h"
 #include "sacn_mock/private/sockets.h"
@@ -33,6 +34,24 @@
 #else
 #define TestSourceState TestSourceStateStatic
 #endif
+
+#define VERIFY_LOCKING_AND_RETURN_VALUE(function_call, expected_return_value) \
+  do                                                                          \
+  {                                                                           \
+    unsigned int previous_lock_count = sacn_lock_fake.call_count;             \
+    EXPECT_EQ(function_call, expected_return_value);                          \
+    EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);                \
+    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);        \
+  } while (0)
+
+static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
+static const std::string kTestLocalName = std::string("Test Source");
+static const SacnSourceConfig kTestSourceConfig = {kTestLocalCid.get(),
+                                                   kTestLocalName.c_str(),
+                                                   SACN_SOURCE_INFINITE_UNIVERSES,
+                                                   false,
+                                                   kSacnIpV4AndIpV6,
+                                                   SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT};
 
 class TestSourceState : public ::testing::Test
 {
@@ -49,12 +68,30 @@ protected:
 
   void TearDown() override
   {
+    next_source_handle_ = 0;
     sacn_source_state_deinit();
     sacn_mem_deinit();
   }
+
+  sacn_source_t next_source_handle_ = 0;
 };
 
-TEST_F(TestSourceState, Foo)
+TEST_F(TestSourceState, ProcessSourcesCountsSources)
 {
-  // TODO
+  SacnSource* tmp = nullptr;
+  SacnSourceConfig config = kTestSourceConfig;
+
+  config.manually_process_source = true;
+  EXPECT_EQ(add_sacn_source(next_source_handle_++, &config, &tmp), kEtcPalErrOk);
+  EXPECT_EQ(add_sacn_source(next_source_handle_++, &config, &tmp), kEtcPalErrOk);
+  EXPECT_EQ(add_sacn_source(next_source_handle_++, &config, &tmp), kEtcPalErrOk);
+  int num_manual_sources = next_source_handle_;
+
+  config.manually_process_source = false;
+  EXPECT_EQ(add_sacn_source(next_source_handle_++, &config, &tmp), kEtcPalErrOk);
+  EXPECT_EQ(add_sacn_source(next_source_handle_++, &config, &tmp), kEtcPalErrOk);
+  int num_threaded_sources = (next_source_handle_ - num_manual_sources);
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(take_lock_and_process_sources(kProcessManualSources), num_manual_sources);
+  VERIFY_LOCKING_AND_RETURN_VALUE(take_lock_and_process_sources(kProcessThreadedSources), num_threaded_sources);
 }
