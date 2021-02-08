@@ -145,7 +145,7 @@ TEST_F(TestSourceState, ProcessSourcesCountsSources)
   VERIFY_LOCKING_AND_RETURN_VALUE(take_lock_and_process_sources(kProcessThreadedSources), num_threaded_sources);
 }
 
-TEST_F(TestSourceState, DeinitMarksThreadedSourcesTerminating)
+TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
 {
   SacnSourceConfig source_config = kTestSourceConfig;
   source_config.manually_process_source = true;
