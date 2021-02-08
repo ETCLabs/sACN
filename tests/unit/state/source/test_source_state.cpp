@@ -73,24 +73,32 @@ protected:
     sacn_mem_deinit();
   }
 
+  SacnSource* AddSource(const SacnSourceConfig& config)
+  {
+    SacnSource* result = nullptr;
+    EXPECT_EQ(add_sacn_source(next_source_handle_++, &config, &result), kEtcPalErrOk);
+    return result;
+  }
+
+  int GetNumSourcesCreated() { return next_source_handle_; }
+
   sacn_source_t next_source_handle_ = 0;
 };
 
 TEST_F(TestSourceState, ProcessSourcesCountsSources)
 {
-  SacnSource* tmp = nullptr;
   SacnSourceConfig config = kTestSourceConfig;
 
   config.manually_process_source = true;
-  EXPECT_EQ(add_sacn_source(next_source_handle_++, &config, &tmp), kEtcPalErrOk);
-  EXPECT_EQ(add_sacn_source(next_source_handle_++, &config, &tmp), kEtcPalErrOk);
-  EXPECT_EQ(add_sacn_source(next_source_handle_++, &config, &tmp), kEtcPalErrOk);
-  int num_manual_sources = next_source_handle_;
+  AddSource(config);
+  AddSource(config);
+  AddSource(config);
+  int num_manual_sources = GetNumSourcesCreated();
 
   config.manually_process_source = false;
-  EXPECT_EQ(add_sacn_source(next_source_handle_++, &config, &tmp), kEtcPalErrOk);
-  EXPECT_EQ(add_sacn_source(next_source_handle_++, &config, &tmp), kEtcPalErrOk);
-  int num_threaded_sources = (next_source_handle_ - num_manual_sources);
+  AddSource(config);
+  AddSource(config);
+  int num_threaded_sources = (GetNumSourcesCreated() - num_manual_sources);
 
   VERIFY_LOCKING_AND_RETURN_VALUE(take_lock_and_process_sources(kProcessManualSources), num_manual_sources);
   VERIFY_LOCKING_AND_RETURN_VALUE(take_lock_and_process_sources(kProcessThreadedSources), num_threaded_sources);
