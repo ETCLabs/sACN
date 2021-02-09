@@ -221,3 +221,27 @@ TEST_F(TestSourceState, UniverseDiscoveryTimingIsCorrect)
     ++etcpal_getms_fake.return_val;
   }
 }
+
+TEST_F(TestSourceState, SourceTerminatingStopsUniverseDiscovery)
+{
+  etcpal_getms_fake.return_val = 0u;
+
+  sacn_source_t source_handle = AddSource(kTestSourceConfig);
+  AddUniverse(source_handle, kTestUniverseConfig);
+  InitTestLevels(source_handle, kTestUniverseConfig.universe, kTestBuffer, kTestBufferLength);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, 0u);
+
+  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, NUM_TEST_NETINTS);
+
+  set_source_terminating(*GetSource(source_handle));
+  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, NUM_TEST_NETINTS);
+  EXPECT_EQ(get_num_sources(), 1u);
+}
