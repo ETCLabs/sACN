@@ -135,6 +135,13 @@ protected:
                               kDisableForceSync);
   }
 
+  void AddUniverseForUniverseDiscovery(sacn_source_t source_handle, SacnSourceUniverseConfig& universe_config)
+  {
+    AddUniverse(source_handle, universe_config);
+    InitTestLevels(source_handle, universe_config.universe, kTestBuffer, kTestBufferLength);
+    ++universe_config.universe;
+  }
+
   sacn_source_t next_source_handle_ = 0;
 };
 
@@ -258,11 +265,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsForEachPage)
   for (int num_pages = 1; num_pages <= 4; ++num_pages)
   {
     for (int i = 0; i < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE; ++i)
-    {
-      AddUniverse(source_handle, universe_config);
-      InitTestLevels(source_handle, universe_config.universe, kTestBuffer, kTestBufferLength);
-      ++universe_config.universe;
-    }
+      AddUniverseForUniverseDiscovery(source_handle, universe_config);
 
     etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
 
@@ -300,11 +303,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
   for (int i = 0; i < 20; ++i)
   {
     for (int j = 0; j < 100; ++j)
-    {
-      AddUniverse(source_handle, universe_config);
-      InitTestLevels(source_handle, universe_config.universe, kTestBuffer, kTestBufferLength);
-      ++universe_config.universe;
-    }
+      AddUniverseForUniverseDiscovery(source_handle, universe_config);
 
     etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
@@ -324,15 +323,8 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectPageNumbers)
   sacn_source_t source_handle = AddSource(kTestSourceConfig);
 
   SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
-  for (int num_pages = 1; num_pages <= 4; ++num_pages)
-  {
-    for (int i = 0; i < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE; ++i)
-    {
-      AddUniverse(source_handle, universe_config);
-      InitTestLevels(source_handle, universe_config.universe, kTestBuffer, kTestBufferLength);
-      ++universe_config.universe;
-    }
-  }
+  for (int i = 0; i < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE * 4; ++i)
+    AddUniverseForUniverseDiscovery(source_handle, universe_config);
 
   etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
