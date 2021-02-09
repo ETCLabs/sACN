@@ -84,6 +84,7 @@ static void remove_from_source_netints(SacnSource* source, const EtcPalMcastNeti
 etcpal_error_t sacn_source_state_init(void)
 {
 #if SACN_SOURCE_ENABLED
+  shutting_down = false;
   init_int_handle_manager(&source_handle_mgr, source_handle_in_use, NULL);
 #endif
 

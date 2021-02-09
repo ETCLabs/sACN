@@ -23,6 +23,7 @@
 #include <optional>
 #include "etcpal/cpp/uuid.h"
 #include "etcpal_mock/common.h"
+#include "etcpal_mock/timer.h"
 #include "sacn_mock/private/common.h"
 #include "sacn_mock/private/sockets.h"
 #include "sacn/private/mem.h"
@@ -36,7 +37,7 @@
 #define TestSourceState TestSourceStateStatic
 #endif
 
-#define NUM_TEST_NETINTS 3
+#define NUM_TEST_NETINTS 3u
 #define VERIFY_LOCKING(function_call)                                  \
   do                                                                   \
   {                                                                    \
@@ -110,6 +111,10 @@ protected:
     SacnSourceUniverse* tmp = nullptr;
     EXPECT_EQ(add_sacn_source_universe(*GetSource(source), &config, kTestNetints, NUM_TEST_NETINTS, &tmp),
               kEtcPalErrOk);
+
+    for (size_t i = 0; i < NUM_TEST_NETINTS; ++i)
+      EXPECT_EQ(add_sacn_source_netint(*GetSource(source), &kTestNetints[i].iface), kEtcPalErrOk);
+
     return config.universe;
   }
 
@@ -125,8 +130,8 @@ protected:
 
   void InitTestLevels(sacn_source_t source, uint16_t universe, const uint8_t* levels, size_t levels_size)
   {
-    update_levels_and_or_paps(*GetSource(source), *GetUniverse(source, universe), levels, levels_size, nullptr,
-                              0u, kDisableForceSync);
+    update_levels_and_or_paps(*GetSource(source), *GetUniverse(source, universe), levels, levels_size, nullptr, 0u,
+                              kDisableForceSync);
   }
 
   sacn_source_t next_source_handle_ = 0;
@@ -193,4 +198,26 @@ TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
   EXPECT_EQ(GetSource(manual_source_2).value()->terminating, false);
   EXPECT_EQ(GetSource(threaded_source_1).value()->terminating, true);
   EXPECT_EQ(GetSource(threaded_source_2).value()->terminating, true);
+}
+
+TEST_F(TestSourceState, UniverseDiscoveryTimingIsCorrect)
+{
+  etcpal_getms_fake.return_val = 0u;
+
+  sacn_source_t source_handle = AddSource(kTestSourceConfig);
+  AddUniverse(source_handle, kTestUniverseConfig);
+  InitTestLevels(source_handle, kTestUniverseConfig.universe, kTestBuffer, kTestBufferLength);
+
+  for (int i = 0; i < 10; ++i)
+  {
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    EXPECT_EQ(sacn_send_multicast_fake.call_count, NUM_TEST_NETINTS * i);
+
+    etcpal_getms_fake.return_val += SACN_UNIVERSE_DISCOVERY_INTERVAL;
+
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    EXPECT_EQ(sacn_send_multicast_fake.call_count, NUM_TEST_NETINTS * i);
+
+    ++etcpal_getms_fake.return_val;
+  }
 }
