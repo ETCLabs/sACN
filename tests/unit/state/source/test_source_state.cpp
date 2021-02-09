@@ -123,6 +123,12 @@ protected:
       return std::nullopt;
   }
 
+  void InitTestLevels(sacn_source_t source, uint16_t universe, const uint8_t* levels, size_t levels_size)
+  {
+    update_levels_and_or_paps(*GetSource(source), *GetUniverse(source, universe), levels, levels_size, nullptr,
+                              0u, kDisableForceSync);
+  }
+
   sacn_source_t next_source_handle_ = 0;
 };
 
@@ -159,12 +165,8 @@ TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
   AddUniverse(threaded_source_1, kTestUniverseConfig);
   AddUniverse(threaded_source_2, kTestUniverseConfig);
 
-  update_levels_and_or_paps(*GetSource(threaded_source_1),
-                            *GetUniverse(threaded_source_1, kTestUniverseConfig.universe), kTestBuffer,
-                            kTestBufferLength, nullptr, 0u, kDisableForceSync);
-  update_levels_and_or_paps(*GetSource(threaded_source_2),
-                            *GetUniverse(threaded_source_2, kTestUniverseConfig.universe), kTestBuffer,
-                            kTestBufferLength, nullptr, 0u, kDisableForceSync);
+  InitTestLevels(threaded_source_1, kTestUniverseConfig.universe, kTestBuffer, kTestBufferLength);
+  InitTestLevels(threaded_source_2, kTestUniverseConfig.universe, kTestBuffer, kTestBufferLength);
 
   EXPECT_EQ(initialize_source_thread(), kEtcPalErrOk);
 
