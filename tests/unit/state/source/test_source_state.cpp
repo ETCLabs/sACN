@@ -245,3 +245,29 @@ TEST_F(TestSourceState, SourceTerminatingStopsUniverseDiscovery)
   EXPECT_EQ(sacn_send_multicast_fake.call_count, NUM_TEST_NETINTS);
   EXPECT_EQ(get_num_sources(), 1u);
 }
+
+TEST_F(TestSourceState, UniverseDiscoverySendsForEachPage)
+{
+  etcpal_getms_fake.return_val = 0u;
+
+  sacn_source_t source_handle = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  int last_send_count = sacn_send_multicast_fake.call_count;
+  for (int num_pages = 1; num_pages <= 4; ++num_pages)
+  {
+    for (int i = 0; i < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE; ++i)
+    {
+      AddUniverse(source_handle, universe_config);
+      InitTestLevels(source_handle, universe_config.universe, kTestBuffer, kTestBufferLength);
+      ++universe_config.universe;
+    }
+
+    etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    EXPECT_EQ(sacn_send_multicast_fake.call_count - last_send_count, num_pages * NUM_TEST_NETINTS);
+
+    last_send_count = sacn_send_multicast_fake.call_count;
+  }
+}
