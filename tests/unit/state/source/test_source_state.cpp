@@ -186,26 +186,26 @@ TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessManualSources));
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
-  EXPECT_EQ(GetSource(manual_source_1).value()->terminating, false);
-  EXPECT_EQ(GetSource(manual_source_2).value()->terminating, false);
-  EXPECT_EQ(GetSource(threaded_source_1).value()->terminating, false);
-  EXPECT_EQ(GetSource(threaded_source_2).value()->terminating, false);
+  EXPECT_EQ((*GetSource(manual_source_1))->terminating, false);
+  EXPECT_EQ((*GetSource(manual_source_2))->terminating, false);
+  EXPECT_EQ((*GetSource(threaded_source_1))->terminating, false);
+  EXPECT_EQ((*GetSource(threaded_source_2))->terminating, false);
 
   sacn_source_state_deinit();
 
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessManualSources));
 
-  EXPECT_EQ(GetSource(manual_source_1).value()->terminating, false);
-  EXPECT_EQ(GetSource(manual_source_2).value()->terminating, false);
-  EXPECT_EQ(GetSource(threaded_source_1).value()->terminating, false);
-  EXPECT_EQ(GetSource(threaded_source_2).value()->terminating, false);
+  EXPECT_EQ((*GetSource(manual_source_1))->terminating, false);
+  EXPECT_EQ((*GetSource(manual_source_2))->terminating, false);
+  EXPECT_EQ((*GetSource(threaded_source_1))->terminating, false);
+  EXPECT_EQ((*GetSource(threaded_source_2))->terminating, false);
 
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
-  EXPECT_EQ(GetSource(manual_source_1).value()->terminating, false);
-  EXPECT_EQ(GetSource(manual_source_2).value()->terminating, false);
-  EXPECT_EQ(GetSource(threaded_source_1).value()->terminating, true);
-  EXPECT_EQ(GetSource(threaded_source_2).value()->terminating, true);
+  EXPECT_EQ((*GetSource(manual_source_1))->terminating, false);
+  EXPECT_EQ((*GetSource(manual_source_2))->terminating, false);
+  EXPECT_EQ((*GetSource(threaded_source_1))->terminating, true);
+  EXPECT_EQ((*GetSource(threaded_source_2))->terminating, true);
 }
 
 TEST_F(TestSourceState, UniverseDiscoveryTimingIsCorrect)
