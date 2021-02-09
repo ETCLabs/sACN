@@ -28,6 +28,7 @@
 #include "sacn_mock/private/sockets.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
+#include "sacn/private/pdu.h"
 #include "gtest/gtest.h"
 #include "fff.h"
 
@@ -269,5 +270,43 @@ TEST_F(TestSourceState, UniverseDiscoverySendsForEachPage)
     EXPECT_EQ(sacn_send_multicast_fake.call_count - last_send_count, num_pages * NUM_TEST_NETINTS);
 
     last_send_count = sacn_send_multicast_fake.call_count;
+  }
+}
+
+TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
+{
+  sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
+                                            const EtcPalMcastNetintId*) {
+    int page = send_buf[SACN_UNIVERSE_DISCOVERY_PAGE_OFFSET];
+    int num_universes = (ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE])) + ACN_UDP_PREAMBLE_SIZE -
+                         SACN_UNIVERSE_DISCOVERY_HEADER_SIZE) /
+                        2;
+
+    EXPECT_LE(num_universes, SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE);
+
+    for (int i = 0; i < num_universes; ++i)
+    {
+      int expected_universe = i + 1 + (page * SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE);
+      int actual_universe = etcpal_unpack_u16b(&send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (i * 2)]);
+      EXPECT_EQ(actual_universe, expected_universe);
+    }
+  };
+
+  etcpal_getms_fake.return_val = 0u;
+
+  sacn_source_t source_handle = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (int i = 0; i < 20; ++i)
+  {
+    for (int j = 0; j < 100; ++j)
+    {
+      AddUniverse(source_handle, universe_config);
+      InitTestLevels(source_handle, universe_config.universe, kTestBuffer, kTestBufferLength);
+      ++universe_config.universe;
+    }
+
+    etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
   }
 }
