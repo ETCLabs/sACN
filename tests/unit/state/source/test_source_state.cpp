@@ -332,7 +332,6 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectPageNumbers)
 
 TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
 {
-
   etcpal_getms_fake.return_val = 0u;
 
   sacn_source_t source_handle = AddSource(kTestSourceConfig);
@@ -358,4 +357,26 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
     AddUniverseForUniverseDiscovery(source_handle, universe_config);
   etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+}
+
+TEST_F(TestSourceState, UniverseDiscoverySendsCorrectSequenceNumber)
+{
+  sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
+                                            const EtcPalMcastNetintId*) {
+    EXPECT_EQ(send_buf[SACN_SEQ_OFFSET], (sacn_send_multicast_fake.call_count - 1) / NUM_TEST_NETINTS);
+  };
+
+  etcpal_getms_fake.return_val = 0u;
+
+  sacn_source_t source_handle = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (int i = 0; i < 20; ++i)
+  {
+    for (int j = 0; j < 100; ++j)
+      AddUniverseForUniverseDiscovery(source_handle, universe_config);
+
+    etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  }
 }
