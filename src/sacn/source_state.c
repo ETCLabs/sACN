@@ -477,8 +477,15 @@ int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uin
   // Update universe count, page, and last page PDU fields
   SET_UNIVERSE_COUNT(source->universe_discovery_send_buf, num_universes_packed);
   SET_PAGE(source->universe_discovery_send_buf, page_number);
-  SET_LAST_PAGE(source->universe_discovery_send_buf,
-                (uint8_t)(source->num_active_universes / SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE));
+  if (source->num_active_universes > 0)
+  {
+    SET_LAST_PAGE(source->universe_discovery_send_buf,
+                  (uint8_t)((source->num_active_universes - 1) / SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE));
+  }
+  else
+  {
+    SET_LAST_PAGE(source->universe_discovery_send_buf, 0);
+  }
 
   // Return number of universes packed
   return num_universes_packed;
