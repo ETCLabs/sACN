@@ -773,18 +773,20 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
  * This function will update the outgoing packet values for both DMX and per-address priority data, and reset the logic
  * that slows down packet transmission due to inactivity.
  *
- * Per-address priority support has specific rules about when to send value changes vs. pap changes.  These rules are
- * documented in https://etclabs.github.io/sACN/docs/head/per_address_priority.html, and are triggered by the use of
- * this function. Changing per-address priorities to and from "don't care", changing the size of the priorities array,
- * or passing in NULL/non-NULL for the priorities will cause this library to do the necessary tasks to "take control" or
- * "release control" of the corresponding DMX values.
+ * The application should adhere to the rules for per-address priority (PAP) specified in
+ * https://etclabs.github.io/sACN/docs/head/per_address_priority.html. This API will adhere to the rules within the
+ * scope of the implementation, which involve handling transmission suppression and the order in which DMX and PAP
+ * packets are sent. For each slot the application releases control of (by setting the PAP to 0 or reducing the number
+ * of PAPs), it is recommended that the application also set that slot's corresponding DMX level to 0. This is left to
+ * the application.
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
  * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
- * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
- * per-address priorities or want to stop using per-address priorities.
+ * @param[in] new_priorities A buffer of per-address priorities to copy from. Setting this to NULL will stop the
+ * transmission of per-address priorities, in which case receivers will revert to the universe priority after PAP times
+ * out.
  * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
@@ -848,11 +850,12 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
  * the logic that slows down packet transmission due to inactivity. Additionally, both packets to be sent by this call
  * will have their force_synchronization option flags set.
  *
- * Per-address priority support has specific rules about when to send value changes vs. pap changes.  These rules are
- * documented in https://etclabs.github.io/sACN/docs/head/per_address_priority.html, and are triggered by the use of
- * this function. Changing per-address priorities to and from "don't care", changing the size of the priorities array,
- * or passing in NULL/non-NULL for the priorities will cause this library to do the necessary tasks to "take control" or
- * "release control" of the corresponding DMX values.
+ * The application should adhere to the rules for per-address priority (PAP) specified in
+ * https://etclabs.github.io/sACN/docs/head/per_address_priority.html. This API will adhere to the rules within the
+ * scope of the implementation, which involve handling transmission suppression and the order in which DMX and PAP
+ * packets are sent. For each slot the application releases control of (by setting the PAP to 0 or reducing the number
+ * of PAPs), it is recommended that the application also set that slot's corresponding DMX level to 0. This is left to
+ * the application.
  *
  * If no synchronization universe is configured, this function acts like a direct call to
  * sacn_source_update_values_and_pap().
@@ -863,8 +866,9 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
  * @param[in] universe Universe to update.
  * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
- * @param[in] new_priorities A buffer of per-address priorities to copy from. This may be NULL if you are not using
- * per-address priorities or want to stop using per-address priorities.
+ * @param[in] new_priorities A buffer of per-address priorities to copy from. Setting this to NULL will stop the
+ * transmission of per-address priorities, in which case receivers will revert to the universe priority after PAP times
+ * out.
  * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe,
