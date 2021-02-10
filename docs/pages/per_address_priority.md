@@ -9,7 +9,7 @@ To better handle multiple source control scenarios, the 0xDD sACN start code was
 The following acronyms and terms are used:
 - *sACN*,  *Streaming ACN*, *Streaming DMX*: Reference “BSR E1.31 DMX512-A Streaming Protocol”
 - *Receiver*: A device that receives sACN
-- *Source*: A device that sends sACN. Sources are uniquely identified by their CID number.
+- *Source*: A device that sends sACN. Sources are uniquely identified by their CID.
 - *DMX level(s)*: Property values associated with a Null START code data packet.
 - *HTP*: Highest Takes Precedence: The source with the highest level will have control.
 - *Packet priority field*: Value of priority field in an sACN packet.
