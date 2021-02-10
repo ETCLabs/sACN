@@ -81,13 +81,13 @@ etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSource
 etcpal_error_t lookup_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
                                    SacnUnicastDestination** unicast_dest);
 SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNetintId* id);
-SacnSourceNetint* lookup_source_netint_and_index(SacnSource* source, const EtcPalMcastNetintId* id, size_t* index);
-SacnSource* get_source(size_t index);
+SacnSourceNetint* lookup_source_netint_and_index(SacnSource* source, const EtcPalMcastNetintId* id, int* index);
+SacnSource* get_source(int index);
 size_t get_num_sources();
-void remove_sacn_source_netint(SacnSource* source, size_t index);
-void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index);
-void remove_sacn_source_universe(SacnSource* source, size_t index);
-void remove_sacn_source(size_t index);
+void remove_sacn_source_netint(SacnSource* source, int index);
+void remove_sacn_unicast_dest(SacnSourceUniverse* universe, int index);
+void remove_sacn_source_universe(SacnSource* source, int index);
+void remove_sacn_source(int index);
 
 #ifdef __cplusplus
 }
