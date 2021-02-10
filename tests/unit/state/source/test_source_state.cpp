@@ -98,40 +98,36 @@ protected:
     return (next_source_handle_ - 1);
   }
 
-  std::optional<SacnSource*> GetSource(sacn_source_t handle)
+  SacnSource* GetSource(sacn_source_t handle)
   {
     SacnSource* state = nullptr;
-    if (lookup_source(handle, &state) == kEtcPalErrOk)
-      return state;
-    else
-      return std::nullopt;
+    lookup_source(handle, &state);
+    return state;
   }
 
   uint16_t AddUniverse(sacn_source_t source, const SacnSourceUniverseConfig& config)
   {
     SacnSourceUniverse* tmp = nullptr;
-    EXPECT_EQ(add_sacn_source_universe(*GetSource(source), &config, kTestNetints, NUM_TEST_NETINTS, &tmp),
+    EXPECT_EQ(add_sacn_source_universe(GetSource(source), &config, kTestNetints, NUM_TEST_NETINTS, &tmp),
               kEtcPalErrOk);
 
     for (size_t i = 0; i < NUM_TEST_NETINTS; ++i)
-      EXPECT_EQ(add_sacn_source_netint(*GetSource(source), &kTestNetints[i].iface), kEtcPalErrOk);
+      EXPECT_EQ(add_sacn_source_netint(GetSource(source), &kTestNetints[i].iface), kEtcPalErrOk);
 
     return config.universe;
   }
 
-  std::optional<SacnSourceUniverse*> GetUniverse(sacn_source_t source, uint16_t universe)
+  SacnSourceUniverse* GetUniverse(sacn_source_t source, uint16_t universe)
   {
     SacnSource* source_state = nullptr;
     SacnSourceUniverse* universe_state = nullptr;
-    if (lookup_source_and_universe(source, universe, &source_state, &universe_state) == kEtcPalErrOk)
-      return universe_state;
-    else
-      return std::nullopt;
+    lookup_source_and_universe(source, universe, &source_state, &universe_state);
+    return universe_state;
   }
 
   void InitTestLevels(sacn_source_t source, uint16_t universe, const uint8_t* levels, size_t levels_size)
   {
-    update_levels_and_or_paps(*GetSource(source), *GetUniverse(source, universe), levels, levels_size, nullptr, 0u,
+    update_levels_and_or_paps(GetSource(source), GetUniverse(source, universe), levels, levels_size, nullptr, 0u,
                               kDisableForceSync);
   }
 
@@ -186,26 +182,26 @@ TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessManualSources));
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
-  EXPECT_EQ((*GetSource(manual_source_1))->terminating, false);
-  EXPECT_EQ((*GetSource(manual_source_2))->terminating, false);
-  EXPECT_EQ((*GetSource(threaded_source_1))->terminating, false);
-  EXPECT_EQ((*GetSource(threaded_source_2))->terminating, false);
+  EXPECT_EQ((GetSource(manual_source_1))->terminating, false);
+  EXPECT_EQ((GetSource(manual_source_2))->terminating, false);
+  EXPECT_EQ((GetSource(threaded_source_1))->terminating, false);
+  EXPECT_EQ((GetSource(threaded_source_2))->terminating, false);
 
   sacn_source_state_deinit();
 
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessManualSources));
 
-  EXPECT_EQ((*GetSource(manual_source_1))->terminating, false);
-  EXPECT_EQ((*GetSource(manual_source_2))->terminating, false);
-  EXPECT_EQ((*GetSource(threaded_source_1))->terminating, false);
-  EXPECT_EQ((*GetSource(threaded_source_2))->terminating, false);
+  EXPECT_EQ((GetSource(manual_source_1))->terminating, false);
+  EXPECT_EQ((GetSource(manual_source_2))->terminating, false);
+  EXPECT_EQ((GetSource(threaded_source_1))->terminating, false);
+  EXPECT_EQ((GetSource(threaded_source_2))->terminating, false);
 
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
-  EXPECT_EQ((*GetSource(manual_source_1))->terminating, false);
-  EXPECT_EQ((*GetSource(manual_source_2))->terminating, false);
-  EXPECT_EQ((*GetSource(threaded_source_1))->terminating, true);
-  EXPECT_EQ((*GetSource(threaded_source_2))->terminating, true);
+  EXPECT_EQ((GetSource(manual_source_1))->terminating, false);
+  EXPECT_EQ((GetSource(manual_source_2))->terminating, false);
+  EXPECT_EQ((GetSource(threaded_source_1))->terminating, true);
+  EXPECT_EQ((GetSource(threaded_source_2))->terminating, true);
 }
 
 TEST_F(TestSourceState, UniverseDiscoveryTimingIsCorrect)
@@ -246,7 +242,7 @@ TEST_F(TestSourceState, SourceTerminatingStopsUniverseDiscovery)
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
   EXPECT_EQ(sacn_send_multicast_fake.call_count, NUM_TEST_NETINTS);
 
-  set_source_terminating(*GetSource(source_handle));
+  set_source_terminating(GetSource(source_handle));
   etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
 
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
