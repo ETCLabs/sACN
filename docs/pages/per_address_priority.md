@@ -9,7 +9,7 @@ To better handle multiple source control scenarios, the 0xDD sACN start code was
 The following acronyms and terms are used:
 - *sACN*,  *Streaming ACN*, *Streaming DMX*: Reference “BSR E1.31 DMX512-A Streaming Protocol”
 - *Receiver*: A device that receives sACN
-- *Source*: A device that send sACN. Sources are uniquely identified by their CID number.
+- *Source*: A device that sends sACN. Sources are uniquely identified by their CID.
 - *DMX level(s)*: Property values associated with a Null START code data packet.
 - *HTP*: Highest Takes Precedence: The source with the highest level will have control.
 - *Packet priority field*: Value of priority field in an sACN packet.
@@ -34,15 +34,13 @@ The following acronyms and terms are used:
 7. Per-address priorities for sources that do not send 0xDD packets will be taken from the packet priority field. 
 8. The source follows the sACN rules for non-changing data for 0xDD packets as well, so a change of priorities for a universe is sent for 3 extra frames and then sent once every 800-1000ms. 
 9. When a source wants to take control of an address, it should set desired DMX level and then set the per-address priority to a non-0 value.
-10.	When a source wants to give up control of an address, it sets the per-address priority to a 0 value.  It is recommended that it subsequently sends out DMX levels of 0 for that address.
-11.	Setting a priority to zero may result in source loss behavior for the corresponding address if there is no other source that gets control.  
-It may be desirable for sources to provide a user configurable option to also set the data to 0 before setting the priority to 0.
-12. For some compatibility with receivers that don’t support the 0xDD packets, sources sending 0xDD packets shall also provide a packet priority value that applies to all addresses.  The default value for this priority shall be 100.  This allows for packet priority and HTP control between sources.
-13. When a receiver detects a new source, it waits for a 0xDD packet for up to 1.5 seconds before processing DMX levels from that source.  If a receiver does not detect a 0xDD packet, it fails back and uses the packet priority until a 0xDD packet is detected.   
-14.	When a receiver detects that a source has reached the sACN source loss timeout for 0xDD packets (e.g. no 0xDD packets in Universal Hold Last Look Time--2.5 seconds at minimum), but is still receiving NULL start code packets, the receiver shall fall back to using the sACN packet priority located in the NULL start code packets.
-15. When a receiver detects that a source has reached the sACN source loss timeout for NULL start code packets (e.g. no NULL start code packets in the Universal Hold Last Look Time--2.5 seconds at minimum) the receiver shall act as if the source has given up control of its addresses as stated in 4.16 even if 0xDD packets continue to be received.  
-The desired sequence for a source to terminate its sACN stream is to send three packets with the Stream_Terminated bit (6) of the Packet options field set to 1.  This will allow the device with the next highest priority to gain control after the appropriate sampling time resolution.
-16. When a receiver detects that a source has given up control of an address (by setting the priority for that address to 0), the receiver will give control to the source with next highest priority. If no source is available, source loss behavior for that address shall apply.
+10.	When a source wants to give up control of an address, it should set the per-address priority to zero. It is recommended to also set the DMX level to zero, because setting a priority to zero may result in source loss behavior for the corresponding address if there is no other source that gets control.
+11. For some compatibility with receivers that don’t support the 0xDD packets, sources sending 0xDD packets shall also provide a packet priority value that applies to all addresses.  The default value for this priority shall be 100.  This allows for packet priority and HTP control between sources.
+12. When a receiver detects a new source, it waits for a 0xDD packet for up to 1.5 seconds before processing DMX levels from that source.  If a receiver does not detect a 0xDD packet, it falls back and uses the packet priority until a 0xDD packet is detected.   
+13.	When a receiver detects that a source has reached the sACN source loss timeout for 0xDD packets (e.g. no 0xDD packets in Universal Hold Last Look Time--2.5 seconds at minimum), but is still receiving NULL start code packets, the receiver shall fall back to using the sACN packet priority located in the NULL start code packets.
+14. When a receiver detects that a source has reached the sACN source loss timeout for NULL start code packets (e.g. no NULL start code packets in the Universal Hold Last Look Time--2.5 seconds at minimum) the receiver shall act as if the source has given up control of its addresses as stated in 4.16 even if 0xDD packets continue to be received.  
+The desired sequence for a source to terminate its sACN stream is to send three NULL start code packets with the Stream_Terminated bit (6) of the Packet options field set to 1.  This will allow the device with the next highest priority to gain control after the appropriate sampling time resolution.
+15. When a receiver detects that a source has given up control of an address (by setting the priority for that address to 0), the receiver will give control to the source with next highest priority. If no source is available, source loss behavior for that address shall apply.
 
 # Summary
 In summary, priority may be specified on a per packet basis in sACN. This ETC extension allows priorities to be provided on a per-address basis using the alternate start code of 0xDD.
