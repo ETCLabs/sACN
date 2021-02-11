@@ -105,14 +105,14 @@ protected:
     return state;
   }
 
-  uint16_t AddUniverse(sacn_source_t source, const SacnSourceUniverseConfig& config)
+  uint16_t AddUniverse(sacn_source_t source, const SacnSourceUniverseConfig& config,
+                       SacnMcastInterface* netints = kTestNetints, size_t num_netints = NUM_TEST_NETINTS)
   {
     SacnSourceUniverse* tmp = nullptr;
-    EXPECT_EQ(add_sacn_source_universe(GetSource(source), &config, kTestNetints, NUM_TEST_NETINTS, &tmp),
-              kEtcPalErrOk);
+    EXPECT_EQ(add_sacn_source_universe(GetSource(source), &config, netints, num_netints, &tmp), kEtcPalErrOk);
 
-    for (size_t i = 0; i < NUM_TEST_NETINTS; ++i)
-      EXPECT_EQ(add_sacn_source_netint(GetSource(source), &kTestNetints[i].iface), kEtcPalErrOk);
+    for (size_t i = 0; i < num_netints; ++i)
+      EXPECT_EQ(add_sacn_source_netint(GetSource(source), &netints[i].iface), kEtcPalErrOk);
 
     return config.universe;
   }
@@ -131,9 +131,11 @@ protected:
                               kDisableForceSync);
   }
 
-  void AddUniverseForUniverseDiscovery(sacn_source_t source_handle, SacnSourceUniverseConfig& universe_config)
+  void AddUniverseForUniverseDiscovery(sacn_source_t source_handle, SacnSourceUniverseConfig& universe_config,
+                                       SacnMcastInterface* netints = kTestNetints,
+                                       size_t num_netints = NUM_TEST_NETINTS)
   {
-    AddUniverse(source_handle, universe_config);
+    AddUniverse(source_handle, universe_config, netints, num_netints);
     InitTestLevels(source_handle, universe_config.universe, kTestBuffer, kTestBufferLength);
     ++universe_config.universe;
   }
@@ -375,4 +377,26 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectSequenceNumber)
     etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
   }
+}
+
+TEST_F(TestSourceState, UniverseDiscoveryUsesCorrectNetints)
+{
+  sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t*,
+                                            const EtcPalMcastNetintId* netint) {
+    EXPECT_EQ(netint->ip_type, kTestNetints[sacn_send_multicast_fake.call_count - 1].iface.ip_type);
+    EXPECT_EQ(netint->index, kTestNetints[sacn_send_multicast_fake.call_count - 1].iface.index);
+  };
+
+  etcpal_getms_fake.return_val = 0u;
+
+  sacn_source_t source_handle = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (int i = 0; i < NUM_TEST_NETINTS; ++i)
+    AddUniverseForUniverseDiscovery(source_handle, universe_config, &kTestNetints[i], 1u);
+
+  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, NUM_TEST_NETINTS);
 }
