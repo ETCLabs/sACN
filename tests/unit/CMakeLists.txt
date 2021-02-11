@@ -34,3 +34,4 @@ endfunction()
 
 add_subdirectory(utils)
 add_subdirectory(api)
+add_subdirectory(state)

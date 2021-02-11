@@ -52,6 +52,7 @@ extern "C" {
 
 #define SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE 512
 #define SACN_DISCOVERY_UNIVERSE 64214
+#define SACN_UNIVERSE_DISCOVERY_INTERVAL 10000
 
 /*
  * This ensures there are always enough SocketRefs. This is multiplied by 2 because SocketRefs come in pairs - one for

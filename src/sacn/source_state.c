@@ -84,6 +84,7 @@ static void remove_from_source_netints(SacnSource* source, const EtcPalMcastNeti
 etcpal_error_t sacn_source_state_init(void)
 {
 #if SACN_SOURCE_ENABLED
+  shutting_down = false;
   init_int_handle_manager(&source_handle_mgr, source_handle_in_use, NULL);
 #endif
 
@@ -208,8 +209,8 @@ int process_sources(process_sources_behavior_t behavior)
 {
   int num_sources_tracked = 0;
 
-  // Iterate the sources backwards to allow for removals
-  for (size_t i = get_num_sources() - 1; i >= 0; --i)
+  // Iterate the sources backwards to allow for removals (i must not be unsigned)
+  for (int i = get_num_sources() - 1; i >= 0; --i)
   {
     SacnSource* source = get_source(i);
 
@@ -251,8 +252,8 @@ void process_universe_discovery(SacnSource* source)
 // Needs lock
 void process_universes(SacnSource* source)
 {
-  // Iterate the universes backwards to allow for removals
-  for (size_t i = source->num_universes - 1; i >= 0; --i)
+  // Iterate the universes backwards to allow for removals (i must not be unsigned)
+  for (int i = source->num_universes - 1; i >= 0; --i)
   {
     SacnSourceUniverse* universe = &source->universes[i];
 
@@ -270,8 +271,8 @@ void process_universes(SacnSource* source)
 // Needs lock
 void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe)
 {
-  // Iterate unicast destinations backwards to allow for removals
-  for (size_t i = universe->num_unicast_dests - 1; i >= 0; --i)
+  // Iterate unicast destinations backwards to allow for removals (i must not be unsigned)
+  for (int i = universe->num_unicast_dests - 1; i >= 0; --i)
   {
     SacnUnicastDestination* dest = &universe->unicast_dests[i];
 
@@ -476,8 +477,15 @@ int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uin
   // Update universe count, page, and last page PDU fields
   SET_UNIVERSE_COUNT(source->universe_discovery_send_buf, num_universes_packed);
   SET_PAGE(source->universe_discovery_send_buf, page_number);
-  SET_LAST_PAGE(source->universe_discovery_send_buf,
-                (uint8_t)(source->num_active_universes / SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE));
+  if (source->num_active_universes > 0)
+  {
+    SET_LAST_PAGE(source->universe_discovery_send_buf,
+                  (uint8_t)((source->num_active_universes - 1) / SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE));
+  }
+  else
+  {
+    SET_LAST_PAGE(source->universe_discovery_send_buf, 0);
+  }
 
   // Return number of universes packed
   return num_universes_packed;

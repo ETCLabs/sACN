@@ -33,7 +33,6 @@
 /**************************** Private constants ******************************/
 
 #define INITIAL_CAPACITY 8
-#define UNIVERSE_DISCOVERY_INTERVAL 10000
 
 /****************************** Private macros *******************************/
 
@@ -724,7 +723,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     memcpy(source->name, config->name, strlen(config->name));
     source->terminating = false;
     source->num_active_universes = 0;
-    etcpal_timer_start(&source->universe_discovery_timer, UNIVERSE_DISCOVERY_INTERVAL);
+    etcpal_timer_start(&source->universe_discovery_timer, SACN_UNIVERSE_DISCOVERY_INTERVAL);
     source->process_manually = config->manually_process_source;
     source->ip_supported = config->ip_supported;
     source->keep_alive_interval = config->keep_alive_interval;
