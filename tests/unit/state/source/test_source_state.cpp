@@ -443,3 +443,33 @@ TEST_F(TestSourceState, UniverseDiscoveryExcludesUniversesWithoutData)
   etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 }
+
+TEST_F(TestSourceState, UniverseDiscoveryExcludesUnicastOnlyUniverses)
+{
+  sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
+                                            const EtcPalMcastNetintId*) {
+    int num_universes = (ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE])) + ACN_UDP_PREAMBLE_SIZE -
+                         SACN_UNIVERSE_DISCOVERY_HEADER_SIZE) /
+                        2;
+
+    for (int i = 0; i < num_universes; ++i)
+    {
+      int universe = etcpal_unpack_u16b(&send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (i * 2)]);
+      EXPECT_EQ(universe % 2, 1);
+    }
+  };
+
+  etcpal_getms_fake.return_val = 0u;
+
+  sacn_source_t source_handle = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (int i = 0; i < 100; ++i)
+  {
+    universe_config.send_unicast_only = (i % 2);
+    AddUniverseForUniverseDiscovery(source_handle, universe_config);
+  }
+
+  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+}
