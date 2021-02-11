@@ -339,7 +339,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectPageNumbers)
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 }
 
-int universe_discovery_sends_correct_last_page_iteration = 0;
+static int universe_discovery_sends_correct_last_page_iteration = 0;
 TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
 {
   etcpal_getms_fake.return_val = 0u;
@@ -408,4 +408,38 @@ TEST_F(TestSourceState, UniverseDiscoveryUsesCorrectNetints)
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
   EXPECT_EQ(sacn_send_multicast_fake.call_count, NUM_TEST_NETINTS);
+}
+
+TEST_F(TestSourceState, UniverseDiscoveryExcludesUniversesWithoutData)
+{
+  sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
+                                            const EtcPalMcastNetintId*) {
+    int num_universes = (ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE])) + ACN_UDP_PREAMBLE_SIZE -
+                         SACN_UNIVERSE_DISCOVERY_HEADER_SIZE) /
+                        2;
+
+    for (int i = 0; i < num_universes; ++i)
+    {
+      int universe = etcpal_unpack_u16b(&send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (i * 2)]);
+      EXPECT_EQ(universe % 2, 0);
+    }
+  };
+
+  etcpal_getms_fake.return_val = 0u;
+
+  sacn_source_t source_handle = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (int i = 0; i < 100; ++i)
+  {
+    AddUniverse(source_handle, universe_config);
+
+    if (i % 2)
+      InitTestLevels(source_handle, universe_config.universe, kTestBuffer, kTestBufferLength);
+
+    ++universe_config.universe;
+  }
+
+  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 }
