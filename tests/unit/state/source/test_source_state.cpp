@@ -76,6 +76,8 @@ static const EtcPalIpAddr kTestRemoteAddrs[NUM_TEST_ADDRS] = {
     etcpal::IpAddr::FromString("10.101.1.1").get(), etcpal::IpAddr::FromString("10.101.1.2").get(),
     etcpal::IpAddr::FromString("10.101.1.3").get(), etcpal::IpAddr::FromString("10.101.1.4").get()};
 
+// Some of the tests use these variables to communicate with their custom_fake lambdas.
+static int current_test_iteration = 0;
 static int current_remote_addr_index = 0;
 
 class TestSourceState : public ::testing::Test
@@ -288,20 +290,19 @@ TEST_F(TestSourceState, UniverseDiscoverySendsForEachPage)
   }
 }
 
-static int universe_discovery_sends_correct_universe_lists_iteration = 0;
 TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
 {
   ASSERT_EQ(SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE % 4, 0);
 
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                             const EtcPalMcastNetintId*) {
-    int iteration = universe_discovery_sends_correct_universe_lists_iteration;
     int page = send_buf[SACN_UNIVERSE_DISCOVERY_PAGE_OFFSET];
     int last_page = send_buf[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET];
     int max_universes_per_page = SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE;
     int expected_num_universes =
-        (page < last_page) ? max_universes_per_page
-                           : ((((iteration * (max_universes_per_page / 4)) - 1) % max_universes_per_page) + 1);
+        (page < last_page)
+            ? max_universes_per_page
+            : ((((current_test_iteration * (max_universes_per_page / 4)) - 1) % max_universes_per_page) + 1);
     int actual_num_universes = (ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE])) + ACN_UDP_PREAMBLE_SIZE -
                                 SACN_UNIVERSE_DISCOVERY_HEADER_SIZE) /
                                2;
@@ -323,7 +324,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
   SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
   for (int i = 0; i < 10; ++i)
   {
-    universe_discovery_sends_correct_universe_lists_iteration = (i + 1);
+    current_test_iteration = (i + 1);
 
     for (int j = 0; j < (SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE / 4); ++j)
       AddUniverseForUniverseDiscovery(source_handle, universe_config);
@@ -353,7 +354,6 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectPageNumbers)
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 }
 
-static int universe_discovery_sends_correct_last_page_iteration = 0;
 TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
 {
   etcpal_getms_fake.return_val = 0u;
@@ -364,12 +364,11 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
 
   for (int i = 0; i < 4; ++i)
   {
-    universe_discovery_sends_correct_last_page_iteration = i;
+    current_test_iteration = i;
 
     sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                               const EtcPalMcastNetintId*) {
-      EXPECT_EQ(send_buf[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET],
-                universe_discovery_sends_correct_last_page_iteration);
+      EXPECT_EQ(send_buf[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET], current_test_iteration);
     };
 
     for (int j = 0; j < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE; ++j)
