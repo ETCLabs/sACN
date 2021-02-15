@@ -710,7 +710,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     // Initialize the universe discovery send buffer.
     memset(source->universe_discovery_send_buf, 0, SACN_MTU);
 
-    size_t written = 0;
+    int written = 0;
     written += pack_sacn_root_layer(source->universe_discovery_send_buf, SACN_UNIVERSE_DISCOVERY_HEADER_SIZE, true,
                                     &config->cid);
     written +=
