@@ -277,7 +277,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     }
     else
     {
-      for (int i = 0; i < (int)config->num_unicast_destinations; ++i)
+      for (size_t i = 0; i < config->num_unicast_destinations; ++i)
       {
         if (ETCPAL_IP_IS_INVALID(&config->unicast_destinations[i]))
           result = kEtcPalErrInvalid;
@@ -298,7 +298,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       result = add_sacn_source_universe(source, config, netints, num_netints, &universe);
 
     // Update the source's netint tracking.
-    for (int i = 0; (result == kEtcPalErrOk) && (i < (int)universe->netints.num_netints); ++i)
+    for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->netints.num_netints); ++i)
       result = add_sacn_source_netint(source, &universe->netints.netints[i]);
 
     sacn_unlock();
@@ -954,12 +954,12 @@ etcpal_error_t sacn_source_reset_networking(SacnMcastInterface* netints, size_t 
   {
     sacn_sockets_reset_source();
 
-    for (int i = 0; (result == kEtcPalErrOk) && (i < (int)get_num_sources()); ++i)
+    for (size_t i = 0; (result == kEtcPalErrOk) && (i < get_num_sources()); ++i)
     {
       SacnSource* source = get_source(i);
       clear_source_netints(source);
 
-      for (int j = 0; (result == kEtcPalErrOk) && (j < (int)source->num_universes); ++j)
+      for (size_t j = 0; (result == kEtcPalErrOk) && (j < source->num_universes); ++j)
         result = reset_source_universe_networking(source, &source->universes[j], netints, num_netints);
     }
 
@@ -1014,14 +1014,14 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUnivers
   {
     // Validate netint_lists. It must include all universes of all sources and nothing more.
     size_t total_num_universes = 0;
-    for (int i = 0; (result == kEtcPalErrOk) && (i < (int)get_num_sources()); ++i)
+    for (size_t i = 0; (result == kEtcPalErrOk) && (i < get_num_sources()); ++i)
     {
-      for (int j = 0; (result == kEtcPalErrOk) && (j < (int)get_source(i)->num_universes); ++j)
+      for (size_t j = 0; (result == kEtcPalErrOk) && (j < get_source(i)->num_universes); ++j)
       {
         ++total_num_universes;
 
         bool found = false;
-        for (int k = 0; !found && (k < (int)num_netint_lists); ++k)
+        for (size_t k = 0; !found && (k < num_netint_lists); ++k)
         {
           found = ((get_source(i)->handle == netint_lists[k].handle) &&
                    (get_source(i)->universes[j].universe_id == netint_lists[k].universe));
@@ -1042,11 +1042,11 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUnivers
     {
       sacn_sockets_reset_source();
 
-      for (int i = 0; i < (int)get_num_sources(); ++i)
+      for (size_t i = 0; i < get_num_sources(); ++i)
         clear_source_netints(get_source(i));
     }
 
-    for (int i = 0; (result == kEtcPalErrOk) && (i < (int)num_netint_lists); ++i)
+    for (size_t i = 0; (result == kEtcPalErrOk) && (i < num_netint_lists); ++i)
     {
       const SacnSourceUniverseNetintList* netint_list = &netint_lists[i];
 

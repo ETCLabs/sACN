@@ -60,7 +60,7 @@ static int process_sources(process_sources_behavior_t behavior);
 static void process_universe_discovery(SacnSource* source);
 static void process_universes(SacnSource* source);
 static void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe);
-static void process_universe_termination(SacnSource* source, int index);
+static void process_universe_termination(SacnSource* source, size_t index);
 static void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniverse* universe);
 static void process_null_sent(SacnSourceUniverse* universe);
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -70,7 +70,7 @@ static void send_termination_multicast(const SacnSource* source, SacnSourceUnive
 static void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe,
                                      SacnUnicastDestination* dest);
 static void send_universe_discovery(SacnSource* source);
-static int pack_universe_discovery_page(SacnSource* source, int* universe_index, uint8_t page_number);
+static int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uint8_t page_number);
 static void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_levels,
                           size_t new_levels_size, force_sync_behavior_t force_sync);
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -289,7 +289,7 @@ void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe)
 }
 
 // Needs lock
-void process_universe_termination(SacnSource* source, int index)
+void process_universe_termination(SacnSource* source, size_t index)
 {
   SacnSourceUniverse* universe = &source->universes[index];
 
@@ -303,7 +303,7 @@ void process_universe_termination(SacnSource* source, int index)
       --source->num_active_universes;
 
     // Update the netints tree
-    for (int i = 0; i < (int)universe->netints.num_netints; ++i)
+    for (size_t i = 0; i < universe->netints.num_netints; ++i)
       remove_from_source_netints(source, &universe->netints.netints[i]);
 
     remove_sacn_source_universe(source, index);
@@ -410,14 +410,14 @@ void send_universe_discovery(SacnSource* source)
   if (source->num_netints > 0)
   {
     // Initialize universe index and page number
-    int universe_index = 0;
+    size_t universe_index = 0;
     uint8_t page_number = 0;
 
     // Pack the next page & loop while there's a page to send
     while (pack_universe_discovery_page(source, &universe_index, page_number) > 0)
     {
       // Send multicast on IPv4 and/or IPv6
-      for (int i = 0; i < (int)source->num_netints; ++i)
+      for (size_t i = 0; i < source->num_netints; ++i)
       {
         sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, source->ip_supported, source->universe_discovery_send_buf,
                             &source->netints[i].id);
@@ -435,7 +435,7 @@ void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
 {
   if (!universe->send_unicast_only)
   {
-    for (int i = 0; i < (int)universe->netints.num_netints; ++i)
+    for (size_t i = 0; i < universe->netints.num_netints; ++i)
       sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]);
   }
 }
@@ -443,19 +443,19 @@ void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
 // Needs lock
 void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
 {
-  for (int i = 0; i < (int)universe->num_unicast_dests; ++i)
+  for (size_t i = 0; i < universe->num_unicast_dests; ++i)
     sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr);
 }
 
 // Needs lock
-int pack_universe_discovery_page(SacnSource* source, int* universe_index, uint8_t page_number)
+int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uint8_t page_number)
 {
   // Initialize packing pointer and universe counter
   uint8_t* pcur = &source->universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE];
   int num_universes_packed = 0;
 
   // Iterate up to 512 universes (sorted)
-  while ((*universe_index < (int)source->num_universes) &&
+  while ((*universe_index < source->num_universes) &&
          (num_universes_packed < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE))
   {
     const SacnSourceUniverse* universe = &source->universes[*universe_index];
@@ -544,7 +544,7 @@ void set_source_terminating(SacnSource* source)
     source->terminating = true;
 
     // Set terminating for each universe of this source
-    for (int i = 0; i < (int)source->num_universes; ++i)
+    for (size_t i = 0; i < source->num_universes; ++i)
       set_universe_terminating(&source->universes[i]);
   }
 }
@@ -560,7 +560,7 @@ void set_universe_terminating(SacnSourceUniverse* universe)
     universe->num_terminations_sent = 0;
 
     // Set terminating for each unicast destination of this universe
-    for (int i = 0; i < (int)universe->num_unicast_dests; ++i)
+    for (size_t i = 0; i < universe->num_unicast_dests; ++i)
       set_unicast_dest_terminating(&universe->unicast_dests[i]);
   }
 }
@@ -606,7 +606,7 @@ void set_source_name(SacnSource* source, const char* new_name)
   strncpy((char*)(&source->universe_discovery_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
 
   // For each universe:
-  for (int i = 0; i < (int)source->num_universes; ++i)
+  for (size_t i = 0; i < source->num_universes; ++i)
   {
     SacnSourceUniverse* universe = &source->universes[i];
 
@@ -622,7 +622,7 @@ void set_source_name(SacnSource* source, const char* new_name)
 // Needs lock
 size_t get_source_universes(const SacnSource* source, uint16_t* universes, size_t universes_size)
 {
-  for (int i = 0; (i < (int)source->num_universes) && universes && (i < (int)universes_size); ++i)
+  for (size_t i = 0; (i < source->num_universes) && universes && (i < universes_size); ++i)
     universes[i] = source->universes[i].universe_id;
 
   return source->num_universes;
@@ -632,7 +632,7 @@ size_t get_source_universes(const SacnSource* source, uint16_t* universes, size_
 size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr* destinations,
                                 size_t destinations_size)
 {
-  for (int i = 0; (i < (int)universe->num_unicast_dests) && destinations && (i < (int)destinations_size); ++i)
+  for (size_t i = 0; (i < universe->num_unicast_dests) && destinations && (i < destinations_size); ++i)
     destinations[i] = universe->unicast_dests[i].dest_addr;
 
   return universe->num_unicast_dests;
@@ -642,7 +642,7 @@ size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr
 size_t get_source_universe_netints(const SacnSourceUniverse* universe, EtcPalMcastNetintId* netints,
                                    size_t netints_size)
 {
-  for (int i = 0; netints && (i < (int)netints_size) && (i < (int)universe->netints.num_netints); ++i)
+  for (size_t i = 0; netints && (i < netints_size) && (i < universe->netints.num_netints); ++i)
     netints[i] = universe->netints.netints[i];
 
   return universe->netints.num_netints;
@@ -666,8 +666,8 @@ etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUn
 {
   etcpal_error_t result = sacn_initialize_source_netints(&universe->netints, netints, num_netints);
 
-  for (int i = 0; (result == kEtcPalErrOk) && (i < (int)universe->netints.num_netints); ++i)
-    result = add_sacn_source_netint(source, &universe->netints.netints[i]);
+  for (size_t k = 0; (result == kEtcPalErrOk) && (k < universe->netints.num_netints); ++k)
+    result = add_sacn_source_netint(source, &universe->netints.netints[k]);
 
   if (result == kEtcPalErrOk)
     reset_transmission_suppression(source, universe, kResetNullAndPap);
@@ -695,7 +695,7 @@ void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bo
 
 void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id)
 {
-  int netint_index = 0;
+  size_t netint_index = 0;
   SacnSourceNetint* netint_state = lookup_source_netint_and_index(source, id, &netint_index);
 
   if (netint_state)

@@ -81,7 +81,7 @@
   {                                                                                                       \
     --container->num_##buffer;                                                                            \
                                                                                                           \
-    if (index < (int)container->num_##buffer)                                                             \
+    if (index < container->num_##buffer)                                                                  \
     {                                                                                                     \
       memmove(&container->buffer[index], &container->buffer[index + 1], container->num_##buffer - index); \
     }                                                                                                     \
@@ -150,10 +150,10 @@ static struct SacnMemBufs
 static void zero_status_lists(SacnSourceStatusLists* status_lists);
 static void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t size);
 
-static int get_source_index(sacn_source_t handle, bool* found);
-static int get_source_universe_index(SacnSource* source, uint16_t universe, bool* found);
-static int get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found);
-static int get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found);
+static size_t get_source_index(sacn_source_t handle, bool* found);
+static size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found);
+static size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found);
+static size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found);
 
 #if SACN_DYNAMIC_MEM
 static size_t grow_capacity(size_t old_capacity, size_t capacity_requested);
@@ -459,7 +459,7 @@ SamplingStartedNotification* get_sampling_started_buffer(sacn_thread_id_t thread
     CHECK_CAPACITY(notifications, size, buf, SamplingStartedNotification, SACN_RECEIVER_MAX_UNIVERSES, NULL);
 
     memset(notifications->buf, 0, size * sizeof(SamplingStartedNotification));
-    for (int i = 0; i < (int)size; ++i)
+    for (size_t i = 0; i < size; ++i)
       notifications->buf[i].handle = SACN_RECEIVER_INVALID;
 
     return notifications->buf;
@@ -485,7 +485,7 @@ SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id,
     CHECK_CAPACITY(notifications, size, buf, SamplingEndedNotification, SACN_RECEIVER_MAX_UNIVERSES, NULL);
 
     memset(notifications->buf, 0, size * sizeof(SamplingEndedNotification));
-    for (int i = 0; i < (int)size; ++i)
+    for (size_t i = 0; i < size; ++i)
       notifications->buf[i].handle = SACN_RECEIVER_INVALID;
 
     return notifications->buf;
@@ -631,14 +631,14 @@ bool remove_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket
 {
   SACN_ASSERT(recv_thread_context);
 
-  for (int i = 0; i < (int)recv_thread_context->num_socket_refs; ++i)
+  for (size_t i = 0; i < recv_thread_context->num_socket_refs; ++i)
   {
     SocketRef* ref = &recv_thread_context->socket_refs[i];
     if (ref->sock == socket)
     {
       if (--ref->refcount == 0)
       {
-        if (i < (int)recv_thread_context->num_socket_refs - 1)
+        if (i < recv_thread_context->num_socket_refs - 1)
           memmove(ref, ref + 1, (recv_thread_context->num_socket_refs - 1 - i) * sizeof(SocketRef));
         --recv_thread_context->num_socket_refs;
         return true;
@@ -710,7 +710,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     // Initialize the universe discovery send buffer.
     memset(source->universe_discovery_send_buf, 0, SACN_MTU);
 
-    int written = 0;
+    size_t written = 0;
     written += pack_sacn_root_layer(source->universe_discovery_send_buf, SACN_UNIVERSE_DISCOVERY_HEADER_SIZE, true,
                                     &config->cid);
     written +=
@@ -832,7 +832,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 #endif
   }
 
-  for (int i = 0; (result == kEtcPalErrOk) && (i < (int)config->num_unicast_destinations); ++i)
+  for (size_t i = 0; (result == kEtcPalErrOk) && (i < config->num_unicast_destinations); ++i)
   {
     SacnUnicastDestination* dest = NULL;
     result = add_sacn_unicast_dest(universe, &config->unicast_destinations[i], &dest);
@@ -933,7 +933,7 @@ etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t univers
 etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state)
 {
   bool found = false;
-  int index = get_source_index(handle, &found);
+  size_t index = get_source_index(handle, &found);
   *source_state = found ? &mem_bufs.sources[index] : NULL;
   return found ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
@@ -942,7 +942,7 @@ etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state)
 etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSourceUniverse** universe_state)
 {
   bool found = false;
-  int index = get_source_universe_index(source, universe, &found);
+  size_t index = get_source_universe_index(source, universe, &found);
   *universe_state = found ? &source->universes[index] : NULL;
   return found ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
@@ -952,7 +952,7 @@ etcpal_error_t lookup_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpA
                                    SacnUnicastDestination** unicast_dest)
 {
   bool found = false;
-  int index = get_unicast_dest_index(universe, addr, &found);
+  size_t index = get_unicast_dest_index(universe, addr, &found);
   *unicast_dest = found ? &universe->unicast_dests[index] : NULL;
   return found ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
@@ -961,21 +961,21 @@ etcpal_error_t lookup_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpA
 SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNetintId* id)
 {
   bool found = false;
-  int index = get_source_netint_index(source, id, &found);
+  size_t index = get_source_netint_index(source, id, &found);
   return found ? &source->netints[index] : NULL;
 }
 
 // Needs lock
-SacnSourceNetint* lookup_source_netint_and_index(SacnSource* source, const EtcPalMcastNetintId* id, int* index)
+SacnSourceNetint* lookup_source_netint_and_index(SacnSource* source, const EtcPalMcastNetintId* id, size_t* index)
 {
   bool found = false;
   *index = get_source_netint_index(source, id, &found);
   return found ? &source->netints[*index] : NULL;
 }
 
-SacnSource* get_source(int index)
+SacnSource* get_source(size_t index)
 {
-  return (index < (int)mem_bufs.num_sources) ? &mem_bufs.sources[index] : NULL;
+  return (index < mem_bufs.num_sources) ? &mem_bufs.sources[index] : NULL;
 }
 
 size_t get_num_sources()
@@ -984,19 +984,19 @@ size_t get_num_sources()
 }
 
 // Needs lock
-void remove_sacn_source_netint(SacnSource* source, int index)
+void remove_sacn_source_netint(SacnSource* source, size_t index)
 {
   REMOVE_AT_INDEX(source, netints, index);
 }
 
 // Needs lock
-void remove_sacn_unicast_dest(SacnSourceUniverse* universe, int index)
+void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index)
 {
   REMOVE_AT_INDEX(universe, unicast_dests, index);
 }
 
 // Needs lock
-void remove_sacn_source_universe(SacnSource* source, int index)
+void remove_sacn_source_universe(SacnSource* source, size_t index)
 {
 #if SACN_DYNAMIC_MEM
   if (source->universes[index].unicast_dests)
@@ -1008,7 +1008,7 @@ void remove_sacn_source_universe(SacnSource* source, int index)
 }
 
 // Needs lock
-void remove_sacn_source(int index)
+void remove_sacn_source(size_t index)
 {
 #if SACN_DYNAMIC_MEM
   if (mem_bufs.sources[index].universes)
@@ -1039,12 +1039,12 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
   }
 }
 
-int get_source_index(sacn_source_t handle, bool* found)
+size_t get_source_index(sacn_source_t handle, bool* found)
 {
   *found = false;
-  int index = 0;
+  size_t index = 0;
 
-  while (!(*found) && (index < (int)mem_bufs.num_sources))
+  while (!(*found) && (index < mem_bufs.num_sources))
   {
     if (mem_bufs.sources[index].handle == handle)
       *found = true;
@@ -1055,12 +1055,12 @@ int get_source_index(sacn_source_t handle, bool* found)
   return index;
 }
 
-int get_source_universe_index(SacnSource* source, uint16_t universe, bool* found)
+size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found)
 {
   *found = false;
-  int index = 0;
+  size_t index = 0;
 
-  while (!(*found) && (index < (int)source->num_universes))
+  while (!(*found) && (index < source->num_universes))
   {
     if (source->universes[index].universe_id == universe)
       *found = true;
@@ -1071,12 +1071,12 @@ int get_source_universe_index(SacnSource* source, uint16_t universe, bool* found
   return index;
 }
 
-int get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found)
+size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found)
 {
   *found = false;
-  int index = 0;
+  size_t index = 0;
 
-  while (!(*found) && (index < (int)universe->num_unicast_dests))
+  while (!(*found) && (index < universe->num_unicast_dests))
   {
     if (etcpal_ip_cmp(&universe->unicast_dests[index].dest_addr, addr) == 0)
       *found = true;
@@ -1087,12 +1087,12 @@ int get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* add
   return index;
 }
 
-int get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found)
+size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found)
 {
   *found = false;
-  int index = 0;
+  size_t index = 0;
 
-  while (!(*found) && (index < (int)source->num_netints))
+  while (!(*found) && (index < source->num_netints))
   {
     if ((source->netints[index].id.index == id->index) && (source->netints[index].id.ip_type == id->ip_type))
       *found = true;
@@ -1439,9 +1439,10 @@ void deinit_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_buf)
 
   if (sources_lost_buf->buf)
   {
-    for (int i = 0; i < (int)sources_lost_buf->buf_capacity; ++i)
+    for (size_t i = 0; i < sources_lost_buf->buf_capacity; ++i)
+    {
       deinit_sources_lost_entry(&sources_lost_buf->buf[i]);
-
+    }
     free(sources_lost_buf->buf);
   }
 }
