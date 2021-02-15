@@ -695,7 +695,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
 
       // Send on the network
       send_universe_multicast(source_state, universe_state, send_buf);
-      send_universe_unicast(source_state, universe_state, send_buf);
+      send_universe_unicast(source_state, universe_state, send_buf, kIncludeTerminatingUnicastDests);
       increment_sequence_number(universe_state);
     }
 

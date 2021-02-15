@@ -315,7 +315,7 @@ void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniver
   {
     // Send 0x00 data & reset the keep-alive timer
     send_universe_multicast(source, universe, universe->null_send_buf);
-    send_universe_unicast(source, universe, universe->null_send_buf);
+    send_universe_unicast(source, universe, universe->null_send_buf, kSkipTerminatingUnicastDests);
     increment_sequence_number(universe);
 
     if (universe->null_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
@@ -330,7 +330,7 @@ void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniver
   {
     // Send 0xDD data & reset the keep-alive timer
     send_universe_multicast(source, universe, universe->pap_send_buf);
-    send_universe_unicast(source, universe, universe->pap_send_buf);
+    send_universe_unicast(source, universe, universe->pap_send_buf, kSkipTerminatingUnicastDests);
     increment_sequence_number(universe);
 
     if (universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
@@ -425,11 +425,12 @@ void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
 }
 
 // Needs lock
-void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
+void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf,
+                           send_universe_unicast_behavior_t behavior)
 {
   for (size_t i = 0; i < universe->num_unicast_dests; ++i)
   {
-    if (!universe->unicast_dests[i].terminating)
+    if ((behavior != kSkipTerminatingUnicastDests) || !universe->unicast_dests[i].terminating)
       sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr);
   }
 }
