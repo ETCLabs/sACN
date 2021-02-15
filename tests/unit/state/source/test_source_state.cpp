@@ -21,6 +21,7 @@
 
 #include <limits>
 #include <optional>
+#include "etcpal/cpp/inet.h"
 #include "etcpal/cpp/uuid.h"
 #include "etcpal_mock/common.h"
 #include "etcpal_mock/timer.h"
@@ -39,6 +40,7 @@
 #endif
 
 #define NUM_TEST_NETINTS 3u
+#define NUM_TEST_ADDRS 4u
 #define VERIFY_LOCKING(function_call)                                  \
   do                                                                   \
   {                                                                    \
@@ -70,6 +72,11 @@ static SacnMcastInterface kTestNetints[NUM_TEST_NETINTS] = {{{kEtcPalIpTypeV4, 1
                                                             {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
 static const uint8_t* kTestBuffer = (uint8_t*)"ABCDEFGHIJKL";
 static const size_t kTestBufferLength = strlen((char*)kTestBuffer);
+static const EtcPalIpAddr kTestRemoteAddrs[NUM_TEST_ADDRS] = {
+    etcpal::IpAddr::FromString("10.101.1.1").get(), etcpal::IpAddr::FromString("10.101.1.2").get(),
+    etcpal::IpAddr::FromString("10.101.1.3").get(), etcpal::IpAddr::FromString("10.101.1.4").get()};
+
+static int current_remote_addr_index = 0;
 
 class TestSourceState : public ::testing::Test
 {
@@ -138,6 +145,13 @@ protected:
     AddUniverse(source_handle, universe_config, netints, num_netints);
     InitTestLevels(source_handle, universe_config.universe, kTestBuffer, kTestBufferLength);
     ++universe_config.universe;
+  }
+
+  void AddTestUnicastDests(sacn_source_t source, uint16_t universe)
+  {
+    SacnUnicastDestination* tmp = nullptr;
+    for (int i = 0; i < NUM_TEST_ADDRS; ++i)
+      EXPECT_EQ(add_sacn_unicast_dest(GetUniverse(source, universe), &kTestRemoteAddrs[i], &tmp), kEtcPalErrOk);
   }
 
   sacn_source_t next_source_handle_ = 0;
@@ -472,4 +486,41 @@ TEST_F(TestSourceState, UniverseDiscoveryExcludesUnicastOnlyUniverses)
 
   etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+}
+
+TEST_F(TestSourceState, UnicastDestsWithDataTerminateCorrectly)
+{
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
+                                          const EtcPalIpAddr* dest_addr) {
+    EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
+    EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
+    EXPECT_EQ(etcpal_ip_cmp(dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
+
+    --current_remote_addr_index;
+  };
+
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  AddUniverse(source, kTestUniverseConfig, kTestNetints, NUM_TEST_NETINTS);
+  InitTestLevels(source, kTestUniverseConfig.universe, kTestBuffer, kTestBufferLength);
+  AddTestUnicastDests(source, kTestUniverseConfig.universe);
+
+  for (int i = 0; i < NUM_TEST_ADDRS; ++i)
+    set_unicast_dest_terminating(&GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[i]);
+
+  for (int i = 0; i < 3; ++i)
+  {
+    uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->seq_num;
+
+    current_remote_addr_index = (NUM_TEST_ADDRS - 1);
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+    for (int j = 0; j < NUM_TEST_ADDRS; ++j)
+      EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[j].num_terminations_sent, i + 1);
+
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests, (i < 2) ? NUM_TEST_ADDRS : 0u);
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->seq_num - old_seq_num, (uint8_t)NUM_TEST_ADDRS);
+    EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, kTestUniverseConfig.universe)->null_send_buf), 0x00u);
+  }
+
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, NUM_TEST_ADDRS * 3u);
 }
