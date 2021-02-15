@@ -62,10 +62,6 @@ static void process_universes(SacnSource* source);
 static void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe);
 static void process_universe_termination(SacnSource* source, size_t index);
 static void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniverse* universe);
-static void process_null_sent(SacnSourceUniverse* universe);
-#if SACN_ETC_PRIORITY_EXTENSION
-static void process_pap_sent(SacnSourceUniverse* universe);
-#endif
 static void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe);
 static void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe,
                                      SacnUnicastDestination* dest);
@@ -320,7 +316,11 @@ void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniver
     // Send 0x00 data & reset the keep-alive timer
     send_universe_multicast(source, universe, universe->null_send_buf);
     send_universe_unicast(source, universe, universe->null_send_buf);
-    process_null_sent(universe);
+    increment_sequence_number(universe);
+
+    if (universe->null_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
+      ++universe->null_packets_sent_before_suppression;
+
     etcpal_timer_reset(&universe->null_keep_alive_timer);
   }
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -331,7 +331,11 @@ void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniver
     // Send 0xDD data & reset the keep-alive timer
     send_universe_multicast(source, universe, universe->pap_send_buf);
     send_universe_unicast(source, universe, universe->pap_send_buf);
-    process_pap_sent(universe);
+    increment_sequence_number(universe);
+
+    if (universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
+      ++universe->pap_packets_sent_before_suppression;
+
     etcpal_timer_reset(&universe->pap_keep_alive_timer);
   }
 #endif
@@ -348,26 +352,6 @@ void increment_sequence_number(SacnSourceUniverse* universe)
 }
 
 // Needs lock
-void process_null_sent(SacnSourceUniverse* universe)
-{
-  increment_sequence_number(universe);
-
-  if (universe->null_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
-    ++universe->null_packets_sent_before_suppression;
-}
-
-#if SACN_ETC_PRIORITY_EXTENSION
-// Needs lock
-void process_pap_sent(SacnSourceUniverse* universe)
-{
-  increment_sequence_number(universe);
-
-  if (universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
-    ++universe->pap_packets_sent_before_suppression;
-}
-#endif
-
-// Needs lock
 void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe)
 {
   // Repurpose null_send_buf for the termination packet
@@ -376,7 +360,7 @@ void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* un
 
   // Send the termination packet on multicast only
   send_universe_multicast(source, universe, universe->null_send_buf);
-  process_null_sent(universe);
+  increment_sequence_number(universe);
 
   // Increment the termination counter
   ++universe->num_terminations_sent;
@@ -394,7 +378,7 @@ void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
 
   // Send the termination packet on unicast only
   sacn_send_unicast(source->ip_supported, universe->null_send_buf, &dest->dest_addr);
-  process_null_sent(universe);
+  increment_sequence_number(universe);
 
   // Increment the termination counter
   ++dest->num_terminations_sent;
@@ -444,7 +428,10 @@ void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
 void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
 {
   for (size_t i = 0; i < universe->num_unicast_dests; ++i)
-    sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr);
+  {
+    if (!universe->unicast_dests[i].terminating)
+      sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr);
+  }
 }
 
 // Needs lock
