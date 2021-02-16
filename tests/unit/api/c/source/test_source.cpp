@@ -71,7 +71,7 @@ static const uint8_t kTestStartCode = 0x12u;
 static const uint8_t* kTestBuffer = (uint8_t*)"ABCDEFGHIJKL";
 static const size_t kTestBufferLength = strlen((char*)kTestBuffer);
 static const uint8_t* kTestBuffer2 = (uint8_t*)"MNOPQRSTUVWXYZ";
-static const size_t kTestBuffer2Length = strlen((char*)kTestBuffer);
+static const size_t kTestBuffer2Length = strlen((char*)kTestBuffer2);
 static SacnMcastInterface kTestNetints[NUM_TEST_NETINTS] = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                             {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
                                                             {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
