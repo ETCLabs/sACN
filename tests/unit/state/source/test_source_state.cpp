@@ -83,8 +83,8 @@ static const EtcPalIpAddr kTestRemoteAddrs[NUM_TEST_ADDRS] = {
     etcpal::IpAddr::FromString("10.101.1.3").get(), etcpal::IpAddr::FromString("10.101.1.4").get()};
 
 // Some of the tests use these variables to communicate with their custom_fake lambdas.
-static unsigned int num_universe_discovery_sends = 0;
-static unsigned int num_universe_data_sends = 0;
+static unsigned int num_universe_discovery_sends = 0u;
+static unsigned int num_universe_data_sends = 0u;
 static int current_test_iteration = 0;
 static int current_remote_addr_index = 0;
 static int current_universe = 0;
@@ -117,6 +117,9 @@ protected:
 
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_source_state_init(), kEtcPalErrOk);
+
+    num_universe_data_sends = 0u;
+    num_universe_discovery_sends = 0u;
   }
 
   void TearDown() override
@@ -251,7 +254,6 @@ TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
 TEST_F(TestSourceState, UniverseDiscoveryTimingIsCorrect)
 {
   etcpal_getms_fake.return_val = 0u;
-  num_universe_discovery_sends = 0;
 
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                             const EtcPalMcastNetintId*) {
@@ -280,7 +282,6 @@ TEST_F(TestSourceState, UniverseDiscoveryTimingIsCorrect)
 TEST_F(TestSourceState, SourceTerminatingStopsUniverseDiscovery)
 {
   etcpal_getms_fake.return_val = 0u;
-  num_universe_discovery_sends = 0;
 
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                             const EtcPalMcastNetintId*) {
@@ -311,7 +312,6 @@ TEST_F(TestSourceState, SourceTerminatingStopsUniverseDiscovery)
 TEST_F(TestSourceState, UniverseDiscoverySendsForEachPage)
 {
   etcpal_getms_fake.return_val = 0u;
-  num_universe_discovery_sends = 0;
 
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                             const EtcPalMcastNetintId*) {
@@ -385,7 +385,6 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
 
 TEST_F(TestSourceState, UniverseDiscoverySendsCorrectPageNumbers)
 {
-  num_universe_discovery_sends = 0;
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                             const EtcPalMcastNetintId*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
@@ -435,7 +434,6 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
 
 TEST_F(TestSourceState, UniverseDiscoverySendsCorrectSequenceNumber)
 {
-  num_universe_discovery_sends = 0;
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                             const EtcPalMcastNetintId*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
@@ -462,7 +460,6 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectSequenceNumber)
 
 TEST_F(TestSourceState, UniverseDiscoveryUsesCorrectNetints)
 {
-  num_universe_discovery_sends = 0;
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                             const EtcPalMcastNetintId* netint) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
@@ -559,7 +556,6 @@ TEST_F(TestSourceState, UniverseDiscoveryExcludesUnicastOnlyUniverses)
 
 TEST_F(TestSourceState, RemovingUniversesUpdatesUniverseDiscovery)
 {
-  num_universe_discovery_sends = 0;
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                             const EtcPalMcastNetintId*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
@@ -667,7 +663,6 @@ TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateCorrectly)
 
 TEST_F(TestSourceState, UniversesWithDataTerminateCorrectly)
 {
-  num_universe_data_sends = 0;
   sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
                                             const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {
     if (IS_UNIVERSE_DATA(send_buf))
