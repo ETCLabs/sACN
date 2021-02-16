@@ -746,3 +746,47 @@ TEST_F(TestSourceState, UniversesWithoutDataTerminateCorrectly)
   EXPECT_EQ(GetSource(source)->num_universes, 0u);
   EXPECT_EQ(num_universe_data_sends, 0u);
 }
+
+TEST_F(TestSourceState, OnlyActiveUniverseRemovalsUpdateCounter)
+{
+  // Active universes are universes that should be included in universe discovery. Inactive universes should not. The
+  // active universes counter should only decrement when an active universe is removed.
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  uint16_t active_universe = AddUniverse(source, universe_config, kTestNetints, NUM_TEST_NETINTS);
+  InitTestLevels(source, active_universe, kTestBuffer, kTestBufferLength);
+  ++universe_config.universe;
+  uint16_t inactive_universe_1 = AddUniverse(source, universe_config, kTestNetints, NUM_TEST_NETINTS);
+  ++universe_config.universe;
+  universe_config.send_unicast_only = true;
+  uint16_t inactive_universe_2 = AddUniverse(source, universe_config, kTestNetints, NUM_TEST_NETINTS);
+  InitTestLevels(source, active_universe, kTestBuffer, kTestBufferLength);
+  ++universe_config.universe;
+  uint16_t inactive_universe_3 = AddUniverse(source, universe_config, kTestNetints, NUM_TEST_NETINTS);
+
+  size_t old_count = GetSource(source)->num_active_universes;
+
+  set_universe_terminating(GetUniverse(source, inactive_universe_1));
+  for (int i = 0; i < 3; ++i)
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(GetSource(source)->num_active_universes, old_count);
+
+  set_universe_terminating(GetUniverse(source, inactive_universe_2));
+  for (int i = 0; i < 3; ++i)
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(GetSource(source)->num_active_universes, old_count);
+
+  set_universe_terminating(GetUniverse(source, inactive_universe_3));
+  for (int i = 0; i < 3; ++i)
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(GetSource(source)->num_active_universes, old_count);
+
+  set_universe_terminating(GetUniverse(source, active_universe));
+  for (int i = 0; i < 3; ++i)
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(GetSource(source)->num_active_universes, old_count - 1u);
+}
