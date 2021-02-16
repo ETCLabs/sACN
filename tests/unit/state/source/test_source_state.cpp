@@ -84,8 +84,11 @@ static const EtcPalIpAddr kTestRemoteAddrs[NUM_TEST_ADDRS] = {
 
 // Some of the tests use these variables to communicate with their custom_fake lambdas.
 static unsigned int num_universe_discovery_sends = 0;
+static unsigned int num_universe_data_sends = 0;
 static int current_test_iteration = 0;
 static int current_remote_addr_index = 0;
+static int current_universe = 0;
+static int current_netint_index = 0;
 
 class TestSourceState : public ::testing::Test
 {
@@ -660,4 +663,65 @@ TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateCorrectly)
   EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->seq_num - old_seq_num, (uint8_t)0u);  // No data to send.
 
   EXPECT_EQ(sacn_send_unicast_fake.call_count, 0u);
+}
+
+TEST_F(TestSourceState, UniversesWithDataTerminateCorrectly)
+{
+  num_universe_data_sends = 0;
+  sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
+                                            const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {
+    if (IS_UNIVERSE_DATA(send_buf))
+    {
+      EXPECT_EQ(universe_id, current_universe);
+      EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
+      EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
+      EXPECT_EQ(netint->ip_type, kTestNetints[current_netint_index].iface.ip_type);
+      EXPECT_EQ(netint->index, kTestNetints[current_netint_index].iface.index);
+
+      current_netint_index = (current_netint_index + 1) % NUM_TEST_NETINTS;
+
+      if (current_netint_index == 0)
+        --current_universe;
+
+      ++num_universe_data_sends;
+    }
+  };
+
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (universe_config.universe = 1; universe_config.universe <= 10u; ++universe_config.universe)
+  {
+    AddUniverse(source, universe_config, kTestNetints, NUM_TEST_NETINTS);
+    InitTestLevels(source, universe_config.universe, kTestBuffer, kTestBufferLength);
+    set_universe_terminating(GetUniverse(source, universe_config.universe));
+  }
+
+  for (int i = 0; i < 3; ++i)
+  {
+    uint8_t old_seq_num[10];
+    for (uint16_t j = 0; j < 10u; ++j)
+      old_seq_num[j] = GetUniverse(source, j + 1u)->seq_num;
+
+    current_universe = 10;
+    current_netint_index = 0;
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+    if (i < 2)
+    {
+      for (uint16_t j = 0u; j < 10u; ++j)
+      {
+        EXPECT_EQ(GetUniverse(source, j + 1u)->num_terminations_sent, i + 1);
+        EXPECT_EQ(GetUniverse(source, j + 1u)->seq_num - old_seq_num[j], (uint8_t)1u);
+        EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, j + 1u)->null_send_buf), 0x00u);
+      }
+
+      EXPECT_EQ(GetSource(source)->num_universes, 10u);
+    }
+    else
+    {
+      EXPECT_EQ(GetSource(source)->num_universes, 0u);
+    }
+  }
+
+  EXPECT_EQ(num_universe_data_sends, NUM_TEST_NETINTS * 30u);
 }
