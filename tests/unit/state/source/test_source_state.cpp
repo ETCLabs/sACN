@@ -487,6 +487,48 @@ TEST_F(TestSourceState, UniverseDiscoveryExcludesUnicastOnlyUniverses)
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 }
 
+TEST_F(TestSourceState, RemovingUniversesUpdatesUniverseDiscovery)
+{
+  sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
+                                            const EtcPalMcastNetintId*) {
+    int expected_num_universes = (10 - current_test_iteration);
+    int actual_num_universes = (ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE])) + ACN_UDP_PREAMBLE_SIZE -
+                                SACN_UNIVERSE_DISCOVERY_HEADER_SIZE) /
+                               2;
+
+    EXPECT_EQ(actual_num_universes, expected_num_universes);
+
+    for (int i = 0; i < expected_num_universes; ++i)
+    {
+      int expected_universe = i + 1;
+      int actual_universe = etcpal_unpack_u16b(&send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (i * 2)]);
+      EXPECT_EQ(actual_universe, expected_universe);
+    }
+  };
+
+  etcpal_getms_fake.return_val = 0u;
+
+  sacn_source_t source_handle = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+
+  for (int i = 0; i < 10; ++i)
+    AddUniverseForUniverseDiscovery(source_handle, universe_config);
+
+  for (current_test_iteration = 0; current_test_iteration < 10; ++current_test_iteration)
+  {
+    set_universe_terminating(GetUniverse(source_handle, (uint16_t)(10u - current_test_iteration)));
+
+    for (int i = 0; i < 3; ++i)
+    {
+      etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+      VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    }
+
+    EXPECT_EQ(sacn_send_multicast_fake.call_count, NUM_TEST_NETINTS * 3u * (current_test_iteration + 1u));
+  }
+}
+
 TEST_F(TestSourceState, UnicastDestsWithDataTerminateCorrectly)
 {
   sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
