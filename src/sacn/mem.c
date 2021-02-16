@@ -76,15 +76,16 @@
 
 #endif  // SACN_DYNAMIC_MEM
 
-#define REMOVE_AT_INDEX(container, buffer, index)                                                         \
-  do                                                                                                      \
-  {                                                                                                       \
-    --container->num_##buffer;                                                                            \
-                                                                                                          \
-    if (index < container->num_##buffer)                                                                  \
-    {                                                                                                     \
-      memmove(&container->buffer[index], &container->buffer[index + 1], container->num_##buffer - index); \
-    }                                                                                                     \
+#define REMOVE_AT_INDEX(container, buffer_type, buffer, index)          \
+  do                                                                    \
+  {                                                                     \
+    --container->num_##buffer;                                          \
+                                                                        \
+    if (index < container->num_##buffer)                                \
+    {                                                                   \
+      memmove(&container->buffer[index], &container->buffer[index + 1], \
+              (container->num_##buffer - index) * sizeof(buffer_type)); \
+    }                                                                   \
   } while (0)
 
 /****************************** Private types ********************************/
@@ -986,13 +987,13 @@ size_t get_num_sources()
 // Needs lock
 void remove_sacn_source_netint(SacnSource* source, size_t index)
 {
-  REMOVE_AT_INDEX(source, netints, index);
+  REMOVE_AT_INDEX(source, SacnSourceNetint, netints, index);
 }
 
 // Needs lock
 void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index)
 {
-  REMOVE_AT_INDEX(universe, unicast_dests, index);
+  REMOVE_AT_INDEX(universe, SacnUnicastDestination, unicast_dests, index);
 }
 
 // Needs lock
@@ -1004,7 +1005,7 @@ void remove_sacn_source_universe(SacnSource* source, size_t index)
   if (source->universes[index].netints.netints)
     free(source->universes[index].netints.netints);
 #endif
-  REMOVE_AT_INDEX(source, universes, index);
+  REMOVE_AT_INDEX(source, SacnSourceUniverse, universes, index);
 }
 
 // Needs lock
@@ -1016,7 +1017,7 @@ void remove_sacn_source(size_t index)
   if (mem_bufs.sources[index].netints)
     free(mem_bufs.sources[index].netints);
 #endif
-  REMOVE_AT_INDEX((&mem_bufs), sources, index);
+  REMOVE_AT_INDEX((&mem_bufs), SacnSource, sources, index);
 }
 
 void zero_status_lists(SacnSourceStatusLists* status_lists)

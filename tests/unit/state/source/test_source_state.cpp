@@ -790,3 +790,31 @@ TEST_F(TestSourceState, OnlyActiveUniverseRemovalsUpdateCounter)
 
   EXPECT_EQ(GetSource(source)->num_active_universes, old_count - 1u);
 }
+
+TEST_F(TestSourceState, UniverseRemovalUpdatesSourceNetints)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (size_t num_netints = NUM_TEST_NETINTS; num_netints >= 1u; --num_netints)
+  {
+    AddUniverse(source, universe_config, &kTestNetints[NUM_TEST_NETINTS - num_netints], num_netints);
+    ++universe_config.universe;
+  }
+
+  for (int i = 0; i < NUM_TEST_NETINTS; ++i)
+  {
+    EXPECT_EQ(GetSource(source)->num_netints, NUM_TEST_NETINTS - i);
+    for (size_t j = 0u; j < GetSource(source)->num_netints; ++j)
+    {
+      EXPECT_EQ(GetSource(source)->netints[j].id.ip_type, kTestNetints[j + i].iface.ip_type);
+      EXPECT_EQ(GetSource(source)->netints[j].id.index, kTestNetints[j + i].iface.index);
+      EXPECT_EQ(GetSource(source)->netints[j].num_refs, j + 1u);
+    }
+
+    set_universe_terminating(GetUniverse(source, (uint16_t)(i + 1)));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  }
+
+  EXPECT_EQ(GetSource(source)->num_netints, 0u);
+}
