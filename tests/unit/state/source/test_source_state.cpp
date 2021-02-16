@@ -720,3 +720,27 @@ TEST_F(TestSourceState, UniversesWithDataTerminateCorrectly)
 
   EXPECT_EQ(num_universe_data_sends, NUM_TEST_NETINTS * 30u);
 }
+
+TEST_F(TestSourceState, UniversesWithoutDataTerminateCorrectly)
+{
+  sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
+                                            const EtcPalMcastNetintId*) {
+    if (IS_UNIVERSE_DATA(send_buf))
+      ++num_universe_data_sends;
+  };
+
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (universe_config.universe = 1; universe_config.universe <= 10u; ++universe_config.universe)
+  {
+    AddUniverse(source, universe_config, kTestNetints, NUM_TEST_NETINTS);
+    set_universe_terminating(GetUniverse(source, universe_config.universe));
+  }
+
+  EXPECT_EQ(GetSource(source)->num_universes, 10u);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(GetSource(source)->num_universes, 0u);
+  EXPECT_EQ(num_universe_data_sends, 0u);
+}
