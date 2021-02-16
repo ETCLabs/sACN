@@ -687,6 +687,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateCorrectly)
   for (universe_config.universe = 1; universe_config.universe <= 10u; ++universe_config.universe)
   {
     AddUniverse(source, universe_config, kTestNetints, NUM_TEST_NETINTS);
+    AddTestUnicastDests(source, universe_config.universe);
     InitTestLevels(source, universe_config.universe, kTestBuffer, kTestBufferLength);
     set_universe_terminating(GetUniverse(source, universe_config.universe));
   }
@@ -706,7 +707,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateCorrectly)
       for (uint16_t j = 0u; j < 10u; ++j)
       {
         EXPECT_EQ(GetUniverse(source, j + 1u)->num_terminations_sent, i + 1);
-        EXPECT_EQ(GetUniverse(source, j + 1u)->seq_num - old_seq_num[j], (uint8_t)1u);
+        EXPECT_EQ(GetUniverse(source, j + 1u)->seq_num - old_seq_num[j], (uint8_t)(NUM_TEST_ADDRS + 1u));
         EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, j + 1u)->null_send_buf), 0x00u);
       }
 
@@ -734,6 +735,7 @@ TEST_F(TestSourceState, UniversesWithoutDataTerminateCorrectly)
   for (universe_config.universe = 1; universe_config.universe <= 10u; ++universe_config.universe)
   {
     AddUniverse(source, universe_config, kTestNetints, NUM_TEST_NETINTS);
+    AddTestUnicastDests(source, universe_config.universe);
     set_universe_terminating(GetUniverse(source, universe_config.universe));
   }
 
