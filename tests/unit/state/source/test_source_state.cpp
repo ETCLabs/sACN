@@ -567,3 +567,24 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateCorrectly)
 
   EXPECT_EQ(sacn_send_unicast_fake.call_count, NUM_TEST_ADDRS * 3u);
 }
+
+TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateCorrectly)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  AddUniverse(source, kTestUniverseConfig, kTestNetints, NUM_TEST_NETINTS);
+  AddTestUnicastDests(source, kTestUniverseConfig.universe);
+
+  for (int i = 0; i < NUM_TEST_ADDRS; ++i)
+    set_unicast_dest_terminating(&GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[i]);
+
+  uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->seq_num;
+
+  EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests, NUM_TEST_ADDRS);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests, 0u);
+  EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->seq_num - old_seq_num, (uint8_t)0u);  // No data to send.
+
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, 0u);
+}
