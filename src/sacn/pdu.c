@@ -107,7 +107,7 @@ bool parse_draft_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderD
   return true;
 }
 
-size_t pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const EtcPalUuid* source_cid)
+int pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const EtcPalUuid* source_cid)
 {
   uint8_t* pcur = buf;
 
@@ -128,12 +128,12 @@ size_t pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, co
   memcpy(pcur, source_cid->data, ETCPAL_UUID_BYTES);
   pcur += ETCPAL_UUID_BYTES;
 
-  return (size_t)(pcur - buf);
+  return (int)(pcur - buf);
 }
 
-size_t pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t vector, const char* source_name,
-                                    uint8_t priority, uint16_t sync_address, uint8_t seq_num, bool preview,
-                                    bool terminated, bool force_sync, uint16_t universe_id)
+int pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t vector, const char* source_name,
+                                 uint8_t priority, uint16_t sync_address, uint8_t seq_num, bool preview,
+                                 bool terminated, bool force_sync, uint16_t universe_id)
 {
   ETCPAL_UNUSED_ARG(sync_address);  // TODO sacn_sync
   ETCPAL_UNUSED_ARG(force_sync);    // TODO sacn_sync
@@ -171,10 +171,10 @@ size_t pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t 
   etcpal_pack_u16b(pcur, universe_id);
   pcur += 2;
 
-  return (size_t)(pcur - buf);
+  return (int)(pcur - buf);
 }
 
-size_t pack_sacn_dmp_layer_header(uint8_t* buf, uint8_t start_code, uint16_t slot_count)
+int pack_sacn_dmp_layer_header(uint8_t* buf, uint8_t start_code, uint16_t slot_count)
 {
   uint8_t* pcur = buf;
 
@@ -200,10 +200,10 @@ size_t pack_sacn_dmp_layer_header(uint8_t* buf, uint8_t start_code, uint16_t slo
   *pcur = start_code;
   ++pcur;
 
-  return (size_t)(pcur - buf);
+  return (int)(pcur - buf);
 }
 
-size_t pack_sacn_sync_framing_layer(uint8_t* buf, uint8_t seq_num, uint16_t sync_address)
+int pack_sacn_sync_framing_layer(uint8_t* buf, uint8_t seq_num, uint16_t sync_address)
 {
   uint8_t* pcur = buf;
 
@@ -225,10 +225,10 @@ size_t pack_sacn_sync_framing_layer(uint8_t* buf, uint8_t seq_num, uint16_t sync
   etcpal_pack_u16b(pcur, 0u);  // Reserved
   pcur += 2;
 
-  return (size_t)(pcur - buf);
+  return (int)(pcur - buf);
 }
 
-size_t pack_sacn_universe_discovery_framing_layer(uint8_t* buf, uint16_t universe_count, const char* source_name)
+int pack_sacn_universe_discovery_framing_layer(uint8_t* buf, uint16_t universe_count, const char* source_name)
 {
   uint8_t* pcur = buf;
 
@@ -249,10 +249,10 @@ size_t pack_sacn_universe_discovery_framing_layer(uint8_t* buf, uint16_t univers
   etcpal_pack_u32b(pcur, 0u);  // Reserved
   pcur += 4;
 
-  return (size_t)(pcur - buf);
+  return (int)(pcur - buf);
 }
 
-size_t pack_sacn_universe_discovery_layer_header(uint8_t* buf, uint16_t universe_count, uint8_t page, uint8_t last_page)
+int pack_sacn_universe_discovery_layer_header(uint8_t* buf, uint16_t universe_count, uint8_t page, uint8_t last_page)
 {
   uint8_t* pcur = buf;
 
@@ -273,7 +273,7 @@ size_t pack_sacn_universe_discovery_layer_header(uint8_t* buf, uint16_t universe
   *pcur = last_page;
   ++pcur;
 
-  return (size_t)(pcur - buf);
+  return (int)(pcur - buf);
 }
 
 void init_sacn_data_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid,
@@ -282,7 +282,7 @@ void init_sacn_data_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPal
 
 {
   memset(send_buf, 0, SACN_MTU);
-  size_t written = 0;
+  int written = 0;
   written += pack_sacn_root_layer(send_buf, SACN_DATA_HEADER_SIZE, false, source_cid);
   written += pack_sacn_data_framing_layer(&send_buf[written], 0, VECTOR_E131_DATA_PACKET, source_name, priority,
                                           sync_universe, 0, send_preview, false, false, universe);

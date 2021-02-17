@@ -54,7 +54,9 @@ extern "C" {
 #define SACN_SEQ_OFFSET 111
 #define SACN_OPTS_OFFSET 112
 
+#define SACN_ROOT_VECTOR_OFFSET ACN_UDP_PREAMBLE_SIZE + 2
 #define SACN_FRAMING_OFFSET 38
+#define SACN_FRAMING_VECTOR_OFFSET 40
 #define SACN_SOURCE_NAME_OFFSET 44
 #define SACN_DMP_OFFSET 115
 #define SACN_PROPERTY_VALUE_COUNT_OFFSET 123
@@ -115,15 +117,14 @@ bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* h
                             const uint8_t** pdata);
 bool parse_draft_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* header, uint8_t* seq,
                                   bool* terminated, const uint8_t** pdata);
-size_t pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const EtcPalUuid* source_cid);
-size_t pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t vector, const char* source_name,
-                                    uint8_t priority, uint16_t sync_address, uint8_t seq_num, bool preview,
-                                    bool terminated, bool force_sync, uint16_t universe_id);
-size_t pack_sacn_dmp_layer_header(uint8_t* buf, uint8_t start_code, uint16_t slot_count);
-size_t pack_sacn_sync_framing_layer(uint8_t* buf, uint8_t seq_num, uint16_t sync_address);
-size_t pack_sacn_universe_discovery_framing_layer(uint8_t* buf, uint16_t universe_count, const char* source_name);
-size_t pack_sacn_universe_discovery_layer_header(uint8_t* buf, uint16_t universe_count, uint8_t page,
-                                                 uint8_t last_page);
+int pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const EtcPalUuid* source_cid);
+int pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t vector, const char* source_name,
+                                 uint8_t priority, uint16_t sync_address, uint8_t seq_num, bool preview,
+                                 bool terminated, bool force_sync, uint16_t universe_id);
+int pack_sacn_dmp_layer_header(uint8_t* buf, uint8_t start_code, uint16_t slot_count);
+int pack_sacn_sync_framing_layer(uint8_t* buf, uint8_t seq_num, uint16_t sync_address);
+int pack_sacn_universe_discovery_framing_layer(uint8_t* buf, uint16_t universe_count, const char* source_name);
+int pack_sacn_universe_discovery_layer_header(uint8_t* buf, uint16_t universe_count, uint8_t page, uint8_t last_page);
 void init_sacn_data_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid,
                              const char* source_name, uint8_t priority, uint16_t universe, uint16_t sync_universe,
                              bool send_preview);

@@ -413,7 +413,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
 
     // Initialize & reset transmission suppression
     if (result == kEtcPalErrOk)
-      reset_transmission_suppression(source_state, universe_state, kResetNullAndPap);
+      reset_transmission_suppression(source_state, universe_state, kResetLevelAndPap);
 
     sacn_unlock();
   }
@@ -695,7 +695,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
 
       // Send on the network
       send_universe_multicast(source_state, universe_state, send_buf);
-      send_universe_unicast(source_state, universe_state, send_buf);
+      send_universe_unicast(source_state, universe_state, send_buf, kIncludeTerminatingUnicastDests);
       increment_sequence_number(universe_state);
     }
 

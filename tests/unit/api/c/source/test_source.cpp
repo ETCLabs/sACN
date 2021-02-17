@@ -71,7 +71,7 @@ static const uint8_t kTestStartCode = 0x12u;
 static const uint8_t* kTestBuffer = (uint8_t*)"ABCDEFGHIJKL";
 static const size_t kTestBufferLength = strlen((char*)kTestBuffer);
 static const uint8_t* kTestBuffer2 = (uint8_t*)"MNOPQRSTUVWXYZ";
-static const size_t kTestBuffer2Length = strlen((char*)kTestBuffer);
+static const size_t kTestBuffer2Length = strlen((char*)kTestBuffer2);
 static SacnMcastInterface kTestNetints[NUM_TEST_NETINTS] = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                             {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
                                                             {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
@@ -289,7 +289,7 @@ TEST_F(TestSource, SourceAddUnicastDestinationWorks)
                                                        reset_transmission_suppression_behavior_t behavior) {
     EXPECT_EQ(source->handle, kTestHandle);
     EXPECT_EQ(universe->universe_id, kTestUniverse);
-    EXPECT_EQ(behavior, kResetNullAndPap);
+    EXPECT_EQ(behavior, kResetLevelAndPap);
   };
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4),
@@ -368,13 +368,21 @@ TEST_F(TestSource, SourceSendNowWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
-  send_universe_multicast_fake.custom_fake = send_universe_unicast_fake.custom_fake =
-      [](const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf) {
-        EXPECT_EQ(source->handle, kTestHandle);
-        EXPECT_EQ(universe->universe_id, kTestUniverse);
-        EXPECT_EQ(send_buf[SACN_DATA_HEADER_SIZE - 1], kTestStartCode);
-        EXPECT_EQ(memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer, kTestBufferLength), 0);
-      };
+  send_universe_multicast_fake.custom_fake = [](const SacnSource* source, SacnSourceUniverse* universe,
+                                                const uint8_t* send_buf) {
+    EXPECT_EQ(source->handle, kTestHandle);
+    EXPECT_EQ(universe->universe_id, kTestUniverse);
+    EXPECT_EQ(send_buf[SACN_DATA_HEADER_SIZE - 1], kTestStartCode);
+    EXPECT_EQ(memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer, kTestBufferLength), 0);
+  };
+  send_universe_unicast_fake.custom_fake = [](const SacnSource* source, SacnSourceUniverse* universe,
+                                              const uint8_t* send_buf, send_universe_unicast_behavior_t behavior) {
+    EXPECT_EQ(source->handle, kTestHandle);
+    EXPECT_EQ(universe->universe_id, kTestUniverse);
+    EXPECT_EQ(send_buf[SACN_DATA_HEADER_SIZE - 1], kTestStartCode);
+    EXPECT_EQ(memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer, kTestBufferLength), 0);
+    EXPECT_EQ(behavior, kIncludeTerminatingUnicastDests);
+  };
   increment_sequence_number_fake.custom_fake = [](SacnSourceUniverse* universe) {
     EXPECT_EQ(universe->universe_id, kTestUniverse);
   };

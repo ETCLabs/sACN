@@ -38,7 +38,7 @@
 
 #define SOURCE_THREAD_INTERVAL 23
 #define NUM_PRE_SUPPRESSION_PACKETS 4
-#define IS_PART_OF_UNIVERSE_DISCOVERY(universe) (universe->has_null_data && !universe->send_unicast_only)
+#define IS_PART_OF_UNIVERSE_DISCOVERY(universe) (universe->has_level_data && !universe->send_unicast_only)
 
 /**************************** Private variables ******************************/
 
@@ -61,11 +61,7 @@ static void process_universe_discovery(SacnSource* source);
 static void process_universes(SacnSource* source);
 static void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe);
 static void process_universe_termination(SacnSource* source, size_t index);
-static void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniverse* universe);
-static void process_null_sent(SacnSourceUniverse* universe);
-#if SACN_ETC_PRIORITY_EXTENSION
-static void process_pap_sent(SacnSourceUniverse* universe);
-#endif
+static void transmit_levels_and_paps_when_needed(SacnSource* source, SacnSourceUniverse* universe);
 static void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe);
 static void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe,
                                      SacnUnicastDestination* dest);
@@ -264,7 +260,7 @@ void process_universes(SacnSource* source)
     if (universe->terminating)
       process_universe_termination(source, i);
     else
-      process_universe_null_pap_transmission(source, universe);
+      transmit_levels_and_paps_when_needed(source, universe);
   }
 }
 
@@ -279,10 +275,10 @@ void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe)
     // Terminate and clean up this unicast destination if needed
     if (dest->terminating)
     {
-      if ((dest->num_terminations_sent < 3) && universe->has_null_data)
+      if ((dest->num_terminations_sent < 3) && universe->has_level_data)
         send_termination_unicast(source, universe, dest);
 
-      if ((dest->num_terminations_sent >= 3) || !universe->has_null_data)
+      if ((dest->num_terminations_sent >= 3) || !universe->has_level_data)
         remove_sacn_unicast_dest(universe, i);
     }
   }
@@ -293,10 +289,10 @@ void process_universe_termination(SacnSource* source, size_t index)
 {
   SacnSourceUniverse* universe = &source->universes[index];
 
-  if ((universe->num_terminations_sent < 3) && universe->has_null_data)
+  if ((universe->num_terminations_sent < 3) && universe->has_level_data)
     send_termination_multicast(source, universe);
 
-  if (((universe->num_terminations_sent >= 3) && (universe->num_unicast_dests == 0)) || !universe->has_null_data)
+  if (((universe->num_terminations_sent >= 3) && (universe->num_unicast_dests == 0)) || !universe->has_level_data)
   {
     // Update num_active_universes if needed
     if (IS_PART_OF_UNIVERSE_DISCOVERY(universe))
@@ -311,17 +307,21 @@ void process_universe_termination(SacnSource* source, size_t index)
 }
 
 // Needs lock
-void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniverse* universe)
+void transmit_levels_and_paps_when_needed(SacnSource* source, SacnSourceUniverse* universe)
 {
   // If 0x00 data is ready to send
-  if (universe->has_null_data && ((universe->null_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
-                                  etcpal_timer_is_expired(&universe->null_keep_alive_timer)))
+  if (universe->has_level_data && ((universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
+                                   etcpal_timer_is_expired(&universe->level_keep_alive_timer)))
   {
     // Send 0x00 data & reset the keep-alive timer
-    send_universe_multicast(source, universe, universe->null_send_buf);
-    send_universe_unicast(source, universe, universe->null_send_buf);
-    process_null_sent(universe);
-    etcpal_timer_reset(&universe->null_keep_alive_timer);
+    send_universe_multicast(source, universe, universe->level_send_buf);
+    send_universe_unicast(source, universe, universe->level_send_buf, kSkipTerminatingUnicastDests);
+    increment_sequence_number(universe);
+
+    if (universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
+      ++universe->level_packets_sent_before_suppression;
+
+    etcpal_timer_reset(&universe->level_keep_alive_timer);
   }
 #if SACN_ETC_PRIORITY_EXTENSION
   // If 0xDD data is ready to send
@@ -330,8 +330,12 @@ void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniver
   {
     // Send 0xDD data & reset the keep-alive timer
     send_universe_multicast(source, universe, universe->pap_send_buf);
-    send_universe_unicast(source, universe, universe->pap_send_buf);
-    process_pap_sent(universe);
+    send_universe_unicast(source, universe, universe->pap_send_buf, kSkipTerminatingUnicastDests);
+    increment_sequence_number(universe);
+
+    if (universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
+      ++universe->pap_packets_sent_before_suppression;
+
     etcpal_timer_reset(&universe->pap_keep_alive_timer);
   }
 #endif
@@ -341,66 +345,46 @@ void process_universe_null_pap_transmission(SacnSource* source, SacnSourceUniver
 void increment_sequence_number(SacnSourceUniverse* universe)
 {
   ++universe->seq_num;
-  universe->null_send_buf[SACN_SEQ_OFFSET] = universe->seq_num;
+  universe->level_send_buf[SACN_SEQ_OFFSET] = universe->seq_num;
 #if SACN_ETC_PRIORITY_EXTENSION
   universe->pap_send_buf[SACN_SEQ_OFFSET] = universe->seq_num;
 #endif
 }
 
 // Needs lock
-void process_null_sent(SacnSourceUniverse* universe)
-{
-  increment_sequence_number(universe);
-
-  if (universe->null_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
-    ++universe->null_packets_sent_before_suppression;
-}
-
-#if SACN_ETC_PRIORITY_EXTENSION
-// Needs lock
-void process_pap_sent(SacnSourceUniverse* universe)
-{
-  increment_sequence_number(universe);
-
-  if (universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
-    ++universe->pap_packets_sent_before_suppression;
-}
-#endif
-
-// Needs lock
 void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe)
 {
-  // Repurpose null_send_buf for the termination packet
-  bool old_terminated_opt = TERMINATED_OPT_SET(universe->null_send_buf);
-  SET_TERMINATED_OPT(universe->null_send_buf, true);
+  // Repurpose level_send_buf for the termination packet
+  bool old_terminated_opt = TERMINATED_OPT_SET(universe->level_send_buf);
+  SET_TERMINATED_OPT(universe->level_send_buf, true);
 
   // Send the termination packet on multicast only
-  send_universe_multicast(source, universe, universe->null_send_buf);
-  process_null_sent(universe);
+  send_universe_multicast(source, universe, universe->level_send_buf);
+  increment_sequence_number(universe);
 
   // Increment the termination counter
   ++universe->num_terminations_sent;
 
   // Revert terminated flag
-  SET_TERMINATED_OPT(universe->null_send_buf, old_terminated_opt);
+  SET_TERMINATED_OPT(universe->level_send_buf, old_terminated_opt);
 }
 
 // Needs lock
 void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe, SacnUnicastDestination* dest)
 {
-  // Repurpose null_send_buf for the termination packet
-  bool old_terminated_opt = TERMINATED_OPT_SET(universe->null_send_buf);
-  SET_TERMINATED_OPT(universe->null_send_buf, true);
+  // Repurpose level_send_buf for the termination packet
+  bool old_terminated_opt = TERMINATED_OPT_SET(universe->level_send_buf);
+  SET_TERMINATED_OPT(universe->level_send_buf, true);
 
   // Send the termination packet on unicast only
-  sacn_send_unicast(source->ip_supported, universe->null_send_buf, &dest->dest_addr);
-  process_null_sent(universe);
+  sacn_send_unicast(source->ip_supported, universe->level_send_buf, &dest->dest_addr);
+  increment_sequence_number(universe);
 
   // Increment the termination counter
   ++dest->num_terminations_sent;
 
   // Revert terminated flag
-  SET_TERMINATED_OPT(universe->null_send_buf, old_terminated_opt);
+  SET_TERMINATED_OPT(universe->level_send_buf, old_terminated_opt);
 }
 
 // Needs lock
@@ -441,10 +425,14 @@ void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
 }
 
 // Needs lock
-void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
+void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf,
+                           send_universe_unicast_behavior_t behavior)
 {
   for (size_t i = 0; i < universe->num_unicast_dests; ++i)
-    sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr);
+  {
+    if ((behavior != kSkipTerminatingUnicastDests) || !universe->unicast_dests[i].terminating)
+      sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr);
+  }
 }
 
 // Needs lock
@@ -460,7 +448,7 @@ int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uin
   {
     const SacnSourceUniverse* universe = &source->universes[*universe_index];
 
-    // If this universe has NULL start code data at a bare minimum & is not unicast-only
+    // If this universe has level data at a bare minimum & is not unicast-only
     if (IS_PART_OF_UNIVERSE_DISCOVERY(universe))
     {
       // Pack the universe ID
@@ -497,9 +485,9 @@ void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state,
 {
   bool was_part_of_discovery = IS_PART_OF_UNIVERSE_DISCOVERY(universe_state);
 
-  update_send_buf_data(universe_state->null_send_buf, new_levels, (uint16_t)new_levels_size, force_sync);
-  universe_state->has_null_data = true;
-  reset_transmission_suppression(source_state, universe_state, kResetNull);
+  update_send_buf_data(universe_state->level_send_buf, new_levels, (uint16_t)new_levels_size, force_sync);
+  universe_state->has_level_data = true;
+  reset_transmission_suppression(source_state, universe_state, kResetLevel);
 
   if (!was_part_of_discovery && IS_PART_OF_UNIVERSE_DISCOVERY(universe_state))
     ++source_state->num_active_universes;
@@ -581,15 +569,15 @@ void set_unicast_dest_terminating(SacnUnicastDestination* dest)
 void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse* universe,
                                     reset_transmission_suppression_behavior_t behavior)
 {
-  if ((behavior == kResetNull) || (behavior == kResetNullAndPap))
+  if ((behavior == kResetLevel) || (behavior == kResetLevelAndPap))
   {
-    universe->null_packets_sent_before_suppression = 0;
+    universe->level_packets_sent_before_suppression = 0;
 
-    if (universe->has_null_data)
-      etcpal_timer_start(&universe->null_keep_alive_timer, source->keep_alive_interval);
+    if (universe->has_level_data)
+      etcpal_timer_start(&universe->level_keep_alive_timer, source->keep_alive_interval);
   }
 
-  if ((behavior == kResetPap) || (behavior == kResetNullAndPap))
+  if ((behavior == kResetPap) || (behavior == kResetLevelAndPap))
   {
     universe->pap_packets_sent_before_suppression = 0;
 
@@ -611,11 +599,11 @@ void set_source_name(SacnSource* source, const char* new_name)
     SacnSourceUniverse* universe = &source->universes[i];
 
     // Update the source name in this universe's send buffers
-    strncpy((char*)(&universe->null_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
+    strncpy((char*)(&universe->level_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
     strncpy((char*)(&universe->pap_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
 
     // Reset transmission suppression for start codes 0x00 and 0xDD
-    reset_transmission_suppression(source, universe, kResetNullAndPap);
+    reset_transmission_suppression(source, universe, kResetLevelAndPap);
   }
 }
 
@@ -670,7 +658,7 @@ etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUn
     result = add_sacn_source_netint(source, &universe->netints.netints[k]);
 
   if (result == kEtcPalErrOk)
-    reset_transmission_suppression(source, universe, kResetNullAndPap);
+    reset_transmission_suppression(source, universe, kResetLevelAndPap);
 
   return result;
 }
@@ -679,18 +667,18 @@ etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUn
 void set_universe_priority(const SacnSource* source, SacnSourceUniverse* universe, uint8_t priority)
 {
   universe->priority = priority;
-  universe->null_send_buf[SACN_PRI_OFFSET] = priority;
+  universe->level_send_buf[SACN_PRI_OFFSET] = priority;
   universe->pap_send_buf[SACN_PRI_OFFSET] = priority;
-  reset_transmission_suppression(source, universe, kResetNullAndPap);
+  reset_transmission_suppression(source, universe, kResetLevelAndPap);
 }
 
 // Needs lock
 void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bool preview)
 {
   universe->send_preview = preview;
-  SET_PREVIEW_OPT(universe->null_send_buf, preview);
+  SET_PREVIEW_OPT(universe->level_send_buf, preview);
   SET_PREVIEW_OPT(universe->pap_send_buf, preview);
-  reset_transmission_suppression(source, universe, kResetNullAndPap);
+  reset_transmission_suppression(source, universe, kResetLevelAndPap);
 }
 
 void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id)
