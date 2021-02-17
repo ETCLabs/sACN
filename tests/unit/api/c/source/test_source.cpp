@@ -381,7 +381,7 @@ TEST_F(TestSource, SourceSendNowWorks)
     EXPECT_EQ(universe->universe_id, kTestUniverse);
     EXPECT_EQ(send_buf[SACN_DATA_HEADER_SIZE - 1], kTestStartCode);
     EXPECT_EQ(memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer, kTestBufferLength), 0);
-    EXPECT_EQ(behavior, kIncludeTerminatingUnicastDests);
+    EXPECT_EQ(behavior, kSkipTerminatingUnicastDests);
   };
   increment_sequence_number_fake.custom_fake = [](SacnSourceUniverse* universe) {
     EXPECT_EQ(universe->universe_id, kTestUniverse);
