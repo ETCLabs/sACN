@@ -188,6 +188,9 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
     if (result == kEtcPalErrOk)
       result = lookup_source(handle, &source);
 
+    if ((result == kEtcPalErrOk) && source && source->terminating)
+      result = kEtcPalErrNotFound;
+
     // Set this source's name.
     if (result == kEtcPalErrOk)
       set_source_name(source, new_name);
@@ -204,9 +207,9 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
 /**
  * @brief Destroy an sACN source instance.
  *
- * Stops sending all universes for this source. The destruction is queued, and actually occurs either on the thread or
- * on a call to sacn_source_process_manual() after an additional three packets have been sent with the
- * "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets.
+ * Stops sending all universes for this source. This removes the source and queues the sending of termination packets to
+ * all of the source's universes, which takes place either on the thread or on calls to sacn_source_process_manual().
+ * The source will also stop transmitting sACN universe discovery packets.
  *
  * @param[in] handle Handle to the source to destroy.
  */
@@ -221,7 +224,7 @@ void sacn_source_destroy(sacn_source_t handle)
     lookup_source(handle, &source);
 
     // If the source was found, initiate termination.
-    if (source)
+    if (source && !source->terminating)
       set_source_terminating(source);
 
     sacn_unlock();
@@ -292,6 +295,9 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     if (result == kEtcPalErrOk)
       result = lookup_source(handle, &source);
 
+    if ((result == kEtcPalErrOk) && source && source->terminating)
+      result = kEtcPalErrNotFound;
+
     // Initialize the universe's state.
     SacnSourceUniverse* universe = NULL;
     if (result == kEtcPalErrOk)
@@ -313,11 +319,10 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
 /**
  * @brief Remove a universe from a source.
  *
- * This queues the universe for removal. The destruction actually occurs either on the thread or on a call to
- * sacn_source_process_manual() after an additional three packets have been sent with the "Stream_Terminated" option
- * set.
+ * This removes a universe and queues the sending of termination packets to the universe, which takes place either on
+ * the thread or on calls to sacn_source_process_manual().
  *
- * The source will also stop transmitting sACN universe discovery packets for that universe.
+ * The source will also stop including the universe in sACN universe discovery packets.
  *
  * @param[in] handle Handle to the source from which to remove the universe.
  * @param[in] universe Universe to remove.
@@ -331,7 +336,7 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if (universe_state)
+    if (universe_state && !universe_state->terminating)
       set_universe_terminating(universe_state);
 
     sacn_unlock();
@@ -357,7 +362,7 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
   {
     // Look up source state
     SacnSource* source = NULL;
-    if (lookup_source(handle, &source) == kEtcPalErrOk)
+    if ((lookup_source(handle, &source) == kEtcPalErrOk) && source && !source->terminating)
       total_num_universes = get_source_universes(source, universes, universes_size);
 
     sacn_unlock();
@@ -406,6 +411,9 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
     if (result == kEtcPalErrOk)
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
+    if ((result == kEtcPalErrOk) && universe_state && universe_state->terminating)
+      result = kEtcPalErrNotFound;
+
     // Add unicast destination
     SacnUnicastDestination* unicast_dest = NULL;
     if (result == kEtcPalErrOk)
@@ -427,9 +435,8 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
 /**
  * @brief Remove a unicast destination on a source's universe.
  *
- * This queues the address for removal. The removal actually occurs either on the thread or on a call to
- * sacn_source_process_manual() after an additional three packets have been sent with the "Stream_Terminated" option
- * set.
+ * This removes a unicast destination address and queues the sending of termination packets to the address, which takes
+ * place either on the thread or on calls to sacn_source_process_manual().
  *
  * @param[in] handle Handle to the source to change.
  * @param[in] universe Universe to change.
@@ -447,13 +454,13 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if (universe_state)
+    if (universe_state && !universe_state->terminating)
     {
       SacnUnicastDestination* unicast_dest = NULL;
       lookup_unicast_dest(universe_state, dest, &unicast_dest);
 
       // Initiate termination
-      if (unicast_dest)
+      if (unicast_dest && !unicast_dest->terminating)
         set_unicast_dest_terminating(unicast_dest);
     }
 
@@ -485,7 +492,10 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     if (lookup_source_and_universe(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
-      total_num_dests = get_source_unicast_dests(universe_state, destinations, destinations_size);
+    {
+      if (universe_state && !universe_state->terminating)
+        total_num_dests = get_source_unicast_dests(universe_state, destinations, destinations_size);
+    }
 
     sacn_unlock();
   }
@@ -533,6 +543,9 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
     SacnSourceUniverse* universe_state = NULL;
     if (result == kEtcPalErrOk)
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
+
+    if ((result == kEtcPalErrOk) && universe_state && universe_state->terminating)
+      result = kEtcPalErrNotFound;
 
     // Set the priority.
     if (result == kEtcPalErrOk)
@@ -589,6 +602,9 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
     SacnSourceUniverse* universe_state = NULL;
     if (result == kEtcPalErrOk)
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
+
+    if ((result == kEtcPalErrOk) && universe_state && universe_state->terminating)
+      result = kEtcPalErrNotFound;
 
     // Set the preview flag.
     if (result == kEtcPalErrOk)
@@ -685,6 +701,9 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
     if (result == kEtcPalErrOk)
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
+    if ((result == kEtcPalErrOk) && universe_state && universe_state->terminating)
+      result = kEtcPalErrNotFound;
+
     if (result == kEtcPalErrOk)
     {
       // Initialize send buffer
@@ -695,7 +714,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
 
       // Send on the network
       send_universe_multicast(source_state, universe_state, send_buf);
-      send_universe_unicast(source_state, universe_state, send_buf, kIncludeTerminatingUnicastDests);
+      send_universe_unicast(source_state, universe_state, send_buf, kSkipTerminatingUnicastDests);
       increment_sequence_number(universe_state);
     }
 
@@ -760,7 +779,10 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
-    update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, kDisableForceSync);
+
+    if (universe_state && !universe_state->terminating)
+      update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, kDisableForceSync);
+
     sacn_unlock();
   }
 #endif  // SACN_SOURCE_ENABLED
@@ -800,12 +822,15 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
-                              new_priorities_size, kDisableForceSync);
+    if (universe_state && !universe_state->terminating)
+    {
+      update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
+                                new_priorities_size, kDisableForceSync);
 
-    // Stop using PAPs if new_priorities is NULL
-    if (!new_priorities)
-      disable_pap_data(universe_state);
+      // Stop using PAPs if new_priorities is NULL
+      if (!new_priorities)
+        disable_pap_data(universe_state);
+    }
 
     sacn_unlock();
   }
@@ -837,7 +862,10 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
-    update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, kEnableForceSync);
+
+    if (universe_state && !universe_state->terminating)
+      update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, kEnableForceSync);
+
     sacn_unlock();
   }
 #endif  // SACN_SOURCE_ENABLED
@@ -882,12 +910,15 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
-                              new_priorities_size, kEnableForceSync);
+    if (universe_state && !universe_state->terminating)
+    {
+      update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
+                                new_priorities_size, kEnableForceSync);
 
-    // Stop using PAPs if new_priorities is NULL
-    if (!new_priorities)
-      disable_pap_data(universe_state);
+      // Stop using PAPs if new_priorities is NULL
+      if (!new_priorities)
+        disable_pap_data(universe_state);
+    }
 
     sacn_unlock();
   }
@@ -906,9 +937,9 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
  * haven't been updated. Also destroys sources & universes that have been marked for termination after sending the
  * required three terminated packets.
  *
- * @return Current number of manual sources tracked by the library. This can be useful on shutdown to
- *         track when destroyed sources have finished sending the terminated packets and actually
- *         been destroyed.
+ * @return Current number of manual sources tracked by the library, including sources that have been destroyed but are
+ * still sending termination packets. This can be useful on shutdown to track when destroyed sources have finished
+ * sending the terminated packets and actually been destroyed.
  */
 int sacn_source_process_manual(void)
 {
@@ -1088,7 +1119,10 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     if (lookup_source_and_universe(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
-      total_num_network_interfaces = get_source_universe_netints(universe_state, netints, netints_size);
+    {
+      if (universe_state && !universe_state->terminating)
+        total_num_network_interfaces = get_source_universe_netints(universe_state, netints, netints_size);
+    }
 
     sacn_unlock();
   }

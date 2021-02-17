@@ -610,20 +610,38 @@ void set_source_name(SacnSource* source, const char* new_name)
 // Needs lock
 size_t get_source_universes(const SacnSource* source, uint16_t* universes, size_t universes_size)
 {
-  for (size_t i = 0; (i < source->num_universes) && universes && (i < universes_size); ++i)
-    universes[i] = source->universes[i].universe_id;
+  size_t num_non_terminating_universes = 0;
+  for (size_t read = 0; (read < source->num_universes); ++read)
+  {
+    if (!source->universes[read].terminating)
+    {
+      if (universes && (num_non_terminating_universes < universes_size))
+        universes[num_non_terminating_universes] = source->universes[read].universe_id;
 
-  return source->num_universes;
+      ++num_non_terminating_universes;
+    }
+  }
+
+  return num_non_terminating_universes;
 }
 
 // Needs lock
 size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr* destinations,
                                 size_t destinations_size)
 {
-  for (size_t i = 0; (i < universe->num_unicast_dests) && destinations && (i < destinations_size); ++i)
-    destinations[i] = universe->unicast_dests[i].dest_addr;
+  size_t num_non_terminating_dests = 0;
+  for (size_t read = 0; (read < universe->num_unicast_dests); ++read)
+  {
+    if (!universe->unicast_dests[read].terminating)
+    {
+      if (destinations && (num_non_terminating_dests < destinations_size))
+        destinations[num_non_terminating_dests] = universe->unicast_dests[read].dest_addr;
 
-  return universe->num_unicast_dests;
+      ++num_non_terminating_dests;
+    }
+  }
+
+  return num_non_terminating_dests;
 }
 
 // Needs lock
