@@ -211,7 +211,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
  * all of the source's universes, which takes place either on the thread or on calls to sacn_source_process_manual().
  * The source will also stop transmitting sACN universe discovery packets.
  *
- * @param[in] handle Handle to the source to destroy.
+ * @param[in] handle Handle to the source to destroy. This handle will no longer be usable with the source API.
  */
 void sacn_source_destroy(sacn_source_t handle)
 {
@@ -325,7 +325,8 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
  * The source will also stop including the universe in sACN universe discovery packets.
  *
  * @param[in] handle Handle to the source from which to remove the universe.
- * @param[in] universe Universe to remove.
+ * @param[in] universe Universe to remove. The source API functions will no longer recognize this universe for this
+ * source unless the universe is re-added to the source.
  */
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 {
@@ -440,7 +441,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
  *
  * @param[in] handle Handle to the source to change.
  * @param[in] universe Universe to change.
- * @param[in] dest The destination IP.  May not be NULL, and must match the address passed to
+ * @param[in] dest The destination IP to remove.  May not be NULL, and must match the address passed to
  * sacn_source_add_unicast_destination().
  */
 void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)

@@ -384,7 +384,8 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings, std::
  *
  * The source will also stop including the universe in sACN universe discovery packets.
  *
- * @param[in] universe Universe to remove.
+ * @param[in] universe Universe to remove. This source's functions will no longer recognize this universe unless the
+ * universe is re-added.
  */
 inline void Source::RemoveUniverse(uint16_t universe)
 {
@@ -440,7 +441,7 @@ inline etcpal::Error Source::AddUnicastDestination(uint16_t universe, const etcp
  * place either on the thread or on calls to ProcessManual().
  *
  * @param[in] universe Universe to change.
- * @param[in] dest The destination IP.  Must match the address passed to AddUnicastDestination().
+ * @param[in] dest The destination IP to remove.  Must match the address passed to AddUnicastDestination().
  */
 inline void Source::RemoveUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest)
 {
