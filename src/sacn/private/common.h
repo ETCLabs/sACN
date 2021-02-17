@@ -404,10 +404,10 @@ struct SacnSourceUniverse
   uint8_t seq_num;
 
   // Start code 0x00 state
-  int null_packets_sent_before_suppression;
-  EtcPalTimer null_keep_alive_timer;
-  uint8_t null_send_buf[SACN_MTU];
-  bool has_null_data;
+  int level_packets_sent_before_suppression;
+  EtcPalTimer level_keep_alive_timer;
+  uint8_t level_send_buf[SACN_MTU];
+  bool has_level_data;
 
 #if SACN_ETC_PRIORITY_EXTENSION
   // Start code 0xDD state

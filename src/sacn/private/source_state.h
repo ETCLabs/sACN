@@ -30,9 +30,9 @@ typedef enum
 
 typedef enum
 {
-  kResetNull,
+  kResetLevel,
   kResetPap,
-  kResetNullAndPap
+  kResetLevelAndPap
 } reset_transmission_suppression_behavior_t;
 
 typedef enum

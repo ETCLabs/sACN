@@ -289,7 +289,7 @@ TEST_F(TestSource, SourceAddUnicastDestinationWorks)
                                                        reset_transmission_suppression_behavior_t behavior) {
     EXPECT_EQ(source->handle, kTestHandle);
     EXPECT_EQ(universe->universe_id, kTestUniverse);
-    EXPECT_EQ(behavior, kResetNullAndPap);
+    EXPECT_EQ(behavior, kResetLevelAndPap);
   };
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4),

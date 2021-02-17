@@ -413,7 +413,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
 
     // Initialize & reset transmission suppression
     if (result == kEtcPalErrOk)
-      reset_transmission_suppression(source_state, universe_state, kResetNullAndPap);
+      reset_transmission_suppression(source_state, universe_state, kResetLevelAndPap);
 
     sacn_unlock();
   }
