@@ -1014,6 +1014,23 @@ TEST_F(TestSourceState, TerminatingUnicastDestsOnlySendTerminations)
     etcpal_getms_fake.return_val += 100u;
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
   }
+}
 
-  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t*, const EtcPalIpAddr*) {};
+TEST_F(TestSourceState, PapNotTransmittedIfNotAdded)
+{
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t* send_buf, const EtcPalIpAddr*) {
+    uint8_t start_code = send_buf[SACN_DATA_HEADER_SIZE - 1];
+    EXPECT_EQ(start_code, 0x00u);
+  };
+
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  AddUniverse(source, kTestUniverseConfig, kTestNetints, NUM_TEST_NETINTS);
+  InitTestData(source, kTestUniverseConfig.universe, kTestBuffer, kTestBufferLength);
+  AddTestUnicastDests(source, kTestUniverseConfig.universe);
+
+  for (int i = 0; i < 100; ++i)
+  {
+    etcpal_getms_fake.return_val += 100u;
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  }
 }
