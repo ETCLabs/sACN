@@ -205,18 +205,34 @@ protected:
       if (IS_UNIVERSE_DATA(send_buf))
       {
         if (memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer, kTestBufferLength) == 0)
+        {
           ++num_level_multicast_sends;
+          EXPECT_EQ(num_level_multicast_sends, num_pap_multicast_sends + current_netint_index + 1);
+        }
         else if (memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer2, kTestBuffer2Length) == 0)
+        {
           ++num_pap_multicast_sends;
+          EXPECT_EQ(num_pap_multicast_sends, (num_level_multicast_sends - NUM_TEST_NETINTS) + current_netint_index + 1);
+        }
+
+        current_netint_index = (current_netint_index + 1) % NUM_TEST_NETINTS;
       }
     };
     sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t* send_buf, const EtcPalIpAddr*) {
       if (IS_UNIVERSE_DATA(send_buf))
       {
         if (memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer, kTestBufferLength) == 0)
+        {
           ++num_level_unicast_sends;
+          EXPECT_EQ(num_level_unicast_sends, num_pap_unicast_sends + current_remote_addr_index + 1);
+        }
         else if (memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer2, kTestBuffer2Length) == 0)
+        {
           ++num_pap_unicast_sends;
+          EXPECT_EQ(num_pap_unicast_sends, (num_level_unicast_sends - NUM_TEST_ADDRS) + current_remote_addr_index + 1);
+        }
+
+        current_remote_addr_index = (current_remote_addr_index + 1) % NUM_TEST_ADDRS;
       }
     };
 
@@ -226,6 +242,9 @@ protected:
     uint16_t universe = AddUniverse(source, kTestUniverseConfig);
     AddTestUnicastDests(source, universe);
     InitTestData(source, universe, kTestBuffer, kTestBufferLength, kTestBuffer2, kTestBuffer2Length);
+
+    current_netint_index = 0;
+    current_remote_addr_index = 0;
 
     for (int i = 0; i < 5; ++i)
     {
@@ -902,17 +921,17 @@ TEST_F(TestSourceState, UniverseRemovalUpdatesSourceNetints)
   EXPECT_EQ(GetSource(source)->num_netints, 0u);
 }
 
-TEST_F(TestSourceState, SourceTransmitsLevelsAndPapsAtDefaultInterval)
+TEST_F(TestSourceState, TransmitsLevelsAndPapsCorrectlyAtDefaultInterval)
 {
   TestLevelPapTransmission(SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
 }
 
-TEST_F(TestSourceState, SourceTransmitsLevelsAndPapsAtShortInterval)
+TEST_F(TestSourceState, TransmitsLevelsAndPapsCorrectlyAtShortInterval)
 {
   TestLevelPapTransmission(100);
 }
 
-TEST_F(TestSourceState, SourceTransmitsLevelsAndPapsAtLongInterval)
+TEST_F(TestSourceState, TransmitsLevelsAndPapsCorrectlyAtLongInterval)
 {
   TestLevelPapTransmission(2000);
 }
