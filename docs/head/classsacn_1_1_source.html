@@ -937,7 +937,7 @@ used to generate live output."</p>
 <p>Trigger the transmission of sACN packets for all universes of sources that were created with manually_process_source set to true. </p>
 <p>Note: Unless you created the source with manually_process_source set to true, similar functionality will be automatically called by an internal thread of the module. Otherwise, this must be called at the maximum rate at which the application will send sACN.</p>
 <p>Sends the current data for universes which have been updated, and sends keep-alive data for universes which haven't been updated. Also destroys sources &amp; universes that have been marked for termination after sending the required three terminated packets.</p>
-<dl class="section return"><dt>Returns</dt><dd>Current number of manual sources tracked by the library. This can be useful on shutdown to track when destroyed sources have finished sending the terminated packets and actually been destroyed. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Current number of manual sources tracked by the library, including sources that have been destroyed but are still sending termination packets. This can be useful on shutdown to track when destroyed sources have finished sending the terminated packets and actually been destroyed. </dd></dl>
 
 </div>
 </div>
@@ -976,11 +976,11 @@ used to generate live output."</p>
 </div><div class="memdoc">
 
 <p>Remove a unicast destination on a universe. </p>
-<p>This queues the address for removal. The removal actually occurs either on the thread or on a call to <a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126" title="Trigger the transmission of sACN packets for all universes of sources that were created with manually...">ProcessManual()</a> after an additional three packets have been sent with the "Stream_Terminated" option set.</p>
+<p>This removes a unicast destination address and queues the sending of termination packets to the address, which takes place either on the thread or on calls to <a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126" title="Trigger the transmission of sACN packets for all universes of sources that were created with manually...">ProcessManual()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to change. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dest</td><td>The destination IP. Must match the address passed to <a class="el" href="classsacn_1_1_source.html#a5d7f1f26d1a6f5dbffca60dd08ac0454" title="Add a unicast destination for a universe. ">AddUnicastDestination()</a>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dest</td><td>The destination IP to remove. Must match the address passed to <a class="el" href="classsacn_1_1_source.html#a5d7f1f26d1a6f5dbffca60dd08ac0454" title="Add a unicast destination for a universe. ">AddUnicastDestination()</a>. </td></tr>
   </table>
   </dd>
 </dl>
@@ -1012,11 +1012,11 @@ used to generate live output."</p>
 </div><div class="memdoc">
 
 <p>Remove a universe from a source. </p>
-<p>This queues the universe for removal. The destruction actually occurs either on the thread or on a call to <a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126" title="Trigger the transmission of sACN packets for all universes of sources that were created with manually...">ProcessManual()</a> after an additional three packets have been sent with the "Stream_Terminated" option set.</p>
-<p>The source will also stop transmitting sACN universe discovery packets for that universe.</p>
+<p>This removes a universe and queues the sending of termination packets to the universe, which takes place either on the thread or on calls to <a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126" title="Trigger the transmission of sACN packets for all universes of sources that were created with manually...">ProcessManual()</a>.</p>
+<p>The source will also stop including the universe in sACN universe discovery packets.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to remove. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to remove. This source's functions will no longer recognize this universe unless the universe is re-added. </td></tr>
   </table>
   </dd>
 </dl>
@@ -1292,7 +1292,7 @@ used to generate live output."</p>
 </div><div class="memdoc">
 
 <p>Destroy an sACN source instance. </p>
-<p>Stops sending all universes for this source. The destruction is queued, and actually occurs either on the thread or on a call to <a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126" title="Trigger the transmission of sACN packets for all universes of sources that were created with manually...">ProcessManual()</a> after an additional three packets have been sent with the "Stream_Terminated" option set. The source will also stop transmitting sACN universe discovery packets. </p>
+<p>Stops sending all universes for this source. This removes the source and queues the sending of termination packets to all of the source's universes, which takes place either on the thread or on calls to <a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126" title="Trigger the transmission of sACN packets for all universes of sources that were created with manually...">ProcessManual()</a>. The source will also stop transmitting sACN universe discovery packets. </p>
 
 </div>
 </div>
