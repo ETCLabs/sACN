@@ -91,6 +91,7 @@ static unsigned int num_level_multicast_sends = 0u;
 static unsigned int num_pap_multicast_sends = 0u;
 static unsigned int num_level_unicast_sends = 0u;
 static unsigned int num_pap_unicast_sends = 0u;
+static unsigned int num_invalid_sends = 0u;
 static int current_test_iteration = 0;
 static int current_remote_addr_index = 0;
 static int current_universe = 0;
@@ -130,6 +131,7 @@ protected:
     num_pap_multicast_sends = 0u;
     num_level_unicast_sends = 0u;
     num_pap_unicast_sends = 0u;
+    num_invalid_sends = 0u;
   }
 
   void TearDown() override
@@ -200,10 +202,13 @@ protected:
   {
     etcpal_getms_fake.return_val = 0u;
 
-    sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                              const EtcPalMcastNetintId*) {
+    sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
+                                              const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {
       if (IS_UNIVERSE_DATA(send_buf))
       {
+        EXPECT_EQ(universe_id, kTestUniverseConfig.universe);
+        EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
+
         if (memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer, kTestBufferLength) == 0)
         {
           ++num_level_multicast_sends;
@@ -214,13 +219,23 @@ protected:
           ++num_pap_multicast_sends;
           EXPECT_EQ(num_pap_multicast_sends, (num_level_multicast_sends - NUM_TEST_NETINTS) + current_netint_index + 1);
         }
+        else
+        {
+          ++num_invalid_sends;
+        }
+
+        EXPECT_EQ(kTestNetints[current_netint_index].iface.index, netint->index);
+        EXPECT_EQ(kTestNetints[current_netint_index].iface.ip_type, netint->ip_type);
 
         current_netint_index = (current_netint_index + 1) % NUM_TEST_NETINTS;
       }
     };
-    sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t* send_buf, const EtcPalIpAddr*) {
+    sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
+                                            const EtcPalIpAddr* dest_addr) {
       if (IS_UNIVERSE_DATA(send_buf))
       {
+        EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
+
         if (memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer, kTestBufferLength) == 0)
         {
           ++num_level_unicast_sends;
@@ -231,6 +246,12 @@ protected:
           ++num_pap_unicast_sends;
           EXPECT_EQ(num_pap_unicast_sends, (num_level_unicast_sends - NUM_TEST_ADDRS) + current_remote_addr_index + 1);
         }
+        else
+        {
+          ++num_invalid_sends;
+        }
+
+        EXPECT_EQ(etcpal_ip_cmp(&kTestRemoteAddrs[current_remote_addr_index], dest_addr), 0);
 
         current_remote_addr_index = (current_remote_addr_index + 1) % NUM_TEST_ADDRS;
       }
@@ -285,6 +306,8 @@ protected:
       EXPECT_EQ(num_level_unicast_sends, NUM_TEST_ADDRS * i);
       EXPECT_EQ(num_pap_unicast_sends, NUM_TEST_ADDRS * i);
     }
+
+    EXPECT_EQ(num_invalid_sends, 0u);
   }
 
   sacn_source_t next_source_handle_ = 0;
