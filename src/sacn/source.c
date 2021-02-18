@@ -825,12 +825,11 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
 
     if (universe_state && !universe_state->terminating)
     {
+      if (!new_priorities)
+        disable_pap_data(universe_state);  // This needs to be done first
+
       update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
                                 new_priorities_size, kDisableForceSync);
-
-      // Stop using PAPs if new_priorities is NULL
-      if (!new_priorities)
-        disable_pap_data(universe_state);
     }
 
     sacn_unlock();
@@ -913,12 +912,11 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 
     if (universe_state && !universe_state->terminating)
     {
+      if (!new_priorities)
+        disable_pap_data(universe_state);  // This needs to be done first
+
       update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
                                 new_priorities_size, kEnableForceSync);
-
-      // Stop using PAPs if new_priorities is NULL
-      if (!new_priorities)
-        disable_pap_data(universe_state);
     }
 
     sacn_unlock();
