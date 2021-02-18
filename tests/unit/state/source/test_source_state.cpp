@@ -962,3 +962,35 @@ TEST_F(TestSourceState, SendUnicastOnlyWorks)
   EXPECT_EQ(num_universe_data_sends, 0u);
   EXPECT_GT(sacn_send_unicast_fake.call_count, 0u);
 }
+
+TEST_F(TestSourceState, TerminatingUnicastDestsOnlySendTerminations)
+{
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t* send_buf, const EtcPalIpAddr* dest_addr) {
+    if (etcpal_ip_cmp(dest_addr, &kTestRemoteAddrs[0]) == 0)
+    {
+      EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
+
+      uint8_t start_code = send_buf[SACN_DATA_HEADER_SIZE - 1];
+      EXPECT_EQ(start_code, 0x00u);
+    }
+    else
+    {
+      EXPECT_EQ(TERMINATED_OPT_SET(send_buf), 0x00u);
+    }
+  };
+
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  AddUniverse(source, kTestUniverseConfig, kTestNetints, NUM_TEST_NETINTS);
+  InitTestData(source, kTestUniverseConfig.universe, kTestBuffer, kTestBufferLength, kTestBuffer2, kTestBuffer2Length);
+  AddTestUnicastDests(source, kTestUniverseConfig.universe);
+
+  set_unicast_dest_terminating(&GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[0]);
+
+  for (int i = 0; i < 100; ++i)
+  {
+    etcpal_getms_fake.return_val += 100u;
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  }
+
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t*, const EtcPalIpAddr*) {};
+}
