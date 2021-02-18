@@ -281,9 +281,9 @@ inline etcpal::Error Source::Startup(const Settings& settings)
 /**
  * @brief Destroy an sACN source instance.
  *
- * Stops sending all universes for this source. The destruction is queued, and actually occurs either on the thread or
- * on a call to ProcessManual() after an additional three packets have been sent with the "Stream_Terminated" option
- * set. The source will also stop transmitting sACN universe discovery packets.
+ * Stops sending all universes for this source. This removes the source and queues the sending of termination packets to
+ * all of the source's universes, which takes place either on the thread or on calls to ProcessManual().
+ * The source will also stop transmitting sACN universe discovery packets.
  */
 inline void Source::Shutdown()
 {
@@ -379,12 +379,13 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings, std::
 /**
  * @brief Remove a universe from a source.
  *
- * This queues the universe for removal. The destruction actually occurs either on the thread or on a call to
- * ProcessManual() after an additional three packets have been sent with the "Stream_Terminated" option set.
+ * This removes a universe and queues the sending of termination packets to the universe, which takes place either on
+ * the thread or on calls to ProcessManual().
  *
- * The source will also stop transmitting sACN universe discovery packets for that universe.
+ * The source will also stop including the universe in sACN universe discovery packets.
  *
- * @param[in] universe Universe to remove.
+ * @param[in] universe Universe to remove. This source's functions will no longer recognize this universe unless the
+ * universe is re-added.
  */
 inline void Source::RemoveUniverse(uint16_t universe)
 {
@@ -436,11 +437,11 @@ inline etcpal::Error Source::AddUnicastDestination(uint16_t universe, const etcp
 /**
  * @brief Remove a unicast destination on a universe.
  *
- * This queues the address for removal. The removal actually occurs either on the thread or on a call to ProcessManual()
- * after an additional three packets have been sent with the "Stream_Terminated" option set.
+ * This removes a unicast destination address and queues the sending of termination packets to the address, which takes
+ * place either on the thread or on calls to ProcessManual().
  *
  * @param[in] universe Universe to change.
- * @param[in] dest The destination IP.  Must match the address passed to AddUnicastDestination().
+ * @param[in] dest The destination IP to remove.  Must match the address passed to AddUnicastDestination().
  */
 inline void Source::RemoveUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest)
 {
@@ -700,9 +701,9 @@ inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* n
  * haven't been updated. Also destroys sources & universes that have been marked for termination after sending the
  * required three terminated packets.
  *
- * @return Current number of manual sources tracked by the library. This can be useful on shutdown to
- *         track when destroyed sources have finished sending the terminated packets and actually
- *         been destroyed.
+ * @return Current number of manual sources tracked by the library, including sources that have been destroyed but are
+ * still sending termination packets. This can be useful on shutdown to track when destroyed sources have finished
+ * sending the terminated packets and actually been destroyed.
  */
 inline int Source::ProcessManual()
 {
