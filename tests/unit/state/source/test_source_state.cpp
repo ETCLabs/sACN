@@ -1034,3 +1034,25 @@ TEST_F(TestSourceState, PapNotTransmittedIfNotAdded)
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
   }
 }
+
+TEST_F(TestSourceState, SourcesTerminateCorrectly)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (universe_config.universe = 1; universe_config.universe <= 10u; ++universe_config.universe)
+  {
+    AddUniverse(source, universe_config, kTestNetints, NUM_TEST_NETINTS);
+    AddTestUnicastDests(source, universe_config.universe);
+    InitTestData(source, universe_config.universe, kTestBuffer, kTestBufferLength);
+  }
+
+  set_source_terminating(GetSource(source));
+
+  for (int i = 0; i < 3; ++i)
+  {
+    EXPECT_NE(GetSource(source), nullptr);
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  }
+
+  EXPECT_EQ(GetSource(source), nullptr);
+}
