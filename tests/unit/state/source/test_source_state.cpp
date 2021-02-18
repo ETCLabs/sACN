@@ -935,3 +935,30 @@ TEST_F(TestSourceState, TransmitsLevelsAndPapsCorrectlyAtLongInterval)
 {
   TestLevelPapTransmission(2000);
 }
+
+TEST_F(TestSourceState, SendUnicastOnlyWorks)
+{
+  etcpal_getms_fake.return_val = 0;
+
+  sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
+                                            const EtcPalMcastNetintId*) {
+    if (IS_UNIVERSE_DATA(send_buf))
+      ++num_universe_data_sends;
+  };
+
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  universe_config.send_unicast_only = true;
+  uint16_t universe = AddUniverse(source, universe_config);
+  AddTestUnicastDests(source, universe);
+  InitTestData(source, universe, kTestBuffer, kTestBufferLength, kTestBuffer2, kTestBuffer2Length);
+
+  for (int i = 0; i < 100; ++i)
+  {
+    etcpal_getms_fake.return_val += 100u;
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  }
+
+  EXPECT_EQ(num_universe_data_sends, 0u);
+  EXPECT_GT(sacn_send_unicast_fake.call_count, 0u);
+}
