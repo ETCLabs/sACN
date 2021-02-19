@@ -1108,3 +1108,15 @@ TEST_F(TestSourceState, InitializeSourceThreadWorks)
   initialize_source_thread();
   EXPECT_EQ(etcpal_thread_create_fake.call_count, 1u);
 }
+
+TEST_F(TestSourceState, GetNextSourceHandleWorks)
+{
+  sacn_source_t handle = get_next_source_handle();
+
+  for (int i = 0; i < 10; ++i)
+  {
+    sacn_source_t prev_handle = handle;
+    handle = get_next_source_handle();
+    EXPECT_EQ(handle, prev_handle + 1);
+  }
+}
