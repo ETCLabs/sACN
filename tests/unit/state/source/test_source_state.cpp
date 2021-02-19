@@ -1794,3 +1794,14 @@ TEST_F(TestSourceState, GetSourceUniverseNetintsWorks)
     EXPECT_EQ(netints[i].ip_type, kTestNetints[i].iface.ip_type);
   }
 }
+
+TEST_F(TestSourceState, DisablePapDataWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  InitTestData(source, universe, kTestBuffer, kTestBufferLength, kTestBuffer2, kTestBuffer2Length);
+
+  EXPECT_EQ(GetUniverse(source, universe)->has_pap_data, true);
+  disable_pap_data(GetUniverse(source, universe));
+  EXPECT_EQ(GetUniverse(source, universe)->has_pap_data, false);
+}
