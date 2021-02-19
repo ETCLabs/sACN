@@ -1668,7 +1668,10 @@ TEST_F(TestSourceState, SetSourceNameWorks)
   EXPECT_EQ(strncmp(name_in_discovery_buffer, kTestName, kTestNameLength), 0);
 
   for (int i = kTestNameLength; i < SACN_SOURCE_NAME_MAX_LEN; ++i)
+  {
+    EXPECT_EQ(GetSource(source)->name[i], '\0');
     EXPECT_EQ(name_in_discovery_buffer[i], '\0');
+  }
 
   for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + 3u); ++universe)
   {
