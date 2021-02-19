@@ -1602,3 +1602,45 @@ TEST_F(TestSourceState, SetUniverseTerminatingWorks)
     EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent, 0);
   }
 }
+
+TEST_F(TestSourceState, SetSourceTerminatingWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (int i = 0; i < 3; ++i)
+  {
+    AddUniverse(source, universe_config);
+    ++universe_config.universe;
+  }
+
+  set_source_terminating(GetSource(source));
+  EXPECT_EQ(GetSource(source)->terminating, true);
+  for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + 3u); ++universe)
+  {
+    EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
+    EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 0);
+
+    GetUniverse(source, universe)->num_terminations_sent = 2;
+  }
+
+  set_source_terminating(GetSource(source));
+  EXPECT_EQ(GetSource(source)->terminating, true);
+  for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + 3u); ++universe)
+  {
+    EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
+    EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 2);
+
+    GetUniverse(source, universe)->terminating = false;
+  }
+
+  GetSource(source)->terminating = false;
+  
+  set_source_terminating(GetSource(source));
+  EXPECT_EQ(GetSource(source)->terminating, true);
+  for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + 3u); ++universe)
+  {
+    EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
+    EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 0);
+  }
+}
