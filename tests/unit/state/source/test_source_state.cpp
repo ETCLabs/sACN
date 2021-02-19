@@ -1411,3 +1411,30 @@ TEST_F(TestSourceState, SendUniverseMulticastWorks)
   send_universe_multicast(GetSource(source), GetUniverse(source, multicast_universe), kTestBuffer);
   EXPECT_EQ(sacn_send_multicast_fake.call_count, NUM_TEST_NETINTS);
 }
+
+TEST_F(TestSourceState, SetPreviewFlagWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  InitTestData(source, universe, kTestBuffer, kTestBufferLength, kTestBuffer2, kTestBuffer2Length);
+
+  etcpal_getms_fake.return_val = kTestGetMsValue;
+
+  set_preview_flag(GetSource(source), GetUniverse(source, universe), true);
+
+  EXPECT_EQ(GetUniverse(source, universe)->send_preview, true);
+  EXPECT_NE(GetUniverse(source, universe)->level_send_buf[SACN_OPTS_OFFSET] & SACN_OPTVAL_PREVIEW, 0x00u);
+  EXPECT_NE(GetUniverse(source, universe)->pap_send_buf[SACN_OPTS_OFFSET] & SACN_OPTVAL_PREVIEW, 0x00u);
+  EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.reset_time, kTestGetMsValue);
+  EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.reset_time, kTestGetMsValue);
+
+  etcpal_getms_fake.return_val = kTestGetMsValue2;
+
+  set_preview_flag(GetSource(source), GetUniverse(source, universe), false);
+
+  EXPECT_EQ(GetUniverse(source, universe)->send_preview, false);
+  EXPECT_EQ(GetUniverse(source, universe)->level_send_buf[SACN_OPTS_OFFSET] & SACN_OPTVAL_PREVIEW, 0x00u);
+  EXPECT_EQ(GetUniverse(source, universe)->pap_send_buf[SACN_OPTS_OFFSET] & SACN_OPTVAL_PREVIEW, 0x00u);
+  EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.reset_time, kTestGetMsValue2);
+  EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.reset_time, kTestGetMsValue2);
+}
