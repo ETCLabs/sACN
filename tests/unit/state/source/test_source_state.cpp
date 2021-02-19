@@ -1561,3 +1561,44 @@ TEST_F(TestSourceState, ResetPapTransmissionSuppressionWorks)
   EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.interval,
             (uint32_t)kTestSourceConfig.keep_alive_interval);
 }
+
+TEST_F(TestSourceState, SetUniverseTerminatingWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  AddTestUnicastDests(source, universe);
+
+  set_universe_terminating(GetUniverse(source, universe));
+  EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
+  EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 0);
+
+  for (int i = 0; i < NUM_TEST_ADDRS; ++i)
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].terminating, true);
+
+  GetUniverse(source, universe)->num_terminations_sent = 2;
+
+  for (int i = 0; i < NUM_TEST_ADDRS; ++i)
+    GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent = 2;
+
+  set_universe_terminating(GetUniverse(source, universe));
+  EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
+  EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 2);
+
+  for (int i = 0; i < NUM_TEST_ADDRS; ++i)
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent, 2);
+
+  GetUniverse(source, universe)->terminating = false;
+
+  for (int i = 0; i < NUM_TEST_ADDRS; ++i)
+    GetUniverse(source, universe)->unicast_dests[i].terminating = false;
+
+  set_universe_terminating(GetUniverse(source, universe));
+  EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
+  EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 0);
+
+  for (int i = 0; i < NUM_TEST_ADDRS; ++i)
+  {
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].terminating, true);
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent, 0);
+  }
+}
