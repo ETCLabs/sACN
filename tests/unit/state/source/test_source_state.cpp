@@ -1805,3 +1805,13 @@ TEST_F(TestSourceState, DisablePapDataWorks)
   disable_pap_data(GetUniverse(source, universe));
   EXPECT_EQ(GetUniverse(source, universe)->has_pap_data, false);
 }
+
+TEST_F(TestSourceState, ClearSourceNetintsWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  AddUniverse(source, kTestUniverseConfig);
+
+  EXPECT_EQ(GetSource(source)->num_netints, NUM_TEST_NETINTS);
+  clear_source_netints(GetSource(source));
+  EXPECT_EQ(GetSource(source)->num_netints, 0u);
+}
