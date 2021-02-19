@@ -87,6 +87,8 @@ static const EtcPalIpAddr kTestRemoteAddrs[NUM_TEST_ADDRS] = {
 static const uint32_t kTestGetMsValue = 1234567u;
 static const uint32_t kTestGetMsValue2 = 2345678u;
 static const uint8_t kTestPriority = 123u;
+static const char* kTestName = "Test Name";
+static const size_t kTestNameLength = strlen(kTestName);
 
 // Some of the tests use these variables to communicate with their custom_fake lambdas.
 static unsigned int num_universe_discovery_sends = 0u;
@@ -1635,12 +1637,53 @@ TEST_F(TestSourceState, SetSourceTerminatingWorks)
   }
 
   GetSource(source)->terminating = false;
-  
+
   set_source_terminating(GetSource(source));
   EXPECT_EQ(GetSource(source)->terminating, true);
   for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + 3u); ++universe)
   {
     EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
     EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 0);
+  }
+}
+
+TEST_F(TestSourceState, SetSourceNameWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (int i = 0; i < 3; ++i)
+  {
+    AddUniverse(source, universe_config);
+    InitTestData(source, universe_config.universe, kTestBuffer, kTestBufferLength, kTestBuffer2, kTestBuffer2Length);
+    ++universe_config.universe;
+  }
+
+  etcpal_getms_fake.return_val = kTestGetMsValue;
+
+  set_source_name(GetSource(source), kTestName);
+  EXPECT_EQ(strcmp(GetSource(source)->name, kTestName), 0);
+
+  char* name_in_discovery_buffer = (char*)(&GetSource(source)->universe_discovery_send_buf[SACN_SOURCE_NAME_OFFSET]);
+  EXPECT_EQ(strncmp(name_in_discovery_buffer, kTestName, kTestNameLength), 0);
+
+  for (int i = kTestNameLength; i < SACN_SOURCE_NAME_MAX_LEN; ++i)
+    EXPECT_EQ(name_in_discovery_buffer[i], '\0');
+
+  for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + 3u); ++universe)
+  {
+    char* name_in_level_buffer = (char*)(&GetUniverse(source, universe)->level_send_buf[SACN_SOURCE_NAME_OFFSET]);
+    char* name_in_pap_buffer = (char*)(&GetUniverse(source, universe)->pap_send_buf[SACN_SOURCE_NAME_OFFSET]);
+    EXPECT_EQ(strncmp(name_in_level_buffer, kTestName, kTestNameLength), 0);
+    EXPECT_EQ(strncmp(name_in_pap_buffer, kTestName, kTestNameLength), 0);
+
+    for (int i = kTestNameLength; i < SACN_SOURCE_NAME_MAX_LEN; ++i)
+    {
+      EXPECT_EQ(name_in_level_buffer[i], '\0');
+      EXPECT_EQ(name_in_pap_buffer[i], '\0');
+    }
+
+    EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.reset_time, kTestGetMsValue);
+    EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.reset_time, kTestGetMsValue);
   }
 }
