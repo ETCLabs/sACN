@@ -1766,3 +1766,31 @@ TEST_F(TestSourceState, GetSourceUnicastDestsWorks)
   for (size_t i = 0u; i < (NUM_TEST_ADDRS - num_terminating); ++i)
     EXPECT_EQ(etcpal_ip_cmp(&destinations[i], &kTestRemoteAddrs[(i * 2) + 1]), 0);
 }
+
+TEST_F(TestSourceState, GetSourceUniverseNetintsWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+
+  EtcPalMcastNetintId netints[NUM_TEST_NETINTS] = {{kEtcPalIpTypeInvalid, 0u}};
+
+  size_t num_netints = get_source_universe_netints(GetUniverse(source, universe), netints, 1u);
+  EXPECT_EQ(num_netints, NUM_TEST_NETINTS);
+
+  EXPECT_EQ(netints[0].index, kTestNetints[0].iface.index);
+  EXPECT_EQ(netints[0].ip_type, kTestNetints[0].iface.ip_type);
+  for (size_t i = 1u; i < NUM_TEST_NETINTS; ++i)
+  {
+    EXPECT_EQ(netints[i].index, 0u);
+    EXPECT_EQ(netints[i].ip_type, kEtcPalIpTypeInvalid);
+  }
+
+  num_netints = get_source_universe_netints(GetUniverse(source, universe), netints, NUM_TEST_NETINTS);
+  EXPECT_EQ(num_netints, NUM_TEST_NETINTS);
+
+  for (size_t i = 0u; i < NUM_TEST_NETINTS; ++i)
+  {
+    EXPECT_EQ(netints[i].index, kTestNetints[i].iface.index);
+    EXPECT_EQ(netints[i].ip_type, kTestNetints[i].iface.ip_type);
+  }
+}
