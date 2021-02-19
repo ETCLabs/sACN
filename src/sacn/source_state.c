@@ -512,9 +512,9 @@ void update_paps(SacnSource* source_state, SacnSourceUniverse* universe_state, c
 // Needs lock
 void zero_levels_where_paps_are_zero(SacnSourceUniverse* universe_state)
 {
-  int level_count = universe_state->level_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET] - 1;
-  int pap_count = universe_state->pap_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET] - 1;
-  for (int i = 0; i < level_count; ++i)
+  uint16_t level_count = etcpal_unpack_u16b(&universe_state->level_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET]) - 1;
+  uint16_t pap_count = etcpal_unpack_u16b(&universe_state->pap_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET]) - 1;
+  for (uint16_t i = 0; i < level_count; ++i)
   {
     if ((i >= pap_count) || (universe_state->pap_send_buf[SACN_DATA_HEADER_SIZE + i] == 0))
       universe_state->level_send_buf[SACN_DATA_HEADER_SIZE + i] = 0;
