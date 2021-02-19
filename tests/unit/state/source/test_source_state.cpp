@@ -1730,3 +1730,39 @@ TEST_F(TestSourceState, GetSourceUniversesWorks)
   for (uint16_t i = 0u; i < (7u - num_terminating); ++i)
     EXPECT_EQ(universes[i], kTestUniverseConfig.universe + (i * 2u) + 1u);
 }
+
+TEST_F(TestSourceState, GetSourceUnicastDestsWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  AddTestUnicastDests(source, universe);
+
+  EtcPalIpAddr invalid_addr = ETCPAL_IP_INVALID_INIT;
+  EtcPalIpAddr destinations[NUM_TEST_ADDRS] = {ETCPAL_IP_INVALID_INIT};
+
+  size_t num_dests = get_source_unicast_dests(GetUniverse(source, universe), destinations, 1u);
+  EXPECT_EQ(num_dests, NUM_TEST_ADDRS);
+
+  EXPECT_EQ(etcpal_ip_cmp(&destinations[0], &kTestRemoteAddrs[0]), 0);
+  for (size_t i = 1u; i < NUM_TEST_ADDRS; ++i)
+    EXPECT_EQ(etcpal_ip_cmp(&destinations[i], &invalid_addr), 0);
+
+  num_dests = get_source_unicast_dests(GetUniverse(source, universe), destinations, NUM_TEST_ADDRS);
+  EXPECT_EQ(num_dests, NUM_TEST_ADDRS);
+
+  for (size_t i = 0u; i < NUM_TEST_ADDRS; ++i)
+    EXPECT_EQ(etcpal_ip_cmp(&destinations[i], &kTestRemoteAddrs[i]), 0);
+
+  size_t num_terminating = 0u;
+  for (size_t i = 0u; i < NUM_TEST_ADDRS; i += 2u)
+  {
+    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i]);
+    ++num_terminating;
+  }
+
+  num_dests = get_source_unicast_dests(GetUniverse(source, universe), destinations, NUM_TEST_ADDRS);
+  EXPECT_EQ(num_dests, NUM_TEST_ADDRS - num_terminating);
+
+  for (size_t i = 0u; i < (NUM_TEST_ADDRS - num_terminating); ++i)
+    EXPECT_EQ(etcpal_ip_cmp(&destinations[i], &kTestRemoteAddrs[(i * 2) + 1]), 0);
+}
