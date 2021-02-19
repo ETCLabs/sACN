@@ -618,11 +618,12 @@ inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, s
  * This function will update the outgoing packet values for both DMX and per-address priority data, and reset the logic
  * that slows down packet transmission due to inactivity.
  *
- * Per-address priority support has specific rules about when to send value changes vs. pap changes.  These rules are
- * documented in https://etclabs.github.io/sACN/docs/head/per_address_priority.html, and are triggered by the use of
- * this function. Changing per-address priorities to and from "don't care", changing the size of the priorities array,
- * or passing in NULL/non-NULL for the priorities will cause this library to do the necessary tasks to "take control" or
- * "release control" of the corresponding DMX values.
+ * The application should adhere to the rules for per-address priority (PAP) specified in
+ * https://etclabs.github.io/sACN/docs/head/per_address_priority.html. This API will adhere to the rules within the
+ * scope of the implementation. This includes handling transmission suppression and the order in which DMX and PAP
+ * packets are sent. This also includes automatically setting levels to 0, even if the application specified a different
+ * level, for each slot that the application assigns a PAP of 0 (by setting the PAP to 0 or reducing the number of
+ * PAPs).
  *
  * @param[in] universe Universe to update.
  * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
@@ -665,11 +666,12 @@ inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* n
  * the logic that slows down packet transmission due to inactivity. Additionally, both packets to be sent by this call
  * will have their force_synchronization option flags set.
  *
- * Per-address priority support has specific rules about when to send value changes vs. pap changes.  These rules are
- * documented in https://etclabs.github.io/sACN/docs/head/per_address_priority.html, and are triggered by the use of
- * this function. Changing per-address priorities to and from "don't care", changing the size of the priorities array,
- * or passing in NULL/non-NULL for the priorities will cause this library to do the necessary tasks to "take control" or
- * "release control" of the corresponding DMX values.
+ * The application should adhere to the rules for per-address priority (PAP) specified in
+ * https://etclabs.github.io/sACN/docs/head/per_address_priority.html. This API will adhere to the rules within the
+ * scope of the implementation. This includes handling transmission suppression and the order in which DMX and PAP
+ * packets are sent. This also includes automatically setting levels to 0, even if the application specified a different
+ * level, for each slot that the application assigns a PAP of 0 (by setting the PAP to 0 or reducing the number of
+ * PAPs).
  *
  * If no synchronization universe is configured, this function acts like a direct call to UpdateValues().
  *

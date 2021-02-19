@@ -798,10 +798,10 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
  *
  * The application should adhere to the rules for per-address priority (PAP) specified in
  * https://etclabs.github.io/sACN/docs/head/per_address_priority.html. This API will adhere to the rules within the
- * scope of the implementation, which involve handling transmission suppression and the order in which DMX and PAP
- * packets are sent. For each slot the application releases control of (by setting the PAP to 0 or reducing the number
- * of PAPs), it is recommended that the application also set that slot's corresponding DMX level to 0. This is left to
- * the application.
+ * scope of the implementation. This includes handling transmission suppression and the order in which DMX and PAP
+ * packets are sent. This also includes automatically setting levels to 0, even if the application specified a different
+ * level, for each slot that the application assigns a PAP of 0 (by setting the PAP to 0 or reducing the number of
+ * PAPs).
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
@@ -825,12 +825,11 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
 
     if (universe_state && !universe_state->terminating)
     {
+      if (!new_priorities)
+        disable_pap_data(universe_state);  // This needs to be done first
+
       update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
                                 new_priorities_size, kDisableForceSync);
-
-      // Stop using PAPs if new_priorities is NULL
-      if (!new_priorities)
-        disable_pap_data(universe_state);
     }
 
     sacn_unlock();
@@ -881,10 +880,10 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
  *
  * The application should adhere to the rules for per-address priority (PAP) specified in
  * https://etclabs.github.io/sACN/docs/head/per_address_priority.html. This API will adhere to the rules within the
- * scope of the implementation, which involve handling transmission suppression and the order in which DMX and PAP
- * packets are sent. For each slot the application releases control of (by setting the PAP to 0 or reducing the number
- * of PAPs), it is recommended that the application also set that slot's corresponding DMX level to 0. This is left to
- * the application.
+ * scope of the implementation. This includes handling transmission suppression and the order in which DMX and PAP
+ * packets are sent. This also includes automatically setting levels to 0, even if the application specified a different
+ * level, for each slot that the application assigns a PAP of 0 (by setting the PAP to 0 or reducing the number of
+ * PAPs).
  *
  * If no synchronization universe is configured, this function acts like a direct call to
  * sacn_source_update_values_and_pap().
@@ -913,12 +912,11 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 
     if (universe_state && !universe_state->terminating)
     {
+      if (!new_priorities)
+        disable_pap_data(universe_state);  // This needs to be done first
+
       update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
                                 new_priorities_size, kEnableForceSync);
-
-      // Stop using PAPs if new_priorities is NULL
-      if (!new_priorities)
-        disable_pap_data(universe_state);
     }
 
     sacn_unlock();

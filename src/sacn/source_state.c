@@ -72,6 +72,7 @@ static void update_levels(SacnSource* source_state, SacnSourceUniverse* universe
 #if SACN_ETC_PRIORITY_EXTENSION
 static void update_paps(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_priorities,
                         size_t new_priorities_size, force_sync_behavior_t force_sync);
+static void zero_levels_where_paps_are_zero(SacnSourceUniverse* universe_state);
 #endif
 static void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id);
 
@@ -487,6 +488,11 @@ void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state,
 
   update_send_buf_data(universe_state->level_send_buf, new_levels, (uint16_t)new_levels_size, force_sync);
   universe_state->has_level_data = true;
+#if SACN_ETC_PRIORITY_EXTENSION
+  if (universe_state->has_pap_data)
+    zero_levels_where_paps_are_zero(universe_state);  // PAPs must already be updated!
+#endif
+
   reset_transmission_suppression(source_state, universe_state, kResetLevel);
 
   if (!was_part_of_discovery && IS_PART_OF_UNIVERSE_DISCOVERY(universe_state))
@@ -502,6 +508,18 @@ void update_paps(SacnSource* source_state, SacnSourceUniverse* universe_state, c
   universe_state->has_pap_data = true;
   reset_transmission_suppression(source_state, universe_state, kResetPap);
 }
+
+// Needs lock
+void zero_levels_where_paps_are_zero(SacnSourceUniverse* universe_state)
+{
+  int level_count = universe_state->level_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET] - 1;
+  int pap_count = universe_state->pap_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET] - 1;
+  for (int i = 0; i < level_count; ++i)
+  {
+    if ((i >= pap_count) || (universe_state->pap_send_buf[SACN_DATA_HEADER_SIZE + i] == 0))
+      universe_state->level_send_buf[SACN_DATA_HEADER_SIZE + i] = 0;
+  }
+}
 #endif
 
 // Needs lock
@@ -511,14 +529,13 @@ void update_levels_and_or_paps(SacnSource* source, SacnSourceUniverse* universe,
 {
   if (source && universe)
   {
-    // Update 0x00 values
-    if (new_levels)
-      update_levels(source, universe, new_levels, new_levels_size, force_sync);
 #if SACN_ETC_PRIORITY_EXTENSION
-    // Update 0xDD values
+    // Make sure PAPs are updated before levels.
     if (new_priorities)
       update_paps(source, universe, new_priorities, new_priorities_size, force_sync);
 #endif
+    if (new_levels)
+      update_levels(source, universe, new_levels, new_levels_size, force_sync);
   }
 }
 
