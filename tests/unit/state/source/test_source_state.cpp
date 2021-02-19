@@ -1384,3 +1384,30 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
   send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer, kSkipTerminatingUnicastDests);
   EXPECT_EQ(sacn_send_unicast_fake.call_count, (2u * NUM_TEST_ADDRS) + NUM_TEST_ADDRS - num_terminating);
 }
+
+TEST_F(TestSourceState, SendUniverseMulticastWorks)
+{
+  sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
+                                            const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {
+    EXPECT_EQ(universe_id, kTestUniverseConfig.universe);
+    EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
+    EXPECT_EQ(memcmp(send_buf, kTestBuffer, kTestBufferLength), 0);
+    EXPECT_EQ(netint->index, kTestNetints[current_netint_index].iface.index);
+    EXPECT_EQ(netint->ip_type, kTestNetints[current_netint_index].iface.ip_type);
+    ++current_netint_index;
+  };
+
+  sacn_source_t source = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  uint16_t multicast_universe = AddUniverse(source, universe_config);
+  universe_config.send_unicast_only = true;
+  ++universe_config.universe;
+  uint16_t unicast_only_universe = AddUniverse(source, universe_config);
+
+  current_remote_addr_index = 0;
+  send_universe_multicast(GetSource(source), GetUniverse(source, unicast_only_universe), kTestBuffer);
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, 0u);
+  send_universe_multicast(GetSource(source), GetUniverse(source, multicast_universe), kTestBuffer);
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, NUM_TEST_NETINTS);
+}
