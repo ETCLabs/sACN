@@ -1485,3 +1485,79 @@ TEST_F(TestSourceState, SetUnicastDestTerminatingWorks)
     EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent, 0);
   }
 }
+
+TEST_F(TestSourceState, ResetLevelAndPapTransmissionSuppressionWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  InitTestData(source, universe, kTestBuffer, kTestBufferLength, kTestBuffer2, kTestBuffer2Length);
+
+  GetUniverse(source, universe)->level_packets_sent_before_suppression = 4;
+  GetUniverse(source, universe)->pap_packets_sent_before_suppression = 4;
+  GetUniverse(source, universe)->level_keep_alive_timer.reset_time = 0u;
+  GetUniverse(source, universe)->level_keep_alive_timer.interval = 0u;
+  GetUniverse(source, universe)->pap_keep_alive_timer.reset_time = 0u;
+  GetUniverse(source, universe)->pap_keep_alive_timer.interval = 0u;
+
+  etcpal_getms_fake.return_val = kTestGetMsValue;
+  reset_transmission_suppression(GetSource(source), GetUniverse(source, universe), kResetLevelAndPap);
+
+  EXPECT_EQ(GetUniverse(source, universe)->level_packets_sent_before_suppression, 0);
+  EXPECT_EQ(GetUniverse(source, universe)->pap_packets_sent_before_suppression, 0);
+  EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.reset_time, etcpal_getms_fake.return_val);
+  EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.reset_time, etcpal_getms_fake.return_val);
+  EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.interval,
+            (uint32_t)kTestSourceConfig.keep_alive_interval);
+  EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.interval,
+            (uint32_t)kTestSourceConfig.keep_alive_interval);
+}
+
+TEST_F(TestSourceState, ResetLevelTransmissionSuppressionWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  InitTestData(source, universe, kTestBuffer, kTestBufferLength, kTestBuffer2, kTestBuffer2Length);
+
+  GetUniverse(source, universe)->level_packets_sent_before_suppression = 4;
+  GetUniverse(source, universe)->pap_packets_sent_before_suppression = 4;
+  GetUniverse(source, universe)->level_keep_alive_timer.reset_time = 0u;
+  GetUniverse(source, universe)->level_keep_alive_timer.interval = 0u;
+  GetUniverse(source, universe)->pap_keep_alive_timer.reset_time = 0u;
+  GetUniverse(source, universe)->pap_keep_alive_timer.interval = 0u;
+
+  etcpal_getms_fake.return_val = kTestGetMsValue;
+  reset_transmission_suppression(GetSource(source), GetUniverse(source, universe), kResetLevel);
+
+  EXPECT_EQ(GetUniverse(source, universe)->level_packets_sent_before_suppression, 0);
+  EXPECT_EQ(GetUniverse(source, universe)->pap_packets_sent_before_suppression, 4);
+  EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.reset_time, etcpal_getms_fake.return_val);
+  EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.reset_time, 0u);
+  EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.interval,
+            (uint32_t)kTestSourceConfig.keep_alive_interval);
+  EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.interval, 0u);
+}
+
+TEST_F(TestSourceState, ResetPapTransmissionSuppressionWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  InitTestData(source, universe, kTestBuffer, kTestBufferLength, kTestBuffer2, kTestBuffer2Length);
+
+  GetUniverse(source, universe)->level_packets_sent_before_suppression = 4;
+  GetUniverse(source, universe)->pap_packets_sent_before_suppression = 4;
+  GetUniverse(source, universe)->level_keep_alive_timer.reset_time = 0u;
+  GetUniverse(source, universe)->level_keep_alive_timer.interval = 0u;
+  GetUniverse(source, universe)->pap_keep_alive_timer.reset_time = 0u;
+  GetUniverse(source, universe)->pap_keep_alive_timer.interval = 0u;
+
+  etcpal_getms_fake.return_val = kTestGetMsValue;
+  reset_transmission_suppression(GetSource(source), GetUniverse(source, universe), kResetPap);
+
+  EXPECT_EQ(GetUniverse(source, universe)->level_packets_sent_before_suppression, 4);
+  EXPECT_EQ(GetUniverse(source, universe)->pap_packets_sent_before_suppression, 0);
+  EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.reset_time, 0u);
+  EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.reset_time, etcpal_getms_fake.return_val);
+  EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.interval, 0u);
+  EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.interval,
+            (uint32_t)kTestSourceConfig.keep_alive_interval);
+}
