@@ -1076,3 +1076,23 @@ TEST_F(TestSourceState, SourcesTerminateCorrectly)
 
   EXPECT_EQ(GetSource(source), nullptr);
 }
+
+TEST_F(TestSourceState, InitializeSourceThreadWorks)
+{
+  etcpal_thread_create_fake.custom_fake = [](etcpal_thread_t* id, const EtcPalThreadParams* params,
+                                             void (*thread_fn)(void*), void* thread_arg) {
+    EXPECT_NE(id, nullptr);
+    EXPECT_EQ(params->priority, (unsigned int)ETCPAL_THREAD_DEFAULT_PRIORITY);
+    EXPECT_EQ(params->stack_size, (unsigned int)ETCPAL_THREAD_DEFAULT_STACK);
+    EXPECT_EQ(strcmp(params->thread_name, ETCPAL_THREAD_DEFAULT_NAME), 0);
+    EXPECT_EQ(params->platform_data, nullptr);
+    EXPECT_NE(thread_fn, nullptr);
+    EXPECT_EQ(thread_arg, nullptr);
+
+    return kEtcPalErrOk;
+  };
+
+  EXPECT_EQ(etcpal_thread_create_fake.call_count, 0u);
+  initialize_source_thread();
+  EXPECT_EQ(etcpal_thread_create_fake.call_count, 1u);
+}
