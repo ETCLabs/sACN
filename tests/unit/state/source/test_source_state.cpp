@@ -1438,3 +1438,24 @@ TEST_F(TestSourceState, SetPreviewFlagWorks)
   EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.reset_time, kTestGetMsValue2);
   EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.reset_time, kTestGetMsValue2);
 }
+
+TEST_F(TestSourceState, SetUniversePriorityWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  InitTestData(source, universe, kTestBuffer, kTestBufferLength, kTestBuffer2, kTestBuffer2Length);
+
+  etcpal_getms_fake.return_val = kTestGetMsValue;
+  for (uint8_t priority = 1u; priority < 10u; ++priority)
+  {
+    set_universe_priority(GetSource(source), GetUniverse(source, universe), priority);
+
+    EXPECT_EQ(GetUniverse(source, universe)->priority, priority);
+    EXPECT_EQ(GetUniverse(source, universe)->level_send_buf[SACN_PRI_OFFSET], priority);
+    EXPECT_EQ(GetUniverse(source, universe)->pap_send_buf[SACN_PRI_OFFSET], priority);
+    EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.reset_time, etcpal_getms_fake.return_val);
+    EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.reset_time, etcpal_getms_fake.return_val);
+
+    ++etcpal_getms_fake.return_val;
+  }
+}
