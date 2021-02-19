@@ -1690,3 +1690,43 @@ TEST_F(TestSourceState, SetSourceNameWorks)
     EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.reset_time, kTestGetMsValue);
   }
 }
+
+TEST_F(TestSourceState, GetSourceUniversesWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (int i = 0; i < 7; ++i)
+  {
+    AddUniverse(source, universe_config);
+    ++universe_config.universe;
+  }
+
+  uint16_t universes[7] = {0u};
+
+  size_t num_universes = get_source_universes(GetSource(source), universes, 1u);
+  EXPECT_EQ(num_universes, 7u);
+
+  EXPECT_EQ(universes[0], kTestUniverseConfig.universe);
+  for (uint16_t i = 1u; i < 7u; ++i)
+    EXPECT_EQ(universes[i], 0u);
+
+  num_universes = get_source_universes(GetSource(source), universes, 7u);
+  EXPECT_EQ(num_universes, 7u);
+
+  for (uint16_t i = 0u; i < 7u; ++i)
+    EXPECT_EQ(universes[i], kTestUniverseConfig.universe + i);
+
+  size_t num_terminating = 0u;
+  for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + 7u); universe += 2u)
+  {
+    set_universe_terminating(GetUniverse(source, universe));
+    ++num_terminating;
+  }
+
+  num_universes = get_source_universes(GetSource(source), universes, 7u);
+  EXPECT_EQ(num_universes, 7u - num_terminating);
+
+  for (uint16_t i = 0u; i < (7u - num_terminating); ++i)
+    EXPECT_EQ(universes[i], kTestUniverseConfig.universe + (i * 2u) + 1u);
+}
