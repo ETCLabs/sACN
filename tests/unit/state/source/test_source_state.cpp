@@ -1234,7 +1234,7 @@ TEST_F(TestSourceState, UpdateOnlyPapsSavesLevels)
   EXPECT_EQ(universe_state->pap_keep_alive_timer.reset_time, kTestGetMsValue2);
 }
 
-TEST_F(TestSourceState, ZeroingPapsZeroesLevels)
+TEST_F(TestSourceState, LevelsZeroWhereverPapsAreZeroed)
 {
   sacn_source_t source = AddSource(kTestSourceConfig);
   uint16_t universe = AddUniverse(source, kTestUniverseConfig);
@@ -1264,6 +1264,24 @@ TEST_F(TestSourceState, ZeroingPapsZeroesLevels)
     else
       EXPECT_EQ(universe_state->level_send_buf[SACN_DATA_HEADER_SIZE + i], 0u);
   }
+
+  update_levels_and_or_paps(source_state, universe_state, kTestBuffer, kTestBufferLength, nullptr, 0u,
+                            kDisableForceSync);
+
+  for (size_t i = 0u; i < kTestBufferLength; ++i)
+  {
+    if (i % 2)
+      EXPECT_GT(universe_state->level_send_buf[SACN_DATA_HEADER_SIZE + i], 0u);
+    else
+      EXPECT_EQ(universe_state->level_send_buf[SACN_DATA_HEADER_SIZE + i], 0u);
+  }
+
+  disable_pap_data(universe_state);
+  update_levels_and_or_paps(source_state, universe_state, kTestBuffer, kTestBufferLength, nullptr, 0u,
+                            kDisableForceSync);
+
+  for (size_t i = 0u; i < kTestBufferLength; ++i)
+    EXPECT_GT(universe_state->level_send_buf[SACN_DATA_HEADER_SIZE + i], 0u);
 
   update_levels_and_or_paps(source_state, universe_state, kTestBuffer, kTestBufferLength, &kTestPriority, 1u,
                             kDisableForceSync);
