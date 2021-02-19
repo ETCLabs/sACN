@@ -24,6 +24,7 @@
 #include "etcpal/cpp/inet.h"
 #include "etcpal/cpp/uuid.h"
 #include "etcpal_mock/common.h"
+#include "etcpal_mock/thread.h"
 #include "etcpal_mock/timer.h"
 #include "sacn_mock/private/common.h"
 #include "sacn_mock/private/sockets.h"
@@ -312,6 +313,25 @@ protected:
 
   sacn_source_t next_source_handle_ = 0;
 };
+
+TEST_F(TestSourceState, DeinitJoinsInitializedThread)
+{
+  EXPECT_EQ(etcpal_thread_join_fake.call_count, 0u);
+
+  initialize_source_thread();
+  sacn_source_state_deinit();
+
+  EXPECT_EQ(etcpal_thread_join_fake.call_count, 1u);
+}
+
+TEST_F(TestSourceState, DeinitDoesNotJoinUninitializedThread)
+{
+  EXPECT_EQ(etcpal_thread_join_fake.call_count, 0u);
+
+  sacn_source_state_deinit();
+
+  EXPECT_EQ(etcpal_thread_join_fake.call_count, 0u);
+}
 
 TEST_F(TestSourceState, ProcessSourcesCountsSources)
 {
