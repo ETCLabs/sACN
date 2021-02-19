@@ -1101,7 +1101,8 @@ TEST_F(TestSourceState, InitializeSourceThreadWorks)
     EXPECT_NE(id, nullptr);
     EXPECT_EQ(params->priority, (unsigned int)ETCPAL_THREAD_DEFAULT_PRIORITY);
     EXPECT_EQ(params->stack_size, (unsigned int)ETCPAL_THREAD_DEFAULT_STACK);
-    EXPECT_EQ(strcmp(params->thread_name, ETCPAL_THREAD_DEFAULT_NAME), 0);
+    if (params->thread_name)
+      EXPECT_EQ(strcmp(params->thread_name, ETCPAL_THREAD_DEFAULT_NAME), 0);
     EXPECT_EQ(params->platform_data, nullptr);
     EXPECT_NE(thread_fn, nullptr);
     EXPECT_EQ(thread_arg, nullptr);
