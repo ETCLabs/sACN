@@ -1342,3 +1342,45 @@ TEST_F(TestSourceState, IncrementSequenceNumberWorks)
     EXPECT_EQ(universe_state->pap_send_buf[SACN_SEQ_OFFSET], universe_state->seq_num);
   }
 }
+
+TEST_F(TestSourceState, SendUniverseUnicastWorks)
+{
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
+                                          const EtcPalIpAddr* dest_addr) {
+    EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
+    EXPECT_EQ(memcmp(send_buf, kTestBuffer, kTestBufferLength), 0);
+    EXPECT_EQ(etcpal_ip_cmp(dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
+    ++current_remote_addr_index;
+  };
+
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  AddTestUnicastDests(source, universe);
+
+  current_remote_addr_index = 0;
+  send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer, kSkipTerminatingUnicastDests);
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, NUM_TEST_ADDRS);
+
+  unsigned int num_terminating = 0u;
+  for (int i = 1; i < NUM_TEST_ADDRS; i += 2)
+  {
+    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i]);
+    ++num_terminating;
+  }
+
+  current_remote_addr_index = 0;
+  send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer, kIncludeTerminatingUnicastDests);
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, 2u * NUM_TEST_ADDRS);
+
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
+                                          const EtcPalIpAddr* dest_addr) {
+    EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
+    EXPECT_EQ(memcmp(send_buf, kTestBuffer, kTestBufferLength), 0);
+    EXPECT_EQ(etcpal_ip_cmp(dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
+    current_remote_addr_index += 2;
+  };
+
+  current_remote_addr_index = 0;
+  send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer, kSkipTerminatingUnicastDests);
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, (2u * NUM_TEST_ADDRS) + NUM_TEST_ADDRS - num_terminating);
+}
