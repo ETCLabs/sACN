@@ -1459,3 +1459,29 @@ TEST_F(TestSourceState, SetUniversePriorityWorks)
     ++etcpal_getms_fake.return_val;
   }
 }
+
+TEST_F(TestSourceState, SetUnicastDestTerminatingWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  AddTestUnicastDests(source, universe);
+
+  for (int i = 0; i < NUM_TEST_ADDRS; ++i)
+  {
+    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i]);
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].terminating, true);
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent, 0);
+
+    GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent = 2;
+
+    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i]);
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].terminating, true);
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent, 2);
+
+    GetUniverse(source, universe)->unicast_dests[i].terminating = false;
+
+    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i]);
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].terminating, true);
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent, 0);
+  }
+}
