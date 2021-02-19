@@ -1815,3 +1815,41 @@ TEST_F(TestSourceState, ClearSourceNetintsWorks)
   clear_source_netints(GetSource(source));
   EXPECT_EQ(GetSource(source)->num_netints, 0u);
 }
+
+TEST_F(TestSourceState, ResetSourceUniverseNetworkingWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverse* universe_state = nullptr;
+  EXPECT_EQ(add_sacn_source_universe(GetSource(source), &kTestUniverseConfig, kTestNetints, NUM_TEST_NETINTS,
+                                     &universe_state),
+            kEtcPalErrOk);
+  InitTestData(source, kTestUniverseConfig.universe, kTestBuffer, kTestBufferLength, kTestBuffer2, kTestBuffer2Length);
+
+#if SACN_DYNAMIC_MEM
+  free(universe_state->netints.netints);
+  universe_state->netints.netints = nullptr;
+#endif
+  universe_state->netints.num_netints = 0u;
+
+  EXPECT_EQ(GetSource(source)->num_netints, 0u);
+
+  etcpal_getms_fake.return_val = kTestGetMsValue;
+
+  EXPECT_EQ(reset_source_universe_networking(GetSource(source), universe_state, kTestNetints, NUM_TEST_NETINTS),
+            kEtcPalErrOk);
+  EXPECT_EQ(universe_state->netints.num_netints, NUM_TEST_NETINTS);
+  EXPECT_EQ(GetSource(source)->num_netints, NUM_TEST_NETINTS);
+
+  for (size_t i = 0u; i < NUM_TEST_NETINTS; ++i)
+  {
+    EXPECT_EQ(universe_state->netints.netints[i].index, kTestNetints[i].iface.index);
+    EXPECT_EQ(universe_state->netints.netints[i].ip_type, kTestNetints[i].iface.ip_type);
+    EXPECT_EQ(GetSource(source)->netints[i].id.index, kTestNetints[i].iface.index);
+    EXPECT_EQ(GetSource(source)->netints[i].id.ip_type, kTestNetints[i].iface.ip_type);
+    EXPECT_EQ(GetSource(source)->netints[i].num_refs, 1u);
+  }
+
+  EXPECT_EQ(universe_state->level_keep_alive_timer.reset_time, kTestGetMsValue);
+  EXPECT_EQ(universe_state->pap_keep_alive_timer.reset_time, kTestGetMsValue);
+}
