@@ -333,6 +333,18 @@ TEST_F(TestSourceState, DeinitDoesNotJoinUninitializedThread)
   EXPECT_EQ(etcpal_thread_join_fake.call_count, 0u);
 }
 
+TEST_F(TestSourceState, DeinitDoesNotJoinFailedThread)
+{
+  etcpal_thread_create_fake.return_val = kEtcPalErrSys;
+
+  EXPECT_EQ(etcpal_thread_join_fake.call_count, 0u);
+
+  initialize_source_thread();
+  sacn_source_state_deinit();
+
+  EXPECT_EQ(etcpal_thread_join_fake.call_count, 0u);
+}
+
 TEST_F(TestSourceState, ProcessSourcesCountsSources)
 {
   SacnSourceConfig config = kTestSourceConfig;
