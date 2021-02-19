@@ -1323,3 +1323,22 @@ TEST_F(TestSourceState, UpdateLevelsIncrementsActiveUniversesCorrectly)
                             kDisableForceSync);
   EXPECT_EQ(source_state->num_active_universes, 1u);
 }
+
+TEST_F(TestSourceState, IncrementSequenceNumberWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+
+  SacnSource* source_state = nullptr;
+  SacnSourceUniverse* universe_state = nullptr;
+  lookup_source_and_universe(source, universe, &source_state, &universe_state);
+
+  for (int i = 0; i < 10; ++i)
+  {
+    uint8_t old_seq_num = universe_state->seq_num;
+    increment_sequence_number(universe_state);
+    EXPECT_EQ(universe_state->seq_num, old_seq_num + 1u);
+    EXPECT_EQ(universe_state->level_send_buf[SACN_SEQ_OFFSET], universe_state->seq_num);
+    EXPECT_EQ(universe_state->pap_send_buf[SACN_SEQ_OFFSET], universe_state->seq_num);
+  }
+}
