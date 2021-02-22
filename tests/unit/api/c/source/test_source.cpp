@@ -61,6 +61,8 @@
 static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
 static const std::string kTestLocalName = std::string("Test Source");
 static const std::string kTestLocalName2 = std::string("Test Source 2");
+static const std::string kTestLocalNameTooLong =
+    std::string("Test Source Name Too Long Test Source Name Too Long Test Source N");
 static const EtcPalIpAddr kTestRemoteAddrV4 = etcpal::IpAddr::FromString("10.101.1.1").get();
 static const EtcPalIpAddr kTestRemoteAddrV6 = etcpal::IpAddr::FromString("2001:db8::1234:5678").get();
 static const sacn_source_t kTestHandle = 123u;
@@ -192,6 +194,79 @@ TEST_F(TestSource, ManualSourceCreateWorks)
   EXPECT_EQ(get_next_source_handle_fake.call_count, 1u);
   EXPECT_EQ(lookup_source(kTestHandle, &source_state), kEtcPalErrOk);
   EXPECT_EQ(handle, kTestHandle);
+}
+
+TEST_F(TestSource, SourceCreateErrInvalidWorks)
+{
+  SacnSourceConfig valid_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+  valid_config.cid = kTestLocalCid.get();
+  valid_config.name = kTestLocalName.c_str();
+  SacnSourceConfig null_cid_config = valid_config;
+  null_cid_config.cid = kEtcPalNullUuid;
+  SacnSourceConfig null_name_config = valid_config;
+  null_name_config.name = nullptr;
+  SacnSourceConfig lengthy_name_config = valid_config;
+  lengthy_name_config.name = kTestLocalNameTooLong.c_str();
+  SacnSourceConfig zero_keep_alive_config = valid_config;
+  zero_keep_alive_config.keep_alive_interval = 0;
+  SacnSourceConfig negative_keep_alive_config = valid_config;
+  negative_keep_alive_config.keep_alive_interval = -100;
+
+  sacn_source_t handle = SACN_SOURCE_INVALID;
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(nullptr, &handle), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&null_cid_config, &handle), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&null_name_config, &handle), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&lengthy_name_config, &handle), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&zero_keep_alive_config, &handle), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&negative_keep_alive_config, &handle), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&valid_config, nullptr), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&valid_config, &handle), kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceCreateErrNotInitWorks)
+{
+  SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+  config.cid = kTestLocalCid.get();
+  config.name = kTestLocalName.c_str();
+  sacn_source_t handle = SACN_SOURCE_INVALID;
+
+  sacn_initialized_fake.return_val = false;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&config, &handle), kEtcPalErrNotInit);
+  sacn_initialized_fake.return_val = true;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&config, &handle), kEtcPalErrOk);
+}
+
+#if !SACN_DYNAMIC_MEM
+TEST_F(TestSource, SourceCreateErrNoMemWorks)
+{
+  SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+  config.cid = kTestLocalCid.get();
+  config.name = kTestLocalName.c_str();
+  sacn_source_t handle = SACN_SOURCE_INVALID;
+
+  for (int i = 0; i < SACN_SOURCE_MAX_SOURCES; ++i)
+  {
+    get_next_source_handle_fake.return_val = i;
+    VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&config, &handle), kEtcPalErrOk);
+  }
+
+  get_next_source_handle_fake.return_val = SACN_SOURCE_MAX_SOURCES;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&config, &handle), kEtcPalErrNoMem);
+}
+#endif
+
+TEST_F(TestSource, SourceCreateReturnsThreadError)
+{
+  SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+  config.cid = kTestLocalCid.get();
+  config.name = kTestLocalName.c_str();
+  sacn_source_t handle = SACN_SOURCE_INVALID;
+
+  initialize_source_thread_fake.return_val = kEtcPalErrSys;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&config, &handle), kEtcPalErrSys);
+  initialize_source_thread_fake.return_val = kEtcPalErrOk;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&config, &handle), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceDestroyWorks)
