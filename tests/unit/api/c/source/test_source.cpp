@@ -353,6 +353,37 @@ TEST_F(TestSource, SourceChangeNameWorks)
   EXPECT_EQ(set_source_name_fake.call_count, 1u);
 }
 
+TEST_F(TestSource, SourceChangeNameErrInvalidWorks)
+{
+  SetUpSource(kTestHandle);
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(SACN_SOURCE_INVALID, kTestLocalName2.c_str()),
+                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, nullptr), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalNameTooLong.c_str()),
+                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, nullptr), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceChangeNameErrNotInitWorks)
+{
+  SetUpSource(kTestHandle);
+  sacn_initialized_fake.return_val = false;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrNotInit);
+  sacn_initialized_fake.return_val = true;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceChangeNameErrNotFoundWorks)
+{
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrNotFound);
+  SetUpSource(kTestHandle);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrOk);
+  GetSource(kTestHandle)->terminating = true;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrNotFound);
+}
+
 TEST_F(TestSource, SourceAddUniverseWorks)
 {
   SetUpSource(kTestHandle);
