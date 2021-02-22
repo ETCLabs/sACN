@@ -131,6 +131,13 @@ protected:
 
     EXPECT_EQ(sacn_source_add_universe(source_handle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
   }
+
+  SacnSource* GetSource(sacn_source_t handle)
+  {
+    SacnSource* state = nullptr;
+    lookup_source(handle, &state);
+    return state;
+  }
 };
 
 TEST_F(TestSource, SourceConfigInitWorks)
@@ -317,6 +324,17 @@ TEST_F(TestSource, SourceDestroyHandlesNotFound)
   VERIFY_LOCKING(sacn_source_destroy(kTestHandle));
   EXPECT_EQ(set_source_terminating_fake.call_count, 0u);
   SetUpSource(kTestHandle);
+  VERIFY_LOCKING(sacn_source_destroy(kTestHandle));
+  EXPECT_EQ(set_source_terminating_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceDestroyHandlesAlreadyTerminating)
+{
+  SetUpSource(kTestHandle);
+  GetSource(kTestHandle)->terminating = true;
+  VERIFY_LOCKING(sacn_source_destroy(kTestHandle));
+  EXPECT_EQ(set_source_terminating_fake.call_count, 0u);
+  GetSource(kTestHandle)->terminating = false;
   VERIFY_LOCKING(sacn_source_destroy(kTestHandle));
   EXPECT_EQ(set_source_terminating_fake.call_count, 1u);
 }
