@@ -1336,7 +1336,7 @@ TEST_F(TestSourceState, IncrementSequenceNumberWorks)
   SacnSourceUniverse* universe_state = nullptr;
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
-  for (int i = 0; i < 10; ++i)
+  for (int i = 0; i < 255; ++i)
   {
     uint8_t old_seq_num = universe_state->seq_num;
     increment_sequence_number(universe_state);
@@ -1344,6 +1344,12 @@ TEST_F(TestSourceState, IncrementSequenceNumberWorks)
     EXPECT_EQ(universe_state->level_send_buf[SACN_SEQ_OFFSET], universe_state->seq_num);
     EXPECT_EQ(universe_state->pap_send_buf[SACN_SEQ_OFFSET], universe_state->seq_num);
   }
+
+  EXPECT_EQ(universe_state->seq_num, 255u);
+  increment_sequence_number(universe_state);
+  EXPECT_EQ(universe_state->seq_num, 0u);
+  EXPECT_EQ(universe_state->level_send_buf[SACN_SEQ_OFFSET], 0u);
+  EXPECT_EQ(universe_state->pap_send_buf[SACN_SEQ_OFFSET], 0u);
 }
 
 TEST_F(TestSourceState, SendUniverseUnicastWorks)
