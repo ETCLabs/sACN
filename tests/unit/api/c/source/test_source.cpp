@@ -135,6 +135,11 @@ TEST_F(TestSource, SourceConfigInitWorks)
   EXPECT_EQ(config.keep_alive_interval, SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
 }
 
+TEST_F(TestSource, SourceConfigInitHandlesNull)
+{
+  sacn_source_config_init(nullptr);
+}
+
 TEST_F(TestSource, SourceUniverseConfigInitWorks)
 {
   SacnSourceUniverseConfig config;
@@ -146,6 +151,11 @@ TEST_F(TestSource, SourceUniverseConfigInitWorks)
   EXPECT_EQ(config.unicast_destinations, (EtcPalIpAddr*)NULL);
   EXPECT_EQ(config.num_unicast_destinations, 0u);
   EXPECT_EQ(config.sync_universe, 0u);
+}
+
+TEST_F(TestSource, SourceUniverseConfigInitHandlesNull)
+{
+  sacn_source_universe_config_init(nullptr);
 }
 
 TEST_F(TestSource, ThreadedSourceCreateWorks)
