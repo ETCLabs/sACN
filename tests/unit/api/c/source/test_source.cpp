@@ -49,6 +49,14 @@
     EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);         \
     EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count); \
   } while (0)
+#define VERIFY_NO_LOCKING(function_call)                               \
+  do                                                                   \
+  {                                                                    \
+    unsigned int previous_lock_count = sacn_lock_fake.call_count;      \
+    function_call;                                                     \
+    EXPECT_EQ(sacn_lock_fake.call_count, previous_lock_count);         \
+    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count); \
+  } while (0)
 #define VERIFY_LOCKING_AND_RETURN_VALUE(function_call, expected_return_value) \
   do                                                                          \
   {                                                                           \
@@ -278,6 +286,37 @@ TEST_F(TestSource, SourceDestroyWorks)
     EXPECT_EQ(source->handle, kTestHandle);
   };
 
+  VERIFY_LOCKING(sacn_source_destroy(kTestHandle));
+  EXPECT_EQ(set_source_terminating_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceDestroyHandlesNotInit)
+{
+  SetUpSource(kTestHandle);
+
+  sacn_initialized_fake.return_val = false;
+  VERIFY_NO_LOCKING(sacn_source_destroy(kTestHandle));
+  EXPECT_EQ(set_source_terminating_fake.call_count, 0u);
+  sacn_initialized_fake.return_val = true;
+  VERIFY_LOCKING(sacn_source_destroy(kTestHandle));
+  EXPECT_EQ(set_source_terminating_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceDestroyHandlesInvalidHandle)
+{
+  SetUpSource(kTestHandle);
+
+  VERIFY_NO_LOCKING(sacn_source_destroy(SACN_SOURCE_INVALID));
+  EXPECT_EQ(set_source_terminating_fake.call_count, 0u);
+  VERIFY_LOCKING(sacn_source_destroy(kTestHandle));
+  EXPECT_EQ(set_source_terminating_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceDestroyHandlesNotFound)
+{
+  VERIFY_LOCKING(sacn_source_destroy(kTestHandle));
+  EXPECT_EQ(set_source_terminating_fake.call_count, 0u);
+  SetUpSource(kTestHandle);
   VERIFY_LOCKING(sacn_source_destroy(kTestHandle));
   EXPECT_EQ(set_source_terminating_fake.call_count, 1u);
 }
