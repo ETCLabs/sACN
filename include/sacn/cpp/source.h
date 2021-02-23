@@ -294,7 +294,7 @@ inline etcpal::Error Source::Startup(const Settings& settings)
 inline void Source::Shutdown()
 {
   sacn_source_destroy(handle_.value());
-  handle_.SetValue(SACN_SOURCE_INVALID);
+  handle_.Clear();
 }
 
 /**
