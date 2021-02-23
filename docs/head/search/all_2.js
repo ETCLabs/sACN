@@ -9,6 +9,9 @@ var searchData=
   ['changesynchronizationuniverse',['ChangeSynchronizationUniverse',['../classsacn_1_1_source.html#a6f73aa9c83e7d7266128cba5d4f70ef2',1,'sacn::Source']]],
   ['changeuniverse',['ChangeUniverse',['../classsacn_1_1_merge_receiver.html#aa94ae64c11fbb22db3e21fba1e85cc64',1,'sacn::MergeReceiver::ChangeUniverse()'],['../classsacn_1_1_receiver.html#aa94ae64c11fbb22db3e21fba1e85cc64',1,'sacn::Receiver::ChangeUniverse()']]],
   ['cid',['cid',['../struct_sacn_header_data.html#a4c3f7d9a58af5033f9acd8c942bf81d9',1,'SacnHeaderData::cid()'],['../struct_sacn_remote_source.html#a4c3f7d9a58af5033f9acd8c942bf81d9',1,'SacnRemoteSource::cid()'],['../struct_sacn_lost_source.html#a4c3f7d9a58af5033f9acd8c942bf81d9',1,'SacnLostSource::cid()'],['../struct_sacn_source_config.html#a4c3f7d9a58af5033f9acd8c942bf81d9',1,'SacnSourceConfig::cid()'],['../structsacn_1_1_source_1_1_settings.html#ab74b3ddda3c95279107d0059dd7ee9f3',1,'sacn::Source::Settings::cid()']]],
+  ['clear',['Clear',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_opaque_id.html#adc79a2829b7e197f61e821a2b0942b81',1,'etcpal::OpaqueId']]],
+  ['clearbits',['ClearBits',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_event_group.html#a00b51ef9ad31be233f2005ed798f8b6c',1,'etcpal::EventGroup']]],
+  ['clearbitsfromisr',['ClearBitsFromIsr',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_event_group.html#a41ba5cddf117130676e4a27cb3ebcdd5',1,'etcpal::EventGroup']]],
   ['clock_5fseq_5fand_5fnode',['clock_seq_and_node',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_uuid.html#ad1c7dfeea57e4e696bca56b1cb172292',1,'etcpal::Uuid::clock_seq_and_node() const noexcept'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_uuid.html#ad1c7dfeea57e4e696bca56b1cb172292',1,'etcpal::Uuid::clock_seq_and_node() const noexcept']]],
   ['cmp',['cmp',['https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_rb_tree.html#a7b29df8f3907a7cb322be7a1cb130670',1,'EtcPalRbTree']]],
   ['code',['code',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html#a65e890bf700cdd8262c552690a03baad',1,'etcpal::Error']]],
@@ -18,6 +21,5 @@ var searchData=
   ['critical',['Critical',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#a1c8920f98f8e58c892f8db1b07309c34',1,'etcpal::Logger::Critical(const char *format,...)'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#a1c8920f98f8e58c892f8db1b07309c34',1,'etcpal::Logger::Critical(const char *format,...)']]],
   ['core_20modules',['Core Modules',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__core.html',1,'']]],
   ['c_2b_2b_20wrappers',['C++ Wrappers',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__cpp.html',1,'']]],
-  ['counting_20semaphores',['Counting Semaphores',['https://etclabs.github.io/EtcPal/docs/head/group__etcpal__sem.html',1,'']]],
   ['common_20definitions',['Common Definitions',['../group__sacn__cpp__common.html',1,'']]]
 ];

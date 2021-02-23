@@ -199,8 +199,7 @@ $(document).ready(function(){initNavTree('classsacn_1_1_source.html','');});
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="#pub-static-attribs">Static Public Attributes</a>  </div>
+<a href="#pub-static-methods">Static Public Member Functions</a>  </div>
   <div class="headertitle">
 <div class="title">Source Class Reference<div class="ingroups"><a class="el" href="group__sacn__cpp__api.html">sACN C++ Language APIs</a> &raquo; <a class="el" href="group__sacn__source__cpp.html">sACN Source API</a></div></div>  </div>
 </div><!--header-->
@@ -223,8 +222,8 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a6c08b4f270d0515441eb0eeef16776d0"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a6c08b4f270d0515441eb0eeef16776d0">Handle</a> = <a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a></td></tr>
-<tr class="separator:a6c08b4f270d0515441eb0eeef16776d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3defc9aed71824af85696f0f7e1b9ae4"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a3defc9aed71824af85696f0f7e1b9ae4">Handle</a> = <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_opaque_id.html">etcpal::OpaqueId</a>&lt; <a class="el" href="classsacn_1_1detail_1_1_source_handle_type.html">detail::SourceHandleType</a>, <a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>, <a class="el" href="group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153">SACN_SOURCE_INVALID</a> &gt;</td></tr>
+<tr class="separator:a3defc9aed71824af85696f0f7e1b9ae4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -295,10 +294,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af65ca703eb59bd26ca80a0493169eb0f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#af65ca703eb59bd26ca80a0493169eb0f">UpdateValuesAndForceSync</a> (uint16_t universe, const uint8_t *new_values, size_t new_values_size, const uint8_t *new_priorities, size_t new_priorities_size)</td></tr>
 <tr class="memdesc:af65ca703eb59bd26ca80a0493169eb0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Like <a class="el" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047" title="Copies the universe&#39;s dmx values into the packet to be sent on the next threaded or manual update...">UpdateValues()</a>, but also sets the force_sync flag on the packet.  <a href="#af65ca703eb59bd26ca80a0493169eb0f">More...</a><br /></td></tr>
 <tr class="separator:af65ca703eb59bd26ca80a0493169eb0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab862dc0dd665318204b83182f016731c"><td class="memItemLeft" align="right" valign="top">std::vector&lt; EtcPalMcastNetintId &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ab862dc0dd665318204b83182f016731c">GetNetworkInterfaces</a> (uint16_t universe)</td></tr>
+<tr class="memitem:ab862dc0dd665318204b83182f016731c"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_mcast_netint_id.html">EtcPalMcastNetintId</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ab862dc0dd665318204b83182f016731c">GetNetworkInterfaces</a> (uint16_t universe)</td></tr>
 <tr class="memdesc:ab862dc0dd665318204b83182f016731c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain a vector of a universe's network interfaces.  <a href="#ab862dc0dd665318204b83182f016731c">More...</a><br /></td></tr>
 <tr class="separator:ab862dc0dd665318204b83182f016731c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f8c06497d45385dbb819d1dd4fc7a25"><td class="memItemLeft" align="right" valign="top">constexpr <a class="el" href="classsacn_1_1_source.html#a6c08b4f270d0515441eb0eeef16776d0">Handle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25">handle</a> () const</td></tr>
+<tr class="memitem:a4f8c06497d45385dbb819d1dd4fc7a25"><td class="memItemLeft" align="right" valign="top">constexpr <a class="el" href="classsacn_1_1_source.html#a3defc9aed71824af85696f0f7e1b9ae4">Handle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25">handle</a> () const</td></tr>
 <tr class="memdesc:a4f8c06497d45385dbb819d1dd4fc7a25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current handle to the underlying C sacn_source.  <a href="#a4f8c06497d45385dbb819d1dd4fc7a25">More...</a><br /></td></tr>
 <tr class="separator:a4f8c06497d45385dbb819d1dd4fc7a25"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -316,25 +315,20 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a397e6ca116216b28b6c312171f892794"><td class="memItemLeft" align="right" valign="top">static <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a397e6ca116216b28b6c312171f892794">ResetNetworking</a> (std::vector&lt; <a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a> &gt; &amp;netints)</td></tr>
 <tr class="memdesc:a397e6ca116216b28b6c312171f892794"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets and determines network interfaces for each universe of each source.  <a href="#a397e6ca116216b28b6c312171f892794">More...</a><br /></td></tr>
 <tr class="separator:a397e6ca116216b28b6c312171f892794"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
-Static Public Attributes</h2></td></tr>
-<tr class="memitem:a86c59ec42eb180800c2e554d0f1e1a06"><td class="memItemLeft" align="right" valign="top">static constexpr <a class="el" href="classsacn_1_1_source.html#a6c08b4f270d0515441eb0eeef16776d0">Handle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a86c59ec42eb180800c2e554d0f1e1a06">kInvalidHandle</a> = <a class="el" href="group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153">SACN_SOURCE_INVALID</a></td></tr>
-<tr class="separator:a86c59ec42eb180800c2e554d0f1e1a06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>An instance of sACN <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API. ">Source</a> functionality; see <a class="el" href="using_source.html">Using the sACN Source API</a>. </p>
 <p>Components that send sACN are referred to as sACN Sources. Use this API to act as an sACN <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API. ">Source</a>.</p>
 <p>See <a class="el" href="using_source.html">Using the sACN Source API</a> for a detailed description of how to use this API. </p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
-<a id="a6c08b4f270d0515441eb0eeef16776d0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6c08b4f270d0515441eb0eeef16776d0">&#9670;&nbsp;</a></span>Handle</h2>
+<a id="a3defc9aed71824af85696f0f7e1b9ae4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3defc9aed71824af85696f0f7e1b9ae4">&#9670;&nbsp;</a></span>Handle</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">using <a class="el" href="classsacn_1_1_source.html#a6c08b4f270d0515441eb0eeef16776d0">Handle</a> =  <a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a></td>
+          <td class="memname">using <a class="el" href="classsacn_1_1_source.html#a3defc9aed71824af85696f0f7e1b9ae4">Handle</a> =  <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_opaque_id.html">etcpal::OpaqueId</a>&lt;<a class="el" href="classsacn_1_1detail_1_1_source_handle_type.html">detail::SourceHandleType</a>, <a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>, <a class="el" href="group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153">SACN_SOURCE_INVALID</a>&gt;</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -768,7 +762,7 @@ used to generate live output."</p>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; EtcPalMcastNetintId &gt; GetNetworkInterfaces </td>
+          <td class="memname">std::vector&lt; <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_mcast_netint_id.html">EtcPalMcastNetintId</a> &gt; GetNetworkInterfaces </td>
           <td>(</td>
           <td class="paramtype">uint16_t&#160;</td>
           <td class="paramname"><em>universe</em></td><td>)</td>
@@ -866,7 +860,7 @@ used to generate live output."</p>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr <a class="el" href="classsacn_1_1_source.html#a6c08b4f270d0515441eb0eeef16776d0">Source::Handle</a> handle </td>
+          <td class="memname">constexpr <a class="el" href="classsacn_1_1_source.html#a3defc9aed71824af85696f0f7e1b9ae4">Source::Handle</a> handle </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -880,7 +874,7 @@ used to generate live output."</p>
 </div><div class="memdoc">
 
 <p>Get the current handle to the underlying C sacn_source. </p>
-<dl class="section return"><dt>Returns</dt><dd>The handle or <a class="el" href="classsacn_1_1_source.html#a86c59ec42eb180800c2e554d0f1e1a06">Source::kInvalidHandle</a>. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The handle, which will only be valid if the source has been successfully created using <a class="el" href="classsacn_1_1_source.html#ab263565edc9ebf5ffd6e82a18184e4c3" title="Create a new sACN source to send sACN data. ">Startup()</a>. </dd></dl>
 
 </div>
 </div>
@@ -1584,30 +1578,6 @@ used to generate live output."</p>
   </table>
   </dd>
 </dl>
-
-</div>
-</div>
-<h2 class="groupheader">Field Documentation</h2>
-<a id="a86c59ec42eb180800c2e554d0f1e1a06"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a86c59ec42eb180800c2e554d0f1e1a06">&#9670;&nbsp;</a></span>kInvalidHandle</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">constexpr <a class="el" href="classsacn_1_1_source.html#a6c08b4f270d0515441eb0eeef16776d0">Handle</a> kInvalidHandle = <a class="el" href="group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153">SACN_SOURCE_INVALID</a></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>An invalid Handle value. </p>
 
 </div>
 </div>

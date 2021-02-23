@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['lock',['Lock',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_mutex.html#a747fd95916e116a6ed37cc641e394c69',1,'etcpal::Mutex']]],
+  ['lock',['Lock',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_mutex.html#a747fd95916e116a6ed37cc641e394c69',1,'etcpal::Mutex::Lock()'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_recursive_mutex.html#a747fd95916e116a6ed37cc641e394c69',1,'etcpal::RecursiveMutex::Lock()']]],
   ['log',['Log',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#aa613ebedf6ebc98cccf35990217e2eab',1,'etcpal::Logger']]],
   ['log_5faction',['log_action',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#a5763d3286470e0ddf797daac285d7e40',1,'etcpal::Logger::log_action() const noexcept'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#a5763d3286470e0ddf797daac285d7e40',1,'etcpal::Logger::log_action() const noexcept']]],
   ['log_5fmask',['log_mask',['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#ad0d3bf4ed833ebbaa8529a171d788f20',1,'etcpal::Logger::log_mask() const noexcept'],['https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_logger.html#ad0d3bf4ed833ebbaa8529a171d788f20',1,'etcpal::Logger::log_mask() const noexcept']]],
