@@ -819,6 +819,30 @@ TEST_F(TestSource, SourceGetUnicastDestinationsWorks)
   EXPECT_EQ(get_source_unicast_dests_fake.call_count, 1u);
 }
 
+TEST_F(TestSource, SourceGetUnicastDestinationsHandlesNotFound)
+{
+  VERIFY_LOCKING(sacn_source_get_unicast_destinations(kTestHandle, kTestUniverse, nullptr, 0u));
+  EXPECT_EQ(get_source_unicast_dests_fake.call_count, 0u);
+
+  SetUpSource(kTestHandle);
+
+  VERIFY_LOCKING(sacn_source_get_unicast_destinations(kTestHandle, kTestUniverse, nullptr, 0u));
+  EXPECT_EQ(get_source_unicast_dests_fake.call_count, 0u);
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  VERIFY_LOCKING(sacn_source_get_unicast_destinations(kTestHandle, kTestUniverse, nullptr, 0u));
+  EXPECT_EQ(get_source_unicast_dests_fake.call_count, 0u);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+  VERIFY_LOCKING(sacn_source_get_unicast_destinations(kTestHandle, kTestUniverse, nullptr, 0u));
+  EXPECT_EQ(get_source_unicast_dests_fake.call_count, 1u);
+}
+
 TEST_F(TestSource, SourceChangePriorityWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
