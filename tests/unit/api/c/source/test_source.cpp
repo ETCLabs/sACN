@@ -100,6 +100,25 @@ protected:
     sacn_sockets_reset_all_fakes();
     sacn_source_state_reset_all_fakes();
 
+    sacn_initialize_source_netints_fake.custom_fake = [](SacnInternalNetintArray* source_netints,
+                                                         SacnMcastInterface* app_netints, size_t num_app_netints) {
+#if SACN_DYNAMIC_MEM
+      source_netints->netints = (EtcPalMcastNetintId*)calloc(NUM_TEST_NETINTS, sizeof(EtcPalMcastNetintId));
+      source_netints->netints_capacity = NUM_TEST_NETINTS;
+#endif
+      source_netints->num_netints = NUM_TEST_NETINTS;
+
+      for (size_t i = 0u; i < num_app_netints; ++i)
+      {
+        EXPECT_EQ(app_netints[i].iface.index, kTestNetints[i].iface.index);
+        EXPECT_EQ(app_netints[i].iface.ip_type, kTestNetints[i].iface.ip_type);
+        EXPECT_EQ(app_netints[i].status, kTestNetints[i].status);
+        source_netints->netints[i] = app_netints[i].iface;
+      }
+
+      return kEtcPalErrOk;
+    };
+
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_source_init(), kEtcPalErrOk);
   }
@@ -390,25 +409,6 @@ TEST_F(TestSource, SourceAddUniverseWorks)
 
   SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
   universe_config.universe = kTestUniverse;
-
-  sacn_initialize_source_netints_fake.custom_fake = [](SacnInternalNetintArray* source_netints,
-                                                       SacnMcastInterface* app_netints, size_t num_app_netints) {
-#if SACN_DYNAMIC_MEM
-    source_netints->netints = (EtcPalMcastNetintId*)calloc(NUM_TEST_NETINTS, sizeof(EtcPalMcastNetintId));
-    source_netints->netints_capacity = NUM_TEST_NETINTS;
-#endif
-    source_netints->num_netints = NUM_TEST_NETINTS;
-
-    for (size_t i = 0u; i < num_app_netints; ++i)
-    {
-      EXPECT_EQ(app_netints[i].iface.index, kTestNetints[i].iface.index);
-      EXPECT_EQ(app_netints[i].iface.ip_type, kTestNetints[i].iface.ip_type);
-      EXPECT_EQ(app_netints[i].status, kTestNetints[i].status);
-      source_netints->netints[i] = app_netints[i].iface;
-    }
-
-    return kEtcPalErrOk;
-  };
 
   VERIFY_LOCKING_AND_RETURN_VALUE(
       sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
