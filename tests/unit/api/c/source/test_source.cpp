@@ -164,6 +164,14 @@ protected:
     lookup_source(handle, &state);
     return state;
   }
+
+  SacnSourceUniverse* GetUniverse(sacn_source_t source, uint16_t universe)
+  {
+    SacnSource* source_state = nullptr;
+    SacnSourceUniverse* universe_state = nullptr;
+    lookup_source_and_universe(source, universe, &source_state, &universe_state);
+    return universe_state;
+  }
 };
 
 TEST_F(TestSource, SourceConfigInitWorks)
@@ -588,6 +596,25 @@ TEST_F(TestSource, SourceRemoveUniverseWorks)
     EXPECT_EQ(universe->universe_id, kTestUniverse);
   };
 
+  VERIFY_LOCKING(sacn_source_remove_universe(kTestHandle, kTestUniverse));
+  EXPECT_EQ(set_universe_terminating_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceRemoveUniverseHandlesNotFound)
+{
+  SetUpSource(kTestHandle);
+
+  VERIFY_LOCKING(sacn_source_remove_universe(kTestHandle, kTestUniverse));
+  EXPECT_EQ(set_universe_terminating_fake.call_count, 0u);
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+  sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  VERIFY_LOCKING(sacn_source_remove_universe(kTestHandle, kTestUniverse));
+  EXPECT_EQ(set_universe_terminating_fake.call_count, 0u);
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
   VERIFY_LOCKING(sacn_source_remove_universe(kTestHandle, kTestUniverse));
   EXPECT_EQ(set_universe_terminating_fake.call_count, 1u);
 }
