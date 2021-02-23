@@ -44,6 +44,9 @@
 #define NUM_SOURCES_IN_NETINT_LISTS 2u
 #define NUM_UNIVERSES_IN_NETINT_LISTS 2u
 #define NUM_TEST_NETINT_LISTS (NUM_SOURCES_IN_NETINT_LISTS * NUM_UNIVERSES_IN_NETINT_LISTS)
+#define NUM_TEST_INVALID_NETINT_LISTS_1 2u
+#define NUM_TEST_INVALID_NETINT_LISTS_2 2u
+#define NUM_TEST_INVALID_NETINT_LISTS_3 5u
 #define NUM_TEST_ADDRS 4u
 #define VERIFY_LOCKING(function_call)                                  \
   do                                                                   \
@@ -95,6 +98,7 @@ static const sacn_source_t kTestHandle = 123;
 static const sacn_source_t kTestHandle2 = 456;
 static const uint16_t kTestUniverse = 456u;
 static const uint16_t kTestUniverse2 = 789u;
+static const uint16_t kTestUniverse3 = 321u;
 static const uint8_t kTestPriority = 77u;
 static const uint8_t kTestInvalidPriority = 201u;
 static const bool kTestPreviewFlag = true;
@@ -113,6 +117,18 @@ static const SacnSourceUniverseNetintList kTestNetintLists[NUM_TEST_NETINT_LISTS
     {kTestHandle, kTestUniverse2, kTestNetints, NUM_TEST_NETINTS},
     {kTestHandle2, kTestUniverse, kTestNetints, NUM_TEST_NETINTS},
     {kTestHandle2, kTestUniverse2, kTestNetints, NUM_TEST_NETINTS}};
+static const SacnSourceUniverseNetintList kTestInvalidNetintLists1[NUM_TEST_INVALID_NETINT_LISTS_1] = {
+    {kTestHandle, kTestUniverse, kTestNetints, NUM_TEST_NETINTS},
+    {kTestHandle, kTestUniverse2, kTestNetints, NUM_TEST_NETINTS}};
+static const SacnSourceUniverseNetintList kTestInvalidNetintLists2[NUM_TEST_INVALID_NETINT_LISTS_2] = {
+    {kTestHandle, kTestUniverse, kTestNetints, NUM_TEST_NETINTS},
+    {kTestHandle2, kTestUniverse2, kTestNetints, NUM_TEST_NETINTS}};
+static const SacnSourceUniverseNetintList kTestInvalidNetintLists3[NUM_TEST_INVALID_NETINT_LISTS_3] = {
+    {kTestHandle, kTestUniverse, kTestNetints, NUM_TEST_NETINTS},
+    {kTestHandle, kTestUniverse2, kTestNetints, NUM_TEST_NETINTS},
+    {kTestHandle2, kTestUniverse, kTestNetints, NUM_TEST_NETINTS},
+    {kTestHandle2, kTestUniverse2, kTestNetints, NUM_TEST_NETINTS},
+    {kTestHandle2, kTestUniverse3, kTestNetints, NUM_TEST_NETINTS}};
 
 static unsigned int current_netint_list_index = 0u;
 
@@ -1479,6 +1495,50 @@ TEST_F(TestSource, SourceResetNetworkingPerUniverseWorks)
   EXPECT_EQ(sacn_sockets_reset_source_fake.call_count, 1u);
   EXPECT_EQ(clear_source_netints_fake.call_count, NUM_SOURCES_IN_NETINT_LISTS);
   EXPECT_EQ(reset_source_universe_networking_fake.call_count, NUM_TEST_NETINT_LISTS);
+}
+
+TEST_F(TestSource, SourceResetNetworkingPerUniverseErrNoNetintsWorks)
+{
+  SetUpSourcesAndUniverses(kTestNetintLists, NUM_TEST_NETINT_LISTS);
+
+  reset_source_universe_networking_fake.return_val = kEtcPalErrNoNetints;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking_per_universe(kTestNetintLists, NUM_TEST_NETINT_LISTS),
+                                  kEtcPalErrNoNetints);
+  reset_source_universe_networking_fake.return_val = kEtcPalErrOk;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking_per_universe(kTestNetintLists, NUM_TEST_NETINT_LISTS),
+                                  kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceResetNetworkingPerUniverseErrInvalidWorks)
+{
+  SetUpSourcesAndUniverses(kTestNetintLists, NUM_TEST_NETINT_LISTS);
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking_per_universe(nullptr, NUM_TEST_NETINT_LISTS),
+                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking_per_universe(kTestNetintLists, 0u), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_reset_networking_per_universe(kTestInvalidNetintLists1, NUM_TEST_INVALID_NETINT_LISTS_1),
+      kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_reset_networking_per_universe(kTestInvalidNetintLists2, NUM_TEST_INVALID_NETINT_LISTS_2),
+      kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_reset_networking_per_universe(kTestInvalidNetintLists3, NUM_TEST_INVALID_NETINT_LISTS_3),
+      kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking_per_universe(kTestNetintLists, NUM_TEST_NETINT_LISTS),
+                                  kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceResetNetworkingPerUniverseErrNotInitWorks)
+{
+  SetUpSourcesAndUniverses(kTestNetintLists, NUM_TEST_NETINT_LISTS);
+
+  sacn_initialized_fake.return_val = false;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking_per_universe(kTestNetintLists, NUM_TEST_NETINT_LISTS),
+                                  kEtcPalErrNotInit);
+  sacn_initialized_fake.return_val = true;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking_per_universe(kTestNetintLists, NUM_TEST_NETINT_LISTS),
+                                  kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceGetNetintsWorks)
