@@ -902,11 +902,10 @@ TEST_F(TestSource, SourceChangePriorityErrNotFoundWorks)
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority),
                                   kEtcPalErrNotFound);
-  
+
   GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
 
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority),
-                                  kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceChangePreviewFlagWorks)
@@ -940,11 +939,9 @@ TEST_F(TestSource, SourceChangePreviewFlagErrNotInitWorks)
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
   sacn_initialized_fake.return_val = false;
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true),
-                                  kEtcPalErrNotInit);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true), kEtcPalErrNotInit);
   sacn_initialized_fake.return_val = true;
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true),
-                                  kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceChangePreviewFlagErrNotFoundWorks)
@@ -969,8 +966,7 @@ TEST_F(TestSource, SourceChangePreviewFlagErrNotFoundWorks)
 
   GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
 
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true),
-                                  kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceSendNowWorks)
@@ -1002,6 +998,69 @@ TEST_F(TestSource, SourceSendNowWorks)
   EXPECT_EQ(send_universe_multicast_fake.call_count, 1u);
   EXPECT_EQ(send_universe_unicast_fake.call_count, 1u);
   EXPECT_EQ(increment_sequence_number_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceSendNowErrInvalidWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_send_now(SACN_SOURCE_INVALID, kTestUniverse, kTestStartCode, kTestBuffer, kTestBufferLength),
+      kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_send_now(kTestHandle, 0u, kTestStartCode, kTestBuffer, kTestBufferLength),
+                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_send_now(kTestHandle, 64000u, kTestStartCode, kTestBuffer, kTestBufferLength), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_send_now(kTestHandle, kTestUniverse, kTestStartCode, kTestBuffer, (DMX_ADDRESS_COUNT + 1u)),
+      kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_send_now(kTestHandle, kTestUniverse, kTestStartCode, nullptr, kTestBufferLength), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_send_now(kTestHandle, kTestUniverse, kTestStartCode, kTestBuffer, 0u),
+                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_send_now(kTestHandle, kTestUniverse, kTestStartCode, kTestBuffer, kTestBufferLength), kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceSendNowErrNotInitWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+  sacn_initialized_fake.return_val = false;
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_send_now(kTestHandle, kTestUniverse, kTestStartCode, kTestBuffer, kTestBufferLength),
+      kEtcPalErrNotInit);
+  sacn_initialized_fake.return_val = true;
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_send_now(kTestHandle, kTestUniverse, kTestStartCode, kTestBuffer, kTestBufferLength), kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceSendNowErrNotFoundWorks)
+{
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_send_now(kTestHandle, kTestUniverse, kTestStartCode, kTestBuffer, kTestBufferLength),
+      kEtcPalErrNotFound);
+
+  SetUpSource(kTestHandle);
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_send_now(kTestHandle, kTestUniverse, kTestStartCode, kTestBuffer, kTestBufferLength),
+      kEtcPalErrNotFound);
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_send_now(kTestHandle, kTestUniverse, kTestStartCode, kTestBuffer, kTestBufferLength),
+      kEtcPalErrNotFound);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_send_now(kTestHandle, kTestUniverse, kTestStartCode, kTestBuffer, kTestBufferLength), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceUpdateValuesWorks)
