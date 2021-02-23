@@ -634,6 +634,19 @@ TEST_F(TestSource, SourceGetUniversesWorks)
   EXPECT_EQ(get_source_universes_fake.call_count, 1u);
 }
 
+TEST_F(TestSource, SourceGetUniversesHandlesNotFound)
+{
+  VERIFY_LOCKING(sacn_source_get_universes(kTestHandle, nullptr, 0u));
+  EXPECT_EQ(get_source_universes_fake.call_count, 0u);
+  SetUpSource(kTestHandle);
+  GetSource(kTestHandle)->terminating = true;
+  VERIFY_LOCKING(sacn_source_get_universes(kTestHandle, nullptr, 0u));
+  EXPECT_EQ(get_source_universes_fake.call_count, 0u);
+  GetSource(kTestHandle)->terminating = false;
+  VERIFY_LOCKING(sacn_source_get_universes(kTestHandle, nullptr, 0u));
+  EXPECT_EQ(get_source_universes_fake.call_count, 1u);
+}
+
 TEST_F(TestSource, SourceAddUnicastDestinationWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
