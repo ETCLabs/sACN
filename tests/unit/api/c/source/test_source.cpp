@@ -733,6 +733,7 @@ TEST_F(TestSource, SourceAddUnicastDestinationErrExistsWorks)
                                   kEtcPalErrExists);
 }
 
+#if !SACN_DYNAMIC_MEM
 TEST_F(TestSource, SourceAddUnicastDestinationErrNoMemWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
@@ -748,6 +749,7 @@ TEST_F(TestSource, SourceAddUnicastDestinationErrNoMemWorks)
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &addr),
                                   kEtcPalErrNoMem);
 }
+#endif
 
 TEST_F(TestSource, SourceRemoveUnicastDestinationWorks)
 {
