@@ -66,6 +66,14 @@
     EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);                \
     EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);        \
   } while (0)
+#define VERIFY_NO_LOCKING_AND_RETURN_VALUE(function_call, expected_return_value) \
+  do                                                                             \
+  {                                                                              \
+    unsigned int previous_lock_count = sacn_lock_fake.call_count;                \
+    EXPECT_EQ(function_call, expected_return_value);                             \
+    EXPECT_EQ(sacn_lock_fake.call_count, previous_lock_count);                   \
+    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);           \
+  } while (0)
 
 static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
 static const std::string kTestLocalName = std::string("Test Source");
@@ -1380,6 +1388,25 @@ TEST_F(TestSource, SourceResetNetworkingWorks)
   EXPECT_EQ(sacn_sockets_reset_source_fake.call_count, 1u);
   EXPECT_EQ(clear_source_netints_fake.call_count, 1u);
   EXPECT_EQ(reset_source_universe_networking_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceResetNetworkingErrNoNetintsWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  reset_source_universe_networking_fake.return_val = kEtcPalErrNoNetints;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking(kTestNetints, NUM_TEST_NETINTS), kEtcPalErrNoNetints);
+  reset_source_universe_networking_fake.return_val = kEtcPalErrOk;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking(kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceResetNetworkingErrNotInitWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+  sacn_initialized_fake.return_val = false;
+  VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking(kTestNetints, NUM_TEST_NETINTS), kEtcPalErrNotInit);
+  sacn_initialized_fake.return_val = true;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking(kTestNetints, NUM_TEST_NETINTS), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceResetNetworkingPerUniverseWorks)
