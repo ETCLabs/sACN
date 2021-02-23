@@ -924,6 +924,55 @@ TEST_F(TestSource, SourceChangePreviewFlagWorks)
   EXPECT_EQ(set_preview_flag_fake.call_count, 1u);
 }
 
+TEST_F(TestSource, SourceChangePreviewFlagErrInvalidWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(SACN_SOURCE_INVALID, kTestUniverse, true),
+                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, 0u, true), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, 64000u, true), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true), kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceChangePreviewFlagErrNotInitWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  sacn_initialized_fake.return_val = false;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true),
+                                  kEtcPalErrNotInit);
+  sacn_initialized_fake.return_val = true;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true),
+                                  kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceChangePreviewFlagErrNotFoundWorks)
+{
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true),
+                                  kEtcPalErrNotFound);
+
+  SetUpSource(kTestHandle);
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true),
+                                  kEtcPalErrNotFound);
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true),
+                                  kEtcPalErrNotFound);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true),
+                                  kEtcPalErrOk);
+}
+
 TEST_F(TestSource, SourceSendNowWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
