@@ -83,6 +83,7 @@ static const EtcPalIpAddr kTestRemoteAddrsWithInvalid[NUM_TEST_ADDRS] = {
 static const sacn_source_t kTestHandle = 123;
 static const uint16_t kTestUniverse = 456u;
 static const uint8_t kTestPriority = 77u;
+static const uint8_t kTestInvalidPriority = 201u;
 static const bool kTestPreviewFlag = true;
 static const uint8_t kTestStartCode = 0x12u;
 static const uint8_t* kTestBuffer = (uint8_t*)"ABCDEFGHIJKL";
@@ -856,6 +857,56 @@ TEST_F(TestSource, SourceChangePriorityWorks)
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority), kEtcPalErrOk);
   EXPECT_EQ(set_universe_priority_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceChangePriorityErrInvalidWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(SACN_SOURCE_INVALID, kTestUniverse, kTestPriority),
+                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, 0u, kTestPriority), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, 64000u, kTestPriority), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestInvalidPriority),
+                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority), kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceChangePriorityErrNotInitWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  sacn_initialized_fake.return_val = false;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority),
+                                  kEtcPalErrNotInit);
+  sacn_initialized_fake.return_val = true;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority), kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceChangePriorityErrNotFoundWorks)
+{
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority),
+                                  kEtcPalErrNotFound);
+
+  SetUpSource(kTestHandle);
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority),
+                                  kEtcPalErrNotFound);
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority),
+                                  kEtcPalErrNotFound);
+  
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority),
+                                  kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceChangePreviewFlagWorks)
