@@ -386,6 +386,7 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
  * @return #kEtcPalErrExists: The unicast destination was already added to this universe on this source.
+ * @return #kEtcPalErrNoMem: No room to allocate additional destination address.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)

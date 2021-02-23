@@ -670,6 +670,85 @@ TEST_F(TestSource, SourceAddUnicastDestinationWorks)
   EXPECT_EQ(reset_transmission_suppression_fake.call_count, 1u);
 }
 
+TEST_F(TestSource, SourceAddUnicastDestinationErrInvalidWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_add_unicast_destination(SACN_SOURCE_INVALID, kTestUniverse, &kTestRemoteAddrV4), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, 0u, &kTestRemoteAddrV4),
+                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, 64000u, &kTestRemoteAddrV4),
+                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, nullptr),
+                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &etcpal::IpAddr().get()), kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4),
+                                  kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceAddUnicastDestinationErrNotInitWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+  sacn_initialized_fake.return_val = false;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4),
+                                  kEtcPalErrNotInit);
+  sacn_initialized_fake.return_val = true;
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4),
+                                  kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceAddUnicastDestinationErrNotFoundWorks)
+{
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4),
+                                  kEtcPalErrNotFound);
+
+  SetUpSource(kTestHandle);
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4),
+                                  kEtcPalErrNotFound);
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4),
+                                  kEtcPalErrNotFound);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4),
+                                  kEtcPalErrOk);
+}
+
+TEST_F(TestSource, SourceAddUnicastDestinationErrExistsWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4),
+                                  kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4),
+                                  kEtcPalErrExists);
+}
+
+TEST_F(TestSource, SourceAddUnicastDestinationErrNoMemWorks)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  EtcPalIpAddr addr = kTestRemoteAddrV4;
+  for (int i = 0; i < SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE; ++i)
+  {
+    VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &addr),
+                                    kEtcPalErrOk);
+    ++addr.addr.v4;
+  }
+
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &addr),
+                                  kEtcPalErrNoMem);
+}
+
 TEST_F(TestSource, SourceRemoveUnicastDestinationWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
