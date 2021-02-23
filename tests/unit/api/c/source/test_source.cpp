@@ -1083,6 +1083,44 @@ TEST_F(TestSource, SourceUpdateValuesWorks)
   EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
 }
 
+TEST_F(TestSource, SourceUpdateValuesHandlesInvalid)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  VERIFY_NO_LOCKING(sacn_source_update_values(kTestHandle, kTestUniverse, nullptr, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+  VERIFY_NO_LOCKING(sacn_source_update_values(kTestHandle, kTestUniverse, kTestBuffer, (DMX_ADDRESS_COUNT + 1u)));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+  VERIFY_LOCKING(sacn_source_update_values(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceUpdateValuesHandlesNotFound)
+{
+  VERIFY_LOCKING(sacn_source_update_values(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+
+  SetUpSource(kTestHandle);
+
+  VERIFY_LOCKING(sacn_source_update_values(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+
+  VERIFY_LOCKING(sacn_source_update_values(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+
+  VERIFY_LOCKING(sacn_source_update_values(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
+}
+
 TEST_F(TestSource, SourceUpdateValuesAndPapWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
@@ -1117,6 +1155,54 @@ TEST_F(TestSource, SourceUpdateValuesAndPapWorks)
   EXPECT_EQ(disable_pap_data_fake.call_count, 1u);
 }
 
+TEST_F(TestSource, SourceUpdateValuesAndPapHandlesInvalid)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  VERIFY_NO_LOCKING(sacn_source_update_values_and_pap(kTestHandle, kTestUniverse, nullptr, kTestBufferLength,
+                                                      kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+  VERIFY_NO_LOCKING(sacn_source_update_values_and_pap(kTestHandle, kTestUniverse, kTestBuffer, (DMX_ADDRESS_COUNT + 1u),
+                                                      kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+  VERIFY_NO_LOCKING(sacn_source_update_values_and_pap(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength,
+                                                      kTestBuffer2, (DMX_ADDRESS_COUNT + 1u)));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+  VERIFY_LOCKING(sacn_source_update_values_and_pap(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength,
+                                                   kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceUpdateValuesAndPapHandlesNotFound)
+{
+  VERIFY_LOCKING(sacn_source_update_values_and_pap(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength,
+                                                   kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+
+  SetUpSource(kTestHandle);
+
+  VERIFY_LOCKING(sacn_source_update_values_and_pap(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength,
+                                                   kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+
+  VERIFY_LOCKING(sacn_source_update_values_and_pap(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength,
+                                                   kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+
+  VERIFY_LOCKING(sacn_source_update_values_and_pap(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength,
+                                                   kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
+}
+
 TEST_F(TestSource, SourceUpdateValuesAndForceSyncWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
@@ -1132,6 +1218,45 @@ TEST_F(TestSource, SourceUpdateValuesAndForceSyncWorks)
         EXPECT_EQ(new_priorities_size, 0u);
         EXPECT_EQ(force_sync, kEnableForceSync);
       };
+
+  VERIFY_LOCKING(sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceUpdateValuesAndForceSyncHandlesInvalid)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  VERIFY_NO_LOCKING(sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, nullptr, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+  VERIFY_NO_LOCKING(
+      sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer, (DMX_ADDRESS_COUNT + 1u)));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+  VERIFY_LOCKING(sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceUpdateValuesAndForceSyncHandlesNotFound)
+{
+  VERIFY_LOCKING(sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+
+  SetUpSource(kTestHandle);
+
+  VERIFY_LOCKING(sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+
+  VERIFY_LOCKING(sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
 
   VERIFY_LOCKING(sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength));
   EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
@@ -1169,6 +1294,54 @@ TEST_F(TestSource, SourceUpdateValuesAndPapAndForceSyncWorks)
                                                                   kTestBufferLength, nullptr, 0u));
   EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 2u);
   EXPECT_EQ(disable_pap_data_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceUpdateValuesAndPapAndForceSyncHandlesInvalid)
+{
+  SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
+
+  VERIFY_NO_LOCKING(sacn_source_update_values_and_pap_and_force_sync(
+      kTestHandle, kTestUniverse, nullptr, kTestBufferLength, kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+  VERIFY_NO_LOCKING(sacn_source_update_values_and_pap_and_force_sync(
+      kTestHandle, kTestUniverse, kTestBuffer, (DMX_ADDRESS_COUNT + 1u), kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+  VERIFY_NO_LOCKING(sacn_source_update_values_and_pap_and_force_sync(
+      kTestHandle, kTestUniverse, kTestBuffer, kTestBufferLength, kTestBuffer2, (DMX_ADDRESS_COUNT + 1u)));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+  VERIFY_LOCKING(sacn_source_update_values_and_pap_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer,
+                                                                  kTestBufferLength, kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SourceUpdateValuesAndPapAndForceSyncHandlesNotFound)
+{
+  VERIFY_LOCKING(sacn_source_update_values_and_pap_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer,
+                                                                  kTestBufferLength, kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+
+  SetUpSource(kTestHandle);
+
+  VERIFY_LOCKING(sacn_source_update_values_and_pap_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer,
+                                                                  kTestBufferLength, kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+
+  VERIFY_LOCKING(sacn_source_update_values_and_pap_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer,
+                                                                  kTestBufferLength, kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
+
+  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+
+  VERIFY_LOCKING(sacn_source_update_values_and_pap_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer,
+                                                                  kTestBufferLength, kTestBuffer2, kTestBuffer2Length));
+  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
 }
 
 TEST_F(TestSource, SourceProcessManualWorks)
