@@ -764,6 +764,44 @@ TEST_F(TestSource, SourceRemoveUnicastDestinationWorks)
   EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 1u);
 }
 
+TEST_F(TestSource, SourceRemoveUnicastDestinationHandlesInvalid)
+{
+  VERIFY_NO_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, nullptr));
+  EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 0u);
+}
+
+TEST_F(TestSource, SourceRemoveUnicastDestinationHandlesNotFound)
+{
+  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4));
+  EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 0u);
+
+  SetUpSource(kTestHandle);
+
+  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4));
+  EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 0u);
+
+  SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
+  universe_config.universe = kTestUniverse;
+
+  sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints, NUM_TEST_NETINTS);
+
+  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4));
+  EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 0u);
+
+  EXPECT_EQ(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4), kEtcPalErrOk);
+
+  SacnUnicastDestination* dest = nullptr;
+  lookup_unicast_dest(GetUniverse(kTestHandle, kTestUniverse), &kTestRemoteAddrV4, &dest);
+
+  dest->terminating = true;
+  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4));
+  EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 0u);
+
+  dest->terminating = false;
+  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrV4));
+  EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 1u);
+}
+
 TEST_F(TestSource, SourceGetUnicastDestinationsWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
