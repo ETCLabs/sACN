@@ -29,7 +29,7 @@
 
 #include <limits.h>
 #include "etcpal/common.h"
-#include "etcpal/lock.h"
+#include "etcpal/mutex.h"
 #include "etcpal/log.h"
 #include "etcpal/rbtree.h"
 #include "etcpal/socket.h"

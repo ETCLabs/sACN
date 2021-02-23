@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include "etcpal/common.h"
-#include "etcpal/lock.h"
+#include "etcpal/mutex.h"
 #include "etcpal/thread.h"
 #include "etcpal/timer.h"
 #include "sacn/receiver.h"

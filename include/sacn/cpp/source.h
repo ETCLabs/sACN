@@ -29,6 +29,7 @@
 #include "sacn/source.h"
 #include "etcpal/cpp/uuid.h"
 #include "etcpal/cpp/inet.h"
+#include "etcpal/cpp/opaque_id.h"
 
 /**
  * @defgroup sacn_source_cpp sACN Source API
@@ -38,6 +39,14 @@
 
 namespace sacn
 {
+
+namespace detail
+{
+class SourceHandleType
+{
+};
+};  // namespace detail
+
 /**
  * @ingroup sacn_source_cpp
  * @brief An instance of sACN Source functionality; see @ref using_source.
@@ -50,9 +59,7 @@ class Source
 {
 public:
   /** A handle type used by the sACN library to identify source instances. */
-  using Handle = sacn_source_t;
-  /** An invalid Handle value. */
-  static constexpr Handle kInvalidHandle = SACN_SOURCE_INVALID;
+  using Handle = etcpal::OpaqueId<detail::SourceHandleType, sacn_source_t, SACN_SOURCE_INVALID>;
 
   /**
    * @ingroup sacn_source_cpp
@@ -208,7 +215,7 @@ private:
 
   SacnSourceConfig TranslateConfig(const Settings& settings);
 
-  Handle handle_{kInvalidHandle};
+  Handle handle_;
 };
 
 /**
@@ -275,7 +282,10 @@ inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handl
 inline etcpal::Error Source::Startup(const Settings& settings)
 {
   SacnSourceConfig config = TranslateConfig(settings);
-  return sacn_source_create(&config, &handle_);
+  sacn_source_t c_handle = SACN_SOURCE_INVALID;
+  etcpal::Error result = sacn_source_create(&config, &c_handle);
+  handle_.SetValue(c_handle);
+  return result;
 }
 
 /**
@@ -287,8 +297,8 @@ inline etcpal::Error Source::Startup(const Settings& settings)
  */
 inline void Source::Shutdown()
 {
-  sacn_source_destroy(handle_);
-  handle_ = kInvalidHandle;
+  sacn_source_destroy(handle_.value());
+  handle_.Clear();
 }
 
 /**
@@ -311,7 +321,7 @@ inline void Source::Shutdown()
  */
 inline etcpal::Error Source::ChangeName(const std::string& new_name)
 {
-  return sacn_source_change_name(handle_, new_name.c_str());
+  return sacn_source_change_name(handle_.value(), new_name.c_str());
 }
 
 /**
@@ -339,7 +349,7 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
 inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings)
 {
   TranslatedUniverseConfig config(settings);
-  return sacn_source_add_universe(handle_, &config.get(), nullptr, 0);
+  return sacn_source_add_universe(handle_.value(), &config.get(), nullptr, 0);
 }
 
 /**
@@ -371,9 +381,9 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings, std::
   TranslatedUniverseConfig config(settings);
 
   if (netints.empty())
-    return sacn_source_add_universe(handle_, &config.get(), nullptr, 0);
+    return sacn_source_add_universe(handle_.value(), &config.get(), nullptr, 0);
 
-  return sacn_source_add_universe(handle_, &config.get(), netints.data(), netints.size());
+  return sacn_source_add_universe(handle_.value(), &config.get(), netints.data(), netints.size());
 }
 
 /**
@@ -389,7 +399,7 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings, std::
  */
 inline void Source::RemoveUniverse(uint16_t universe)
 {
-  sacn_source_remove_universe(handle_, universe);
+  sacn_source_remove_universe(handle_.value(), universe);
 }
 
 /**
@@ -407,7 +417,7 @@ inline std::vector<uint16_t> Source::GetUniverses()
   do
   {
     universes.resize(size_guess);
-    num_universes = sacn_source_get_universes(handle_, universes.data(), universes.size());
+    num_universes = sacn_source_get_universes(handle_.value(), universes.data(), universes.size());
     size_guess = num_universes + 4u;
   } while (num_universes > universes.size());
 
@@ -431,7 +441,7 @@ inline std::vector<uint16_t> Source::GetUniverses()
  */
 inline etcpal::Error Source::AddUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest)
 {
-  return sacn_source_add_unicast_destination(handle_, universe, &dest.get());
+  return sacn_source_add_unicast_destination(handle_.value(), universe, &dest.get());
 }
 
 /**
@@ -445,7 +455,7 @@ inline etcpal::Error Source::AddUnicastDestination(uint16_t universe, const etcp
  */
 inline void Source::RemoveUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest)
 {
-  sacn_source_remove_unicast_destination(handle_, universe, &dest.get());
+  sacn_source_remove_unicast_destination(handle_.value(), universe, &dest.get());
 }
 
 /**
@@ -465,7 +475,7 @@ inline std::vector<etcpal::IpAddr> Source::GetUnicastDestinations(uint16_t unive
   {
     destinations.resize(size_guess);
     num_destinations =
-        sacn_source_get_unicast_destinations(handle_, universe, destinations.data(), destinations.size());
+        sacn_source_get_unicast_destinations(handle_.value(), universe, destinations.data(), destinations.size());
     size_guess = num_destinations + 4u;
   } while (num_destinations > destinations.size());
 
@@ -500,7 +510,7 @@ inline std::vector<etcpal::IpAddr> Source::GetUnicastDestinations(uint16_t unive
  */
 inline etcpal::Error Source::ChangePriority(uint16_t universe, uint8_t new_priority)
 {
-  return sacn_source_change_priority(handle_, universe, new_priority);
+  return sacn_source_change_priority(handle_.value(), universe, new_priority);
 }
 
 /**
@@ -523,7 +533,7 @@ inline etcpal::Error Source::ChangePriority(uint16_t universe, uint8_t new_prior
  */
 inline etcpal::Error Source::ChangePreviewFlag(uint16_t universe, bool new_preview_flag)
 {
-  return sacn_source_change_preview_flag(handle_, universe, new_preview_flag);
+  return sacn_source_change_preview_flag(handle_.value(), universe, new_preview_flag);
 }
 
 /**
@@ -547,7 +557,7 @@ inline etcpal::Error Source::ChangePreviewFlag(uint16_t universe, bool new_previ
  */
 inline etcpal::Error Source::ChangeSynchronizationUniverse(uint16_t universe, uint16_t new_sync_universe)
 {
-  return sacn_source_change_synchronization_universe(handle_, universe, new_sync_universe);
+  return sacn_source_change_synchronization_universe(handle_.value(), universe, new_sync_universe);
 }
 
 /**
@@ -570,7 +580,7 @@ inline etcpal::Error Source::ChangeSynchronizationUniverse(uint16_t universe, ui
  */
 inline etcpal::Error Source::SendNow(uint16_t universe, uint8_t start_code, const uint8_t* buffer, size_t buflen)
 {
-  return sacn_source_send_now(handle_, universe, start_code, buffer, buflen);
+  return sacn_source_send_now(handle_.value(), universe, start_code, buffer, buflen);
 }
 
 /**
@@ -590,7 +600,7 @@ inline etcpal::Error Source::SendNow(uint16_t universe, uint8_t start_code, cons
  */
 inline etcpal::Error Source::SendSynchronization(uint16_t sync_universe)
 {
-  return sacn_source_send_synchronization(handle_, sync_universe);
+  return sacn_source_send_synchronization(handle_.value(), sync_universe);
 }
 
 /**
@@ -608,7 +618,7 @@ inline etcpal::Error Source::SendSynchronization(uint16_t sync_universe)
  */
 inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size)
 {
-  sacn_source_update_values(handle_, universe, new_values, new_values_size);
+  sacn_source_update_values(handle_.value(), universe, new_values, new_values_size);
 }
 
 /**
@@ -635,7 +645,7 @@ inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, s
 inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size,
                                  const uint8_t* new_priorities, size_t new_priorities_size)
 {
-  sacn_source_update_values_and_pap(handle_, universe, new_values, new_values_size, new_priorities,
+  sacn_source_update_values_and_pap(handle_.value(), universe, new_values, new_values_size, new_priorities,
                                     new_priorities_size);
 }
 
@@ -656,7 +666,7 @@ inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, s
  */
 inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size)
 {
-  sacn_source_update_values_and_force_sync(handle_, universe, new_values, new_values_size);
+  sacn_source_update_values_and_force_sync(handle_.value(), universe, new_values, new_values_size);
 }
 
 /**
@@ -687,8 +697,8 @@ inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* n
 inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size,
                                              const uint8_t* new_priorities, size_t new_priorities_size)
 {
-  sacn_source_update_values_and_pap_and_force_sync(handle_, universe, new_values, new_values_size, new_priorities,
-                                                   new_priorities_size);
+  sacn_source_update_values_and_pap_and_force_sync(handle_.value(), universe, new_values, new_values_size,
+                                                   new_priorities, new_priorities_size);
 }
 
 /**
@@ -832,7 +842,7 @@ inline std::vector<EtcPalMcastNetintId> Source::GetNetworkInterfaces(uint16_t un
   do
   {
     netints.resize(size_guess);
-    num_netints = sacn_source_get_network_interfaces(handle_, universe, netints.data(), netints.size());
+    num_netints = sacn_source_get_network_interfaces(handle_.value(), universe, netints.data(), netints.size());
     size_guess = num_netints + 4u;
   } while (num_netints > netints.size());
 
@@ -843,7 +853,7 @@ inline std::vector<EtcPalMcastNetintId> Source::GetNetworkInterfaces(uint16_t un
 /**
  * @brief Get the current handle to the underlying C sacn_source.
  *
- * @return The handle or Source::kInvalidHandle.
+ * @return The handle, which will only be valid if the source has been successfully created using Startup().
  */
 inline constexpr Source::Handle Source::handle() const
 {
