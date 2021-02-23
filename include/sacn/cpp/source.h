@@ -39,6 +39,14 @@
 
 namespace sacn
 {
+
+namespace detail
+{
+class SourceHandleType
+{
+};
+};  // namespace detail
+
 /**
  * @ingroup sacn_source_cpp
  * @brief An instance of sACN Source functionality; see @ref using_source.
@@ -50,12 +58,8 @@ namespace sacn
 class Source
 {
 public:
-  struct HandleType
-  {
-  };
-
   /** A handle type used by the sACN library to identify source instances. */
-  using Handle = etcpal::OpaqueId<HandleType, sacn_source_t, SACN_SOURCE_INVALID>;
+  using Handle = etcpal::OpaqueId<detail::SourceHandleType, sacn_source_t, SACN_SOURCE_INVALID>;
 
   /**
    * @ingroup sacn_source_cpp
