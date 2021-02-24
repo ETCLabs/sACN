@@ -36,6 +36,8 @@
 #define TestSource TestCppSourceStatic
 #endif
 
+static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
+static const std::string kTestLocalName = "Test Source";
 
 class TestSource : public ::testing::Test
 {
@@ -57,6 +59,13 @@ protected:
   }
 };
 
-TEST_F(TestSource, SetStandardVersionWorks)
+TEST_F(TestSource, SettingsConstructorWorks)
 {
+  sacn::Source::Settings settings(kTestLocalCid, kTestLocalName);
+  EXPECT_EQ(ETCPAL_UUID_CMP(&settings.cid.get(), &kTestLocalCid.get()), 0);
+  EXPECT_EQ(settings.name, kTestLocalName);
+  EXPECT_EQ(settings.universe_count_max, static_cast<size_t>(SACN_SOURCE_INFINITE_UNIVERSES));
+  EXPECT_EQ(settings.manually_process_source, false);
+  EXPECT_EQ(settings.ip_supported, kSacnIpV4AndIpV6);
+  EXPECT_EQ(settings.keep_alive_interval, SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
 }
