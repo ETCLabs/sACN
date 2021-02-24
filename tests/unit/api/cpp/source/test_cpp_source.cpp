@@ -25,9 +25,9 @@
 #include "sacn_mock/private/common.h"
 #include "sacn_mock/private/source_loss.h"
 #include "sacn_mock/private/sockets.h"
+#include "sacn_mock/private/source.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
-#include "sacn/private/source.h"
 #include "gtest/gtest.h"
 
 #if SACN_DYNAMIC_MEM
@@ -46,14 +46,13 @@ protected:
     sacn_common_reset_all_fakes();
     sacn_source_loss_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
+    sacn_source_reset_all_fakes();
 
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
-    ASSERT_EQ(sacn_source_init(), kEtcPalErrOk);
   }
 
   void TearDown() override
   {
-    sacn_source_deinit();
     sacn_mem_deinit();
   }
 };
