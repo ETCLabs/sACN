@@ -53,10 +53,7 @@ protected:
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
   }
 
-  void TearDown() override
-  {
-    sacn_mem_deinit();
-  }
+  void TearDown() override { sacn_mem_deinit(); }
 };
 
 TEST_F(TestSource, SettingsConstructorWorks)
@@ -68,4 +65,13 @@ TEST_F(TestSource, SettingsConstructorWorks)
   EXPECT_EQ(settings.manually_process_source, false);
   EXPECT_EQ(settings.ip_supported, kSacnIpV4AndIpV6);
   EXPECT_EQ(settings.keep_alive_interval, SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
+}
+
+TEST_F(TestSource, SettingsIsValidWorks)
+{
+  sacn::Source::Settings valid_settings(kTestLocalCid, kTestLocalName);
+  sacn::Source::Settings invalid_settings(etcpal::Uuid(), kTestLocalName);
+
+  EXPECT_EQ(valid_settings.IsValid(), true);
+  EXPECT_EQ(invalid_settings.IsValid(), false);
 }
