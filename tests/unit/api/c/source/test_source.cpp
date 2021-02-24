@@ -197,14 +197,17 @@ protected:
   {
     for (size_t i = 0u; i < num_netint_lists; ++i)
     {
-      SacnSourceConfig source_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
-      source_config.cid = kTestLocalCid.get();
-      source_config.name = kTestLocalName.c_str();
+      if (!GetSource(netint_lists[i].handle))
+      {
+        SacnSourceConfig source_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
+        source_config.cid = kTestLocalCid.get();
+        source_config.name = kTestLocalName.c_str();
 
-      get_next_source_handle_fake.return_val = netint_lists[i].handle;
+        get_next_source_handle_fake.return_val = netint_lists[i].handle;
 
-      sacn_source_t handle = SACN_SOURCE_INVALID;
-      sacn_source_create(&source_config, &handle);
+        sacn_source_t handle = SACN_SOURCE_INVALID;
+        sacn_source_create(&source_config, &handle);
+      }
 
       SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
       universe_config.universe = netint_lists[i].universe;
