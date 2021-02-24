@@ -82,10 +82,9 @@ static constexpr size_t kNumTestInvalidNetintLists2 = 2u;
 static constexpr size_t kNumTestInvalidNetintLists3 = 5u;
 static constexpr size_t kNumTestAddrs = 4u;
 static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
-static const std::string kTestLocalName = std::string("Test Source");
-static const std::string kTestLocalName2 = std::string("Test Source 2");
-static const std::string kTestLocalNameTooLong =
-    std::string("Test Source Name Too Long Test Source Name Too Long Test Source N");
+static constexpr char kTestLocalName[] = "Test Source";
+static constexpr char kTestLocalName2[] = "Test Source 2";
+static constexpr char kTestLocalNameTooLong[] = "Test Source Name Too Long Test Source Name Too Long Test Source N";
 static const EtcPalIpAddr kTestRemoteAddrV4 = etcpal::IpAddr::FromString("10.101.1.1").get();
 static const EtcPalIpAddr kTestRemoteAddrV6 = etcpal::IpAddr::FromString("2001:db8::1234:5678").get();
 static const EtcPalIpAddr kTestRemoteAddrs[kNumTestAddrs] = {
@@ -175,7 +174,7 @@ protected:
   {
     SacnSourceConfig source_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
     source_config.cid = kTestLocalCid.get();
-    source_config.name = kTestLocalName.c_str();
+    source_config.name = kTestLocalName;
 
     get_next_source_handle_fake.return_val = source_handle;
 
@@ -201,7 +200,7 @@ protected:
       {
         SacnSourceConfig source_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
         source_config.cid = kTestLocalCid.get();
-        source_config.name = kTestLocalName.c_str();
+        source_config.name = kTestLocalName;
 
         get_next_source_handle_fake.return_val = netint_lists[i].handle;
 
@@ -273,7 +272,7 @@ TEST_F(TestSource, ThreadedSourceCreateWorks)
 {
   SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
   config.cid = kTestLocalCid.get();
-  config.name = kTestLocalName.c_str();
+  config.name = kTestLocalName;
   config.manually_process_source = false;
 
   get_next_source_handle_fake.return_val = kTestHandle;
@@ -291,7 +290,7 @@ TEST_F(TestSource, ManualSourceCreateWorks)
 {
   SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
   config.cid = kTestLocalCid.get();
-  config.name = kTestLocalName.c_str();
+  config.name = kTestLocalName;
   config.manually_process_source = true;
 
   get_next_source_handle_fake.return_val = kTestHandle;
@@ -309,13 +308,13 @@ TEST_F(TestSource, SourceCreateErrInvalidWorks)
 {
   SacnSourceConfig valid_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
   valid_config.cid = kTestLocalCid.get();
-  valid_config.name = kTestLocalName.c_str();
+  valid_config.name = kTestLocalName;
   SacnSourceConfig null_cid_config = valid_config;
   null_cid_config.cid = kEtcPalNullUuid;
   SacnSourceConfig null_name_config = valid_config;
   null_name_config.name = nullptr;
   SacnSourceConfig lengthy_name_config = valid_config;
-  lengthy_name_config.name = kTestLocalNameTooLong.c_str();
+  lengthy_name_config.name = kTestLocalNameTooLong;
   SacnSourceConfig zero_keep_alive_config = valid_config;
   zero_keep_alive_config.keep_alive_interval = 0;
   SacnSourceConfig negative_keep_alive_config = valid_config;
@@ -337,7 +336,7 @@ TEST_F(TestSource, SourceCreateErrNotInitWorks)
 {
   SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
   config.cid = kTestLocalCid.get();
-  config.name = kTestLocalName.c_str();
+  config.name = kTestLocalName;
   sacn_source_t handle = SACN_SOURCE_INVALID;
 
   sacn_initialized_fake.return_val = false;
@@ -351,7 +350,7 @@ TEST_F(TestSource, SourceCreateErrNoMemWorks)
 {
   SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
   config.cid = kTestLocalCid.get();
-  config.name = kTestLocalName.c_str();
+  config.name = kTestLocalName;
   sacn_source_t handle = SACN_SOURCE_INVALID;
 
   for (int i = 0; i < SACN_SOURCE_MAX_SOURCES; ++i)
@@ -369,7 +368,7 @@ TEST_F(TestSource, SourceCreateReturnsThreadError)
 {
   SacnSourceConfig config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
   config.cid = kTestLocalCid.get();
-  config.name = kTestLocalName.c_str();
+  config.name = kTestLocalName;
   sacn_source_t handle = SACN_SOURCE_INVALID;
 
   initialize_source_thread_fake.return_val = kEtcPalErrSys;
@@ -440,10 +439,10 @@ TEST_F(TestSource, SourceChangeNameWorks)
   set_source_name_fake.custom_fake = [](SacnSource* source, const char* new_name) {
     ASSERT_NE(source, nullptr);
     EXPECT_EQ(source->handle, kTestHandle);
-    EXPECT_EQ(strcmp(new_name, kTestLocalName2.c_str()), 0);
+    EXPECT_EQ(strcmp(new_name, kTestLocalName2), 0);
   };
 
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2), kEtcPalErrOk);
   EXPECT_EQ(set_source_name_fake.call_count, 1u);
 }
 
@@ -451,31 +450,29 @@ TEST_F(TestSource, SourceChangeNameErrInvalidWorks)
 {
   SetUpSource(kTestHandle);
 
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(SACN_SOURCE_INVALID, kTestLocalName2.c_str()),
-                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(SACN_SOURCE_INVALID, kTestLocalName2), kEtcPalErrInvalid);
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, nullptr), kEtcPalErrInvalid);
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalNameTooLong.c_str()),
-                                  kEtcPalErrInvalid);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalNameTooLong), kEtcPalErrInvalid);
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, nullptr), kEtcPalErrInvalid);
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceChangeNameErrNotInitWorks)
 {
   SetUpSource(kTestHandle);
   sacn_initialized_fake.return_val = false;
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrNotInit);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2), kEtcPalErrNotInit);
   sacn_initialized_fake.return_val = true;
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceChangeNameErrNotFoundWorks)
 {
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrNotFound);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2), kEtcPalErrNotFound);
   SetUpSource(kTestHandle);
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2), kEtcPalErrOk);
   GetSource(kTestHandle)->terminating = true;
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2.c_str()), kEtcPalErrNotFound);
+  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_name(kTestHandle, kTestLocalName2), kEtcPalErrNotFound);
 }
 
 TEST_F(TestSource, SourceAddUniverseWorks)

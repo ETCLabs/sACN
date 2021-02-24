@@ -66,9 +66,8 @@
 static constexpr size_t kNumTestNetints = 3u;
 static constexpr size_t kNumTestAddrs = 4u;
 static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
-static const std::string kTestLocalName = std::string("Test Source");
 static const SacnSourceConfig kTestSourceConfig = {kTestLocalCid.get(),
-                                                   kTestLocalName.c_str(),
+                                                   "Test Source",
                                                    SACN_SOURCE_INFINITE_UNIVERSES,
                                                    false,
                                                    kSacnIpV4AndIpV6,
