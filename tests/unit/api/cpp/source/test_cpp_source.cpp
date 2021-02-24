@@ -39,6 +39,7 @@
 static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
 static const std::string kTestLocalName = "Test Source";
 static constexpr uint16_t kTestUniverse = 123u;
+static constexpr sacn_source_t kTestHandle = 456;
 
 class TestSource : public ::testing::Test
 {
@@ -101,4 +102,12 @@ TEST_F(TestSource, UniverseSettingsIsValidWorks)
   EXPECT_EQ(invalid_settings_1.IsValid(), false);
   EXPECT_EQ(invalid_settings_2.IsValid(), false);
   EXPECT_EQ(invalid_settings_3.IsValid(), false);
+}
+
+TEST_F(TestSource, UniverseNetintListConstructorWorks)
+{
+  sacn::Source::UniverseNetintList list(kTestHandle, kTestUniverse);
+  EXPECT_EQ(list.handle, kTestHandle);
+  EXPECT_EQ(list.universe, kTestUniverse);
+  EXPECT_EQ(list.netints.empty(), true);
 }
