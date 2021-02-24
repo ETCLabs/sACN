@@ -93,36 +93,36 @@ static const EtcPalIpAddr kTestRemoteAddrs[kNumTestAddrs] = {
 static const EtcPalIpAddr kTestRemoteAddrsWithInvalid[kNumTestAddrs] = {
     etcpal::IpAddr::FromString("10.101.1.1").get(), etcpal::IpAddr::FromString("10.101.1.2").get(),
     etcpal::IpAddr().get(), etcpal::IpAddr::FromString("10.101.1.4").get()};
-static const sacn_source_t kTestHandle = 123;
-static const sacn_source_t kTestHandle2 = 456;
-static const uint16_t kTestUniverse = 456u;
-static const uint16_t kTestUniverse2 = 789u;
-static const uint16_t kTestUniverse3 = 321u;
-static const uint8_t kTestPriority = 77u;
-static const uint8_t kTestInvalidPriority = 201u;
-static const bool kTestPreviewFlag = true;
-static const uint8_t kTestStartCode = 0x12u;
-static const uint8_t* kTestBuffer = (uint8_t*)"ABCDEFGHIJKL";
-static const size_t kTestBufferLength = strlen((char*)kTestBuffer);
-static const uint8_t* kTestBuffer2 = (uint8_t*)"MNOPQRSTUVWXYZ";
-static const size_t kTestBuffer2Length = strlen((char*)kTestBuffer2);
+static constexpr sacn_source_t kTestHandle = 123;
+static constexpr sacn_source_t kTestHandle2 = 456;
+static constexpr uint16_t kTestUniverse = 456u;
+static constexpr uint16_t kTestUniverse2 = 789u;
+static constexpr uint16_t kTestUniverse3 = 321u;
+static constexpr uint8_t kTestPriority = 77u;
+static constexpr uint8_t kTestInvalidPriority = 201u;
+static constexpr bool kTestPreviewFlag = true;
+static constexpr uint8_t kTestStartCode = 0x12u;
+static constexpr uint8_t kTestBuffer[] = "ABCDEFGHIJKL";
+static constexpr size_t kTestBufferLength = 12u;
+static constexpr uint8_t kTestBuffer2[] = "MNOPQRSTUVWXYZ";
+static constexpr size_t kTestBuffer2Length = 14u;
 static SacnMcastInterface kTestNetints[kNumTestNetints] = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                            {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
                                                            {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
-static const size_t kTestReturnSize = 1234u;
-static const int kTestReturnInt = 5678;
-static const SacnSourceUniverseNetintList kTestNetintLists[kNumTestNetintLists] = {
+static constexpr size_t kTestReturnSize = 1234u;
+static constexpr int kTestReturnInt = 5678;
+static constexpr SacnSourceUniverseNetintList kTestNetintLists[kNumTestNetintLists] = {
     {kTestHandle, kTestUniverse, kTestNetints, kNumTestNetints},
     {kTestHandle, kTestUniverse2, kTestNetints, kNumTestNetints},
     {kTestHandle2, kTestUniverse, kTestNetints, kNumTestNetints},
     {kTestHandle2, kTestUniverse2, kTestNetints, kNumTestNetints}};
-static const SacnSourceUniverseNetintList kTestInvalidNetintLists1[kNumTestInvalidNetintLists1] = {
+static constexpr SacnSourceUniverseNetintList kTestInvalidNetintLists1[kNumTestInvalidNetintLists1] = {
     {kTestHandle, kTestUniverse, kTestNetints, kNumTestNetints},
     {kTestHandle, kTestUniverse2, kTestNetints, kNumTestNetints}};
-static const SacnSourceUniverseNetintList kTestInvalidNetintLists2[kNumTestInvalidNetintLists2] = {
+static constexpr SacnSourceUniverseNetintList kTestInvalidNetintLists2[kNumTestInvalidNetintLists2] = {
     {kTestHandle, kTestUniverse, kTestNetints, kNumTestNetints},
     {kTestHandle2, kTestUniverse2, kTestNetints, kNumTestNetints}};
-static const SacnSourceUniverseNetintList kTestInvalidNetintLists3[kNumTestInvalidNetintLists3] = {
+static constexpr SacnSourceUniverseNetintList kTestInvalidNetintLists3[kNumTestInvalidNetintLists3] = {
     {kTestHandle, kTestUniverse, kTestNetints, kNumTestNetints},
     {kTestHandle, kTestUniverse2, kTestNetints, kNumTestNetints},
     {kTestHandle2, kTestUniverse, kTestNetints, kNumTestNetints},

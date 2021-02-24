@@ -72,22 +72,22 @@ static const SacnSourceConfig kTestSourceConfig = {kTestLocalCid.get(),
                                                    false,
                                                    kSacnIpV4AndIpV6,
                                                    SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT};
-static const SacnSourceUniverseConfig kTestUniverseConfig = {1, 100, false, false, NULL, 0, 0};
+static constexpr SacnSourceUniverseConfig kTestUniverseConfig = {1, 100, false, false, NULL, 0, 0};
 static SacnMcastInterface kTestNetints[kNumTestNetints] = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                            {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
                                                            {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
-static const uint8_t* kTestBuffer = (uint8_t*)"ABCDEFGHIJKL";
-static const size_t kTestBufferLength = 12u;
-static const uint8_t* kTestBuffer2 = (uint8_t*)"MNOPQRSTUVWXYZ";
-static const size_t kTestBuffer2Length = 14u;
+static constexpr uint8_t kTestBuffer[] = "ABCDEFGHIJKL";
+static constexpr size_t kTestBufferLength = 12u;
+static constexpr uint8_t kTestBuffer2[] = "MNOPQRSTUVWXYZ";
+static constexpr size_t kTestBuffer2Length = 14u;
 static const EtcPalIpAddr kTestRemoteAddrs[kNumTestAddrs] = {
     etcpal::IpAddr::FromString("10.101.1.1").get(), etcpal::IpAddr::FromString("10.101.1.2").get(),
     etcpal::IpAddr::FromString("10.101.1.3").get(), etcpal::IpAddr::FromString("10.101.1.4").get()};
-static const uint32_t kTestGetMsValue = 1234567u;
-static const uint32_t kTestGetMsValue2 = 2345678u;
-static const uint8_t kTestPriority = 123u;
-static const char* kTestName = "Test Name";
-static const size_t kTestNameLength = strlen(kTestName);
+static constexpr uint32_t kTestGetMsValue = 1234567u;
+static constexpr uint32_t kTestGetMsValue2 = 2345678u;
+static constexpr uint8_t kTestPriority = 123u;
+static constexpr char kTestName[] = "Test Name";
+static constexpr size_t kTestNameLength = 9u;
 
 // Some of the tests use these variables to communicate with their custom_fake lambdas.
 static unsigned int num_universe_discovery_sends = 0u;
