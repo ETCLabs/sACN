@@ -71,10 +71,12 @@ TEST_F(TestSource, SettingsConstructorWorks)
 TEST_F(TestSource, SettingsIsValidWorks)
 {
   sacn::Source::Settings valid_settings(kTestLocalCid, kTestLocalName);
-  sacn::Source::Settings invalid_settings(etcpal::Uuid(), kTestLocalName);
+  sacn::Source::Settings invalid_settings_1(etcpal::Uuid(), kTestLocalName);
+  sacn::Source::Settings invalid_settings_2;
 
   EXPECT_EQ(valid_settings.IsValid(), true);
-  EXPECT_EQ(invalid_settings.IsValid(), false);
+  EXPECT_EQ(invalid_settings_1.IsValid(), false);
+  EXPECT_EQ(invalid_settings_2.IsValid(), false);
 }
 
 TEST_F(TestSource, UniverseSettingsConstructorWorks)
