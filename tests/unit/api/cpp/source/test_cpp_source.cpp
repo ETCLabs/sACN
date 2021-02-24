@@ -52,6 +52,11 @@ protected:
     sacn_sockets_reset_all_fakes();
     sacn_source_reset_all_fakes();
 
+    sacn_source_create_fake.custom_fake = [](const SacnSourceConfig*, sacn_source_t* handle) {
+      *handle = kTestHandle;
+      return kEtcPalErrOk;
+    };
+
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
   }
 
@@ -110,4 +115,26 @@ TEST_F(TestSource, UniverseNetintListConstructorWorks)
   EXPECT_EQ(list.handle, kTestHandle);
   EXPECT_EQ(list.universe, kTestUniverse);
   EXPECT_EQ(list.netints.empty(), true);
+}
+
+TEST_F(TestSource, StartupWorks)
+{
+  sacn_source_create_fake.custom_fake = [](const SacnSourceConfig* config, sacn_source_t* handle) {
+    EXPECT_EQ(ETCPAL_UUID_CMP(&config->cid, &kTestLocalCid.get()), 0);
+    EXPECT_EQ(strcmp(config->name, kTestLocalName.c_str()), 0);
+    EXPECT_EQ(config->universe_count_max, static_cast<size_t>(SACN_SOURCE_INFINITE_UNIVERSES));
+    EXPECT_EQ(config->manually_process_source, false);
+    EXPECT_EQ(config->ip_supported, kSacnIpV4AndIpV6);
+    EXPECT_EQ(config->keep_alive_interval, SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
+    EXPECT_NE(handle, nullptr);
+    *handle = kTestHandle;
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  etcpal::Error result = source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(sacn_source_create_fake.call_count, 1u);
+  EXPECT_EQ(source.handle().value(), kTestHandle);
+  EXPECT_EQ(result.IsOk(), true);
 }
