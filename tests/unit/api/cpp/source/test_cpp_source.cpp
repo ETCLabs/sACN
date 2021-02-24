@@ -89,3 +89,16 @@ TEST_F(TestSource, UniverseSettingsConstructorWorks)
   EXPECT_EQ(settings.unicast_destinations.empty(), true);
   EXPECT_EQ(settings.sync_universe, 0u);
 }
+
+TEST_F(TestSource, UniverseSettingsIsValidWorks)
+{
+  sacn::Source::UniverseSettings valid_settings(kTestUniverse);
+  sacn::Source::UniverseSettings invalid_settings_1(0u);
+  sacn::Source::UniverseSettings invalid_settings_2(64000u);
+  sacn::Source::UniverseSettings invalid_settings_3;
+
+  EXPECT_EQ(valid_settings.IsValid(), true);
+  EXPECT_EQ(invalid_settings_1.IsValid(), false);
+  EXPECT_EQ(invalid_settings_2.IsValid(), false);
+  EXPECT_EQ(invalid_settings_3.IsValid(), false);
+}
