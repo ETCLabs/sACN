@@ -437,6 +437,7 @@ inline std::vector<uint16_t> Source::GetUniverses()
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
  * @return #kEtcPalErrExists: The unicast destination was already added to this universe on this source.
+ * @return #kEtcPalErrNoMem: No room to allocate additional destination address.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error Source::AddUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest)
