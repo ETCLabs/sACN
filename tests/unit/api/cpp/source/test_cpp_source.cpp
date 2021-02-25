@@ -575,3 +575,36 @@ TEST_F(TestSource, ProcessManualWorks)
   source.ProcessManual();
   EXPECT_EQ(sacn_source_process_manual_fake.call_count, 1u);
 }
+
+TEST_F(TestSource, ResetNetworkingWorksWithoutNetints)
+{
+  sacn_source_reset_networking_fake.custom_fake = [](SacnMcastInterface* netints, size_t num_netints) {
+    EXPECT_EQ(netints, nullptr);
+    EXPECT_EQ(num_netints, 0u);
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.ResetNetworking().IsOk(), true);
+  EXPECT_EQ(sacn_source_reset_networking_fake.call_count, 1u);
+  std::vector<SacnMcastInterface> empty_netints;
+  EXPECT_EQ(source.ResetNetworking(empty_netints).IsOk(), true);
+  EXPECT_EQ(sacn_source_reset_networking_fake.call_count, 2u);
+}
+
+TEST_F(TestSource, ResetNetworkingWorksWithNetints)
+{
+  sacn_source_reset_networking_fake.custom_fake = [](SacnMcastInterface* netints, size_t num_netints) {
+    EXPECT_EQ(netints, kTestNetints.data());
+    EXPECT_EQ(num_netints, kTestNetints.size());
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.ResetNetworking(kTestNetints).IsOk(), true);
+  EXPECT_EQ(sacn_source_reset_networking_fake.call_count, 1u);
+}
