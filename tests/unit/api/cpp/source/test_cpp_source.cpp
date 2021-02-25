@@ -528,3 +528,40 @@ TEST_F(TestSource, UpdateValuesAndPapWorks)
   source.UpdateValues(kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(), kTestBuffer2.size());
   EXPECT_EQ(sacn_source_update_values_and_pap_fake.call_count, 1u);
 }
+
+TEST_F(TestSource, UpdateValuesAndForceSyncWorks)
+{
+  sacn_source_update_values_and_force_sync_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
+                                                                 const uint8_t* new_values, size_t new_values_size) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(new_values, kTestBuffer.data());
+    EXPECT_EQ(new_values_size, kTestBuffer.size());
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  source.UpdateValuesAndForceSync(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  EXPECT_EQ(sacn_source_update_values_and_force_sync_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, UpdateValuesAndPapAndForceSyncWorks)
+{
+  sacn_source_update_values_and_pap_and_force_sync_fake.custom_fake =
+      [](sacn_source_t handle, uint16_t universe, const uint8_t* new_values, size_t new_values_size,
+         const uint8_t* new_priorities, size_t new_priorities_size) {
+        EXPECT_EQ(handle, kTestHandle);
+        EXPECT_EQ(universe, kTestUniverse);
+        EXPECT_EQ(new_values, kTestBuffer.data());
+        EXPECT_EQ(new_values_size, kTestBuffer.size());
+        EXPECT_EQ(new_priorities, kTestBuffer2.data());
+        EXPECT_EQ(new_priorities_size, kTestBuffer2.size());
+      };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  source.UpdateValuesAndForceSync(kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(), kTestBuffer2.size());
+  EXPECT_EQ(sacn_source_update_values_and_pap_and_force_sync_fake.call_count, 1u);
+}
