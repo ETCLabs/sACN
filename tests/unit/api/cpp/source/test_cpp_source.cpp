@@ -38,6 +38,7 @@
 
 static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
 static const std::string kTestLocalName = "Test Source";
+static const std::string kTestLocalName2 = "Test Source 2";
 static constexpr uint16_t kTestUniverse = 123u;
 static constexpr sacn_source_t kTestHandle = 456;
 
@@ -137,4 +138,30 @@ TEST_F(TestSource, StartupWorks)
   EXPECT_EQ(sacn_source_create_fake.call_count, 1u);
   EXPECT_EQ(source.handle().value(), kTestHandle);
   EXPECT_EQ(result.IsOk(), true);
+}
+
+TEST_F(TestSource, ShutdownWorks)
+{
+  sacn_source_destroy_fake.custom_fake = [](sacn_source_t handle) { EXPECT_EQ(handle, kTestHandle); };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.handle().value(), kTestHandle);
+  source.Shutdown();
+  EXPECT_EQ(source.handle().value(), SACN_SOURCE_INVALID);
+}
+
+TEST_F(TestSource, ChangeNameWorks)
+{
+  sacn_source_change_name_fake.custom_fake = [](sacn_source_t handle, const char* new_name) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(strcmp(new_name, kTestLocalName2.c_str()), 0);
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.ChangeName(kTestLocalName2).IsOk(), true);
 }
