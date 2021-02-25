@@ -562,6 +562,16 @@ TEST_F(TestSource, UpdateValuesAndPapAndForceSyncWorks)
   sacn::Source source;
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
-  source.UpdateValuesAndForceSync(kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(), kTestBuffer2.size());
+  source.UpdateValuesAndForceSync(kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(),
+                                  kTestBuffer2.size());
   EXPECT_EQ(sacn_source_update_values_and_pap_and_force_sync_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, ProcessManualWorks)
+{
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  source.ProcessManual();
+  EXPECT_EQ(sacn_source_process_manual_fake.call_count, 1u);
 }
