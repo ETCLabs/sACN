@@ -40,9 +40,11 @@ static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44b
 static const std::string kTestLocalName = "Test Source";
 static const std::string kTestLocalName2 = "Test Source 2";
 static constexpr uint16_t kTestUniverse = 123u;
+static constexpr uint16_t kTestSyncUniverse = 789u;
 static constexpr sacn_source_t kTestHandle = 456;
 static constexpr uint8_t kTestPriority = 77u;
 static constexpr bool kTestPreviewFlag = true;
+static constexpr uint8_t kTestStartCode = 12u;
 
 static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                        {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
@@ -60,6 +62,10 @@ static const std::vector<etcpal::IpAddr> kTestRemoteAddrs = {
     etcpal::IpAddr::FromString("10.101.1.11"), etcpal::IpAddr::FromString("10.101.1.12"),
     etcpal::IpAddr::FromString("10.101.1.13"), etcpal::IpAddr::FromString("10.101.1.14"),
     etcpal::IpAddr::FromString("10.101.1.15")};
+
+static const std::vector<uint8_t> kTestBuffer = {
+    0x01u, 0x02u, 0x03u, 0x04u, 0x05u, 0x06u, 0x07u, 0x08u, 0x09u, 0x0Au, 0x0Bu, 0x0Cu,
+};
 
 static std::vector<uint16_t> current_universes;
 static std::vector<EtcPalIpAddr> current_dests;
@@ -430,4 +436,40 @@ TEST_F(TestSource, ChangePreviewFlagWorks)
 
   EXPECT_EQ(source.ChangePreviewFlag(kTestUniverse, kTestPreviewFlag).IsOk(), true);
   EXPECT_EQ(sacn_source_change_preview_flag_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, ChangeSyncUniverseWorks)
+{
+  sacn_source_change_synchronization_universe_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
+                                                                    uint16_t new_sync_universe) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(new_sync_universe, kTestSyncUniverse);
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.ChangeSynchronizationUniverse(kTestUniverse, kTestSyncUniverse).IsOk(), true);
+  EXPECT_EQ(sacn_source_change_synchronization_universe_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, SendNowWorks)
+{
+  sacn_source_send_now_fake.custom_fake = [](sacn_source_t handle, uint16_t universe, uint8_t start_code,
+                                             const uint8_t* buffer, size_t buflen) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(start_code, kTestStartCode);
+    EXPECT_EQ(buffer, kTestBuffer.data());
+    EXPECT_EQ(buflen, kTestBuffer.size());
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.SendNow(kTestUniverse, kTestStartCode, kTestBuffer.data(), kTestBuffer.size()).IsOk(), true);
+  EXPECT_EQ(sacn_source_send_now_fake.call_count, 1u);
 }
