@@ -217,3 +217,16 @@ TEST_F(TestSource, AddUniverseWorksWithNetints)
 
   EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse), kTestNetints).IsOk(), true);
 }
+
+TEST_F(TestSource, RemoveUniverseWorks)
+{
+  sacn_source_remove_universe_fake.custom_fake = [](sacn_source_t handle, uint16_t universe) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  source.RemoveUniverse(kTestUniverse);
+}
