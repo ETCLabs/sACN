@@ -49,7 +49,18 @@ static std::vector<SacnMcastInterface> kTestNetintsEmpty = {};
 
 static const std::vector<uint16_t> kTestUniverses = {1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u, 11u, 12u, 13u, 14u, 15u};
 
+static const std::vector<etcpal::IpAddr> kTestRemoteAddrs = {
+    etcpal::IpAddr::FromString("10.101.1.1"),  etcpal::IpAddr::FromString("10.101.1.2"),
+    etcpal::IpAddr::FromString("10.101.1.3"),  etcpal::IpAddr::FromString("10.101.1.4"),
+    etcpal::IpAddr::FromString("10.101.1.5"),  etcpal::IpAddr::FromString("10.101.1.6"),
+    etcpal::IpAddr::FromString("10.101.1.7"),  etcpal::IpAddr::FromString("10.101.1.8"),
+    etcpal::IpAddr::FromString("10.101.1.9"),  etcpal::IpAddr::FromString("10.101.1.10"),
+    etcpal::IpAddr::FromString("10.101.1.11"), etcpal::IpAddr::FromString("10.101.1.12"),
+    etcpal::IpAddr::FromString("10.101.1.13"), etcpal::IpAddr::FromString("10.101.1.14"),
+    etcpal::IpAddr::FromString("10.101.1.15")};
+
 static std::vector<uint16_t> current_universes;
+static std::vector<EtcPalIpAddr> current_dests;
 
 class TestSource : public ::testing::Test
 {
@@ -293,4 +304,95 @@ TEST_F(TestSource, GetStaticUniversesWorks)
 
   EXPECT_EQ(source.GetUniverses(), kTestUniverses);
   EXPECT_EQ(sacn_source_get_universes_fake.call_count, 2u);
+}
+
+TEST_F(TestSource, AddUnicastDestinationWorks)
+{
+  sacn_source_add_unicast_destination_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
+                                                            const EtcPalIpAddr* dest) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(etcpal_ip_cmp(dest, &kTestRemoteAddrs[0].get()), 0);
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestRemoteAddrs[0]).IsOk(), true);
+  EXPECT_EQ(sacn_source_add_unicast_destination_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, RemoveUnicastDestinationWorks)
+{
+  sacn_source_remove_unicast_destination_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
+                                                               const EtcPalIpAddr* dest) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(etcpal_ip_cmp(dest, &kTestRemoteAddrs[0].get()), 0);
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  source.RemoveUnicastDestination(kTestUniverse, kTestRemoteAddrs[0]);
+  EXPECT_EQ(sacn_source_remove_unicast_destination_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, GetGrowingUnicastDestinationsWorks)
+{
+  sacn_source_get_unicast_destinations_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
+                                                             EtcPalIpAddr* destinations, size_t destinations_size) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_NE(destinations, nullptr);
+    EXPECT_EQ(destinations_size, current_dests.size() + 4u);
+
+    for (int i = 0; (i < 5) && (current_dests.size() < kTestRemoteAddrs.size()); ++i)
+      current_dests.push_back(kTestRemoteAddrs[current_dests.size()].get());
+
+    if (sacn_source_get_unicast_destinations_fake.call_count < 4u)
+      EXPECT_LT(destinations_size, current_dests.size());
+    else
+      EXPECT_GT(destinations_size, current_dests.size());
+
+    for (size_t i = 0; (i < destinations_size) && (i < current_dests.size()); ++i)
+      destinations[i] = current_dests[i];
+
+    return current_dests.size();
+  };
+
+  current_dests.clear();
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.GetUnicastDestinations(kTestUniverse), kTestRemoteAddrs);
+  EXPECT_EQ(sacn_source_get_unicast_destinations_fake.call_count, 4u);
+}
+
+TEST_F(TestSource, GetStaticUnicastDestinationsWorks)
+{
+  sacn_source_get_unicast_destinations_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
+                                                             EtcPalIpAddr* destinations, size_t destinations_size) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_NE(destinations, nullptr);
+
+    if (sacn_source_get_unicast_destinations_fake.call_count == 1u)
+      EXPECT_EQ(destinations_size, 4u);
+    else
+      EXPECT_EQ(destinations_size, kTestRemoteAddrs.size() + 4u);
+
+    for (size_t i = 0; (i < destinations_size) && (i < kTestRemoteAddrs.size()); ++i)
+      destinations[i] = kTestRemoteAddrs[i].get();
+
+    return kTestRemoteAddrs.size();
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.GetUnicastDestinations(kTestUniverse), kTestRemoteAddrs);
+  EXPECT_EQ(sacn_source_get_unicast_destinations_fake.call_count, 2u);
 }
