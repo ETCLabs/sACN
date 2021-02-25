@@ -155,6 +155,8 @@ public:
     /** Create an empty, invalid data structure by default. */
     UniverseNetintList() = default;
     UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id);
+    UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id,
+                       const std::vector<SacnMcastInterface>& network_interfaces);
   };
 
   Source() = default;
@@ -260,6 +262,15 @@ inline bool Source::UniverseSettings::IsValid() const
  */
 inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id)
     : handle(source_handle), universe(universe_id)
+{
+}
+
+/**
+ * @brief Create a Universe Netint List instance by passing all members explicitly.
+ */
+inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id,
+                                                      const std::vector<SacnMcastInterface>& network_interfaces)
+    : handle(source_handle), universe(universe_id), netints(network_interfaces)
 {
 }
 

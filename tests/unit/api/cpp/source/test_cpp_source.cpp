@@ -40,8 +40,10 @@ static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44b
 static const std::string kTestLocalName = "Test Source";
 static const std::string kTestLocalName2 = "Test Source 2";
 static constexpr uint16_t kTestUniverse = 123u;
+static constexpr uint16_t kTestUniverse2 = 456u;
 static constexpr uint16_t kTestSyncUniverse = 789u;
 static constexpr sacn_source_t kTestHandle = 456;
+static constexpr sacn_source_t kTestHandle2 = 654;
 static constexpr uint8_t kTestPriority = 77u;
 static constexpr bool kTestPreviewFlag = true;
 static constexpr uint8_t kTestStartCode = 12u;
@@ -50,6 +52,11 @@ static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, k
                                                        {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
                                                        {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
 static std::vector<SacnMcastInterface> kTestNetintsEmpty = {};
+
+static std::vector<sacn::Source::UniverseNetintList> kTestNetintLists = {{kTestHandle, kTestUniverse, kTestNetints},
+                                                                         {kTestHandle, kTestUniverse2, kTestNetints},
+                                                                         {kTestHandle2, kTestUniverse, kTestNetints},
+                                                                         {kTestHandle2, kTestUniverse2, kTestNetints}};
 
 static const std::vector<uint16_t> kTestUniverses = {1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u, 11u, 12u, 13u, 14u, 15u};
 
@@ -607,4 +614,28 @@ TEST_F(TestSource, ResetNetworkingWorksWithNetints)
 
   EXPECT_EQ(source.ResetNetworking(kTestNetints).IsOk(), true);
   EXPECT_EQ(sacn_source_reset_networking_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, ResetNetworkingPerUniverseWorks)
+{
+  sacn_source_reset_networking_per_universe_fake.custom_fake = [](const SacnSourceUniverseNetintList* netint_lists,
+                                                                  size_t num_netint_lists) {
+    EXPECT_EQ(num_netint_lists, kTestNetintLists.size());
+
+    for (size_t i = 0u; i < num_netint_lists; ++i)
+    {
+      EXPECT_EQ(netint_lists[i].handle, kTestNetintLists[i].handle);
+      EXPECT_EQ(netint_lists[i].universe, kTestNetintLists[i].universe);
+      EXPECT_EQ(netint_lists[i].netints, kTestNetintLists[i].netints.data());
+      EXPECT_EQ(netint_lists[i].num_netints, kTestNetintLists[i].netints.size());
+    }
+
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.ResetNetworking(kTestNetintLists).IsOk(), true);
+  EXPECT_EQ(sacn_source_reset_networking_per_universe_fake.call_count, 1u);
 }
