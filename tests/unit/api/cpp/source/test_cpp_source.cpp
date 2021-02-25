@@ -66,6 +66,9 @@ static const std::vector<etcpal::IpAddr> kTestRemoteAddrs = {
 static const std::vector<uint8_t> kTestBuffer = {
     0x01u, 0x02u, 0x03u, 0x04u, 0x05u, 0x06u, 0x07u, 0x08u, 0x09u, 0x0Au, 0x0Bu, 0x0Cu,
 };
+static const std::vector<uint8_t> kTestBuffer2 = {
+    0x0Du, 0x0Eu, 0x0Fu, 0x10u, 0x11u, 0x12u, 0x13u, 0x14u, 0x15u, 0x16u, 0x17u, 0x18u, 0x19u, 0x1Au,
+};
 
 static std::vector<uint16_t> current_universes;
 static std::vector<EtcPalIpAddr> current_dests;
@@ -487,4 +490,41 @@ TEST_F(TestSource, SendSynchronizationWorks)
 
   EXPECT_EQ(source.SendSynchronization(kTestSyncUniverse).IsOk(), true);
   EXPECT_EQ(sacn_source_send_synchronization_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, UpdateValuesWorks)
+{
+  sacn_source_update_values_fake.custom_fake = [](sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
+                                                  size_t new_values_size) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(new_values, kTestBuffer.data());
+    EXPECT_EQ(new_values_size, kTestBuffer.size());
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  source.UpdateValues(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  EXPECT_EQ(sacn_source_update_values_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, UpdateValuesAndPapWorks)
+{
+  sacn_source_update_values_and_pap_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
+                                                          const uint8_t* new_values, size_t new_values_size,
+                                                          const uint8_t* new_priorities, size_t new_priorities_size) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(new_values, kTestBuffer.data());
+    EXPECT_EQ(new_values_size, kTestBuffer.size());
+    EXPECT_EQ(new_priorities, kTestBuffer2.data());
+    EXPECT_EQ(new_priorities_size, kTestBuffer2.size());
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  source.UpdateValues(kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(), kTestBuffer2.size());
+  EXPECT_EQ(sacn_source_update_values_and_pap_fake.call_count, 1u);
 }
