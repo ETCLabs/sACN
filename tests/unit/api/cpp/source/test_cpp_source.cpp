@@ -158,6 +158,7 @@ TEST_F(TestSource, ShutdownWorks)
 
   EXPECT_EQ(source.handle().value(), kTestHandle);
   source.Shutdown();
+  EXPECT_EQ(sacn_source_destroy_fake.call_count, 1u);
   EXPECT_EQ(source.handle().value(), SACN_SOURCE_INVALID);
 }
 
@@ -173,6 +174,7 @@ TEST_F(TestSource, ChangeNameWorks)
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
   EXPECT_EQ(source.ChangeName(kTestLocalName2).IsOk(), true);
+  EXPECT_EQ(sacn_source_change_name_fake.call_count, 1u);
 }
 
 TEST_F(TestSource, AddUniverseWorksWithoutNetints)
@@ -196,7 +198,9 @@ TEST_F(TestSource, AddUniverseWorksWithoutNetints)
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
   EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).IsOk(), true);
+  EXPECT_EQ(sacn_source_add_universe_fake.call_count, 1u);
   EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse), kTestNetintsEmpty).IsOk(), true);
+  EXPECT_EQ(sacn_source_add_universe_fake.call_count, 2u);
 }
 
 TEST_F(TestSource, AddUniverseWorksWithNetints)
@@ -220,6 +224,7 @@ TEST_F(TestSource, AddUniverseWorksWithNetints)
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
   EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse), kTestNetints).IsOk(), true);
+  EXPECT_EQ(sacn_source_add_universe_fake.call_count, 1u);
 }
 
 TEST_F(TestSource, RemoveUniverseWorks)
@@ -233,6 +238,7 @@ TEST_F(TestSource, RemoveUniverseWorks)
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
   source.RemoveUniverse(kTestUniverse);
+  EXPECT_EQ(sacn_source_remove_universe_fake.call_count, 1u);
 }
 
 TEST_F(TestSource, GetGrowingUniversesWorks)
