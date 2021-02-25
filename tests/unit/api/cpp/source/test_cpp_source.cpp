@@ -473,3 +473,18 @@ TEST_F(TestSource, SendNowWorks)
   EXPECT_EQ(source.SendNow(kTestUniverse, kTestStartCode, kTestBuffer.data(), kTestBuffer.size()).IsOk(), true);
   EXPECT_EQ(sacn_source_send_now_fake.call_count, 1u);
 }
+
+TEST_F(TestSource, SendSynchronizationWorks)
+{
+  sacn_source_send_synchronization_fake.custom_fake = [](sacn_source_t handle, uint16_t sync_universe) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(sync_universe, kTestSyncUniverse);
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.SendSynchronization(kTestSyncUniverse).IsOk(), true);
+  EXPECT_EQ(sacn_source_send_synchronization_fake.call_count, 1u);
+}
