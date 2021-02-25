@@ -282,7 +282,7 @@ TEST_F(TestSource, GetGrowingUniversesWorks)
   EXPECT_EQ(sacn_source_get_universes_fake.call_count, 4u);
 }
 
-TEST_F(TestSource, GetStaticUniversesWorks)
+TEST_F(TestSource, GetUnchangingUniversesWorks)
 {
   sacn_source_get_universes_fake.custom_fake = [](sacn_source_t handle, uint16_t* universes, size_t universes_size) {
     EXPECT_EQ(handle, kTestHandle);
@@ -371,7 +371,7 @@ TEST_F(TestSource, GetGrowingUnicastDestinationsWorks)
   EXPECT_EQ(sacn_source_get_unicast_destinations_fake.call_count, 4u);
 }
 
-TEST_F(TestSource, GetStaticUnicastDestinationsWorks)
+TEST_F(TestSource, GetUnchangingUnicastDestinationsWorks)
 {
   sacn_source_get_unicast_destinations_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
                                                              EtcPalIpAddr* destinations, size_t destinations_size) {
