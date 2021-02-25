@@ -41,6 +41,8 @@ static const std::string kTestLocalName = "Test Source";
 static const std::string kTestLocalName2 = "Test Source 2";
 static constexpr uint16_t kTestUniverse = 123u;
 static constexpr sacn_source_t kTestHandle = 456;
+static constexpr uint8_t kTestPriority = 77u;
+static constexpr bool kTestPreviewFlag = true;
 
 static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                        {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
@@ -395,4 +397,37 @@ TEST_F(TestSource, GetUnchangingUnicastDestinationsWorks)
 
   EXPECT_EQ(source.GetUnicastDestinations(kTestUniverse), kTestRemoteAddrs);
   EXPECT_EQ(sacn_source_get_unicast_destinations_fake.call_count, 2u);
+}
+
+TEST_F(TestSource, ChangePriorityWorks)
+{
+  sacn_source_change_priority_fake.custom_fake = [](sacn_source_t handle, uint16_t universe, uint8_t new_priority) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(new_priority, kTestPriority);
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.ChangePriority(kTestUniverse, kTestPriority).IsOk(), true);
+  EXPECT_EQ(sacn_source_change_priority_fake.call_count, 1u);
+}
+
+TEST_F(TestSource, ChangePreviewFlagWorks)
+{
+  sacn_source_change_preview_flag_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
+                                                        bool new_preview_flag) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(new_preview_flag, kTestPreviewFlag);
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.ChangePreviewFlag(kTestUniverse, kTestPreviewFlag).IsOk(), true);
+  EXPECT_EQ(sacn_source_change_preview_flag_fake.call_count, 1u);
 }
