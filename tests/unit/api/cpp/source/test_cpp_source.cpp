@@ -42,6 +42,11 @@ static const std::string kTestLocalName2 = "Test Source 2";
 static constexpr uint16_t kTestUniverse = 123u;
 static constexpr sacn_source_t kTestHandle = 456;
 
+static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
+                                                       {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
+                                                       {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
+static std::vector<SacnMcastInterface> kTestNetintsEmpty = {};
+
 class TestSource : public ::testing::Test
 {
 protected:
@@ -164,4 +169,51 @@ TEST_F(TestSource, ChangeNameWorks)
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
   EXPECT_EQ(source.ChangeName(kTestLocalName2).IsOk(), true);
+}
+
+TEST_F(TestSource, AddUniverseWorksWithoutNetints)
+{
+  sacn_source_add_universe_fake.custom_fake = [](sacn_source_t handle, const SacnSourceUniverseConfig* config,
+                                                 SacnMcastInterface* netints, size_t num_netints) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(config->universe, kTestUniverse);
+    EXPECT_EQ(config->priority, 100u);
+    EXPECT_EQ(config->send_preview, false);
+    EXPECT_EQ(config->send_unicast_only, false);
+    EXPECT_EQ(config->unicast_destinations, nullptr);
+    EXPECT_EQ(config->num_unicast_destinations, 0u);
+    EXPECT_EQ(config->sync_universe, 0u);
+    EXPECT_EQ(netints, nullptr);
+    EXPECT_EQ(num_netints, 0u);
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).IsOk(), true);
+  EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse), kTestNetintsEmpty).IsOk(), true);
+}
+
+TEST_F(TestSource, AddUniverseWorksWithNetints)
+{
+  sacn_source_add_universe_fake.custom_fake = [](sacn_source_t handle, const SacnSourceUniverseConfig* config,
+                                                 SacnMcastInterface* netints, size_t num_netints) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(config->universe, kTestUniverse);
+    EXPECT_EQ(config->priority, 100u);
+    EXPECT_EQ(config->send_preview, false);
+    EXPECT_EQ(config->send_unicast_only, false);
+    EXPECT_EQ(config->unicast_destinations, nullptr);
+    EXPECT_EQ(config->num_unicast_destinations, 0u);
+    EXPECT_EQ(config->sync_universe, 0u);
+    EXPECT_EQ(netints, kTestNetints.data());
+    EXPECT_EQ(num_netints, kTestNetints.size());
+    return kEtcPalErrOk;
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse), kTestNetints).IsOk(), true);
 }
