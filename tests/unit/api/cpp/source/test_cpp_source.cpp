@@ -49,11 +49,11 @@ static constexpr bool kTestPreviewFlag = true;
 static constexpr uint8_t kTestStartCode = 12u;
 
 static std::vector<SacnMcastInterface> kTestNetints = {
-    {{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk}, {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
-    {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}, {{kEtcPalIpTypeV4, 4u}, kEtcPalErrOk},
-    {{kEtcPalIpTypeV4, 5u}, kEtcPalErrOk}, {{kEtcPalIpTypeV4, 6u}, kEtcPalErrOk},
-    {{kEtcPalIpTypeV4, 7u}, kEtcPalErrOk}, {{kEtcPalIpTypeV4, 8u}, kEtcPalErrOk},
-    {{kEtcPalIpTypeV4, 9u}, kEtcPalErrOk}, {{kEtcPalIpTypeV4, 10u}, kEtcPalErrOk},
+    {{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},  {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
+    {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk},  {{kEtcPalIpTypeV4, 4u}, kEtcPalErrOk},
+    {{kEtcPalIpTypeV4, 5u}, kEtcPalErrOk},  {{kEtcPalIpTypeV4, 6u}, kEtcPalErrOk},
+    {{kEtcPalIpTypeV4, 7u}, kEtcPalErrOk},  {{kEtcPalIpTypeV4, 8u}, kEtcPalErrOk},
+    {{kEtcPalIpTypeV4, 9u}, kEtcPalErrOk},  {{kEtcPalIpTypeV4, 10u}, kEtcPalErrOk},
     {{kEtcPalIpTypeV4, 11u}, kEtcPalErrOk}, {{kEtcPalIpTypeV4, 12u}, kEtcPalErrOk},
     {{kEtcPalIpTypeV4, 13u}, kEtcPalErrOk}, {{kEtcPalIpTypeV4, 14u}, kEtcPalErrOk},
     {{kEtcPalIpTypeV4, 15u}, kEtcPalErrOk}};
@@ -715,4 +715,11 @@ TEST_F(TestSource, GetUnchangingNetintsWorks)
   }
 
   EXPECT_EQ(sacn_source_get_network_interfaces_fake.call_count, 2u);
+}
+
+TEST_F(TestSource, GetHandleWorks)
+{
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+  EXPECT_EQ(source.handle().value(), kTestHandle);
 }
