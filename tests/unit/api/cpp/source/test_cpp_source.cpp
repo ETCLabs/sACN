@@ -47,6 +47,10 @@ static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, k
                                                        {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
 static std::vector<SacnMcastInterface> kTestNetintsEmpty = {};
 
+static const std::vector<uint16_t> kTestUniverses = {1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u, 11u, 12u, 13u, 14u, 15u};
+
+static std::vector<uint16_t> current_universes;
+
 class TestSource : public ::testing::Test
 {
 protected:
@@ -229,4 +233,58 @@ TEST_F(TestSource, RemoveUniverseWorks)
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
   source.RemoveUniverse(kTestUniverse);
+}
+
+TEST_F(TestSource, GetGrowingUniversesWorks)
+{
+  sacn_source_get_universes_fake.custom_fake = [](sacn_source_t handle, uint16_t* universes, size_t universes_size) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_NE(universes, nullptr);
+    EXPECT_EQ(universes_size, current_universes.size() + 4u);
+
+    for (int i = 0; (i < 5) && (current_universes.size() < kTestUniverses.size()); ++i)
+      current_universes.push_back(kTestUniverses[current_universes.size()]);
+
+    if (sacn_source_get_universes_fake.call_count < 4u)
+      EXPECT_LT(universes_size, current_universes.size());
+    else
+      EXPECT_GT(universes_size, current_universes.size());
+
+    for (size_t i = 0; (i < universes_size) && (i < current_universes.size()); ++i)
+      universes[i] = current_universes[i];
+
+    return current_universes.size();
+  };
+
+  current_universes.clear();
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.GetUniverses(), kTestUniverses);
+  EXPECT_EQ(sacn_source_get_universes_fake.call_count, 4u);
+}
+
+TEST_F(TestSource, GetStaticUniversesWorks)
+{
+  sacn_source_get_universes_fake.custom_fake = [](sacn_source_t handle, uint16_t* universes, size_t universes_size) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_NE(universes, nullptr);
+
+    if (sacn_source_get_universes_fake.call_count == 1u)
+      EXPECT_EQ(universes_size, 4u);
+    else
+      EXPECT_EQ(universes_size, kTestUniverses.size() + 4u);
+
+    for (size_t i = 0; (i < universes_size) && (i < kTestUniverses.size()); ++i)
+      universes[i] = kTestUniverses[i];
+
+    return kTestUniverses.size();
+  };
+
+  sacn::Source source;
+  source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
+
+  EXPECT_EQ(source.GetUniverses(), kTestUniverses);
+  EXPECT_EQ(sacn_source_get_universes_fake.call_count, 2u);
 }
