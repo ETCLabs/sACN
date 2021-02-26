@@ -25,6 +25,7 @@ var group__sacn__source__cpp =
     [ "UniverseNetintList", "structsacn_1_1_source_1_1_universe_netint_list.html", [
       [ "UniverseNetintList", "structsacn_1_1_source_1_1_universe_netint_list.html#a73644ddd63df91014c177680f2336e47", null ],
       [ "UniverseNetintList", "structsacn_1_1_source_1_1_universe_netint_list.html#a830547cfb51426350144edd9c028bc14", null ],
+      [ "UniverseNetintList", "structsacn_1_1_source_1_1_universe_netint_list.html#aa0cef0ea55a0e9bc9d8a2c5ecd16ec31", null ],
       [ "handle", "structsacn_1_1_source_1_1_universe_netint_list.html#aee044b8551b82b1058427bbb17e74528", null ],
       [ "netints", "structsacn_1_1_source_1_1_universe_netint_list.html#a2a0cd7263bacb4663085d28599867b12", null ],
       [ "universe", "structsacn_1_1_source_1_1_universe_netint_list.html#a0cf34824f8777f28b50f62b7870d6f8c", null ]
