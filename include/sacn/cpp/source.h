@@ -267,6 +267,9 @@ inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handl
 
 /**
  * @brief Create a Universe Netint List instance by passing all members explicitly.
+ *
+ * This constructor allows for the use of list initialization when setting up one or more UniverseNetintLists (such as
+ * initializing the vector<UniverseNetintList> that gets passed into Source::ResetNetworking).
  */
 inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id,
                                                       const std::vector<SacnMcastInterface>& network_interfaces)
