@@ -22,9 +22,6 @@
 #include <limits>
 #include "etcpal/cpp/error.h"
 #include "etcpal_mock/common.h"
-#include "sacn_mock/private/common.h"
-#include "sacn_mock/private/sockets.h"
-#include "sacn_mock/private/source_state.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
 #include "sacn/private/source.h"

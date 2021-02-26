@@ -22,6 +22,8 @@
 
 #include "sacn/private/common.h"
 
+#if SACN_SOURCE_ENABLED
+
 typedef enum
 {
   kProcessManualSources,
@@ -79,5 +81,7 @@ etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUn
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* SACN_SOURCE_ENABLED */
 
 #endif /* SACN_PRIVATE_SOURCE_STATE_H_ */

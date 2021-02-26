@@ -377,6 +377,8 @@ typedef struct SacnRecvThreadContext
  * Types used by the sACN Source module
  *****************************************************************************/
 
+#if SACN_SOURCE_ENABLED
+
 typedef struct SacnSourceNetint
 {
   EtcPalMcastNetintId id;  // This must be the first struct member.
@@ -456,6 +458,8 @@ typedef enum
   kEnableForceSync,
   kDisableForceSync
 } force_sync_behavior_t;
+
+#endif  // SACN_SOURCE_ENABLED
 
 /******************************************************************************
  * Global variables, functions, and state tracking

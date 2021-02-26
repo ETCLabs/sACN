@@ -112,7 +112,9 @@ typedef struct ToEraseBuf
 
 /**************************** Private variables ******************************/
 
+#if SACN_SOURCE_ENABLED
 static bool sources_initialized = false;
+#endif
 
 static struct SacnMemBufs
 {
@@ -142,8 +144,10 @@ static struct SacnMemBufs
   SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_THREADS];
 #endif  // SACN_DYNAMIC_MEM
 
+#if SACN_SOURCE_ENABLED
   SACN_DECLARE_BUF(SacnSource, sources, SACN_SOURCE_MAX_SOURCES);
   size_t num_sources;
+#endif
 } mem_bufs;
 
 /*********************** Private function prototypes *************************/
@@ -151,10 +155,12 @@ static struct SacnMemBufs
 static void zero_status_lists(SacnSourceStatusLists* status_lists);
 static void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t size);
 
+#if SACN_SOURCE_ENABLED
 static size_t get_source_index(sacn_source_t handle, bool* found);
 static size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found);
 static size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found);
 static size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found);
+#endif
 
 #if SACN_DYNAMIC_MEM
 static size_t grow_capacity(size_t old_capacity, size_t capacity_requested);
@@ -212,9 +218,11 @@ static void deinit_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_end
 static void deinit_source_limit_exceeded_buf(void);
 #endif  // SACN_DYNAMIC_MEM
 
+#if SACN_SOURCE_ENABLED
 // Sources initialization/deinitialization
 static etcpal_error_t init_sources(void);
 static void deinit_sources(void);
+#endif
 
 /*************************** Function definitions ****************************/
 
@@ -251,8 +259,10 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
     res = init_source_limit_exceeded_buf(num_threads);
 #endif
 
+#if SACN_SOURCE_ENABLED
   if (res == kEtcPalErrOk)
     res = init_sources();
+#endif
 
   // Clean up
   if (res != kEtcPalErrOk)
@@ -266,7 +276,9 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
  */
 void sacn_mem_deinit(void)
 {
+#if SACN_SOURCE_ENABLED
   deinit_sources();
+#endif
 
 #if SACN_DYNAMIC_MEM
   deinit_source_limit_exceeded_buf();
@@ -692,6 +704,8 @@ void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnR
   }
 }
 
+#if SACN_SOURCE_ENABLED
+
 // Needs lock
 etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state)
 {
@@ -1020,6 +1034,8 @@ void remove_sacn_source(size_t index)
   REMOVE_AT_INDEX((&mem_bufs), SacnSource, sources, index);
 }
 
+#endif  // SACN_SOURCE_ENABLED
+
 void zero_status_lists(SacnSourceStatusLists* status_lists)
 {
   SACN_ASSERT(status_lists);
@@ -1039,6 +1055,8 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
     sources_lost->context = NULL;
   }
 }
+
+#if SACN_SOURCE_ENABLED
 
 size_t get_source_index(sacn_source_t handle, bool* found)
 {
@@ -1103,6 +1121,8 @@ size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id
 
   return index;
 }
+
+#endif  // SACN_SOURCE_ENABLED
 
 #if SACN_DYNAMIC_MEM
 size_t grow_capacity(size_t old_capacity, size_t capacity_requested)
@@ -1506,6 +1526,8 @@ void deinit_source_limit_exceeded_buf(void)
 
 #endif  // SACN_DYNAMIC_MEM
 
+#if SACN_SOURCE_ENABLED
+
 etcpal_error_t init_sources(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
@@ -1542,3 +1564,5 @@ void deinit_sources(void)
     sacn_unlock();
   }
 }
+
+#endif  // SACN_SOURCE_ENABLED

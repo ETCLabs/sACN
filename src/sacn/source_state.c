@@ -17,8 +17,11 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include "sacn/private/source_loss.h"
 #include "sacn/private/common.h"
+
+#if SACN_SOURCE_ENABLED
+
+#include "sacn/private/source_loss.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/pdu.h"
 #include "sacn/private/sockets.h"
@@ -730,3 +733,10 @@ void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* i
       remove_sacn_source_netint(source, netint_index);
   }
 }
+
+#else  // SACN_SOURCE_ENABLED
+#ifdef _MSC_VER
+// Disable "nonstandard extension used" warning
+#pragma warning(disable : 4206)
+#endif
+#endif  // SACN_SOURCE_ENABLED
