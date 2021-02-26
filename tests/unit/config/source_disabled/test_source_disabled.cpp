@@ -22,6 +22,7 @@
 #include <limits>
 #include "etcpal/cpp/error.h"
 #include "etcpal_mock/common.h"
+#include "sacn/source.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
 #include "sacn/private/source.h"
@@ -42,17 +43,46 @@ protected:
     etcpal_reset_all_fakes();
 
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
-    ASSERT_EQ(sacn_source_init(), kEtcPalErrOk);
   }
 
   void TearDown() override
   {
-    sacn_source_deinit();
     sacn_mem_deinit();
   }
 };
 
-TEST_F(TestSourceDisabled, Foo)
+#if SACN_DYNAMIC_MEM
+TEST_F(TestSourceDisabled, SourceIsEnabledInDynamicMode)
 {
-  // TODO
+  EXPECT_NE(sacn_source_create(nullptr, nullptr), kEtcPalErrNotImpl);
+  EXPECT_NE(sacn_source_change_name(SACN_SOURCE_INVALID, nullptr), kEtcPalErrNotImpl);
+  EXPECT_NE(sacn_source_add_universe(SACN_SOURCE_INVALID, nullptr, nullptr, 0u), kEtcPalErrNotImpl);
+  EXPECT_NE(sacn_source_add_unicast_destination(SACN_SOURCE_INVALID, 0u, nullptr), kEtcPalErrNotImpl);
+  EXPECT_NE(sacn_source_change_priority(SACN_SOURCE_INVALID, 0u, 0u), kEtcPalErrNotImpl);
+  EXPECT_NE(sacn_source_change_preview_flag(SACN_SOURCE_INVALID, 0u, false), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_change_synchronization_universe(SACN_SOURCE_INVALID, 0u, 0u), kEtcPalErrNotImpl);
+  EXPECT_NE(sacn_source_send_now(SACN_SOURCE_INVALID, 0u, 0u, nullptr, 0u), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_send_synchronization(SACN_SOURCE_INVALID, 0u), kEtcPalErrNotImpl);
+  EXPECT_NE(sacn_source_reset_networking(nullptr, 0u), kEtcPalErrNotImpl);
+  EXPECT_NE(sacn_source_reset_networking_per_universe(nullptr, 0u), kEtcPalErrNotImpl);
 }
+#else  // SACN_DYNAMIC_MEM
+TEST_F(TestSourceDisabled, SourceIsDisabledInStaticMode)
+{
+  EXPECT_EQ(sacn_source_create(nullptr, nullptr), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_change_name(SACN_SOURCE_INVALID, nullptr), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_add_universe(SACN_SOURCE_INVALID, nullptr, nullptr, 0u), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_get_universes(SACN_SOURCE_INVALID, nullptr, 0u), 0u);
+  EXPECT_EQ(sacn_source_add_unicast_destination(SACN_SOURCE_INVALID, 0u, nullptr), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_get_unicast_destinations(SACN_SOURCE_INVALID, 0u, nullptr, 0u), 0u);
+  EXPECT_EQ(sacn_source_change_priority(SACN_SOURCE_INVALID, 0u, 0u), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_change_preview_flag(SACN_SOURCE_INVALID, 0u, false), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_change_synchronization_universe(SACN_SOURCE_INVALID, 0u, 0u), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_send_now(SACN_SOURCE_INVALID, 0u, 0u, nullptr, 0u), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_send_synchronization(SACN_SOURCE_INVALID, 0u), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_process_manual(), 0);
+  EXPECT_EQ(sacn_source_reset_networking(nullptr, 0u), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_reset_networking_per_universe(nullptr, 0u), kEtcPalErrNotImpl);
+  EXPECT_EQ(sacn_source_get_network_interfaces(SACN_SOURCE_INVALID, 0u, nullptr, 0u), 0u);
+}
+#endif
