@@ -13,5 +13,5 @@ set(TEST_UTILS_SOURCES
   ${SACN_SRC}/sacn_mock/common.c
 )
 
-sacn_add_dynamic_test(test_utils ${TEST_UTILS_SOURCES})
-sacn_add_static_test(test_utils ${TEST_UTILS_SOURCES})
+sacn_add_dynamic_test(test_utils ${SACN_TEST}/configs/dynamic ${TEST_UTILS_SOURCES})
+sacn_add_static_test(test_utils ${SACN_TEST}/configs/static ${TEST_UTILS_SOURCES})

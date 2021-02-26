@@ -2,13 +2,13 @@ include(GoogleTest)
 
 set(UNIT_TEST_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-function(sacn_add_dynamic_test test_name)
+function(sacn_add_dynamic_test test_name config_dir)
   set(target_name ${test_name}_dynamic)
   add_executable(${target_name} ${ARGN})
 
   target_compile_definitions(${target_name} PRIVATE SACN_HAVE_CONFIG_H)
   target_include_directories(${target_name} PRIVATE
-    ${SACN_TEST}/configs/dynamic
+    ${config_dir}
     ${SACN_INCLUDE}
     ${SACN_SRC}
   )
@@ -17,13 +17,13 @@ function(sacn_add_dynamic_test test_name)
   gtest_discover_tests(${target_name})
 endfunction()
 
-function(sacn_add_static_test test_name)
+function(sacn_add_static_test test_name config_dir)
   set(target_name ${test_name}_static)
   add_executable(${target_name} ${ARGN})
 
   target_compile_definitions(${target_name} PRIVATE SACN_HAVE_CONFIG_H)
   target_include_directories(${target_name} PRIVATE
-    ${SACN_TEST}/configs/static
+    ${config_dir}
     ${SACN_INCLUDE}
     ${SACN_SRC}
   )

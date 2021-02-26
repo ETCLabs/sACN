@@ -13,5 +13,5 @@ set(TEST_SOURCE_STATE_SOURCES
   ${SACN_SRC}/sacn_mock/sockets.c
 )
 
-sacn_add_dynamic_test(test_source_state ${TEST_SOURCE_STATE_SOURCES})
-sacn_add_static_test(test_source_state ${TEST_SOURCE_STATE_SOURCES})
+sacn_add_dynamic_test(test_source_state ${SACN_TEST}/configs/dynamic ${TEST_SOURCE_STATE_SOURCES})
+sacn_add_static_test(test_source_state ${SACN_TEST}/configs/static ${TEST_SOURCE_STATE_SOURCES})
