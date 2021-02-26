@@ -43,9 +43,6 @@ protected:
   void SetUp() override
   {
     etcpal_reset_all_fakes();
-    sacn_common_reset_all_fakes();
-    sacn_sockets_reset_all_fakes();
-    sacn_source_state_reset_all_fakes();
 
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_source_init(), kEtcPalErrOk);

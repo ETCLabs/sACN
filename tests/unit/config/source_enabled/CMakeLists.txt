@@ -6,8 +6,7 @@ set(TEST_SOURCE_ENABLED_SOURCES
   test_source_enabled.cpp
   main.cpp
 
-  ${SACN_API_SOURCES}
-  ${SACN_MOCK_SOURCES}
+  ${SACN_SOURCES}
 )
 
 sacn_add_dynamic_test(test_source_enabled ${TEST_SOURCE_ENABLED_DIR}/config/dynamic ${TEST_SOURCE_ENABLED_SOURCES})
