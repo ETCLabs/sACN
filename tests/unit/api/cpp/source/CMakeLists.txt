@@ -4,7 +4,12 @@ set(TEST_SOURCE_SOURCES
   test_cpp_source.cpp
   main.cpp
 
-  ${SACN_API_SOURCES}
+  ${SACN_SRC}/sacn/mem.c
+  ${SACN_SRC}/sacn/pdu.c
+  ${SACN_SRC}/sacn/util.c
+  
+  ${SACN_SRC}/sacn_mock/source.c
+  
   ${SACN_MOCK_SOURCES}
 )
 
