@@ -94,8 +94,10 @@ typedef unsigned int sacn_thread_id_t;
 #define SACN_DECLARE_BUF(type, name, max_static_size) \
   type* name;                                         \
   size_t name##_capacity
-#else
+#elif max_static_size
 #define SACN_DECLARE_BUF(type, name, max_static_size) type name[max_static_size]
+#else
+#define SACN_DECLARE_BUF(type, name, max_static_size) type* name
 #endif
 
 /******************************************************************************
@@ -377,8 +379,6 @@ typedef struct SacnRecvThreadContext
  * Types used by the sACN Source module
  *****************************************************************************/
 
-#if SACN_SOURCE_ENABLED
-
 typedef struct SacnSourceNetint
 {
   EtcPalMcastNetintId id;  // This must be the first struct member.
@@ -458,8 +458,6 @@ typedef enum
   kEnableForceSync,
   kDisableForceSync
 } force_sync_behavior_t;
-
-#endif  // SACN_SOURCE_ENABLED
 
 /******************************************************************************
  * Global variables, functions, and state tracking

@@ -67,7 +67,6 @@ bool remove_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket
 void add_receiver_to_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver);
 void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver);
 
-#if SACN_SOURCE_ENABLED
 etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state);
 etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniverseConfig* config,
                                         SacnMcastInterface* netints, size_t num_netints,
@@ -89,7 +88,6 @@ void remove_sacn_source_netint(SacnSource* source, size_t index);
 void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index);
 void remove_sacn_source_universe(SacnSource* source, size_t index);
 void remove_sacn_source(size_t index);
-#endif  // SACN_SOURCE_ENABLED
 
 #ifdef __cplusplus
 }

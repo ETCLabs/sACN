@@ -74,13 +74,9 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     bool mem_initted = false;
     bool sockets_initted = false;
     bool source_loss_initted = false;
-#if SACN_SOURCE_ENABLED
     bool source_state_initted = false;
-#endif
     bool receiver_initted = false;
-#if SACN_SOURCE_ENABLED
     bool source_initted = false;
-#endif
     bool merger_initted = false;
     bool merge_receiver_initted = false;
     bool source_detector_initted = false;
@@ -106,16 +102,12 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
       sockets_initted = ((res = sacn_sockets_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
       source_loss_initted = ((res = sacn_source_loss_init()) == kEtcPalErrOk);
-#if SACN_SOURCE_ENABLED
     if (res == kEtcPalErrOk)
       source_state_initted = ((res = sacn_source_state_init()) == kEtcPalErrOk);
-#endif
     if (res == kEtcPalErrOk)
       receiver_initted = ((res = sacn_receiver_init()) == kEtcPalErrOk);
-#if SACN_SOURCE_ENABLED
     if (res == kEtcPalErrOk)
       source_initted = ((res = sacn_source_init()) == kEtcPalErrOk);
-#endif
     if ( res == kEtcPalErrOk)
       merger_initted = ((res = sacn_dmx_merger_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
@@ -136,16 +128,12 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
         sacn_merge_receiver_deinit();
       if (merger_initted)
         sacn_dmx_merger_deinit();
-#if SACN_SOURCE_ENABLED
       if (source_initted)
         sacn_source_deinit();
-#endif
       if (receiver_initted)
         sacn_receiver_deinit();
-#if SACN_SOURCE_ENABLED
       if (source_state_initted)
         sacn_source_state_deinit();
-#endif
       if (source_loss_initted)
         sacn_source_loss_deinit();
       if (sockets_initted)
@@ -178,13 +166,9 @@ void sacn_deinit(void)
 
     sacn_merge_receiver_deinit();
     sacn_dmx_merger_deinit();
-#if SACN_SOURCE_ENABLED
     sacn_source_deinit();
-#endif
     sacn_receiver_deinit();
-#if SACN_SOURCE_ENABLED
     sacn_source_state_deinit();
-#endif
     sacn_source_loss_deinit();
     sacn_sockets_deinit();
     sacn_mem_deinit();
