@@ -699,6 +699,7 @@ void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnR
 // Needs lock
 etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state)
 {
+#if SACN_SOURCE_ENABLED
   etcpal_error_t result = kEtcPalErrOk;
   SacnSource* source = NULL;
   if (lookup_source(handle, &source) == kEtcPalErrOk)
@@ -706,13 +707,9 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
 
   if (result == kEtcPalErrOk)
   {
-#if SACN_SOURCE_ENABLED
     CHECK_ROOM_FOR_ONE_MORE((&mem_bufs), sources, SacnSource, SACN_SOURCE_MAX_SOURCES, kEtcPalErrNoMem);
 
     source = &mem_bufs.sources[mem_bufs.num_sources];
-#else
-    result = kEtcPalErrNoMem;
-#endif
   }
 
   if (result == kEtcPalErrOk)
@@ -756,9 +753,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
 
   if (result == kEtcPalErrOk)
   {
-#if SACN_SOURCE_ENABLED
     ++mem_bufs.num_sources;
-#endif
   }
   else
   {
@@ -777,12 +772,18 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
         source->netints = NULL;
       }
     }
-#endif
+#endif  // SACN_DYNAMIC_MEM
   }
 
   *source_state = source;
 
   return result;
+#else  // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(config);
+  ETCPAL_UNUSED_ARG(source_state);
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
 }
 
 // Needs lock
