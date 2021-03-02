@@ -29,7 +29,11 @@ extern "C" {
 etcpal_error_t sacn_receiver_state_init(void);
 void sacn_receiver_state_deinit(void);
 
-
+sacn_receiver_t get_next_receiver_handle();
+etcpal_error_t clear_term_sets_and_sources(SacnReceiver* receiver);
+etcpal_error_t add_receiver_sockets(SacnReceiver* receiver);
+void begin_sampling_period(SacnReceiver* receiver);
+void remove_receiver_sockets(SacnReceiver* receiver, socket_close_behavior_t close_behavior);
 
 #ifdef __cplusplus
 }

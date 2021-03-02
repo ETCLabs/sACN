@@ -22,12 +22,15 @@
 #include <stddef.h>
 #include <string.h>
 #include "etcpal/common.h"
+#include "etcpal/rbtree.h"
 #include "sacn/private/common.h"
 #include "sacn/private/opts.h"
 #include "sacn/private/pdu.h"
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>
+#else
+#include "etcpal/mempool.h"
 #endif
 
 /**************************** Private constants ******************************/
@@ -60,6 +63,20 @@
 #define CHECK_ROOM_FOR_ONE_MORE(container, buffer, buffer_type, max_static, failure_return_value) \
   CHECK_CAPACITY(container, container->num_##buffer + 1, buffer, buffer_type, max_static, failure_return_value)
 
+/* Macros for dynamic allocation. */
+#define ALLOC_RECEIVER() malloc(sizeof(SacnReceiver))
+#define ALLOC_TRACKED_SOURCE() malloc(sizeof(SacnTrackedSource))
+#define FREE_RECEIVER(ptr)        \
+  do                              \
+  {                               \
+    if (ptr->netints.netints)     \
+    {                             \
+      free(ptr->netints.netints); \
+    }                             \
+    free(ptr);                    \
+  } while (0)
+#define FREE_TRACKED_SOURCE(ptr) free(ptr)
+
 #else  // SACN_DYNAMIC_MEM
 
 #define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static, failure_return_value) \
@@ -73,6 +90,12 @@
 
 #define CHECK_ROOM_FOR_ONE_MORE(container, buffer, buffer_type, max_static, failure_return_value) \
   CHECK_CAPACITY(container, container->num_##buffer + 1, buffer, buffer_type, max_static, failure_return_value)
+
+/* Macros for static allocation, which is done using etcpal_mempool. */
+#define ALLOC_RECEIVER() etcpal_mempool_alloc(sacnrecv_receivers)
+#define ALLOC_TRACKED_SOURCE() etcpal_mempool_alloc(sacnrecv_tracked_sources)
+#define FREE_RECEIVER(ptr) etcpal_mempool_free(sacnrecv_receivers, ptr)
+#define FREE_TRACKED_SOURCE(ptr) etcpal_mempool_free(sacnrecv_tracked_sources, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
 
@@ -150,6 +173,15 @@ static struct SacnMemBufs
 #endif
 } mem_bufs;
 
+#if !SACN_DYNAMIC_MEM
+ETCPAL_MEMPOOL_DEFINE(sacnrecv_receivers, SacnReceiver, SACN_RECEIVER_MAX_UNIVERSES);
+ETCPAL_MEMPOOL_DEFINE(sacnrecv_tracked_sources, SacnTrackedSource, SACN_RECEIVER_TOTAL_MAX_SOURCES);
+ETCPAL_MEMPOOL_DEFINE(sacnrecv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODES);
+#endif
+
+static EtcPalRbTree receivers;
+static EtcPalRbTree receivers_by_universe;
+
 /*********************** Private function prototypes *************************/
 
 static void zero_status_lists(SacnSourceStatusLists* status_lists);
@@ -216,9 +248,28 @@ static void deinit_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_end
 static void deinit_source_limit_exceeded_buf(void);
 #endif  // SACN_DYNAMIC_MEM
 
+// Receiver memory management
+static etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver);
+static etcpal_error_t reset_receiver_state(SacnReceiver* receiver);
+static void remove_receiver_from_maps(SacnReceiver* receiver);
+
+// Receiver tree node management
+static int tracked_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+static int receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+static int receiver_compare_by_universe(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+static EtcPalRbNode* node_alloc(void);
+static void node_dealloc(EtcPalRbNode* node);
+static void source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+static bool receiver_handle_in_use(int handle_val, void* cookie);
+
 // Sources initialization/deinitialization
 static etcpal_error_t init_sources(void);
 static void deinit_sources(void);
+
+// Receivers initialization/deinitialization
+static etcpal_error_t init_receivers(void);
+static void deinit_receivers(void);
 
 /*************************** Function definitions ****************************/
 
@@ -257,6 +308,8 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
 
   if (res == kEtcPalErrOk)
     res = init_sources();
+  if (res == kEtcPalErrOk)
+    res = init_receivers();
 
   // Clean up
   if (res != kEtcPalErrOk)
@@ -270,6 +323,7 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
  */
 void sacn_mem_deinit(void)
 {
+  deinit_receivers();
   deinit_sources();
 
 #if SACN_DYNAMIC_MEM
@@ -778,7 +832,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
   *source_state = source;
 
   return result;
-#else  // SACN_SOURCE_ENABLED
+#else   // SACN_SOURCE_ENABLED
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(config);
   ETCPAL_UNUSED_ARG(source_state);
@@ -1052,9 +1106,110 @@ void remove_sacn_source(size_t index)
 #endif  // SACN_DYNAMIC_MEM
 
   REMOVE_AT_INDEX((&mem_bufs), SacnSource, sources, index);
-#else  // SACN_SOURCE_ENABLED
+#else   // SACN_SOURCE_ENABLED
   ETCPAL_UNUSED_ARG(index);
 #endif  // SACN_SOURCE_ENABLED
+}
+
+/*
+ * Allocate a new receiver instances and do essential first initialization, in preparation for
+ * creating the sockets and subscriptions.
+ *
+ * [in] config Receiver configuration data.
+ * Returns the new initialized receiver instance, or NULL if out of memory.
+ */
+etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfig* config, SacnMcastInterface* netints,
+                                 size_t num_netints, SacnReceiver** receiver_state)
+{
+  SACN_ASSERT(config);
+
+  // First check to see if we are already listening on this universe.
+  SacnReceiver* tmp = NULL;
+  if (lookup_receiver_by_universe(config->universe_id, &tmp) == kEtcPalErrOk)
+    return kEtcPalErrExists;
+
+  if (handle == SACN_RECEIVER_INVALID)
+    return kEtcPalErrNoMem;
+
+  SacnReceiver* receiver = ALLOC_RECEIVER();
+  if (!receiver)
+    return kEtcPalErrNoMem;
+
+  receiver->keys.handle = handle;
+  receiver->keys.universe = config->universe_id;
+  receiver->thread_id = SACN_THREAD_ID_INVALID;
+
+  receiver->ipv4_socket = ETCPAL_SOCKET_INVALID;
+  receiver->ipv6_socket = ETCPAL_SOCKET_INVALID;
+
+  etcpal_error_t initialize_receiver_netints_result =
+      sacn_initialize_receiver_netints(&receiver->netints, netints, num_netints);
+  if (initialize_receiver_netints_result != kEtcPalErrOk)
+  {
+    FREE_RECEIVER(receiver);
+    return initialize_receiver_netints_result;
+  }
+
+  receiver->sampling = false;
+  receiver->notified_sampling_started = false;
+  receiver->suppress_limit_exceeded_notification = false;
+  etcpal_rbtree_init(&receiver->sources, tracked_source_compare, node_alloc, node_dealloc);
+  receiver->term_sets = NULL;
+
+  receiver->filter_preview_data = ((config->flags & SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA) != 0);
+
+  receiver->callbacks = config->callbacks;
+
+  receiver->source_count_max = config->source_count_max;
+
+  receiver->ip_supported = config->ip_supported;
+
+  receiver->next = NULL;
+
+  *receiver_state = receiver;
+
+  // Insert the new universe into the map.
+  return insert_receiver_into_maps(receiver);
+}
+
+etcpal_error_t lookup_receiver(sacn_receiver_t handle, SacnReceiver** receiver_state)
+{
+  *receiver_state = (SacnReceiver*)etcpal_rbtree_find(&receivers, &handle);
+  return receiver_state ? kEtcPalErrOk : kEtcPalErrNotFound;
+}
+
+etcpal_error_t lookup_receiver_by_universe(uint16_t universe, SacnReceiver** receiver_state)
+{
+  SacnReceiverKeys lookup_keys;
+  lookup_keys.universe = universe;
+  *receiver_state = (SacnReceiver*)etcpal_rbtree_find(&receivers_by_universe, &lookup_keys);
+
+  return receiver_state ? kEtcPalErrOk : kEtcPalErrNotFound;
+}
+
+etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_universe)
+{
+  etcpal_error_t res = etcpal_rbtree_remove(&receivers_by_universe, receiver);
+
+  if (res == kEtcPalErrOk)
+  {
+    receiver->keys.universe = new_universe;
+    res = etcpal_rbtree_insert(&receivers_by_universe, receiver);
+  }
+
+  return res;
+}
+
+etcpal_error_t clear_receiver_sources(SacnReceiver* receiver)
+{
+  return etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
+}
+
+void remove_sacn_receiver(SacnReceiver* receiver)
+{
+  etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
+  remove_receiver_from_maps(receiver);
+  FREE_RECEIVER(receiver);
 }
 
 void zero_status_lists(SacnSourceStatusLists* status_lists)
@@ -1547,6 +1702,130 @@ void deinit_source_limit_exceeded_buf(void)
 
 #endif  // SACN_DYNAMIC_MEM
 
+/**************************************************************************************************
+ * Internal helpers for managing the receivers, the sources they track, and their trees
+ *************************************************************************************************/
+
+/*
+ * Add a receiver to the maps that are used to track receivers globally.
+ *
+ * [in] receiver Receiver instance to add.
+ * Returns error code indicating the result of the operations.
+ */
+etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver)
+{
+  etcpal_error_t res = etcpal_rbtree_insert(&receiver_state.receivers, receiver);
+  if (res == kEtcPalErrOk)
+  {
+    res = etcpal_rbtree_insert(&receiver_state.receivers_by_universe, receiver);
+    if (res != kEtcPalErrOk)
+      etcpal_rbtree_remove(&receiver_state.receivers, receiver);
+  }
+  return res;
+}
+
+/*
+ * Reset a receiver's state. Make sure to take the sACN lock before calling.
+ *
+ * [in,out] receiver Receiver to reset state for.
+ * Returns error code indicating the result of the reset.
+ */
+etcpal_error_t reset_receiver_state(SacnReceiver* receiver)
+{
+  receiver->sampling = true;
+  receiver->notified_sampling_started = false;
+  etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
+  receiver->suppress_limit_exceeded_notification = false;
+
+  clear_term_set_list(receiver->term_sets);
+  receiver->term_sets = NULL;
+
+  return etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
+}
+
+/*
+ * Remove a receiver instance from the maps that are used to track receivers globally.
+ *
+ * [in] receiver Receiver to remove.
+ */
+void remove_receiver_from_maps(SacnReceiver* receiver)
+{
+  etcpal_rbtree_remove(&receiver_state.receivers_by_universe, receiver);
+  etcpal_rbtree_remove(&receiver_state.receivers, receiver);
+}
+
+int tracked_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
+{
+  ETCPAL_UNUSED_ARG(tree);
+
+  const SacnTrackedSource* a = (const SacnTrackedSource*)value_a;
+  const SacnTrackedSource* b = (const SacnTrackedSource*)value_b;
+  return ETCPAL_UUID_CMP(&a->cid, &b->cid);
+}
+
+int receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
+{
+  ETCPAL_UNUSED_ARG(tree);
+
+  const SacnReceiver* a = (const SacnReceiver*)value_a;
+  const SacnReceiver* b = (const SacnReceiver*)value_b;
+  return (a->keys.handle > b->keys.handle) - (a->keys.handle < b->keys.handle);
+}
+
+int receiver_compare_by_universe(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
+{
+  ETCPAL_UNUSED_ARG(tree);
+
+  const SacnReceiver* a = (const SacnReceiver*)value_a;
+  const SacnReceiver* b = (const SacnReceiver*)value_b;
+  return (a->keys.universe > b->keys.universe) - (a->keys.universe < b->keys.universe);
+}
+
+EtcPalRbNode* node_alloc(void)
+{
+#if SACN_DYNAMIC_MEM
+  return (EtcPalRbNode*)malloc(sizeof(EtcPalRbNode));
+#else
+  return etcpal_mempool_alloc(sacnrecv_rb_nodes);
+#endif
+}
+
+void node_dealloc(EtcPalRbNode* node)
+{
+#if SACN_DYNAMIC_MEM
+  free(node);
+#else
+  etcpal_mempool_free(sacnrecv_rb_nodes, node);
+#endif
+}
+
+/* Helper function for clearing an EtcPalRbTree containing sources. */
+static void source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
+{
+  ETCPAL_UNUSED_ARG(self);
+  FREE_TRACKED_SOURCE(node->value);
+  node_dealloc(node);
+}
+
+/* Helper function for clearing an EtcPalRbTree containing SacnReceivers. */
+static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
+{
+  ETCPAL_UNUSED_ARG(self);
+
+  SacnReceiver* receiver = (SacnReceiver*)node->value;
+  etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
+  remove_receiver_sockets(receiver, kCloseSocketNow);
+  FREE_RECEIVER(receiver);
+  node_dealloc(node);
+}
+
+bool receiver_handle_in_use(int handle_val, void* cookie)
+{
+  ETCPAL_UNUSED_ARG(cookie);
+
+  return (etcpal_rbtree_find(&receivers, &handle_val) != NULL);
+}
+
 etcpal_error_t init_sources(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
@@ -1585,4 +1864,29 @@ void deinit_sources(void)
     sacn_unlock();
   }
 #endif  // SACN_SOURCE_ENABLED
+}
+
+etcpal_error_t init_receivers(void)
+{
+  etcpal_error_t res = kEtcPalErrOk;
+
+#if !SACN_DYNAMIC_MEM
+  res |= etcpal_mempool_init(sacnrecv_receivers);
+  res |= etcpal_mempool_init(sacnrecv_tracked_sources);
+  res |= etcpal_mempool_init(sacnrecv_rb_nodes);
+#endif
+
+  if (res == kEtcPalErrOk)
+  {
+    etcpal_rbtree_init(&receiver_state.receivers, receiver_compare, node_alloc, node_dealloc);
+    etcpal_rbtree_init(&receiver_state.receivers_by_universe, receiver_compare_by_universe, node_alloc, node_dealloc);
+  }
+
+  return res;
+}
+
+void deinit_receivers(void)
+{
+  etcpal_rbtree_clear_with_cb(&receiver_state.receivers, universe_tree_dealloc);
+  etcpal_rbtree_clear(&receiver_state.receivers_by_universe);
 }

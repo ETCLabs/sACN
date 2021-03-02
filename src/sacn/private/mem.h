@@ -67,6 +67,7 @@ bool remove_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket
 void add_receiver_to_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver);
 void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver);
 
+// sACN Source memory API
 etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state);
 etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniverseConfig* config,
                                         SacnMcastInterface* netints, size_t num_netints,
@@ -88,6 +89,15 @@ void remove_sacn_source_netint(SacnSource* source, size_t index);
 void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index);
 void remove_sacn_source_universe(SacnSource* source, size_t index);
 void remove_sacn_source(size_t index);
+
+// sACN Receiver memory API
+etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfig* config, SacnMcastInterface* netints,
+                                 size_t num_netints, SacnReceiver** receiver_state);
+etcpal_error_t lookup_receiver(sacn_receiver_t handle, SacnReceiver** receiver_state);
+etcpal_error_t lookup_receiver_by_universe(uint16_t universe, SacnReceiver** receiver_state);
+etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_universe);
+etcpal_error_t clear_receiver_sources(SacnReceiver* receiver);
+void remove_sacn_receiver(SacnReceiver* receiver);
 
 #ifdef __cplusplus
 }
