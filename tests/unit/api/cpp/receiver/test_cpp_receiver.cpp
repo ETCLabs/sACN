@@ -58,8 +58,7 @@ protected:
   }
 };
 
-TEST_F(TestReceiver, SetStandardVersionWorks)
+TEST_F(TestReceiver, Foo)
 {
-  // Initialization should set it to the default
-  EXPECT_EQ(sacn_receiver_get_standard_version(), kSacnStandardVersionAll);
+  // TODO
 }

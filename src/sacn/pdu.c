@@ -69,44 +69,6 @@ bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* h
   return true;
 }
 
-#define DRAFT_SACN_DATA_PACKET_MIN_SIZE 52
-#define DRAFT_SACN_DATA_SOURCE_NAME_LEN 32
-
-bool parse_draft_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* header, uint8_t* seq,
-                                  bool* terminated, const uint8_t** pdata)
-{
-  // Check the input parameters including buffer size
-  if (!buf || !header || !seq || !terminated || !pdata || buflen < DRAFT_SACN_DATA_PACKET_MIN_SIZE)
-    return false;
-
-  // Check the framing layer vector
-  if (etcpal_unpack_u32b(&buf[2]) != VECTOR_E131_DATA_PACKET)
-    return false;
-
-  // Check the DMP vector and fixed values
-  if (buf[44] != SACN_DMPVECT_SET_PROPERTY || buf[45] != 0xa1u || etcpal_unpack_u16b(&buf[48]) != 0x0001u)
-    return false;
-
-  // Make sure the length of the slot data as communicated by the slot count doesn't overflow the
-  // data buffer.
-  header->slot_count = etcpal_unpack_u16b(&buf[50]);
-  *pdata = &buf[52];
-  if (*pdata + header->slot_count > buf + buflen)
-    return false;
-
-  strncpy(header->source_name, (char*)&buf[6], DRAFT_SACN_DATA_SOURCE_NAME_LEN);
-  header->source_name[DRAFT_SACN_DATA_SOURCE_NAME_LEN] = '\0';
-  header->priority = buf[38];
-  if (header->priority == 0)
-    header->priority = 100;  // The default priority if the source isn't using priority.
-  *seq = buf[39];
-  header->preview = false;
-  *terminated = false;
-  header->universe_id = etcpal_unpack_u16b(&buf[40]);
-  header->start_code = buf[47];
-  return true;
-}
-
 int pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const EtcPalUuid* source_cid)
 {
   uint8_t* pcur = buf;

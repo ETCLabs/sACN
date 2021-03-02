@@ -58,6 +58,7 @@ protected:
   }
 };
 
-TEST_F(TestMergeReceiver, SetStandardVersionWorks)
+TEST_F(TestMergeReceiver, Foo)
 {
+  // TODO
 }
