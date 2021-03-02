@@ -17,10 +17,8 @@ documentation, please see the [documentation](http://etclabs.github.io/sACN).
 
 ## Standard Version
 
-The current version of this repository implements ANSI E1.31-2009. You can download the standard
-document for free from the [ESTA TSP downloads page](https://tsp.esta.org/tsp/documents/published_docs.php). 
-
-The 2016 and 2018 revisions of the standard are currently being implemented.
+This repository will implement ANSI E1.31-2018. It is currently in development. You can download the standard
+document for free from the [ESTA TSP downloads page](https://tsp.esta.org/tsp/documents/published_docs.php).
 
 ## About this ETCLabs Project
 
