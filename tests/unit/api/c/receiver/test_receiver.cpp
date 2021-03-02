@@ -22,6 +22,7 @@
 #include <limits>
 #include "etcpal_mock/common.h"
 #include "sacn_mock/private/common.h"
+#include "sacn_mock/private/receiver_state.h"
 #include "sacn_mock/private/source_loss.h"
 #include "sacn_mock/private/sockets.h"
 #include "sacn/private/mem.h"
