@@ -141,6 +141,8 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
 
   return result;
 #else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(config);
+  ETCPAL_UNUSED_ARG(handle);
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -200,6 +202,8 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
 
   return result;
 #else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(new_name);
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -229,6 +233,8 @@ void sacn_source_destroy(sacn_source_t handle)
 
     sacn_unlock();
   }
+#else
+  ETCPAL_UNUSED_ARG(handle);
 #endif
 }
 
@@ -312,6 +318,10 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
 
   return result;
 #else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(config);
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(num_netints);
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -342,6 +352,9 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 
     sacn_unlock();
   }
+#else
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
 #endif
 }
 
@@ -368,6 +381,10 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
 
     sacn_unlock();
   }
+#else
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universes);
+  ETCPAL_UNUSED_ARG(universes_size);
 #endif
 
   return total_num_universes;
@@ -430,6 +447,9 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
 
   return result;
 #else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(dest);
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -468,6 +488,10 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
 
     sacn_unlock();
   }
+#else
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(dest);
 #endif
 }
 
@@ -501,6 +525,11 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
 
     sacn_unlock();
   }
+#else
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(destinations);
+  ETCPAL_UNUSED_ARG(destinations_size);
 #endif
 
   return total_num_dests;
@@ -558,6 +587,9 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
 
   return result;
 #else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(new_priority);
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -617,6 +649,9 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
 
   return result;
 #else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(new_preview_flag);
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -652,6 +687,9 @@ etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
   ETCPAL_UNUSED_ARG(new_sync_universe);
   return kEtcPalErrNotImpl;
 #else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(new_sync_universe);
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -725,6 +763,11 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
 
   return result;
 #else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(start_code);
+  ETCPAL_UNUSED_ARG(buffer);
+  ETCPAL_UNUSED_ARG(buflen);
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -754,6 +797,8 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t s
   ETCPAL_UNUSED_ARG(sync_universe);
   return kEtcPalErrNotImpl;
 #else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(sync_universe);
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -787,6 +832,11 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
 
     sacn_unlock();
   }
+#else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(new_values);
+  ETCPAL_UNUSED_ARG(new_values_size);
 #endif  // SACN_SOURCE_ENABLED
 }
 
@@ -835,6 +885,13 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
 
     sacn_unlock();
   }
+#else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(new_values);
+  ETCPAL_UNUSED_ARG(new_values_size);
+  ETCPAL_UNUSED_ARG(new_priorities);
+  ETCPAL_UNUSED_ARG(new_priorities_size);
 #endif  // SACN_SOURCE_ENABLED
 }
 
@@ -869,6 +926,11 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
 
     sacn_unlock();
   }
+#else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(new_values);
+  ETCPAL_UNUSED_ARG(new_values_size);
 #endif  // SACN_SOURCE_ENABLED
 }
 
@@ -922,6 +984,13 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 
     sacn_unlock();
   }
+#else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(new_values);
+  ETCPAL_UNUSED_ARG(new_values_size);
+  ETCPAL_UNUSED_ARG(new_priorities);
+  ETCPAL_UNUSED_ARG(new_priorities_size);
 #endif  // SACN_SOURCE_ENABLED
 }
 
@@ -999,6 +1068,8 @@ etcpal_error_t sacn_source_reset_networking(SacnMcastInterface* netints, size_t 
 
   return result;
 #else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(num_netints);
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -1093,6 +1164,8 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUnivers
 
   return result;
 #else   // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(netint_lists);
+  ETCPAL_UNUSED_ARG(num_netint_lists);
   return kEtcPalErrNotImpl;
 #endif  // SACN_SOURCE_ENABLED
 }
@@ -1126,6 +1199,11 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
 
     sacn_unlock();
   }
+#else
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(netints_size);
 #endif
 
   return total_num_network_interfaces;

@@ -434,7 +434,15 @@ struct SacnSource
 
   bool terminating;  // If in the process of terminating all universes and removing this source.
 
+#if (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)
   SACN_DECLARE_BUF(SacnSourceUniverse, universes, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE);
+#else  // (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)
+  // These should never be used or even be allocated. Their only purpose is to prevent build errors.
+  SacnSourceUniverse* universes;
+#if SACN_DYNAMIC_MEM
+  size_t universes_capacity;
+#endif  // SACN_DYNAMIC_MEM
+#endif  // (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)
   size_t num_universes;
   size_t num_active_universes;  // Number of universes to include in universe discovery packets.
   EtcPalTimer universe_discovery_timer;

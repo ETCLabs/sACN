@@ -17,8 +17,9 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include "sacn/private/source_loss.h"
 #include "sacn/private/common.h"
+
+#include "sacn/private/source_loss.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/pdu.h"
 #include "sacn/private/sockets.h"
@@ -90,6 +91,7 @@ etcpal_error_t sacn_source_state_init(void)
 
 void sacn_source_state_deinit(void)
 {
+#if SACN_SOURCE_ENABLED
   // Shut down the Tick thread...
   bool thread_initted = false;
   if (sacn_lock())
@@ -101,6 +103,7 @@ void sacn_source_state_deinit(void)
 
   if (thread_initted)
     stop_tick_thread();
+#endif
 }
 
 bool source_handle_in_use(int handle_val, void* cookie)

@@ -112,7 +112,9 @@ typedef struct ToEraseBuf
 
 /**************************** Private variables ******************************/
 
+#if SACN_SOURCE_ENABLED
 static bool sources_initialized = false;
+#endif
 
 static struct SacnMemBufs
 {
@@ -142,8 +144,10 @@ static struct SacnMemBufs
   SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_THREADS];
 #endif  // SACN_DYNAMIC_MEM
 
+#if SACN_SOURCE_ENABLED
   SACN_DECLARE_BUF(SacnSource, sources, SACN_SOURCE_MAX_SOURCES);
   size_t num_sources;
+#endif
 } mem_bufs;
 
 /*********************** Private function prototypes *************************/
@@ -695,6 +699,7 @@ void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnR
 // Needs lock
 etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state)
 {
+#if SACN_SOURCE_ENABLED
   etcpal_error_t result = kEtcPalErrOk;
   SacnSource* source = NULL;
   if (lookup_source(handle, &source) == kEtcPalErrOk)
@@ -705,7 +710,10 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     CHECK_ROOM_FOR_ONE_MORE((&mem_bufs), sources, SacnSource, SACN_SOURCE_MAX_SOURCES, kEtcPalErrNoMem);
 
     source = &mem_bufs.sources[mem_bufs.num_sources];
+  }
 
+  if (result == kEtcPalErrOk)
+  {
     source->handle = handle;
 
     // Initialize the universe discovery send buffer.
@@ -750,23 +758,32 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
   else
   {
 #if SACN_DYNAMIC_MEM
-    if (source->universes)
+    if (source)
     {
-      free(source->universes);
-      source->universes = NULL;
-    }
+      if (source->universes)
+      {
+        free(source->universes);
+        source->universes = NULL;
+      }
 
-    if (source->netints)
-    {
-      free(source->netints);
-      source->netints = NULL;
+      if (source->netints)
+      {
+        free(source->netints);
+        source->netints = NULL;
+      }
     }
-#endif
+#endif  // SACN_DYNAMIC_MEM
   }
 
   *source_state = source;
 
   return result;
+#else  // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(config);
+  ETCPAL_UNUSED_ARG(source_state);
+  return kEtcPalErrNotImpl;
+#endif  // SACN_SOURCE_ENABLED
 }
 
 // Needs lock
@@ -933,10 +950,16 @@ etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t univers
 // Needs lock
 etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state)
 {
+#if SACN_SOURCE_ENABLED
   bool found = false;
   size_t index = get_source_index(handle, &found);
   *source_state = found ? &mem_bufs.sources[index] : NULL;
   return found ? kEtcPalErrOk : kEtcPalErrNotFound;
+#else
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(source_state);
+  return kEtcPalErrNotFound;
+#endif
 }
 
 // Needs lock
@@ -976,12 +999,21 @@ SacnSourceNetint* lookup_source_netint_and_index(SacnSource* source, const EtcPa
 
 SacnSource* get_source(size_t index)
 {
+#if SACN_SOURCE_ENABLED
   return (index < mem_bufs.num_sources) ? &mem_bufs.sources[index] : NULL;
+#else
+  ETCPAL_UNUSED_ARG(index);
+  return NULL;
+#endif
 }
 
 size_t get_num_sources()
 {
+#if SACN_SOURCE_ENABLED
   return mem_bufs.num_sources;
+#else
+  return 0;
+#endif
 }
 
 // Needs lock
@@ -1011,13 +1043,18 @@ void remove_sacn_source_universe(SacnSource* source, size_t index)
 // Needs lock
 void remove_sacn_source(size_t index)
 {
+#if SACN_SOURCE_ENABLED
 #if SACN_DYNAMIC_MEM
   if (mem_bufs.sources[index].universes)
     free(mem_bufs.sources[index].universes);
   if (mem_bufs.sources[index].netints)
     free(mem_bufs.sources[index].netints);
-#endif
+#endif  // SACN_DYNAMIC_MEM
+
   REMOVE_AT_INDEX((&mem_bufs), SacnSource, sources, index);
+#else  // SACN_SOURCE_ENABLED
+  ETCPAL_UNUSED_ARG(index);
+#endif  // SACN_SOURCE_ENABLED
 }
 
 void zero_status_lists(SacnSourceStatusLists* status_lists)
@@ -1045,6 +1082,7 @@ size_t get_source_index(sacn_source_t handle, bool* found)
   *found = false;
   size_t index = 0;
 
+#if SACN_SOURCE_ENABLED
   while (!(*found) && (index < mem_bufs.num_sources))
   {
     if (mem_bufs.sources[index].handle == handle)
@@ -1052,6 +1090,9 @@ size_t get_source_index(sacn_source_t handle, bool* found)
     else
       ++index;
   }
+#else
+  ETCPAL_UNUSED_ARG(handle);
+#endif
 
   return index;
 }
@@ -1509,17 +1550,18 @@ void deinit_source_limit_exceeded_buf(void)
 etcpal_error_t init_sources(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
-
-#if SACN_SOURCE_ENABLED && SACN_DYNAMIC_MEM
+#if SACN_SOURCE_ENABLED
+#if SACN_DYNAMIC_MEM
   mem_bufs.sources = calloc(INITIAL_CAPACITY, sizeof(SacnSource));
   mem_bufs.sources_capacity = mem_bufs.sources ? INITIAL_CAPACITY : 0;
   if (!mem_bufs.sources)
     res = kEtcPalErrNoMem;
-#endif
+#endif  // SACN_DYNAMIC_MEM
   mem_bufs.num_sources = 0;
 
   if (res == kEtcPalErrOk)
     sources_initialized = true;
+#endif  // SACN_SOURCE_ENABLED
 
   return res;
 }
@@ -1527,6 +1569,7 @@ etcpal_error_t init_sources(void)
 // Takes lock
 void deinit_sources(void)
 {
+#if SACN_SOURCE_ENABLED
   if (sacn_lock())
   {
     if (sources_initialized)
@@ -1534,11 +1577,12 @@ void deinit_sources(void)
 #if SACN_DYNAMIC_MEM
       free(mem_bufs.sources);
       mem_bufs.sources_capacity = 0;
-#endif
+#endif  // SACN_DYNAMIC_MEM
       mem_bufs.num_sources = 0;
       sources_initialized = false;
     }
 
     sacn_unlock();
   }
+#endif  // SACN_SOURCE_ENABLED
 }
