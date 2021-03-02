@@ -199,7 +199,6 @@ $(document).ready(function(){initNavTree('group__sacn__receiver.html','');});
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#define-members">Macros</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
-<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">sACN Receiver<div class="ingroups"><a class="el" href="group__s_a_c_n.html">sACN</a></div></div>  </div>
@@ -268,15 +267,6 @@ Typedefs</h2></td></tr>
 <tr class="memitem:ga5ce1e4d9da4807b53d71869f0e39950a"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_receiver_netint_list.html">SacnReceiverNetintList</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#ga5ce1e4d9da4807b53d71869f0e39950a">SacnReceiverNetintList</a></td></tr>
 <tr class="separator:ga5ce1e4d9da4807b53d71869f0e39950a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
-Enumerations</h2></td></tr>
-<tr class="memitem:gabeec981c5a14c8c0dbddcdfa99717ad0"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0">sacn_standard_version_t</a> { <a class="el" href="group__sacn__receiver.html#ggabeec981c5a14c8c0dbddcdfa99717ad0af1b7b7c22524036d5fb24c29daf8349d">kSacnStandardVersionNone</a>, 
-<a class="el" href="group__sacn__receiver.html#ggabeec981c5a14c8c0dbddcdfa99717ad0a5e40e5a5e8039540253c9cd8716f9569">kSacnStandardVersionDraft</a>, 
-<a class="el" href="group__sacn__receiver.html#ggabeec981c5a14c8c0dbddcdfa99717ad0acdfd634d940898beb3475330afac2f52">kSacnStandardVersionPublished</a>, 
-<a class="el" href="group__sacn__receiver.html#ggabeec981c5a14c8c0dbddcdfa99717ad0af2e11730c14bfddd25f13f82e634830d">kSacnStandardVersionAll</a>
- }</td></tr>
-<tr class="separator:gabeec981c5a14c8c0dbddcdfa99717ad0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ga82f2e3740ce865b7aa3e018aa8a229d9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#ga82f2e3740ce865b7aa3e018aa8a229d9">sacn_receiver_config_init</a> (<a class="el" href="struct_sacn_receiver_config.html">SacnReceiverConfig</a> *config)</td></tr>
@@ -303,12 +293,6 @@ Functions</h2></td></tr>
 <tr class="memitem:ga6ce5c1c8e4fafe2f339c6d3084dacfc4"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#ga6ce5c1c8e4fafe2f339c6d3084dacfc4">sacn_receiver_get_network_interfaces</a> (<a class="el" href="group__sacn__receiver.html#gafc1e3c92911f567bed81bbd04f3f34f6">sacn_receiver_t</a> handle, <a class="elRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_mcast_netint_id.html">EtcPalMcastNetintId</a> *netints, size_t netints_size)</td></tr>
 <tr class="memdesc:ga6ce5c1c8e4fafe2f339c6d3084dacfc4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain a list of a receiver's network interfaces.  <a href="#ga6ce5c1c8e4fafe2f339c6d3084dacfc4">More...</a><br /></td></tr>
 <tr class="separator:ga6ce5c1c8e4fafe2f339c6d3084dacfc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga4cb36b56dd22b9122f491182a7315e8c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#ga4cb36b56dd22b9122f491182a7315e8c">sacn_receiver_set_standard_version</a> (<a class="el" href="group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0">sacn_standard_version_t</a> version)</td></tr>
-<tr class="memdesc:ga4cb36b56dd22b9122f491182a7315e8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the current version of the sACN standard to which the module is listening.  <a href="#ga4cb36b56dd22b9122f491182a7315e8c">More...</a><br /></td></tr>
-<tr class="separator:ga4cb36b56dd22b9122f491182a7315e8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaecb775f60463e32ddb4ce2c7b2281249"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0">sacn_standard_version_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#gaecb775f60463e32ddb4ce2c7b2281249">sacn_receiver_get_standard_version</a> ()</td></tr>
-<tr class="memdesc:gaecb775f60463e32ddb4ce2c7b2281249"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current version of the sACN standard to which the module is listening.  <a href="#gaecb775f60463e32ddb4ce2c7b2281249">More...</a><br /></td></tr>
-<tr class="separator:gaecb775f60463e32ddb4ce2c7b2281249"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gabea27e71ae23c9176832f883a8ad7f06"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html#gabea27e71ae23c9176832f883a8ad7f06">sacn_receiver_set_expired_wait</a> (uint32_t wait_ms)</td></tr>
 <tr class="memdesc:gabea27e71ae23c9176832f883a8ad7f06"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the expired notification wait time.  <a href="#gabea27e71ae23c9176832f883a8ad7f06">More...</a><br /></td></tr>
 <tr class="separator:gabea27e71ae23c9176832f883a8ad7f06"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -659,32 +643,6 @@ sACN receiver flags</h2></td></tr>
 
 </div>
 </div>
-<h2 class="groupheader">Enumeration Type Documentation</h2>
-<a id="gabeec981c5a14c8c0dbddcdfa99717ad0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gabeec981c5a14c8c0dbddcdfa99717ad0">&#9670;&nbsp;</a></span>sacn_standard_version_t</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum <a class="el" href="group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0">sacn_standard_version_t</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>An identifier for a version of the sACN standard. </p>
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ggabeec981c5a14c8c0dbddcdfa99717ad0af1b7b7c22524036d5fb24c29daf8349d"></a>kSacnStandardVersionNone&#160;</td><td class="fielddoc"><p>Neither the draft nor the ratified sACN version. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="ggabeec981c5a14c8c0dbddcdfa99717ad0a5e40e5a5e8039540253c9cd8716f9569"></a>kSacnStandardVersionDraft&#160;</td><td class="fielddoc"><p>The 2006 draft sACN standard version. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="ggabeec981c5a14c8c0dbddcdfa99717ad0acdfd634d940898beb3475330afac2f52"></a>kSacnStandardVersionPublished&#160;</td><td class="fielddoc"><p>The current published sACN standard version. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="ggabeec981c5a14c8c0dbddcdfa99717ad0af2e11730c14bfddd25f13f82e634830d"></a>kSacnStandardVersionAll&#160;</td><td class="fielddoc"><p>Both the current published and 2006 draft sACN standard version. </p>
-</td></tr>
-</table>
-
-</div>
-</div>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="gabb5ec7d4459ac694e5fa0ae97572f388"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#gabb5ec7d4459ac694e5fa0ae97572f388">&#9670;&nbsp;</a></span>sacn_receiver_change_universe()</h2>
@@ -930,27 +888,6 @@ sACN receiver flags</h2></td></tr>
 
 </div>
 </div>
-<a id="gaecb775f60463e32ddb4ce2c7b2281249"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gaecb775f60463e32ddb4ce2c7b2281249">&#9670;&nbsp;</a></span>sacn_receiver_get_standard_version()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0">sacn_standard_version_t</a> sacn_receiver_get_standard_version </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Get the current version of the sACN standard to which the module is listening. </p>
-<p>This is a global option across all listening receivers.</p>
-<dl class="section return"><dt>Returns</dt><dd>Version of sACN to which the module is listening, or <a class="el" href="group__sacn__receiver.html#ggabeec981c5a14c8c0dbddcdfa99717ad0af1b7b7c22524036d5fb24c29daf8349d">kSacnStandardVersionNone</a> if the module is not initialized. </dd></dl>
-
-</div>
-</div>
 <a id="gae77eea445ebb380fb4d47c63c0f3ba32"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#gae77eea445ebb380fb4d47c63c0f3ba32">&#9670;&nbsp;</a></span>sacn_receiver_get_universe()</h2>
 
@@ -1114,33 +1051,6 @@ sACN receiver flags</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">wait_ms</td><td>Wait time in milliseconds. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="ga4cb36b56dd22b9122f491182a7315e8c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga4cb36b56dd22b9122f491182a7315e8c">&#9670;&nbsp;</a></span>sacn_receiver_set_standard_version()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void sacn_receiver_set_standard_version </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0">sacn_standard_version_t</a>&#160;</td>
-          <td class="paramname"><em>version</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Set the current version of the sACN standard to which the module is listening. </p>
-<p>This is a global option across all listening receivers.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>Version of sACN to listen to. </td></tr>
   </table>
   </dd>
 </dl>

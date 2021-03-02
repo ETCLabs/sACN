@@ -262,12 +262,6 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a9f30344ac78d234cd406b4669caef256"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#a9f30344ac78d234cd406b4669caef256">SetStandardVersion</a> (<a class="el" href="group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0">sacn_standard_version_t</a> version)</td></tr>
-<tr class="memdesc:a9f30344ac78d234cd406b4669caef256"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the current version of the sACN standard to which the module is listening.  <a href="#a9f30344ac78d234cd406b4669caef256">More...</a><br /></td></tr>
-<tr class="separator:a9f30344ac78d234cd406b4669caef256"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a10fb12573de0db62d78bcc481eaf525f"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0">sacn_standard_version_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#a10fb12573de0db62d78bcc481eaf525f">GetStandardVersion</a> ()</td></tr>
-<tr class="memdesc:a10fb12573de0db62d78bcc481eaf525f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current version of the sACN standard to which the module is listening.  <a href="#a10fb12573de0db62d78bcc481eaf525f">More...</a><br /></td></tr>
-<tr class="separator:a10fb12573de0db62d78bcc481eaf525f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f7e0ac39dc43d67c53daa787e733859"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_receiver.html#a0f7e0ac39dc43d67c53daa787e733859">SetExpiredWait</a> (uint32_t wait_ms)</td></tr>
 <tr class="memdesc:a0f7e0ac39dc43d67c53daa787e733859"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the expired notification wait time.  <a href="#a0f7e0ac39dc43d67c53daa787e733859">More...</a><br /></td></tr>
 <tr class="separator:a0f7e0ac39dc43d67c53daa787e733859"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -438,35 +432,6 @@ Static Public Attributes</h2></td></tr>
 
 <p>Obtain a vector of this receiver's network interfaces. </p>
 <dl class="section return"><dt>Returns</dt><dd>A vector of this receiver's network interfaces. </dd></dl>
-
-</div>
-</div>
-<a id="a10fb12573de0db62d78bcc481eaf525f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a10fb12573de0db62d78bcc481eaf525f">&#9670;&nbsp;</a></span>GetStandardVersion()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0">sacn_standard_version_t</a> GetStandardVersion </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Get the current version of the sACN standard to which the module is listening. </p>
-<p>This is a global option across all listening receivers.</p>
-<dl class="section return"><dt>Returns</dt><dd>Version of sACN to which the module is listening, or <a class="el" href="group__sacn__receiver.html#ggabeec981c5a14c8c0dbddcdfa99717ad0af1b7b7c22524036d5fb24c29daf8349d">kSacnStandardVersionNone</a> if the module is not initialized. </dd></dl>
 
 </div>
 </div>
@@ -702,41 +667,6 @@ Static Public Attributes</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">wait_ms</td><td>Wait time in milliseconds. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a9f30344ac78d234cd406b4669caef256"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9f30344ac78d234cd406b4669caef256">&#9670;&nbsp;</a></span>SetStandardVersion()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void SetStandardVersion </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0">sacn_standard_version_t</a>&#160;</td>
-          <td class="paramname"><em>version</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Set the current version of the sACN standard to which the module is listening. </p>
-<p>This is a global option across all listening receivers.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>Version of sACN to listen to. </td></tr>
   </table>
   </dd>
 </dl>

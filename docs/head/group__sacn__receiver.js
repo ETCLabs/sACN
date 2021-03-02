@@ -47,22 +47,14 @@ var group__sacn__receiver =
     [ "SacnSourcePapLostCallback", "group__sacn__receiver.html#ga7608a394e455465e56c789957f3f3214", null ],
     [ "SacnSourcesLostCallback", "group__sacn__receiver.html#ga80326cc324898e1faebe2da1339bd0b3", null ],
     [ "SacnUniverseDataCallback", "group__sacn__receiver.html#ga7bbce89033bafcde13e1c4a413555acf", null ],
-    [ "sacn_standard_version_t", "group__sacn__receiver.html#gabeec981c5a14c8c0dbddcdfa99717ad0", [
-      [ "kSacnStandardVersionNone", "group__sacn__receiver.html#ggabeec981c5a14c8c0dbddcdfa99717ad0af1b7b7c22524036d5fb24c29daf8349d", null ],
-      [ "kSacnStandardVersionDraft", "group__sacn__receiver.html#ggabeec981c5a14c8c0dbddcdfa99717ad0a5e40e5a5e8039540253c9cd8716f9569", null ],
-      [ "kSacnStandardVersionPublished", "group__sacn__receiver.html#ggabeec981c5a14c8c0dbddcdfa99717ad0acdfd634d940898beb3475330afac2f52", null ],
-      [ "kSacnStandardVersionAll", "group__sacn__receiver.html#ggabeec981c5a14c8c0dbddcdfa99717ad0af2e11730c14bfddd25f13f82e634830d", null ]
-    ] ],
     [ "sacn_receiver_change_universe", "group__sacn__receiver.html#gabb5ec7d4459ac694e5fa0ae97572f388", null ],
     [ "sacn_receiver_config_init", "group__sacn__receiver.html#ga82f2e3740ce865b7aa3e018aa8a229d9", null ],
     [ "sacn_receiver_create", "group__sacn__receiver.html#ga7c6f216bef2361a0e097f22fe69cba1a", null ],
     [ "sacn_receiver_destroy", "group__sacn__receiver.html#ga43f99a2447364832c9ab135ac3d8b6ae", null ],
     [ "sacn_receiver_get_expired_wait", "group__sacn__receiver.html#gabd632f80d5da75c47c1f08103a42a391", null ],
     [ "sacn_receiver_get_network_interfaces", "group__sacn__receiver.html#ga6ce5c1c8e4fafe2f339c6d3084dacfc4", null ],
-    [ "sacn_receiver_get_standard_version", "group__sacn__receiver.html#gaecb775f60463e32ddb4ce2c7b2281249", null ],
     [ "sacn_receiver_get_universe", "group__sacn__receiver.html#gae77eea445ebb380fb4d47c63c0f3ba32", null ],
     [ "sacn_receiver_reset_networking", "group__sacn__receiver.html#ga3cb970c236a7f37064988f72d760d47b", null ],
     [ "sacn_receiver_reset_networking_per_receiver", "group__sacn__receiver.html#ga0b14f40eaf24a866fed007bc18674ec7", null ],
-    [ "sacn_receiver_set_expired_wait", "group__sacn__receiver.html#gabea27e71ae23c9176832f883a8ad7f06", null ],
-    [ "sacn_receiver_set_standard_version", "group__sacn__receiver.html#ga4cb36b56dd22b9122f491182a7315e8c", null ]
+    [ "sacn_receiver_set_expired_wait", "group__sacn__receiver.html#gabea27e71ae23c9176832f883a8ad7f06", null ]
 ];
