@@ -211,8 +211,6 @@ public:
   std::vector<EtcPalMcastNetintId> GetNetworkInterfaces();
 
   // Lesser used functions.  These apply to all instances of this class.
-  static void SetStandardVersion(sacn_standard_version_t version);
-  static sacn_standard_version_t GetStandardVersion();
   static void SetExpiredWait(uint32_t wait_ms);
   static uint32_t GetExpiredWait();
 
@@ -455,31 +453,6 @@ inline std::vector<EtcPalMcastNetintId> Receiver::GetNetworkInterfaces()
 
   netints.resize(num_netints);
   return netints;
-}
-
-/**
- * @brief Set the current version of the sACN standard to which the module is listening.
- *
- * This is a global option across all listening receivers.
- *
- * @param[in] version Version of sACN to listen to.
- */
-inline void Receiver::SetStandardVersion(sacn_standard_version_t version)
-{
-  sacn_receiver_set_standard_version(version);
-}
-
-/**
- * @brief Get the current version of the sACN standard to which the module is listening.
- *
- * This is a global option across all listening receivers.
- *
- * @return Version of sACN to which the module is listening, or #kSacnStandardVersionNone if the module is
- *         not initialized.
- */
-inline sacn_standard_version_t Receiver::GetStandardVersion()
-{
-  sacn_receiver_get_standard_version();
 }
 
 /**

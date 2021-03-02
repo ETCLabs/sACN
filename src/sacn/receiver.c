@@ -92,7 +92,6 @@ ETCPAL_MEMPOOL_DEFINE(sacnrecv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODE
 
 static struct SacnRecvState
 {
-  sacn_standard_version_t version_listening;
   uint32_t expired_wait;
 
   IntHandleManager handle_mgr;
@@ -126,7 +125,7 @@ static void sacn_receive_thread(void* arg);
 static void handle_incoming(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
                             const EtcPalSockAddr* from_addr);
 static void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
-                                    const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr, bool draft);
+                                    const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr);
 static void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
                                     SourcePapLostNotification* source_pap_lost, bool* notify);
 static void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* notify);
@@ -180,7 +179,6 @@ etcpal_error_t sacn_receiver_init(void)
     etcpal_rbtree_init(&receiver_state.receivers, receiver_compare, node_alloc, node_dealloc);
     etcpal_rbtree_init(&receiver_state.receivers_by_universe, receiver_compare_by_universe, node_alloc, node_dealloc);
     init_int_handle_manager(&receiver_state.handle_mgr, receiver_handle_in_use, NULL);
-    receiver_state.version_listening = kSacnStandardVersionAll;
     receiver_state.expired_wait = SACN_DEFAULT_EXPIRED_WAIT_MS;
   }
   else
@@ -648,48 +646,6 @@ size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, EtcPalMcastN
 }
 
 /**
- * @brief Set the current version of the sACN standard to which the module is listening.
- *
- * This is a global option across all listening receivers.
- *
- * @param[in] version Version of sACN to listen to.
- */
-void sacn_receiver_set_standard_version(sacn_standard_version_t version)
-{
-  if (!sacn_initialized())
-    return;
-
-  if (sacn_lock())
-  {
-    receiver_state.version_listening = version;
-    sacn_unlock();
-  }
-}
-
-/**
- * @brief Get the current version of the sACN standard to which the module is listening.
- *
- * This is a global option across all listening receivers.
- *
- * @return Version of sACN to which the module is listening, or #kSacnStandardVersionNone if the module is
- *         not initialized.
- */
-sacn_standard_version_t sacn_receiver_get_standard_version()
-{
-  sacn_standard_version_t res = kSacnStandardVersionNone;
-
-  if (!sacn_initialized())
-    return res;
-
-  if (sacn_lock())
-  {
-    res = receiver_state.version_listening;
-    sacn_unlock();
-  }
-  return res;
-}
-
-/**
  * @brief Set the expired notification wait time.
  *
  * The library will wait at least this long after a source loss condition has been encountered before
@@ -1085,17 +1041,8 @@ void handle_incoming(sacn_thread_id_t thread_id, const uint8_t* data, size_t dat
   AcnPdu lpdu = ACN_PDU_INIT;
   while (acn_parse_root_layer_pdu(preamble.rlp_block, preamble.rlp_block_len, &rlp, &lpdu))
   {
-    if (rlp.vector == ACN_VECTOR_ROOT_E131_DATA && (receiver_state.version_listening == kSacnStandardVersionPublished ||
-                                                    receiver_state.version_listening == kSacnStandardVersionAll))
-    {
-      handle_sacn_data_packet(thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr, false);
-    }
-    else if (rlp.vector == ACN_VECTOR_ROOT_DRAFT_E131_DATA &&
-             (receiver_state.version_listening == kSacnStandardVersionDraft ||
-              receiver_state.version_listening == kSacnStandardVersionAll))
-    {
-      handle_sacn_data_packet(thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr, true);
-    }
+    if (rlp.vector == ACN_VECTOR_ROOT_E131_DATA)
+      handle_sacn_data_packet(thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr);
   }
 }
 
@@ -1107,10 +1054,9 @@ void handle_incoming(sacn_thread_id_t thread_id, const uint8_t* data, size_t dat
  * [in] datalen Size of buffer.
  * [in] sender_cid CID from which the data was received.
  * [in] from_addr Network address from which the data was received.
- * [in] draft Whether the data packet is in draft or ratified sACN format.
  */
 void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
-                             const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr, bool draft)
+                             const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr)
 {
   UniverseDataNotification* universe_data = get_universe_data(thread_id);
   SourceLimitExceededNotification* source_limit_exceeded = get_source_limit_exceeded(thread_id);
@@ -1128,15 +1074,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
   SacnHeaderData* header = &universe_data->header;
   header->cid = *sender_cid;
 
-  if (draft)
-  {
-    parse_res =
-        parse_draft_sacn_data_packet(data, datalen, header, &seq, &is_termination_packet, &universe_data->pdata);
-  }
-  else
-  {
-    parse_res = parse_sacn_data_packet(data, datalen, header, &seq, &is_termination_packet, &universe_data->pdata);
-  }
+  parse_res = parse_sacn_data_packet(data, datalen, header, &seq, &is_termination_packet, &universe_data->pdata);
 
   if (!parse_res)
   {
@@ -1144,7 +1082,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     {
       char cid_str[ETCPAL_UUID_STRING_BYTES];
       etcpal_uuid_to_string(sender_cid, cid_str);
-      SACN_LOG_WARNING("Ignoring malformed %ssACN data packet from component %s", draft ? "Draft " : "", cid_str);
+      SACN_LOG_WARNING("Ignoring malformed sACN data packet from component %s", cid_str);
     }
     return;
   }

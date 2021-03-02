@@ -67,15 +67,6 @@ typedef int sacn_receiver_t;
  */
 #define SACN_RECEIVER_INFINITE_SOURCES 0
 
-/** An identifier for a version of the sACN standard. */
-typedef enum
-{
-  kSacnStandardVersionNone,      /**< Neither the draft nor the ratified sACN version. */
-  kSacnStandardVersionDraft,     /**< The 2006 draft sACN standard version. */
-  kSacnStandardVersionPublished, /**< The current published sACN standard version. */
-  kSacnStandardVersionAll        /**< Both the current published and 2006 draft sACN standard version. */
-} sacn_standard_version_t;
-
 /**
  * @brief The default expired notification wait time.
  *
@@ -284,8 +275,6 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnReceiverNet
                                                            size_t num_netint_lists);
 size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, EtcPalMcastNetintId* netints, size_t netints_size);
 
-void sacn_receiver_set_standard_version(sacn_standard_version_t version);
-sacn_standard_version_t sacn_receiver_get_standard_version();
 void sacn_receiver_set_expired_wait(uint32_t wait_ms);
 uint32_t sacn_receiver_get_expired_wait();
 

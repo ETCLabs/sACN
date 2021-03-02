@@ -131,21 +131,6 @@ protected:
   }
 };
 
-TEST_F(TestReceiver, SetStandardVersionWorks)
-{
-  // Initialization should set it to the default
-  EXPECT_EQ(sacn_receiver_get_standard_version(), kSacnStandardVersionAll);
-
-  sacn_receiver_set_standard_version(kSacnStandardVersionDraft);
-  EXPECT_EQ(sacn_receiver_get_standard_version(), kSacnStandardVersionDraft);
-  sacn_receiver_set_standard_version(kSacnStandardVersionPublished);
-  EXPECT_EQ(sacn_receiver_get_standard_version(), kSacnStandardVersionPublished);
-  sacn_receiver_set_standard_version(kSacnStandardVersionAll);
-  EXPECT_EQ(sacn_receiver_get_standard_version(), kSacnStandardVersionAll);
-  sacn_receiver_set_standard_version(kSacnStandardVersionNone);
-  EXPECT_EQ(sacn_receiver_get_standard_version(), kSacnStandardVersionNone);
-}
-
 TEST_F(TestReceiver, SetExpiredWaitWorks)
 {
   // Initialization should set it to the default
