@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
-// DECLARE_FAKE_VALUE_FUNC...
-// DECLARE_FAKE_VOID_FUNC...
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_state_init);
+DECLARE_FAKE_VOID_FUNC(sacn_receiver_state_deinit);
+DECLARE_FAKE_VALUE_FUNC(sacn_receiver_t, get_next_receiver_handle);
+DECLARE_FAKE_VALUE_FUNC(size_t, get_receiver_netints, const SacnReceiver*, EtcPalMcastNetintId*, size_t);
+DECLARE_FAKE_VOID_FUNC(set_expired_wait, uint32_t);
+DECLARE_FAKE_VALUE_FUNC(uint32_t, get_expired_wait);
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, clear_term_sets_and_sources, SacnReceiver*);
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, assign_receiver_to_thread, SacnReceiver*);
+DECLARE_FAKE_VOID_FUNC(remove_receiver_from_thread, SacnReceiver*, socket_close_behavior_t);
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, add_receiver_sockets, SacnReceiver*);
+DECLARE_FAKE_VOID_FUNC(begin_sampling_period, SacnReceiver*);
+DECLARE_FAKE_VOID_FUNC(remove_receiver_sockets, SacnReceiver*, socket_close_behavior_t);
+DECLARE_FAKE_VOID_FUNC(remove_all_receiver_sockets, socket_close_behavior_t);
 
 void sacn_receiver_state_reset_all_fakes(void);
 

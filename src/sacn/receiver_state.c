@@ -45,6 +45,7 @@ static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PR
 
 #define SACN_PERIODIC_INTERVAL 120
 
+
 /****************************** Private types ********************************/
 
 typedef struct PeriodicCallbacks
@@ -66,13 +67,9 @@ static IntHandleManager handle_mgr;
 /*********************** Private function prototypes *************************/
 
 // Receiver creation and destruction
-static etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver);
+static bool receiver_handle_in_use(int handle_val, void* cookie);
 
 static etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context);
-
-static void remove_receiver_from_thread(SacnReceiver* receiver, socket_close_behavior_t socket_close_behavior);
-
-static void remove_all_receiver_sockets(socket_close_behavior_t close_behavior);
 
 static void sacn_receive_thread(void* arg);
 
@@ -125,11 +122,31 @@ void sacn_receiver_state_deinit(void)
       sacn_cleanup_dead_sockets(thread_context);
     }
   }
+
+  remove_all_receiver_sockets(kCloseSocketNow);
 }
 
 sacn_receiver_t get_next_receiver_handle()
 {
   return get_next_int_handle(&handle_mgr, -1);
+}
+
+size_t get_receiver_netints(const SacnReceiver* receiver, EtcPalMcastNetintId* netints, size_t netints_size)
+{
+  for (size_t i = 0; netints && (i < netints_size) && (i < receiver->netints.num_netints); ++i)
+    netints[i] = receiver->netints.netints[i];
+
+  return receiver->netints.num_netints;
+}
+
+void set_expired_wait(uint32_t wait_ms)
+{
+  expired_wait = wait_ms;
+}
+
+uint32_t get_expired_wait()
+{
+  return expired_wait;
 }
 
 etcpal_error_t clear_term_sets_and_sources(SacnReceiver* receiver)
@@ -138,60 +155,6 @@ etcpal_error_t clear_term_sets_and_sources(SacnReceiver* receiver)
   receiver->term_sets = NULL;
   return clear_receiver_sources(receiver);
 }
-
-/*
- * Initialize a receiver's IPv4 and IPv6 sockets. Make sure to take the sACN lock before calling.
- *
- * [in] receiver Receiver to add sockets for. Make sure the universe ID, thread ID, IP supported, and netints are
- * initialized.
- * Returns error code indicating the result of adding the sockets.
- */
-etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
-{
-  etcpal_error_t res = kEtcPalErrOk;
-
-  if (supports_ipv4(receiver->ip_supported))
-  {
-    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, receiver->keys.universe,
-                                   receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv4_socket);
-
-    if ((res == kEtcPalErrNoNetints) && supports_ipv6(receiver->ip_supported))
-      res = kEtcPalErrOk;  // Try IPv6.
-  }
-
-  if ((res == kEtcPalErrOk) && supports_ipv6(receiver->ip_supported))
-  {
-    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, receiver->keys.universe,
-                                   receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv6_socket);
-  }
-
-  return res;
-}
-
-void begin_sampling_period(SacnReceiver* receiver)
-{
-  receiver->sampling = true;
-  receiver->notified_sampling_started = false;
-  etcpal_timer_start(&receiver->sample_timer, SAMPLE_TIME);
-}
-
-/*
- * Remove a receiver's sockets, choosing whether to close them now or wait until the next thread cycle.
- *
- * [in/out] receiver Receiver whose sockets to remove. Socket handles are set to invalid.
- * [in] close_behavior Whether to close the sockets now or wait until the next thread cycle.
- */
-void remove_receiver_sockets(SacnReceiver* receiver, socket_close_behavior_t close_behavior)
-{
-  if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, close_behavior);
-  if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, close_behavior);
-}
-
-/**************************************************************************************************
- * Helpers for receiver creation and destruction
- *************************************************************************************************/
 
 /*
  * Pick a thread for the receiver based on current load balancing, create the receiver's sockets,
@@ -241,25 +204,6 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver)
 }
 
 /*
- * Start a new thread to process receiver state. The thread is associated with a specific
- * SacnRecvThreadContext instance.
- *
- * [in,out] recv_thread_context Thread context corresponding to the thread to start.
- * Returns error code indicating the result of the thread start operation.
- */
-etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
-{
-  recv_thread_context->running = true;
-  etcpal_error_t create_res = etcpal_thread_create(&recv_thread_context->thread_handle, &kReceiverThreadParams,
-                                                   sacn_receive_thread, recv_thread_context);
-  if (create_res != kEtcPalErrOk)
-  {
-    recv_thread_context->running = false;
-  }
-  return create_res;
-}
-
-/*
  * Remove a receiver instance from a receiver thread. After this completes, the thread will no
  * longer process timeouts for that receiver.
  *
@@ -279,6 +223,56 @@ void remove_receiver_from_thread(SacnReceiver* receiver, socket_close_behavior_t
 }
 
 /*
+ * Initialize a receiver's IPv4 and IPv6 sockets. Make sure to take the sACN lock before calling.
+ *
+ * [in] receiver Receiver to add sockets for. Make sure the universe ID, thread ID, IP supported, and netints are
+ * initialized.
+ * Returns error code indicating the result of adding the sockets.
+ */
+etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
+{
+  etcpal_error_t res = kEtcPalErrOk;
+
+  if (supports_ipv4(receiver->ip_supported))
+  {
+    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, receiver->keys.universe,
+                                   receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv4_socket);
+
+    if ((res == kEtcPalErrNoNetints) && supports_ipv6(receiver->ip_supported))
+      res = kEtcPalErrOk;  // Try IPv6.
+  }
+
+  if ((res == kEtcPalErrOk) && supports_ipv6(receiver->ip_supported))
+  {
+    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, receiver->keys.universe,
+                                   receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv6_socket);
+  }
+
+  return res;
+}
+
+void begin_sampling_period(SacnReceiver* receiver)
+{
+  receiver->sampling = true;
+  receiver->notified_sampling_started = false;
+  etcpal_timer_start(&receiver->sample_timer, SACN_SAMPLE_TIME);
+}
+
+/*
+ * Remove a receiver's sockets, choosing whether to close them now or wait until the next thread cycle.
+ *
+ * [in/out] receiver Receiver whose sockets to remove. Socket handles are set to invalid.
+ * [in] close_behavior Whether to close the sockets now or wait until the next thread cycle.
+ */
+void remove_receiver_sockets(SacnReceiver* receiver, socket_close_behavior_t close_behavior)
+{
+  if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, close_behavior);
+  if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, close_behavior);
+}
+
+/*
  * Remove all receiver sockets, choosing whether to close them now or wait until the next thread cycle.
  *
  * The sACN lock should be locked before calling this.
@@ -288,12 +282,39 @@ void remove_receiver_from_thread(SacnReceiver* receiver, socket_close_behavior_t
 void remove_all_receiver_sockets(socket_close_behavior_t close_behavior)
 {
   EtcPalRbIter iter;
-  etcpal_rbiter_init(&iter);
-  for (SacnReceiver* receiver = etcpal_rbiter_first(&iter, &receiver_state.receivers); receiver;
-       receiver = etcpal_rbiter_next(&iter))
-  {
+  for (SacnReceiver* receiver = get_first_receiver(&iter); receiver; receiver = get_next_receiver(&iter))
     remove_receiver_sockets(receiver, close_behavior);
+}
+
+/**************************************************************************************************
+ * Helpers for receiver creation and destruction
+ *************************************************************************************************/
+
+bool receiver_handle_in_use(int handle_val, void* cookie)
+{
+  ETCPAL_UNUSED_ARG(cookie);
+
+  SacnReceiver* tmp = NULL;
+  return (lookup_receiver(handle_val, &tmp) == kEtcPalErrOk);
+}
+
+/*
+ * Start a new thread to process receiver state. The thread is associated with a specific
+ * SacnRecvThreadContext instance.
+ *
+ * [in,out] recv_thread_context Thread context corresponding to the thread to start.
+ * Returns error code indicating the result of the thread start operation.
+ */
+etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
+{
+  recv_thread_context->running = true;
+  etcpal_error_t create_res = etcpal_thread_create(&recv_thread_context->thread_handle, &kReceiverThreadParams,
+                                                   sacn_receive_thread, recv_thread_context);
+  if (create_res != kEtcPalErrOk)
+  {
+    recv_thread_context->running = false;
   }
+  return create_res;
 }
 
 /*
@@ -430,10 +451,8 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 
   if (sacn_lock())
   {
-    SacnReceiverKeys lookup_keys;
-    lookup_keys.universe = header->universe_id;
-    SacnReceiver* receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers_by_universe, &lookup_keys);
-    if (!receiver)
+    SacnReceiver* receiver = NULL;
+    if (lookup_receiver_by_universe(header->universe_id, &receiver) != kEtcPalErrOk)
     {
       // We are not listening to this universe.
       sacn_unlock();
@@ -528,7 +547,7 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
 
   // No matter how valid, we got something.
   src->dmx_received_since_last_tick = true;
-  etcpal_timer_start(&src->packet_timer, SOURCE_LOSS_TIMEOUT);
+  etcpal_timer_start(&src->packet_timer, SACN_SOURCE_LOSS_TIMEOUT);
 
 #if SACN_ETC_PRIORITY_EXTENSION
   switch (src->recv_state)
@@ -553,7 +572,7 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
         // Our per-address-priority waiting period has expired. Keep the timer going in case the
         // source starts sending PAP later.
         src->recv_state = kRecvStateHaveDmxOnly;
-        etcpal_timer_start(&src->pap_timer, SOURCE_LOSS_TIMEOUT);
+        etcpal_timer_start(&src->pap_timer, SACN_SOURCE_LOSS_TIMEOUT);
       }
       else
       {
@@ -609,7 +628,7 @@ void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* not
     case kRecvStateWaitingForPap:
     case kRecvStateHaveDmxOnly:
       src->recv_state = kRecvStateHaveDmxAndPap;
-      etcpal_timer_start(&src->pap_timer, SOURCE_LOSS_TIMEOUT);
+      etcpal_timer_start(&src->pap_timer, SACN_SOURCE_LOSS_TIMEOUT);
       break;
     case kRecvStateHaveDmxAndPap:
       etcpal_timer_reset(&src->pap_timer);
@@ -648,21 +667,23 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
   *notify = true;
 
   // A new source has appeared!
-  SacnTrackedSource* src = NULL;
-
-  size_t current_number_of_sources = etcpal_rbtree_size(&receiver->sources);
-#if SACN_DYNAMIC_MEM
-  size_t max_number_of_sources = receiver->source_count_max;
-  bool infinite_sources = (max_number_of_sources == SACN_RECEIVER_INFINITE_SOURCES);
-#else
-  size_t max_number_of_sources = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE;
-  bool infinite_sources = false;
+  if (add_sacn_tracked_source(receiver, sender_cid, header->source_name, seq, header->start_code, new_source) ==
+      kEtcPalErrOk)
+  {
+#if SACN_ETC_PRIORITY_EXTENSION
+    if ((receiver->sampling && (header->start_code == SACN_STARTCODE_PRIORITY)) || !receiver->sampling)
+      *notify = false;
 #endif
 
-  if (infinite_sources || (current_number_of_sources < max_number_of_sources))
-    src = ALLOC_TRACKED_SOURCE();
-
-  if (!src)
+    if (SACN_CAN_LOG(ETCPAL_LOG_DEBUG))
+    {
+      char cid_str[ETCPAL_UUID_STRING_BYTES];
+      etcpal_uuid_to_string(sender_cid, cid_str);
+      SACN_LOG_DEBUG("Tracking new source %s (%s) with initial start code 0x%02x", header->source_name, cid_str,
+                     header->start_code);
+    }
+  }
+  else
   {
     // No room for new source.
     if (!receiver->suppress_limit_exceeded_notification)
@@ -672,59 +693,7 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
       source_limit_exceeded->context = receiver->callbacks.context;
       source_limit_exceeded->handle = receiver->keys.handle;
       source_limit_exceeded->universe = receiver->keys.universe;
-      return;
     }
-    else
-    {
-      // Notification suppressed - don't notify
-      return;
-    }
-  }
-  src->cid = *sender_cid;
-  ETCPAL_MSVC_NO_DEP_WRN strcpy(src->name, header->source_name);
-  etcpal_timer_start(&src->packet_timer, SOURCE_LOSS_TIMEOUT);
-  src->seq = seq;
-  src->terminated = false;
-  src->dmx_received_since_last_tick = true;
-
-#if SACN_ETC_PRIORITY_EXTENSION
-  if (receiver->sampling)
-  {
-    if (header->start_code == SACN_STARTCODE_PRIORITY)
-    {
-      // Need to wait for DMX - ignore PAP packets until we've seen at least one DMX packet.
-      *notify = false;
-      src->recv_state = kRecvStateWaitingForDmx;
-      etcpal_timer_start(&src->pap_timer, SOURCE_LOSS_TIMEOUT);
-    }
-    else
-    {
-      // If we are in the sampling period, the wait period for PAP is not necessary.
-      src->recv_state = kRecvStateHaveDmxOnly;
-    }
-  }
-  else
-  {
-    // Even if this is a priority packet, we want to make sure that DMX packets are also being
-    // sent before notifying.
-    if (header->start_code == SACN_STARTCODE_PRIORITY)
-      src->recv_state = kRecvStateWaitingForDmx;
-    else
-      src->recv_state = kRecvStateWaitingForPap;
-    *notify = false;
-    etcpal_timer_start(&src->pap_timer, WAIT_FOR_PRIORITY);
-  }
-#endif
-
-  etcpal_rbtree_insert(&receiver->sources, src);
-  *new_source = src;
-
-  if (SACN_CAN_LOG(ETCPAL_LOG_DEBUG))
-  {
-    char cid_str[ETCPAL_UUID_STRING_BYTES];
-    etcpal_uuid_to_string(sender_cid, cid_str);
-    SACN_LOG_DEBUG("Tracking new source %s (%s) with initial start code 0x%02x", header->source_name, cid_str,
-                   header->start_code);
   }
 }
 
@@ -883,15 +852,12 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
   }
 
   mark_sources_offline(status_lists->offline, status_lists->num_offline, status_lists->unknown,
-                       status_lists->num_unknown, &receiver->term_sets, receiver_state.expired_wait);
+                       status_lists->num_unknown, &receiver->term_sets, expired_wait);
   mark_sources_online(status_lists->online, status_lists->num_online, receiver->term_sets);
   get_expired_sources(&receiver->term_sets, sources_lost);
 
   for (size_t i = 0; i < num_to_erase; ++i)
-  {
-    etcpal_rbtree_remove(&receiver->sources, to_erase[i]);
-    FREE_TRACKED_SOURCE(to_erase[i]);
-  }
+    remove_receiver_source(receiver, &to_erase[i]->cid);
 
   if (sources_lost->num_lost_sources > 0)
   {
@@ -899,10 +865,9 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
     sources_lost->context = receiver->callbacks.context;
     sources_lost->handle = receiver->keys.handle;
     sources_lost->universe = receiver->keys.universe;
+
     for (size_t i = 0; i < sources_lost->num_lost_sources; ++i)
-    {
-      etcpal_rbtree_remove_with_cb(&receiver->sources, &sources_lost->lost_sources[i].cid, source_tree_dealloc);
-    }
+      remove_receiver_source(receiver, &sources_lost->lost_sources[i].cid);
   }
 }
 

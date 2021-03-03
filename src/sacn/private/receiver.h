@@ -36,14 +36,6 @@
 extern "C" {
 #endif
 
-#define SACN_RECEIVER_MAX_RB_NODES ((SACN_RECEIVER_MAX_UNIVERSES * 2) + SACN_RECEIVER_TOTAL_MAX_SOURCES)
-
-/* The source-loss timeout, defined in E1.31 as network data loss */
-#define SOURCE_LOSS_TIMEOUT 2500
-/* How long to wait for a 0xdd packet once a new source is discovered */
-#define WAIT_FOR_PRIORITY 1500
-/* Length of the sampling period for a new universe */
-#define SAMPLE_TIME 1500
 
 etcpal_error_t sacn_receiver_init(void);
 void sacn_receiver_deinit(void);

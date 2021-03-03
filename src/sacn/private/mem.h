@@ -93,10 +93,16 @@ void remove_sacn_source(size_t index);
 // sACN Receiver memory API
 etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfig* config, SacnMcastInterface* netints,
                                  size_t num_netints, SacnReceiver** receiver_state);
+etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid* sender_cid, const char* name,
+                                       uint8_t seq_num, uint8_t first_start_code,
+                                       SacnTrackedSource** tracked_source_state);
 etcpal_error_t lookup_receiver(sacn_receiver_t handle, SacnReceiver** receiver_state);
 etcpal_error_t lookup_receiver_by_universe(uint16_t universe, SacnReceiver** receiver_state);
+SacnReceiver* get_first_receiver(EtcPalRbIter* iterator);
+SacnReceiver* get_next_receiver(EtcPalRbIter* iterator);
 etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_universe);
 etcpal_error_t clear_receiver_sources(SacnReceiver* receiver);
+etcpal_error_t remove_receiver_source(SacnReceiver* receiver, const EtcPalUuid* cid);
 void remove_sacn_receiver(SacnReceiver* receiver);
 
 #ifdef __cplusplus

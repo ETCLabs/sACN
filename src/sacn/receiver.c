@@ -325,15 +325,16 @@ etcpal_error_t sacn_receiver_reset_networking(SacnMcastInterface* netints, size_
       remove_all_receiver_sockets(kQueueSocketForClose);
 
       EtcPalRbIter iter;
-      etcpal_rbiter_init(&iter);
-      for (SacnReceiver* receiver = etcpal_rbiter_first(&iter, &receiver_state.receivers);
-           (res == kEtcPalErrOk) && receiver; receiver = etcpal_rbiter_next(&iter))
+      for (SacnReceiver* receiver = get_first_receiver(&iter); (res == kEtcPalErrOk) && receiver;
+           receiver = get_next_receiver(&iter))
       {
         res = sacn_initialize_receiver_netints(&receiver->netints, netints, num_netints);
         if (res == kEtcPalErrOk)
           res = add_receiver_sockets(receiver);
         if (res == kEtcPalErrOk)
-          res = reset_receiver_state(receiver);
+          res = clear_term_sets_and_sources(receiver);
+        if (res == kEtcPalErrOk)
+          begin_sampling_period(receiver);
       }
     }
 
@@ -383,10 +384,10 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnReceiverNet
   {
     // Validate netint_lists. It must include all receivers and nothing more.
     size_t total_num_receivers = 0;
+
     EtcPalRbIter iter;
-    etcpal_rbiter_init(&iter);
-    for (SacnReceiver* receiver = etcpal_rbiter_first(&iter, &receiver_state.receivers);
-         (res == kEtcPalErrOk) && receiver; receiver = etcpal_rbiter_next(&iter))
+    for (SacnReceiver* receiver = get_first_receiver(&iter); (res == kEtcPalErrOk) && receiver;
+         receiver = get_next_receiver(&iter))
     {
       ++total_num_receivers;
 
@@ -415,13 +416,16 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnReceiverNet
       // After the old sockets have been removed, initialize the new netints, sockets, and state.
       for (size_t i = 0; (res == kEtcPalErrOk) && (i < num_netint_lists); ++i)
       {
-        SacnReceiver* receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers, &netint_lists[i].handle);
+        SacnReceiver* receiver = NULL;
+        lookup_receiver(netint_lists[i].handle, &receiver);
         res =
             sacn_initialize_receiver_netints(&receiver->netints, netint_lists[i].netints, netint_lists[i].num_netints);
         if (res == kEtcPalErrOk)
           res = add_receiver_sockets(receiver);
         if (res == kEtcPalErrOk)
-          res = reset_receiver_state(receiver);
+          res = clear_term_sets_and_sources(receiver);
+        if (res == kEtcPalErrOk)
+          begin_sampling_period(receiver);
       }
     }
 
@@ -446,14 +450,9 @@ size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, EtcPalMcastN
 
   if (sacn_lock())
   {
-    SacnReceiver* receiver = (SacnReceiver*)etcpal_rbtree_find(&receiver_state.receivers, &handle);
-    if (receiver)
-    {
-      total_num_network_interfaces = receiver->netints.num_netints;
-
-      for (size_t i = 0; netints && (i < netints_size) && (i < total_num_network_interfaces); ++i)
-        netints[i] = receiver->netints.netints[i];
-    }
+    SacnReceiver* receiver = NULL;
+    if (lookup_receiver(handle, &receiver) == kEtcPalErrOk)
+      total_num_network_interfaces = get_receiver_netints(receiver, netints, netints_size);
 
     sacn_unlock();
   }
@@ -477,7 +476,7 @@ void sacn_receiver_set_expired_wait(uint32_t wait_ms)
 
   if (sacn_lock())
   {
-    receiver_state.expired_wait = wait_ms;
+    set_expired_wait(wait_ms);
     sacn_unlock();
   }
 }
@@ -500,7 +499,7 @@ uint32_t sacn_receiver_get_expired_wait()
 
   if (sacn_lock())
   {
-    res = receiver_state.expired_wait;
+    res = get_expired_wait();
     sacn_unlock();
   }
   return res;
