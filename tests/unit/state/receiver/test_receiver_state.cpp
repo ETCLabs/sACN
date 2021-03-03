@@ -40,6 +40,20 @@
 #define TestReceiverState TestReceiverStateStatic
 #endif
 
+static const SacnReceiverCallbacks kTestCallbacks = {
+    [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*, bool, void*) {},
+    [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {},
+    NULL,
+    NULL,
+    NULL,
+    NULL};
+static const SacnReceiverConfig kTestReceiverConfig = {0u, kTestCallbacks, SACN_RECEIVER_INFINITE_SOURCES, 0u,
+                                                       kSacnIpV4AndIpV6};
+
+static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
+                                                       {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
+                                                       {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
+
 class TestReceiverState : public ::testing::Test
 {
 protected:
@@ -58,9 +72,36 @@ protected:
     sacn_receiver_state_deinit();
     sacn_mem_deinit();
   }
+
+  SacnReceiver* AddReceiver(uint16_t universe_id, const SacnReceiverCallbacks& callbacks = kTestCallbacks)
+  {
+    SacnReceiverConfig config = kTestReceiverConfig;
+    config.universe_id = universe_id;
+    config.callbacks = callbacks;
+
+    SacnReceiver* receiver = nullptr;
+    EXPECT_EQ(add_sacn_receiver(next_receiver_handle_++, &config, kTestNetints.data(), kTestNetints.size(), &receiver),
+              kEtcPalErrOk);
+
+    return receiver;
+  }
+
+  sacn_receiver_t next_receiver_handle_ = 0;
 };
 
-TEST_F(TestReceiverState, Foo)
+TEST_F(TestReceiverState, ExpiredWaitInitializes)
 {
-  // TODO
+  EXPECT_EQ(get_expired_wait(), SACN_DEFAULT_EXPIRED_WAIT_MS);
+}
+
+TEST_F(TestReceiverState, DeinitJoinsInitializedThread)
+{
+  EXPECT_EQ(etcpal_thread_join_fake.call_count, 0u);
+
+  SacnReceiver* receiver = AddReceiver(1u);
+  assign_receiver_to_thread(receiver);
+
+  sacn_receiver_state_deinit();
+
+  EXPECT_EQ(etcpal_thread_join_fake.call_count, 1u);
 }
