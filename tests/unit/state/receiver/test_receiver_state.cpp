@@ -94,14 +94,28 @@ TEST_F(TestReceiverState, ExpiredWaitInitializes)
   EXPECT_EQ(get_expired_wait(), SACN_DEFAULT_EXPIRED_WAIT_MS);
 }
 
-TEST_F(TestReceiverState, DeinitJoinsInitializedThread)
+TEST_F(TestReceiverState, InitializedThreadDeinitializes)
 {
   EXPECT_EQ(etcpal_thread_join_fake.call_count, 0u);
+  EXPECT_EQ(sacn_cleanup_dead_sockets_fake.call_count, 0u);
+
+  etcpal_thread_join_fake.custom_fake = [](etcpal_thread_t* id) {
+    EXPECT_EQ(id, &get_recv_thread_context(0)->thread_handle);
+    return kEtcPalErrOk;
+  };
+  sacn_cleanup_dead_sockets_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context) {
+    EXPECT_EQ(recv_thread_context, get_recv_thread_context(0));
+  };
 
   SacnReceiver* receiver = AddReceiver(1u);
   assign_receiver_to_thread(receiver);
 
+  EXPECT_EQ(get_recv_thread_context(0)->running, true);
+
   sacn_receiver_state_deinit();
 
   EXPECT_EQ(etcpal_thread_join_fake.call_count, 1u);
+  EXPECT_EQ(sacn_cleanup_dead_sockets_fake.call_count, 1u);
+
+  EXPECT_EQ(get_recv_thread_context(0)->running, false);
 }
