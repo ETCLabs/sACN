@@ -1,0 +1,368 @@
+<!-- HTML header for doxygen 1.8.14-->
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=9" />
+  <meta name="generator" content="Doxygen 1.8.13" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>sACN: Using the sACN Source API</title>
+  <link href="tabs.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="text/javascript" src="dynsections.js"></script>
+  <link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<script type="text/javascript">
+  $(document).ready(initResizable);
+</script>
+  <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+  <link href="stylesheet.css" rel="stylesheet" type="text/css" />
+  <!--BEGIN CUSTOM SCRIPTS-->
+  <script type="text/javascript">
+    $(function () {
+      $.get('/sACN/versions.txt', function (data) {
+        if (data) {
+          var lines = data.split('\n');
+          if (lines.length > 0) {
+            var version_select = $("#version_select").empty();
+            lines.forEach(function (line) {
+              line = line.trim();
+              if (!line) {
+                return;
+              }
+              line = line.split(':');
+              var option_name = line[0].replace(/^v/, '');
+              if (line.length > 1) {
+                option_name += ' (' + line[1] + ')';
+              }
+              var option_val = '/sACN/docs/' + line[0];
+              var option = $('<option></option>').attr("value", option_val)
+                .text(option_name);
+              if (window.location.pathname.match('docs/' + line[0])) {
+                option = option.attr("selected", "selected");
+              }
+              version_select.append(option);
+            });
+          }
+        }
+      }, 'text');
+    });
+	</script>
+  <script type="text/javascript">
+    $(function () { selectAllC() });
+  </script>
+  <script type="text/javascript">
+    function selectAllC() {
+      // Enable all C-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_c")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_c")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectAllCpp() {
+      // Enable all C++-language blocks
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.endsWith("_cpp")) {
+          tabcontent[i].style.display = "block";
+        } else {
+          tabcontent[i].style.display = "none"
+        }
+      }
+      // Enable all C++-language buttons
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.endsWith("_cpp")) {
+          if (!tablinks[i].className.includes("active")) {
+            tablinks[i].className = tablinks[i].className += " active";
+          }
+        } else {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+    }
+    function selectLanguage(evt, block_id, language) {
+      // Get all elements with class="tabcontent" and hide them
+      var tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        if (tabcontent[i].id.startsWith("div_" + block_id)) {
+          tabcontent[i].style.display = "none";
+        }
+      }
+      // Get all elements with class="tablinks" and remove the class "active"
+      var tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        if (tablinks[i].id.startsWith("button_" + block_id)) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+      }
+      // Show the current tab, and add an "active" class to the button that opened the tab
+      document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+      if (!evt.currentTarget.className.includes("active")) {
+        evt.currentTarget.className += " active";
+      }
+    }
+  </script>
+  <!--END CUSTOM SCRIPT-->
+</head>
+<body>
+  <div id="top">
+    <!-- do not remove this div, it is closed by doxygen! -->
+    <div id="titlearea">
+      <table cellspacing="0" cellpadding="0" style="width: 100%">
+        <tbody>
+          <tr style="height: 56px;">
+            <td id="projectalign" style="padding-left: 0.5em;">
+              <div id="projectname">sACN
+                &#160;<span id="projectnumber">Staging for pull request 52</span>
+              </div>
+              <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+            </td>
+            <!--BEGIN CUSTOM INSERTED SECTION-->
+            <td style="text-align: right; padding-right: 0.5em">
+              <div id="otherversions">
+                View other versions:
+                <select id="version_select" onchange="location = this.value">
+                </select>
+              </div>
+            </td>
+            <!--END CUSTOM INSERTED SECTION-->
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- end header part -->
+<!-- Generated by Doxygen 1.8.13 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "search",false,'Search');
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+$(document).ready(function(){initNavTree('using_source.html','');});
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="headertitle">
+<div class="title">Using the sACN Source API </div>  </div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p>The sACN Source API provides a method for applications to transmit sACN data on one or more universes. This API exposes both a C and C++ language interface. The C++ interface is a header-only wrapper around the C interface.</p>
+<p> 
+<div class="tab">
+  <button id="button_1_c" class="tablinks" onclick="selectAllC()">Show All C Snippets</button>
+  <button id="button_1_cpp" class="tablinks" onclick="selectAllCpp()">Show All C++ Snippets</button>
+</div>
+</p>
+<h2>Initialization and Destruction</h2>
+<p>The sACN library must be globally initialized before using the Source API. See <a class="el" href="global_init_and_destroy.html">Global Initialization and Destruction</a>.</p>
+<p>A source must first be created before it can be used to transmit sACN data. Each source has a name and a CID. These are specified in the source's configuration structure, along with other optional settings. Once the source's configuration is initialized, it can simply be passed into the source Create/Startup function. If the source Create/Startup function succeeds, that source's functionality will become available. In C, this is accessed with a source handle, whereas in C++ it's accessed through a Source object. A source can later be destroyed using the source Destroy Shutdown function.</p>
+<p> 
+<div class="tab">
+  <button id="button_2_c" class="tablinks" onclick="selectLanguage(event, '2', 'c')">C</button>
+  <button id="button_2_cpp" class="tablinks" onclick="selectLanguage(event, '2', 'cpp')">C++</button>
+</div>
+<div id="div_2_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_uuid.html">EtcPalUuid</a> my_cid;</div><div class="line"><span class="keywordtype">char</span> my_name[<a class="code" href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8">SACN_SOURCE_NAME_MAX_LEN</a>];</div><div class="line"><span class="comment">// Assuming my_cid and my_name are initialized by the application...</span></div><div class="line"></div><div class="line"><a class="code" href="struct_sacn_source_config.html">SacnSourceConfig</a> my_config = <a class="code" href="group__sacn__source.html#ga1fc88ea9a51c4a935ec87630a0b177f1">SACN_SOURCE_CONFIG_DEFAULT_INIT</a>;</div><div class="line">my_config.<a class="code" href="struct_sacn_source_config.html#a4c3f7d9a58af5033f9acd8c942bf81d9">cid</a> = my_cid;</div><div class="line">my_config.<a class="code" href="struct_sacn_source_config.html#a8f8f80d37794cde9472343e4487ba3eb">name</a> = my_name;</div><div class="line"></div><div class="line"><a class="code" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> my_handle;</div><div class="line"><a class="code" href="group__sacn__source.html#ga37f43cd2ec265e3052eea6d5f1b68233">sacn_source_create</a>(&amp;my_config, &amp;my_handle);</div><div class="line"></div><div class="line"><span class="comment">// To destroy the source when you&#39;re done with it:</span></div><div class="line"><a class="code" href="group__sacn__source.html#gaeb8a9797368aabad696c81225b4c8aaa">sacn_source_destroy</a>(my_handle);</div></div><!-- fragment --><p> 
+</div>
+<div id="div_2_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_uuid.html">etcpal::Uuid</a> my_cid;</div><div class="line">std::string my_name;</div><div class="line"><span class="comment">// Assuming my_cid and my_name are initialized by the application...</span></div><div class="line"></div><div class="line"><a class="code" href="structsacn_1_1_source_1_1_settings.html">sacn::Source::Settings</a> my_config(my_cid, my_name);</div><div class="line"></div><div class="line"><a class="code" href="classsacn_1_1_source.html">sacn::Source</a> my_source;</div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#ab263565edc9ebf5ffd6e82a18184e4c3">Startup</a>(my_config);</div><div class="line"></div><div class="line"><span class="comment">// To destroy the source when you&#39;re done with it:</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">Shutdown</a>();</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>Adding and Removing Universes</h2>
+<p>A universe represents a destination for the DMX data being transmitted by a source. The receivers on the other end can choose which universes they want to listen on. Thus, universes allow for the organization of DMX traffic.</p>
+<p>A source can transmit on one or more universes. Each universe has a configuration, which includes the universe number and other optional settings. Once you create this configuration, you can simply pass it into the Add Universe function. In this function, you can also specify specific network interfaces for the source to use for this universe. You can also indicate that all network interfaces should be used. When you're done transmitting on that universe, you can call the Remove Universe function.</p>
+<p> 
+<div class="tab">
+  <button id="button_3_c" class="tablinks" onclick="selectLanguage(event, '3', 'c')">C</button>
+  <button id="button_3_cpp" class="tablinks" onclick="selectLanguage(event, '3', 'cpp')">C++</button>
+</div>
+<div id="div_3_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line">uint16_t my_universe = 1;  <span class="comment">// Using universe 1 as an example.</span></div><div class="line"></div><div class="line"><a class="code" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a> my_universe_config = <a class="code" href="group__sacn__source.html#ga20483046bfb90da7c9bf089fc0229a6b">SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT</a>;</div><div class="line">my_universe_config.<a class="code" href="struct_sacn_source_universe_config.html#a0cf34824f8777f28b50f62b7870d6f8c">universe</a> = my_universe;</div><div class="line"></div><div class="line"><a class="code" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> my_netints[NUM_MY_NETINTS];</div><div class="line"><span class="comment">// Assuming my_netints and NUM_MY_NETINTS are initialized by the application...</span></div><div class="line"></div><div class="line"><span class="comment">// If you want to specify specific network interfaces to use:</span></div><div class="line"><a class="code" href="group__sacn__source.html#gaa26374ff40861d221d4f0f863d17793d">sacn_source_add_universe</a>(my_handle, &amp;my_universe_config, my_netints, NUM_MY_NETINTS);</div><div class="line"><span class="comment">// Or, if you just want to use all network interfaces:</span></div><div class="line"><a class="code" href="group__sacn__source.html#gaa26374ff40861d221d4f0f863d17793d">sacn_source_add_universe</a>(my_handle, &amp;my_universe_config, NULL, 0);</div><div class="line"><span class="comment">// You can add additional universes as well, in the same way.</span></div><div class="line"></div><div class="line"><span class="comment">// To remove a universe from your source when you&#39;re done transmitting on it:</span></div><div class="line"><a class="code" href="group__sacn__source.html#ga7f8233fae115142c2e2a9488faa12d5d">sacn_source_remove_universe</a>(my_handle, my_universe);</div></div><!-- fragment --><p> 
+</div>
+<div id="div_3_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line">uint16_t my_universe = 1;  <span class="comment">// Using universe 1 as an example.</span></div><div class="line"></div><div class="line"><a class="code" href="structsacn_1_1_source_1_1_universe_settings.html">sacn::Source::UniverseSettings</a> my_universe_config(my_universe);</div><div class="line"></div><div class="line">std::vector&lt;SacnMcastInterface&gt; my_netints;</div><div class="line"><span class="comment">// Assuming my_netints is initialized by the application...</span></div><div class="line"></div><div class="line"><span class="comment">// If you want to specify specific network interfaces to use:</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e">AddUniverse</a>(my_universe_config, my_netints);</div><div class="line"><span class="comment">// Or, if you just want to use all network interfaces:</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e">AddUniverse</a>(my_universe_config);</div><div class="line"><span class="comment">// You can add additional universes as well, in the same way.</span></div><div class="line"></div><div class="line"><span class="comment">// To remove a universe from your source when you&#39;re done transmitting on it:</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#aa0293c6689075dd5cb9692f036c8540f">RemoveUniverse</a>(my_universe);</div></div><!-- fragment --><p> 
+</div>
+</p>
+<p>The application can also obtain the list of universes that a source is currently transmitting on:</p>
+<p> 
+<div class="tab">
+  <button id="button_4_c" class="tablinks" onclick="selectLanguage(event, '4', 'c')">C</button>
+  <button id="button_4_cpp" class="tablinks" onclick="selectLanguage(event, '4', 'cpp')">C++</button>
+</div>
+<div id="div_4_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line">uint16_t *universes;  <span class="comment">// Points to an array with UNIVERSES_SIZE (perhaps SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE) elements.</span></div><div class="line"><span class="keywordtype">size_t</span> num_universes = <a class="code" href="group__sacn__source.html#ga90b2e59fa6709ee72042778a60c93330">sacn_source_get_universes</a>(handle_, universes, UNIVERSES_SIZE);</div><div class="line"><span class="keywordflow">if</span>(num_universes &gt; UNIVERSES_SIZE)</div><div class="line">{</div><div class="line">  <span class="comment">// Not all of the universes were written to the array. The application should allocate a larger array and try again.</span></div><div class="line">}</div><div class="line"><span class="keywordflow">else</span></div><div class="line">{</div><div class="line">  <span class="comment">// The first num_universes elements of the universes array represent the complete list of universes.</span></div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+<div id="div_4_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line">std::vector&lt;uint16_t&gt; universes = my_source.<a class="code" href="classsacn_1_1_source.html#adc1d03b3f1516e7f545862b9096d834c">GetUniverses</a>();</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>Update Values</h2>
+<p>At this point, once you have new data to transmit, you can use the Update Values functionality to copy in the NULL start code or per-address priority (PAP) data that should be transmitted on the network. Assuming you didn't set the manually_process_source setting to true, the source thread will take care of actually sending the data. Otherwise, you'll need to call the Process Manual function at your DMX rate (typically 23 ms).</p>
+<p>Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the library is compiled with <a class="el" href="group__sacnopts__global.html#ga59ee3abb2f4eb1554d7be219a9c8028b" title="Enable ETC&#39;s per-address priority extension to sACN. ">SACN_ETC_PRIORITY_EXTENSION</a> set to 0.</p>
+<p> 
+<div class="tab">
+  <button id="button_5_c" class="tablinks" onclick="selectLanguage(event, '5', 'c')">C</button>
+  <button id="button_5_cpp" class="tablinks" onclick="selectLanguage(event, '5', 'cpp')">C++</button>
+</div>
+<div id="div_5_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// Initialize my_values_buffer and (possibly) my_priorities_buffer with the values you want to send...</span></div><div class="line">uint8_t my_values_buffer[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line">uint8_t my_priorities_buffer[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line"></div><div class="line"><span class="comment">// Now copy in the new values to send. Then the source thread will handle transmitting the </span></div><div class="line"><span class="comment">// data (unless you set manually_process_source to true in the SacnSourceConfig).</span></div><div class="line"><a class="code" href="group__sacn__source.html#gabf3e1c5a9c098ad1a85d4d3099a84cf4">sacn_source_update_values</a>(my_handle, my_universe, my_values_buffer, DMX_ADDRESS_COUNT);</div><div class="line"><span class="comment">// Or if you&#39;re using per-address priorities:</span></div><div class="line"><a class="code" href="group__sacn__source.html#ga5eeb0dbabcfbfe8846aa0cccc28264b3">sacn_source_update_values_and_pap</a>(my_handle, my_universe, my_values_buffer, DMX_ADDRESS_COUNT, my_priorities_buffer, DMX_ADDRESS_COUNT);</div></div><!-- fragment --><p> 
+</div>
+<div id="div_5_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// Initialize my_values_buffer and (possibly) my_priorities_buffer with the values you want to send...</span></div><div class="line">uint8_t my_values_buffer[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line">uint8_t my_priorities_buffer[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line"></div><div class="line"><span class="comment">// Now copy in the new values to send. Then the source thread will handle transmitting the </span></div><div class="line"><span class="comment">// data (unless you set manually_process_source to true in the Source::Settings).</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047">UpdateValues</a>(my_universe, my_values_buffer, DMX_ADDRESS_COUNT);</div><div class="line"><span class="comment">// Or if you&#39;re using per-address priorities:</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#ac162298618ea8824476cbe33cb95c047">UpdateValues</a>(my_universe, my_values_buffer, DMX_ADDRESS_COUNT, my_priorities_buffer, DMX_ADDRESS_COUNT);</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>Multicast and Unicast</h2>
+<p>By default, sources transmit DMX data over multicast. The destination multicast address is based on the universe number, therefore each universe's data goes to a different multicast address. However, sources can also transmit to one or more unicast addresses in addition to multicast. To add a unicast destination for a universe, call the Add Unicast Destination function. There's also a Remove Unicast Destination function. The universe configuration also has a send_unicast_only setting, which disables the transmission of multicast altogether. Once you change the unicast configuration, transmission suppression is reset and the newly added unicast destinations will have data transmitted to them.</p>
+<p> 
+<div class="tab">
+  <button id="button_6_c" class="tablinks" onclick="selectLanguage(event, '6', 'c')">C</button>
+  <button id="button_6_cpp" class="tablinks" onclick="selectLanguage(event, '6', 'cpp')">C++</button>
+</div>
+<div id="div_6_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// Unicast can be sent to one or more addresses, in addition to multicast.</span></div><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a> custom_destination;  <span class="comment">// Application initializes custom_destination...</span></div><div class="line"><a class="code" href="group__sacn__source.html#ga2b7d3fb6a2d252eee7c051acfe97d242">sacn_source_add_unicast_destination</a>(my_handle, my_universe, &amp;custom_destination);</div><div class="line"></div><div class="line"><span class="comment">// You can remove a unicast destination previously added:</span></div><div class="line"><a class="code" href="group__sacn__source.html#ga4ebe5d509af8c963c104f2dd96a3ac76">sacn_source_remove_unicast_destination</a>(my_handle, my_universe, &amp;custom_destination);</div></div><!-- fragment --><p> 
+</div>
+<div id="div_6_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// Unicast can be sent to one or more addresses, in addition to multicast.</span></div><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a> custom_destination;  <span class="comment">// Application initializes custom_destination...</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#a5d7f1f26d1a6f5dbffca60dd08ac0454">AddUnicastDestination</a>(my_universe, custom_destination);</div><div class="line"></div><div class="line"><span class="comment">// You can remove a unicast destination previously added:</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966">RemoveUnicastDestination</a>(my_universe, custom_destination);</div></div><!-- fragment --><p> 
+</div>
+</p>
+<p>The starting set of unicast destinations can also be specified with the universe configuration's optional unicast_destinations setting.</p>
+<p>The application can also obtain the list of unicast destinations that a universe is currently transmitting on:</p>
+<p> 
+<div class="tab">
+  <button id="button_7_c" class="tablinks" onclick="selectLanguage(event, '7', 'c')">C</button>
+  <button id="button_7_cpp" class="tablinks" onclick="selectLanguage(event, '7', 'cpp')">C++</button>
+</div>
+<div id="div_7_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><a class="codeRef" doxygen="/home/vsts/work/1/s/external/EtcPal/docs/etcpal.tag:https://etclabs.github.io/EtcPal/docs/head/" href="https://etclabs.github.io/EtcPal/docs/head/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a> *unicast_dests;  <span class="comment">// Points to an array with DESTS_SIZE (perhaps SACN_MAX_UNICAST_DESTINATIONS) elements.</span></div><div class="line"><span class="keywordtype">size_t</span> num_dests = <a class="code" href="group__sacn__source.html#ga12f792b85add6af90ba2560f287b630c">sacn_source_get_unicast_destinations</a>(handle_, my_universe, unicast_dests, DESTS_SIZE);</div><div class="line"><span class="keywordflow">if</span>(num_dests &gt; DESTS_SIZE)</div><div class="line">{</div><div class="line">  <span class="comment">// Not all of the destinations were written to the array. The application should allocate a larger array &amp; try again.</span></div><div class="line">}</div><div class="line"><span class="keywordflow">else</span></div><div class="line">{</div><div class="line">  <span class="comment">// The first num_dests elements of the unicast_dests array represent the complete list of unicast destinations.</span></div><div class="line">}</div></div><!-- fragment --><p> 
+</div>
+<div id="div_7_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line">std::vector&lt;etcpal::IpAddr&gt; unicast_dests = my_source.<a class="code" href="classsacn_1_1_source.html#a80e1d17f72cc96da34ed4e2ed7b5a439">GetUnicastDestinations</a>(my_universe);</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>Custom Start Codes</h2>
+<p>The Update Values functions only allow you to send start code 0x00 (NULL) and 0xDD (PAP) data. If you want to send data for a different start code, you'll need to use the Send Now function to transmit that data synchronously.</p>
+<p> 
+<div class="tab">
+  <button id="button_8_c" class="tablinks" onclick="selectLanguage(event, '8', 'c')">C</button>
+  <button id="button_8_cpp" class="tablinks" onclick="selectLanguage(event, '8', 'cpp')">C++</button>
+</div>
+<div id="div_8_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line">uint8_t my_custom_start_code;</div><div class="line">uint8_t my_custom_start_code_data[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line"><span class="comment">// Initialize start code and data...</span></div><div class="line"></div><div class="line"><a class="code" href="group__sacn__source.html#ga6e7cea16d61ae355bc313452f0b47e48">sacn_source_send_now</a>(my_handle, my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);</div></div><!-- fragment --><p> 
+</div>
+<div id="div_8_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line">uint8_t my_custom_start_code;</div><div class="line">uint8_t my_custom_start_code_data[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div><div class="line"><span class="comment">// Initialize start code and data...</span></div><div class="line"></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#a22cf560eca13a3cbc4c8384bad438897">SendNow</a>(my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);</div></div><!-- fragment --><p> 
+</div>
+</p>
+<h2>sACN Sync</h2>
+<p>You can also configure synchronization universes for each of your universes using the Change Synchronization Universe function. Then the transmitted DMX data will include this synchronization universe, indicating to the receivers to wait to apply the data until a synchronization message is received on the specified synchronization universe. To send the synchronization message, call the Send Synchronization function. NOTE: sACN Sync will not be supported in sACN 2.0.0.</p>
+<p> 
+<div class="tab">
+  <button id="button_9_c" class="tablinks" onclick="selectLanguage(event, '9', 'c')">C</button>
+  <button id="button_9_cpp" class="tablinks" onclick="selectLanguage(event, '9', 'cpp')">C++</button>
+</div>
+<div id="div_9_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// You can also set up a synchronization universe for a universe.</span></div><div class="line"><span class="comment">// Receivers should hang on to the data and wait for a sync message.</span></div><div class="line">uint16_t my_sync_universe = 123;  <span class="comment">// Let&#39;s say the sync universe is 123, for example.</span></div><div class="line"><a class="code" href="group__sacn__source.html#gac21fab7b1fe15c281e89303ce26d08fd">sacn_source_change_synchronization_universe</a>(my_handle, my_universe, my_sync_universe);</div><div class="line"></div><div class="line"><span class="comment">// Whenever you want the data to be applied, you can immediately send a sync message for your universe.</span></div><div class="line"><a class="code" href="group__sacn__source.html#ga0e07a954dab245c7d6f323d9bdeb2df3">sacn_source_send_synchronization</a>(my_handle, my_universe);</div></div><!-- fragment --><p> 
+</div>
+<div id="div_9_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// You can also set up a synchronization universe for a universe.</span></div><div class="line"><span class="comment">// Receivers should hang on to the data and wait for a sync message.</span></div><div class="line">uint16_t my_sync_universe = 123;  <span class="comment">// Let&#39;s say the sync universe is 123, for example.</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#a6f73aa9c83e7d7266128cba5d4f70ef2">ChangeSynchronizationUniverse</a>(my_universe, my_sync_universe);</div><div class="line"></div><div class="line"><span class="comment">// Whenever you want the data to be applied, you can immediately send a sync message for your universe.</span></div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f">SendSynchronization</a>(my_universe);</div></div><!-- fragment --><p> 
+</div>
+</p>
+<p>The initial setting for sync universe can also be specified with the universe configuration's optional sync_universe setting.</p>
+<h2>Changing Preview Flag, Universe Priority, or Source Name</h2>
+<p>The preview flag, universe priority, and/or source name can be changed at any time using the appropriate Change function. This will also update the data being sent on the network and reset transmission suppression.</p>
+<p> 
+<div class="tab">
+  <button id="button_10_c" class="tablinks" onclick="selectLanguage(event, '10', 'c')">C</button>
+  <button id="button_10_cpp" class="tablinks" onclick="selectLanguage(event, '10', 'cpp')">C++</button>
+</div>
+<div id="div_10_c" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// The preview flag, priority, and name can also be changed at any time:</span></div><div class="line"><span class="keyword">const</span> <span class="keywordtype">char</span>* new_name = <span class="stringliteral">&quot;Hello World&quot;</span>;</div><div class="line"><a class="code" href="group__sacn__source.html#ga0c44cd3dba2627779bfb65ea8349fe1c">sacn_source_change_name</a>(my_handle, new_name)</div><div class="line">uint8_t new_priority = 50;</div><div class="line"><a class="code" href="group__sacn__source.html#ga0ee9dd3d8114b4277cb73134d0ae2dc4">sacn_source_change_priority</a>(my_handle, my_universe, new_priority);</div><div class="line"><span class="keywordtype">bool</span> new_preview_flag = <span class="keyword">true</span>;</div><div class="line"><a class="code" href="group__sacn__source.html#ga99d5fce087ce0b2b7d2caedf65bcce5e">sacn_source_change_preview_flag</a>(my_handle, my_universe, new_preview_flag);</div></div><!-- fragment --><p> 
+</div>
+<div id="div_10_cpp" class="tabcontent">
+</p>
+<div class="fragment"><div class="line"><span class="comment">// The preview flag, priority, and name can also be changed at any time:</span></div><div class="line">std::string new_name(<span class="stringliteral">&quot;Hello World&quot;</span>);</div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#aa33e199741640a65c41cc19d18b4b6f0">ChangeName</a>(new_name)</div><div class="line">uint8_t new_priority = 50;</div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#a250e66ea54b315476f4c201600dd7b5f">ChangePriority</a>(my_universe, new_priority);</div><div class="line"><span class="keywordtype">bool</span> new_preview_flag = <span class="keyword">true</span>;</div><div class="line">my_source.<a class="code" href="classsacn_1_1_source.html#a386b243f62f7cc246de825add2af3161">ChangePreviewFlag</a>(my_universe, new_preview_flag);</div></div><!-- fragment --><p> 
+</div>
+ </p>
+</div></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="getting_started.html">Getting Started with sACN</a></li>
+    <li class="footer">Generated by
+    <a href="http://www.doxygen.org/index.html">
+    <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>
+  </ul>
+</div>
+</body>
+</html>
