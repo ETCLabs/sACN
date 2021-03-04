@@ -188,8 +188,8 @@ TEST_F(TestReceiverState, GetReceiverNetintsWorks)
 {
   SacnReceiver* receiver = AddReceiver(kTestUniverse);
 
-  std::vector<EtcPalMcastNetintId> netints(kTestNetints.size());
-  for (size_t i = 0u; i < kTestNetints.size(); ++i)
+  std::vector<EtcPalMcastNetintId> netints(kTestNetints.size() * 2u);
+  for (size_t i = 0u; i < (kTestNetints.size() * 2u); ++i)
   {
     netints[i].index = 0u;
     netints[i].ip_type = kEtcPalIpTypeInvalid;
@@ -200,7 +200,7 @@ TEST_F(TestReceiverState, GetReceiverNetintsWorks)
 
   EXPECT_EQ(netints[0].index, kTestNetints[0].iface.index);
   EXPECT_EQ(netints[0].ip_type, kTestNetints[0].iface.ip_type);
-  for (size_t i = 1u; i < kTestNetints.size(); ++i)
+  for (size_t i = 1u; i < netints.size(); ++i)
   {
     EXPECT_EQ(netints[i].index, 0u);
     EXPECT_EQ(netints[i].ip_type, kEtcPalIpTypeInvalid);
@@ -213,6 +213,12 @@ TEST_F(TestReceiverState, GetReceiverNetintsWorks)
   {
     EXPECT_EQ(netints[i].index, kTestNetints[i].iface.index);
     EXPECT_EQ(netints[i].ip_type, kTestNetints[i].iface.ip_type);
+  }
+
+  for (size_t i = kTestNetints.size(); i < netints.size(); ++i)
+  {
+    EXPECT_EQ(netints[i].index, 0u);
+    EXPECT_EQ(netints[i].ip_type, kEtcPalIpTypeInvalid);
   }
 }
 
