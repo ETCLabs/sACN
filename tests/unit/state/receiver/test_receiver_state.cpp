@@ -28,6 +28,7 @@
 #include "etcpal_mock/timer.h"
 #include "sacn_mock/private/common.h"
 #include "sacn_mock/private/sockets.h"
+#include "sacn_mock/private/source_loss.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
 #include "sacn/private/pdu.h"
@@ -50,6 +51,9 @@ static const SacnReceiverCallbacks kTestCallbacks = {
 static const SacnReceiverConfig kTestReceiverConfig = {0u, kTestCallbacks, SACN_RECEIVER_INFINITE_SOURCES, 0u,
                                                        kSacnIpV4AndIpV6};
 
+static const EtcPalUuid kTestCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22").get();
+static const char kTestName[] = "Test Name";
+
 static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                        {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
                                                        {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
@@ -57,6 +61,7 @@ static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, k
 static const sacn_receiver_t kFirstReceiverHandle = 0;
 static const uint16_t kTestUniverse = 123u;
 static const etcpal_socket_t kTestSocket = static_cast<etcpal_socket_t>(7);
+static TerminationSet kTestTermSet = {{0u, 0u}, {nullptr, nullptr, 0u, nullptr, nullptr, nullptr}, nullptr};
 
 class TestReceiverState : public ::testing::Test
 {
@@ -93,7 +98,8 @@ protected:
     sacn_mem_deinit();
   }
 
-  SacnReceiver* AddReceiver(uint16_t universe_id, const SacnReceiverCallbacks& callbacks = kTestCallbacks)
+  SacnReceiver* AddReceiver(uint16_t universe_id = kTestUniverse,
+                            const SacnReceiverCallbacks& callbacks = kTestCallbacks)
   {
     SacnReceiverConfig config = kTestReceiverConfig;
     config.universe_id = universe_id;
@@ -111,7 +117,18 @@ protected:
     return receiver;
   }
 
+  SacnTrackedSource* AddTrackedSource(SacnReceiver* receiver)
+  {
+    SacnTrackedSource* source = nullptr;
+    EXPECT_EQ(add_sacn_tracked_source(receiver, &next_source_cid_, kTestName, 0u, 0u, &source), kEtcPalErrOk);
+
+    ++next_source_cid_.data[0];
+
+    return source;
+  }
+
   sacn_receiver_t next_receiver_handle_ = kFirstReceiverHandle;
+  EtcPalUuid next_source_cid_ = kTestCid;
 };
 
 TEST_F(TestReceiverState, ExpiredWaitInitializes)
@@ -230,6 +247,29 @@ TEST_F(TestReceiverState, GetSetExpiredWaitWorks)
   EXPECT_EQ(get_expired_wait(), 10u);
   set_expired_wait(100u);
   EXPECT_EQ(get_expired_wait(), 100u);
+}
+
+TEST_F(TestReceiverState, ClearTermSetsAndSourcesWorks)
+{
+  SacnReceiver* receiver = AddReceiver();
+  AddTrackedSource(receiver);
+
+  EXPECT_EQ(etcpal_rbtree_size(&receiver->sources), 1u);
+  EXPECT_EQ(clear_term_set_list_fake.call_count, 0u);
+
+  clear_term_set_list_fake.custom_fake = [](TerminationSet* list) {
+    SacnReceiver* state = nullptr;
+    lookup_receiver_by_universe(kTestUniverse, &state);
+    EXPECT_EQ(list, state->term_sets);
+  };
+
+  receiver->term_sets = &kTestTermSet;
+
+  clear_term_sets_and_sources(receiver);
+
+  EXPECT_EQ(etcpal_rbtree_size(&receiver->sources), 0u);
+  EXPECT_EQ(clear_term_set_list_fake.call_count, 1u);
+  EXPECT_EQ(receiver->term_sets, nullptr);
 }
 
 TEST_F(TestReceiverState, RemoveAllReceiverSocketsRemovesIpv4AndIpv6)
