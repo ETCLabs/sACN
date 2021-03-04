@@ -67,6 +67,22 @@ protected:
     sacn_common_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
 
+    sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* receiver_netints,
+                                                           SacnMcastInterface* app_netints, size_t num_app_netints) {
+#if SACN_DYNAMIC_MEM
+      receiver_netints->netints = (EtcPalMcastNetintId*)calloc(num_app_netints, sizeof(EtcPalMcastNetintId));
+#endif
+      receiver_netints->num_netints = num_app_netints;
+
+      for (size_t i = 0; i < num_app_netints; ++i)
+      {
+        receiver_netints->netints[i] = app_netints[i].iface;
+        app_netints[i].status = kEtcPalErrOk;
+      }
+
+      return kEtcPalErrOk;
+    };
+
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_receiver_state_init(), kEtcPalErrOk);
   }
@@ -166,6 +182,38 @@ TEST_F(TestReceiverState, GetNextReceiverHandleWorks)
 {
   for (sacn_receiver_t handle = 0; handle < 10; ++handle)
     EXPECT_EQ(get_next_receiver_handle(), handle);
+}
+
+TEST_F(TestReceiverState, GetReceiverNetintsWorks)
+{
+  SacnReceiver* receiver = AddReceiver(kTestUniverse);
+
+  std::vector<EtcPalMcastNetintId> netints(kTestNetints.size());
+  for (size_t i = 0u; i < kTestNetints.size(); ++i)
+  {
+    netints[i].index = 0u;
+    netints[i].ip_type = kEtcPalIpTypeInvalid;
+  }
+
+  size_t num_netints = get_receiver_netints(receiver, netints.data(), 1u);
+  EXPECT_EQ(num_netints, kTestNetints.size());
+
+  EXPECT_EQ(netints[0].index, kTestNetints[0].iface.index);
+  EXPECT_EQ(netints[0].ip_type, kTestNetints[0].iface.ip_type);
+  for (size_t i = 1u; i < kTestNetints.size(); ++i)
+  {
+    EXPECT_EQ(netints[i].index, 0u);
+    EXPECT_EQ(netints[i].ip_type, kEtcPalIpTypeInvalid);
+  }
+
+  num_netints = get_receiver_netints(receiver, netints.data(), netints.size());
+  EXPECT_EQ(num_netints, kTestNetints.size());
+
+  for (size_t i = 0u; i < kTestNetints.size(); ++i)
+  {
+    EXPECT_EQ(netints[i].index, kTestNetints[i].iface.index);
+    EXPECT_EQ(netints[i].ip_type, kTestNetints[i].iface.ip_type);
+  }
 }
 
 TEST_F(TestReceiverState, RemoveAllReceiverSocketsRemovesIpv4AndIpv6)
