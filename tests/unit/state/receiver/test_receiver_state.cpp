@@ -137,20 +137,22 @@ TEST_F(TestReceiverState, UninitializedThreadDoesNotDeinitialize)
 
 TEST_F(TestReceiverState, DeinitRemovesAllReceiverSockets)
 {
-  SacnReceiver* receiver = AddReceiver(kTestUniverse);
-
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
                                                  const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
     *socket = kTestSocket;
     return kEtcPalErrOk;
   };
 
-  assign_receiver_to_thread(receiver);
+  for (uint16_t i = 0u; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
+    assign_receiver_to_thread(AddReceiver(kTestUniverse + i));
 
   sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
                                                     socket_close_behavior_t close_behavior) {
+    uint16_t universe =
+        kTestUniverse + ((static_cast<uint16_t>(sacn_remove_receiver_socket_fake.call_count) - 1u) / 2u);
+
     SacnReceiver* state = nullptr;
-    lookup_receiver_by_universe(kTestUniverse, &state);
+    lookup_receiver_by_universe(universe, &state);
 
     EXPECT_EQ(thread_id, 0u);
     EXPECT_TRUE((socket == &state->ipv4_socket) || (socket == &state->ipv6_socket));
@@ -163,5 +165,5 @@ TEST_F(TestReceiverState, DeinitRemovesAllReceiverSockets)
 
   sacn_receiver_state_deinit();
 
-  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u * SACN_RECEIVER_MAX_UNIVERSES);
 }
