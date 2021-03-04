@@ -151,9 +151,12 @@ TEST_F(TestReceiverState, DeinitRemovesAllReceiverSockets)
                                                     socket_close_behavior_t close_behavior) {
     SacnReceiver* state = nullptr;
     lookup_receiver_by_universe(kTestUniverse, &state);
+
     EXPECT_EQ(thread_id, 0u);
     EXPECT_TRUE((socket == &state->ipv4_socket) || (socket == &state->ipv6_socket));
     EXPECT_EQ(close_behavior, kCloseSocketNow);
+
+    *socket = ETCPAL_SOCKET_INVALID;
   };
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
