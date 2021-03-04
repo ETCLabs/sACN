@@ -222,6 +222,16 @@ TEST_F(TestReceiverState, GetReceiverNetintsWorks)
   }
 }
 
+TEST_F(TestReceiverState, GetSetExpiredWaitWorks)
+{
+  set_expired_wait(1u);
+  EXPECT_EQ(get_expired_wait(), 1u);
+  set_expired_wait(10u);
+  EXPECT_EQ(get_expired_wait(), 10u);
+  set_expired_wait(100u);
+  EXPECT_EQ(get_expired_wait(), 100u);
+}
+
 TEST_F(TestReceiverState, RemoveAllReceiverSocketsRemovesIpv4AndIpv6)
 {
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
