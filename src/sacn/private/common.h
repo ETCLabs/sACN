@@ -54,6 +54,13 @@ extern "C" {
 #define SACN_DISCOVERY_UNIVERSE 64214
 #define SACN_UNIVERSE_DISCOVERY_INTERVAL 10000
 
+/* The source-loss timeout, defined in E1.31 as network data loss */
+#define SACN_SOURCE_LOSS_TIMEOUT 2500
+/* How long to wait for a 0xdd packet once a new source is discovered */
+#define SACN_WAIT_FOR_PRIORITY 1500
+/* Length of the sampling period for a new universe */
+#define SACN_SAMPLE_TIME 1500
+
 /*
  * This ensures there are always enough SocketRefs. This is multiplied by 2 because SocketRefs come in pairs - one for
  * IPv4, and another for IPv6. This is because a single SocketRef cannot intermix IPv4 and IPv6.
