@@ -274,6 +274,87 @@ TEST_F(TestReceiverState, ClearTermSetsAndSourcesWorks)
   EXPECT_EQ(receiver->term_sets, nullptr);
 }
 
+TEST_F(TestReceiverState, AssignReceiverToThreadWorks)
+{
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t universe,
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
+    EXPECT_EQ(universe, kTestUniverse);
+    *socket = kTestSocket;
+    return kEtcPalErrOk;
+  };
+  etcpal_thread_create_fake.custom_fake = [](etcpal_thread_t* id, const EtcPalThreadParams* params,
+                                             void (*thread_fn)(void*), void* thread_arg) {
+    ETCPAL_UNUSED_ARG(thread_fn);
+    EXPECT_EQ(id, &get_recv_thread_context(0)->thread_handle);
+    EXPECT_EQ(params->priority, static_cast<unsigned int>(SACN_RECEIVER_THREAD_PRIORITY));
+    EXPECT_EQ(params->stack_size, static_cast<unsigned int>(SACN_RECEIVER_THREAD_STACK));
+    EXPECT_EQ(strcmp(params->thread_name, "sACN Receive Thread"), 0);
+    EXPECT_EQ(params->platform_data, nullptr);
+    EXPECT_NE(thread_fn, nullptr);
+    EXPECT_EQ(thread_arg, get_recv_thread_context(0));
+    return kEtcPalErrOk;
+  };
+
+  SacnReceiver* receiver = AddReceiver();
+
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 0u);
+  EXPECT_EQ(etcpal_thread_create_fake.call_count, 0u);
+
+  EXPECT_EQ(assign_receiver_to_thread(receiver), kEtcPalErrOk);
+
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 2u);
+  EXPECT_EQ(etcpal_thread_create_fake.call_count, 1u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
+  EXPECT_EQ(get_recv_thread_context(0)->running, true);
+  EXPECT_EQ(get_recv_thread_context(0)->receivers->keys.universe, kTestUniverse);
+}
+
+TEST_F(TestReceiverState, AssignReceiverToThreadHandlesSocketError)
+{
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
+    *socket = kTestSocket;
+    return kEtcPalErrNoNetints;
+  };
+
+  SacnReceiver* receiver = AddReceiver();
+
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 0u);
+  EXPECT_EQ(etcpal_thread_create_fake.call_count, 0u);
+
+  EXPECT_EQ(assign_receiver_to_thread(receiver), kEtcPalErrNoNetints);
+
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 2u);
+  EXPECT_EQ(etcpal_thread_create_fake.call_count, 0u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
+  EXPECT_EQ(get_recv_thread_context(0)->running, false);
+  EXPECT_EQ(get_recv_thread_context(0)->receivers, nullptr);
+}
+
+TEST_F(TestReceiverState, AssignReceiverToThreadHandlesThreadError)
+{
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
+    *socket = kTestSocket;
+    return kEtcPalErrOk;
+  };
+
+  etcpal_thread_create_fake.return_val = kEtcPalErrSys;
+
+  SacnReceiver* receiver = AddReceiver();
+
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 0u);
+  EXPECT_EQ(etcpal_thread_create_fake.call_count, 0u);
+
+  EXPECT_EQ(assign_receiver_to_thread(receiver), kEtcPalErrSys);
+
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 2u);
+  EXPECT_EQ(etcpal_thread_create_fake.call_count, 1u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u);
+  EXPECT_EQ(get_recv_thread_context(0)->running, false);
+  EXPECT_EQ(get_recv_thread_context(0)->receivers, nullptr);
+}
+
 TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesIpv4AndIpv6)
 {
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
