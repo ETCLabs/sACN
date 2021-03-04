@@ -355,6 +355,23 @@ TEST_F(TestReceiverState, AssignReceiverToThreadHandlesThreadError)
   EXPECT_EQ(get_recv_thread_context(0)->receivers, nullptr);
 }
 
+TEST_F(TestReceiverState, RemoveReceiverFromThreadWorks)
+{
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
+    *socket = kTestSocket;
+    return kEtcPalErrOk;
+  };
+
+  SacnReceiver* receiver = AddReceiver();
+  EXPECT_EQ(assign_receiver_to_thread(receiver), kEtcPalErrOk);
+
+  remove_receiver_from_thread(receiver, kQueueSocketForClose);
+
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u);
+  EXPECT_EQ(get_recv_thread_context(0)->receivers, nullptr);
+}
+
 TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesIpv4AndIpv6)
 {
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
