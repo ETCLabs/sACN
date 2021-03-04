@@ -119,3 +119,14 @@ TEST_F(TestReceiverState, InitializedThreadDeinitializes)
 
   EXPECT_EQ(get_recv_thread_context(0)->running, false);
 }
+
+TEST_F(TestReceiverState, UninitializedThreadDoesNotDeinitialize)
+{
+  EXPECT_EQ(etcpal_thread_join_fake.call_count, 0u);
+  EXPECT_EQ(sacn_cleanup_dead_sockets_fake.call_count, 0u);
+
+  sacn_receiver_state_deinit();
+
+  EXPECT_EQ(etcpal_thread_join_fake.call_count, 0u);
+  EXPECT_EQ(sacn_cleanup_dead_sockets_fake.call_count, 0u);
+}
