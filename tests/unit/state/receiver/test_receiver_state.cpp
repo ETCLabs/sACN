@@ -94,6 +94,8 @@ protected:
 
   void TearDown() override
   {
+    sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_socket_t*, socket_close_behavior_t) {};
+
     sacn_receiver_state_deinit();
     sacn_mem_deinit();
   }
@@ -272,7 +274,7 @@ TEST_F(TestReceiverState, ClearTermSetsAndSourcesWorks)
   EXPECT_EQ(receiver->term_sets, nullptr);
 }
 
-TEST_F(TestReceiverState, RemoveAllReceiverSocketsRemovesIpv4AndIpv6)
+TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesIpv4AndIpv6)
 {
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
                                                  const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
@@ -280,16 +282,13 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsRemovesIpv4AndIpv6)
     return kEtcPalErrOk;
   };
 
-  for (uint16_t i = 0u; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
-    assign_receiver_to_thread(AddReceiver(kTestUniverse + i));
+  SacnReceiver* receiver = AddReceiver();
+  assign_receiver_to_thread(receiver);
 
   sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
                                                     socket_close_behavior_t close_behavior) {
-    uint16_t universe =
-        kTestUniverse + ((static_cast<uint16_t>(sacn_remove_receiver_socket_fake.call_count) - 1u) / 2u);
-
     SacnReceiver* state = nullptr;
-    lookup_receiver_by_universe(universe, &state);
+    lookup_receiver_by_universe(kTestUniverse, &state);
 
     EXPECT_EQ(thread_id, 0u);
     EXPECT_TRUE((socket == &state->ipv4_socket) || (socket == &state->ipv6_socket));
@@ -300,12 +299,12 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsRemovesIpv4AndIpv6)
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
 
-  remove_all_receiver_sockets(kCloseSocketNow);
+  remove_receiver_sockets(receiver, kCloseSocketNow);
 
-  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u * SACN_RECEIVER_MAX_UNIVERSES);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u);
 }
 
-TEST_F(TestReceiverState, RemoveAllReceiverSocketsRemovesOnlyIpv4)
+TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesOnlyIpv4)
 {
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
                                                  const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
@@ -313,20 +312,17 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsRemovesOnlyIpv4)
     return kEtcPalErrOk;
   };
 
-  for (uint16_t i = 0u; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
-  {
-    SacnReceiverConfig config = kTestReceiverConfig;
-    config.universe_id = kTestUniverse + i;
-    config.ip_supported = kSacnIpV4Only;
-    assign_receiver_to_thread(AddReceiver(config));
-  }
+  SacnReceiverConfig config = kTestReceiverConfig;
+  config.universe_id = kTestUniverse;
+  config.ip_supported = kSacnIpV4Only;
+
+  SacnReceiver* receiver = AddReceiver(config);
+  assign_receiver_to_thread(receiver);
 
   sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
                                                     socket_close_behavior_t close_behavior) {
-    uint16_t universe = kTestUniverse + (static_cast<uint16_t>(sacn_remove_receiver_socket_fake.call_count) - 1u);
-
     SacnReceiver* state = nullptr;
-    lookup_receiver_by_universe(universe, &state);
+    lookup_receiver_by_universe(kTestUniverse, &state);
 
     EXPECT_EQ(thread_id, 0u);
     EXPECT_EQ(socket, &state->ipv4_socket);
@@ -337,12 +333,12 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsRemovesOnlyIpv4)
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
 
-  remove_all_receiver_sockets(kCloseSocketNow);
+  remove_receiver_sockets(receiver, kCloseSocketNow);
 
-  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, static_cast<unsigned int>(SACN_RECEIVER_MAX_UNIVERSES));
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 1u);
 }
 
-TEST_F(TestReceiverState, RemoveAllReceiverSocketsRemovesOnlyIpv6)
+TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesOnlyIpv6)
 {
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
                                                  const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
@@ -350,20 +346,17 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsRemovesOnlyIpv6)
     return kEtcPalErrOk;
   };
 
-  for (uint16_t i = 0u; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
-  {
-    SacnReceiverConfig config = kTestReceiverConfig;
-    config.universe_id = kTestUniverse + i;
-    config.ip_supported = kSacnIpV6Only;
-    assign_receiver_to_thread(AddReceiver(config));
-  }
+  SacnReceiverConfig config = kTestReceiverConfig;
+  config.universe_id = kTestUniverse;
+  config.ip_supported = kSacnIpV6Only;
+
+  SacnReceiver* receiver = AddReceiver(config);
+  assign_receiver_to_thread(receiver);
 
   sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
                                                     socket_close_behavior_t close_behavior) {
-    uint16_t universe = kTestUniverse + (static_cast<uint16_t>(sacn_remove_receiver_socket_fake.call_count) - 1u);
-
     SacnReceiver* state = nullptr;
-    lookup_receiver_by_universe(universe, &state);
+    lookup_receiver_by_universe(kTestUniverse, &state);
 
     EXPECT_EQ(thread_id, 0u);
     EXPECT_EQ(socket, &state->ipv6_socket);
@@ -374,7 +367,37 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsRemovesOnlyIpv6)
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
 
+  remove_receiver_sockets(receiver, kCloseSocketNow);
+
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 1u);
+}
+
+TEST_F(TestReceiverState, RemoveAllReceiverSocketsWorks)
+{
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
+    *socket = kTestSocket;
+    return kEtcPalErrOk;
+  };
+
+  for (uint16_t i = 0u; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
+    assign_receiver_to_thread(AddReceiver(kTestUniverse + i));
+
+  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_socket_t* socket,
+                                                    socket_close_behavior_t close_behavior) {
+    uint16_t universe =
+        kTestUniverse + ((static_cast<uint16_t>(sacn_remove_receiver_socket_fake.call_count) - 1u) / 2u);
+
+    SacnReceiver* state = nullptr;
+    lookup_receiver_by_universe(universe, &state);
+
+    EXPECT_TRUE((socket == &state->ipv4_socket) || (socket == &state->ipv6_socket));
+    EXPECT_EQ(close_behavior, kCloseSocketNow);
+  };
+
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
+
   remove_all_receiver_sockets(kCloseSocketNow);
 
-  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, static_cast<unsigned int>(SACN_RECEIVER_MAX_UNIVERSES));
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u * SACN_RECEIVER_MAX_UNIVERSES);
 }
