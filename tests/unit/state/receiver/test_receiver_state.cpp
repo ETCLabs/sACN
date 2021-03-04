@@ -472,6 +472,20 @@ TEST_F(TestReceiverState, AddReceiverSocketsHandlesNoIpv6Netints)
   EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 2u);
 }
 
+TEST_F(TestReceiverState, BeginSamplingPeriodWorks)
+{
+  SacnReceiver* receiver = AddReceiver();
+
+  EXPECT_EQ(receiver->sampling, false);
+  EXPECT_EQ(receiver->notified_sampling_started, false);
+
+  begin_sampling_period(receiver);
+
+  EXPECT_EQ(receiver->sampling, true);
+  EXPECT_EQ(receiver->notified_sampling_started, false);
+  EXPECT_EQ(receiver->sample_timer.interval, static_cast<uint32_t>(SACN_SAMPLE_TIME));
+}
+
 TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesIpv4AndIpv6)
 {
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
