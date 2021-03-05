@@ -439,37 +439,87 @@ TEST_F(TestReceiverState, AddReceiverSocketsHandlesIpv6Only)
   EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 1u);
 }
 
-TEST_F(TestReceiverState, AddReceiverSocketsHandlesNoNetints)
+TEST_F(TestReceiverState, AddReceiverSocketsHandlesErrors)
 {
-  sacn_add_receiver_socket_fake.return_val = kEtcPalErrNoNetints;
-
   SacnReceiver* receiver = AddReceiver();
+
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
+                                                 const EtcPalMcastNetintId*, size_t,
+                                                 etcpal_socket_t*) { return kEtcPalErrNoNetints; };
+
   EXPECT_EQ(add_receiver_sockets(receiver), kEtcPalErrNoNetints);
   EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 2u);
-}
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
 
-TEST_F(TestReceiverState, AddReceiverSocketsHandlesNoIpv4Netints)
-{
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t ip_type, uint16_t,
                                                  const EtcPalMcastNetintId*, size_t, etcpal_socket_t*) {
     return (ip_type == kEtcPalIpTypeV4) ? kEtcPalErrNoNetints : kEtcPalErrOk;
   };
 
-  SacnReceiver* receiver = AddReceiver();
   EXPECT_EQ(add_receiver_sockets(receiver), kEtcPalErrOk);
-  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 2u);
-}
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 4u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
 
-TEST_F(TestReceiverState, AddReceiverSocketsHandlesNoIpv6Netints)
-{
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t ip_type, uint16_t,
                                                  const EtcPalMcastNetintId*, size_t, etcpal_socket_t*) {
-    return (ip_type == kEtcPalIpTypeV6) ? kEtcPalErrNoNetints : kEtcPalErrOk;
+    return (ip_type == kEtcPalIpTypeV4) ? kEtcPalErrNoNetints : kEtcPalErrSys;
   };
 
-  SacnReceiver* receiver = AddReceiver();
+  EXPECT_EQ(add_receiver_sockets(receiver), kEtcPalErrSys);
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 6u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
+
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
+                                                 const EtcPalMcastNetintId*, size_t,
+                                                 etcpal_socket_t*) { return kEtcPalErrOk; };
+
   EXPECT_EQ(add_receiver_sockets(receiver), kEtcPalErrOk);
-  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 2u);
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 8u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
+
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t ip_type, uint16_t,
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t*) {
+    return (ip_type == kEtcPalIpTypeV4) ? kEtcPalErrOk : kEtcPalErrSys;
+  };
+
+  EXPECT_EQ(add_receiver_sockets(receiver), kEtcPalErrSys);
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 10u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 1u);
+
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t ip_type, uint16_t,
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t*) {
+    return (ip_type == kEtcPalIpTypeV4) ? kEtcPalErrOk : kEtcPalErrNoNetints;
+  };
+
+  EXPECT_EQ(add_receiver_sockets(receiver), kEtcPalErrOk);
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 12u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 1u);
+
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
+                                                 const EtcPalMcastNetintId*, size_t,
+                                                 etcpal_socket_t*) { return kEtcPalErrSys; };
+
+  EXPECT_EQ(add_receiver_sockets(receiver), kEtcPalErrSys);
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 13u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 1u);
+
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t ip_type, uint16_t,
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t*) {
+    return (ip_type == kEtcPalIpTypeV4) ? kEtcPalErrSys : kEtcPalErrNoNetints;
+  };
+
+  EXPECT_EQ(add_receiver_sockets(receiver), kEtcPalErrSys);
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 14u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 1u);
+
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t ip_type, uint16_t,
+                                                 const EtcPalMcastNetintId*, size_t, etcpal_socket_t*) {
+    return (ip_type == kEtcPalIpTypeV4) ? kEtcPalErrSys : kEtcPalErrOk;
+  };
+
+  EXPECT_EQ(add_receiver_sockets(receiver), kEtcPalErrSys);
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 15u);
+  EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 1u);
 }
 
 TEST_F(TestReceiverState, BeginSamplingPeriodWorks)

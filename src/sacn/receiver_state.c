@@ -248,14 +248,15 @@ etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
                                  receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv6_socket);
   }
 
-  if ((ipv4_res == kEtcPalErrNoNetints) && (ipv6_res == kEtcPalErrNoNetints))
-    return kEtcPalErrNoNetints;
-  else if (ipv4_res == kEtcPalErrNoNetints)
-    return ipv6_res;
-  else if (ipv6_res == kEtcPalErrNoNetints)
-    return ipv4_res;
-  else
-    return ipv6_res;
+  etcpal_error_t result =
+      (((ipv4_res == kEtcPalErrNoNetints) || (ipv4_res == kEtcPalErrOk)) && (ipv6_res != kEtcPalErrNoNetints))
+          ? ipv6_res
+          : ipv4_res;
+
+  if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, kCloseSocketNow);
+
+  return result;
 }
 
 void begin_sampling_period(SacnReceiver* receiver)
