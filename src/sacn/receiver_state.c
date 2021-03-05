@@ -231,24 +231,32 @@ void remove_receiver_from_thread(SacnReceiver* receiver, socket_close_behavior_t
  */
 etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
 {
-  etcpal_error_t res = kEtcPalErrOk;
+  etcpal_error_t ipv4_res = kEtcPalErrNoNetints;
+  etcpal_error_t ipv6_res = kEtcPalErrNoNetints;
 
   if (supports_ipv4(receiver->ip_supported))
   {
-    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, receiver->keys.universe,
-                                   receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv4_socket);
-
-    if ((res == kEtcPalErrNoNetints) && supports_ipv6(receiver->ip_supported))
-      res = kEtcPalErrOk;  // Try IPv6.
+    ipv4_res =
+        sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, receiver->keys.universe,
+                                 receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv4_socket);
   }
 
-  if ((res == kEtcPalErrOk) && supports_ipv6(receiver->ip_supported))
+  if (((ipv4_res == kEtcPalErrOk) || (ipv4_res == kEtcPalErrNoNetints)) && supports_ipv6(receiver->ip_supported))
   {
-    res = sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, receiver->keys.universe,
-                                   receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv6_socket);
+    ipv6_res =
+        sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, receiver->keys.universe,
+                                 receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv6_socket);
   }
 
-  return res;
+  etcpal_error_t result =
+      (((ipv4_res == kEtcPalErrNoNetints) || (ipv4_res == kEtcPalErrOk)) && (ipv6_res != kEtcPalErrNoNetints))
+          ? ipv6_res
+          : ipv4_res;
+
+  if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, kCloseSocketNow);
+
+  return result;
 }
 
 void begin_sampling_period(SacnReceiver* receiver)
