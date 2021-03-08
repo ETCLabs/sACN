@@ -55,6 +55,7 @@ static const SacnReceiverConfig kTestReceiverConfig = {0u, kTestCallbacks, SACN_
 
 static const EtcPalUuid kTestCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22").get();
 static const char kTestName[] = "Test Name";
+static const EtcPalSockAddr kTestSockAddr = {SACN_PORT, etcpal::IpAddr::FromString("10.101.1.1").get()};
 
 static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                        {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
@@ -64,6 +65,8 @@ static const sacn_receiver_t kFirstReceiverHandle = 0;
 static const uint16_t kTestUniverse = 123u;
 static const etcpal_socket_t kTestSocket = static_cast<etcpal_socket_t>(7);
 static TerminationSet kTestTermSet = {{0u, 0u}, {nullptr, nullptr, 0u, nullptr, nullptr, nullptr}, nullptr};
+
+static uint8_t test_data[SACN_MTU];
 
 class TestReceiverState : public ::testing::Test
 {
@@ -151,6 +154,8 @@ class TestReceiverThread : public TestReceiverState
 
     begin_sampling_period(test_receiver_);
     ASSERT_EQ(assign_receiver_to_thread(test_receiver_), kEtcPalErrOk);
+
+    memset(test_data, 0, SACN_MTU);
   }
 
   void TearDown() override
@@ -163,6 +168,21 @@ class TestReceiverThread : public TestReceiverState
     }
 
     TestReceiverState::TearDown();
+  }
+
+  void UpdateTestData(uint8_t start_code, uint16_t universe, uint8_t* data = nullptr, uint16_t data_len = 0u)
+  {
+    init_sacn_data_send_buf(test_data, start_code, &kTestCid, kTestName, 100u, universe, 0u, false);
+
+    if (data)
+      update_send_buf_data(test_data, data, data_len, kDisableForceSync);
+
+    sacn_read_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadResult* read_result) {
+      read_result->from_addr = kTestSockAddr;
+      read_result->data = test_data;
+      read_result->data_len = SACN_MTU;
+      return kEtcPalErrOk;
+    };
   }
 
   SacnReceiver* test_receiver_;
@@ -717,8 +737,9 @@ TEST_F(TestReceiverThread, CleansDeadSockets)
 
 TEST_F(TestReceiverThread, Reads)
 {
-  sacn_read_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context, SacnReadResult*) {
+  sacn_read_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context, SacnReadResult* read_result) {
     EXPECT_EQ(recv_thread_context, get_recv_thread_context(0u));
+    EXPECT_NE(read_result, nullptr);
     return kEtcPalErrTimedOut;
   };
 
