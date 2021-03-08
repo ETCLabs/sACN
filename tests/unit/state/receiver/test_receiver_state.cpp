@@ -37,8 +37,10 @@
 
 #if SACN_DYNAMIC_MEM
 #define TestReceiverState TestReceiverStateDynamic
+#define TestReceiverThread TestReceiverThreadDynamic
 #else
 #define TestReceiverState TestReceiverStateStatic
+#define TestReceiverThread TestReceiverThreadStatic
 #endif
 
 static const SacnReceiverCallbacks kTestCallbacks = {
@@ -133,6 +135,35 @@ protected:
 
   sacn_receiver_t next_receiver_handle_ = kFirstReceiverHandle;
   EtcPalUuid next_source_cid_ = kTestCid;
+};
+
+class TestReceiverThread : public TestReceiverState
+{
+  void SetUp() override
+  {
+    TestReceiverState::SetUp();
+
+    ASSERT_EQ(add_sacn_receiver(kFirstReceiverHandle, &kTestReceiverConfig, kTestNetints.data(), kTestNetints.size(),
+                                &test_receiver_),
+              kEtcPalErrOk);
+
+    begin_sampling_period(test_receiver_);
+    ASSERT_EQ(assign_receiver_to_thread(test_receiver_), kEtcPalErrOk);
+  }
+
+  void TearDown() override
+  {
+    if (test_receiver_)
+    {
+      remove_receiver_from_thread(test_receiver_, kCloseSocketNow);
+      remove_sacn_receiver(test_receiver_);
+      test_receiver_ = nullptr;
+    }
+
+    TestReceiverState::TearDown();
+  }
+
+  SacnReceiver* test_receiver_;
 };
 
 TEST_F(TestReceiverState, ExpiredWaitInitializes)
