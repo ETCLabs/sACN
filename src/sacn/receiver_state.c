@@ -294,6 +294,40 @@ void remove_all_receiver_sockets(socket_close_behavior_t close_behavior)
     remove_receiver_sockets(receiver, close_behavior);
 }
 
+/*
+ * Called in a loop by each receiver thread to manage incoming data and receiver state.
+ */
+void iterate_thread(SacnRecvThreadContext* context, EtcPalTimer* periodic_timer)
+{
+  if (sacn_lock())
+  {
+    sacn_add_pending_sockets(context);
+    sacn_cleanup_dead_sockets(context);
+    sacn_unlock();
+  }
+
+  SacnReadResult read_result;
+  etcpal_error_t read_res = sacn_read(context, &read_result);
+  if (read_res == kEtcPalErrOk)
+  {
+    handle_incoming(context->thread_id, read_result.data, read_result.data_len, &read_result.from_addr);
+  }
+  else if (read_res != kEtcPalErrTimedOut)
+  {
+    if (read_res != kEtcPalErrNoSockets)
+    {
+      SACN_LOG_WARNING("Error occurred while attempting to read sACN incoming data: '%s'.", etcpal_strerror(read_res));
+    }
+    etcpal_thread_sleep(SACN_RECEIVER_READ_TIMEOUT_MS);
+  }
+
+  if (etcpal_timer_is_expired(periodic_timer))
+  {
+    process_receivers(context);
+    etcpal_timer_reset(periodic_timer);
+  }
+}
+
 /**************************************************************************************************
  * Helpers for receiver creation and destruction
  *************************************************************************************************/
@@ -348,36 +382,7 @@ void sacn_receive_thread(void* arg)
   etcpal_timer_start(&periodic_timer, SACN_PERIODIC_INTERVAL);
 
   while (context->running)
-  {
-    if (sacn_lock())
-    {
-      sacn_add_pending_sockets(context);
-      sacn_cleanup_dead_sockets(context);
-      sacn_unlock();
-    }
-
-    SacnReadResult read_result;
-    etcpal_error_t read_res = sacn_read(context, &read_result);
-    if (read_res == kEtcPalErrOk)
-    {
-      handle_incoming(context->thread_id, read_result.data, read_result.data_len, &read_result.from_addr);
-    }
-    else if (read_res != kEtcPalErrTimedOut)
-    {
-      if (read_res != kEtcPalErrNoSockets)
-      {
-        SACN_LOG_WARNING("Error occurred while attempting to read sACN incoming data: '%s'.",
-                         etcpal_strerror(read_res));
-      }
-      etcpal_thread_sleep(SACN_RECEIVER_READ_TIMEOUT_MS);
-    }
-
-    if (etcpal_timer_is_expired(&periodic_timer))
-    {
-      process_receivers(context);
-      etcpal_timer_reset(&periodic_timer);
-    }
-  }
+    iterate_thread(context, &periodic_timer);
 
   // Destroy the poll context
   etcpal_poll_context_deinit(&context->poll_context);
