@@ -143,6 +143,8 @@ class TestReceiverThread : public TestReceiverState
   {
     TestReceiverState::SetUp();
 
+    sacn_read_fake.return_val = kEtcPalErrTimedOut;
+
     ASSERT_EQ(add_sacn_receiver(kFirstReceiverHandle, &kTestReceiverConfig, kTestNetints.data(), kTestNetints.size(),
                                 &test_receiver_),
               kEtcPalErrOk);
@@ -685,4 +687,30 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsWorks)
   remove_all_receiver_sockets(kCloseSocketNow);
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u * SACN_RECEIVER_MAX_UNIVERSES);
+}
+
+TEST_F(TestReceiverThread, AddsPendingSockets)
+{
+  sacn_add_pending_sockets_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context) {
+    EXPECT_EQ(recv_thread_context, get_recv_thread_context(0u));
+  };
+
+  for (unsigned int i = 1u; i <= 10u; ++i)
+  {
+    iterate_thread(get_recv_thread_context(0u));
+    sacn_add_pending_sockets_fake.call_count = i;
+  }
+}
+
+TEST_F(TestReceiverThread, CleansDeadSockets)
+{
+  sacn_cleanup_dead_sockets_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context) {
+    EXPECT_EQ(recv_thread_context, get_recv_thread_context(0u));
+  };
+
+  for (unsigned int i = 1u; i <= 10u; ++i)
+  {
+    iterate_thread(get_recv_thread_context(0u));
+    sacn_cleanup_dead_sockets_fake.call_count = i;
+  }
 }
