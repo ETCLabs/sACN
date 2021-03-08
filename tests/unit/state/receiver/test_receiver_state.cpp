@@ -714,3 +714,17 @@ TEST_F(TestReceiverThread, CleansDeadSockets)
     sacn_cleanup_dead_sockets_fake.call_count = i;
   }
 }
+
+TEST_F(TestReceiverThread, Reads)
+{
+  sacn_read_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context, SacnReadResult*) {
+    EXPECT_EQ(recv_thread_context, get_recv_thread_context(0u));
+    return kEtcPalErrTimedOut;
+  };
+
+  for (unsigned int i = 1u; i <= 10u; ++i)
+  {
+    iterate_thread(get_recv_thread_context(0u));
+    sacn_read_fake.call_count = i;
+  }
+}
