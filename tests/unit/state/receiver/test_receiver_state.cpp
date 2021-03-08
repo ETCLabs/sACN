@@ -43,13 +43,16 @@
 #define TestReceiverThread TestReceiverThreadStatic
 #endif
 
-static const SacnReceiverCallbacks kTestCallbacks = {
-    [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*, bool, void*) {},
-    [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {},
-    NULL,
-    NULL,
-    NULL,
-    NULL};
+FAKE_VOID_FUNC(universe_data, sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*, bool,
+               void*);
+FAKE_VOID_FUNC(sources_lost, sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*);
+FAKE_VOID_FUNC(sampling_period_started, sacn_receiver_t, uint16_t, void*);
+FAKE_VOID_FUNC(sampling_period_ended, sacn_receiver_t, uint16_t, void*);
+FAKE_VOID_FUNC(source_pap_lost, sacn_receiver_t, uint16_t, const SacnRemoteSource*, void*);
+FAKE_VOID_FUNC(source_limit_exceeded, sacn_receiver_t, uint16_t, void*);
+
+static const SacnReceiverCallbacks kTestCallbacks = {universe_data,         sources_lost,    sampling_period_started,
+                                                     sampling_period_ended, source_pap_lost, source_limit_exceeded};
 static const SacnReceiverConfig kTestReceiverConfig = {0u, kTestCallbacks, SACN_RECEIVER_INFINITE_SOURCES, 0u,
                                                        kSacnIpV4AndIpV6};
 
@@ -57,12 +60,19 @@ static const EtcPalUuid kTestCid = etcpal::Uuid::FromString("5103d586-44bf-46df-
 static const char kTestName[] = "Test Name";
 static const EtcPalSockAddr kTestSockAddr = {SACN_PORT, etcpal::IpAddr::FromString("10.101.1.1").get()};
 
+static const std::vector<uint8_t> kTestBuffer = {
+    0x01u, 0x02u, 0x03u, 0x04u, 0x05u, 0x06u, 0x07u, 0x08u, 0x09u, 0x0Au, 0x0Bu, 0x0Cu,
+};
+
 static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                        {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
                                                        {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
 
 static const sacn_receiver_t kFirstReceiverHandle = 0;
 static const uint16_t kTestUniverse = 123u;
+static const uint8_t kTestPriority = 100u;
+static const bool kTestPreview = false;
+
 static const etcpal_socket_t kTestSocket = static_cast<etcpal_socket_t>(7);
 static TerminationSet kTestTermSet = {{0u, 0u}, {nullptr, nullptr, 0u, nullptr, nullptr, nullptr}, nullptr};
 
@@ -142,15 +152,15 @@ protected:
 
 class TestReceiverThread : public TestReceiverState
 {
+protected:
   void SetUp() override
   {
     TestReceiverState::SetUp();
 
     sacn_read_fake.return_val = kEtcPalErrTimedOut;
 
-    ASSERT_EQ(add_sacn_receiver(kFirstReceiverHandle, &kTestReceiverConfig, kTestNetints.data(), kTestNetints.size(),
-                                &test_receiver_),
-              kEtcPalErrOk);
+    test_receiver_ = AddReceiver();
+    ASSERT_NE(test_receiver_, nullptr);
 
     begin_sampling_period(test_receiver_);
     ASSERT_EQ(assign_receiver_to_thread(test_receiver_), kEtcPalErrOk);
@@ -170,12 +180,12 @@ class TestReceiverThread : public TestReceiverState
     TestReceiverState::TearDown();
   }
 
-  void UpdateTestData(uint8_t start_code, uint16_t universe, uint8_t* data = nullptr, uint16_t data_len = 0u)
+  void UpdateTestData(uint8_t start_code, uint16_t universe, const uint8_t* data = nullptr, size_t data_len = 0u)
   {
-    init_sacn_data_send_buf(test_data, start_code, &kTestCid, kTestName, 100u, universe, 0u, false);
+    init_sacn_data_send_buf(test_data, start_code, &kTestCid, kTestName, kTestPriority, universe, 0u, kTestPreview);
 
     if (data)
-      update_send_buf_data(test_data, data, data_len, kDisableForceSync);
+      update_send_buf_data(test_data, data, static_cast<uint16_t>(data_len), kDisableForceSync);
 
     sacn_read_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadResult* read_result) {
       read_result->from_addr = kTestSockAddr;
@@ -748,4 +758,30 @@ TEST_F(TestReceiverThread, Reads)
     iterate_thread(get_recv_thread_context(0u));
     sacn_read_fake.call_count = i;
   }
+}
+
+TEST_F(TestReceiverThread, UniverseDataWorks)
+{
+  universe_data_fake.custom_fake = [](sacn_receiver_t handle, const EtcPalSockAddr* source_addr,
+                                      const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling,
+                                      void* context) {
+    EXPECT_EQ(handle, kFirstReceiverHandle);
+    EXPECT_EQ(etcpal_ip_cmp(&source_addr->ip, &kTestSockAddr.ip), 0);
+    EXPECT_EQ(source_addr->port, kTestSockAddr.port);
+    EXPECT_EQ(ETCPAL_UUID_CMP(&header->cid, &kTestCid), 0);
+    EXPECT_EQ(strcmp(header->source_name, kTestName), 0);
+    EXPECT_EQ(header->universe_id, kTestUniverse);
+    EXPECT_EQ(header->priority, kTestPriority);
+    EXPECT_EQ(header->preview, kTestPreview);
+    EXPECT_EQ(header->start_code, 0x00u);
+    EXPECT_EQ(header->slot_count, kTestBuffer.size());
+    EXPECT_EQ(memcmp(pdata, kTestBuffer.data(), kTestBuffer.size()), 0);
+    EXPECT_EQ(is_sampling, true);
+    EXPECT_EQ(context, nullptr);
+  };
+
+  UpdateTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+
+  iterate_thread(get_recv_thread_context(0u));
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
 }
