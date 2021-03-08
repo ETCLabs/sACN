@@ -32,7 +32,7 @@ DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, add_receiver_sockets, SacnReceiver*);
 DEFINE_FAKE_VOID_FUNC(begin_sampling_period, SacnReceiver*);
 DEFINE_FAKE_VOID_FUNC(remove_receiver_sockets, SacnReceiver*, socket_close_behavior_t);
 DEFINE_FAKE_VOID_FUNC(remove_all_receiver_sockets, socket_close_behavior_t);
-DEFINE_FAKE_VOID_FUNC(iterate_thread, SacnRecvThreadContext*, EtcPalTimer*);
+DEFINE_FAKE_VOID_FUNC(iterate_thread, SacnRecvThreadContext*);
 
 void sacn_receiver_state_reset_all_fakes(void)
 {

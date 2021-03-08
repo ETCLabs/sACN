@@ -36,15 +36,12 @@
 
 /****************************** Private macros *******************************/
 
-
-
 /***************************** Private constants *****************************/
 
 static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PRIORITY, SACN_RECEIVER_THREAD_STACK,
                                                          "sACN Receive Thread", NULL};
 
 #define SACN_PERIODIC_INTERVAL 120
-
 
 /****************************** Private types ********************************/
 
@@ -297,7 +294,7 @@ void remove_all_receiver_sockets(socket_close_behavior_t close_behavior)
 /*
  * Called in a loop by each receiver thread to manage incoming data and receiver state.
  */
-void iterate_thread(SacnRecvThreadContext* context, EtcPalTimer* periodic_timer)
+void iterate_thread(SacnRecvThreadContext* context)
 {
   if (sacn_lock())
   {
@@ -321,10 +318,16 @@ void iterate_thread(SacnRecvThreadContext* context, EtcPalTimer* periodic_timer)
     etcpal_thread_sleep(SACN_RECEIVER_READ_TIMEOUT_MS);
   }
 
-  if (etcpal_timer_is_expired(periodic_timer))
+  if (!context->periodic_timer_started)
+  {
+    etcpal_timer_start(&context->periodic_timer, SACN_PERIODIC_INTERVAL);
+    context->periodic_timer_started = true;
+  }
+
+  if (etcpal_timer_is_expired(&context->periodic_timer))
   {
     process_receivers(context);
-    etcpal_timer_reset(periodic_timer);
+    etcpal_timer_reset(&context->periodic_timer);
   }
 }
 
@@ -350,6 +353,7 @@ bool receiver_handle_in_use(int handle_val, void* cookie)
 etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
 {
   recv_thread_context->running = true;
+  recv_thread_context->periodic_timer_started = false;
   etcpal_error_t create_res = etcpal_thread_create(&recv_thread_context->thread_handle, &kReceiverThreadParams,
                                                    sacn_receive_thread, recv_thread_context);
   if (create_res != kEtcPalErrOk)
@@ -378,11 +382,8 @@ void sacn_receive_thread(void* arg)
     return;
   }
 
-  EtcPalTimer periodic_timer;
-  etcpal_timer_start(&periodic_timer, SACN_PERIODIC_INTERVAL);
-
   while (context->running)
-    iterate_thread(context, &periodic_timer);
+    iterate_thread(context);
 
   // Destroy the poll context
   etcpal_poll_context_deinit(&context->poll_context);
