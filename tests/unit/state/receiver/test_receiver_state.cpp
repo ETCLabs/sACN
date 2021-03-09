@@ -727,7 +727,7 @@ TEST_F(TestReceiverThread, AddsPendingSockets)
 
   for (unsigned int i = 1u; i <= 10u; ++i)
   {
-    iterate_thread(get_recv_thread_context(0u));
+    read_network_and_process_receivers(get_recv_thread_context(0u));
     sacn_add_pending_sockets_fake.call_count = i;
   }
 }
@@ -740,7 +740,7 @@ TEST_F(TestReceiverThread, CleansDeadSockets)
 
   for (unsigned int i = 1u; i <= 10u; ++i)
   {
-    iterate_thread(get_recv_thread_context(0u));
+    read_network_and_process_receivers(get_recv_thread_context(0u));
     sacn_cleanup_dead_sockets_fake.call_count = i;
   }
 }
@@ -755,7 +755,7 @@ TEST_F(TestReceiverThread, Reads)
 
   for (unsigned int i = 1u; i <= 10u; ++i)
   {
-    iterate_thread(get_recv_thread_context(0u));
+    read_network_and_process_receivers(get_recv_thread_context(0u));
     sacn_read_fake.call_count = i;
   }
 }
@@ -782,6 +782,6 @@ TEST_F(TestReceiverThread, UniverseDataWorks)
 
   UpdateTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
 
-  iterate_thread(get_recv_thread_context(0u));
+  read_network_and_process_receivers(get_recv_thread_context(0u));
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 }

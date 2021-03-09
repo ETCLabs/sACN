@@ -294,7 +294,7 @@ void remove_all_receiver_sockets(socket_close_behavior_t close_behavior)
 /*
  * Called in a loop by each receiver thread to manage incoming data and receiver state.
  */
-void iterate_thread(SacnRecvThreadContext* context)
+void read_network_and_process_receivers(SacnRecvThreadContext* context)
 {
   if (sacn_lock())
   {
@@ -383,7 +383,7 @@ void sacn_receive_thread(void* arg)
   }
 
   while (context->running)
-    iterate_thread(context);
+    read_network_and_process_receivers(context);
 
   // Destroy the poll context
   etcpal_poll_context_deinit(&context->poll_context);
