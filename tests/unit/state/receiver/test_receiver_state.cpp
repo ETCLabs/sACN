@@ -909,6 +909,10 @@ TEST_F(TestReceiverThread, UniverseDataWaitsForNullStartCode)
     EXPECT_EQ(universe_data_fake.call_count, 0u);
   }
 
+  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
   InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
   RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 1u);
@@ -936,4 +940,18 @@ TEST_F(TestReceiverThread, UniverseDataFiltersUnknownUniverses)
     RunThreadCycle();
     EXPECT_EQ(universe_data_fake.call_count, 1u);
   }
+}
+
+TEST_F(TestReceiverThread, UniverseDataIndicatesPap)
+{
+  InitTestData(0x00, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool, void*) { EXPECT_EQ(header->start_code, 0xDDu); };
+
+  InitTestData(0xDD, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 2u);
 }
