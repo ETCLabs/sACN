@@ -882,9 +882,15 @@ TEST_F(TestReceiverThread, UniverseDataIndicatesSampling)
   EXPECT_EQ(universe_data_fake.call_count, 3u);
 }
 
-TEST_F(TestReceiverThread, UniverseDataIndicatesCustomStartCodes)
+TEST_F(TestReceiverThread, CustomStartCodesNotifyCorrectlyDuringSamplingPeriod)
 {
-  // The first packet must be start code 0x00
+  for (uint8_t i = 1u; i < 10u; ++i)
+  {
+    InitTestData(i, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+    RunThreadCycle();
+    EXPECT_EQ(universe_data_fake.call_count, 0u);
+  }
+
   InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
   RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 1u);
@@ -942,8 +948,12 @@ TEST_F(TestReceiverThread, UniverseDataFiltersUnknownUniverses)
   }
 }
 
-TEST_F(TestReceiverThread, UniverseDataIndicatesPap)
+TEST_F(TestReceiverThread, PapNotifiesCorrectlyDuringSamplingPeriod)
 {
+  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
   InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
   RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 1u);
