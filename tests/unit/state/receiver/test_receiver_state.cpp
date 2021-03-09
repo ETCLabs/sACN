@@ -1012,3 +1012,25 @@ TEST_F(TestReceiverThread, UniverseDataEventuallyStopsWaitingForPap)
   RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 }
+
+TEST_F(TestReceiverThread, UniverseDataFiltersPurePapAfterSamplingPeriod)
+{
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
+
+  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
+  for (int wait = 200; wait <= SACN_WAIT_FOR_PRIORITY; wait += 200)
+  {
+    etcpal_getms_fake.return_val += 200u;
+    RunThreadCycle();
+    EXPECT_EQ(universe_data_fake.call_count, 0u);
+  }
+
+  etcpal_getms_fake.return_val += 200u;
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+}
