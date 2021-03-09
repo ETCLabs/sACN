@@ -71,7 +71,7 @@ static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, k
                                                        {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
 
 static const sacn_receiver_t kFirstReceiverHandle = 0;
-static const uint8_t kTestPriority = 100u;
+static const uint8_t kTestPriority = 77u;
 static const bool kTestPreview = false;
 
 static const etcpal_socket_t kTestSocket = static_cast<etcpal_socket_t>(7);
@@ -79,6 +79,7 @@ static TerminationSet kTestTermSet = {{0u, 0u}, {nullptr, nullptr, 0u, nullptr, 
 
 static uint8_t test_data[SACN_MTU];
 static uint8_t seq_num;
+static unsigned int test_iteration;
 
 class TestReceiverState : public ::testing::Test
 {
@@ -104,6 +105,8 @@ protected:
 
       return kEtcPalErrOk;
     };
+
+    test_iteration = 1u;
 
     ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_receiver_state_init(), kEtcPalErrOk);
@@ -877,4 +880,22 @@ TEST_F(TestReceiverThread, UniverseDataIndicatesSampling)
                                       bool is_sampling, void*) { EXPECT_EQ(is_sampling, false); };
   RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 3u);
+}
+
+TEST_F(TestReceiverThread, UniverseDataIndicatesCustomStartCodes)
+{
+  // The first packet must be start code 0x00
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool,
+                                      void*) { EXPECT_EQ(header->start_code, static_cast<uint8_t>(test_iteration)); };
+  for (test_iteration = 1; test_iteration < 10; ++test_iteration)
+  {
+    InitTestData(static_cast<uint8_t>(test_iteration), kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+    RunThreadCycle();
+    EXPECT_EQ(universe_data_fake.call_count, test_iteration + 1u);
+  }
 }
