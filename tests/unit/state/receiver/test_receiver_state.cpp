@@ -51,10 +51,12 @@ FAKE_VOID_FUNC(sampling_period_ended, sacn_receiver_t, uint16_t, void*);
 FAKE_VOID_FUNC(source_pap_lost, sacn_receiver_t, uint16_t, const SacnRemoteSource*, void*);
 FAKE_VOID_FUNC(source_limit_exceeded, sacn_receiver_t, uint16_t, void*);
 
+static const uint16_t kTestUniverse = 123u;
+
 static const SacnReceiverCallbacks kTestCallbacks = {universe_data,         sources_lost,    sampling_period_started,
                                                      sampling_period_ended, source_pap_lost, source_limit_exceeded};
-static const SacnReceiverConfig kTestReceiverConfig = {0u, kTestCallbacks, SACN_RECEIVER_INFINITE_SOURCES, 0u,
-                                                       kSacnIpV4AndIpV6};
+static const SacnReceiverConfig kTestReceiverConfig = {kTestUniverse, kTestCallbacks, SACN_RECEIVER_INFINITE_SOURCES,
+                                                       0u, kSacnIpV4AndIpV6};
 
 static const EtcPalUuid kTestCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22").get();
 static const char kTestName[] = "Test Name";
@@ -69,7 +71,6 @@ static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, k
                                                        {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
 
 static const sacn_receiver_t kFirstReceiverHandle = 0;
-static const uint16_t kTestUniverse = 123u;
 static const uint8_t kTestPriority = 100u;
 static const bool kTestPreview = false;
 
@@ -157,6 +158,13 @@ protected:
   {
     TestReceiverState::SetUp();
 
+    RESET_FAKE(universe_data);
+    RESET_FAKE(sources_lost);
+    RESET_FAKE(sampling_period_started);
+    RESET_FAKE(sampling_period_ended);
+    RESET_FAKE(source_pap_lost);
+    RESET_FAKE(source_limit_exceeded);
+
     sacn_read_fake.return_val = kEtcPalErrTimedOut;
 
     test_receiver_ = AddReceiver();
@@ -180,12 +188,18 @@ protected:
     TestReceiverState::TearDown();
   }
 
-  void UpdateTestData(uint8_t start_code, uint16_t universe, const uint8_t* data = nullptr, size_t data_len = 0u)
+  void InitTestData(uint8_t start_code, uint16_t universe, const uint8_t* data = nullptr, size_t data_len = 0u,
+                    bool terminated = false, bool preview = false)
   {
     init_sacn_data_send_buf(test_data, start_code, &kTestCid, kTestName, kTestPriority, universe, 0u, kTestPreview);
 
     if (data)
       update_send_buf_data(test_data, data, static_cast<uint16_t>(data_len), kDisableForceSync);
+
+    if (terminated)
+      SET_TERMINATED_OPT(test_data, true);
+    if (preview)
+      SET_PREVIEW_OPT(test_data, true);
 
     sacn_read_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadResult* read_result) {
       read_result->from_addr = kTestSockAddr;
@@ -193,6 +207,17 @@ protected:
       read_result->data_len = SACN_MTU;
       return kEtcPalErrOk;
     };
+  }
+
+  void UpdateTestReceiverConfig(const SacnReceiverConfig& config)
+  {
+    sacn_receiver_t handle = test_receiver_->keys.handle;
+    remove_receiver_from_thread(test_receiver_, kQueueSocketForClose);
+    remove_sacn_receiver(test_receiver_);
+    EXPECT_EQ(add_sacn_receiver(handle, &config, kTestNetints.data(), kTestNetints.size(), &test_receiver_),
+              kEtcPalErrOk);
+    begin_sampling_period(test_receiver_);
+    EXPECT_EQ(assign_receiver_to_thread(test_receiver_), kEtcPalErrOk);
   }
 
   SacnReceiver* test_receiver_;
@@ -780,7 +805,31 @@ TEST_F(TestReceiverThread, UniverseDataWorks)
     EXPECT_EQ(context, nullptr);
   };
 
-  UpdateTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+
+  read_network_and_process_receivers(get_recv_thread_context(0u));
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+}
+
+TEST_F(TestReceiverThread, UniverseDataFiltersTerminating)
+{
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), true);
+  read_network_and_process_receivers(get_recv_thread_context(0u));
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+}
+
+TEST_F(TestReceiverThread, UniverseDataFiltersPreview)
+{
+  SacnReceiverConfig filter_preview_config = kTestReceiverConfig;
+  filter_preview_config.flags |= SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA;
+  UpdateTestReceiverConfig(filter_preview_config);
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), false, true);
+  read_network_and_process_receivers(get_recv_thread_context(0u));
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
+  SacnReceiverConfig allow_preview_config = kTestReceiverConfig;
+  UpdateTestReceiverConfig(allow_preview_config);
 
   read_network_and_process_receivers(get_recv_thread_context(0u));
   EXPECT_EQ(universe_data_fake.call_count, 1u);
