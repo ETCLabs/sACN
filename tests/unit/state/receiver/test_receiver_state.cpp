@@ -859,3 +859,22 @@ TEST_F(TestReceiverThread, UniverseDataIndicatesPreview)
   RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 2u);
 }
+
+TEST_F(TestReceiverThread, UniverseDataIndicatesSampling)
+{
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+                                      bool is_sampling, void*) { EXPECT_EQ(is_sampling, true); };
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 2u);
+
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*,
+                                      bool is_sampling, void*) { EXPECT_EQ(is_sampling, false); };
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 3u);
+}
