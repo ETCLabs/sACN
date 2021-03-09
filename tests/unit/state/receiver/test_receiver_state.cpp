@@ -1106,3 +1106,33 @@ TEST_F(TestReceiverThread, PapExpirationRemovesInternalSourceDuringSamplingPerio
   EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
   EXPECT_EQ(sources_lost_fake.call_count, 0u);
 }
+
+TEST_F(TestReceiverThread, PapExpirationRemovesInternalSourceAfterSamplingPeriod)
+{
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
+
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
+
+  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 1u);
+
+  RemoveTestData();
+
+  for (int ms = (SACN_PERIODIC_INTERVAL + 1); ms <= SACN_WAIT_FOR_PRIORITY; ms += (SACN_PERIODIC_INTERVAL + 1))
+  {
+    etcpal_getms_fake.return_val += static_cast<uint32_t>(SACN_PERIODIC_INTERVAL + 1);
+
+    RunThreadCycle();
+    EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 1u);
+  }
+
+  etcpal_getms_fake.return_val += static_cast<uint32_t>(SACN_PERIODIC_INTERVAL + 1);
+
+  RunThreadCycle();
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
+  EXPECT_EQ(sources_lost_fake.call_count, 0u);
+}
