@@ -41,8 +41,6 @@
 static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PRIORITY, SACN_RECEIVER_THREAD_STACK,
                                                          "sACN Receive Thread", NULL};
 
-#define SACN_PERIODIC_INTERVAL 120
-
 /****************************** Private types ********************************/
 
 typedef struct PeriodicCallbacks

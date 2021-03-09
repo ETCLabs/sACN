@@ -215,6 +215,12 @@ protected:
     };
   }
 
+  void RemoveTestData()
+  {
+    memset(test_data, 0, SACN_MTU);
+    sacn_read_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadResult*) { return kEtcPalErrTimedOut; };
+  }
+
   void UpdateTestReceiverConfig(const SacnReceiverConfig& config)
   {
     sacn_receiver_t handle = test_receiver_->keys.handle;
@@ -1073,4 +1079,30 @@ TEST_F(TestReceiverThread, CustomStartCodesNotifyCorrectlyAfterSamplingPeriod)
     RunThreadCycle();
     EXPECT_EQ(universe_data_fake.call_count, test_iteration);
   }
+}
+
+TEST_F(TestReceiverThread, PapExpirationRemovesInternalSourceDuringSamplingPeriod)
+{
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
+
+  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 1u);
+
+  RemoveTestData();
+
+  for (int ms = (SACN_PERIODIC_INTERVAL + 1); ms <= SACN_SOURCE_LOSS_TIMEOUT; ms += (SACN_PERIODIC_INTERVAL + 1))
+  {
+    etcpal_getms_fake.return_val += static_cast<uint32_t>(SACN_PERIODIC_INTERVAL + 1);
+
+    RunThreadCycle();
+    EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 1u);
+  }
+
+  etcpal_getms_fake.return_val += static_cast<uint32_t>(SACN_PERIODIC_INTERVAL + 1);
+
+  RunThreadCycle();
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
+  EXPECT_EQ(sources_lost_fake.call_count, 0u);
 }
