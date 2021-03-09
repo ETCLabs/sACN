@@ -78,6 +78,7 @@ static const etcpal_socket_t kTestSocket = static_cast<etcpal_socket_t>(7);
 static TerminationSet kTestTermSet = {{0u, 0u}, {nullptr, nullptr, 0u, nullptr, nullptr, nullptr}, nullptr};
 
 static uint8_t test_data[SACN_MTU];
+static uint8_t seq_num;
 
 class TestReceiverState : public ::testing::Test
 {
@@ -173,6 +174,8 @@ protected:
     begin_sampling_period(test_receiver_);
     ASSERT_EQ(assign_receiver_to_thread(test_receiver_), kEtcPalErrOk);
 
+    seq_num = 0u;
+
     memset(test_data, 0, SACN_MTU);
   }
 
@@ -189,17 +192,15 @@ protected:
   }
 
   void InitTestData(uint8_t start_code, uint16_t universe, const uint8_t* data = nullptr, size_t data_len = 0u,
-                    bool terminated = false, bool preview = false)
+                    uint8_t flags = 0u, uint8_t sequence_number = seq_num)
   {
     init_sacn_data_send_buf(test_data, start_code, &kTestCid, kTestName, kTestPriority, universe, 0u, kTestPreview);
 
     if (data)
       update_send_buf_data(test_data, data, static_cast<uint16_t>(data_len), kDisableForceSync);
 
-    if (terminated)
-      SET_TERMINATED_OPT(test_data, true);
-    if (preview)
-      SET_PREVIEW_OPT(test_data, true);
+    test_data[SACN_OPTS_OFFSET] |= flags;
+    test_data[SACN_SEQ_OFFSET] = sequence_number;
 
     sacn_read_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadResult* read_result) {
       read_result->from_addr = kTestSockAddr;
@@ -218,6 +219,13 @@ protected:
               kEtcPalErrOk);
     begin_sampling_period(test_receiver_);
     EXPECT_EQ(assign_receiver_to_thread(test_receiver_), kEtcPalErrOk);
+  }
+
+  void RunThreadCycle()
+  {
+    read_network_and_process_receivers(get_recv_thread_context(0u));
+    ++seq_num;
+    test_data[SACN_SEQ_OFFSET] = seq_num;
   }
 
   SacnReceiver* test_receiver_;
@@ -752,7 +760,7 @@ TEST_F(TestReceiverThread, AddsPendingSockets)
 
   for (unsigned int i = 1u; i <= 10u; ++i)
   {
-    read_network_and_process_receivers(get_recv_thread_context(0u));
+    RunThreadCycle();
     sacn_add_pending_sockets_fake.call_count = i;
   }
 }
@@ -765,7 +773,7 @@ TEST_F(TestReceiverThread, CleansDeadSockets)
 
   for (unsigned int i = 1u; i <= 10u; ++i)
   {
-    read_network_and_process_receivers(get_recv_thread_context(0u));
+    RunThreadCycle();
     sacn_cleanup_dead_sockets_fake.call_count = i;
   }
 }
@@ -780,7 +788,7 @@ TEST_F(TestReceiverThread, Reads)
 
   for (unsigned int i = 1u; i <= 10u; ++i)
   {
-    read_network_and_process_receivers(get_recv_thread_context(0u));
+    RunThreadCycle();
     sacn_read_fake.call_count = i;
   }
 }
@@ -807,14 +815,14 @@ TEST_F(TestReceiverThread, UniverseDataWorks)
 
   InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
 
-  read_network_and_process_receivers(get_recv_thread_context(0u));
+  RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 }
 
 TEST_F(TestReceiverThread, UniverseDataFiltersTerminating)
 {
-  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), true);
-  read_network_and_process_receivers(get_recv_thread_context(0u));
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), SACN_OPTVAL_TERMINATED);
+  RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 0u);
 }
 
@@ -824,13 +832,30 @@ TEST_F(TestReceiverThread, UniverseDataFiltersPreview)
   filter_preview_config.flags |= SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA;
   UpdateTestReceiverConfig(filter_preview_config);
 
-  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), false, true);
-  read_network_and_process_receivers(get_recv_thread_context(0u));
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), SACN_OPTVAL_PREVIEW);
+  RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 0u);
 
   SacnReceiverConfig allow_preview_config = kTestReceiverConfig;
   UpdateTestReceiverConfig(allow_preview_config);
 
-  read_network_and_process_receivers(get_recv_thread_context(0u));
+  RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 1u);
+}
+
+TEST_F(TestReceiverThread, UniverseDataIndicatesPreview)
+{
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool, void*) { EXPECT_EQ(header->preview, true); };
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), SACN_OPTVAL_PREVIEW);
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool, void*) { EXPECT_EQ(header->preview, false); };
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u);
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 2u);
 }
