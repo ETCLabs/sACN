@@ -52,9 +52,11 @@ FAKE_VOID_FUNC(source_pap_lost, sacn_receiver_t, uint16_t, const SacnRemoteSourc
 FAKE_VOID_FUNC(source_limit_exceeded, sacn_receiver_t, uint16_t, void*);
 
 static const uint16_t kTestUniverse = 123u;
+static int kTestContext = 1234567;
 
 static const SacnReceiverCallbacks kTestCallbacks = {universe_data,         sources_lost,    sampling_period_started,
-                                                     sampling_period_ended, source_pap_lost, source_limit_exceeded};
+                                                     sampling_period_ended, source_pap_lost, source_limit_exceeded,
+                                                     &kTestContext};
 static const SacnReceiverConfig kTestReceiverConfig = {kTestUniverse, kTestCallbacks, SACN_RECEIVER_INFINITE_SOURCES,
                                                        0u, kSacnIpV4AndIpV6};
 
@@ -813,7 +815,7 @@ TEST_F(TestReceiverThread, UniverseDataWorks)
     EXPECT_EQ(header->slot_count, kTestBuffer.size());
     EXPECT_EQ(memcmp(pdata, kTestBuffer.data(), kTestBuffer.size()), 0);
     EXPECT_EQ(is_sampling, true);
-    EXPECT_EQ(context, nullptr);
+    EXPECT_EQ(context, &kTestContext);
   };
 
   InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
