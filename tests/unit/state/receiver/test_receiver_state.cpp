@@ -925,18 +925,18 @@ TEST_F(TestReceiverThread, UniverseDataFiltersUnknownUniverses)
 
   for (uint16_t unknown_universe = (kTestUniverse - 10u); unknown_universe < kTestUniverse; ++unknown_universe)
   {
-    InitTestData(0x00, unknown_universe, kTestBuffer.data(), kTestBuffer.size());
+    InitTestData(0x00u, unknown_universe, kTestBuffer.data(), kTestBuffer.size());
     RunThreadCycle();
     EXPECT_EQ(universe_data_fake.call_count, 0u);
   }
 
-  InitTestData(0x00, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
   RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 
   for (uint16_t unknown_universe = (kTestUniverse + 1u); unknown_universe < (kTestUniverse + 10u); ++unknown_universe)
   {
-    InitTestData(0x00, unknown_universe, kTestBuffer.data(), kTestBuffer.size());
+    InitTestData(0x00u, unknown_universe, kTestBuffer.data(), kTestBuffer.size());
     RunThreadCycle();
     EXPECT_EQ(universe_data_fake.call_count, 1u);
   }
@@ -944,14 +944,46 @@ TEST_F(TestReceiverThread, UniverseDataFiltersUnknownUniverses)
 
 TEST_F(TestReceiverThread, UniverseDataIndicatesPap)
 {
-  InitTestData(0x00, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
   RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 
   universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
                                       const uint8_t*, bool, void*) { EXPECT_EQ(header->start_code, 0xDDu); };
 
-  InitTestData(0xDD, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 2u);
+}
+
+TEST_F(TestReceiverThread, UniverseDataWaitsForPapAfterSamplingPeriod)
+{
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
+  for (int wait = 200; wait < SACN_WAIT_FOR_PRIORITY; wait += 200)
+  {
+    etcpal_getms_fake.return_val += 200u;
+    RunThreadCycle();
+    EXPECT_EQ(universe_data_fake.call_count, 0u);
+  }
+
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool, void*) { EXPECT_EQ(header->start_code, 0xDDu); };
+
+  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool, void*) { EXPECT_EQ(header->start_code, 0x00u); };
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
   RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 2u);
 }
