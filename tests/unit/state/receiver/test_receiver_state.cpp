@@ -87,6 +87,7 @@ protected:
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
+    sacn_source_loss_reset_all_fakes();
 
     sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* receiver_netints,
                                                            SacnMcastInterface* app_netints, size_t num_app_netints) {
@@ -1138,4 +1139,16 @@ TEST_F(TestReceiverThread, PapExpirationRemovesInternalSourceAfterSamplingPeriod
   RunThreadCycle();
   EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
   EXPECT_EQ(sources_lost_fake.call_count, 0u);
+}
+
+TEST_F(TestReceiverThread, SourceLossProcessedEachTick)
+{
+  for (unsigned int ticks = 0u; ticks < 10u; ++ticks)
+  {
+    RunThreadCycle();
+    EXPECT_EQ(mark_sources_online_fake.call_count, ticks);
+    EXPECT_EQ(mark_sources_offline_fake.call_count, ticks);
+    EXPECT_EQ(get_expired_sources_fake.call_count, ticks);
+    etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+  }
 }
