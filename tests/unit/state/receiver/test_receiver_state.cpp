@@ -1241,3 +1241,39 @@ TEST_F(TestReceiverThread, SourceGoesUnknownCorrectly)
   RunThreadCycle();
   EXPECT_EQ(mark_sources_offline_fake.call_count, 5u);
 }
+
+TEST_F(TestReceiverThread, TimedOutSourceGoesOfflineCorrectly)
+{
+  auto source_is_offline = [](const SacnLostSourceInternal* offline_sources, size_t num_offline_sources,
+                              const SacnRemoteSourceInternal*, size_t, TerminationSet**, uint32_t) {
+    EXPECT_EQ(num_offline_sources, 1u);
+    EXPECT_EQ(ETCPAL_UUID_CMP(&offline_sources->cid, &kTestCid), 0);
+  };
+  auto source_is_not_offline = [](const SacnLostSourceInternal*, size_t num_offline_sources,
+                                  const SacnRemoteSourceInternal*, size_t, TerminationSet**,
+                                  uint32_t) { EXPECT_EQ(num_offline_sources, 0u); };
+
+  // Online
+  mark_sources_offline_fake.custom_fake = source_is_not_offline;
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+  RunThreadCycle();
+  EXPECT_EQ(mark_sources_offline_fake.call_count, 1u);
+
+  // Unknown
+  mark_sources_offline_fake.custom_fake = source_is_not_offline;
+
+  RemoveTestData();
+  etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+  RunThreadCycle();
+  EXPECT_EQ(mark_sources_offline_fake.call_count, 2u);
+
+  // Offline
+  mark_sources_offline_fake.custom_fake = source_is_offline;
+
+  etcpal_getms_fake.return_val += (SACN_SOURCE_LOSS_TIMEOUT + 1u);
+  RunThreadCycle();
+  EXPECT_EQ(mark_sources_offline_fake.call_count, 3u);
+}
