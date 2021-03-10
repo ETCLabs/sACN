@@ -22,6 +22,8 @@
 
 #include "sacn/private/common.h"
 
+#define SACN_PERIODIC_INTERVAL 120
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -40,7 +42,7 @@ etcpal_error_t add_receiver_sockets(SacnReceiver* receiver);
 void begin_sampling_period(SacnReceiver* receiver);
 void remove_receiver_sockets(SacnReceiver* receiver, socket_close_behavior_t close_behavior);
 void remove_all_receiver_sockets(socket_close_behavior_t close_behavior);
-void iterate_thread(SacnRecvThreadContext* context);
+void read_network_and_process_receivers(SacnRecvThreadContext* context);
 
 #ifdef __cplusplus
 }
