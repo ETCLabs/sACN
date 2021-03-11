@@ -1497,6 +1497,11 @@ TEST_F(TestReceiverThread, SourceLimitExceededWorks)
   UpdateTestReceiverConfig(config_with_limit);
 #else
   static constexpr int kMaxSources = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE;
+
+  // Set config value to something different to confirm it is ignored.
+  SacnReceiverConfig config_with_limit = kTestReceiverConfig;
+  config_with_limit.source_count_max = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE - 1;
+  UpdateTestReceiverConfig(config_with_limit);
 #endif
 
   source_limit_exceeded_fake.custom_fake = [](sacn_receiver_t handle, uint16_t universe, void* context) {
