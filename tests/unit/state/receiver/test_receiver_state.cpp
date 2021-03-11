@@ -192,9 +192,9 @@ protected:
   }
 
   void InitTestData(uint8_t start_code, uint16_t universe, const uint8_t* data = nullptr, size_t data_len = 0u,
-                    uint8_t flags = 0u, uint8_t sequence_number = seq_num_)
+                    uint8_t flags = 0u, const EtcPalUuid& source_cid = kTestCid, uint8_t sequence_number = seq_num_)
   {
-    init_sacn_data_send_buf(test_data_, start_code, &kTestCid, kTestName, kTestPriority, universe, 0u, kTestPreview);
+    init_sacn_data_send_buf(test_data_, start_code, &source_cid, kTestName, kTestPriority, universe, 0u, kTestPreview);
 
     if (data)
       update_send_buf_data(test_data_, data, static_cast<uint16_t>(data_len), kDisableForceSync);
@@ -1305,4 +1305,68 @@ TEST_F(TestReceiverThread, TerminatedSourceGoesOfflineCorrectly)
   etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
   RunThreadCycle();
   EXPECT_EQ(mark_sources_offline_fake.call_count, 2u);
+}
+
+TEST_F(TestReceiverThread, StatusListsTrackMultipleSources)
+{
+  static EtcPalUuid online_cid_1 = etcpal::Uuid::V4().get();
+  static EtcPalUuid online_cid_2 = etcpal::Uuid::V4().get();
+  static EtcPalUuid unknown_cid_1 = etcpal::Uuid::V4().get();
+  static EtcPalUuid unknown_cid_2 = etcpal::Uuid::V4().get();
+  static EtcPalUuid offline_cid_1 = etcpal::Uuid::V4().get();
+  static EtcPalUuid offline_cid_2 = etcpal::Uuid::V4().get();
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, offline_cid_1);
+  RunThreadCycle();
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), SACN_OPTVAL_TERMINATED, offline_cid_1);
+  RunThreadCycle();
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, offline_cid_2);
+  RunThreadCycle();
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), SACN_OPTVAL_TERMINATED, offline_cid_2);
+  RunThreadCycle();
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, unknown_cid_1);
+  RunThreadCycle();
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, unknown_cid_2);
+  etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+  RunThreadCycle();
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, online_cid_1);
+  RunThreadCycle();
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, online_cid_2);
+  RunThreadCycle();
+
+  static auto list_includes_cids = [](const EtcPalUuid& list_cid_1, const EtcPalUuid& list_cid_2,
+                                      const EtcPalUuid& actual_cid_1, const EtcPalUuid& actual_cid_2) {
+    if ((ETCPAL_UUID_CMP(&list_cid_1, &actual_cid_1) == 0) && (ETCPAL_UUID_CMP(&list_cid_2, &actual_cid_2) == 0))
+      return true;
+    else if ((ETCPAL_UUID_CMP(&list_cid_1, &actual_cid_2) == 0) && (ETCPAL_UUID_CMP(&list_cid_2, &actual_cid_1) == 0))
+      return true;
+    else
+      return false;
+  };
+
+  mark_sources_offline_fake.custom_fake = [](const SacnLostSourceInternal* offline_sources, size_t num_offline_sources,
+                                             const SacnRemoteSourceInternal* unknown_sources,
+                                             size_t num_unknown_sources, TerminationSet**, uint32_t) {
+    EXPECT_EQ(num_offline_sources, 2u);
+    EXPECT_TRUE(list_includes_cids(offline_sources[0].cid, offline_sources[1].cid, offline_cid_1, offline_cid_2));
+    EXPECT_EQ(num_unknown_sources, 2u);
+    EXPECT_TRUE(list_includes_cids(unknown_sources[0].cid, unknown_sources[1].cid, unknown_cid_1, unknown_cid_2));
+  };
+
+  mark_sources_online_fake.custom_fake = [](const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
+                                            TerminationSet*) {
+    EXPECT_EQ(num_online_sources, 2u);
+    EXPECT_TRUE(list_includes_cids(online_sources[0].cid, online_sources[1].cid, online_cid_1, online_cid_2));
+  };
+
+  unsigned int expected_mark_sources_offline_count = mark_sources_offline_fake.call_count + 1u;
+  unsigned int expected_mark_sources_online_count = mark_sources_online_fake.call_count + 1u;
+
+  etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+  RunThreadCycle();
+
+  EXPECT_EQ(mark_sources_offline_fake.call_count, expected_mark_sources_offline_count);
+  EXPECT_EQ(mark_sources_online_fake.call_count, expected_mark_sources_online_count);
 }
