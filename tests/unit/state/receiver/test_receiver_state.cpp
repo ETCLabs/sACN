@@ -1469,3 +1469,58 @@ TEST_F(TestReceiverThread, SourcePapLostWorks)
 
   EXPECT_EQ(source_pap_lost_fake.call_count, 1u);
 }
+
+TEST_F(TestReceiverThread, SourceLimitExceededWorks)
+{
+#if SACN_DYNAMIC_MEM
+  static constexpr int kMaxSources = 10;
+  SacnReceiverConfig config_with_limit = kTestReceiverConfig;
+  config_with_limit.source_count_max = kMaxSources;
+  UpdateTestReceiverConfig(config_with_limit);
+#else
+  static constexpr int kMaxSources = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE;
+#endif
+
+  source_limit_exceeded_fake.custom_fake = [](sacn_receiver_t handle, uint16_t universe, void* context) {
+    EXPECT_EQ(handle, kFirstReceiverHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(context, &kTestContext);
+  };
+
+  static EtcPalUuid last_cid;  // Save this to remove a source later.
+  for (int i = 0; i < kMaxSources; ++i)
+  {
+    last_cid = etcpal::Uuid::V4().get();
+    InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, last_cid);
+    RunThreadCycle();
+  }
+
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 0u);
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, etcpal::Uuid::V4().get());
+  RunThreadCycle();
+
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 1u);
+
+  // Now test rate limiting.
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, etcpal::Uuid::V4().get());
+  RunThreadCycle();
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 1u);
+
+  // Remove a source.
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), SACN_OPTVAL_TERMINATED, last_cid);
+  etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+  get_expired_sources_fake.custom_fake = [](TerminationSet**, SourcesLostNotification* sources_lost) {
+    add_lost_source(sources_lost, &last_cid, kTestName, true);
+  };
+  RunThreadCycle();
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 1u);
+
+  // Now add two sources - one to get back to the limit, and another to surpass it.
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, etcpal::Uuid::V4().get());
+  RunThreadCycle();
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 1u);
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, etcpal::Uuid::V4().get());
+  RunThreadCycle();
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 2u);
+}
