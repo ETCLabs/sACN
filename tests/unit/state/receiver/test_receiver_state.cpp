@@ -1153,6 +1153,24 @@ TEST_F(TestReceiverThread, SourceLossProcessedEachTick)
   }
 }
 
+TEST_F(TestReceiverThread, SourceLossUsesExpiredWait)
+{
+  static constexpr uint32_t kTestExpiredWait = 1234u;
+
+  mark_sources_offline_fake.custom_fake = [](const SacnLostSourceInternal*, size_t, const SacnRemoteSourceInternal*,
+                                             size_t, TerminationSet**,
+                                             uint32_t expired_wait) { EXPECT_EQ(expired_wait, kTestExpiredWait); };
+
+  EXPECT_EQ(mark_sources_offline_fake.call_count, 0u);
+
+  set_expired_wait(kTestExpiredWait);
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+  RunThreadCycle();
+
+  EXPECT_EQ(mark_sources_offline_fake.call_count, 1u);
+}
+
 TEST_F(TestReceiverThread, SourceGoesOnlineCorrectly)
 {
   auto source_is_online = [](const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
