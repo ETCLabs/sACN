@@ -1407,3 +1407,40 @@ TEST_F(TestReceiverThread, SourcesLostWorks)
   EXPECT_EQ(get_expired_sources_fake.call_count, 1u);
   EXPECT_EQ(sources_lost_fake.call_count, 1u);
 }
+
+TEST_F(TestReceiverThread, SamplingPeriodStartedWorks)
+{
+  sampling_period_started_fake.custom_fake = [](sacn_receiver_t handle, uint16_t universe, void* context) {
+    EXPECT_EQ(handle, kFirstReceiverHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(context, &kTestContext);
+  };
+
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+  RunThreadCycle();
+
+  EXPECT_EQ(sampling_period_started_fake.call_count, 1u);
+}
+
+TEST_F(TestReceiverThread, SamplingPeriodEndedWorks)
+{
+  sampling_period_ended_fake.custom_fake = [](sacn_receiver_t handle, uint16_t universe, void* context) {
+    EXPECT_EQ(handle, kFirstReceiverHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(context, &kTestContext);
+  };
+
+  EXPECT_EQ(sampling_period_ended_fake.call_count, 0u);
+
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+  RunThreadCycle();
+
+  EXPECT_EQ(sampling_period_ended_fake.call_count, 0u);
+
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
+
+  EXPECT_EQ(sampling_period_ended_fake.call_count, 1u);
+}
