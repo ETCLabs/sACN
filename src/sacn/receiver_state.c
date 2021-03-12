@@ -880,6 +880,8 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
 
     for (size_t i = 0; i < sources_lost->num_lost_sources; ++i)
       remove_receiver_source(receiver, &sources_lost->lost_sources[i].cid);
+
+    receiver->suppress_limit_exceeded_notification = false;
   }
 }
 
