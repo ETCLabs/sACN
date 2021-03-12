@@ -1553,3 +1553,29 @@ TEST_F(TestReceiverThread, SourceLimitExceededWorks)
   RunThreadCycle();
   EXPECT_EQ(source_limit_exceeded_fake.call_count, 2u);
 }
+
+TEST_F(TestReceiverThread, SeqNumFilteringWorks)
+{
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, kTestCid, 10u);
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, kTestCid, 11u);
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 2u);
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, kTestCid, 21u);
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 3u);
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, kTestCid, 21u);
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 3u);
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, kTestCid, 20u);
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 3u);
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, kTestCid, 2u);
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 3u);
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, kTestCid, 1u);
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 4u);
+}
