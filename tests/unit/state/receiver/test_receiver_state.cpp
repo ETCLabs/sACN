@@ -1395,7 +1395,13 @@ TEST_F(TestReceiverThread, SourcesLostWorks)
   static EtcPalUuid lost_source_cids[kNumLostSources];
 
   for (size_t i = 0u; i < kNumLostSources; ++i)
+  {
+    EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), i);
     lost_source_cids[i] = etcpal::Uuid::V4().get();
+    InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, lost_source_cids[i]);
+    RunThreadCycle();
+    EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), i + 1u);
+  }
 
   get_expired_sources_fake.custom_fake = [](TerminationSet**, SourcesLostNotification* sources_lost) {
     for (size_t i = 0u; i < kNumLostSources; ++i)
@@ -1418,12 +1424,12 @@ TEST_F(TestReceiverThread, SourcesLostWorks)
     EXPECT_EQ(context, &kTestContext);
   };
 
-  RunThreadCycle();
   etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
   RunThreadCycle();
 
   EXPECT_EQ(get_expired_sources_fake.call_count, 1u);
   EXPECT_EQ(sources_lost_fake.call_count, 1u);
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
 }
 
 TEST_F(TestReceiverThread, SamplingPeriodStartedWorks)
