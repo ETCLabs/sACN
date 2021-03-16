@@ -1072,7 +1072,8 @@ TEST_F(TestReceiverThread, CustomStartCodesNotifyCorrectlyAfterSamplingPeriod)
 
   InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
   RunThreadCycle();
-  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
+  unsigned int start_count = universe_data_fake.call_count;
 
   universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
                                       const uint8_t*, bool,
@@ -1081,7 +1082,7 @@ TEST_F(TestReceiverThread, CustomStartCodesNotifyCorrectlyAfterSamplingPeriod)
   {
     InitTestData(static_cast<uint8_t>(test_iteration), kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
     RunThreadCycle();
-    EXPECT_EQ(universe_data_fake.call_count, test_iteration);
+    EXPECT_EQ(universe_data_fake.call_count, start_count + test_iteration);
   }
 }
 
