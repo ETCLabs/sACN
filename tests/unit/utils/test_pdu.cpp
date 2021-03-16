@@ -122,3 +122,25 @@ TEST_F(TestPdu, SetDataSlotCountWorks)
   EXPECT_EQ(ACN_PDU_LENGTH((&test_buffer_[SACN_DMP_OFFSET])),
             static_cast<uint32_t>(SACN_DATA_HEADER_SIZE - SACN_DMP_OFFSET));
 }
+
+TEST_F(TestPdu, SetUniverseCountWorks)
+{
+  uint16_t test_count = 256;
+
+  SET_UNIVERSE_COUNT(test_buffer_, test_count);
+  EXPECT_EQ(ACN_PDU_LENGTH((&test_buffer_[ACN_UDP_PREAMBLE_SIZE])),
+            static_cast<uint32_t>(SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (test_count * 2u) - ACN_UDP_PREAMBLE_SIZE));
+  EXPECT_EQ(ACN_PDU_LENGTH((&test_buffer_[SACN_FRAMING_OFFSET])),
+            static_cast<uint32_t>(SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (test_count * 2u) - SACN_FRAMING_OFFSET));
+  EXPECT_EQ(
+      ACN_PDU_LENGTH((&test_buffer_[SACN_UNIVERSE_DISCOVERY_OFFSET])),
+      static_cast<uint32_t>(SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (test_count * 2u) - SACN_UNIVERSE_DISCOVERY_OFFSET));
+
+  SET_UNIVERSE_COUNT(test_buffer_, 0u);
+  EXPECT_EQ(ACN_PDU_LENGTH((&test_buffer_[ACN_UDP_PREAMBLE_SIZE])),
+            static_cast<uint32_t>(SACN_UNIVERSE_DISCOVERY_HEADER_SIZE - ACN_UDP_PREAMBLE_SIZE));
+  EXPECT_EQ(ACN_PDU_LENGTH((&test_buffer_[SACN_FRAMING_OFFSET])),
+            static_cast<uint32_t>(SACN_UNIVERSE_DISCOVERY_HEADER_SIZE - SACN_FRAMING_OFFSET));
+  EXPECT_EQ(ACN_PDU_LENGTH((&test_buffer_[SACN_UNIVERSE_DISCOVERY_OFFSET])),
+            static_cast<uint32_t>(SACN_UNIVERSE_DISCOVERY_HEADER_SIZE - SACN_UNIVERSE_DISCOVERY_OFFSET));
+}
