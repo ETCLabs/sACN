@@ -19,6 +19,7 @@
 
 #include "sacn/private/pdu.h"
 
+#include "etcpal/cpp/uuid.h"
 #include "etcpal_mock/common.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
@@ -53,6 +54,8 @@ protected:
     size_t packet_length = SACN_DATA_HEADER_SIZE + header.slot_count;
 
     uint8_t* pcur = test_buffer_;
+
+    memset(test_buffer_, 0, SACN_MTU);
 
     // Root Layer
     pcur += acn_pack_udp_preamble(pcur, ACN_UDP_PREAMBLE_SIZE);  // Preamble & Post-amble Sizes + ACN Packet Identifier
@@ -106,22 +109,20 @@ protected:
     (*pcur) = header.start_code;  // DMX512-A START Code
     ++pcur;
     memcpy(pcur, pdata, header.slot_count);  // Data
-    pcur += header.slot_count;
-
-    memset(pcur, 0, SACN_MTU - (pcur - test_buffer_));
   }
 
-  void TestParseDataPacket(const SacnHeaderData& header, uint8_t seq, bool terminated, const uint8_t* pdata)
+  void TestParseDataPacket(const SacnHeaderData& header, uint8_t seq, bool terminated,
+                           const std::vector<uint8_t>& pdata)
   {
-    InitTestBuffer(header, seq, terminated, pdata);
+    InitTestBuffer(header, seq, terminated, pdata.data());
 
     SacnHeaderData header_out;
     uint8_t seq_out;
     bool terminated_out;
-    const uint8_t *pdata_out;
-    EXPECT_TRUE(parse_sacn_data_packet(test_buffer_, SACN_MTU, &header_out, &seq_out, &terminated_out, &pdata_out));
+    const uint8_t* pdata_out;
+    EXPECT_TRUE(parse_sacn_data_packet(&test_buffer_[SACN_FRAMING_OFFSET], SACN_MTU, &header_out, &seq_out,
+                                       &terminated_out, &pdata_out));
 
-    EXPECT_EQ(ETCPAL_UUID_CMP(&header_out.cid, &header.cid), 0);
     EXPECT_EQ(strcmp(header_out.source_name, header.source_name), 0);
     EXPECT_EQ(header_out.universe_id, header.universe_id);
     EXPECT_EQ(header_out.priority, header.priority);
@@ -130,7 +131,7 @@ protected:
     EXPECT_EQ(header_out.slot_count, header.slot_count);
     EXPECT_EQ(seq_out, seq);
     EXPECT_EQ(terminated_out, terminated);
-    EXPECT_EQ(memcmp(pdata_out, pdata, header.slot_count), 0);
+    EXPECT_EQ(memcmp(pdata_out, pdata.data(), header.slot_count), 0);
   }
 
   uint8_t test_buffer_[SACN_MTU];
@@ -259,4 +260,17 @@ TEST_F(TestPdu, SetLastPageWorks)
   EXPECT_EQ(test_buffer_[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET], kTestPage);
   SET_LAST_PAGE(test_buffer_, 0u);
   EXPECT_EQ(memcmp(test_buffer_, old_buf, SACN_MTU), 0);
+}
+
+TEST_F(TestPdu, ParseSacnDataPacketWorks)
+{
+  TestParseDataPacket({kEtcPalNullUuid, "Test Name", 1u, 100u, true, 0x00, 3u}, 1u, false, {1u, 2u, 3u});
+  TestParseDataPacket({kEtcPalNullUuid, "Name Test", 123u, 64, false, 0xDD, 5u}, 10u, true, {7u, 6u, 5u, 4u, 3u});
+
+  std::vector<uint8_t> max_data;
+  for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    max_data.push_back(static_cast<uint8_t>(i));
+  TestParseDataPacket({kEtcPalNullUuid, "012345678901234567890123456789012345678901234567890123456789012", 0xFFFFu,
+                       0xFF, true, 0xFF, DMX_ADDRESS_COUNT},
+                      0xFFu, true, max_data);
 }
