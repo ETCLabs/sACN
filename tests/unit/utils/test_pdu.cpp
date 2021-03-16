@@ -25,6 +25,11 @@
 #include "gtest/gtest.h"
 #include "fff.h"
 
+// Suppress strncpy() warning on Windows/MSVC.
+#ifdef _MSC_VER
+#pragma warning(disable : 4996)
+#endif
+
 #if SACN_DYNAMIC_MEM
 #define TestPdu TestPduDynamic
 #else
@@ -42,6 +47,66 @@ protected:
   }
 
   void TearDown() override {}
+
+  void InitTestBuffer(const SacnHeaderData& header, uint8_t seq, bool terminated, const uint8_t* pdata)
+  {
+    size_t packet_length = SACN_DATA_HEADER_SIZE + header.slot_count;
+
+    uint8_t* pcur = test_buffer_;
+
+    // Root Layer
+    pcur += acn_pack_udp_preamble(pcur, ACN_UDP_PREAMBLE_SIZE);  // Preamble & Post-amble Sizes + ACN Packet Identifier
+    (*pcur) &= 0x70u;                                            // Flags
+    ACN_PDU_PACK_NORMAL_LEN(pcur, packet_length - ACN_UDP_PREAMBLE_SIZE);  // Length
+    pcur += 2;
+    etcpal_pack_u32b(pcur, ACN_VECTOR_ROOT_E131_DATA);  // Vector
+    pcur += 4;
+    memcpy(pcur, header.cid.data, ETCPAL_UUID_BYTES);  // CID
+    pcur += ETCPAL_UUID_BYTES;
+
+    // E1.31 Framing Layer
+    (*pcur) &= 0x70u;                                                    // Flags
+    ACN_PDU_PACK_NORMAL_LEN(pcur, packet_length - SACN_FRAMING_OFFSET);  // Length
+    pcur += 2;
+    etcpal_pack_u32b(pcur, VECTOR_E131_DATA_PACKET);  // Vector
+    pcur += 4;
+    strncpy((char*)pcur, header.source_name, SACN_SOURCE_NAME_MAX_LEN);  // Source Name
+    pcur += SACN_SOURCE_NAME_MAX_LEN;
+    (*pcur) = header.priority;  // Priority
+    ++pcur;
+    etcpal_pack_u16b(pcur, 0u);  // Synchronization Address
+    pcur += 2;
+    (*pcur) = seq;  // Sequence Number
+    ++pcur;
+
+    // Options
+    if (header.preview)
+      *pcur |= SACN_OPTVAL_PREVIEW;
+    if (terminated)
+      *pcur |= SACN_OPTVAL_TERMINATED;
+    ++pcur;
+
+    etcpal_pack_u16b(pcur, header.universe_id);  // Universe
+    pcur += 2;
+
+    // DMP Layer
+    (*pcur) &= 0x70u;                                                // Flags
+    ACN_PDU_PACK_NORMAL_LEN(pcur, packet_length - SACN_DMP_OFFSET);  // Length
+    pcur += 2;
+    (*pcur) = 0x02u;  // Vector = VECTOR_DMP_SET_PROPERTY
+    ++pcur;
+    (*pcur) = 0xA1u;  // Address Type & Data Type
+    ++pcur;
+    etcpal_pack_u16b(pcur, 0x0000u);  // First Property Address
+    pcur += 2;
+    etcpal_pack_u16b(pcur, 0x0001u);  // Address Increment
+    pcur += 2;
+    etcpal_pack_u16b(pcur, header.slot_count + 1u);  // Property value count
+    pcur += 2;
+    (*pcur) = header.start_code;  // DMX512-A START Code
+    ++pcur;
+    memcpy(pcur, pdata, header.slot_count);  // Data
+  }
 
   uint8_t test_buffer_[SACN_MTU];
 };
