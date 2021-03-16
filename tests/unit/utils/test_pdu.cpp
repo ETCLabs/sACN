@@ -37,14 +37,28 @@ protected:
   void SetUp() override
   {
     etcpal_reset_all_fakes();
+
+    memset(test_buffer_, 0, SACN_MTU);
   }
 
   void TearDown() override
   {
   }
+
+  uint8_t test_buffer_[SACN_MTU];
 };
 
-TEST_F(TestPdu, Foo)
+TEST_F(TestPdu, SetSequenceWorks)
 {
-  // TODO
+  static constexpr uint8_t kTestSeqNum = 123u;
+
+  uint8_t old_buf[SACN_MTU];
+  memcpy(old_buf, test_buffer_, SACN_MTU);
+
+  SET_SEQUENCE(test_buffer_, kTestSeqNum);
+  EXPECT_EQ(test_buffer_[SACN_SEQ_OFFSET], kTestSeqNum);
+  SET_SEQUENCE(test_buffer_, 0u);
+  EXPECT_EQ(test_buffer_[SACN_SEQ_OFFSET], 0u);
+
+  EXPECT_EQ(memcmp(test_buffer_, old_buf, SACN_MTU), 0);
 }
