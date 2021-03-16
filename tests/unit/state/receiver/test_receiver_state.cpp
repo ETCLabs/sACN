@@ -1479,6 +1479,8 @@ TEST_F(TestReceiverThread, SeqNumFilteringWorks)
 
 #if SACN_ETC_PRIORITY_EXTENSION
 
+/* Tests to run if PAP is enabled in the configuration. */
+
 TEST_F(TestReceiverThread, UniverseDataWaitsForPapAfterSamplingPeriod)
 {
   RunThreadCycle();
@@ -1591,5 +1593,11 @@ TEST_F(TestReceiverThread, PapExpirationRemovesInternalSourceAfterSamplingPeriod
   EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
   EXPECT_EQ(sources_lost_fake.call_count, 0u);
 }
+
+#else  // SACN_ETC_PRIORITY_EXTENSION
+
+/* Tests to run if PAP is disabled in the configuration. */
+
+
 
 #endif  // SACN_ETC_PRIORITY_EXTENSION
