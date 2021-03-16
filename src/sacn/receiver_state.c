@@ -555,6 +555,11 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
                              SourcePapLostNotification* source_pap_lost, bool* notify)
 {
+#if !SACN_ETC_PRIORITY_EXTENSION
+  ETCPAL_UNUSED_ARG(receiver);
+  ETCPAL_UNUSED_ARG(source_pap_lost);
+#endif
+
   *notify = true;  // Notify universe data during and after the sampling period.
 
   // No matter how valid, we got something.
