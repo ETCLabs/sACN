@@ -973,7 +973,12 @@ TEST_F(TestReceiverThread, PapNotifiesCorrectlyDuringSamplingPeriod)
 
   InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
   RunThreadCycle();
+
+#if SACN_ETC_PRIORITY_EXTENSION
   EXPECT_EQ(universe_data_fake.call_count, 2u);
+#else
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+#endif
 }
 
 TEST_F(TestReceiverThread, UniverseDataFiltersPurePapAfterSamplingPeriod)
