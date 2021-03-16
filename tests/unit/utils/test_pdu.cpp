@@ -144,3 +144,29 @@ TEST_F(TestPdu, SetUniverseCountWorks)
   EXPECT_EQ(ACN_PDU_LENGTH((&test_buffer_[SACN_UNIVERSE_DISCOVERY_OFFSET])),
             static_cast<uint32_t>(SACN_UNIVERSE_DISCOVERY_HEADER_SIZE - SACN_UNIVERSE_DISCOVERY_OFFSET));
 }
+
+TEST_F(TestPdu, SetPageWorks)
+{
+  static constexpr uint8_t kTestPage = 12u;
+
+  uint8_t old_buf[SACN_MTU];
+  memcpy(old_buf, test_buffer_, SACN_MTU);
+
+  SET_PAGE(test_buffer_, kTestPage);
+  EXPECT_EQ(test_buffer_[SACN_UNIVERSE_DISCOVERY_PAGE_OFFSET], kTestPage);
+  SET_PAGE(test_buffer_, 0u);
+  EXPECT_EQ(memcmp(test_buffer_, old_buf, SACN_MTU), 0);
+}
+
+TEST_F(TestPdu, SetLastPageWorks)
+{
+  static constexpr uint8_t kTestPage = 12u;
+
+  uint8_t old_buf[SACN_MTU];
+  memcpy(old_buf, test_buffer_, SACN_MTU);
+
+  SET_LAST_PAGE(test_buffer_, kTestPage);
+  EXPECT_EQ(test_buffer_[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET], kTestPage);
+  SET_LAST_PAGE(test_buffer_, 0u);
+  EXPECT_EQ(memcmp(test_buffer_, old_buf, SACN_MTU), 0);
+}
