@@ -69,3 +69,11 @@ TEST_F(TestPdu, SetTerminatedOptWorks)
   SET_TERMINATED_OPT(test_buffer_, false);
   EXPECT_EQ(memcmp(test_buffer_, old_buf, SACN_MTU), 0);
 }
+
+TEST_F(TestPdu, TerminatedOptSetWorks)
+{
+  test_buffer_[SACN_OPTS_OFFSET] |= SACN_OPTVAL_TERMINATED;
+  EXPECT_TRUE(TERMINATED_OPT_SET(test_buffer_));
+  test_buffer_[SACN_OPTS_OFFSET] = 0u;
+  EXPECT_FALSE(TERMINATED_OPT_SET(test_buffer_));
+}
