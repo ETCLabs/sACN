@@ -1339,6 +1339,31 @@ TEST_F(TestReceiverThread, SamplingPeriodEndedWorks)
   EXPECT_EQ(sampling_period_ended_fake.call_count, 1u);
 }
 
+TEST_F(TestReceiverThread, SourcePapLostWorks)
+{
+  source_pap_lost_fake.custom_fake = [](sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
+                                        void* context) {
+    EXPECT_EQ(handle, kFirstReceiverHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+    EXPECT_EQ(ETCPAL_UUID_CMP(&source->cid, &kTestCid), 0);
+    EXPECT_EQ(strcmp(source->name, kTestName), 0);
+    EXPECT_EQ(context, &kTestContext);
+  };
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+
+  EXPECT_EQ(source_pap_lost_fake.call_count, 0u);
+
+  etcpal_getms_fake.return_val += (SACN_SOURCE_LOSS_TIMEOUT + 1u);
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+
+  EXPECT_EQ(source_pap_lost_fake.call_count, 1u);
+}
+
 TEST_F(TestReceiverThread, SourceLimitExceededWorks)
 {
 #if SACN_DYNAMIC_MEM
@@ -1556,31 +1581,6 @@ TEST_F(TestReceiverThread, PapExpirationRemovesInternalSourceAfterSamplingPeriod
   RunThreadCycle();
   EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
   EXPECT_EQ(sources_lost_fake.call_count, 0u);
-}
-
-TEST_F(TestReceiverThread, SourcePapLostWorks)
-{
-  source_pap_lost_fake.custom_fake = [](sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
-                                        void* context) {
-    EXPECT_EQ(handle, kFirstReceiverHandle);
-    EXPECT_EQ(universe, kTestUniverse);
-    EXPECT_EQ(ETCPAL_UUID_CMP(&source->cid, &kTestCid), 0);
-    EXPECT_EQ(strcmp(source->name, kTestName), 0);
-    EXPECT_EQ(context, &kTestContext);
-  };
-
-  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
-  RunThreadCycle();
-  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
-  RunThreadCycle();
-
-  EXPECT_EQ(source_pap_lost_fake.call_count, 0u);
-
-  etcpal_getms_fake.return_val += (SACN_SOURCE_LOSS_TIMEOUT + 1u);
-  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
-  RunThreadCycle();
-
-  EXPECT_EQ(source_pap_lost_fake.call_count, 1u);
 }
 
 #endif  // SACN_ETC_PRIORITY_EXTENSION
