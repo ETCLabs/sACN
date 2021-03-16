@@ -106,6 +106,31 @@ protected:
     (*pcur) = header.start_code;  // DMX512-A START Code
     ++pcur;
     memcpy(pcur, pdata, header.slot_count);  // Data
+    pcur += header.slot_count;
+
+    memset(pcur, 0, SACN_MTU - (pcur - test_buffer_));
+  }
+
+  void TestParseDataPacket(const SacnHeaderData& header, uint8_t seq, bool terminated, const uint8_t* pdata)
+  {
+    InitTestBuffer(header, seq, terminated, pdata);
+
+    SacnHeaderData header_out;
+    uint8_t seq_out;
+    bool terminated_out;
+    const uint8_t *pdata_out;
+    EXPECT_TRUE(parse_sacn_data_packet(test_buffer_, SACN_MTU, &header_out, &seq_out, &terminated_out, &pdata_out));
+
+    EXPECT_EQ(ETCPAL_UUID_CMP(&header_out.cid, &header.cid), 0);
+    EXPECT_EQ(strcmp(header_out.source_name, header.source_name), 0);
+    EXPECT_EQ(header_out.universe_id, header.universe_id);
+    EXPECT_EQ(header_out.priority, header.priority);
+    EXPECT_EQ(header_out.preview, header.preview);
+    EXPECT_EQ(header_out.start_code, header.start_code);
+    EXPECT_EQ(header_out.slot_count, header.slot_count);
+    EXPECT_EQ(seq_out, seq);
+    EXPECT_EQ(terminated_out, terminated);
+    EXPECT_EQ(memcmp(pdata_out, pdata, header.slot_count), 0);
   }
 
   uint8_t test_buffer_[SACN_MTU];
