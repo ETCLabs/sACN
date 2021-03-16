@@ -1361,7 +1361,11 @@ TEST_F(TestReceiverThread, SourcePapLostWorks)
   InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
   RunThreadCycle();
 
+#if SACN_ETC_PRIORITY_EXTENSION
   EXPECT_EQ(source_pap_lost_fake.call_count, 1u);
+#else
+  EXPECT_EQ(source_pap_lost_fake.call_count, 0u);
+#endif
 }
 
 TEST_F(TestReceiverThread, SourceLimitExceededWorks)
