@@ -1612,4 +1612,23 @@ TEST_F(TestReceiverThread, LevelDataAlwaysNotifiesAfterSamplingPeriod)
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 }
 
+TEST_F(TestReceiverThread, PapNeverNotifiesAfterSamplingPeriod)
+{
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
+
+  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+
+  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+}
+
 #endif  // SACN_ETC_PRIORITY_EXTENSION
