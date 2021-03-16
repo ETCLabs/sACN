@@ -1598,7 +1598,7 @@ TEST_F(TestReceiverThread, PapExpirationRemovesInternalSourceAfterSamplingPeriod
 
 /* Tests to run if PAP is disabled in the configuration. */
 
-TEST_F(TestReceiverThread, UniverseDataAlwaysNotifiesAfterSamplingPeriod)
+TEST_F(TestReceiverThread, LevelDataAlwaysNotifiesAfterSamplingPeriod)
 {
   RunThreadCycle();
   etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
