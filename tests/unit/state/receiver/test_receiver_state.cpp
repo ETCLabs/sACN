@@ -1641,4 +1641,18 @@ TEST_F(TestReceiverThread, PapCreatesNoInternalSourcesDuringSamplingPeriod)
   EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
 }
 
+TEST_F(TestReceiverThread, PapCreatesNoInternalSourcesAfterSamplingPeriod)
+{
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
+
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
+
+  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
+}
+
 #endif  // SACN_ETC_PRIORITY_EXTENSION
