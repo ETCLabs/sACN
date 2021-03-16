@@ -1598,6 +1598,18 @@ TEST_F(TestReceiverThread, PapExpirationRemovesInternalSourceAfterSamplingPeriod
 
 /* Tests to run if PAP is disabled in the configuration. */
 
+TEST_F(TestReceiverThread, UniverseDataAlwaysNotifiesAfterSamplingPeriod)
+{
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
 
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool, void*) { EXPECT_EQ(header->start_code, 0x00u); };
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+}
 
 #endif  // SACN_ETC_PRIORITY_EXTENSION
