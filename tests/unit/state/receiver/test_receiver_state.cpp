@@ -1631,4 +1631,14 @@ TEST_F(TestReceiverThread, PapNeverNotifiesAfterSamplingPeriod)
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 }
 
+TEST_F(TestReceiverThread, PapCreatesNoInternalSourcesDuringSamplingPeriod)
+{
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
+
+  InitTestData(0xDDu, kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  RunThreadCycle();
+
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sources), 0u);
+}
+
 #endif  // SACN_ETC_PRIORITY_EXTENSION
