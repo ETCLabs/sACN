@@ -77,3 +77,27 @@ TEST_F(TestPdu, TerminatedOptSetWorks)
   test_buffer_[SACN_OPTS_OFFSET] = 0u;
   EXPECT_FALSE(TERMINATED_OPT_SET(test_buffer_));
 }
+
+TEST_F(TestPdu, SetPreviewOptWorks)
+{
+  uint8_t old_buf[SACN_MTU];
+  memcpy(old_buf, test_buffer_, SACN_MTU);
+
+  SET_PREVIEW_OPT(test_buffer_, true);
+  EXPECT_GT(test_buffer_[SACN_OPTS_OFFSET] & SACN_OPTVAL_PREVIEW, 0u);
+  SET_PREVIEW_OPT(test_buffer_, false);
+  EXPECT_EQ(memcmp(test_buffer_, old_buf, SACN_MTU), 0);
+}
+
+TEST_F(TestPdu, SetPriorityWorks)
+{
+  static constexpr uint8_t kTestPriority = 64u;
+
+  uint8_t old_buf[SACN_MTU];
+  memcpy(old_buf, test_buffer_, SACN_MTU);
+
+  SET_PRIORITY(test_buffer_, kTestPriority);
+  EXPECT_EQ(test_buffer_[SACN_PRI_OFFSET], kTestPriority);
+  SET_PRIORITY(test_buffer_, 0u);
+  EXPECT_EQ(memcmp(test_buffer_, old_buf, SACN_MTU), 0);
+}
