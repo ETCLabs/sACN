@@ -49,28 +49,38 @@ protected:
 
   void TearDown() override {}
 
-  void InitTestBuffer(uint8_t* test_buffer, const SacnHeaderData& header, uint8_t seq, bool terminated,
-                      const uint8_t* pdata)
+  void InitDataPacket(uint8_t* output, const SacnHeaderData& header, uint8_t seq, bool terminated, const uint8_t* pdata)
   {
-    size_t packet_length = SACN_DATA_HEADER_SIZE + header.slot_count;
+    memset(output, 0, SACN_MTU);
+    uint8_t* pcur = output;
 
-    uint8_t* pcur = test_buffer;
+    pcur = InitRootLayer(pcur, header);
+    pcur = InitFramingLayer(pcur, header, seq, terminated);
+    InitDmpLayer(pcur, header, pdata);
+  }
 
-    memset(test_buffer, 0, SACN_MTU);
+  uint8_t* InitRootLayer(uint8_t* output, const SacnHeaderData& header)
+  {
+    uint8_t* pcur = output;
 
-    // Root Layer
     pcur += acn_pack_udp_preamble(pcur, ACN_UDP_PREAMBLE_SIZE);  // Preamble & Post-amble Sizes + ACN Packet Identifier
     (*pcur) &= 0x70u;                                            // Flags
-    ACN_PDU_PACK_NORMAL_LEN(pcur, packet_length - ACN_UDP_PREAMBLE_SIZE);  // Length
+    ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE + header.slot_count - ACN_UDP_PREAMBLE_SIZE);  // Length
     pcur += 2;
     etcpal_pack_u32b(pcur, ACN_VECTOR_ROOT_E131_DATA);  // Vector
     pcur += 4;
     memcpy(pcur, header.cid.data, ETCPAL_UUID_BYTES);  // CID
     pcur += ETCPAL_UUID_BYTES;
 
-    // E1.31 Framing Layer
-    (*pcur) &= 0x70u;                                                    // Flags
-    ACN_PDU_PACK_NORMAL_LEN(pcur, packet_length - SACN_FRAMING_OFFSET);  // Length
+    return pcur;
+  }
+
+  uint8_t* InitFramingLayer(uint8_t* output, const SacnHeaderData& header, uint8_t seq, bool terminated)
+  {
+    uint8_t* pcur = output;
+
+    (*pcur) &= 0x70u;                                                                                // Flags
+    ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE + header.slot_count - SACN_FRAMING_OFFSET);  // Length
     pcur += 2;
     etcpal_pack_u32b(pcur, VECTOR_E131_DATA_PACKET);  // Vector
     pcur += 4;
@@ -93,9 +103,15 @@ protected:
     etcpal_pack_u16b(pcur, header.universe_id);  // Universe
     pcur += 2;
 
-    // DMP Layer
-    (*pcur) &= 0x70u;                                                // Flags
-    ACN_PDU_PACK_NORMAL_LEN(pcur, packet_length - SACN_DMP_OFFSET);  // Length
+    return pcur;
+  }
+
+  uint8_t* InitDmpLayer(uint8_t* output, const SacnHeaderData& header, const uint8_t* pdata)
+  {
+    uint8_t* pcur = output;
+
+    (*pcur) &= 0x70u;                                                                            // Flags
+    ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE + header.slot_count - SACN_DMP_OFFSET);  // Length
     pcur += 2;
     (*pcur) = 0x02u;  // Vector = VECTOR_DMP_SET_PROPERTY
     ++pcur;
@@ -110,12 +126,14 @@ protected:
     (*pcur) = header.start_code;  // DMX512-A START Code
     ++pcur;
     memcpy(pcur, pdata, header.slot_count);  // Data
+
+    return pcur;
   }
 
   void TestParseDataPacket(const SacnHeaderData& header, uint8_t seq, bool terminated,
                            const std::vector<uint8_t>& pdata)
   {
-    InitTestBuffer(test_buffer_, header, seq, terminated, pdata.data());
+    InitDataPacket(test_buffer_, header, seq, terminated, pdata.data());
 
     SacnHeaderData header_out;
     uint8_t seq_out;
@@ -294,7 +312,7 @@ TEST_F(TestPdu, ParseSacnDataPacketHandlesInvalid)
   const uint8_t* pdata_out;
 
   uint8_t valid_data[SACN_MTU];
-  InitTestBuffer(valid_data, kValidHeader, 1u, false, kValidData.data());
+  InitDataPacket(valid_data, kValidHeader, 1u, false, kValidData.data());
   EXPECT_TRUE(parse_sacn_data_packet(&valid_data[SACN_FRAMING_OFFSET], kValidBufferLength, &header_out, &seq_out,
                                      &terminated_out, &pdata_out));
 
@@ -313,32 +331,32 @@ TEST_F(TestPdu, ParseSacnDataPacketHandlesInvalid)
 
   // Now test buffer defects
   uint8_t vector_not_data[SACN_MTU];
-  InitTestBuffer(vector_not_data, kValidHeader, 1u, false, kValidData.data());
+  InitDataPacket(vector_not_data, kValidHeader, 1u, false, kValidData.data());
   etcpal_pack_u32b(&vector_not_data[SACN_FRAMING_OFFSET + 2], kNonDataVector);
   EXPECT_FALSE(parse_sacn_data_packet(&vector_not_data[SACN_FRAMING_OFFSET], kValidBufferLength, &header_out, &seq_out,
                                       &terminated_out, &pdata_out));
   uint8_t invalid_dmp_vector[SACN_MTU];
-  InitTestBuffer(invalid_dmp_vector, kValidHeader, 1u, false, kValidData.data());
+  InitDataPacket(invalid_dmp_vector, kValidHeader, 1u, false, kValidData.data());
   invalid_dmp_vector[SACN_FRAMING_OFFSET + 79] = kInvalidDmpVector;
   EXPECT_FALSE(parse_sacn_data_packet(&invalid_dmp_vector[SACN_FRAMING_OFFSET], kValidBufferLength, &header_out,
                                       &seq_out, &terminated_out, &pdata_out));
   uint8_t invalid_address_data_type[SACN_MTU];
-  InitTestBuffer(invalid_address_data_type, kValidHeader, 1u, false, kValidData.data());
+  InitDataPacket(invalid_address_data_type, kValidHeader, 1u, false, kValidData.data());
   invalid_address_data_type[SACN_FRAMING_OFFSET + 80] = kInvalidAddressDataType;
   EXPECT_FALSE(parse_sacn_data_packet(&invalid_address_data_type[SACN_FRAMING_OFFSET], kValidBufferLength, &header_out,
                                       &seq_out, &terminated_out, &pdata_out));
   uint8_t invalid_first_property_addr[SACN_MTU];
-  InitTestBuffer(invalid_first_property_addr, kValidHeader, 1u, false, kValidData.data());
+  InitDataPacket(invalid_first_property_addr, kValidHeader, 1u, false, kValidData.data());
   etcpal_pack_u16b(&invalid_first_property_addr[SACN_FRAMING_OFFSET + 81], kInvalidFirstPropertyAddr);
   EXPECT_FALSE(parse_sacn_data_packet(&invalid_first_property_addr[SACN_FRAMING_OFFSET], kValidBufferLength,
                                       &header_out, &seq_out, &terminated_out, &pdata_out));
   uint8_t invalid_addr_increment[SACN_MTU];
-  InitTestBuffer(invalid_addr_increment, kValidHeader, 1u, false, kValidData.data());
+  InitDataPacket(invalid_addr_increment, kValidHeader, 1u, false, kValidData.data());
   etcpal_pack_u16b(&invalid_addr_increment[SACN_FRAMING_OFFSET + 83], kInvalidAddrIncrement);
   EXPECT_FALSE(parse_sacn_data_packet(&invalid_addr_increment[SACN_FRAMING_OFFSET], kValidBufferLength, &header_out,
                                       &seq_out, &terminated_out, &pdata_out));
   uint8_t data_too_big[SACN_MTU];
-  InitTestBuffer(data_too_big, kValidHeader, 1u, false, kValidData.data());
+  InitDataPacket(data_too_big, kValidHeader, 1u, false, kValidData.data());
   etcpal_pack_u16b(&data_too_big[SACN_FRAMING_OFFSET + 85], static_cast<uint16_t>(kValidData.size() + 2u));
   EXPECT_FALSE(parse_sacn_data_packet(&data_too_big[SACN_FRAMING_OFFSET], kValidBufferLength, &header_out, &seq_out,
                                       &terminated_out, &pdata_out));
