@@ -61,15 +61,20 @@ protected:
 
   uint8_t* InitRootLayer(uint8_t* output, const SacnHeaderData& header)
   {
+    return InitRootLayer(output, SACN_DATA_HEADER_SIZE + header.slot_count, false, header.cid);
+  }
+
+  uint8_t* InitRootLayer(uint8_t* output, uint16_t pdu_length, bool extended, const EtcPalUuid& source_cid)
+  {
     uint8_t* pcur = output;
 
     pcur += acn_pack_udp_preamble(pcur, ACN_UDP_PREAMBLE_SIZE);  // Preamble & Post-amble Sizes + ACN Packet Identifier
-    (*pcur) &= 0x70u;                                            // Flags
-    ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE + header.slot_count - ACN_UDP_PREAMBLE_SIZE);  // Length
+    (*pcur) |= 0x70u;                                            // Flags
+    ACN_PDU_PACK_NORMAL_LEN(pcur, pdu_length - ACN_UDP_PREAMBLE_SIZE);  // Length
     pcur += 2;
-    etcpal_pack_u32b(pcur, ACN_VECTOR_ROOT_E131_DATA);  // Vector
+    etcpal_pack_u32b(pcur, extended ? ACN_VECTOR_ROOT_E131_EXTENDED : ACN_VECTOR_ROOT_E131_DATA);  // Vector
     pcur += 4;
-    memcpy(pcur, header.cid.data, ETCPAL_UUID_BYTES);  // CID
+    memcpy(pcur, source_cid.data, ETCPAL_UUID_BYTES);  // CID
     pcur += ETCPAL_UUID_BYTES;
 
     return pcur;
@@ -151,6 +156,17 @@ protected:
     EXPECT_EQ(seq_out, seq);
     EXPECT_EQ(terminated_out, terminated);
     EXPECT_EQ(memcmp(pdata_out, pdata.data(), header.slot_count), 0);
+  }
+
+  void TestPackRootLayer(uint16_t pdu_length, bool extended, const EtcPalUuid& source_cid)
+  {
+    uint8_t result[SACN_MTU] = {0};
+    uint8_t expected[SACN_MTU] = {0};
+    int result_length = pack_sacn_root_layer(result, pdu_length, extended, &source_cid);
+    int expected_length = InitRootLayer(expected, pdu_length, extended, source_cid) - expected;
+
+    EXPECT_EQ(result_length, expected_length);
+    EXPECT_EQ(memcmp(result, expected, result_length), 0);
   }
 
   uint8_t test_buffer_[SACN_MTU];
@@ -360,4 +376,11 @@ TEST_F(TestPdu, ParseSacnDataPacketHandlesInvalid)
   etcpal_pack_u16b(&data_too_big[SACN_FRAMING_OFFSET + 85], static_cast<uint16_t>(kValidData.size() + 2u));
   EXPECT_FALSE(parse_sacn_data_packet(&data_too_big[SACN_FRAMING_OFFSET], kValidBufferLength, &header_out, &seq_out,
                                       &terminated_out, &pdata_out));
+}
+
+TEST_F(TestPdu, PackSacnRootLayerWorks)
+{
+  TestPackRootLayer(1234u, false, etcpal::Uuid::V4().get());
+  TestPackRootLayer(9876u, true, etcpal::Uuid::V4().get());
+  TestPackRootLayer(0xFFFFu, true, etcpal::Uuid().get());
 }
