@@ -1176,6 +1176,10 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid*
                                        uint8_t seq_num, uint8_t first_start_code,
                                        SacnTrackedSource** tracked_source_state)
 {
+#if !SACN_ETC_PRIORITY_EXTENSION
+  ETCPAL_UNUSED_ARG(first_start_code);
+#endif
+
   etcpal_error_t result = kEtcPalErrOk;
   SacnTrackedSource* src = NULL;
 
