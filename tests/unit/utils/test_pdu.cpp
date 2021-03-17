@@ -344,15 +344,21 @@ TEST_F(TestPdu, SetLastPageWorks)
 
 TEST_F(TestPdu, ParseSacnDataPacketWorks)
 {
-  TestParseDataPacket({kEtcPalNullUuid, "Test Name", 1u, 100u, true, 0x00, 3u}, 1u, false, {1u, 2u, 3u});
-  TestParseDataPacket({kEtcPalNullUuid, "Name Test", 123u, 64, false, 0xDD, 5u}, 10u, true, {7u, 6u, 5u, 4u, 3u});
+  std::vector<uint8_t> data1 = {1u, 2u, 3u};
+  SacnHeaderData header = {kEtcPalNullUuid, "Test Name", 1u, 100u, true, 0x00, static_cast<uint16_t>(data1.size())};
+  TestParseDataPacket(header, 1u, false, data1);
+
+  std::vector<uint8_t> data2 = {7u, 6u, 5u, 4u, 3u};
+  header = {kEtcPalNullUuid, "Name Test", 123u, 64, false, 0xDD, static_cast<uint16_t>(data2.size())};
+  TestParseDataPacket(header, 10u, true, data2);
 
   std::vector<uint8_t> max_data;
   for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
     max_data.push_back(static_cast<uint8_t>(i));
-  TestParseDataPacket({kEtcPalNullUuid, "012345678901234567890123456789012345678901234567890123456789012", 0xFFFFu,
-                       0xFF, true, 0xFF, DMX_ADDRESS_COUNT},
-                      0xFFu, true, max_data);
+  header = {
+      kEtcPalNullUuid,  "012345678901234567890123456789012345678901234567890123456789012", 0xFFFFu, 0xFF, true, 0xFF,
+      DMX_ADDRESS_COUNT};
+  TestParseDataPacket(header, 0xFFu, true, max_data);
 }
 
 TEST_F(TestPdu, ParseSacnDataPacketHandlesInvalid)
