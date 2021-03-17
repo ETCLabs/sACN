@@ -345,19 +345,37 @@ TEST_F(TestPdu, SetLastPageWorks)
 TEST_F(TestPdu, ParseSacnDataPacketWorks)
 {
   std::vector<uint8_t> data1 = {1u, 2u, 3u};
-  SacnHeaderData header = {kEtcPalNullUuid, "Test Name", 1u, 100u, true, 0x00, static_cast<uint16_t>(data1.size())};
+  SacnHeaderData header;
+  header.cid = kEtcPalNullUuid;
+  strcpy(header.source_name, "Test Name");
+  header.universe_id = 1u;
+  header.priority = 100u;
+  header.preview = true;
+  header.start_code = 0x00;
+  header.slot_count = static_cast<uint16_t>(data1.size());
+
   TestParseDataPacket(header, 1u, false, data1);
 
   std::vector<uint8_t> data2 = {7u, 6u, 5u, 4u, 3u};
-  header = {kEtcPalNullUuid, "Name Test", 123u, 64, false, 0xDD, static_cast<uint16_t>(data2.size())};
+  header.cid = kEtcPalNullUuid;
+  strcpy(header.source_name, "Name Test");
+  header.universe_id = 123u;
+  header.priority = 64;
+  header.preview = false;
+  header.start_code = 0xDD;
+  header.slot_count = static_cast<uint16_t>(data2.size());
   TestParseDataPacket(header, 10u, true, data2);
 
   std::vector<uint8_t> max_data;
   for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
     max_data.push_back(static_cast<uint8_t>(i));
-  header = {
-      kEtcPalNullUuid,  "012345678901234567890123456789012345678901234567890123456789012", 0xFFFFu, 0xFF, true, 0xFF,
-      DMX_ADDRESS_COUNT};
+  header.cid = kEtcPalNullUuid;
+  strcpy(header.source_name, "012345678901234567890123456789012345678901234567890123456789012");
+  header.universe_id = 0xFFFFu;
+  header.priority = 0xFF;
+  header.preview = true;
+  header.start_code = 0xFF;
+  header.slot_count = DMX_ADDRESS_COUNT;
   TestParseDataPacket(header, 0xFFu, true, max_data);
 }
 
