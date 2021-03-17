@@ -82,30 +82,39 @@ protected:
 
   uint8_t* InitFramingLayer(uint8_t* output, const SacnHeaderData& header, uint8_t seq, bool terminated)
   {
+    return InitFramingLayer(output, header.slot_count, VECTOR_E131_DATA_PACKET, header.source_name, header.priority,
+                            seq, header.preview, terminated, header.universe_id);
+  }
+
+  uint8_t* InitFramingLayer(uint8_t* output, uint16_t slot_count, uint32_t vector, const char* source_name,
+                            uint8_t priority, uint8_t seq_num, bool preview, bool terminated,
+                            uint16_t universe_id)
+  {
     uint8_t* pcur = output;
 
-    (*pcur) &= 0x70u;                                                                                // Flags
-    ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE + header.slot_count - SACN_FRAMING_OFFSET);  // Length
+    (*pcur) |= 0x70u;                                                                         // Flags
+    ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE + slot_count - SACN_FRAMING_OFFSET);  // Length
     pcur += 2;
-    etcpal_pack_u32b(pcur, VECTOR_E131_DATA_PACKET);  // Vector
+    etcpal_pack_u32b(pcur, vector);  // Vector
     pcur += 4;
-    strncpy((char*)pcur, header.source_name, SACN_SOURCE_NAME_MAX_LEN);  // Source Name
+    strncpy((char*)pcur, source_name, SACN_SOURCE_NAME_MAX_LEN);  // Source Name
     pcur += SACN_SOURCE_NAME_MAX_LEN;
-    (*pcur) = header.priority;  // Priority
+    (*pcur) = priority;  // Priority
     ++pcur;
-    etcpal_pack_u16b(pcur, 0u);  // Synchronization Address
+    etcpal_pack_u16b(pcur, 0u);  // TODO: Synchronization Address
     pcur += 2;
-    (*pcur) = seq;  // Sequence Number
+    (*pcur) = seq_num;  // Sequence Number
     ++pcur;
 
     // Options
-    if (header.preview)
+    if (preview)
       *pcur |= SACN_OPTVAL_PREVIEW;
     if (terminated)
       *pcur |= SACN_OPTVAL_TERMINATED;
+    // TODO: force_sync
     ++pcur;
 
-    etcpal_pack_u16b(pcur, header.universe_id);  // Universe
+    etcpal_pack_u16b(pcur, universe_id);  // Universe
     pcur += 2;
 
     return pcur;
@@ -115,7 +124,7 @@ protected:
   {
     uint8_t* pcur = output;
 
-    (*pcur) &= 0x70u;                                                                            // Flags
+    (*pcur) |= 0x70u;                                                                            // Flags
     ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE + header.slot_count - SACN_DMP_OFFSET);  // Length
     pcur += 2;
     (*pcur) = 0x02u;  // Vector = VECTOR_DMP_SET_PROPERTY
@@ -164,6 +173,22 @@ protected:
     uint8_t expected[SACN_MTU] = {0};
     int result_length = pack_sacn_root_layer(result, pdu_length, extended, &source_cid);
     int expected_length = InitRootLayer(expected, pdu_length, extended, source_cid) - expected;
+
+    EXPECT_EQ(result_length, expected_length);
+    EXPECT_EQ(memcmp(result, expected, result_length), 0);
+  }
+
+  void TestPackDataFramingLayer(uint16_t slot_count, uint32_t vector, const char* source_name, uint8_t priority,
+                                uint16_t sync_address, uint8_t seq_num, bool preview, bool terminated, bool force_sync,
+                                uint16_t universe_id)
+  {
+    uint8_t result[SACN_MTU] = {0};
+    uint8_t expected[SACN_MTU] = {0};
+    int result_length = pack_sacn_data_framing_layer(result, slot_count, vector, source_name, priority, sync_address,
+                                                     seq_num, preview, terminated, force_sync, universe_id);
+    int expected_length = InitFramingLayer(expected, slot_count, vector, source_name, priority, seq_num, preview,
+                                           terminated, universe_id) -
+                          expected;
 
     EXPECT_EQ(result_length, expected_length);
     EXPECT_EQ(memcmp(result, expected, result_length), 0);
@@ -383,4 +408,12 @@ TEST_F(TestPdu, PackSacnRootLayerWorks)
   TestPackRootLayer(1234u, false, etcpal::Uuid::V4().get());
   TestPackRootLayer(9876u, true, etcpal::Uuid::V4().get());
   TestPackRootLayer(0xFFFFu, true, etcpal::Uuid().get());
+}
+
+TEST_F(TestPdu, PackSacnDataFramingLayerWorks)
+{
+  TestPackDataFramingLayer(0x1234, 0x56789ABC, "A Test Name", 0xDE, 0xF012, 0x34, false, true, false, 0x5678);
+  TestPackDataFramingLayer(0xFEDC, 0xBA987654, "Another Test Name", 0x32, 0x10FE, 0xDC, true, false, true, 0xBA98);
+  TestPackDataFramingLayer(0xFFFF, 0xFFFFFFFF, "012345678901234567890123456789012345678901234567890123456789012", 0xFF,
+                           0xFFFF, 0xFF, true, true, true, 0xFFFF);
 }
