@@ -4,6 +4,7 @@ set(TEST_UTILS_SOURCES
   test_source_loss.cpp
   test_mem.cpp
   test_sockets.cpp
+  test_pdu.cpp
   main.cpp
 
   ${SACN_SRC}/sacn/source_loss.c

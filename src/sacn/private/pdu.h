@@ -27,6 +27,7 @@
 #include "sacn/private/common.h"
 #include "sacn/private/opts.h"
 #include "etcpal/acn_rlp.h"
+#include "etcpal/pack.h"
 
 #ifdef __cplusplus
 extern "C" {
