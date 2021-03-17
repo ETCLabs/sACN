@@ -87,8 +87,7 @@ protected:
   }
 
   uint8_t* InitFramingLayer(uint8_t* output, uint16_t slot_count, uint32_t vector, const char* source_name,
-                            uint8_t priority, uint8_t seq_num, bool preview, bool terminated,
-                            uint16_t universe_id)
+                            uint8_t priority, uint8_t seq_num, bool preview, bool terminated, uint16_t universe_id)
   {
     uint8_t* pcur = output;
 
@@ -122,10 +121,15 @@ protected:
 
   uint8_t* InitDmpLayer(uint8_t* output, const SacnHeaderData& header, const uint8_t* pdata)
   {
+    return InitDmpLayer(output, header.start_code, header.slot_count, pdata);
+  }
+
+  uint8_t* InitDmpLayer(uint8_t* output, uint8_t start_code, uint16_t slot_count, const uint8_t* pdata)
+  {
     uint8_t* pcur = output;
 
-    (*pcur) |= 0x70u;                                                                            // Flags
-    ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE + header.slot_count - SACN_DMP_OFFSET);  // Length
+    (*pcur) |= 0x70u;                                                                     // Flags
+    ACN_PDU_PACK_NORMAL_LEN(pcur, SACN_DATA_HEADER_SIZE + slot_count - SACN_DMP_OFFSET);  // Length
     pcur += 2;
     (*pcur) = 0x02u;  // Vector = VECTOR_DMP_SET_PROPERTY
     ++pcur;
@@ -135,11 +139,16 @@ protected:
     pcur += 2;
     etcpal_pack_u16b(pcur, 0x0001u);  // Address Increment
     pcur += 2;
-    etcpal_pack_u16b(pcur, header.slot_count + 1u);  // Property value count
+    etcpal_pack_u16b(pcur, slot_count + 1u);  // Property value count
     pcur += 2;
-    (*pcur) = header.start_code;  // DMX512-A START Code
+    (*pcur) = start_code;  // DMX512-A START Code
     ++pcur;
-    memcpy(pcur, pdata, header.slot_count);  // Data
+
+    if (pdata)
+    {
+      memcpy(pcur, pdata, slot_count);  // Data
+      pdata += slot_count;
+    }
 
     return pcur;
   }
@@ -189,6 +198,17 @@ protected:
     int expected_length = InitFramingLayer(expected, slot_count, vector, source_name, priority, seq_num, preview,
                                            terminated, universe_id) -
                           expected;
+
+    EXPECT_EQ(result_length, expected_length);
+    EXPECT_EQ(memcmp(result, expected, result_length), 0);
+  }
+
+  void TestPackDmpLayerHeader(uint8_t start_code, uint16_t slot_count)
+  {
+    uint8_t result[SACN_MTU] = {0};
+    uint8_t expected[SACN_MTU] = {0};
+    int result_length = pack_sacn_dmp_layer_header(result, start_code, slot_count);
+    int expected_length = InitDmpLayer(expected, start_code, slot_count, nullptr) - expected;
 
     EXPECT_EQ(result_length, expected_length);
     EXPECT_EQ(memcmp(result, expected, result_length), 0);
@@ -416,4 +436,11 @@ TEST_F(TestPdu, PackSacnDataFramingLayerWorks)
   TestPackDataFramingLayer(0xFEDC, 0xBA987654, "Another Test Name", 0x32, 0x10FE, 0xDC, true, false, true, 0xBA98);
   TestPackDataFramingLayer(0xFFFF, 0xFFFFFFFF, "012345678901234567890123456789012345678901234567890123456789012", 0xFF,
                            0xFFFF, 0xFF, true, true, true, 0xFFFF);
+}
+
+TEST_F(TestPdu, PackSacnDmpLayerHeaderWorks)
+{
+  TestPackDmpLayerHeader(0x12, 0x3456);
+  TestPackDmpLayerHeader(0xFE, 0xDCBA);
+  TestPackDmpLayerHeader(0xFF, 0xFFFF);
 }
