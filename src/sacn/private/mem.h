@@ -27,6 +27,7 @@
 #include "etcpal/timer.h"
 #include "etcpal/uuid.h"
 #include "sacn/receiver.h"
+#include "sacn/merge_receiver.h"
 #include "sacn/private/common.h"
 #include "sacn/private/sockets.h"
 #include "sacn/private/opts.h"
@@ -66,6 +67,15 @@ bool add_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t 
 bool remove_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket);
 void add_receiver_to_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver);
 void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnReceiver* receiver);
+
+// sACN Merge Receiver memory API
+etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, sacn_dmx_merger_t merger_handle,
+                                       sacn_receiver_t receiver_handle, const SacnMergeReceiverConfig* config,
+                                       SacnMergeReceiver** state);
+etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeReceiver** state, size_t* index);
+SacnMergeReceiver* get_merge_receiver(size_t index);
+size_t get_num_merge_receivers();
+void remove_sacn_merge_receiver(size_t index);
 
 // sACN Source memory API
 etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state);

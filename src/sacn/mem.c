@@ -39,6 +39,12 @@
 
 #define SACN_RECEIVER_MAX_RB_NODES ((SACN_RECEIVER_MAX_UNIVERSES * 2) + SACN_RECEIVER_TOTAL_MAX_SOURCES)
 
+#if SACN_DMX_MERGER_MAX_MERGERS < SACN_RECEIVER_MAX_UNIVERSES
+#define MAX_MERGE_RECEIVERS SACN_DMX_MERGER_MAX_MERGERS
+#else
+#define MAX_MERGE_RECEIVERS SACN_RECEIVER_MAX_UNIVERSES
+#endif
+
 /****************************** Private macros *******************************/
 
 #if SACN_DYNAMIC_MEM
@@ -141,6 +147,8 @@ typedef struct ToEraseBuf
 static bool sources_initialized = false;
 #endif
 
+static bool merge_receivers_initialized = false;
+
 static struct SacnMemBufs
 {
   unsigned int num_threads;
@@ -173,6 +181,9 @@ static struct SacnMemBufs
   SACN_DECLARE_BUF(SacnSource, sources, SACN_SOURCE_MAX_SOURCES);
   size_t num_sources;
 #endif
+
+  SACN_DECLARE_BUF(SacnMergeReceiver, merge_receivers, MAX_MERGE_RECEIVERS);
+  size_t num_merge_receivers;
 } mem_bufs;
 
 #if !SACN_DYNAMIC_MEM
@@ -188,6 +199,8 @@ static EtcPalRbTree receivers_by_universe;
 
 static void zero_status_lists(SacnSourceStatusLists* status_lists);
 static void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t size);
+
+static size_t get_merge_receiver_index(sacn_merge_receiver_t handle, bool* found);
 
 static size_t get_source_index(sacn_source_t handle, bool* found);
 static size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found);
@@ -271,6 +284,10 @@ static void deinit_sources(void);
 static etcpal_error_t init_receivers(void);
 static void deinit_receivers(void);
 
+// Merge Receivers initialization/deinitialization
+static etcpal_error_t init_merge_receivers(void);
+static void deinit_merge_receivers(void);
+
 /*************************** Function definitions ****************************/
 
 /*
@@ -310,6 +327,8 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
     res = init_sources();
   if (res == kEtcPalErrOk)
     res = init_receivers();
+  if (res == kEtcPalErrOk)
+    res = init_merge_receivers();
 
   // Clean up
   if (res != kEtcPalErrOk)
@@ -323,6 +342,7 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
  */
 void sacn_mem_deinit(void)
 {
+  deinit_merge_receivers();
   deinit_receivers();
   deinit_sources();
 
@@ -748,6 +768,72 @@ void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnR
     last = entry;
     entry = entry->next;
   }
+}
+
+// Needs lock
+etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, sacn_dmx_merger_t merger_handle,
+                                       sacn_receiver_t receiver_handle, const SacnMergeReceiverConfig* config,
+                                       SacnMergeReceiver** state)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+  SacnMergeReceiver* merge_receiver = NULL;
+  if (lookup_merge_receiver(handle, &merge_receiver, NULL) == kEtcPalErrOk)
+    result = kEtcPalErrExists;
+
+  if (result == kEtcPalErrOk)
+  {
+    CHECK_ROOM_FOR_ONE_MORE((&mem_bufs), merge_receivers, SacnMergeReceiver, MAX_MERGE_RECEIVERS, kEtcPalErrNoMem);
+
+    merge_receiver = &mem_bufs.merge_receivers[mem_bufs.num_merge_receivers];
+
+    merge_receiver->merge_receiver_handle = handle;
+    merge_receiver->merger_handle = merger_handle;
+    merge_receiver->receiver_handle = receiver_handle;
+    merge_receiver->callbacks = config->callbacks;
+
+    ++mem_bufs.num_merge_receivers;
+  }
+
+  *state = merge_receiver;
+
+  return result;
+}
+
+// Needs lock
+etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeReceiver** state, size_t* index)
+{
+  bool found = false;
+  size_t idx = get_merge_receiver_index(handle, &found);
+  if (found)
+  {
+    *state = &mem_bufs.merge_receivers[idx];
+    if (index)
+      *index = idx;
+  }
+  else
+  {
+    *state = NULL;
+  }
+
+  return found ? kEtcPalErrOk : kEtcPalErrNotFound;
+}
+
+// Needs lock
+SacnMergeReceiver* get_merge_receiver(size_t index)
+{
+  return (index < mem_bufs.num_merge_receivers) ? &mem_bufs.merge_receivers[index] : NULL;
+}
+
+// Needs lock
+size_t get_num_merge_receivers()
+{
+  return mem_bufs.num_merge_receivers;
+}
+
+// Needs lock
+void remove_sacn_merge_receiver(size_t index)
+{
+  REMOVE_AT_INDEX((&mem_bufs), SacnMergeReceiver, merge_receivers, index);
 }
 
 // Needs lock
@@ -1316,6 +1402,22 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
     sources_lost->num_lost_sources = 0;
     sources_lost->context = NULL;
   }
+}
+
+size_t get_merge_receiver_index(sacn_merge_receiver_t handle, bool* found)
+{
+  *found = false;
+  size_t index = 0;
+
+  while (!(*found) && (index < mem_bufs.num_merge_receivers))
+  {
+    if (mem_bufs.merge_receivers[index].merge_receiver_handle == handle)
+      *found = true;
+    else
+      ++index;
+  }
+
+  return index;
 }
 
 size_t get_source_index(sacn_source_t handle, bool* found)
@@ -1948,4 +2050,39 @@ void deinit_receivers(void)
 {
   etcpal_rbtree_clear_with_cb(&receivers, universe_tree_dealloc);
   etcpal_rbtree_clear(&receivers_by_universe);
+}
+
+etcpal_error_t init_merge_receivers(void)
+{
+  etcpal_error_t res = kEtcPalErrOk;
+#if SACN_DYNAMIC_MEM
+  mem_bufs.merge_receivers = calloc(INITIAL_CAPACITY, sizeof(SacnMergeReceiver));
+  mem_bufs.merge_receivers_capacity = mem_bufs.merge_receivers ? INITIAL_CAPACITY : 0;
+  if (!mem_bufs.merge_receivers)
+    res = kEtcPalErrNoMem;
+#endif  // SACN_DYNAMIC_MEM
+  mem_bufs.num_merge_receivers = 0;
+
+  if (res == kEtcPalErrOk)
+    merge_receivers_initialized = true;
+
+  return res;
+}
+
+void deinit_merge_receivers(void)
+{
+  if (sacn_lock())
+  {
+    if (merge_receivers_initialized)
+    {
+#if SACN_DYNAMIC_MEM
+      free(mem_bufs.merge_receivers);
+      mem_bufs.merge_receivers_capacity = 0;
+#endif  // SACN_DYNAMIC_MEM
+      mem_bufs.num_merge_receivers = 0;
+      merge_receivers_initialized = false;
+    }
+
+    sacn_unlock();
+  }
 }

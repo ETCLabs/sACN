@@ -34,16 +34,6 @@
 extern "C" {
 #endif
 
-//TODO: I put this here so the tests will build.  FLESH THIS OUT..
-/* The internal state/glue needed to map a sacn_receiver_t to a sacn_dmx_merger_t, etc. */
-typedef struct SacnMergeReceiver
-{
-  // Configured callbacks
-  SacnMergeReceiverCallbacks callbacks;
-
-  struct SacnMergeReceiver* next;
-} SacnMergeReceiver;
-
 etcpal_error_t sacn_merge_receiver_init(void);
 void sacn_merge_receiver_deinit(void);
 
