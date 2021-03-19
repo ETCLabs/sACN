@@ -20,42 +20,17 @@
 #include <limits.h>
 #include <stdint.h>
 #include <string.h>
+#include "sacn/dmx_merger.h"
+#include "sacn/receiver.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/util.h"
 #include "sacn/private/merge_receiver.h"
-
-#if SACN_DYNAMIC_MEM
-#include <stdlib.h>
-#else
-#include "etcpal/mempool.h"
-#endif
 
 /***************************** Private constants *****************************/
 
 /****************************** Private macros *******************************/
 
-/* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
-#if SACN_DYNAMIC_MEM
-#define ALLOC_MERGE_RECEIVER() malloc(sizeof(SacnMergeReceiver))
-#define FREE_MERGE_RECEIVER(ptr) \
-  do                             \
-  {                              \
-    if (ptr->netints)            \
-    {                            \
-      free(ptr->netints);        \
-    }                            \
-    free(ptr);                   \
-  } while (0)
-#else
-#define ALLOC_MERGE_RECEIVER() etcpal_mempool_alloc(sacnrecv_merge_receivers)
-#define FREE_MERGE_RECEIVER(ptr) etcpal_mempool_free(sacnrecv_merge_receivers, ptr)
-#endif
-
 /**************************** Private variables ******************************/
-
-#if !SACN_DYNAMIC_MEM
-ETCPAL_MEMPOOL_DEFINE(sacnrecv_merge_receivers, SacnMergeReceiver, SACN_RECEIVER_MAX_UNIVERSES);
-#endif
 
 /*********************** Private function prototypes *************************/
 
@@ -68,52 +43,13 @@ ETCPAL_MEMPOOL_DEFINE(sacnrecv_merge_receivers, SacnMergeReceiver, SACN_RECEIVER
 /* Initialize the sACN Merge Receiver module. Internal function called from sacn_init(). */
 etcpal_error_t sacn_merge_receiver_init(void)
 {
-  /*
-  // TODO: CLEANUP  -- Be sure to check SACN_RECEIVER_MAX_UNIVERSES, as it is illegal to declare a 0-size array in C.
-
-  etcpal_error_t res = kEtcPalErrOk;
-
-#if !SACN_DYNAMIC_MEM
-  res |= etcpal_mempool_init(sacnrecv_receivers);
-  res |= etcpal_mempool_init(sacnrecv_tracked_sources);
-  res |= etcpal_mempool_init(sacnrecv_rb_nodes);
-#endif
-
-  if (res == kEtcPalErrOk)
-  {
-  }
-  else
-  {
-    memset(&receiver_state, 0, sizeof receiver_state);
-  }
-
-  return res;
-  */
-  // TODO
-  return kEtcPalErrOk;
+  return kEtcPalErrOk;  // Nothing to do here.
 }
 
 /* Deinitialize the sACN Merge Receiver module. Internal function called from sacn_deinit(). */
 void sacn_merge_receiver_deinit(void)
 {
-  /*
-  // Stop all receive threads
-  for (unsigned int i = 0; i < sacn_mem_get_num_threads(); ++i)
-  {
-    SacnRecvThreadContext* thread_context = get_recv_thread_context(i);
-    if (thread_context && thread_context->running)
-    {
-      thread_context->running = false;
-      etcpal_thread_join(&thread_context->thread_handle);
-      sacn_cleanup_dead_sockets(thread_context);
-    }
-  }
-
-  // Clear out the rest of the state tracking
-  etcpal_rbtree_clear_with_cb(&receiver_state.receivers, universe_tree_dealloc);
-  etcpal_rbtree_clear(&receiver_state.receivers_by_universe);
-  memset(&receiver_state, 0, sizeof receiver_state);
-  */
+  // Nothing to do here.
 }
 
 /**
@@ -127,6 +63,7 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
   {
     memset(config, 0, sizeof(SacnMergeReceiverConfig));
     config->use_pap = true;
+    config->ip_supported = kSacnIpV4AndIpV6;
   }
 }
 
@@ -157,13 +94,20 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
 etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle,
                                           SacnMcastInterface* netints, size_t num_netints)
 {
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(num_netints);
+  etcpal_error_t result = kEtcPalErrOk;
+
+  sacn_dmx_merger_t merger_handle;
+  sacn_receiver_t receiver_handle;
 
   if (!config || !handle)
-    return kEtcPalErrInvalid;
+    result = kEtcPalErrInvalid;
 
-  return kEtcPalErrNotImpl;
+  if (result == kEtcPalErrOk)
+  {
+
+  }
+
+  return result;
 }
 
 /**

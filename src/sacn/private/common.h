@@ -257,7 +257,7 @@ typedef enum
 /* An sACN source that is being tracked on a given universe. */
 typedef struct SacnTrackedSource
 {
-  EtcPalUuid cid;
+  EtcPalUuid cid;  // This must be the first member of this struct.
   char name[SACN_SOURCE_NAME_MAX_LEN];
   EtcPalTimer packet_timer;
   uint8_t seq;
@@ -386,6 +386,18 @@ typedef struct SacnRecvThreadContext
 /******************************************************************************
  * Types used by the sACN Merge Receiver module
  *****************************************************************************/
+typedef struct SacnSourceIdFromCid SacnSourceIdFromCid;
+struct SacnSourceIdFromCid
+{
+  EtcPalUuid cid;  // This must be the first struct member.
+  sacn_source_id_t id;
+};
+typedef struct SacnCidFromSourceId SacnCidFromSourceId;
+struct SacnCidFromSourceId
+{
+  sacn_source_id_t id;  // This must be the first struct member.
+  EtcPalUuid cid;
+};
 
 typedef struct SacnMergeReceiver SacnMergeReceiver;
 struct SacnMergeReceiver
@@ -394,6 +406,13 @@ struct SacnMergeReceiver
   sacn_dmx_merger_t merger_handle;
   sacn_receiver_t receiver_handle;
   SacnMergeReceiverCallbacks callbacks;
+  bool use_pap;
+
+  uint8_t slots[DMX_ADDRESS_COUNT];
+  sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
+
+  EtcPalRbTree ids_from_cids;
+  EtcPalRbTree cids_from_ids;
 };
 
 /******************************************************************************

@@ -37,7 +37,8 @@
 
 #define INITIAL_CAPACITY 8
 
-#define SACN_RECEIVER_MAX_RB_NODES ((SACN_RECEIVER_MAX_UNIVERSES * 2) + SACN_RECEIVER_TOTAL_MAX_SOURCES)
+// The maximum rb nodes used by the receiver and merge receiver APIs combined
+#define SACN_RECEIVER_MAX_RB_NODES ((SACN_RECEIVER_MAX_UNIVERSES * 2) + (SACN_RECEIVER_TOTAL_MAX_SOURCES * 3))
 
 #if SACN_DMX_MERGER_MAX_MERGERS < SACN_RECEIVER_MAX_UNIVERSES
 #define MAX_MERGE_RECEIVERS SACN_DMX_MERGER_MAX_MERGERS
@@ -74,6 +75,8 @@
 /* Macros for dynamic allocation. */
 #define ALLOC_RECEIVER() malloc(sizeof(SacnReceiver))
 #define ALLOC_TRACKED_SOURCE() malloc(sizeof(SacnTrackedSource))
+#define ALLOC_SOURCE_ID_FROM_CID() malloc(sizeof(SacnSourceIdFromCid))
+#define ALLOC_CID_FROM_SOURCE_ID() malloc(sizeof(SacnCidFromSourceId))
 #define FREE_RECEIVER(ptr)        \
   do                              \
   {                               \
@@ -84,6 +87,8 @@
     free(ptr);                    \
   } while (0)
 #define FREE_TRACKED_SOURCE(ptr) free(ptr)
+#define FREE_SOURCE_ID_FROM_CID(ptr) free(ptr)
+#define FREE_CID_FROM_SOURCE_ID(ptr) free(ptr)
 
 #else  // SACN_DYNAMIC_MEM
 
@@ -102,8 +107,12 @@
 /* Macros for static allocation, which is done using etcpal_mempool. */
 #define ALLOC_RECEIVER() etcpal_mempool_alloc(sacnrecv_receivers)
 #define ALLOC_TRACKED_SOURCE() etcpal_mempool_alloc(sacnrecv_tracked_sources)
+#define ALLOC_SOURCE_ID_FROM_CID() etcpal_mempool_alloc(sacnmergerecv_ids_from_cids)
+#define ALLOC_CID_FROM_SOURCE_ID() etcpal_mempool_alloc(sacnmergerecv_cids_from_ids)
 #define FREE_RECEIVER(ptr) etcpal_mempool_free(sacnrecv_receivers, ptr)
 #define FREE_TRACKED_SOURCE(ptr) etcpal_mempool_free(sacnrecv_tracked_sources, ptr)
+#define FREE_SOURCE_ID_FROM_CID(ptr) etcpal_mempool_free(sacnmergerecv_ids_from_cids, ptr)
+#define FREE_CID_FROM_SOURCE_ID(ptr) etcpal_mempool_free(sacnmergerecv_cids_from_ids, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
 
@@ -190,6 +199,8 @@ static struct SacnMemBufs
 ETCPAL_MEMPOOL_DEFINE(sacnrecv_receivers, SacnReceiver, SACN_RECEIVER_MAX_UNIVERSES);
 ETCPAL_MEMPOOL_DEFINE(sacnrecv_tracked_sources, SacnTrackedSource, SACN_RECEIVER_TOTAL_MAX_SOURCES);
 ETCPAL_MEMPOOL_DEFINE(sacnrecv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODES);
+ETCPAL_MEMPOOL_DEFINE(sacnmergerecv_ids_from_cids, SacnSourceIdFromCid, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+ETCPAL_MEMPOOL_DEFINE(sacnmergerecv_cids_from_ids, SacnCidFromSourceId, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
 #endif
 
 static EtcPalRbTree receivers;
@@ -268,11 +279,14 @@ static etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver);
 static void remove_receiver_from_maps(SacnReceiver* receiver);
 
 // Receiver tree node management
-static int tracked_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+static int source_id_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+static int uuid_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static int receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static int receiver_compare_by_universe(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static EtcPalRbNode* node_alloc(void);
 static void node_dealloc(EtcPalRbNode* node);
+static void source_ids_from_cids_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+static void cids_from_source_ids_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 
@@ -790,6 +804,13 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, sacn_dmx_me
     merge_receiver->merger_handle = merger_handle;
     merge_receiver->receiver_handle = receiver_handle;
     merge_receiver->callbacks = config->callbacks;
+    merge_receiver->use_pap = config->use_pap;
+
+    memset(merge_receiver->slots, 0, DMX_ADDRESS_COUNT);
+    memset(merge_receiver->slot_owners, 0, DMX_ADDRESS_COUNT * sizeof(sacn_source_id_t));
+
+    etcpal_rbtree_init(&merge_receiver->ids_from_cids, uuid_compare, node_alloc, node_dealloc);
+    etcpal_rbtree_init(&merge_receiver->cids_from_ids, source_id_compare, node_alloc, node_dealloc);
 
     ++mem_bufs.num_merge_receivers;
   }
@@ -833,6 +854,8 @@ size_t get_num_merge_receivers()
 // Needs lock
 void remove_sacn_merge_receiver(size_t index)
 {
+  etcpal_rbtree_clear_with_cb(&mem_bufs.merge_receivers[index].ids_from_cids, source_ids_from_cids_tree_dealloc);
+  etcpal_rbtree_clear_with_cb(&mem_bufs.merge_receivers[index].cids_from_ids, cids_from_source_ids_tree_dealloc);
   REMOVE_AT_INDEX((&mem_bufs), SacnMergeReceiver, merge_receivers, index);
 }
 
@@ -1239,7 +1262,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   receiver->sampling = false;
   receiver->notified_sampling_started = false;
   receiver->suppress_limit_exceeded_notification = false;
-  etcpal_rbtree_init(&receiver->sources, tracked_source_compare, node_alloc, node_dealloc);
+  etcpal_rbtree_init(&receiver->sources, uuid_compare, node_alloc, node_dealloc);
   receiver->term_sets = NULL;
 
   receiver->filter_preview_data = ((config->flags & SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA) != 0);
@@ -1923,13 +1946,22 @@ void remove_receiver_from_maps(SacnReceiver* receiver)
   etcpal_rbtree_remove(&receivers, receiver);
 }
 
-int tracked_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
+int source_id_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
 {
   ETCPAL_UNUSED_ARG(tree);
 
-  const SacnTrackedSource* a = (const SacnTrackedSource*)value_a;
-  const SacnTrackedSource* b = (const SacnTrackedSource*)value_b;
-  return ETCPAL_UUID_CMP(&a->cid, &b->cid);
+  const sacn_source_id_t* a = (const sacn_source_id_t*)value_a;
+  const sacn_source_id_t* b = (const sacn_source_id_t*)value_b;
+  return (*a > *b) - (*a < *b);
+}
+
+int uuid_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
+{
+  ETCPAL_UNUSED_ARG(tree);
+
+  const EtcPalUuid* a = (const EtcPalUuid*)value_a;
+  const EtcPalUuid* b = (const EtcPalUuid*)value_b;
+  return ETCPAL_UUID_CMP(a, b);
 }
 
 int receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
@@ -1966,6 +1998,20 @@ void node_dealloc(EtcPalRbNode* node)
 #else
   etcpal_mempool_free(sacnrecv_rb_nodes, node);
 #endif
+}
+
+void source_ids_from_cids_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
+{
+  ETCPAL_UNUSED_ARG(self);
+  FREE_SOURCE_ID_FROM_CID(node->value);
+  node_dealloc(node);
+}
+
+void cids_from_source_ids_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
+{
+  ETCPAL_UNUSED_ARG(self);
+  FREE_CID_FROM_SOURCE_ID(node->value);
+  node_dealloc(node);
 }
 
 /* Helper function for clearing an EtcPalRbTree containing sources. */
