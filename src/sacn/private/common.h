@@ -35,6 +35,7 @@
 #include "etcpal/socket.h"
 #include "etcpal/timer.h"
 #include "sacn/receiver.h"
+#include "sacn/merge_receiver.h"
 #include "sacn/source.h"
 #include "sacn/dmx_merger.h"
 #include "sacn/private/opts.h"
@@ -381,6 +382,19 @@ typedef struct SacnRecvThreadContext
   EtcPalTimer periodic_timer;
   bool periodic_timer_started;
 } SacnRecvThreadContext;
+
+/******************************************************************************
+ * Types used by the sACN Merge Receiver module
+ *****************************************************************************/
+
+typedef struct SacnMergeReceiver SacnMergeReceiver;
+struct SacnMergeReceiver
+{
+  sacn_merge_receiver_t merge_receiver_handle;
+  sacn_dmx_merger_t merger_handle;
+  sacn_receiver_t receiver_handle;
+  SacnMergeReceiverCallbacks callbacks;
+};
 
 /******************************************************************************
  * Types used by the sACN Source module

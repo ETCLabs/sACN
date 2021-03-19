@@ -657,7 +657,7 @@ TEST_F(TestMem, AddReceiverToListWorks)
 #if SACN_DYNAMIC_MEM
   SacnReceiver receiver{};
 #else
-  SacnReceiver receiver{{},{},{},{}};  // Fixes error C3852
+  SacnReceiver receiver{{}, {}, {}, {}};   // Fixes error C3852
 #endif
 
   add_receiver_to_list(&rtc, &receiver);
@@ -710,4 +710,33 @@ TEST_F(TestMem, RemoveReceiverFromListWorks)
   EXPECT_EQ(rtc.receivers->next, nullptr);
   EXPECT_EQ(rtc.num_receivers, 1u);
   EXPECT_EQ(receiver.next, nullptr);
+}
+
+TEST_F(TestMem, AddSacnMergeReceiverWorks)
+{
+  static constexpr sacn_merge_receiver_t kTestMergeReceiver = 1;
+  static constexpr sacn_dmx_merger_t kTestMerger = 2;
+  static constexpr sacn_receiver_t kTestReceiver = 3;
+  static constexpr auto kTestUniverseData = [](sacn_merge_receiver_t, uint16_t, const uint8_t*, const sacn_source_id_t*,
+                                               void*) {};
+  static constexpr auto kTestUniverseNonDmx = [](sacn_merge_receiver_t, uint16_t, const EtcPalSockAddr*,
+                                                 const SacnHeaderData*, const uint8_t*, void*) {};
+  static constexpr auto kTestSourceLimitExceeded = [](sacn_merge_receiver_t, uint16_t, void*) {};
+
+  SacnMergeReceiverConfig config = SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT;
+  config.callbacks.universe_data = kTestUniverseData;
+  config.callbacks.universe_non_dmx = kTestUniverseNonDmx;
+  config.callbacks.source_limit_exceeded = kTestSourceLimitExceeded;
+
+  SacnMergeReceiver* merge_receiver = nullptr;
+  EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiver, kTestMerger, kTestReceiver, &config, &merge_receiver),
+            kEtcPalErrOk);
+
+  ASSERT_NE(merge_receiver, nullptr);
+  EXPECT_EQ(merge_receiver->merge_receiver_handle, kTestMergeReceiver);
+  EXPECT_EQ(merge_receiver->merger_handle, kTestMerger);
+  EXPECT_EQ(merge_receiver->receiver_handle, kTestReceiver);
+  EXPECT_EQ(merge_receiver->callbacks.universe_data, kTestUniverseData);
+  EXPECT_EQ(merge_receiver->callbacks.universe_non_dmx, kTestUniverseNonDmx);
+  EXPECT_EQ(merge_receiver->callbacks.source_limit_exceeded, kTestSourceLimitExceeded);
 }
