@@ -285,9 +285,7 @@ etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
  */
 etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id)
 {
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe_id);
-  return kEtcPalErrNotImpl;
+  return sacn_receiver_get_universe((sacn_receiver_t)handle, universe_id);
 }
 
 /**
