@@ -496,25 +496,49 @@ etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, 
 void universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
                    const uint8_t* pdata, bool is_sampling, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(source_addr);
+  ETCPAL_UNUSED_ARG(header);
+  ETCPAL_UNUSED_ARG(pdata);
+  ETCPAL_UNUSED_ARG(is_sampling);
+  ETCPAL_UNUSED_ARG(context);
 }
 
 void sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
                   size_t num_lost_sources, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(lost_sources);
+  ETCPAL_UNUSED_ARG(num_lost_sources);
+  ETCPAL_UNUSED_ARG(context);
 }
 
 void sampling_started(sacn_receiver_t handle, uint16_t universe, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(context);
 }
 
 void sampling_ended(sacn_receiver_t handle, uint16_t universe, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(context);
 }
 
 void pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(source);
+  ETCPAL_UNUSED_ARG(context);
 }
 
 void source_limit_exceeded(sacn_receiver_t handle, uint16_t universe, void* context)
 {
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(context);
 }
