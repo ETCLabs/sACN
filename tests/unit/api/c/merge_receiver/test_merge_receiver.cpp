@@ -57,7 +57,39 @@ protected:
   }
 };
 
-TEST_F(TestMergeReceiver, TestFoo)
+TEST_F(TestMergeReceiver, CreateWorks)
 {
-  //CHRISTIAN TODO
+  static constexpr uint16_t kTestUniverse = 123u;
+  static constexpr int kTestHandle = 4567u;
+
+  SacnMergeReceiverConfig config = SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT;
+  config.universe_id = kTestUniverse;
+  config.callbacks.universe_data = [](sacn_merge_receiver_t, uint16_t, const uint8_t*, const sacn_source_id_t*, void*) {
+  };
+  config.callbacks.universe_non_dmx = [](sacn_merge_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*,
+                                         const uint8_t*, void*) {};
+
+  sacn_receiver_create_fake.custom_fake = [](const SacnReceiverConfig*, sacn_receiver_t* handle, SacnMcastInterface*,
+                                             size_t) {
+    *handle = kTestHandle;
+    return kEtcPalErrOk;
+  };
+
+  sacn_dmx_merger_create_fake.custom_fake = [](const SacnDmxMergerConfig*, sacn_dmx_merger_t* handle) {
+    *handle = kTestHandle;
+    return kEtcPalErrOk;
+  };
+
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&config, &handle, nullptr, 0u), kEtcPalErrOk);
+
+  EXPECT_EQ(handle, kTestHandle);
+  EXPECT_EQ(sacn_receiver_create_fake.call_count, 1u);
+  EXPECT_EQ(sacn_dmx_merger_create_fake.call_count, 1u);
+
+  SacnMergeReceiver* merge_receiver = NULL;
+  ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver, NULL), kEtcPalErrOk);
+  EXPECT_EQ(merge_receiver->merge_receiver_handle, handle);
+  EXPECT_EQ(merge_receiver->merger_handle, kTestHandle);
+  EXPECT_TRUE(merge_receiver->use_pap);
 }
