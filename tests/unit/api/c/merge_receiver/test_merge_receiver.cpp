@@ -36,6 +36,18 @@
 #define TestMergeReceiver TestMergeReceiverStatic
 #endif
 
+static constexpr uint16_t kTestUniverse = 123u;
+static constexpr int kTestHandle = 4567u;
+static constexpr int kTestHandle2 = 1234u;
+static constexpr SacnMergeReceiverConfig kTestConfig = {
+    kTestUniverse,
+    {[](sacn_merge_receiver_t, uint16_t, const uint8_t*, const sacn_source_id_t*, void*) {},
+     [](sacn_merge_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*, void*) {}, NULL,
+     NULL},
+    SACN_RECEIVER_INFINITE_SOURCES,
+    true,
+    kSacnIpV4AndIpV6};
+
 class TestMergeReceiver : public ::testing::Test
 {
 protected:
@@ -59,16 +71,7 @@ protected:
 
 TEST_F(TestMergeReceiver, CreateWorks)
 {
-  static constexpr uint16_t kTestUniverse = 123u;
-  static constexpr int kTestHandle = 4567u;
-  static constexpr int kTestHandle2 = 1234u;
-
-  SacnMergeReceiverConfig config = SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.universe_id = kTestUniverse;
-  config.callbacks.universe_data = [](sacn_merge_receiver_t, uint16_t, const uint8_t*, const sacn_source_id_t*, void*) {
-  };
-  config.callbacks.universe_non_dmx = [](sacn_merge_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*,
-                                         const uint8_t*, void*) {};
+  SacnMergeReceiverConfig config = kTestConfig;
 
   sacn_receiver_create_fake.custom_fake = [](const SacnReceiverConfig*, sacn_receiver_t* handle, SacnMcastInterface*,
                                              size_t) {
@@ -113,4 +116,25 @@ TEST_F(TestMergeReceiver, CreateWorks)
 
   EXPECT_EQ(sacn_receiver_destroy_fake.call_count, 1u);
   EXPECT_EQ(sacn_dmx_merger_destroy_fake.call_count, 0u);
+}
+
+TEST_F(TestMergeReceiver, DestroyWorks)
+{
+  sacn_receiver_create_fake.custom_fake = [](const SacnReceiverConfig*, sacn_receiver_t* handle, SacnMcastInterface*,
+                                             size_t) {
+    *handle = kTestHandle;
+    return kEtcPalErrOk;
+  };
+
+  sacn_dmx_merger_create_fake.custom_fake = [](const SacnDmxMergerConfig*, sacn_dmx_merger_t* handle) {
+    *handle = kTestHandle;
+    return kEtcPalErrOk;
+  };
+
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(get_num_merge_receivers(), 1u);
+
+  EXPECT_EQ(sacn_merge_receiver_destroy(handle), kEtcPalErrOk);
+  EXPECT_EQ(get_num_merge_receivers(), 0u);
 }
