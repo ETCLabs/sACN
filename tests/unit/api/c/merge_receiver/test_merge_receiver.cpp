@@ -61,6 +61,7 @@ TEST_F(TestMergeReceiver, CreateWorks)
 {
   static constexpr uint16_t kTestUniverse = 123u;
   static constexpr int kTestHandle = 4567u;
+  static constexpr int kTestHandle2 = 1234u;
 
   SacnMergeReceiverConfig config = SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT;
   config.universe_id = kTestUniverse;
@@ -92,4 +93,24 @@ TEST_F(TestMergeReceiver, CreateWorks)
   EXPECT_EQ(merge_receiver->merge_receiver_handle, handle);
   EXPECT_EQ(merge_receiver->merger_handle, kTestHandle);
   EXPECT_TRUE(merge_receiver->use_pap);
+  EXPECT_EQ(get_num_merge_receivers(), 1u);
+
+  // Now test failure cleanup
+  sacn_receiver_create_fake.custom_fake = [](const SacnReceiverConfig*, sacn_receiver_t* handle, SacnMcastInterface*,
+                                             size_t) {
+    *handle = kTestHandle2;
+    return kEtcPalErrOk;
+  };
+
+  sacn_dmx_merger_create_fake.custom_fake = [](const SacnDmxMergerConfig*, sacn_dmx_merger_t*) {
+    return kEtcPalErrSys;
+  };
+
+  ++config.universe_id;
+  EXPECT_EQ(sacn_merge_receiver_create(&config, &handle, nullptr, 0u), kEtcPalErrSys);
+
+  EXPECT_EQ(get_num_merge_receivers(), 1u);
+
+  EXPECT_EQ(sacn_receiver_destroy_fake.call_count, 1u);
+  EXPECT_EQ(sacn_dmx_merger_destroy_fake.call_count, 0u);
 }

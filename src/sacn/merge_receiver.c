@@ -133,22 +133,29 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
   }
 
   SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
-  if ((result == kEtcPalErrOk) && sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    // Since a merge receiver is a specialized receiver, and the handles are integers, just reuse the same value.
-    sacn_merge_receiver_t merge_receiver_handle = (sacn_merge_receiver_t)receiver_handle;
-
-    SacnMergeReceiver* merge_receiver = NULL;
-    result = add_sacn_merge_receiver(merge_receiver_handle, config, &merge_receiver);
-
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
     {
-      merger_config.slots = merge_receiver->slots;
-      merger_config.slot_owners = merge_receiver->slot_owners;
-      *handle = merge_receiver_handle;
-    }
+      // Since a merge receiver is a specialized receiver, and the handles are integers, just reuse the same value.
+      sacn_merge_receiver_t merge_receiver_handle = (sacn_merge_receiver_t)receiver_handle;
 
-    sacn_unlock();
+      SacnMergeReceiver* merge_receiver = NULL;
+      result = add_sacn_merge_receiver(merge_receiver_handle, config, &merge_receiver);
+
+      if (result == kEtcPalErrOk)
+      {
+        merger_config.slots = merge_receiver->slots;
+        merger_config.slot_owners = merge_receiver->slot_owners;
+        *handle = merge_receiver_handle;
+      }
+
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   sacn_dmx_merger_t merger_handle = SACN_DMX_MERGER_INVALID;
@@ -158,13 +165,20 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
     result = sacn_dmx_merger_create(&merger_config, &merger_handle);
   }
 
-  if ((result == kEtcPalErrOk) && sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    SacnMergeReceiver* merge_receiver = NULL;
-    if (lookup_merge_receiver((sacn_merge_receiver_t)receiver_handle, &merge_receiver, NULL) == kEtcPalErrOk)
-      merge_receiver->merger_handle = merger_handle;
+    if (sacn_lock())
+    {
+      SacnMergeReceiver* merge_receiver = NULL;
+      if (lookup_merge_receiver((sacn_merge_receiver_t)receiver_handle, &merge_receiver, NULL) == kEtcPalErrOk)
+        merge_receiver->merger_handle = merger_handle;
 
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   if (result != kEtcPalErrOk)
