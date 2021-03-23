@@ -307,11 +307,99 @@ etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, ui
  */
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id)
 {
-  if (!UNIVERSE_ID_VALID(new_universe_id))
-    return kEtcPalErrInvalid;
+  etcpal_error_t result = kEtcPalErrOk;
 
-  ETCPAL_UNUSED_ARG(handle);
-  return kEtcPalErrNotImpl;
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+  else if (!UNIVERSE_ID_VALID(new_universe_id))
+    result = kEtcPalErrInvalid;
+
+    // Determine what source IDs need removing
+#if SACN_DYNAMIC_MEM
+  sacn_source_id_t* sources_to_remove = NULL;
+#else
+  sacn_source_id_t sources_to_remove[SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE];
+#endif
+  size_t num_sources_to_remove = 0u;
+  if (result == kEtcPalErrOk)
+  {
+    if (sacn_lock())
+    {
+      SacnMergeReceiver* merge_receiver = NULL;
+      result = lookup_merge_receiver(handle, &merge_receiver, NULL);
+
+      if (result == kEtcPalErrOk)
+      {
+        num_sources_to_remove = etcpal_rbtree_size(&merge_receiver->cids_from_ids);
+
+        if (num_sources_to_remove > 0)
+        {
+#if SACN_DYNAMIC_MEM
+          sources_to_remove = calloc(num_sources_to_remove, sizeof(sacn_source_id_t));
+#endif
+          size_t index = 0;
+          EtcPalRbIter iter;
+          etcpal_rbiter_init(&iter);
+          for (sacn_source_id_t* id = etcpal_rbiter_first(&iter, &merge_receiver->cids_from_ids); id;
+               id = etcpal_rbiter_next(&iter))
+          {
+            sources_to_remove[index] = *id;
+            ++index;
+          }
+        }
+      }
+
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
+  }
+
+  // Change receiver universe
+  if (result == kEtcPalErrOk)
+    result = sacn_receiver_change_universe((sacn_receiver_t)handle, new_universe_id);
+
+  if (num_sources_to_remove > 0)
+  {
+    // Remove from merge receiver & get DMX merger handle
+    sacn_dmx_merger_t merger_handle = SACN_DMX_MERGER_INVALID;
+    if (result == kEtcPalErrOk)
+    {
+      if (sacn_lock())
+      {
+        SacnMergeReceiver* merge_receiver = NULL;
+        result = lookup_merge_receiver(handle, &merge_receiver, NULL);
+
+        if (result == kEtcPalErrOk)
+        {
+          merger_handle = merge_receiver->merger_handle;
+
+          for (size_t i = 0; i < num_sources_to_remove; ++i)
+            remove_sacn_merge_receiver_source(merge_receiver, sources_to_remove[i]);
+        }
+
+        sacn_unlock();
+      }
+      else
+      {
+        result = kEtcPalErrSys;
+      }
+    }
+
+    // Remove from DMX merger
+    for (size_t i = 0; (i < num_sources_to_remove) && (result == kEtcPalErrOk); ++i)
+      result = sacn_dmx_merger_remove_source(merger_handle, sources_to_remove[i]);
+  }
+
+  // Clean up
+#if SACN_DYNAMIC_MEM
+  if (sources_to_remove)
+    free(sources_to_remove);
+#endif
+
+  return result;
 }
 
 /**

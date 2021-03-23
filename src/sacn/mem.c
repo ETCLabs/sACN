@@ -859,6 +859,18 @@ void remove_sacn_merge_receiver(size_t index)
 }
 
 // Needs lock
+void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_source_id_t source_id)
+{
+  SacnCidFromSourceId* cid_from_id = etcpal_rbtree_find(&merge_receiver->cids_from_ids, &source_id);
+
+  if (cid_from_id)
+  {
+    etcpal_rbtree_remove_with_cb(&merge_receiver->ids_from_cids, &cid_from_id->cid, source_ids_from_cids_tree_dealloc);
+    etcpal_rbtree_remove_with_cb(&merge_receiver->cids_from_ids, &source_id, cids_from_source_ids_tree_dealloc);
+  }
+}
+
+// Needs lock
 etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state)
 {
 #if SACN_SOURCE_ENABLED

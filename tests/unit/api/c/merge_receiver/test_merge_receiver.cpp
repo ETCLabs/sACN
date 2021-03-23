@@ -138,3 +138,5 @@ TEST_F(TestMergeReceiver, DestroyWorks)
   EXPECT_EQ(sacn_merge_receiver_destroy(handle), kEtcPalErrOk);
   EXPECT_EQ(get_num_merge_receivers(), 0u);
 }
+
+// TODO: sacn_merge_receiver_change_universe?
