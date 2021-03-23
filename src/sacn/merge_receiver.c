@@ -213,8 +213,63 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
  */
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
 {
-  ETCPAL_UNUSED_ARG(handle);
-  return kEtcPalErrNotImpl;
+  etcpal_error_t result = kEtcPalErrOk;
+
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+
+  sacn_dmx_merger_t merger_handle = SACN_DMX_MERGER_INVALID;
+  if (result == kEtcPalErrOk)
+  {
+    if (sacn_lock())
+    {
+      SacnMergeReceiver* merge_receiver = NULL;
+      result = lookup_merge_receiver(handle, &merge_receiver, NULL);
+
+      if ((result == kEtcPalErrOk) && (merge_receiver->merger_handle == SACN_DMX_MERGER_INVALID))
+        result = kEtcPalErrNotFound;  // Merge receiver is still being created, so treat as not found.
+      else
+        merger_handle = merge_receiver->merger_handle;
+
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    etcpal_error_t receiver_result = sacn_receiver_destroy((sacn_receiver_t)handle);
+    etcpal_error_t merger_result = sacn_dmx_merger_destroy(merger_handle);
+
+    etcpal_error_t merge_receiver_result = kEtcPalErrOk;
+    if (sacn_lock())
+    {
+      SacnMergeReceiver* tmp = NULL;
+      size_t index = 0;
+      merge_receiver_result = lookup_merge_receiver(handle, &tmp, &index);
+
+      if (merge_receiver_result == kEtcPalErrOk)
+        remove_sacn_merge_receiver(index);
+
+      sacn_unlock();
+    }
+    else
+    {
+      merge_receiver_result = kEtcPalErrSys;
+    }
+
+    if (receiver_result != kEtcPalErrOk)
+      result = receiver_result;
+    else if (merger_result != kEtcPalErrOk)
+      result = merger_result;
+    else if (merge_receiver_result != kEtcPalErrOk)
+      result = merge_receiver_result;
+  }
+
+  return result;
 }
 
 /**
