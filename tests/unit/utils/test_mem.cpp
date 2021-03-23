@@ -715,8 +715,6 @@ TEST_F(TestMem, RemoveReceiverFromListWorks)
 TEST_F(TestMem, AddSacnMergeReceiverWorks)
 {
   static constexpr sacn_merge_receiver_t kTestMergeReceiver = 1;
-  static constexpr sacn_dmx_merger_t kTestMerger = 2;
-  static constexpr sacn_receiver_t kTestReceiver = 3;
   static constexpr auto kTestUniverseData = [](sacn_merge_receiver_t, uint16_t, const uint8_t*, const sacn_source_id_t*,
                                                void*) {};
   static constexpr auto kTestUniverseNonDmx = [](sacn_merge_receiver_t, uint16_t, const EtcPalSockAddr*,
@@ -729,13 +727,11 @@ TEST_F(TestMem, AddSacnMergeReceiverWorks)
   config.callbacks.source_limit_exceeded = kTestSourceLimitExceeded;
 
   SacnMergeReceiver* merge_receiver = nullptr;
-  EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiver, kTestMerger, kTestReceiver, &config, &merge_receiver),
-            kEtcPalErrOk);
+  EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiver, &config, &merge_receiver), kEtcPalErrOk);
 
   ASSERT_NE(merge_receiver, nullptr);
   EXPECT_EQ(merge_receiver->merge_receiver_handle, kTestMergeReceiver);
-  EXPECT_EQ(merge_receiver->merger_handle, kTestMerger);
-  EXPECT_EQ(merge_receiver->receiver_handle, kTestReceiver);
+  EXPECT_EQ(merge_receiver->merger_handle, SACN_DMX_MERGER_INVALID);
   EXPECT_EQ(merge_receiver->callbacks.universe_data, kTestUniverseData);
   EXPECT_EQ(merge_receiver->callbacks.universe_non_dmx, kTestUniverseNonDmx);
   EXPECT_EQ(merge_receiver->callbacks.source_limit_exceeded, kTestSourceLimitExceeded);

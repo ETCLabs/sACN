@@ -785,11 +785,11 @@ void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnR
 }
 
 // Needs lock
-etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, sacn_dmx_merger_t merger_handle,
-                                       sacn_receiver_t receiver_handle, const SacnMergeReceiverConfig* config,
+etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnMergeReceiverConfig* config,
                                        SacnMergeReceiver** state)
 {
   etcpal_error_t result = kEtcPalErrOk;
+
   SacnMergeReceiver* merge_receiver = NULL;
   if (lookup_merge_receiver(handle, &merge_receiver, NULL) == kEtcPalErrOk)
     result = kEtcPalErrExists;
@@ -801,8 +801,7 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, sacn_dmx_me
     merge_receiver = &mem_bufs.merge_receivers[mem_bufs.num_merge_receivers];
 
     merge_receiver->merge_receiver_handle = handle;
-    merge_receiver->merger_handle = merger_handle;
-    merge_receiver->receiver_handle = receiver_handle;
+    merge_receiver->merger_handle = SACN_DMX_MERGER_INVALID;
     merge_receiver->callbacks = config->callbacks;
     merge_receiver->use_pap = config->use_pap;
 

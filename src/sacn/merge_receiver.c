@@ -34,6 +34,17 @@
 
 /*********************** Private function prototypes *************************/
 
+/*********************** Receiver callback prototypes *************************/
+
+static void universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
+                          const uint8_t* pdata, bool is_sampling, void* context);
+static void sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
+                         size_t num_lost_sources, void* context);
+static void sampling_started(sacn_receiver_t handle, uint16_t universe, void* context);
+static void sampling_ended(sacn_receiver_t handle, uint16_t universe, void* context);
+static void pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source, void* context);
+static void source_limit_exceeded(sacn_receiver_t handle, uint16_t universe, void* context);
+
 /*************************** Function definitions ****************************/
 
 /**************************************************************************************************
@@ -96,15 +107,80 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
 {
   etcpal_error_t result = kEtcPalErrOk;
 
-  sacn_dmx_merger_t merger_handle;
-  sacn_receiver_t receiver_handle;
-
-  if (!config || !handle)
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+  else if (!config || !handle)
     result = kEtcPalErrInvalid;
 
+  sacn_receiver_t receiver_handle = SACN_RECEIVER_INVALID;
   if (result == kEtcPalErrOk)
   {
+    SacnReceiverConfig receiver_config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
+    receiver_config.universe_id = config->universe_id;
+    receiver_config.callbacks.universe_data = universe_data;
+    receiver_config.callbacks.sources_lost = sources_lost;
+    receiver_config.callbacks.sampling_period_started = sampling_started;
+    receiver_config.callbacks.sampling_period_ended = sampling_ended;
+    receiver_config.callbacks.source_pap_lost = pap_lost;
+    receiver_config.callbacks.source_limit_exceeded = source_limit_exceeded;
+    receiver_config.source_count_max = config->source_count_max;
+    receiver_config.flags = SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA;
+    receiver_config.ip_supported = config->ip_supported;
 
+    result = sacn_receiver_create(&receiver_config, &receiver_handle, netints, num_netints);
+  }
+
+  SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
+  if ((result == kEtcPalErrOk) && sacn_lock())
+  {
+    // Since a merge receiver is a specialized receiver, and the handles are integers, just reuse the same value.
+    sacn_merge_receiver_t merge_receiver_handle = (sacn_merge_receiver_t)receiver_handle;
+
+    SacnMergeReceiver* merge_receiver = NULL;
+    result = add_sacn_merge_receiver(merge_receiver_handle, config, &merge_receiver);
+
+    if (result == kEtcPalErrOk)
+    {
+      merger_config.slots = merge_receiver->slots;
+      merger_config.slot_owners = merge_receiver->slot_owners;
+      *handle = merge_receiver_handle;
+    }
+
+    sacn_unlock();
+  }
+
+  sacn_dmx_merger_t merger_handle = SACN_DMX_MERGER_INVALID;
+  if (result == kEtcPalErrOk)
+  {
+    merger_config.source_count_max = config->source_count_max;
+    result = sacn_dmx_merger_create(&merger_config, &merger_handle);
+  }
+
+  if ((result == kEtcPalErrOk) && sacn_lock())
+  {
+    SacnMergeReceiver* merge_receiver = NULL;
+    if (lookup_merge_receiver((sacn_merge_receiver_t)receiver_handle, &merge_receiver, NULL) == kEtcPalErrOk)
+      merge_receiver->merger_handle = merger_handle;
+
+    sacn_unlock();
+  }
+
+  if (result != kEtcPalErrOk)
+  {
+    if (receiver_handle != SACN_RECEIVER_INVALID)
+      sacn_receiver_destroy(receiver_handle);
+    if (merger_handle != SACN_DMX_MERGER_INVALID)
+      sacn_dmx_merger_destroy(merger_handle);
+
+    if (sacn_lock())
+    {
+      SacnMergeReceiver* tmp = NULL;
+      size_t index = 0;
+      if (lookup_merge_receiver((sacn_merge_receiver_t)receiver_handle, &tmp, &index) == kEtcPalErrOk)
+        remove_sacn_merge_receiver(index);
+
+      sacn_unlock();
+    }
   }
 
   return result;
@@ -254,4 +330,34 @@ etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, 
   ETCPAL_UNUSED_ARG(source_id);
   ETCPAL_UNUSED_ARG(source_cid);
   return kEtcPalErrNotImpl;
+}
+
+/**************************************************************************************************
+ * Receiver callback implementations
+ *************************************************************************************************/
+
+void universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
+                   const uint8_t* pdata, bool is_sampling, void* context)
+{
+}
+
+void sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
+                  size_t num_lost_sources, void* context)
+{
+}
+
+void sampling_started(sacn_receiver_t handle, uint16_t universe, void* context)
+{
+}
+
+void sampling_ended(sacn_receiver_t handle, uint16_t universe, void* context)
+{
+}
+
+void pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source, void* context)
+{
+}
+
+void source_limit_exceeded(sacn_receiver_t handle, uint16_t universe, void* context)
+{
 }

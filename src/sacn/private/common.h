@@ -404,7 +404,6 @@ struct SacnMergeReceiver
 {
   sacn_merge_receiver_t merge_receiver_handle;
   sacn_dmx_merger_t merger_handle;
-  sacn_receiver_t receiver_handle;
   SacnMergeReceiverCallbacks callbacks;
   bool use_pap;
 
