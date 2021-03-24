@@ -185,3 +185,20 @@ TEST_F(TestMergeReceiver, ResetNetworkingPerReceiverWorks)
   EXPECT_EQ(sacn_merge_receiver_reset_networking_per_receiver(netint_lists, kNumNetintLists), kEtcPalErrOk);
   EXPECT_EQ(sacn_receiver_reset_networking_per_receiver_fake.call_count, 1u);
 }
+
+TEST_F(TestMergeReceiver, GetSourceIdWorks)
+{
+  static constexpr sacn_source_id_t kTestSourceId = 123u;
+  static const EtcPalUuid kTestCid = etcpal::Uuid::V4().get();
+
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+
+  EXPECT_EQ(sacn_merge_receiver_get_source_id(handle, &kTestCid), SACN_DMX_MERGER_SOURCE_INVALID);
+
+  SacnMergeReceiver* merge_receiver = nullptr;
+  ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver, nullptr), kEtcPalErrOk);
+  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, kTestSourceId, &kTestCid), kEtcPalErrOk);
+
+  EXPECT_EQ(sacn_merge_receiver_get_source_id(handle, &kTestCid), kTestSourceId);
+}

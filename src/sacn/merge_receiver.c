@@ -528,9 +528,24 @@ size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, 
  */
 sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid)
 {
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(source_cid);
-  return SACN_DMX_MERGER_SOURCE_INVALID;
+  sacn_source_id_t result = SACN_DMX_MERGER_SOURCE_INVALID;
+
+  if (sacn_lock())
+  {
+    SacnMergeReceiver* merge_receiver = NULL;
+    if (lookup_merge_receiver(handle, &merge_receiver, NULL) == kEtcPalErrOk)
+    {
+      SacnSourceIdFromCid* id_from_cid =
+          (SacnSourceIdFromCid*)etcpal_rbtree_find(&merge_receiver->ids_from_cids, source_cid);
+
+      if (id_from_cid)
+        result = id_from_cid->id;
+    }
+
+    sacn_unlock();
+  }
+
+  return result;
 }
 
 /**
