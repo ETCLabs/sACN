@@ -793,6 +793,14 @@ TEST_F(TestMem, RemoveSacnMergeReceiverSourceWorks)
         kEtcPalErrOk);
   }
 
+  for (size_t i = kNumSources; i < kNumSources + 5u; ++i)
+  {
+    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
+    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources);
+
+    remove_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i));
+  }
+
   for (size_t i = 0u; i < kNumSources; ++i)
   {
     EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources - i);
