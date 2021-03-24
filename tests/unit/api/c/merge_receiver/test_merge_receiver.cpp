@@ -202,3 +202,23 @@ TEST_F(TestMergeReceiver, GetSourceIdWorks)
 
   EXPECT_EQ(sacn_merge_receiver_get_source_id(handle, &kTestCid), kTestSourceId);
 }
+
+TEST_F(TestMergeReceiver, GetSourceCidWorks)
+{
+  static constexpr sacn_source_id_t kTestSourceId = 123u;
+  static const EtcPalUuid kTestCid = etcpal::Uuid::V4().get();
+
+  EtcPalUuid cid_result = kEtcPalNullUuid;
+
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+
+  EXPECT_EQ(sacn_merge_receiver_get_source_cid(handle, kTestSourceId, &cid_result), kEtcPalErrNotFound);
+
+  SacnMergeReceiver* merge_receiver = nullptr;
+  ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver, nullptr), kEtcPalErrOk);
+  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, kTestSourceId, &kTestCid), kEtcPalErrOk);
+
+  EXPECT_EQ(sacn_merge_receiver_get_source_cid(handle, kTestSourceId, &cid_result), kEtcPalErrOk);
+  EXPECT_EQ(ETCPAL_UUID_CMP(&cid_result, &kTestCid), 0);
+}

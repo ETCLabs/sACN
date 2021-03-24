@@ -412,28 +412,32 @@ inline std::vector<EtcPalMcastNetintId> MergeReceiver::GetNetworkInterfaces()
  * it is a source that has been discovered by the merge receiver.
  *
  * @param[in] source_cid The UUID of the source CID.
- * @return On success this will be the source ID, otherwise kEtcPalErrInvalid.
+ * @return On success this will be the source ID, otherwise kEtcPalErrNotFound.
  */
 inline etcpal::Expected<sacn_source_id_t> MergeReceiver::GetSourceId(const etcpal::Uuid& source_cid) const
 {
   sacn_source_id_t result = sacn_merge_receiver_get_source_id(handle_, &source_cid.get());
   if (result != SACN_DMX_MERGER_SOURCE_INVALID)
     return result;
-  return kEtcPalErrInvalid;
+  return kEtcPalErrNotFound;
 }
 
 /**
  * @brief Converts a source ID to the corresponding source CID.
  *
  * @param[in] source_id The ID of the source.
- * @return On success this will be the source CID, otherwise kEtcPalErrInvalid.
+ * @return On success, the source CID.
+ * @return #kEtcPalErrNotFound: This merge receiver is uninitialized, or source_id does not correspond to a valid
+ * source.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Expected<etcpal::Uuid> MergeReceiver::GetSourceCid(sacn_source_id_t source_id) const
 {
   EtcPalUuid result;
-  if (kEtcPalErrOk == sacn_merge_receiver_get_source_cid(handle_, source_id, &result))
+  etcpal_error_t error = sacn_merge_receiver_get_source_cid(handle_, source_id, &result);
+  if (error == kEtcPalErrOk)
     return result;
-  return kEtcPalErrInvalid;
+  return error;
 }
 
 /**

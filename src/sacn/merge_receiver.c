@@ -555,16 +555,46 @@ sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle,
  * @param[in] source_id The ID of the source.
  * @param[out] source_cid The UUID of the source CID.
  * @return #kEtcPalErrOk: Lookup was successful.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotFound: handle does not correspond to a valid merge receiver, or source_id  does not correspond
  * to a valid source.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, sacn_source_id_t source_id,
                                                   EtcPalUuid* source_cid)
 {
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(source_id);
-  ETCPAL_UNUSED_ARG(source_cid);
-  return kEtcPalErrNotImpl;
+  etcpal_error_t result = kEtcPalErrNotFound;
+
+  if (source_cid)
+  {
+    if (sacn_lock())
+    {
+      SacnMergeReceiver* merge_receiver = NULL;
+      if (lookup_merge_receiver(handle, &merge_receiver, NULL) == kEtcPalErrOk)
+      {
+        SacnCidFromSourceId* cid_from_id =
+            (SacnCidFromSourceId*)etcpal_rbtree_find(&merge_receiver->cids_from_ids, &source_id);
+
+        if (cid_from_id)
+        {
+          result = kEtcPalErrOk;
+          *source_cid = cid_from_id->cid;
+        }
+      }
+
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
+  }
+  else
+  {
+    result = kEtcPalErrInvalid;
+  }
+
+  return result;
 }
 
 /**************************************************************************************************
