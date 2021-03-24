@@ -403,34 +403,64 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
 }
 
 /**
- * @brief Resets the underlying network sockets and packet receipt state for the sACN Merge Receiver.
+ * @brief Resets the underlying network sockets and packet receipt state for all sACN merge receivers.
  *
- * This is typically used when the application detects that the list of networking interfaces has changed.
+ * This is typically used when the application detects that the list of networking interfaces has changed, and wants
+ * every merge receiver to use the same network interfaces.
  *
  * After this call completes, a new sampling period occurs, and then underlying updates will generate new calls to
- * SacnMergeReceiverMergedDataCallback(). If this call fails, the caller must call sacn_merge_receiver_destroy for the
- * merge receiver, because the merge receiver may be in an invalid state.
+ * SacnMergeReceiverMergedDataCallback(). If this call fails, the caller must call sacn_merge_receiver_destroy for each
+ * merge receiver, because the merge receivers may be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
- * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ * network interfaces passed in. This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in] handle Handle to the merge receiver for which to reset the networking.
- * @param[in,out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
- * status codes are filled in.  If NULL, all available interfaces are tried.
- * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
- * @return #kEtcPalErrOk: Network reset successfully.
+ * @param[in, out] netints If non-NULL, this is the list of interfaces the application wants to use, and the status
+ * codes are filled in.  If NULL, all available interfaces are tried.
+ * @param[in, out] num_netints The size of netints, or 0 if netints is NULL.
+ * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, SacnMcastInterface* netints,
-                                                    size_t num_netints)
+etcpal_error_t sacn_merge_receiver_reset_networking(SacnMcastInterface* netints, size_t num_netints)
 {
-  ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
+  return kEtcPalErrNotImpl;
+}
+
+/**
+ * @brief Resets underlying network sockets and packet receipt state, determines network interfaces for each merge
+ * receiver.
+ *
+ * This is typically used when the application detects that the list of networking interfaces has changed, and wants to
+ * determine what the new network interfaces should be for each merge receiver.
+ *
+ * After this call completes, a new sampling period occurs, and then underlying updates will generate new calls to
+ * SacnMergeReceiverMergedDataCallback(). If this call fails, the caller must call sacn_merge_receiver_destroy for each
+ * merge receiver, because the merge receivers may be in an invalid state.
+ *
+ * Note that the networking reset is considered successful if it is able to successfully use any of the network
+ * interfaces passed in for each merge receiver. This will only return #kEtcPalErrNoNetints if none of the interfaces
+ * work for a merge receiver.
+ *
+ * @param[in, out] netint_lists Lists of interfaces the application wants to use for each merge receiver. Must not be
+ * NULL. Must include all merge receivers, and nothing more. The status codes are filled in whenever
+ * SacnMergeReceiverNetintList::netints is non-NULL.
+ * @param[in] num_netint_lists The size of netint_lists. Must not be 0.
+ * @return #kEtcPalErrOk: Networking reset successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided for a merge receiver were usable by the
+ * library.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(const SacnMergeReceiverNetintList* netint_lists,
+                                                                 size_t num_netint_lists)
+{
+  ETCPAL_UNUSED_ARG(netint_lists);
+  ETCPAL_UNUSED_ARG(num_netint_lists);
   return kEtcPalErrNotImpl;
 }
 

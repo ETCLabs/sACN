@@ -554,9 +554,9 @@ inline etcpal::Error Receiver::ResetNetworking(std::vector<SacnMcastInterface>& 
  * interfaces passed in for each receiver. This will only return #kEtcPalErrNoNetints if none of the interfaces work for
  * a receiver.
  *
- * @param[in, out] netint_lists Vector of lists of of interfaces the application wants to use for each receiver. Must
+ * @param[in, out] netint_lists Vector of lists of interfaces the application wants to use for each receiver. Must
  * not be empty. Must include all receivers, and nothing more. The status codes are filled in whenever
- * SacnReceiverNetintList::netints is !empty.
+ * Receiver::NetintList::netints is !empty.
  * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided for a receiver were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
