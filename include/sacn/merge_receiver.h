@@ -52,7 +52,7 @@ extern "C" {
 /** A handle to an sACN Merge Receiver. */
 typedef int sacn_merge_receiver_t;
 /** An invalid sACN merge_receiver handle value. */
-#define SACN_MERGE_RECEIVER_INVALID -1
+#define SACN_MERGE_RECEIVER_INVALID SACN_RECEIVER_INVALID
 
 /**
  * @brief Notify that a new data packet has been received and merged.
