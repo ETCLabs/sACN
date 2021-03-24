@@ -425,9 +425,7 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
  */
 etcpal_error_t sacn_merge_receiver_reset_networking(SacnMcastInterface* netints, size_t num_netints)
 {
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(num_netints);
-  return kEtcPalErrNotImpl;
+  return sacn_receiver_reset_networking(netints, num_netints);
 }
 
 /**
@@ -459,9 +457,45 @@ etcpal_error_t sacn_merge_receiver_reset_networking(SacnMcastInterface* netints,
 etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(const SacnMergeReceiverNetintList* netint_lists,
                                                                  size_t num_netint_lists)
 {
-  ETCPAL_UNUSED_ARG(netint_lists);
-  ETCPAL_UNUSED_ARG(num_netint_lists);
-  return kEtcPalErrNotImpl;
+  etcpal_error_t result = kEtcPalErrOk;
+
+  if (!netint_lists || (num_netint_lists == 0))
+    result = kEtcPalErrInvalid;
+
+#if SACN_DYNAMIC_MEM
+  SacnReceiverNetintList* receiver_netint_lists = NULL;
+  if (result == kEtcPalErrOk)
+  {
+    receiver_netint_lists = calloc(num_netint_lists, sizeof(SacnReceiverNetintList));
+
+    if (!receiver_netint_lists)
+      result = kEtcPalErrNoMem;
+  }
+#else
+  SacnReceiverNetintList receiver_netint_lists[SACN_RECEIVER_MAX_UNIVERSES];
+
+  if (num_netint_lists > SACN_RECEIVER_MAX_UNIVERSES)
+    result = kEtcPalErrInvalid;
+#endif
+
+  if (result == kEtcPalErrOk)
+  {
+    for (size_t i = 0; i < num_netint_lists; ++i)
+    {
+      receiver_netint_lists[i].handle = (sacn_receiver_t)netint_lists[i].handle;
+      receiver_netint_lists[i].netints = netint_lists[i].netints;
+      receiver_netint_lists[i].num_netints = netint_lists[i].num_netints;
+    }
+
+    result = sacn_receiver_reset_networking_per_receiver(receiver_netint_lists, num_netint_lists);
+  }
+
+#if SACN_DYNAMIC_MEM
+  if (receiver_netint_lists)
+    free(receiver_netint_lists);
+#endif
+
+  return result;
 }
 
 /**

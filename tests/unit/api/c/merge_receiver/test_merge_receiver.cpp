@@ -155,3 +155,33 @@ TEST_F(TestMergeReceiver, ChangeUniverseWorks)
   EXPECT_EQ(sacn_receiver_change_universe_fake.call_count, 1u);
   EXPECT_EQ(sacn_dmx_merger_remove_source_fake.call_count, kNumSources);
 }
+
+TEST_F(TestMergeReceiver, ResetNetworkingPerReceiverWorks)
+{
+  static constexpr size_t kNumNetintLists = 7u;
+
+  SacnMergeReceiverNetintList netint_lists[kNumNetintLists];
+
+  for (size_t i = 0u; i < kNumNetintLists; ++i)
+  {
+    netint_lists[i].handle = (sacn_merge_receiver_t)i;
+    netint_lists[i].netints = nullptr;
+    netint_lists[i].num_netints = 0u;
+  }
+
+  sacn_receiver_reset_networking_per_receiver_fake.custom_fake = [](const SacnReceiverNetintList* netint_lists,
+                                                                    size_t num_netint_lists) {
+    for (size_t i = 0u; i < kNumNetintLists; ++i)
+    {
+      EXPECT_EQ(netint_lists[i].handle, (sacn_receiver_t)i);
+      EXPECT_EQ(netint_lists[i].netints, nullptr);
+      EXPECT_EQ(netint_lists[i].num_netints, 0u);
+      EXPECT_EQ(num_netint_lists, kNumNetintLists);
+    }
+
+    return kEtcPalErrOk;
+  };
+
+  EXPECT_EQ(sacn_merge_receiver_reset_networking_per_receiver(netint_lists, kNumNetintLists), kEtcPalErrOk);
+  EXPECT_EQ(sacn_receiver_reset_networking_per_receiver_fake.call_count, 1u);
+}
