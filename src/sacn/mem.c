@@ -820,6 +820,37 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
 }
 
 // Needs lock
+etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_source_id_t source_id,
+                                              const EtcPalUuid* source_cid)
+{
+  SacnSourceIdFromCid* id_from_cid = ALLOC_SOURCE_ID_FROM_CID();
+  SacnCidFromSourceId* cid_from_id = ALLOC_CID_FROM_SOURCE_ID();
+
+  id_from_cid->id = source_id;
+  cid_from_id->id = source_id;
+  id_from_cid->cid = *source_cid;
+  cid_from_id->cid = *source_cid;
+
+  etcpal_error_t result1 = etcpal_rbtree_insert(&merge_receiver->ids_from_cids, id_from_cid);
+  etcpal_error_t result2 = etcpal_rbtree_insert(&merge_receiver->cids_from_ids, cid_from_id);
+
+  if ((result1 != kEtcPalErrOk) || (result2 != kEtcPalErrOk))
+  {
+    if (result1 == kEtcPalErrOk)
+      etcpal_rbtree_remove_with_cb(&merge_receiver->ids_from_cids, id_from_cid, source_ids_from_cids_tree_dealloc);
+    else
+      FREE_SOURCE_ID_FROM_CID(id_from_cid);
+
+    if (result2 == kEtcPalErrOk)
+      etcpal_rbtree_remove_with_cb(&merge_receiver->cids_from_ids, cid_from_id, cids_from_source_ids_tree_dealloc);
+    else
+      FREE_CID_FROM_SOURCE_ID(cid_from_id);
+  }
+
+  return (result1 == kEtcPalErrOk) ? result2 : result1;
+}
+
+// Needs lock
 etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeReceiver** state, size_t* index)
 {
   bool found = false;
@@ -2112,11 +2143,15 @@ void deinit_receivers(void)
 etcpal_error_t init_merge_receivers(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
+
 #if SACN_DYNAMIC_MEM
   mem_bufs.merge_receivers = calloc(INITIAL_CAPACITY, sizeof(SacnMergeReceiver));
   mem_bufs.merge_receivers_capacity = mem_bufs.merge_receivers ? INITIAL_CAPACITY : 0;
   if (!mem_bufs.merge_receivers)
     res = kEtcPalErrNoMem;
+#else   // SACN_DYNAMIC_MEM
+  res |= etcpal_mempool_init(sacnmergerecv_ids_from_cids);
+  res |= etcpal_mempool_init(sacnmergerecv_cids_from_ids);
 #endif  // SACN_DYNAMIC_MEM
   mem_bufs.num_merge_receivers = 0;
 
