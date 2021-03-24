@@ -191,7 +191,7 @@ public:
   void Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
-  std::vector<SacnMcastInterface> GetNetworkInterfaces();
+  std::vector<EtcPalMcastNetintId> GetNetworkInterfaces();
 
   etcpal::Expected<sacn_source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
   etcpal::Expected<etcpal::Uuid> GetSourceCid(sacn_source_id_t source) const;
@@ -383,14 +383,14 @@ inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
 }
 
 /**
- * @brief Obtain the statuses of this merge receiver's network interfaces.
+ * @brief Obtain a vector of this merge receiver's network interfaces.
  *
- * @return A vector of this merge receiver's network interfaces and their statuses.
+ * @return A vector of this merge receiver's network interfaces.
  */
-inline std::vector<SacnMcastInterface> MergeReceiver::GetNetworkInterfaces()
+inline std::vector<EtcPalMcastNetintId> MergeReceiver::GetNetworkInterfaces()
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<SacnMcastInterface> netints;
+  std::vector<EtcPalMcastNetintId> netints;
   size_t size_guess = 4u;
   size_t num_netints = 0u;
 
