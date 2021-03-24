@@ -459,8 +459,14 @@ etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(const SacnMerge
 {
   etcpal_error_t result = kEtcPalErrOk;
 
-  if (!netint_lists || (num_netint_lists == 0))
+  if (!sacn_initialized())
+    result = kEtcPalErrNotInit;
+  else if (!netint_lists || (num_netint_lists == 0))
     result = kEtcPalErrInvalid;
+#if !SACN_DYNAMIC_MEM
+  else if (num_netint_lists > SACN_RECEIVER_MAX_UNIVERSES)
+    result = kEtcPalErrInvalid;
+#endif
 
 #if SACN_DYNAMIC_MEM
   SacnReceiverNetintList* receiver_netint_lists = NULL;
@@ -473,9 +479,6 @@ etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(const SacnMerge
   }
 #else
   SacnReceiverNetintList receiver_netint_lists[SACN_RECEIVER_MAX_UNIVERSES];
-
-  if (num_netint_lists > SACN_RECEIVER_MAX_UNIVERSES)
-    result = kEtcPalErrInvalid;
 #endif
 
   if (result == kEtcPalErrOk)
