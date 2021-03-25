@@ -43,7 +43,7 @@ static constexpr int kTestHandle2 = 1234u;
 static constexpr SacnMergeReceiverConfig kTestConfig = {
     kTestUniverse,
     {[](sacn_merge_receiver_t, uint16_t, const uint8_t*, const sacn_source_id_t*, void*) {},
-     [](sacn_merge_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*, void*) {}, NULL,
+     [](sacn_merge_receiver_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*, void*) {}, NULL,
      NULL},
     SACN_RECEIVER_INFINITE_SOURCES,
     true,

@@ -688,7 +688,6 @@ void universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, co
       {
         non_dmx_notification.callback = merge_receiver->callbacks.universe_non_dmx;
         non_dmx_notification.handle = (sacn_merge_receiver_t)handle;
-        non_dmx_notification.universe = header->universe_id;
         non_dmx_notification.source_addr = source_addr;
         non_dmx_notification.header = header;
         non_dmx_notification.pdata = pdata;
@@ -708,9 +707,9 @@ void universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, co
 
   if (non_dmx_notification.callback)
   {
-    non_dmx_notification.callback(non_dmx_notification.handle, non_dmx_notification.universe,
-                                  non_dmx_notification.source_addr, non_dmx_notification.header,
-                                  non_dmx_notification.pdata, non_dmx_notification.context);
+    non_dmx_notification.callback(non_dmx_notification.handle, non_dmx_notification.source_addr,
+                                  non_dmx_notification.header, non_dmx_notification.pdata,
+                                  non_dmx_notification.context);
   }
 }
 
