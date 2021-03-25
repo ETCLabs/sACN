@@ -386,11 +386,12 @@ typedef struct SacnRecvThreadContext
 /******************************************************************************
  * Types used by the sACN Merge Receiver module
  *****************************************************************************/
-typedef struct SacnSourceIdFromCid SacnSourceIdFromCid;
-struct SacnSourceIdFromCid
+typedef struct SacnMergeReceiverSource SacnMergeReceiverSource;
+struct SacnMergeReceiverSource
 {
   EtcPalUuid cid;  // This must be the first struct member.
   sacn_source_id_t id;
+  bool pending;
 };
 typedef struct SacnCidFromSourceId SacnCidFromSourceId;
 struct SacnCidFromSourceId
@@ -410,9 +411,59 @@ struct SacnMergeReceiver
   uint8_t slots[DMX_ADDRESS_COUNT];
   sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
 
-  EtcPalRbTree ids_from_cids;
+  EtcPalRbTree sources;
   EtcPalRbTree cids_from_ids;
+
+  int num_pending_sources;
 };
+
+/******************************************************************************
+ * Notifications delivered by the sACN Merge Receiver module
+ *****************************************************************************/
+
+typedef struct MergeReceiverMergedDataNotification
+{
+  SacnMergeReceiverMergedDataCallback callback;
+  sacn_merge_receiver_t handle;
+  uint16_t universe;
+  uint8_t slots[DMX_ADDRESS_COUNT];
+  sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
+  void* context;
+} MergeReceiverMergedDataNotification;
+
+#define MERGE_RECV_MERGED_DATA_DEFAULT_INIT              \
+  {                                                      \
+    NULL, SACN_MERGE_RECEIVER_INVALID, 0, {0}, {0}, NULL \
+  }
+
+typedef struct MergeReceiverNonDmxNotification
+{
+  SacnMergeReceiverNonDmxCallback callback;
+  sacn_merge_receiver_t handle;
+  uint16_t universe;
+  const EtcPalSockAddr* source_addr;
+  const SacnHeaderData* header;
+  const uint8_t* pdata;
+  void* context;
+} MergeReceiverNonDmxNotification;
+
+#define MERGE_RECV_NON_DMX_DEFAULT_INIT                          \
+  {                                                              \
+    NULL, SACN_MERGE_RECEIVER_INVALID, 0, NULL, NULL, NULL, NULL \
+  }
+
+typedef struct MergeReceiverSourceLimitExceededNotification
+{
+  SacnMergeReceiverSourceLimitExceededCallback callback;
+  sacn_merge_receiver_t handle;
+  uint16_t universe;
+  void* context;
+} MergeReceiverSourceLimitExceededNotification;
+
+#define MERGE_RECV_SOURCE_LIMIT_EXCEEDED_DEFAULT_INIT \
+  {                                                   \
+    NULL, SACN_MERGE_RECEIVER_INVALID, 0, NULL        \
+  }
 
 /******************************************************************************
  * Types used by the sACN Source module

@@ -75,7 +75,7 @@
 /* Macros for dynamic allocation. */
 #define ALLOC_RECEIVER() malloc(sizeof(SacnReceiver))
 #define ALLOC_TRACKED_SOURCE() malloc(sizeof(SacnTrackedSource))
-#define ALLOC_SOURCE_ID_FROM_CID() malloc(sizeof(SacnSourceIdFromCid))
+#define ALLOC_MERGE_RECEIVER_SOURCE() malloc(sizeof(SacnMergeReceiverSource))
 #define ALLOC_CID_FROM_SOURCE_ID() malloc(sizeof(SacnCidFromSourceId))
 #define FREE_RECEIVER(ptr)        \
   do                              \
@@ -87,7 +87,7 @@
     free(ptr);                    \
   } while (0)
 #define FREE_TRACKED_SOURCE(ptr) free(ptr)
-#define FREE_SOURCE_ID_FROM_CID(ptr) free(ptr)
+#define FREE_MERGE_RECEIVER_SOURCE(ptr) free(ptr)
 #define FREE_CID_FROM_SOURCE_ID(ptr) free(ptr)
 
 #else  // SACN_DYNAMIC_MEM
@@ -107,11 +107,11 @@
 /* Macros for static allocation, which is done using etcpal_mempool. */
 #define ALLOC_RECEIVER() etcpal_mempool_alloc(sacnrecv_receivers)
 #define ALLOC_TRACKED_SOURCE() etcpal_mempool_alloc(sacnrecv_tracked_sources)
-#define ALLOC_SOURCE_ID_FROM_CID() etcpal_mempool_alloc(sacnmergerecv_ids_from_cids)
+#define ALLOC_MERGE_RECEIVER_SOURCE() etcpal_mempool_alloc(sacnmergerecv_sources)
 #define ALLOC_CID_FROM_SOURCE_ID() etcpal_mempool_alloc(sacnmergerecv_cids_from_ids)
 #define FREE_RECEIVER(ptr) etcpal_mempool_free(sacnrecv_receivers, ptr)
 #define FREE_TRACKED_SOURCE(ptr) etcpal_mempool_free(sacnrecv_tracked_sources, ptr)
-#define FREE_SOURCE_ID_FROM_CID(ptr) etcpal_mempool_free(sacnmergerecv_ids_from_cids, ptr)
+#define FREE_MERGE_RECEIVER_SOURCE(ptr) etcpal_mempool_free(sacnmergerecv_sources, ptr)
 #define FREE_CID_FROM_SOURCE_ID(ptr) etcpal_mempool_free(sacnmergerecv_cids_from_ids, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
@@ -199,7 +199,7 @@ static struct SacnMemBufs
 ETCPAL_MEMPOOL_DEFINE(sacnrecv_receivers, SacnReceiver, SACN_RECEIVER_MAX_UNIVERSES);
 ETCPAL_MEMPOOL_DEFINE(sacnrecv_tracked_sources, SacnTrackedSource, SACN_RECEIVER_TOTAL_MAX_SOURCES);
 ETCPAL_MEMPOOL_DEFINE(sacnrecv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODES);
-ETCPAL_MEMPOOL_DEFINE(sacnmergerecv_ids_from_cids, SacnSourceIdFromCid, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+ETCPAL_MEMPOOL_DEFINE(sacnmergerecv_sources, SacnMergeReceiverSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
 ETCPAL_MEMPOOL_DEFINE(sacnmergerecv_cids_from_ids, SacnCidFromSourceId, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
 #endif
 
@@ -285,7 +285,7 @@ static int receiver_compare(const EtcPalRbTree* tree, const void* value_a, const
 static int receiver_compare_by_universe(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static EtcPalRbNode* node_alloc(void);
 static void node_dealloc(EtcPalRbNode* node);
-static void source_ids_from_cids_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+static void merge_receiver_sources_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void cids_from_source_ids_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
@@ -808,8 +808,10 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
     memset(merge_receiver->slots, 0, DMX_ADDRESS_COUNT);
     memset(merge_receiver->slot_owners, 0, DMX_ADDRESS_COUNT * sizeof(sacn_source_id_t));
 
-    etcpal_rbtree_init(&merge_receiver->ids_from_cids, uuid_compare, node_alloc, node_dealloc);
+    etcpal_rbtree_init(&merge_receiver->sources, uuid_compare, node_alloc, node_dealloc);
     etcpal_rbtree_init(&merge_receiver->cids_from_ids, source_id_compare, node_alloc, node_dealloc);
+
+    merge_receiver->num_pending_sources = 0;
 
     ++mem_bufs.num_merge_receivers;
   }
@@ -821,30 +823,35 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
 
 // Needs lock
 etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_source_id_t source_id,
-                                              const EtcPalUuid* source_cid)
+                                              const EtcPalUuid* source_cid, bool pending)
 {
-  SacnSourceIdFromCid* id_from_cid = ALLOC_SOURCE_ID_FROM_CID();
+  SacnMergeReceiverSource* src = ALLOC_MERGE_RECEIVER_SOURCE();
   SacnCidFromSourceId* cid_from_id = ALLOC_CID_FROM_SOURCE_ID();
 
-  id_from_cid->id = source_id;
+  src->id = source_id;
+  src->cid = *source_cid;
+  src->pending = pending;
   cid_from_id->id = source_id;
-  id_from_cid->cid = *source_cid;
   cid_from_id->cid = *source_cid;
 
-  etcpal_error_t result1 = etcpal_rbtree_insert(&merge_receiver->ids_from_cids, id_from_cid);
+  etcpal_error_t result1 = etcpal_rbtree_insert(&merge_receiver->sources, src);
   etcpal_error_t result2 = etcpal_rbtree_insert(&merge_receiver->cids_from_ids, cid_from_id);
 
   if ((result1 != kEtcPalErrOk) || (result2 != kEtcPalErrOk))
   {
     if (result1 == kEtcPalErrOk)
-      etcpal_rbtree_remove_with_cb(&merge_receiver->ids_from_cids, id_from_cid, source_ids_from_cids_tree_dealloc);
+      etcpal_rbtree_remove_with_cb(&merge_receiver->sources, src, merge_receiver_sources_tree_dealloc);
     else
-      FREE_SOURCE_ID_FROM_CID(id_from_cid);
+      FREE_MERGE_RECEIVER_SOURCE(src);
 
     if (result2 == kEtcPalErrOk)
       etcpal_rbtree_remove_with_cb(&merge_receiver->cids_from_ids, cid_from_id, cids_from_source_ids_tree_dealloc);
     else
       FREE_CID_FROM_SOURCE_ID(cid_from_id);
+  }
+  else if (pending)
+  {
+    ++merge_receiver->num_pending_sources;
   }
 
   return (result1 == kEtcPalErrOk) ? result2 : result1;
@@ -870,6 +877,14 @@ etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeRece
 }
 
 // Needs lock
+etcpal_error_t lookup_merge_receiver_source(SacnMergeReceiver* merge_receiver, const EtcPalUuid* source_cid,
+                                            SacnMergeReceiverSource** source)
+{
+  (*source) = etcpal_rbtree_find(&merge_receiver->sources, source_cid);
+  return (*source) ? kEtcPalErrOk : kEtcPalErrNotFound;
+}
+
+// Needs lock
 SacnMergeReceiver* get_merge_receiver(size_t index)
 {
   return (index < mem_bufs.num_merge_receivers) ? &mem_bufs.merge_receivers[index] : NULL;
@@ -884,7 +899,7 @@ size_t get_num_merge_receivers()
 // Needs lock
 void remove_sacn_merge_receiver(size_t index)
 {
-  etcpal_rbtree_clear_with_cb(&mem_bufs.merge_receivers[index].ids_from_cids, source_ids_from_cids_tree_dealloc);
+  etcpal_rbtree_clear_with_cb(&mem_bufs.merge_receivers[index].sources, merge_receiver_sources_tree_dealloc);
   etcpal_rbtree_clear_with_cb(&mem_bufs.merge_receivers[index].cids_from_ids, cids_from_source_ids_tree_dealloc);
   REMOVE_AT_INDEX((&mem_bufs), SacnMergeReceiver, merge_receivers, index);
 }
@@ -896,7 +911,7 @@ void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_s
 
   if (cid_from_id)
   {
-    etcpal_rbtree_remove_with_cb(&merge_receiver->ids_from_cids, &cid_from_id->cid, source_ids_from_cids_tree_dealloc);
+    etcpal_rbtree_remove_with_cb(&merge_receiver->sources, &cid_from_id->cid, merge_receiver_sources_tree_dealloc);
     etcpal_rbtree_remove_with_cb(&merge_receiver->cids_from_ids, &source_id, cids_from_source_ids_tree_dealloc);
   }
 }
@@ -2042,10 +2057,10 @@ void node_dealloc(EtcPalRbNode* node)
 #endif
 }
 
-void source_ids_from_cids_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
+void merge_receiver_sources_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
-  FREE_SOURCE_ID_FROM_CID(node->value);
+  FREE_MERGE_RECEIVER_SOURCE(node->value);
   node_dealloc(node);
 }
 
@@ -2150,7 +2165,7 @@ etcpal_error_t init_merge_receivers(void)
   if (!mem_bufs.merge_receivers)
     res = kEtcPalErrNoMem;
 #else   // SACN_DYNAMIC_MEM
-  res |= etcpal_mempool_init(sacnmergerecv_ids_from_cids);
+  res |= etcpal_mempool_init(sacnmergerecv_sources);
   res |= etcpal_mempool_init(sacnmergerecv_cids_from_ids);
 #endif  // SACN_DYNAMIC_MEM
   mem_bufs.num_merge_receivers = 0;
