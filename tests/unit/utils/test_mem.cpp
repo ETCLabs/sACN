@@ -33,6 +33,16 @@
 #define TestMem TestMemStatic
 #endif
 
+static constexpr sacn_merge_receiver_t kTestMergeReceiverHandle = 1;
+static constexpr SacnMergeReceiverConfig kTestMergeReceiverConfig = {
+    1u,
+    {[](sacn_merge_receiver_t, uint16_t, const uint8_t*, const sacn_source_id_t*, void*) {},
+     [](sacn_merge_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*, void*) {}, NULL,
+     NULL},
+    SACN_RECEIVER_INFINITE_SOURCES,
+    true,
+    kSacnIpV4AndIpV6};
+
 class TestMem : public ::testing::Test
 {
 protected:
@@ -714,27 +724,91 @@ TEST_F(TestMem, RemoveReceiverFromListWorks)
 
 TEST_F(TestMem, AddSacnMergeReceiverWorks)
 {
-  static constexpr sacn_merge_receiver_t kTestMergeReceiver = 1;
-  static constexpr auto kTestUniverseData = [](sacn_merge_receiver_t, uint16_t, const uint8_t*, const sacn_source_id_t*,
-                                               void*) {};
-  static constexpr auto kTestUniverseNonDmx = [](sacn_merge_receiver_t, uint16_t, const EtcPalSockAddr*,
-                                                 const SacnHeaderData*, const uint8_t*, void*) {};
-  static constexpr auto kTestSourceLimitExceeded = [](sacn_merge_receiver_t, uint16_t, void*) {};
-
-  SacnMergeReceiverConfig config = SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = kTestUniverseData;
-  config.callbacks.universe_non_dmx = kTestUniverseNonDmx;
-  config.callbacks.source_limit_exceeded = kTestSourceLimitExceeded;
-
   SacnMergeReceiver* merge_receiver = nullptr;
-  EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiver, &config, &merge_receiver), kEtcPalErrOk);
+  EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &kTestMergeReceiverConfig, &merge_receiver),
+            kEtcPalErrOk);
 
   ASSERT_NE(merge_receiver, nullptr);
-  EXPECT_EQ(merge_receiver->merge_receiver_handle, kTestMergeReceiver);
+  EXPECT_EQ(merge_receiver->merge_receiver_handle, kTestMergeReceiverHandle);
   EXPECT_EQ(merge_receiver->merger_handle, SACN_DMX_MERGER_INVALID);
-  EXPECT_EQ(merge_receiver->callbacks.universe_data, kTestUniverseData);
-  EXPECT_EQ(merge_receiver->callbacks.universe_non_dmx, kTestUniverseNonDmx);
-  EXPECT_EQ(merge_receiver->callbacks.source_limit_exceeded, kTestSourceLimitExceeded);
+  EXPECT_EQ(merge_receiver->callbacks.universe_data, kTestMergeReceiverConfig.callbacks.universe_data);
+  EXPECT_EQ(merge_receiver->callbacks.universe_non_dmx, kTestMergeReceiverConfig.callbacks.universe_non_dmx);
+  EXPECT_EQ(merge_receiver->callbacks.source_limit_exceeded, nullptr);
 }
 
-// TODO: remove_sacn_merge_receiver_source?
+TEST_F(TestMem, AddSacnMergeReceiverSourceWorks)
+{
+  static constexpr size_t kNumSources = 5u;
+
+  SacnMergeReceiver* merge_receiver = nullptr;
+  EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &kTestMergeReceiverConfig, &merge_receiver),
+            kEtcPalErrOk);
+
+  etcpal::Uuid last_cid;
+  for (size_t i = 0u; i < kNumSources; ++i)
+  {
+    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), i);
+    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), i);
+    last_cid = etcpal::Uuid::V4();
+    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i), &last_cid.get()),
+              kEtcPalErrOk);
+  }
+
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources);
+
+  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(kNumSources), &last_cid.get()),
+            kEtcPalErrExists);
+
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources);
+
+  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(kNumSources - 1u),
+                                           &etcpal::Uuid::V4().get()),
+            kEtcPalErrExists);
+
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources);
+
+  EXPECT_EQ(
+      add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(kNumSources - 1u), &last_cid.get()),
+      kEtcPalErrExists);
+
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources);
+}
+
+TEST_F(TestMem, RemoveSacnMergeReceiverSourceWorks)
+{
+  static constexpr size_t kNumSources = 5u;
+
+  SacnMergeReceiver* merge_receiver = nullptr;
+  EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &kTestMergeReceiverConfig, &merge_receiver),
+            kEtcPalErrOk);
+
+  for (size_t i = 0u; i < kNumSources; ++i)
+  {
+    EXPECT_EQ(
+        add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i), &etcpal::Uuid::V4().get()),
+        kEtcPalErrOk);
+  }
+
+  for (size_t i = kNumSources; i < kNumSources + 5u; ++i)
+  {
+    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
+    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources);
+
+    remove_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i));
+  }
+
+  for (size_t i = 0u; i < kNumSources; ++i)
+  {
+    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources - i);
+    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources - i);
+
+    remove_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i));
+  }
+
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), 0u);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), 0u);
+}

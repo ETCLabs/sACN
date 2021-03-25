@@ -162,6 +162,19 @@ typedef struct SacnMergeReceiverConfig
     0, {NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, true, kSacnIpV4AndIpV6 \
   }
 
+/** A set of network interfaces for a particular merge receiver. */
+typedef struct SacnMergeReceiverNetintList
+{
+  /** The merge receiver's handle. */
+  sacn_merge_receiver_t handle;
+
+  /** If non-NULL, this is the list of interfaces the application wants to use, and the status codes are filled in. If
+      NULL, all available interfaces are tried. */
+  SacnMcastInterface* netints;
+  /** The size of netints, or 0 if netints is NULL. */
+  size_t num_netints;
+} SacnMergeReceiverNetintList;
+
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
 
 etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle,
@@ -169,9 +182,10 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle);
 etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id);
-etcpal_error_t sacn_merge_receiver_reset_networking(sacn_merge_receiver_t handle, SacnMcastInterface* netints,
-                                                    size_t num_netints);
-size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, SacnMcastInterface* netints,
+etcpal_error_t sacn_merge_receiver_reset_networking(SacnMcastInterface* netints, size_t num_netints);
+etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(const SacnMergeReceiverNetintList* netint_lists,
+                                                                 size_t num_netint_lists);
+size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, EtcPalMcastNetintId* netints,
                                                   size_t netints_size);
 sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid);
 etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, sacn_source_id_t source_id,

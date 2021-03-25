@@ -161,6 +161,24 @@ public:
     bool IsValid() const;
   };
 
+  /**
+   * @ingroup sacn_merge_receiver_cpp
+   * @brief A set of network interfaces for a particular merge receiver.
+   */
+  struct NetintList
+  {
+    /** The merge receiver's handle. */
+    sacn_merge_receiver_t handle;
+
+    /** If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If
+        empty, all available interfaces are tried. */
+    std::vector<SacnMcastInterface> netints;
+
+    /** Create an empty, invalid data structure by default. */
+    NetintList() = default;
+    NetintList(sacn_merge_receiver_t merge_receiver_handle);
+  };
+
   MergeReceiver() = default;
   MergeReceiver(const MergeReceiver& other) = delete;
   MergeReceiver& operator=(const MergeReceiver& other) = delete;
@@ -173,12 +191,14 @@ public:
   void Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
-  etcpal::Error ResetNetworking();
-  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
-  std::vector<SacnMcastInterface> GetNetworkInterfaces();
+  std::vector<EtcPalMcastNetintId> GetNetworkInterfaces();
 
   etcpal::Expected<sacn_source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
   etcpal::Expected<etcpal::Uuid> GetSourceCid(sacn_source_id_t source) const;
+
+  static etcpal::Error ResetNetworking();
+  static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
+  static etcpal::Error ResetNetworking(std::vector<NetintList>& netint_lists);
 
   constexpr Handle handle() const;
 
@@ -242,6 +262,16 @@ inline MergeReceiver::Settings::Settings(uint16_t new_universe_id) : universe_id
 inline bool MergeReceiver::Settings::IsValid() const
 {
   return (universe_id > 0);
+}
+
+/**
+ * @brief Create a Netint List instance by passing the required members explicitly.
+ *
+ * Optional members can be modified directly in the struct.
+ */
+inline MergeReceiver::NetintList::NetintList(sacn_merge_receiver_t merge_receiver_handle)
+    : handle(merge_receiver_handle)
+{
 }
 
 /**
@@ -353,70 +383,14 @@ inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
 }
 
 /**
- * @brief Resets the underlying network sockets and packet receipt state for this class..
+ * @brief Obtain a vector of this merge receiver's network interfaces.
  *
- * This is the overload of ResetNetworking that uses all network interfaces.
- *
- * This is typically used when the application detects that the list of networking interfaces has changed.
- *
- * After this call completes successfully, the merge receiver is in a sampling period for the new universe and will
- * provide HandleSourcesFound() calls when appropriate. If this call fails, the caller must call Shutdown() on this
- * class, because it may be in an invalid state.
- *
- * Note that the networking reset is considered successful if it is able to successfully use any of the
- * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
- *
- * @return #kEtcPalErrOk: Universe changed successfully.
- * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
- * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @return A vector of this merge receiver's network interfaces.
  */
-inline etcpal::Error MergeReceiver::ResetNetworking()
-{
-  std::vector<SacnMcastInterface> netints;
-  return ResetNetworking(netints);
-}
-
-/**
- * @brief Resets the underlying network sockets and packet receipt state for this class..
- *
- * This is typically used when the application detects that the list of networking interfaces has changed.
- *
- * After this call completes, a new sampling period occurs, and then underlying updates will generate new calls to
- * HandleMergedData(). If this call fails, the caller must call Shutdown() on this class, because it may be in an
- * invalid state.
- *
- * Note that the networking reset is considered successful if it is able to successfully use any of the
- * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
- *
- * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
- * @return #kEtcPalErrOk: Universe changed successfully.
- * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
- * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
- */
-inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterface>& netints)
-{
-  if (netints.empty())
-    return sacn_merge_receiver_reset_networking(handle_, nullptr, 0);
-
-  return sacn_merge_receiver_reset_networking(handle_, netints.data(), netints.size());
-}
-
-/**
- * @brief Obtain the statuses of this merge receiver's network interfaces.
- *
- * @return A vector of this merge receiver's network interfaces and their statuses.
- */
-inline std::vector<SacnMcastInterface> MergeReceiver::GetNetworkInterfaces()
+inline std::vector<EtcPalMcastNetintId> MergeReceiver::GetNetworkInterfaces()
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<SacnMcastInterface> netints;
+  std::vector<EtcPalMcastNetintId> netints;
   size_t size_guess = 4u;
   size_t num_netints = 0u;
 
@@ -438,28 +412,129 @@ inline std::vector<SacnMcastInterface> MergeReceiver::GetNetworkInterfaces()
  * it is a source that has been discovered by the merge receiver.
  *
  * @param[in] source_cid The UUID of the source CID.
- * @return On success this will be the source ID, otherwise kEtcPalErrInvalid.
+ * @return On success this will be the source ID, otherwise kEtcPalErrNotFound.
  */
 inline etcpal::Expected<sacn_source_id_t> MergeReceiver::GetSourceId(const etcpal::Uuid& source_cid) const
 {
   sacn_source_id_t result = sacn_merge_receiver_get_source_id(handle_, &source_cid.get());
   if (result != SACN_DMX_MERGER_SOURCE_INVALID)
     return result;
-  return kEtcPalErrInvalid;
+  return kEtcPalErrNotFound;
 }
 
 /**
  * @brief Converts a source ID to the corresponding source CID.
  *
  * @param[in] source_id The ID of the source.
- * @return On success this will be the source CID, otherwise kEtcPalErrInvalid.
+ * @return On success, the source CID.
+ * @return #kEtcPalErrNotFound: This merge receiver is uninitialized, or source_id does not correspond to a valid
+ * source.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Expected<etcpal::Uuid> MergeReceiver::GetSourceCid(sacn_source_id_t source_id) const
 {
   EtcPalUuid result;
-  if (kEtcPalErrOk == sacn_merge_receiver_get_source_cid(handle_, source_id, &result))
+  etcpal_error_t error = sacn_merge_receiver_get_source_cid(handle_, source_id, &result);
+  if (error == kEtcPalErrOk)
     return result;
-  return kEtcPalErrInvalid;
+  return error;
+}
+
+/**
+ * @brief Resets the underlying network sockets and packet receipt state for all sACN merge receivers.
+ *
+ * This is the overload of ResetNetworking that uses all network interfaces.
+ *
+ * This is typically used when the application detects that the list of networking interfaces has changed, and wants
+ * every merge receiver to use all system network interfaces.
+ *
+ * After this call completes, a new sampling period occurs, and then underlying updates will generate new calls to
+ * HandleMergedData(). If this call fails, the caller must call Shutdown() for each merge receiver, because the merge
+ * receivers may be in an invalid state.
+ *
+ * Note that the networking reset is considered successful if it is able to successfully use any of the
+ * network interfaces. This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
+ * @return #kEtcPalErrOk: Networking reset successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+inline etcpal::Error MergeReceiver::ResetNetworking()
+{
+  std::vector<SacnMcastInterface> netints;
+  return ResetNetworking(netints);
+}
+
+/**
+ * @brief Resets the underlying network sockets and packet receipt state for all sACN merge receivers.
+ *
+ * This is typically used when the application detects that the list of networking interfaces has changed, and wants
+ * every merge receiver to use the same network interfaces.
+ *
+ * After this call completes, a new sampling period occurs, and then underlying updates will generate new calls to
+ * HandleMergedData(). If this call fails, the caller must call Shutdown() for each merge receiver, because the merge
+ * receivers may be in an invalid state.
+ *
+ * Note that the networking reset is considered successful if it is able to successfully use any of the
+ * network interfaces passed in. This will only return #kEtcPalErrNoNetints if none of the interfaces work.
+ *
+ * @param[in, out] netints If !empty, this is the list of interfaces the application wants to use, and the status
+ * codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
+ * @return #kEtcPalErrOk: Networking reset successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterface>& netints)
+{
+  if (netints.empty())
+    return sacn_merge_receiver_reset_networking(nullptr, 0);
+
+  return sacn_merge_receiver_reset_networking(netints.data(), netints.size());
+}
+
+/**
+ * @brief Resets underlying network sockets and packet receipt state, determines network interfaces for each merge
+ * receiver.
+ *
+ * This is typically used when the application detects that the list of networking interfaces has changed, and wants to
+ * determine what the new network interfaces should be for each merge receiver.
+ *
+ * After this call completes, a new sampling period occurs, and then underlying updates will generate new calls to
+ * HandleMergedData(). If this call fails, the caller must call Shutdown() for each merge receiver, because the merge
+ * receivers may be in an invalid state.
+ *
+ * Note that the networking reset is considered successful if it is able to successfully use any of the network
+ * interfaces passed in for each merge receiver. This will only return #kEtcPalErrNoNetints if none of the interfaces
+ * work for a merge receiver.
+ *
+ * @param[in, out] netint_lists Vector of lists of interfaces the application wants to use for each merge receiver. Must
+ * not be empty. Must include all merge receivers, and nothing more. The status codes are filled in whenever
+ * MergeReceiver::NetintList::netints is !empty.
+ * @return #kEtcPalErrOk: Networking reset successfully.
+ * @return #kEtcPalErrNoNetints: None of the network interfaces provided for a merge receiver were usable by the
+ * library.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<NetintList>& netint_lists)
+{
+  std::vector<SacnMergeReceiverNetintList> netint_lists_c;
+  netint_lists_c.reserve(netint_lists.size());
+  std::transform(netint_lists.begin(), netint_lists.end(), std::back_inserter(netint_lists_c), [](NetintList& list) {
+    // clang-format off
+        SacnMergeReceiverNetintList c_list = {
+          list.handle,
+          list.netints.data(),
+          list.netints.size()
+        };
+    // clang-format on
+
+    return c_list;
+  });
+  return sacn_merge_receiver_reset_networking_per_receiver(netint_lists_c.data(), netint_lists_c.size());
 }
 
 /**

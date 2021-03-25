@@ -71,6 +71,8 @@ void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnR
 // sACN Merge Receiver memory API
 etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnMergeReceiverConfig* config,
                                        SacnMergeReceiver** state);
+etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_source_id_t source_id,
+                                              const EtcPalUuid* source_cid);
 etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeReceiver** state, size_t* index);
 SacnMergeReceiver* get_merge_receiver(size_t index);
 size_t get_num_merge_receivers();
