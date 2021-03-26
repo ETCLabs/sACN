@@ -926,7 +926,28 @@ void pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource*
 
 void source_limit_exceeded(sacn_receiver_t handle, uint16_t universe, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(context);
+
+  MergeReceiverSourceLimitExceededNotification limit_exceeded_notification =
+      MERGE_RECV_SOURCE_LIMIT_EXCEEDED_DEFAULT_INIT;
+
+  if (sacn_lock())
+  {
+    SacnMergeReceiver* merge_receiver = NULL;
+    if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL) == kEtcPalErrOk)
+    {
+      limit_exceeded_notification.callback = merge_receiver->callbacks.source_limit_exceeded;
+      limit_exceeded_notification.handle = (sacn_merge_receiver_t)handle;
+      limit_exceeded_notification.universe = universe;
+      limit_exceeded_notification.context = merge_receiver->callbacks.callback_context;
+    }
+
+    sacn_unlock();
+  }
+
+  if (limit_exceeded_notification.callback)
+  {
+    limit_exceeded_notification.callback(limit_exceeded_notification.handle, limit_exceeded_notification.universe,
+                                         limit_exceeded_notification.context);
+  }
 }
