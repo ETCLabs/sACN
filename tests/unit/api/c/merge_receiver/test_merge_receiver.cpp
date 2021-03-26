@@ -669,3 +669,35 @@ TEST_F(TestMergeReceiver, UniverseNonDmxWorks)
   RunUniverseData(kCid, 0x77, {0x56u, 0x78u});
   EXPECT_EQ(universe_non_dmx_fake.call_count, 4u);
 }
+
+TEST_F(TestMergeReceiver, SourceLimitExceededWorks)
+{
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+
+  source_limit_exceeded_fake.custom_fake = [](sacn_merge_receiver_t handle, uint16_t universe, void*) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+  };
+
+  RunSamplingStarted();
+
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 0u);
+  RunSourceLimitExceeded();
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 1u);
+  RunSourceLimitExceeded();
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 2u);
+  RunSourceLimitExceeded();
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 3u);
+
+  RunSamplingEnded();
+
+  RunSourceLimitExceeded();
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 4u);
+  RunSourceLimitExceeded();
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 5u);
+  RunSourceLimitExceeded();
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 6u);
+  RunSourceLimitExceeded();
+  EXPECT_EQ(source_limit_exceeded_fake.call_count, 7u);
+}
