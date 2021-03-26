@@ -600,3 +600,25 @@ TEST_F(TestMergeReceiver, UniverseDataHandlesSourcesLost)
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 0u);
   EXPECT_EQ(universe_data_fake.call_count, 9u);
 }
+
+TEST_F(TestMergeReceiver, UniverseDataHandlesPapLost)
+{
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+
+  RunSamplingStarted();
+  RunSamplingEnded();
+
+  etcpal::Uuid cid = etcpal::Uuid::V4();
+
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  RunUniverseData(cid, 0xDD, {0xFFu, 0xFFu});
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  RunUniverseData(cid, 0x00, {0x01u, 0x02u});
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+
+  EXPECT_EQ(sacn_dmx_merger_remove_paps_fake.call_count, 0u);
+  RunPapLost(cid);
+  EXPECT_EQ(sacn_dmx_merger_remove_paps_fake.call_count, 1u);
+  EXPECT_EQ(universe_data_fake.call_count, 2u);
+}
