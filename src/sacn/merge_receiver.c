@@ -117,7 +117,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
     receiver_config.universe_id = config->universe_id;
     receiver_config.callbacks.universe_data = merge_receiver_universe_data;
     receiver_config.callbacks.sources_lost = merge_receiver_sources_lost;
-    receiver_config.callbacks.sampling_period_started = NULL;
+    receiver_config.callbacks.sampling_period_started = merge_receiver_sampling_started;
     receiver_config.callbacks.sampling_period_ended = merge_receiver_sampling_ended;
     receiver_config.callbacks.source_pap_lost = merge_receiver_pap_lost;
     receiver_config.callbacks.source_limit_exceeded = merge_receiver_source_limit_exceeded;
@@ -599,6 +599,7 @@ etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, 
 void merge_receiver_universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr,
                                   const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling, void* context)
 {
+  ETCPAL_UNUSED_ARG(is_sampling);
   ETCPAL_UNUSED_ARG(context);
 
   // Because this function isn't a single atomic block, if anything is removed between locks, use this to stop early.
@@ -702,7 +703,7 @@ void merge_receiver_universe_data(sacn_receiver_t handle, const EtcPalSockAddr* 
       error_status = lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL);
       if (error_status == kEtcPalErrOk)
       {
-        if (new_merge_occurred && !is_sampling && (merge_receiver->num_pending_sources == 0))
+        if (new_merge_occurred && !merge_receiver->sampling && (merge_receiver->num_pending_sources == 0))
         {
           merged_data_notification.callback = merge_receiver->callbacks.universe_data;
           merged_data_notification.handle = (sacn_merge_receiver_t)handle;
@@ -849,6 +850,23 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
   if (lost_source_ids)
     free(lost_source_ids);
 #endif
+}
+
+void merge_receiver_sampling_started(sacn_receiver_t handle, uint16_t universe, void* context)
+{
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(context);
+
+  if (sacn_lock())
+  {
+    SacnMergeReceiver* merge_receiver = NULL;
+    if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL) == kEtcPalErrOk)
+    {
+      merge_receiver->sampling = true;
+    }
+
+    sacn_unlock();
+  }
 }
 
 void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, void* context)
