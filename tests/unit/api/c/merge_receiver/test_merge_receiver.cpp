@@ -628,9 +628,6 @@ TEST_F(TestMergeReceiver, UniverseNonDmxWorks)
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
   EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
 
-  RunSamplingStarted();
-  RunSamplingEnded();
-
   static const etcpal::Uuid kCid = etcpal::Uuid::V4();
 
   universe_non_dmx_fake.custom_fake = [](sacn_merge_receiver_t handle, uint16_t universe,
@@ -649,6 +646,8 @@ TEST_F(TestMergeReceiver, UniverseNonDmxWorks)
     EXPECT_EQ(header->slot_count, 2u);
   };
 
+  RunSamplingStarted();
+
   EXPECT_EQ(universe_non_dmx_fake.call_count, 0u);
   RunUniverseData(kCid, 0x77, {0x12u, 0x34u});
   EXPECT_EQ(universe_non_dmx_fake.call_count, 1u);
@@ -658,4 +657,15 @@ TEST_F(TestMergeReceiver, UniverseNonDmxWorks)
   EXPECT_EQ(universe_non_dmx_fake.call_count, 1u);
   RunUniverseData(kCid, 0x77, {0x56u, 0x78u});
   EXPECT_EQ(universe_non_dmx_fake.call_count, 2u);
+
+  RunSamplingEnded();
+
+  RunUniverseData(kCid, 0x77, {0x12u, 0x34u});
+  EXPECT_EQ(universe_non_dmx_fake.call_count, 3u);
+  RunUniverseData(kCid, 0xDD, {0xFFu, 0xFFu});
+  EXPECT_EQ(universe_non_dmx_fake.call_count, 3u);
+  RunUniverseData(kCid, 0x00, {0x01u, 0x02u});
+  EXPECT_EQ(universe_non_dmx_fake.call_count, 3u);
+  RunUniverseData(kCid, 0x77, {0x56u, 0x78u});
+  EXPECT_EQ(universe_non_dmx_fake.call_count, 4u);
 }
