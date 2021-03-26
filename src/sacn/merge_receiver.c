@@ -622,6 +622,8 @@ void universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, co
       {
         source_id = source->id;
 
+        // The source is pending until the first 0x00 packet is received. After the sampling period, this indicates that
+        // 0xDD must have either already been notified or timed out.
         if (source->pending && (header->start_code == 0x00))
         {
           source->pending = false;
