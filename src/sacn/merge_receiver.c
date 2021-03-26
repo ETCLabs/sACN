@@ -655,8 +655,8 @@ void universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, co
     {
       // This should be the only place where this is called, which prevents the situation where a different thread
       // already added the source, since each receiver runs their universe_data notifications on one thread.
-      error_status =
-          add_sacn_merge_receiver_source(merge_receiver, source_id, &header->cid, (header->start_code != 0x00));
+      error_status = add_sacn_merge_receiver_source(merge_receiver, source_id, &header->cid,
+                                                    (use_pap && (header->start_code == 0xDD)));
     }
 
     sacn_unlock();
