@@ -788,6 +788,38 @@ void sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSourc
       sacn_dmx_merger_remove_source(merger_handle, lost_source_ids[i]);
   }
 
+  MergeReceiverMergedDataNotification merged_data_notification = MERGE_RECV_MERGED_DATA_DEFAULT_INIT;
+  if ((error_status == kEtcPalErrOk) && sacn_lock())
+  {
+    SacnMergeReceiver* merge_receiver = NULL;
+    error_status = lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL);
+    if (error_status == kEtcPalErrOk)
+    {
+      if (!merge_receiver->sampling && (merge_receiver->num_pending_sources == 0))
+      {
+        merged_data_notification.callback = merge_receiver->callbacks.universe_data;
+        merged_data_notification.handle = (sacn_merge_receiver_t)handle;
+        merged_data_notification.universe = universe;
+        memcpy(merged_data_notification.slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
+        memcpy(merged_data_notification.slot_owners, merge_receiver->slot_owners,
+               DMX_ADDRESS_COUNT * sizeof(sacn_source_id_t));
+        merged_data_notification.context = merge_receiver->callbacks.callback_context;
+      }
+    }
+
+    sacn_unlock();
+  }
+
+  if (error_status == kEtcPalErrOk)
+  {
+    if (merged_data_notification.callback)
+    {
+      merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
+                                        merged_data_notification.slots, merged_data_notification.slot_owners,
+                                        merged_data_notification.context);
+    }
+  }
+
 #if SACN_DYNAMIC_MEM
   if (lost_source_ids)
     free(lost_source_ids);
