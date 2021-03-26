@@ -110,6 +110,33 @@ protected:
 
   void RunSamplingStarted() { merge_receiver_sampling_started(kTestHandle, kTestUniverse, nullptr); }
   void RunSamplingEnded() { merge_receiver_sampling_ended(kTestHandle, kTestUniverse, nullptr); }
+
+  void RunSourcesLost(const std::vector<etcpal::Uuid>& cids)
+  {
+    std::vector<SacnLostSource> lost_sources;
+    lost_sources.reserve(cids.size());
+    std::transform(cids.begin(), cids.end(), std::back_inserter(lost_sources), [](etcpal::Uuid& cid) {
+      // clang-format off
+        SacnLostSource lost_source = {
+          cid.get(),
+          {'\0'},
+          true
+        };
+      // clang-format on
+
+      return lost_source;
+    });
+
+    merge_receiver_sources_lost(kTestHandle, kTestUniverse, lost_sources.data(), lost_sources.size(), nullptr);
+  }
+
+  void RunPapLost(const etcpal::Uuid& cid)
+  {
+    SacnRemoteSource source = {cid.get(), {'\0'}};
+    merge_receiver_pap_lost(kTestHandle, kTestUniverse, &source, nullptr);
+  }
+
+  void RunSourceLimitExceeded() { merge_receiver_source_limit_exceeded(kTestHandle, kTestUniverse, nullptr); }
 };
 
 TEST_F(TestMergeReceiver, CreateWorks)
