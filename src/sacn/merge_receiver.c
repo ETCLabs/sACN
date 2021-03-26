@@ -744,11 +744,54 @@ void universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, co
 void sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
                   size_t num_lost_sources, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(lost_sources);
-  ETCPAL_UNUSED_ARG(num_lost_sources);
   ETCPAL_UNUSED_ARG(context);
+
+  etcpal_error_t error_status = kEtcPalErrOk;
+
+#if SACN_DYNAMIC_MEM
+  sacn_source_id_t* lost_source_ids = calloc(num_lost_sources, sizeof(sacn_source_id_t));
+
+  if (!lost_source_ids)
+    error_status = kEtcPalErrNoMem;
+#else
+  sacn_source_id_t lost_source_ids[SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE];
+#endif
+
+  sacn_dmx_merger_t merger_handle = SACN_DMX_MERGER_INVALID;
+  size_t num_sources_to_remove_from_merger = 0;
+  if ((error_status == kEtcPalErrOk) && sacn_lock())
+  {
+    SacnMergeReceiver* merge_receiver = NULL;
+    error_status = lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL);
+    if (error_status == kEtcPalErrOk)
+    {
+      merger_handle = merge_receiver->merger_handle;
+      for (size_t i = 0; i < num_lost_sources; ++i)
+      {
+        SacnMergeReceiverSource* source = NULL;
+        if (lookup_merge_receiver_source(merge_receiver, &lost_sources[i].cid, &source) == kEtcPalErrOk)
+        {
+          lost_source_ids[i] = source->id;
+          ++num_sources_to_remove_from_merger;
+
+          remove_sacn_merge_receiver_source(merge_receiver, source->id);
+        }
+      }
+    }
+
+    sacn_unlock();
+  }
+
+  if (error_status == kEtcPalErrOk)
+  {
+    for (size_t i = 0; i < num_sources_to_remove_from_merger; ++i)
+      sacn_dmx_merger_remove_source(merger_handle, lost_source_ids[i]);
+  }
+
+#if SACN_DYNAMIC_MEM
+  if (lost_source_ids)
+    free(lost_source_ids);
+#endif
 }
 
 void sampling_started(sacn_receiver_t handle, uint16_t universe, void* context)
