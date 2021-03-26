@@ -139,18 +139,18 @@ TEST_F(TestMergeReceiver, ChangeUniverseWorks)
   ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver, nullptr), kEtcPalErrOk);
   for (size_t i = 0u; i < kNumSources; ++i)
   {
-    EXPECT_EQ(
-        add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i), &etcpal::Uuid::V4().get()),
+    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i),
+                                             &etcpal::Uuid::V4().get(), false),
         kEtcPalErrOk);
   }
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
-  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), kNumSources);
 
   EXPECT_EQ(sacn_merge_receiver_change_universe(handle, kTestUniverse + 1u), kEtcPalErrOk);
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), 0u);
-  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), 0u);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 0u);
 
   EXPECT_EQ(sacn_receiver_change_universe_fake.call_count, 1u);
   EXPECT_EQ(sacn_dmx_merger_remove_source_fake.call_count, kNumSources);
@@ -198,7 +198,7 @@ TEST_F(TestMergeReceiver, GetSourceIdWorks)
 
   SacnMergeReceiver* merge_receiver = nullptr;
   ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver, nullptr), kEtcPalErrOk);
-  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, kTestSourceId, &kTestCid), kEtcPalErrOk);
+  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, kTestSourceId, &kTestCid, false), kEtcPalErrOk);
 
   EXPECT_EQ(sacn_merge_receiver_get_source_id(handle, &kTestCid), kTestSourceId);
 }
@@ -217,8 +217,10 @@ TEST_F(TestMergeReceiver, GetSourceCidWorks)
 
   SacnMergeReceiver* merge_receiver = nullptr;
   ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver, nullptr), kEtcPalErrOk);
-  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, kTestSourceId, &kTestCid), kEtcPalErrOk);
+  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, kTestSourceId, &kTestCid, false), kEtcPalErrOk);
 
   EXPECT_EQ(sacn_merge_receiver_get_source_cid(handle, kTestSourceId, &cid_result), kEtcPalErrOk);
   EXPECT_EQ(ETCPAL_UUID_CMP(&cid_result, &kTestCid), 0);
 }
+
+// TODO: universe_data unit tests (include cases from offline discussion)

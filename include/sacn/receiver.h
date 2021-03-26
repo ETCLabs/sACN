@@ -119,7 +119,8 @@ typedef struct SacnLostSource
  * This notification will not be called for a source until the first NULL start code packet is received. After that
  * happens, this notification is always called immediately during the sampling period, if #SACN_ETC_PRIORITY_EXTENSION
  * is set to 0, or if the start code is not 0x00 or 0xDD. Otherwise, this notification won't be called until both 0x00
- * and 0xDD start codes are received, or the 0xDD timer has expired and a 0x00 packet is received.
+ * and 0xDD start codes are received (in which case the 0xDD notification comes first), or the 0xDD timer has expired
+ * and a 0x00 packet is received.
  *
  * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
  * if the source forces the packet, or if the source sends a data packet without a sync universe.

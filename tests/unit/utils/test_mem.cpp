@@ -748,34 +748,35 @@ TEST_F(TestMem, AddSacnMergeReceiverSourceWorks)
   for (size_t i = 0u; i < kNumSources; ++i)
   {
     EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), i);
-    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), i);
+    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), i);
     last_cid = etcpal::Uuid::V4();
-    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i), &last_cid.get()),
+    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i), &last_cid.get(), false),
               kEtcPalErrOk);
   }
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
-  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), kNumSources);
 
-  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(kNumSources), &last_cid.get()),
+  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(kNumSources), &last_cid.get(),
+                                           false),
             kEtcPalErrExists);
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
-  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), kNumSources);
 
   EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(kNumSources - 1u),
-                                           &etcpal::Uuid::V4().get()),
+                                           &etcpal::Uuid::V4().get(), false),
             kEtcPalErrExists);
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
-  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), kNumSources);
 
-  EXPECT_EQ(
-      add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(kNumSources - 1u), &last_cid.get()),
+  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(kNumSources - 1u),
+                                           &last_cid.get(), false),
       kEtcPalErrExists);
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
-  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), kNumSources);
 }
 
 TEST_F(TestMem, RemoveSacnMergeReceiverSourceWorks)
@@ -788,15 +789,15 @@ TEST_F(TestMem, RemoveSacnMergeReceiverSourceWorks)
 
   for (size_t i = 0u; i < kNumSources; ++i)
   {
-    EXPECT_EQ(
-        add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i), &etcpal::Uuid::V4().get()),
+    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i),
+                                             &etcpal::Uuid::V4().get(), false),
         kEtcPalErrOk);
   }
 
   for (size_t i = kNumSources; i < kNumSources + 5u; ++i)
   {
     EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
-    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources);
+    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), kNumSources);
 
     remove_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i));
   }
@@ -804,11 +805,11 @@ TEST_F(TestMem, RemoveSacnMergeReceiverSourceWorks)
   for (size_t i = 0u; i < kNumSources; ++i)
   {
     EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources - i);
-    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), kNumSources - i);
+    EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), kNumSources - i);
 
     remove_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i));
   }
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), 0u);
-  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->ids_from_cids), 0u);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 0u);
 }
