@@ -415,6 +415,7 @@ struct SacnMergeReceiver
   EtcPalRbTree cids_from_ids;
 
   int num_pending_sources;
+  bool sampling;
 };
 
 /******************************************************************************

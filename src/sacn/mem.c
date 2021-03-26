@@ -812,6 +812,7 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
     etcpal_rbtree_init(&merge_receiver->cids_from_ids, source_id_compare, node_alloc, node_dealloc);
 
     merge_receiver->num_pending_sources = 0;
+    merge_receiver->sampling = true;
 
     ++mem_bufs.num_merge_receivers;
   }

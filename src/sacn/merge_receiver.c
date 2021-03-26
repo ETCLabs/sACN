@@ -805,6 +805,8 @@ void sampling_ended(sacn_receiver_t handle, uint16_t universe, void* context)
     SacnMergeReceiver* merge_receiver = NULL;
     if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL) == kEtcPalErrOk)
     {
+      merge_receiver->sampling = false;
+
       if ((etcpal_rbtree_size(&merge_receiver->sources) > 0) && (merge_receiver->num_pending_sources == 0))
       {
         merged_data_notification.callback = merge_receiver->callbacks.universe_data;
@@ -830,10 +832,64 @@ void sampling_ended(sacn_receiver_t handle, uint16_t universe, void* context)
 
 void pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(source);
   ETCPAL_UNUSED_ARG(context);
+
+  etcpal_error_t error_status = kEtcPalErrOk;
+
+  bool use_pap = false;
+  sacn_dmx_merger_t merger_handle = SACN_DMX_MERGER_INVALID;
+  sacn_source_id_t source_id = SACN_DMX_MERGER_SOURCE_INVALID;
+  if (sacn_lock())
+  {
+    SacnMergeReceiver* merge_receiver = NULL;
+    SacnMergeReceiverSource* merge_recv_src = NULL;
+    error_status = lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL);
+    if (error_status == kEtcPalErrOk)
+      error_status = lookup_merge_receiver_source(merge_receiver, &source->cid, &merge_recv_src);
+    if (error_status == kEtcPalErrOk)
+    {
+      use_pap = merge_receiver->use_pap;
+      merger_handle = merge_receiver->merger_handle;
+      source_id = merge_recv_src->id;
+    }
+
+    sacn_unlock();
+  }
+
+  if (error_status == kEtcPalErrOk)
+    error_status = sacn_dmx_merger_remove_paps(merger_handle, source_id);
+
+  MergeReceiverMergedDataNotification merged_data_notification = MERGE_RECV_MERGED_DATA_DEFAULT_INIT;
+  if ((error_status == kEtcPalErrOk) && sacn_lock())
+  {
+    SacnMergeReceiver* merge_receiver = NULL;
+    error_status = lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL);
+    if (error_status == kEtcPalErrOk)
+    {
+      if (!merge_receiver->sampling && (merge_receiver->num_pending_sources == 0))
+      {
+        merged_data_notification.callback = merge_receiver->callbacks.universe_data;
+        merged_data_notification.handle = (sacn_merge_receiver_t)handle;
+        merged_data_notification.universe = universe;
+        memcpy(merged_data_notification.slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
+        memcpy(merged_data_notification.slot_owners, merge_receiver->slot_owners,
+               DMX_ADDRESS_COUNT * sizeof(sacn_source_id_t));
+        merged_data_notification.context = merge_receiver->callbacks.callback_context;
+      }
+    }
+
+    sacn_unlock();
+  }
+
+  if (error_status == kEtcPalErrOk)
+  {
+    if (merged_data_notification.callback)
+    {
+      merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
+                                        merged_data_notification.slots, merged_data_notification.slot_owners,
+                                        merged_data_notification.context);
+    }
+  }
 }
 
 void source_limit_exceeded(sacn_receiver_t handle, uint16_t universe, void* context)
