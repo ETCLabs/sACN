@@ -399,3 +399,56 @@ TEST_F(TestMergeReceiver, PendingSourceBlocksUniverseData)
   EXPECT_EQ(sacn_dmx_merger_update_paps_fake.call_count, 2u);
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 }
+
+TEST_F(TestMergeReceiver, MultiplePendingSourcesBlockUniverseData)
+{
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+
+  RunSamplingStarted();
+  RunSamplingEnded();
+
+  SacnMergeReceiver* merge_receiver = nullptr;
+  lookup_merge_receiver(handle, &merge_receiver, nullptr);
+
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 0u);
+  EXPECT_EQ(sacn_dmx_merger_add_source_fake.call_count, 0u);
+  EXPECT_EQ(sacn_dmx_merger_update_levels_fake.call_count, 0u);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority_fake.call_count, 0u);
+  EXPECT_EQ(sacn_dmx_merger_update_paps_fake.call_count, 0u);
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
+  etcpal::Uuid cid1 = etcpal::Uuid::V4();
+  etcpal::Uuid cid2 = etcpal::Uuid::V4();
+  etcpal::Uuid cid3 = etcpal::Uuid::V4();
+
+  RunUniverseData(cid1, 0xDD, {0xFFu, 0xFFu});
+  RunUniverseData(cid2, 0xDD, {0xFFu, 0xFFu});
+  RunUniverseData(cid3, 0xDD, {0xFFu, 0xFFu});
+
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 3u);
+  EXPECT_EQ(sacn_dmx_merger_add_source_fake.call_count, 3u);
+  EXPECT_EQ(sacn_dmx_merger_update_levels_fake.call_count, 0u);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority_fake.call_count, 0u);
+  EXPECT_EQ(sacn_dmx_merger_update_paps_fake.call_count, 3u);
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
+  RunUniverseData(cid1, 0x00, {0x01u, 0x02u});
+  RunUniverseData(cid2, 0x00, {0x03u, 0x04u});
+
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 3u);
+  EXPECT_EQ(sacn_dmx_merger_add_source_fake.call_count, 3u);
+  EXPECT_EQ(sacn_dmx_merger_update_levels_fake.call_count, 2u);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority_fake.call_count, 2u);
+  EXPECT_EQ(sacn_dmx_merger_update_paps_fake.call_count, 3u);
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
+  RunUniverseData(cid3, 0x00, {0x05u, 0x06u});
+
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 3u);
+  EXPECT_EQ(sacn_dmx_merger_add_source_fake.call_count, 3u);
+  EXPECT_EQ(sacn_dmx_merger_update_levels_fake.call_count, 3u);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority_fake.call_count, 3u);
+  EXPECT_EQ(sacn_dmx_merger_update_paps_fake.call_count, 3u);
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+}
