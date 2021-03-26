@@ -45,7 +45,6 @@ static void universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_a
                           const uint8_t* pdata, bool is_sampling, void* context);
 static void sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
                          size_t num_lost_sources, void* context);
-static void sampling_started(sacn_receiver_t handle, uint16_t universe, void* context);
 static void sampling_ended(sacn_receiver_t handle, uint16_t universe, void* context);
 static void pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source, void* context);
 static void source_limit_exceeded(sacn_receiver_t handle, uint16_t universe, void* context);
@@ -126,7 +125,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
     receiver_config.universe_id = config->universe_id;
     receiver_config.callbacks.universe_data = universe_data;
     receiver_config.callbacks.sources_lost = sources_lost;
-    receiver_config.callbacks.sampling_period_started = sampling_started;
+    receiver_config.callbacks.sampling_period_started = NULL;
     receiver_config.callbacks.sampling_period_ended = sampling_ended;
     receiver_config.callbacks.source_pap_lost = pap_lost;
     receiver_config.callbacks.source_limit_exceeded = source_limit_exceeded;
@@ -744,6 +743,7 @@ void universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, co
 void sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
                   size_t num_lost_sources, void* context)
 {
+  ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(context);
 
   etcpal_error_t error_status = kEtcPalErrOk;
@@ -794,18 +794,38 @@ void sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSourc
 #endif
 }
 
-void sampling_started(sacn_receiver_t handle, uint16_t universe, void* context)
-{
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(context);
-}
-
 void sampling_ended(sacn_receiver_t handle, uint16_t universe, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(context);
+
+  MergeReceiverMergedDataNotification merged_data_notification = MERGE_RECV_MERGED_DATA_DEFAULT_INIT;
+
+  if (sacn_lock())
+  {
+    SacnMergeReceiver* merge_receiver = NULL;
+    if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL) == kEtcPalErrOk)
+    {
+      if ((etcpal_rbtree_size(&merge_receiver->sources) > 0) && (merge_receiver->num_pending_sources == 0))
+      {
+        merged_data_notification.callback = merge_receiver->callbacks.universe_data;
+        merged_data_notification.handle = (sacn_merge_receiver_t)handle;
+        merged_data_notification.universe = universe;
+        memcpy(merged_data_notification.slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
+        memcpy(merged_data_notification.slot_owners, merge_receiver->slot_owners,
+               DMX_ADDRESS_COUNT * sizeof(sacn_source_id_t));
+        merged_data_notification.context = merge_receiver->callbacks.callback_context;
+      }
+    }
+
+    sacn_unlock();
+  }
+
+  if (merged_data_notification.callback)
+  {
+    merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
+                                      merged_data_notification.slots, merged_data_notification.slot_owners,
+                                      merged_data_notification.context);
+  }
 }
 
 void pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source, void* context)
