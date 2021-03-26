@@ -100,13 +100,14 @@ public:
      * packets on the universe.
      *
      * @param[in] handle The merge receiver's handle.
+     * @param[in] universe The universe this merge receiver is monitoring.
      * @param[in] source_addr The network address from which the sACN packet originated.
      * @param[in] header The header data of the sACN packet.
      * @param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count. This buffer
      *                  is owned by the library.
      */
-    virtual void HandleNonDmxData(Handle handle, const etcpal::SockAddr& source_addr, const SacnHeaderData& header,
-                                  const uint8_t* pdata) = 0;
+    virtual void HandleNonDmxData(Handle handle, uint16_t universe, const etcpal::SockAddr& source_addr,
+                                  const SacnHeaderData& header, const uint8_t* pdata) = 0;
 
     /**
      * @brief Notify that more than the configured maximum number of sources are currently sending on
@@ -222,12 +223,14 @@ extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, u
   }
 }
 
-extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, const EtcPalSockAddr* source_addr,
-                                             const SacnHeaderData* header, const uint8_t* pdata, void* context)
+extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, uint16_t universe,
+                                             const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
+                                             const uint8_t* pdata, void* context)
 {
   if (context && source_addr && header)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(handle, *source_addr, *header, pdata);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(handle, universe, *source_addr, *header,
+                                                                          pdata);
   }
 }
 

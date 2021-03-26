@@ -97,14 +97,16 @@ typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle
  * TODO: this version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
  *
  * @param[in] handle The handle to the merge receiver instance.
+ * @param[in] universe The universe this merge receiver is monitoring.
  * @param[in] source_addr The network address from which the sACN packet originated.
  * @param[in] header The header data of the sACN packet.
  * @param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count. This buffer is
  * owned by the library.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t handle, const EtcPalSockAddr* source_addr,
-                                                const SacnHeaderData* header, const uint8_t* pdata, void* context);
+typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t handle, uint16_t universe,
+                                                const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
+                                                const uint8_t* pdata, void* context);
 
 /**
  * @brief Notify that more than the configured maximum number of sources are currently sending on

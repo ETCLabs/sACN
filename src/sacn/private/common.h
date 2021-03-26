@@ -440,15 +440,16 @@ typedef struct MergeReceiverNonDmxNotification
 {
   SacnMergeReceiverNonDmxCallback callback;
   sacn_merge_receiver_t handle;
+  uint16_t universe;
   const EtcPalSockAddr* source_addr;
   const SacnHeaderData* header;
   const uint8_t* pdata;
   void* context;
 } MergeReceiverNonDmxNotification;
 
-#define MERGE_RECV_NON_DMX_DEFAULT_INIT                       \
-  {                                                           \
-    NULL, SACN_MERGE_RECEIVER_INVALID, NULL, NULL, NULL, NULL \
+#define MERGE_RECV_NON_DMX_DEFAULT_INIT                          \
+  {                                                              \
+    NULL, SACN_MERGE_RECEIVER_INVALID, 0, NULL, NULL, NULL, NULL \
   }
 
 typedef struct MergeReceiverSourceLimitExceededNotification
