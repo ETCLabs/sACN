@@ -519,3 +519,54 @@ TEST_F(TestMergeReceiver, SamplingPeriodBlocksUniverseData)
   RunPapLost(cid1);
   EXPECT_EQ(universe_data_fake.call_count, 6u);
 }
+
+TEST_F(TestMergeReceiver, UniverseDataHandlesSourcesLost)
+{
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+
+  RunSamplingStarted();
+  RunSamplingEnded();
+
+  etcpal::Uuid cid1 = etcpal::Uuid::V4();
+  etcpal::Uuid cid2 = etcpal::Uuid::V4();
+  etcpal::Uuid cid3 = etcpal::Uuid::V4();
+  etcpal::Uuid cid4 = etcpal::Uuid::V4();
+  etcpal::Uuid cid5 = etcpal::Uuid::V4();
+  etcpal::Uuid cid6 = etcpal::Uuid::V4();
+  etcpal::Uuid cid7 = etcpal::Uuid::V4();
+
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  RunUniverseData(cid1, 0x00, {0x01u, 0x02u});
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+  RunUniverseData(cid2, 0x00, {0x01u, 0x02u});
+  EXPECT_EQ(universe_data_fake.call_count, 2u);
+  RunUniverseData(cid3, 0x00, {0x01u, 0x02u});
+  EXPECT_EQ(universe_data_fake.call_count, 3u);
+  RunUniverseData(cid4, 0x00, {0x01u, 0x02u});
+  EXPECT_EQ(universe_data_fake.call_count, 4u);
+  RunUniverseData(cid5, 0x00, {0x01u, 0x02u});
+  EXPECT_EQ(universe_data_fake.call_count, 5u);
+  RunUniverseData(cid6, 0x00, {0x01u, 0x02u});
+  EXPECT_EQ(universe_data_fake.call_count, 6u);
+  RunUniverseData(cid7, 0x00, {0x01u, 0x02u});
+  EXPECT_EQ(universe_data_fake.call_count, 7u);
+
+  SacnMergeReceiver* merge_receiver = nullptr;
+  lookup_merge_receiver(handle, &merge_receiver, nullptr);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 7u);
+
+  EXPECT_EQ(sacn_dmx_merger_remove_source_fake.call_count, 0u);
+
+  RunSourcesLost({cid1, cid2, cid3, cid4});
+
+  EXPECT_EQ(sacn_dmx_merger_remove_source_fake.call_count, 4u);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 3u);
+  EXPECT_EQ(universe_data_fake.call_count, 8u);
+
+  RunSourcesLost({cid5, cid6, cid7});
+
+  EXPECT_EQ(sacn_dmx_merger_remove_source_fake.call_count, 7u);
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 0u);
+  EXPECT_EQ(universe_data_fake.call_count, 9u);
+}
