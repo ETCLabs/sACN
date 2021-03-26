@@ -935,11 +935,11 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
     error_status = kEtcPalErrSys;
   }
 
-  if (error_status == kEtcPalErrOk)
+  if ((error_status == kEtcPalErrOk) && use_pap)
     error_status = sacn_dmx_merger_remove_paps(merger_handle, source_id);
 
   MergeReceiverMergedDataNotification merged_data_notification = MERGE_RECV_MERGED_DATA_DEFAULT_INIT;
-  if (error_status == kEtcPalErrOk)
+  if ((error_status == kEtcPalErrOk) && use_pap)
   {
     if (sacn_lock())
     {
