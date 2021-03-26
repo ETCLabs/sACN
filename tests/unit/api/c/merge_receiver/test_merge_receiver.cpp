@@ -20,6 +20,7 @@
 #include "sacn/merge_receiver.h"
 
 #include <limits>
+#include "etcpal/cpp/inet.h"
 #include "etcpal/cpp/uuid.h"
 #include "etcpal_mock/common.h"
 #include "sacn_mock/private/common.h"
@@ -37,17 +38,23 @@
 #define TestMergeReceiver TestMergeReceiverStatic
 #endif
 
+FAKE_VOID_FUNC(universe_data, sacn_merge_receiver_t, uint16_t, const uint8_t*, const sacn_source_id_t*, void*);
+FAKE_VOID_FUNC(universe_non_dmx, sacn_merge_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*,
+               const uint8_t*, void*);
+FAKE_VOID_FUNC(source_limit_exceeded, sacn_merge_receiver_t, uint16_t, void*);
+
 static constexpr uint16_t kTestUniverse = 123u;
+static constexpr uint8_t kTestPriority = 100u;
 static constexpr int kTestHandle = 4567u;
 static constexpr int kTestHandle2 = 1234u;
-static constexpr SacnMergeReceiverConfig kTestConfig = {
-    kTestUniverse,
-    {[](sacn_merge_receiver_t, uint16_t, const uint8_t*, const sacn_source_id_t*, void*) {},
-     [](sacn_merge_receiver_t, uint16_t, const EtcPalSockAddr*, const SacnHeaderData*, const uint8_t*, void*) {}, NULL,
-     NULL},
-    SACN_RECEIVER_INFINITE_SOURCES,
-    true,
-    kSacnIpV4AndIpV6};
+static constexpr SacnMergeReceiverConfig kTestConfig = {kTestUniverse,
+                                                        {universe_data, universe_non_dmx, source_limit_exceeded, NULL},
+                                                        SACN_RECEIVER_INFINITE_SOURCES,
+                                                        true,
+                                                        kSacnIpV4AndIpV6};
+static const EtcPalSockAddr kTestSourceAddr = {SACN_PORT, etcpal::IpAddr::FromString("10.101.1.1").get()};
+static const SacnHeaderData kTestHeaderData = {
+    etcpal::Uuid::V4().get(), {'\0'}, kTestUniverse, kTestPriority, false, 0x00, DMX_ADDRESS_COUNT};
 
 class TestMergeReceiver : public ::testing::Test
 {
@@ -58,6 +65,10 @@ protected:
     sacn_common_reset_all_fakes();
     sacn_dmx_merger_reset_all_fakes();
     sacn_receiver_reset_all_fakes();
+
+    RESET_FAKE(universe_data);
+    RESET_FAKE(universe_non_dmx);
+    RESET_FAKE(source_limit_exceeded);
 
     sacn_receiver_create_fake.custom_fake = [](const SacnReceiverConfig*, sacn_receiver_t* handle, SacnMcastInterface*,
                                                size_t) {
@@ -79,6 +90,20 @@ protected:
     sacn_merge_receiver_deinit();
     sacn_mem_deinit();
   }
+
+  void RunUniverseData(const etcpal::Uuid& source_cid, uint8_t start_code, const std::vector<uint8_t>& pdata,
+                       uint8_t priority = kTestPriority)
+  {
+    SacnHeaderData header = kTestHeaderData;
+    header.cid = source_cid.get();
+    header.priority = priority;
+    header.start_code = start_code;
+    header.slot_count = static_cast<uint16_t>(pdata.size());
+    merge_receiver_universe_data(kTestHandle, &kTestSourceAddr, &header, pdata.data(), false, nullptr);
+  }
+
+  void RunSamplingStarted() { merge_receiver_sampling_started(kTestHandle, kTestUniverse, nullptr); }
+  void RunSamplingEnded() { merge_receiver_sampling_ended(kTestHandle, kTestUniverse, nullptr); }
 };
 
 TEST_F(TestMergeReceiver, CreateWorks)
@@ -141,7 +166,7 @@ TEST_F(TestMergeReceiver, ChangeUniverseWorks)
   {
     EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_source_id_t>(i),
                                              &etcpal::Uuid::V4().get(), false),
-        kEtcPalErrOk);
+              kEtcPalErrOk);
   }
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->cids_from_ids), kNumSources);
@@ -223,4 +248,10 @@ TEST_F(TestMergeReceiver, GetSourceCidWorks)
   EXPECT_EQ(ETCPAL_UUID_CMP(&cid_result, &kTestCid), 0);
 }
 
-// TODO: universe_data unit tests (include cases from offline discussion)
+TEST_F(TestMergeReceiver, UniverseDataWorks)
+{
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+
+  // TODO
+}
