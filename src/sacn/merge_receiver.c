@@ -26,6 +26,11 @@
 #include "sacn/private/util.h"
 #include "sacn/private/merge_receiver.h"
 
+#if !SACN_DYNAMIC_MEM && (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER != SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE)
+#error \
+    "SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is invalid! The Merge Receiver API requires that it be equal to SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE."
+#endif
+
 /***************************** Private constants *****************************/
 
 /****************************** Private macros *******************************/
