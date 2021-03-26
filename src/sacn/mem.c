@@ -911,6 +911,10 @@ void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_s
 
   if (cid_from_id)
   {
+    SacnMergeReceiverSource* source = etcpal_rbtree_find(&merge_receiver->sources, &cid_from_id->cid);
+    if (source->pending)
+      --merge_receiver->num_pending_sources;
+
     etcpal_rbtree_remove_with_cb(&merge_receiver->sources, &cid_from_id->cid, merge_receiver_sources_tree_dealloc);
     etcpal_rbtree_remove_with_cb(&merge_receiver->cids_from_ids, &source_id, cids_from_source_ids_tree_dealloc);
   }
