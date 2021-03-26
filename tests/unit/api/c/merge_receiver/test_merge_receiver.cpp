@@ -115,7 +115,7 @@ protected:
   {
     std::vector<SacnLostSource> lost_sources;
     lost_sources.reserve(cids.size());
-    std::transform(cids.begin(), cids.end(), std::back_inserter(lost_sources), [](etcpal::Uuid& cid) {
+    std::transform(cids.begin(), cids.end(), std::back_inserter(lost_sources), [](const etcpal::Uuid& cid) {
       // clang-format off
         SacnLostSource lost_source = {
           cid.get(),
@@ -478,4 +478,44 @@ TEST_F(TestMergeReceiver, MultiplePendingSourcesBlockUniverseData)
   EXPECT_EQ(sacn_dmx_merger_update_universe_priority_fake.call_count, 3u);
   EXPECT_EQ(sacn_dmx_merger_update_paps_fake.call_count, 3u);
   EXPECT_EQ(universe_data_fake.call_count, 1u);
+}
+
+TEST_F(TestMergeReceiver, SamplingPeriodBlocksUniverseData)
+{
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+
+  RunSamplingStarted();
+
+  SacnMergeReceiver* merge_receiver = nullptr;
+  lookup_merge_receiver(handle, &merge_receiver, nullptr);
+
+  etcpal::Uuid cid1 = etcpal::Uuid::V4();
+  etcpal::Uuid cid2 = etcpal::Uuid::V4();
+
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  RunUniverseData(cid1, 0x00, {0x01u, 0x02u});
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  RunUniverseData(cid1, 0xDD, {0xFFu, 0xFFu});
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  RunUniverseData(cid2, 0x00, {0x03u, 0x04u});
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  RunSourcesLost({cid2});
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  RunPapLost(cid1);
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
+  RunSamplingEnded();
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+
+  RunUniverseData(cid1, 0x00, {0x05u, 0x06u});
+  EXPECT_EQ(universe_data_fake.call_count, 2u);
+  RunUniverseData(cid1, 0xDD, {0xFFu, 0xFFu});
+  EXPECT_EQ(universe_data_fake.call_count, 3u);
+  RunUniverseData(cid2, 0x00, {0x07u, 0x08u});
+  EXPECT_EQ(universe_data_fake.call_count, 4u);
+  RunSourcesLost({cid2});
+  EXPECT_EQ(universe_data_fake.call_count, 5u);
+  RunPapLost(cid1);
+  EXPECT_EQ(universe_data_fake.call_count, 6u);
 }
