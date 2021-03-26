@@ -653,17 +653,17 @@ void universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, co
   }
 
   // Execute a new merge if needed.
-  bool new_merge = false;
+  bool new_merge_occurred = false;
   if (header->start_code == 0x00)
   {
     sacn_dmx_merger_update_levels(merger_handle, source_id, pdata, header->slot_count);
     sacn_dmx_merger_update_universe_priority(merger_handle, source_id, header->priority);
-    new_merge = true;
+    new_merge_occurred = true;
   }
   else if ((header->start_code == 0xDD) && use_pap)
   {
     sacn_dmx_merger_update_paps(merger_handle, source_id, pdata, header->slot_count);
-    new_merge = true;
+    new_merge_occurred = true;
   }
 
   // Notify if needed.
@@ -675,7 +675,7 @@ void universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, co
     SacnMergeReceiver* merge_receiver = NULL;
     if ((lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL) == kEtcPalErrOk))
     {
-      if (new_merge && !is_sampling && (merge_receiver->num_pending_sources == 0))
+      if (new_merge_occurred && !is_sampling && (merge_receiver->num_pending_sources == 0))
       {
         merged_data_notification.callback = merge_receiver->callbacks.universe_data;
         merged_data_notification.handle = (sacn_merge_receiver_t)handle;
