@@ -1,0 +1,89 @@
+workflow:
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+variables:
+  GIT_STRATEGY: clone
+  GIT_SUBMODULE_STRATEGY: normal
+  GLOBAL_CMAKE_OPTIONS: -DSACN_BUILD_TESTS=ON -DSACN_BUILD_EXAMPLES=ON
+  NEW_BUILD_VERSION:
+    value: "CHANGE-ME"
+    description: "The new build version to deploy in the format M.m.p.b"
+
+windows-build:
+  stage: build
+  tags:
+    - ct-windows
+  script:
+    - mkdir build
+    - cd build
+    - cmake -G "Visual Studio 15 2017 Win64" $env:GLOBAL_CMAKE_OPTIONS ..
+    - cmake --build . --config Release -j
+    - ctest -C Release --output-on-failure
+  artifacts:
+    when: always
+    reports:
+      junit: build/tests/unit/test-results/*.xml
+
+macos-build:
+  stage: build
+  tags:
+    - ct-macos
+  script:
+    - mkdir build
+    - cd build
+    - cmake ${GLOBAL_CMAKE_OPTIONS} ..
+    - cmake --build .
+    - ctest --output-on-failure
+  artifacts:
+    when: always
+    reports:
+      junit: build/tests/unit/test-results/*.xml
+
+linux-build:
+  stage: build
+  image: rikorose/gcc-cmake:latest
+  variables:
+    # CMAKE_ASAN_DEFINITIONS: -DCMAKE_C_FLAGS="-fsanitize=address" -DCMAKE_CXX_FLAGS="-fsanitize=address" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
+    CMAKE_ASAN_DEFINITIONS: ""
+  script:
+    - mkdir build
+    - cd build
+    - cmake ${GLOBAL_CMAKE_OPTIONS} ${CMAKE_ASAN_DEFINITIONS} ..
+    - cmake --build .
+    - ctest --output-on-failure
+  artifacts:
+    when: always
+    reports:
+      junit: build/tests/unit/test-results/*.xml
+
+deploy-docs:
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "main"'
+  image: python:3.8-buster
+  variables:
+    GH_REPO_NAME: sACNDocs
+    GH_REPO_REF: github.com/ETCLabs/sACNDocs.git
+    GH_REPO_TOKEN: $SVC_ETCLABS_REPO_TOKEN
+  script:
+    - apt-get update
+    - apt-get install -y doxygen
+    - chmod +x tools/ci/publish_docs.sh
+    - tools/ci/publish_docs.sh
+
+
+deploy-versioned-build:
+  stage: deploy
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_NAME == "main"'
+  image: python:3.8
+  script:
+    - pip config set global.extra-index-url https://artifactory-mid.etcconnect.com/artifactory/api/pypi/ETC-PyPI/simple
+    - pip config set global.trusted-host artifactory-mid.etcconnect.com
+    - pip install etclibtool
+    - git config user.name "GitLab CI"
+    - git config user.email "noreply.gitlab@etcconnect.com"
+    - etclibtool build --config ./tools/ci/etclibtool_config.json --from-ci --user ${BUILDNETWORKING_USER}:${BUILDNETWORKING_PASS} . ${NEW_BUILD_VERSION}

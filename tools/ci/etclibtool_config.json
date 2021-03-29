@@ -1,0 +1,14 @@
+{
+  "build": {
+    "fileTemplates": {
+      "tools/templates/version.h.in": "include/sacn/version.h"
+    },
+    "jira": {
+      "server": "jira-stage.etcconnect.com",
+      "project": "SACN",
+      "submoduleDeps": {
+        "EtcPal": "external/EtcPal"
+      }
+    }
+  }
+}

@@ -86,17 +86,17 @@ for file_path in markdown_files:
 
 print("Generating Doxygen and capturing warnings...")
 
-if os.getenv("BUILD_REASON", "IndividualCI") == "PullRequest":
-    project_number = "Staging for pull request {}".format(
-        os.getenv("SYSTEM_PULLREQUEST_PULLREQUESTNUMBER")
+if os.getenv("CI_PIPELINE_SOURCE", "push") == "merge_request_event":
+    project_number = "Staging for merge request {}".format(
+        os.getenv("CI_MERGE_REQUEST_IID")
     )
     output_dir = "build/{}/docs/stage/{}".format(
-        os.getenv("GH_REPO_NAME", "sACN"),
-        os.getenv("SYSTEM_PULLREQUEST_PULLREQUESTNUMBER"),
+        os.getenv("GH_REPO_NAME", "sACNDocs"),
+        os.getenv("CI_MERGE_REQUEST_IID"),
     )
 else:
     project_number = "HEAD (unstable)"
-    output_dir = "build/{}/docs/head".format(os.getenv("GH_REPO_NAME", "sACN"))
+    output_dir = "build/{}/docs/head".format(os.getenv("GH_REPO_NAME", "sACNDocs"))
 
 # Remove the relevant documentation directory - git will resolve the changes when the documentation
 # is regenerated.
@@ -117,8 +117,8 @@ print(process_result.stdout.decode("utf-8"))
 
 print("\nISSUES:\n")
 num_issues = 0
-# Check to see if we are running on Azure Pipelines.
-if os.getenv("BUILD_BUILDID"):
+# Check to see if we are running on CI.
+if os.getenv("CI"):
     for line in process_result.stderr.decode("utf-8").splitlines():
         num_issues += 1
         if "error:" in line:
