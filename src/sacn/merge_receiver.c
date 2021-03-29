@@ -31,16 +31,6 @@
     "SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is invalid! The Merge Receiver API requires that it be equal to SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE."
 #endif
 
-/***************************** Private constants *****************************/
-
-/****************************** Private macros *******************************/
-
-/**************************** Private variables ******************************/
-
-/*********************** Private function prototypes *************************/
-
-/*********************** Receiver callback prototypes *************************/
-
 /*************************** Function definitions ****************************/
 
 /**************************************************************************************************
@@ -734,21 +724,18 @@ void merge_receiver_universe_data(sacn_receiver_t handle, const EtcPalSockAddr* 
     }
   }
 
-  if (error_status == kEtcPalErrOk)
+  if (merged_data_notification.callback)
   {
-    if (merged_data_notification.callback)
-    {
-      merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
-                                        merged_data_notification.slots, merged_data_notification.slot_owners,
-                                        merged_data_notification.context);
-    }
+    merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
+                                      merged_data_notification.slots, merged_data_notification.slot_owners,
+                                      merged_data_notification.context);
+  }
 
-    if (non_dmx_notification.callback)
-    {
-      non_dmx_notification.callback(non_dmx_notification.handle, non_dmx_notification.universe,
-                                    non_dmx_notification.source_addr, non_dmx_notification.header,
-                                    non_dmx_notification.pdata, non_dmx_notification.context);
-    }
+  if (non_dmx_notification.callback)
+  {
+    non_dmx_notification.callback(non_dmx_notification.handle, non_dmx_notification.universe,
+                                  non_dmx_notification.source_addr, non_dmx_notification.header,
+                                  non_dmx_notification.pdata, non_dmx_notification.context);
   }
 }
 
@@ -836,14 +823,11 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
     }
   }
 
-  if (error_status == kEtcPalErrOk)
+  if (merged_data_notification.callback)
   {
-    if (merged_data_notification.callback)
-    {
-      merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
-                                        merged_data_notification.slots, merged_data_notification.slot_owners,
-                                        merged_data_notification.context);
-    }
+    merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
+                                      merged_data_notification.slots, merged_data_notification.slot_owners,
+                                      merged_data_notification.context);
   }
 
 #if SACN_DYNAMIC_MEM
@@ -967,14 +951,11 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
     }
   }
 
-  if (error_status == kEtcPalErrOk)
+  if (merged_data_notification.callback)
   {
-    if (merged_data_notification.callback)
-    {
-      merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
-                                        merged_data_notification.slots, merged_data_notification.slot_owners,
-                                        merged_data_notification.context);
-    }
+    merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
+                                      merged_data_notification.slots, merged_data_notification.slot_owners,
+                                      merged_data_notification.context);
   }
 }
 
