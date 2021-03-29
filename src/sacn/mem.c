@@ -812,6 +812,7 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
     etcpal_rbtree_init(&merge_receiver->cids_from_ids, source_id_compare, node_alloc, node_dealloc);
 
     merge_receiver->num_pending_sources = 0;
+    merge_receiver->sampling = true;
 
     ++mem_bufs.num_merge_receivers;
   }
@@ -911,6 +912,10 @@ void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_s
 
   if (cid_from_id)
   {
+    SacnMergeReceiverSource* source = etcpal_rbtree_find(&merge_receiver->sources, &cid_from_id->cid);
+    if (source->pending)
+      --merge_receiver->num_pending_sources;
+
     etcpal_rbtree_remove_with_cb(&merge_receiver->sources, &cid_from_id->cid, merge_receiver_sources_tree_dealloc);
     etcpal_rbtree_remove_with_cb(&merge_receiver->cids_from_ids, &source_id, cids_from_source_ids_tree_dealloc);
   }
