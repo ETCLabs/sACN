@@ -86,4 +86,6 @@ deploy-versioned-build:
     - pip install etclibtool
     - git config user.name "GitLab CI"
     - git config user.email "noreply.gitlab@etcconnect.com"
-    - etclibtool build --config ./tools/ci/etclibtool_config.json --from-ci --user ${BUILDNETWORKING_USER}:${BUILDNETWORKING_PASS} . ${NEW_BUILD_VERSION}
+    - git config http.sslVerify false
+    - etclibtool version --config ./tools/ci/etclibtool_config.json --from-ci --user ${BUILDNETWORKING_USER}:${BUILDNETWORKING_PASS} . ${NEW_BUILD_VERSION}
+    - git push "https://project_139_bot:${REPO_PUSH_TOKEN}@gitlab.etcconnect.com/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME} --tags
