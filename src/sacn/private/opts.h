@@ -258,7 +258,7 @@
 /** @endcond */
 
 /**
- * @brief Currently unused; will be used in the future.
+ * @brief Currently unconfigurable; will be configurable in the future.
  */
 #undef SACN_RECEIVER_MAX_THREADS
 #define SACN_RECEIVER_MAX_THREADS 1

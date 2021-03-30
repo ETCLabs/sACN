@@ -107,28 +107,9 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
 
   if (sacn_lock())
   {
-    SacnReceiver* receiver = NULL;
     if (res == kEtcPalErrOk)
-      res = add_sacn_receiver(get_next_receiver_handle(), config, netints, num_netints, &receiver);
+      res = create_sacn_receiver(config, handle, netints, num_netints);
 
-    if (res == kEtcPalErrOk)
-    {
-      begin_sampling_period(receiver);
-      res = assign_receiver_to_thread(receiver);
-    }
-
-    if (res == kEtcPalErrOk)
-    {
-      *handle = receiver->keys.handle;
-    }
-    else
-    {
-      if (receiver)
-      {
-        remove_receiver_from_thread(receiver, kCloseSocketNow);
-        remove_sacn_receiver(receiver);
-      }
-    }
     sacn_unlock();
   }
   else
@@ -160,15 +141,8 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 
   if (sacn_lock())
   {
-    SacnReceiver* receiver = NULL;
     if (res == kEtcPalErrOk)
-      res = lookup_receiver(handle, &receiver);
-
-    if (res == kEtcPalErrOk)
-    {
-      remove_receiver_from_thread(receiver, kQueueSocketForClose);
-      remove_sacn_receiver(receiver);
-    }
+      res = destroy_sacn_receiver(handle);
 
     sacn_unlock();
   }
@@ -243,37 +217,8 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
 
   if (sacn_lock())
   {
-    // First check to see if there is already a receiver listening on this universe.
     if (res == kEtcPalErrOk)
-    {
-      SacnReceiver* tmp = NULL;
-      if (lookup_receiver_by_universe(new_universe_id, &tmp) == kEtcPalErrOk)
-        res = kEtcPalErrExists;
-    }
-
-    // Find the receiver to change the universe for.
-    SacnReceiver* receiver = NULL;
-    if (res == kEtcPalErrOk)
-      res = lookup_receiver(handle, &receiver);
-
-    // Clear termination sets and sources since they only pertain to the old universe.
-    if (res == kEtcPalErrOk)
-      res = clear_term_sets_and_sources(receiver);
-
-    // Update receiver key and position in receiver_state.receivers_by_universe.
-    if (res == kEtcPalErrOk)
-      res = update_receiver_universe(receiver, new_universe_id);
-
-    // Update the receiver's socket and subscription.
-    if (res == kEtcPalErrOk)
-    {
-      remove_receiver_sockets(receiver, kQueueSocketForClose);
-      res = add_receiver_sockets(receiver);
-    }
-
-    // Begin the sampling period.
-    if (res == kEtcPalErrOk)
-      begin_sampling_period(receiver);
+      res = change_sacn_receiver_universe(handle, new_universe_id);
 
     sacn_unlock();
   }
@@ -502,5 +447,90 @@ uint32_t sacn_receiver_get_expired_wait()
     res = get_expired_wait();
     sacn_unlock();
   }
+  return res;
+}
+
+/**************************************************************************************************
+ * Private functions
+ *************************************************************************************************/
+
+// Needs lock
+etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_receiver_t* handle,
+                                    SacnMcastInterface* netints, size_t num_netints)
+{
+  SacnReceiver* receiver = NULL;
+  etcpal_error_t res = add_sacn_receiver(get_next_receiver_handle(), config, netints, num_netints, &receiver);
+
+  if (res == kEtcPalErrOk)
+  {
+    begin_sampling_period(receiver);
+    res = assign_receiver_to_thread(receiver);
+  }
+
+  if (res == kEtcPalErrOk)
+  {
+    *handle = receiver->keys.handle;
+  }
+  else
+  {
+    if (receiver)
+    {
+      remove_receiver_from_thread(receiver, kCloseSocketNow);
+      remove_sacn_receiver(receiver);
+    }
+  }
+
+  return res;
+}
+
+// Needs lock
+etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle)
+{
+  SacnReceiver* receiver = NULL;
+  etcpal_error_t res = lookup_receiver(handle, &receiver);
+
+  if (res == kEtcPalErrOk)
+  {
+    remove_receiver_from_thread(receiver, kQueueSocketForClose);
+    remove_sacn_receiver(receiver);
+  }
+
+  return res;
+}
+
+// Needs lock
+etcpal_error_t change_sacn_receiver_universe(sacn_receiver_t handle, uint16_t new_universe_id)
+{
+  etcpal_error_t res = kEtcPalErrOk;
+
+  // First check to see if there is already a receiver listening on this universe.
+  SacnReceiver* tmp = NULL;
+  if (lookup_receiver_by_universe(new_universe_id, &tmp) == kEtcPalErrOk)
+    res = kEtcPalErrExists;
+
+  // Find the receiver to change the universe for.
+  SacnReceiver* receiver = NULL;
+  if (res == kEtcPalErrOk)
+    res = lookup_receiver(handle, &receiver);
+
+  // Clear termination sets and sources since they only pertain to the old universe.
+  if (res == kEtcPalErrOk)
+    res = clear_term_sets_and_sources(receiver);
+
+  // Update receiver key and position in receiver_state.receivers_by_universe.
+  if (res == kEtcPalErrOk)
+    res = update_receiver_universe(receiver, new_universe_id);
+
+  // Update the receiver's socket and subscription.
+  if (res == kEtcPalErrOk)
+  {
+    remove_receiver_sockets(receiver, kQueueSocketForClose);
+    res = add_receiver_sockets(receiver);
+  }
+
+  // Begin the sampling period.
+  if (res == kEtcPalErrOk)
+    begin_sampling_period(receiver);
+
   return res;
 }

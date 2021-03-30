@@ -37,6 +37,11 @@ DEFINE_FAKE_VALUE_FUNC(size_t, sacn_receiver_get_network_interfaces, sacn_receiv
 DEFINE_FAKE_VOID_FUNC(sacn_receiver_set_expired_wait, uint32_t);
 DEFINE_FAKE_VALUE_FUNC(uint32_t, sacn_receiver_get_expired_wait);
 
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, create_sacn_receiver, const SacnReceiverConfig*, sacn_receiver_t*,
+                       SacnMcastInterface*, size_t);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, destroy_sacn_receiver, sacn_receiver_t);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, change_sacn_receiver_universe, sacn_receiver_t, uint16_t);
+
 
 void sacn_receiver_reset_all_fakes(void)
 {
@@ -52,4 +57,7 @@ void sacn_receiver_reset_all_fakes(void)
   RESET_FAKE(sacn_receiver_get_network_interfaces);
   RESET_FAKE(sacn_receiver_set_expired_wait);
   RESET_FAKE(sacn_receiver_get_expired_wait);
+  RESET_FAKE(create_sacn_receiver);
+  RESET_FAKE(destroy_sacn_receiver);
+  RESET_FAKE(change_sacn_receiver_universe);
 }

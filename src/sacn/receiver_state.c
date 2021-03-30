@@ -106,19 +106,44 @@ etcpal_error_t sacn_receiver_state_init(void)
 
 void sacn_receiver_state_deinit(void)
 {
+  sacn_thread_id_t threads_ids_to_deinit[SACN_RECEIVER_MAX_THREADS];
+  etcpal_thread_t* threads_handles_to_deinit[SACN_RECEIVER_MAX_THREADS];
+  int num_threads_to_deinit = 0;
+
   // Stop all receive threads
-  for (unsigned int i = 0; i < sacn_mem_get_num_threads(); ++i)
+  if (sacn_lock())
   {
-    SacnRecvThreadContext* thread_context = get_recv_thread_context(i);
-    if (thread_context && thread_context->running)
+    for (unsigned int i = 0; i < sacn_mem_get_num_threads(); ++i)
     {
-      thread_context->running = false;
-      etcpal_thread_join(&thread_context->thread_handle);
-      sacn_cleanup_dead_sockets(thread_context);
+      SacnRecvThreadContext* thread_context = get_recv_thread_context(i);
+      if (thread_context && thread_context->running)
+      {
+        thread_context->running = false;
+        threads_ids_to_deinit[num_threads_to_deinit] = thread_context->thread_id;
+        threads_handles_to_deinit[num_threads_to_deinit] = &thread_context->thread_handle;
+        ++num_threads_to_deinit;
+      }
     }
+
+    sacn_unlock();
   }
 
-  remove_all_receiver_sockets(kCloseSocketNow);
+  for (int i = 0; i < num_threads_to_deinit; ++i)
+    etcpal_thread_join(threads_handles_to_deinit[i]);
+
+  if (sacn_lock())
+  {
+    for (int i = 0; i < num_threads_to_deinit; ++i)
+    {
+      SacnRecvThreadContext* thread_context = get_recv_thread_context(threads_ids_to_deinit[i]);
+      if (thread_context)
+        sacn_cleanup_dead_sockets(thread_context);
+    }
+
+    remove_all_receiver_sockets(kCloseSocketNow);
+
+    sacn_unlock();
+  }
 }
 
 sacn_receiver_t get_next_receiver_handle()

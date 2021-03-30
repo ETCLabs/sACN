@@ -21,6 +21,7 @@
 
 #include "sacn/private/mem.h"
 #include "sacn/private/source_loss.h"
+#include "sacn/private/receiver_state.h"
 #include "sacn/private/source_state.h"
 #include "sacn/private/sockets.h"
 #include "sacn/private/source.h"
@@ -74,6 +75,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
     bool mem_initted = false;
     bool sockets_initted = false;
     bool source_loss_initted = false;
+    bool receiver_state_initted = false;
     bool source_state_initted = false;
     bool receiver_initted = false;
     bool source_initted = false;
@@ -97,11 +99,13 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
         res = kEtcPalErrSys;
     }
     if (res == kEtcPalErrOk)
-      mem_initted = ((res = sacn_mem_init(1)) == kEtcPalErrOk);
+      mem_initted = ((res = sacn_mem_init(SACN_RECEIVER_MAX_THREADS)) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
       sockets_initted = ((res = sacn_sockets_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
       source_loss_initted = ((res = sacn_source_loss_init()) == kEtcPalErrOk);
+    if (res == kEtcPalErrOk)
+      receiver_state_initted = ((res = sacn_receiver_state_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
       source_state_initted = ((res = sacn_source_state_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
@@ -134,6 +138,8 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
         sacn_receiver_deinit();
       if (source_state_initted)
         sacn_source_state_deinit();
+      if (receiver_state_initted)
+        sacn_receiver_state_deinit();
       if (source_loss_initted)
         sacn_source_loss_deinit();
       if (sockets_initted)
@@ -157,6 +163,9 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
  *
  * Set the sACN library back to an uninitialized state. Calls to other sACN API functions will fail
  * until sacn_init() is called again.
+ *
+ * This function is not thread safe with respect to other sACN API functions. Make sure to join your threads that use
+ * the APIs before calling this.
  */
 void sacn_deinit(void)
 {
@@ -169,6 +178,7 @@ void sacn_deinit(void)
     sacn_source_deinit();
     sacn_receiver_deinit();
     sacn_source_state_deinit();
+    sacn_receiver_state_deinit();
     sacn_source_loss_deinit();
     sacn_sockets_deinit();
     sacn_mem_deinit();

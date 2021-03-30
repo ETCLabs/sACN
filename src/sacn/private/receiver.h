@@ -36,9 +36,13 @@
 extern "C" {
 #endif
 
-
 etcpal_error_t sacn_receiver_init(void);
 void sacn_receiver_deinit(void);
+
+etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_receiver_t* handle,
+                                    SacnMcastInterface* netints, size_t num_netints);
+etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle);
+etcpal_error_t change_sacn_receiver_universe(sacn_receiver_t handle, uint16_t new_universe_id);
 
 #ifdef __cplusplus
 }

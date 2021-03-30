@@ -80,6 +80,7 @@ SacnMergeReceiver* get_merge_receiver(size_t index);
 size_t get_num_merge_receivers();
 void remove_sacn_merge_receiver(size_t index);
 void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_source_id_t source_id);
+void clear_sacn_merge_receiver_sources(SacnMergeReceiver* merge_receiver);
 
 // sACN Source memory API
 etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state);

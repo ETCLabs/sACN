@@ -900,8 +900,7 @@ size_t get_num_merge_receivers()
 // Needs lock
 void remove_sacn_merge_receiver(size_t index)
 {
-  etcpal_rbtree_clear_with_cb(&mem_bufs.merge_receivers[index].sources, merge_receiver_sources_tree_dealloc);
-  etcpal_rbtree_clear_with_cb(&mem_bufs.merge_receivers[index].cids_from_ids, cids_from_source_ids_tree_dealloc);
+  clear_sacn_merge_receiver_sources(&mem_bufs.merge_receivers[index]);
   REMOVE_AT_INDEX((&mem_bufs), SacnMergeReceiver, merge_receivers, index);
 }
 
@@ -919,6 +918,14 @@ void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_s
     etcpal_rbtree_remove_with_cb(&merge_receiver->sources, &cid_from_id->cid, merge_receiver_sources_tree_dealloc);
     etcpal_rbtree_remove_with_cb(&merge_receiver->cids_from_ids, &source_id, cids_from_source_ids_tree_dealloc);
   }
+}
+
+// Needs lock
+void clear_sacn_merge_receiver_sources(SacnMergeReceiver* merge_receiver)
+{
+  etcpal_rbtree_clear_with_cb(&merge_receiver->sources, merge_receiver_sources_tree_dealloc);
+  etcpal_rbtree_clear_with_cb(&merge_receiver->cids_from_ids, cids_from_source_ids_tree_dealloc);
+  merge_receiver->num_pending_sources = 0;
 }
 
 // Needs lock
@@ -2187,6 +2194,9 @@ void deinit_merge_receivers(void)
   {
     if (merge_receivers_initialized)
     {
+      for (size_t i = 0; i < mem_bufs.num_merge_receivers; ++i)
+        clear_sacn_merge_receiver_sources(&mem_bufs.merge_receivers[i]);
+
 #if SACN_DYNAMIC_MEM
       free(mem_bufs.merge_receivers);
       mem_bufs.merge_receivers_capacity = 0;

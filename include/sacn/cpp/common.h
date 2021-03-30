@@ -87,6 +87,9 @@ inline etcpal::Error Init(const etcpal::Logger& logger)
  *
  * Closes all connections, deallocates all resources and joins the background thread. No sACN
  * API functions are usable after this function is called.
+ *
+ * This function is not thread safe with respect to other sACN API functions. Make sure to join your threads that use
+ * the APIs before calling this.
  */
 inline void Deinit()
 {

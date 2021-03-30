@@ -60,6 +60,19 @@ etcpal_error_t lookup_state(sacn_dmx_merger_t merger, sacn_source_id_t source, M
                             SourceState** source_state);
 size_t get_number_of_mergers();
 
+etcpal_error_t create_sacn_dmx_merger(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle);
+etcpal_error_t destroy_sacn_dmx_merger(sacn_dmx_merger_t handle);
+etcpal_error_t remove_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_source_id_t source);
+etcpal_error_t add_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_source_id_t* source_id);
+
+etcpal_error_t update_sacn_dmx_merger_levels(sacn_dmx_merger_t merger, sacn_source_id_t source,
+                                             const uint8_t* new_levels, size_t new_levels_count);
+etcpal_error_t update_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_source_id_t source, const uint8_t* paps,
+                                           size_t paps_count);
+etcpal_error_t update_sacn_dmx_merger_universe_priority(sacn_dmx_merger_t merger, sacn_source_id_t source,
+                                                        uint8_t universe_priority);
+etcpal_error_t remove_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_source_id_t source);
+
 #ifdef __cplusplus
 }
 #endif
