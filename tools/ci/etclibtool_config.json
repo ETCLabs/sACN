@@ -1,5 +1,5 @@
 {
-  "build": {
+  "version": {
     "fileTemplates": {
       "tools/templates/version.h.in": "include/sacn/version.h"
     },
