@@ -64,22 +64,20 @@
  * SacnMcastInterface my_netints[NUM_MY_NETINTS];
  * // Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
  *
- * sacn_source_detector_t my_handle;
- *
  * // If you want to specify specific network interfaces to use:
- * etcpal_error_t create_result = sacn_source_detector_create(&my_config, &my_handle, my_netints, NUM_MY_NETINTS);
+ * etcpal_error_t create_result = sacn_source_detector_create(&my_config, my_netints, NUM_MY_NETINTS);
  * // Or, if you just want to use all network interfaces:
- * etcpal_error_t create_result = sacn_source_detector_create(&my_config, &my_handle, NULL, 0);
+ * etcpal_error_t create_result = sacn_source_detector_create(&my_config, NULL, 0);
  * // Check create_result here...
  * 
  * // Now the thread is running and your callbacks will handle application-side processing.
  * 
  * // What if your network interfaces change? Update my_netints and call this:
- * etcpal_error_t reset_result = sacn_source_detector_reset_networking(my_handle, my_netints, NUM_MY_NETINTS);
+ * etcpal_error_t reset_result = sacn_source_detector_reset_networking(my_netints, NUM_MY_NETINTS);
  * // Check reset_result here...
  * 
- * // To destroy a source detector, call this:
- * sacn_source_detector_destroy(my_handle);
+ * // To destroy the source detector, call this:
+ * sacn_source_detector_destroy();
  * 
  * // During application shutdown, everything can be cleaned up by calling sacn_deinit.
  * sacn_deinit();
@@ -87,14 +85,14 @@
  *
  * Callback demonstrations:
  * @code
- * void my_source_updated(sacn_source_detector_t handle, const EtcPalUuid* cid, const char* name,
- *                        const uint16_t* sourced_universes, size_t num_sourced_universes, void* context)
+ * void my_source_updated(const EtcPalUuid* cid, const char* name, const uint16_t* sourced_universes,
+ *                        size_t num_sourced_universes, void* context)
  * {
  *   if (cid && name)
  *   {
  *     char cid_str[ETCPAL_UUID_STRING_BYTES];
  *     etcpal_uuid_to_string(cid, cid_str);
- *     printf("Source Detector (handle %d): Source %s (name %s) ", handle, cid_str, name);
+ *     printf("Source Detector: Source %s (name %s) ", cid_str, name);
  *     if(sourced_universes)
  *     {
  *       printf("is active on these universes: ");
@@ -109,19 +107,19 @@
  *   }
  * }
  *
- * void my_source_expired(sacn_source_detector_t handle, const EtcPalUuid* cid, const char* name, void* context)
+ * void my_source_expired(const EtcPalUuid* cid, const char* name, void* context)
  * {
  *   if (cid && name)
  *   {
  *     char cid_str[ETCPAL_UUID_STRING_BYTES];
  *     etcpal_uuid_to_string(cid, cid_str);
- *     printf("Source Detector (handle %d): Source %s (name %s) has expired.\n", handle, cid_str, name);
+ *     printf("Source Detector: Source %s (name %s) has expired.\n", cid_str, name);
  *   }
  * }
  *
- * void my_limit_exceeded(sacn_source_detector_t handle, void* context)
+ * void my_limit_exceeded(void* context)
  * {
- *   printf("Source Detector (handle %d): Source/universe limit exceeded!\n", handle);
+ *   printf("Source Detector: Source/universe limit exceeded!\n");
  * }
  * @endcode
  *
@@ -131,11 +129,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/** A handle to an sACN source detector. */
-typedef int sacn_source_detector_t;
-/** An invalid sACN source detector handle value. */
-#define SACN_SOURCE_DETECTOR_INVALID -1
 
 /**
  * @brief Constant for "infinite" when listening for sources or universes on a source.
@@ -153,7 +146,6 @@ typedef int sacn_source_detector_t;
  *
  * The list of sourced universes is guaranteed by the protocol to be numerically sorted.
  *
- * @param[in] handle Handle to the listening source detector instance.
  * @param[in] cid The CID of the source.
  * @param[in] name The null-terminated UTF-8 string.
  * @param[in] sourced_universes Numerically sorted array of the currently sourced universes.  Will be NULL if the source
@@ -162,20 +154,18 @@ typedef int sacn_source_detector_t;
  * transmitting any universes.
  * @param[in] context Context pointer that was given at the creation of the source detector instance.
  */
-typedef void (*SacnSourceDetectorSourceUpdatedCallback)(sacn_source_detector_t handle, const EtcPalUuid* cid,
-                                                        const char* name, const uint16_t* sourced_universes,
-                                                        size_t num_sourced_universes, void* context);
+typedef void (*SacnSourceDetectorSourceUpdatedCallback)(const EtcPalUuid* cid, const char* name,
+                                                        const uint16_t* sourced_universes, size_t num_sourced_universes,
+                                                        void* context);
 
 /**
  * @brief Notify that a source is no longer transmitting Universe Discovery messages.
  *
- * @param[in] handle Handle to the listening source detector instance.
  * @param[in] cid The CID of the source.
  * @param[in] name The null-terminated UTF-8 string.
  * @param[in] context Context pointer that was given at the creation of the source detector instance.
  */
-typedef void (*SacnSourceDetectorSourceExpiredCallback)(sacn_source_detector_t handle, const EtcPalUuid* cid,
-                                                        const char* name, void* context);
+typedef void (*SacnSourceDetectorSourceExpiredCallback)(const EtcPalUuid* cid, const char* name, void* context);
 
 /**
  * @brief Notify that the module has run out of memory to track universes or sources
@@ -192,10 +182,9 @@ typedef void (*SacnSourceDetectorSourceExpiredCallback)(sacn_source_detector_t h
  * the module beyond a memory limit.  After that, it will not be called until the number of sources or universes has
  * dropped below the limit and hits it again.
  *
- * @param[in] handle Handle to the listening source detector instance.
  * @param[in] context Context pointer that was given at the creation of the source detector instance.
  */
-typedef void (*SacnSourceDetectorLimitExceededCallback)(sacn_source_detector_t handle, void* context);
+typedef void (*SacnSourceDetectorLimitExceededCallback)(void* context);
 
 /** A set of callback functions that the library uses to notify the application about source detector events. */
 typedef struct SacnSourceDetectorCallbacks
@@ -206,20 +195,20 @@ typedef struct SacnSourceDetectorCallbacks
   void* context; /**< (optional) Pointer to opaque data passed back with each callback. */
 } SacnSourceDetectorCallbacks;
 
-/** A set of configuration information for a sACN Source Detector. */
+/** A set of configuration information for the sACN Source Detector. */
 typedef struct SacnSourceDetectorConfig
 {
-  /** The callbacks this detector will use to notify the application of events. */
+  /** The callbacks the detector will use to notify the application of events. */
   SacnSourceDetectorCallbacks callbacks;
 
   /********* Optional values **********/
 
-  /** The maximum number of sources this detector will record.  It is recommended that applications using dynamic
+  /** The maximum number of sources the detector will record.  It is recommended that applications using dynamic
      memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when configured to use
      static memory -- #SACN_SOURCE_DETECTOR_MAX_SOURCES is used instead.*/
   int source_count_max;
 
-  /** The maximum number of universes this detector will record for a source.  It is recommended that applications using
+  /** The maximum number of universes the detector will record for a source.  It is recommended that applications using
      dynamic memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when configured to
      use static memory -- #SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE is used instead.*/
   int universes_per_source_max;
@@ -236,15 +225,13 @@ typedef struct SacnSourceDetectorConfig
 
 void sacn_source_detector_config_init(SacnSourceDetectorConfig* config);
 
-etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* config, sacn_source_detector_t* handle,
-                                           SacnMcastInterface* netints, size_t num_netints);
-void sacn_source_detector_destroy(sacn_source_detector_t handle);
+etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* config, SacnMcastInterface* netints,
+                                           size_t num_netints);
+void sacn_source_detector_destroy();
 
-etcpal_error_t sacn_source_detector_reset_networking(sacn_source_detector_t handle, SacnMcastInterface* netints,
-                                                     size_t num_netints);
+etcpal_error_t sacn_source_detector_reset_networking(SacnMcastInterface* netints, size_t num_netints);
 
-size_t sacn_source_detector_get_network_interfaces(sacn_source_detector_t handle, SacnMcastInterface* netints,
-                                                   size_t netints_size);
+size_t sacn_source_detector_get_network_interfaces(SacnMcastInterface* netints, size_t netints_size);
 
 #ifdef __cplusplus
 }

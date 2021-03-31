@@ -60,23 +60,22 @@ namespace sacn
  * std::vector<SacnMcastInterface> my_netints;
  * // Assuming my_netints is initialized by the application...
  *
- * SourceDetector my_source_detector;
  * MyNotifyHandler my_notify;  // MyNotifyHandler is an application-defined class for implementing notifications.
  *
  * // If you want to specify specific network interfaces to use:
- * etcpal::Error startup_result = my_source_detector.Startup(my_notify, my_netints);
+ * etcpal::Error startup_result = sacn::SourceDetector::Startup(my_notify, my_netints);
  * // Or, if you just want to use all network interfaces:
- * etcpal::Error startup_result = my_source_detector.Startup(my_notify, std::vector<SacnMcastInterface>());
+ * etcpal::Error startup_result = sacn::SourceDetector::Startup(my_notify);
  * // Check startup_result here...
  * 
  * // Now the thread is running and your callbacks will handle application-side processing.
  * 
  * // What if your network interfaces change? Update my_netints and call this:
- * etcpal::Error reset_result = my_source_detector.ResetNetworking(my_netints);
+ * etcpal::Error reset_result = sacn::SourceDetector::ResetNetworking(my_netints);
  * // Check reset_result here...
  * 
- * // To destroy a source detector, call this:
- * my_source_detector.Shutdown();
+ * // To destroy the source detector, call this:
+ * sacn::SourceDetector::Shutdown();
  * 
  * // During application shutdown, everything can be cleaned up by calling sacn::Deinit.
  * sacn::Deinit();
@@ -84,7 +83,7 @@ namespace sacn
  *
  * Callback demonstrations:
  * @code
- * void MyNotifyHandler::HandleSourceUpdated(Handle handle, const etcpal::Uuid& cid, const std::string& name,
+ * void MyNotifyHandler::HandleSourceUpdated(const etcpal::Uuid& cid, const std::string& name,
                                              const std::vector<uint16_t>& sourced_universes)
  * {
  *   std::cout << "Source Detector: Source " << cid.ToString() << " (name " << name << ") ";
@@ -101,12 +100,12 @@ namespace sacn
  *   }
  * }
  *
- * void MyNotifyHandler::HandleSourceExpired(Handle handle, const etcpal::Uuid& cid, const std::string& name)
+ * void MyNotifyHandler::HandleSourceExpired(const etcpal::Uuid& cid, const std::string& name)
  * {
  *   std::cout << "Source Detector: Source " << cid.ToString() << " (name " << name << ") has expired.\n";
  * }
  *
- * void MyNotifyHandler::HandleMemoryLimitExceeded(Handle handle)
+ * void MyNotifyHandler::HandleMemoryLimitExceeded()
  * {
  *   std::cout << "Source Detector: Source/universe limit exceeded!\n";
  * }
@@ -116,10 +115,6 @@ namespace sacn
 class SourceDetector
 {
 public:
-  /** A handle type used by the sACN library to identify source detector instances. */
-  using Handle = sacn_source_detector_t;
-  /** An invalid Handle value. */
-  static constexpr Handle kInvalidHandle = SACN_SOURCE_DETECTOR_INVALID;
 
   /**
    * @ingroup sacn_source_detector_cpp
@@ -138,30 +133,28 @@ public:
      *
      * The list of sourced universes is guaranteed by the protocol to be numerically sorted.
      *
-     * @param[in] handle The source detector's handle.
      * @param[in] cid The CID of the source.
      * @param[in] name The UTF-8 name string.
      * @param[in] sourced_universes Numerically sorted array of the currently sourced universes.  Will be empty if the
      * source is not currently transmitting any universes.
      */
-    virtual void HandleSourceUpdated(Handle handle, const etcpal::Uuid& cid, const std::string& name,
+    virtual void HandleSourceUpdated(const etcpal::Uuid& cid, const std::string& name,
                                      const std::vector<uint16_t>& sourced_universes) = 0;
 
     /**
      * @brief Notify that a source is no longer transmitting Universe Discovery messages.
      *
-     * @param[in] handle The source detector's handle.
      * @param[in] cid The CID of the source.
      * @param[in] name The UTF-8 name string.
      */
-    virtual void HandleSourceExpired(Handle handle, const etcpal::Uuid& cid, const std::string& name) = 0;
+    virtual void HandleSourceExpired(const etcpal::Uuid& cid, const std::string& name) = 0;
 
     /**
      * @brief Notify that the module has run out of memory to track universes or sources
      *
-     * If #SACN_DYNAMIC_MEM was defined to 1 when sACN was compiled (the default on non-embedded
-     * platforms), and the configuration you pass to sacn_source_detector_create() has source_count_max and
-     * universes_per_source_max set to #SACN_SOURCE_DETECTOR_INFINITE, this callback will never be called.
+     * If #SACN_DYNAMIC_MEM was defined to 1 when sACN was compiled (the default on non-embedded platforms), and the
+     * configuration you pass to Startup() has source_count_max and universes_per_source_max set to
+     * #SACN_SOURCE_DETECTOR_INFINITE, this callback will never be called.
      *
      * If #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max and universes_per_source_max are
      * ignored and #SACN_SOURCE_DETECTOR_MAX_SOURCES and #SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE are used
@@ -170,11 +163,9 @@ public:
      * This callback is rate-limited: it will only be called when the first universe discovery packet is received that
      * takes the module beyond a memory limit.  After that, it will not be called until the number of sources or
      * universes has dropped below the limit and hits it again.
-     *
-     * @param[in] handle The source detector's handle.
      * 
      */
-    virtual void HandleMemoryLimitExceeded(Handle handle) { ETCPAL_UNUSED_ARG(handle); }
+    virtual void HandleMemoryLimitExceeded() {}
   };
 
   /**
@@ -187,12 +178,12 @@ public:
 
     /********* Optional values **********/
 
-    /** The maximum number of sources this detector will record.  It is recommended that applications using dynamic
+    /** The maximum number of sources the detector will record.  It is recommended that applications using dynamic
        memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when configured to use
        static memory -- #SACN_SOURCE_DETECTOR_MAX_SOURCES is used instead.*/
     int source_count_max{SACN_SOURCE_DETECTOR_INFINITE};
 
-    /** The maximum number of universes this detector will record for a source.  It is recommended that applications
+    /** The maximum number of universes the detector will record for a source.  It is recommended that applications
        using dynamic memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when
        configured to use static memory -- #SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE is used instead.*/
     int universes_per_source_max{SACN_SOURCE_DETECTOR_INFINITE};
@@ -204,27 +195,20 @@ public:
     Settings() = default;
   };
 
-  SourceDetector() = default;
-  SourceDetector(const SourceDetector& other) = delete;
-  SourceDetector& operator=(const SourceDetector& other) = delete;
-  SourceDetector(SourceDetector&& other) = default;            /**< Move a detector instance. */
-  SourceDetector& operator=(SourceDetector&& other) = default; /**< Move a detector instance. */
+  SourceDetector() = delete;
 
-  etcpal::Error Startup(NotifyHandler& notify_handler);
-  etcpal::Error Startup(NotifyHandler& notify_handler, std::vector<SacnMcastInterface>& netints);
-  etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler);
-  etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler, std::vector<SacnMcastInterface>& netints);
-  void Shutdown();
-  etcpal::Error ResetNetworking();
-  etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
-  std::vector<SacnMcastInterface> GetNetworkInterfaces();
-
-  constexpr Handle handle() const;
+  static etcpal::Error Startup(NotifyHandler& notify_handler);
+  static etcpal::Error Startup(NotifyHandler& notify_handler, std::vector<SacnMcastInterface>& netints);
+  static etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler);
+  static etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
+                               std::vector<SacnMcastInterface>& netints);
+  static void Shutdown();
+  static etcpal::Error ResetNetworking();
+  static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
+  static std::vector<SacnMcastInterface> GetNetworkInterfaces();
 
 private:
-  SacnSourceDetectorConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
-
-  Handle handle_{kInvalidHandle};
+  static SacnSourceDetectorConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
 };
 
 /**
@@ -233,33 +217,32 @@ private:
  */
 namespace internal
 {
-extern "C" inline void SourceDetectorCbSourceUpdated(sacn_source_detector_t handle, const EtcPalUuid* cid,
-                                                     const char* name, const uint16_t* sourced_universes,
-                                                     size_t num_sourced_universes, void* context)
+extern "C" inline void SourceDetectorCbSourceUpdated(const EtcPalUuid* cid, const char* name,
+                                                     const uint16_t* sourced_universes, size_t num_sourced_universes,
+                                                     void* context)
 {
   if (context && cid && name)
   {
     std::vector<uint16_t> sourced_vec;
     if (sourced_universes && (num_sourced_universes > 0))
       sourced_vec.assign(sourced_universes, sourced_universes + num_sourced_universes);
-    static_cast<SourceDetector::NotifyHandler*>(context)->HandleSourceUpdated(handle, *cid, name, sourced_vec);
+    static_cast<SourceDetector::NotifyHandler*>(context)->HandleSourceUpdated(*cid, name, sourced_vec);
   }
 }
 
-extern "C" inline void SourceDetectorCbSourceExpired(sacn_source_detector_t handle, const EtcPalUuid* cid,
-                                                     const char* name, void* context)
+extern "C" inline void SourceDetectorCbSourceExpired(const EtcPalUuid* cid, const char* name, void* context)
 {
   if (context && cid && name)
   {
-    static_cast<SourceDetector::NotifyHandler*>(context)->HandleSourceExpired(handle, *cid, name);
+    static_cast<SourceDetector::NotifyHandler*>(context)->HandleSourceExpired(*cid, name);
   }
 }
 
-extern "C" inline void SourceDetectorCbMemoryLimitExceeded(sacn_source_detector_t handle, void* context)
+extern "C" inline void SourceDetectorCbMemoryLimitExceeded(void* context)
 {
   if (context)
   {
-    static_cast<SourceDetector::NotifyHandler*>(context)->HandleMemoryLimitExceeded(handle);
+    static_cast<SourceDetector::NotifyHandler*>(context)->HandleMemoryLimitExceeded();
   }
 }
 
@@ -270,11 +253,11 @@ extern "C" inline void SourceDetectorCbMemoryLimitExceeded(sacn_source_detector_
  */
 
 /**
- * @brief Start a new sACN Source Detector with default settings.
+ * @brief Start the sACN Source Detector with default settings.
  *
  * This is an override of Startup that has default settings for the configuration and will use all network interfaces.
  *
- * Note that a detector is considered as successfully created if it is able to successfully use any of the
+ * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] notify_handler The callback handler for the sACN Source Detector to be created.
@@ -282,7 +265,7 @@ extern "C" inline void SourceDetectorCbMemoryLimitExceeded(sacn_source_detector_
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNoMem: No room to allocate memory for this detector.
+ * @return #kEtcPalErrNoMem: No room to allocate memory for the detector.
  * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
@@ -293,12 +276,12 @@ inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler)
 }
 
 /**
- * @brief Start a new sACN Source Detector with default settings.
+ * @brief Start the sACN Source Detector with default settings.
  *
  * This is an override of Startup that doesn't require a Settings parameter, since the fields in that
  * structure are completely optional.
  *
- * Note that a detector is considered as successfully created if it is able to successfully use any of the
+ * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] notify_handler The callback handler for the sACN Source Detector to be created.
@@ -308,7 +291,7 @@ inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler)
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNoMem: No room to allocate memory for this detector.
+ * @return #kEtcPalErrNoMem: No room to allocate memory for the detector.
  * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
@@ -318,11 +301,11 @@ inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler, std:
 }
 
 /**
- * @brief Start a new sACN Source Detector.
+ * @brief Start the sACN Source Detector.
  *
  * This is an override of Startup that uses all network interfaces.
  *
- * Note that a detector is considered as successfully created if it is able to successfully use any of the
+ * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] settings Configuration parameters for the sACN Source Detector to be created.
@@ -331,7 +314,7 @@ inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler, std:
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNoMem: No room to allocate memory for this detector.
+ * @return #kEtcPalErrNoMem: No room to allocate memory for the detector.
  * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
@@ -342,9 +325,9 @@ inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHan
 }
 
 /**
- * @brief Start a new sACN Source Detector.
+ * @brief Start the sACN Source Detector.
  *
- * Note that a detector is considered as successfully created if it is able to successfully use any of the
+ * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] settings Configuration parameters for the sACN Source Detector to be created.
@@ -355,7 +338,7 @@ inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHan
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNoMem: No room to allocate memory for this detector.
+ * @return #kEtcPalErrNoMem: No room to allocate memory for the detector.
  * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
@@ -365,23 +348,22 @@ inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHan
   SacnSourceDetectorConfig config = TranslateConfig(settings, notify_handler);
 
   if (netints.empty())
-    return sacn_source_detector_create(&config, &handle_, NULL, 0);
+    return sacn_source_detector_create(&config, NULL, 0);
 
-  return sacn_source_detector_create(&config, &handle_, netints.data(), netints.size());
+  return sacn_source_detector_create(&config, netints.data(), netints.size());
 }
 
 /**
- * @brief Destroy a sACN Source Detector instance.
+ * @brief Destroy the sACN Source Detector.
  *
  * @return #kEtcPalErrOk: Detector destroyed successfully.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Internal handle does not correspond to a valid detector.
+ * @return #kEtcPalErrNotFound: The detector has not yet been created.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline void SourceDetector::Shutdown()
 {
-  sacn_source_detector_destroy(handle_);
-  handle_ = kInvalidHandle;
+  sacn_source_detector_destroy();
 }
 
 /**
@@ -393,8 +375,7 @@ inline void SourceDetector::Shutdown()
  *
  * After this call completes successfully, the detector will continue as if nothing had changed. New sources could be
  * discovered, or old sources could expire.
- * If this call fails, the caller must call Shutdown() for this class instance, because it may
- * be in an invalid state.
+ * If this call fails, the caller must call Shutdown(), because the source detector may be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -403,7 +384,7 @@ inline void SourceDetector::Shutdown()
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Internal handle does not correspond to a valid detector.
+ * @return #kEtcPalErrNotFound: The detector has not yet been created.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error SourceDetector::ResetNetworking()
@@ -419,8 +400,7 @@ inline etcpal::Error SourceDetector::ResetNetworking()
  *
  * After this call completes successfully, the detector will continue as if nothing had changed. New sources could be
  * discovered, or old sources could expire.
- * If this call fails, the caller must call Shutdown() for this class instance, because it may
- * be in an invalid state.
+ * If this call fails, the caller must call Shutdown(), because the source detector may be in an invalid state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -431,21 +411,21 @@ inline etcpal::Error SourceDetector::ResetNetworking()
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Internal handle does not correspond to a valid detector.
+ * @return #kEtcPalErrNotFound: The detector has not yet been created.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error SourceDetector::ResetNetworking(std::vector<SacnMcastInterface>& netints)
 {
   if (netints.empty())
-    return sacn_source_detector_reset_networking(handle_, nullptr, 0);
+    return sacn_source_detector_reset_networking(nullptr, 0);
   else
-    return sacn_source_detector_reset_networking(handle_, netints.data(), netints.size());
+    return sacn_source_detector_reset_networking(netints.data(), netints.size());
 }
 
 /**
- * @brief Obtain the statuses of this source detector's network interfaces.
+ * @brief Obtain the statuses of the source detector's network interfaces.
  *
- * @return A vector of this source detector's network interfaces and their statuses.
+ * @return A vector of the source detector's network interfaces and their statuses.
  */
 inline std::vector<SacnMcastInterface> SourceDetector::GetNetworkInterfaces()
 {
@@ -457,22 +437,12 @@ inline std::vector<SacnMcastInterface> SourceDetector::GetNetworkInterfaces()
   do
   {
     netints.resize(size_guess);
-    num_netints = sacn_source_detector_get_network_interfaces(handle_, netints.data(), netints.size());
+    num_netints = sacn_source_detector_get_network_interfaces(netints.data(), netints.size());
     size_guess = num_netints + 4u;
   } while (num_netints > netints.size());
 
   netints.resize(num_netints);
   return netints;
-}
-
-/**
- * @brief Get the current handle to the underlying C source detector.
- *
- * @return The handle or SourceDetector::kInvalidHandle.
- */
-inline constexpr SourceDetector::Handle SourceDetector::handle() const
-{
-  return handle_;
 }
 
 inline SacnSourceDetectorConfig SourceDetector::TranslateConfig(const Settings& settings, NotifyHandler& notify_handler)

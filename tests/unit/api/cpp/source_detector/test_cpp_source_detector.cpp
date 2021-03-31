@@ -42,9 +42,6 @@ class TestSourceDetector : public ::testing::Test
 protected:
   void SetUp() override
   {
-    //Just making sure the source detector c++ interface compiles
-    sacn::SourceDetector tst_detector;
-
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
     sacn_source_loss_reset_all_fakes();

@@ -89,13 +89,12 @@ void sacn_source_detector_config_init(SacnSourceDetectorConfig* config)
 }
 
 /**
- * @brief Create a new sACN Source Detector.
+ * @brief Create the sACN Source Detector.
  *
- * Note that a detector is considered as successfully created if it is able to successfully use any of the
+ * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in] config Configuration parameters for the sACN source detector to be created.
- * @param[out] handle Filled in on success with a handle to the detector.
+ * @param[in] config Configuration parameters for the sACN source detector.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
  * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
@@ -103,34 +102,29 @@ void sacn_source_detector_config_init(SacnSourceDetectorConfig* config)
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNoMem: No room to allocate memory for this detector.
+ * @return #kEtcPalErrNoMem: No room to allocate memory for the detector.
  * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* config,
-                                              sacn_source_detector_t* handle, SacnMcastInterface* netints,
-                                              size_t num_netints)
+etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* config, SacnMcastInterface* netints,
+                                           size_t num_netints)
 {
   // TODO CHRISTIAN
   // create starts a thread that does all the receive & processing work for packets.
   ETCPAL_UNUSED_ARG(config);
-  ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
   return kEtcPalErrNotImpl;
 }
 
 /**
- * @brief Destroy a sACN Source Detector instance.
+ * @brief Destroy the sACN Source Detector.
  *
- *
- * @param[in] handle Handle to the detector to destroy.
  */
-void sacn_source_detector_destroy(sacn_source_detector_t handle)
+void sacn_source_detector_destroy()
 {
   // TODO CHRISTIAN
-  // Shutdown the thread if it is for the last detector.
-  ETCPAL_UNUSED_ARG(handle);
+  // Shutdown the thread.
 }
 
 /**
@@ -140,13 +134,12 @@ void sacn_source_detector_destroy(sacn_source_detector_t handle)
  *
  * After this call completes successfully, the detector will continue as if nothing had changed. New sources could be
  * discovered, or old sources could expire.
- * If this call fails, the caller must call sacn_source_detector_destroy for the detector, because the detector may
- * be in an invalid state.
+ * If this call fails, the caller must call sacn_source_detector_destroy, because the detector may be in an invalid
+ * state.
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in] handle Handle to the detector for which to reset the networking.
  * @param[in, out] netints Optional. If non-NULL, this is the list of interfaces the application wants to use, and the
  * status codes are filled in.  If NULL, all available interfaces are tried.
  * @param[in, out] num_netints Optional. The size of netints, or 0 if netints is NULL.
@@ -154,14 +147,12 @@ void sacn_source_detector_destroy(sacn_source_detector_t handle)
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid detector.
+ * @return #kEtcPalErrNotFound: The detector has not been created yet.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_detector_reset_networking(sacn_source_detector_t handle, SacnMcastInterface* netints,
-                                                        size_t num_netints)
+etcpal_error_t sacn_source_detector_reset_networking(SacnMcastInterface* netints, size_t num_netints)
 {
   // TODO CHRISTIAN
-  ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(num_netints);
 
@@ -172,18 +163,16 @@ etcpal_error_t sacn_source_detector_reset_networking(sacn_source_detector_t hand
 }
 
 /**
- * @brief Obtain the statuses of a source detector's network interfaces.
+ * @brief Obtain the statuses of the source detector's network interfaces.
  *
- * @param[in] handle Handle to the source detector for which to obtain the list of network interfaces.
  * @param[out] netints A pointer to an application-owned array where the network interface list will be written.
  * @param[in] netints_size The size of the provided netints array.
  * @return The total number of network interfaces for the source detector. If this is greater than netints_size, then
- * only netints_size addresses were written to the netints array. If the source detector was not found, 0 is returned.
+ * only netints_size addresses were written to the netints array. If the source detector has not been created yet, 0 is
+ * returned.
  */
-size_t sacn_source_detector_get_network_interfaces(sacn_source_detector_t handle, SacnMcastInterface* netints,
-                                                   size_t netints_size)
+size_t sacn_source_detector_get_network_interfaces(SacnMcastInterface* netints, size_t netints_size)
 {
-  ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(netints);
   ETCPAL_UNUSED_ARG(netints_size);
 
