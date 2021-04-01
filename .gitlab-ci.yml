@@ -44,6 +44,8 @@ macos-build:
 
 linux-build:
   stage: build
+  tags:
+    - etc-linux-docker
   image: rikorose/gcc-cmake:latest
   variables:
     # CMAKE_ASAN_DEFINITIONS: -DCMAKE_C_FLAGS="-fsanitize=address" -DCMAKE_CXX_FLAGS="-fsanitize=address" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
@@ -63,6 +65,8 @@ deploy-docs:
   stage: build
   rules:
     - if: '$CI_COMMIT_REF_NAME == "main"'
+  tags:
+    - etc-linux-docker
   image: python:3.8-buster
   variables:
     GH_REPO_NAME: sACNDocs
@@ -79,6 +83,8 @@ deploy-versioned-build:
   stage: deploy
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_NAME == "main"'
+  tags:
+    - etc-linux-docker
   image: python:3.8
   script:
     - pip config set global.extra-index-url https://artifactory-mid.etcconnect.com/artifactory/api/pypi/ETC-PyPI/simple
