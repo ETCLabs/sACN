@@ -28,6 +28,7 @@
 #include "etcpal/uuid.h"
 #include "sacn/receiver.h"
 #include "sacn/merge_receiver.h"
+#include "sacn/source_detector.h"
 #include "sacn/private/common.h"
 #include "sacn/private/sockets.h"
 #include "sacn/private/opts.h"
@@ -119,6 +120,12 @@ etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_uni
 etcpal_error_t clear_receiver_sources(SacnReceiver* receiver);
 etcpal_error_t remove_receiver_source(SacnReceiver* receiver, const EtcPalUuid* cid);
 void remove_sacn_receiver(SacnReceiver* receiver);
+
+// sACN Source Detector memory API
+etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, SacnMcastInterface* netints,
+                                        size_t num_netints, SacnSourceDetector** detector_state);
+SacnSourceDetector* get_sacn_source_detector();
+void remove_sacn_source_detector();
 
 #ifdef __cplusplus
 }

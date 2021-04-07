@@ -31,8 +31,11 @@ DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_init);
 DECLARE_FAKE_VOID_FUNC(sacn_sockets_deinit);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_source);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_receiver);
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_source_detector);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_receiver_netints, SacnInternalNetintArray*, SacnMcastInterface*,
                         size_t);
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_source_detector_netints, SacnInternalNetintArray*,
+                        SacnMcastInterface*, size_t);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_source_netints, SacnInternalNetintArray*, SacnMcastInterface*,
                         size_t);
 DECLARE_FAKE_VOID_FUNC(sacn_get_mcast_addr, etcpal_iptype_t, uint16_t, EtcPalIpAddr*);

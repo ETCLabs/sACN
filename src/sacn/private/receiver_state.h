@@ -37,10 +37,14 @@ void set_expired_wait(uint32_t wait_ms);
 uint32_t get_expired_wait();
 etcpal_error_t clear_term_sets_and_sources(SacnReceiver* receiver);
 etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver);
+etcpal_error_t assign_source_detector_to_thread(SacnSourceDetector* detector);
 void remove_receiver_from_thread(SacnReceiver* receiver, socket_close_behavior_t socket_close_behavior);
+void remove_source_detector_from_thread(SacnSourceDetector* detector, socket_close_behavior_t socket_close_behavior);
 etcpal_error_t add_receiver_sockets(SacnReceiver* receiver);
+etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector);
 void begin_sampling_period(SacnReceiver* receiver);
 void remove_receiver_sockets(SacnReceiver* receiver, socket_close_behavior_t close_behavior);
+void remove_source_detector_sockets(SacnSourceDetector* detector, socket_close_behavior_t close_behavior);
 void remove_all_receiver_sockets(socket_close_behavior_t close_behavior);
 void read_network_and_process_receivers(SacnRecvThreadContext* context);
 

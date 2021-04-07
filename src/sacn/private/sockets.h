@@ -43,9 +43,12 @@ void sacn_sockets_deinit(void);
 
 etcpal_error_t sacn_sockets_reset_source(void);
 etcpal_error_t sacn_sockets_reset_receiver(void);
+etcpal_error_t sacn_sockets_reset_source_detector(void);
 
 etcpal_error_t sacn_initialize_receiver_netints(SacnInternalNetintArray* receiver_netints,
                                                 SacnMcastInterface* app_netints, size_t num_app_netints);
+etcpal_error_t sacn_initialize_source_detector_netints(SacnInternalNetintArray* source_detector_netints,
+                                                       SacnMcastInterface* app_netints, size_t num_app_netints);
 etcpal_error_t sacn_initialize_source_netints(SacnInternalNetintArray* source_netints, SacnMcastInterface* app_netints,
                                               size_t num_app_netints);
 

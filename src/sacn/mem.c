@@ -205,6 +205,7 @@ ETCPAL_MEMPOOL_DEFINE(sacnmergerecv_cids_from_ids, SacnCidFromSourceId, SACN_REC
 
 static EtcPalRbTree receivers;
 static EtcPalRbTree receivers_by_universe;
+static SacnSourceDetector source_detector;
 
 /*********************** Private function prototypes *************************/
 
@@ -302,6 +303,10 @@ static void deinit_receivers(void);
 static etcpal_error_t init_merge_receivers(void);
 static void deinit_merge_receivers(void);
 
+// Source Detector initialization/deinitialization
+static etcpal_error_t init_source_detector(void);
+static void deinit_source_detector(void);
+
 /*************************** Function definitions ****************************/
 
 /*
@@ -343,6 +348,8 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
     res = init_receivers();
   if (res == kEtcPalErrOk)
     res = init_merge_receivers();
+  if (res == kEtcPalErrOk)
+    res = init_source_detector();
 
   // Clean up
   if (res != kEtcPalErrOk)
@@ -356,6 +363,7 @@ etcpal_error_t sacn_mem_init(unsigned int num_threads)
  */
 void sacn_mem_deinit(void)
 {
+  deinit_source_detector();
   deinit_merge_receivers();
   deinit_receivers();
   deinit_sources();
@@ -1476,6 +1484,53 @@ void remove_sacn_receiver(SacnReceiver* receiver)
   FREE_RECEIVER(receiver);
 }
 
+etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, SacnMcastInterface* netints,
+                                        size_t num_netints, SacnSourceDetector** detector_state)
+{
+  SACN_ASSERT(config);
+
+  etcpal_error_t res = kEtcPalErrOk;
+
+  if (source_detector.created)
+    res = kEtcPalErrExists;
+
+  if (res == kEtcPalErrOk)
+  {
+    source_detector.thread_id = SACN_THREAD_ID_INVALID;
+
+    source_detector.ipv4_socket = ETCPAL_SOCKET_INVALID;
+    source_detector.ipv6_socket = ETCPAL_SOCKET_INVALID;
+
+    res = sacn_initialize_source_detector_netints(&source_detector.netints, netints, num_netints);
+  }
+
+  if (res == kEtcPalErrOk)
+  {
+    source_detector.suppress_limit_exceeded_notification = false;
+
+    source_detector.callbacks = config->callbacks;
+    source_detector.source_count_max = config->source_count_max;
+    source_detector.universes_per_source_max = config->universes_per_source_max;
+    source_detector.ip_supported = config->ip_supported;
+
+    source_detector.created = true;
+
+    *detector_state = &source_detector;
+  }
+
+  return res;
+}
+
+SacnSourceDetector* get_sacn_source_detector()
+{
+  return &source_detector;
+}
+
+void remove_sacn_source_detector()
+{
+  source_detector.created = false;
+}
+
 void zero_status_lists(SacnSourceStatusLists* status_lists)
 {
   SACN_ASSERT(status_lists);
@@ -1706,6 +1761,8 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* recv_thread
   recv_thread_context->ipv4_bound = false;
   recv_thread_context->ipv6_bound = false;
 #endif
+
+  recv_thread_context->source_detector = NULL;
 
   return kEtcPalErrOk;
 }
@@ -2207,4 +2264,15 @@ void deinit_merge_receivers(void)
 
     sacn_unlock();
   }
+}
+
+etcpal_error_t init_source_detector(void)
+{
+  source_detector.created = false;
+  return kEtcPalErrOk;
+}
+
+void deinit_source_detector(void)
+{
+  // Nothing to do here
 }

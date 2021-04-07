@@ -27,10 +27,14 @@ DEFINE_FAKE_VOID_FUNC(set_expired_wait, uint32_t);
 DEFINE_FAKE_VALUE_FUNC(uint32_t, get_expired_wait);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, clear_term_sets_and_sources, SacnReceiver*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, assign_receiver_to_thread, SacnReceiver*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, assign_source_detector_to_thread, SacnSourceDetector*);
 DEFINE_FAKE_VOID_FUNC(remove_receiver_from_thread, SacnReceiver*, socket_close_behavior_t);
+DEFINE_FAKE_VOID_FUNC(remove_source_detector_from_thread, SacnSourceDetector*, socket_close_behavior_t);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, add_receiver_sockets, SacnReceiver*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, add_source_detector_sockets, SacnSourceDetector*);
 DEFINE_FAKE_VOID_FUNC(begin_sampling_period, SacnReceiver*);
 DEFINE_FAKE_VOID_FUNC(remove_receiver_sockets, SacnReceiver*, socket_close_behavior_t);
+DEFINE_FAKE_VOID_FUNC(remove_source_detector_sockets, SacnSourceDetector*, socket_close_behavior_t);
 DEFINE_FAKE_VOID_FUNC(remove_all_receiver_sockets, socket_close_behavior_t);
 DEFINE_FAKE_VOID_FUNC(read_network_and_process_receivers, SacnRecvThreadContext*);
 
@@ -44,10 +48,14 @@ void sacn_receiver_state_reset_all_fakes(void)
   RESET_FAKE(get_expired_wait);
   RESET_FAKE(clear_term_sets_and_sources);
   RESET_FAKE(assign_receiver_to_thread);
+  RESET_FAKE(assign_source_detector_to_thread);
   RESET_FAKE(remove_receiver_from_thread);
+  RESET_FAKE(remove_source_detector_from_thread);
   RESET_FAKE(add_receiver_sockets);
+  RESET_FAKE(add_source_detector_sockets);
   RESET_FAKE(begin_sampling_period);
   RESET_FAKE(remove_receiver_sockets);
+  RESET_FAKE(remove_source_detector_sockets);
   RESET_FAKE(remove_all_receiver_sockets);
   RESET_FAKE(read_network_and_process_receivers);
 }

@@ -37,6 +37,7 @@
 #include "sacn/receiver.h"
 #include "sacn/merge_receiver.h"
 #include "sacn/source.h"
+#include "sacn/source_detector.h"
 #include "sacn/dmx_merger.h"
 #include "sacn/private/opts.h"
 
@@ -182,6 +183,43 @@ typedef struct TerminationSetSource
   bool offline;
   bool terminated;
 } TerminationSetSource;
+
+/******************************************************************************
+ * Types used by the sACN Source Detector module
+ *****************************************************************************/
+
+typedef struct SacnSourceDetector SacnSourceDetector;
+struct SacnSourceDetector
+{
+  // Identification
+  sacn_thread_id_t thread_id;
+
+  // Sockets / network interface info
+  etcpal_socket_t ipv4_socket;
+  etcpal_socket_t ipv6_socket;
+  /* Array of network interfaces on which to listen to the specified universe. */
+  SacnInternalNetintArray netints;
+
+  // State tracking
+  bool created;
+  bool suppress_limit_exceeded_notification;
+
+  // Configured callbacks
+  SacnSourceDetectorCallbacks callbacks;
+
+  /* The maximum number of sources the detector will record.  It is recommended that applications using dynamic
+   * memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when configured to use
+   * static memory -- #SACN_SOURCE_DETECTOR_MAX_SOURCES is used instead.*/
+  int source_count_max;
+
+  /* The maximum number of universes the detector will record for a source.  It is recommended that applications using
+   * dynamic memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when configured to
+   * use static memory -- #SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE is used instead.*/
+  int universes_per_source_max;
+
+  /* What IP networking the source detector will support.  The default is #kSacnIpV4AndIpV6. */
+  sacn_ip_support_t ip_supported;
+};
 
 /******************************************************************************
  * Types used by the sACN Receive module
@@ -361,6 +399,8 @@ typedef struct SacnRecvThreadContext
 
   SacnReceiver* receivers;
   size_t num_receivers;
+
+  SacnSourceDetector* source_detector;
 
   // We do most interactions with sockets from the same thread that we receive from them, to avoid
   // thread safety foibles on some platforms. So, sockets to add and remove from the thread's

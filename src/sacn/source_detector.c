@@ -36,6 +36,8 @@
 #include <limits.h>
 #include <stdint.h>
 #include <string.h>
+#include "sacn/private/mem.h"
+#include "sacn/private/receiver_state.h"
 #include "sacn/private/source_detector.h"
 
 #if SACN_DYNAMIC_MEM
@@ -46,9 +48,8 @@
 
 /***************************** Private constants *****************************/
 
-static const EtcPalThreadParams kSourceDetectorThreadParams = {SACN_SOURCE_DETECTOR_THREAD_PRIORITY,
-                                                                  SACN_SOURCE_DETECTOR_THREAD_STACK,
-                                                                  "sACN Source Detector Thread", NULL};
+static const EtcPalThreadParams kSourceDetectorThreadParams = {
+    SACN_SOURCE_DETECTOR_THREAD_PRIORITY, SACN_SOURCE_DETECTOR_THREAD_STACK, "sACN Source Detector Thread", NULL};
 
 /****************************** Private macros *******************************/
 
@@ -109,12 +110,36 @@ void sacn_source_detector_config_init(SacnSourceDetectorConfig* config)
 etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* config, SacnMcastInterface* netints,
                                            size_t num_netints)
 {
-  // TODO CHRISTIAN
-  // create starts a thread that does all the receive & processing work for packets.
-  ETCPAL_UNUSED_ARG(config);
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(num_netints);
-  return kEtcPalErrNotImpl;
+  etcpal_error_t res = kEtcPalErrOk;
+
+  if (!sacn_initialized())
+    res = kEtcPalErrNotInit;
+  else if (!config || !config->callbacks.source_updated || !config->callbacks.source_expired)
+    res = kEtcPalErrInvalid;
+
+  if (sacn_lock())
+  {
+    SacnSourceDetector* source_detector = NULL;
+    if (res == kEtcPalErrOk)
+      res = add_sacn_source_detector(config, netints, num_netints, &source_detector);
+
+    if (res == kEtcPalErrOk)
+      res = assign_source_detector_to_thread(source_detector);
+
+    if ((res != kEtcPalErrOk) && source_detector)
+    {
+      remove_source_detector_from_thread(source_detector, kCloseSocketNow);
+      remove_sacn_source_detector();
+    }
+
+    sacn_unlock();
+  }
+  else
+  {
+    res = kEtcPalErrSys;
+  }
+
+  return res;
 }
 
 /**
@@ -123,8 +148,13 @@ etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* confi
  */
 void sacn_source_detector_destroy()
 {
-  // TODO CHRISTIAN
-  // Shutdown the thread.
+  if (sacn_initialized() && sacn_lock())
+  {
+    remove_source_detector_from_thread(get_sacn_source_detector(), kQueueSocketForClose);
+    remove_sacn_source_detector();
+
+    sacn_unlock();
+  }
 }
 
 /**
@@ -152,14 +182,34 @@ void sacn_source_detector_destroy()
  */
 etcpal_error_t sacn_source_detector_reset_networking(SacnMcastInterface* netints, size_t num_netints)
 {
-  // TODO CHRISTIAN
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(num_netints);
+  etcpal_error_t res = kEtcPalErrOk;
 
   if (!sacn_initialized())
-    return kEtcPalErrNotInit;
+    res = kEtcPalErrNotInit;
 
-  return kEtcPalErrNotImpl;
+  if (sacn_lock())
+  {
+    if (res == kEtcPalErrOk)
+      res = sacn_sockets_reset_source_detector();
+
+    if (res == kEtcPalErrOk)
+    {
+      SacnSourceDetector* detector = get_sacn_source_detector();
+
+      // All current sockets need to be removed before adding new ones.
+      remove_source_detector_sockets(detector, kQueueSocketForClose);
+
+      res = sacn_initialize_source_detector_netints(&detector->netints, netints, num_netints);
+      if (res == kEtcPalErrOk)
+        res = add_source_detector_sockets(detector);
+
+      // TODO: Refresh source/universe tracking
+    }
+
+    sacn_unlock();
+  }
+
+  return res;
 }
 
 /**
