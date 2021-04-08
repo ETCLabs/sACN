@@ -44,7 +44,7 @@ DECLARE_FAKE_VOID_FUNC(begin_sampling_period, SacnReceiver*);
 DECLARE_FAKE_VOID_FUNC(remove_receiver_sockets, SacnReceiver*, socket_close_behavior_t);
 DECLARE_FAKE_VOID_FUNC(remove_source_detector_sockets, SacnSourceDetector*, socket_close_behavior_t);
 DECLARE_FAKE_VOID_FUNC(remove_all_receiver_sockets, socket_close_behavior_t);
-DECLARE_FAKE_VOID_FUNC(read_network_and_process_receivers, SacnRecvThreadContext*);
+DECLARE_FAKE_VOID_FUNC(read_network_and_process, SacnRecvThreadContext*);
 
 void sacn_receiver_state_reset_all_fakes(void);
 

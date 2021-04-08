@@ -115,6 +115,7 @@ extern "C" {
 
 bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* header, uint8_t* seq, bool* terminated,
                             const uint8_t** pdata);
+bool parse_framing_layer_vector(const uint8_t* buf, size_t buflen, uint32_t* vector);
 int pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const EtcPalUuid* source_cid);
 int pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t vector, const char* source_name,
                                  uint8_t priority, uint16_t sync_address, uint8_t seq_num, bool preview,

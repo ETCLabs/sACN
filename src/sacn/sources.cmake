@@ -21,6 +21,7 @@ set(SACN_PRIVATE_HEADERS
   ${SACN_SRC}/sacn/private/source.h
   ${SACN_SRC}/sacn/private/source_state.h
   ${SACN_SRC}/sacn/private/receiver_state.h
+  ${SACN_SRC}/sacn/private/source_detector_state.h
   ${SACN_SRC}/sacn/private/util.h
   ${SACN_SRC}/sacn/private/source_detector.h
 )
@@ -42,6 +43,7 @@ set(SACN_MOCKABLE_SOURCES
   ${SACN_SRC}/sacn/source_loss.c
   ${SACN_SRC}/sacn/source_state.c
   ${SACN_SRC}/sacn/receiver_state.c
+  ${SACN_SRC}/sacn/source_detector_state.c
   ${SACN_SRC}/sacn/sockets.c
 )
 

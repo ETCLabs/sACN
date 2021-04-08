@@ -205,7 +205,7 @@ public:
   static void Shutdown();
   static etcpal::Error ResetNetworking();
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
-  static std::vector<SacnMcastInterface> GetNetworkInterfaces();
+  static std::vector<EtcPalMcastNetintId> GetNetworkInterfaces();
 
 private:
   static SacnSourceDetectorConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
@@ -266,7 +266,6 @@ extern "C" inline void SourceDetectorCbMemoryLimitExceeded(void* context)
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNoMem: No room to allocate memory for the detector.
- * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler)
@@ -292,7 +291,6 @@ inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler)
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNoMem: No room to allocate memory for the detector.
- * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler, std::vector<SacnMcastInterface>& netints)
@@ -315,7 +313,6 @@ inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler, std:
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNoMem: No room to allocate memory for the detector.
- * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHandler& notify_handler)
@@ -339,7 +336,6 @@ inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHan
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNoMem: No room to allocate memory for the detector.
- * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHandler& notify_handler,
@@ -423,14 +419,14 @@ inline etcpal::Error SourceDetector::ResetNetworking(std::vector<SacnMcastInterf
 }
 
 /**
- * @brief Obtain the statuses of the source detector's network interfaces.
+ * @brief Obtain the source detector's network interfaces.
  *
- * @return A vector of the source detector's network interfaces and their statuses.
+ * @return A vector of the source detector's network interfaces.
  */
-inline std::vector<SacnMcastInterface> SourceDetector::GetNetworkInterfaces()
+inline std::vector<EtcPalMcastNetintId> SourceDetector::GetNetworkInterfaces()
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<SacnMcastInterface> netints;
+  std::vector<EtcPalMcastNetintId> netints;
   size_t size_guess = 4u;
   size_t num_netints = 0u;
 

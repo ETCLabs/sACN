@@ -243,7 +243,7 @@ protected:
 
   void RunThreadCycle()
   {
-    read_network_and_process_receivers(get_recv_thread_context(0u));
+    read_network_and_process(get_recv_thread_context(0u));
     ++seq_num_;
     test_data_[SACN_SEQ_OFFSET] = seq_num_;
   }

@@ -69,6 +69,16 @@ bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* h
   return true;
 }
 
+bool parse_framing_layer_vector(const uint8_t* buf, size_t buflen, uint32_t* vector)
+{
+  // Check the input parameters including buffer size
+  if (!buf || !vector || (buflen < 6))
+    return false;
+
+  *vector = etcpal_unpack_u32b(&buf[2]);
+  return true;
+}
+
 int pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const EtcPalUuid* source_cid)
 {
   uint8_t* pcur = buf;

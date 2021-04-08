@@ -46,7 +46,7 @@ void begin_sampling_period(SacnReceiver* receiver);
 void remove_receiver_sockets(SacnReceiver* receiver, socket_close_behavior_t close_behavior);
 void remove_source_detector_sockets(SacnSourceDetector* detector, socket_close_behavior_t close_behavior);
 void remove_all_receiver_sockets(socket_close_behavior_t close_behavior);
-void read_network_and_process_receivers(SacnRecvThreadContext* context);
+void read_network_and_process(SacnRecvThreadContext* context);
 
 #ifdef __cplusplus
 }

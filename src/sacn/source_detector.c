@@ -39,6 +39,7 @@
 #include "sacn/private/mem.h"
 #include "sacn/private/receiver_state.h"
 #include "sacn/private/source_detector.h"
+#include "sacn/private/source_detector_state.h"
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>
@@ -47,9 +48,6 @@
 #endif
 
 /***************************** Private constants *****************************/
-
-static const EtcPalThreadParams kSourceDetectorThreadParams = {
-    SACN_SOURCE_DETECTOR_THREAD_PRIORITY, SACN_SOURCE_DETECTOR_THREAD_STACK, "sACN Source Detector Thread", NULL};
 
 /****************************** Private macros *******************************/
 
@@ -104,7 +102,6 @@ void sacn_source_detector_config_init(SacnSourceDetectorConfig* config)
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNoMem: No room to allocate memory for the detector.
- * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* config, SacnMcastInterface* netints,
@@ -150,8 +147,12 @@ void sacn_source_detector_destroy()
 {
   if (sacn_initialized() && sacn_lock())
   {
-    remove_source_detector_from_thread(get_sacn_source_detector(), kQueueSocketForClose);
-    remove_sacn_source_detector();
+    SacnSourceDetector* detector = get_sacn_source_detector();
+    if (detector)
+    {
+      remove_source_detector_from_thread(detector, kQueueSocketForClose);
+      remove_sacn_source_detector();
+    }
 
     sacn_unlock();
   }
@@ -195,15 +196,15 @@ etcpal_error_t sacn_source_detector_reset_networking(SacnMcastInterface* netints
     if (res == kEtcPalErrOk)
     {
       SacnSourceDetector* detector = get_sacn_source_detector();
+      if (detector)
+      {
+        // All current sockets need to be removed before adding new ones.
+        remove_source_detector_sockets(detector, kQueueSocketForClose);
 
-      // All current sockets need to be removed before adding new ones.
-      remove_source_detector_sockets(detector, kQueueSocketForClose);
-
-      res = sacn_initialize_source_detector_netints(&detector->netints, netints, num_netints);
-      if (res == kEtcPalErrOk)
-        res = add_source_detector_sockets(detector);
-
-      // TODO: Refresh source/universe tracking
+        res = sacn_initialize_source_detector_netints(&detector->netints, netints, num_netints);
+        if (res == kEtcPalErrOk)
+          res = add_source_detector_sockets(detector);
+      }
     }
 
     sacn_unlock();
@@ -213,7 +214,7 @@ etcpal_error_t sacn_source_detector_reset_networking(SacnMcastInterface* netints
 }
 
 /**
- * @brief Obtain the statuses of the source detector's network interfaces.
+ * @brief Obtain the source detector's network interfaces.
  *
  * @param[out] netints A pointer to an application-owned array where the network interface list will be written.
  * @param[in] netints_size The size of the provided netints array.
@@ -221,10 +222,18 @@ etcpal_error_t sacn_source_detector_reset_networking(SacnMcastInterface* netints
  * only netints_size addresses were written to the netints array. If the source detector has not been created yet, 0 is
  * returned.
  */
-size_t sacn_source_detector_get_network_interfaces(SacnMcastInterface* netints, size_t netints_size)
+size_t sacn_source_detector_get_network_interfaces(EtcPalMcastNetintId* netints, size_t netints_size)
 {
-  ETCPAL_UNUSED_ARG(netints);
-  ETCPAL_UNUSED_ARG(netints_size);
+  size_t total_num_network_interfaces = 0;
 
-  return 0;  // TODO
+  if (sacn_lock())
+  {
+    SacnSourceDetector* detector = get_sacn_source_detector();
+    if (detector)
+      total_num_network_interfaces = get_source_detector_netints(detector, netints, netints_size);
+
+    sacn_unlock();
+  }
+
+  return total_num_network_interfaces;
 }

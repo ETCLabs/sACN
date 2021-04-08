@@ -1523,7 +1523,7 @@ etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, 
 
 SacnSourceDetector* get_sacn_source_detector()
 {
-  return &source_detector;
+  return source_detector.created ? &source_detector : NULL;
 }
 
 void remove_sacn_source_detector()

@@ -231,7 +231,7 @@ void sacn_source_detector_destroy();
 
 etcpal_error_t sacn_source_detector_reset_networking(SacnMcastInterface* netints, size_t num_netints);
 
-size_t sacn_source_detector_get_network_interfaces(SacnMcastInterface* netints, size_t netints_size);
+size_t sacn_source_detector_get_network_interfaces(EtcPalMcastNetintId* netints, size_t netints_size);
 
 #ifdef __cplusplus
 }

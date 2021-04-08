@@ -11,6 +11,7 @@ set(TEST_RECEIVER_STATE_SOURCES
   ${SACN_SRC}/sacn_mock/common.c
   ${SACN_SRC}/sacn_mock/source_loss.c
   ${SACN_SRC}/sacn_mock/sockets.c
+  ${SACN_SRC}/sacn_mock/source_detector_state.c
 )
 
 sacn_add_dynamic_test(test_receiver_state ${TEST_RECEIVER_STATE_SOURCES})

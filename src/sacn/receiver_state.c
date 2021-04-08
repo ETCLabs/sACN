@@ -27,6 +27,7 @@
 #include "sacn/private/pdu.h"
 #include "sacn/private/sockets.h"
 #include "sacn/private/receiver_state.h"
+#include "sacn/private/source_detector_state.h"
 #include "sacn/private/util.h"
 #include "etcpal/acn_pdu.h"
 #include "etcpal/acn_rlp.h"
@@ -73,6 +74,8 @@ static void handle_incoming(sacn_thread_id_t thread_id, const uint8_t* data, siz
                             const EtcPalSockAddr* from_addr);
 static void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
                                     const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr);
+static void handle_sacn_extended_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
+                                        const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr);
 static void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
                                     SourcePapLostNotification* source_pap_lost, bool* notify);
 static void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* notify);
@@ -406,9 +409,9 @@ void remove_all_receiver_sockets(socket_close_behavior_t close_behavior)
 }
 
 /*
- * Called in a loop by each receiver thread to manage incoming data and receiver state.
+ * Called in a loop by each receiver thread to manage incoming data and state for receivers and/or the source detector.
  */
-void read_network_and_process_receivers(SacnRecvThreadContext* context)
+void read_network_and_process(SacnRecvThreadContext* context)
 {
   if (sacn_lock())
   {
@@ -497,7 +500,7 @@ void sacn_receive_thread(void* arg)
   }
 
   while (context->running)
-    read_network_and_process_receivers(context);
+    read_network_and_process(context);
 
   // Destroy the poll context
   etcpal_poll_context_deinit(&context->poll_context);
@@ -527,6 +530,8 @@ void handle_incoming(sacn_thread_id_t thread_id, const uint8_t* data, size_t dat
   {
     if (rlp.vector == ACN_VECTOR_ROOT_E131_DATA)
       handle_sacn_data_packet(thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr);
+    else if (rlp.vector == ACN_VECTOR_ROOT_E131_EXTENDED)
+      handle_sacn_extended_packet(thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr);
   }
 }
 
@@ -657,6 +662,37 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 
   // Deliver callbacks if applicable.
   deliver_receive_callbacks(from_addr, sender_cid, header, source_limit_exceeded, source_pap_lost, universe_data);
+}
+
+/*
+ * Handle an sACN Extended packet that has been unpacked from a Root Layer PDU.
+ *
+ * [in] thread_id ID for the thread in which the data packet was received.
+ * [in] data Buffer containing the data packet.
+ * [in] datalen Size of buffer.
+ * [in] sender_cid CID from which the data was received.
+ * [in] from_addr Network address from which the data was received.
+ */
+void handle_sacn_extended_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
+                                 const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr)
+{
+  uint32_t vector;
+  if (parse_framing_layer_vector(data, datalen, &vector))
+  {
+    if (vector == VECTOR_E131_EXTENDED_DISCOVERY)
+    {
+      size_t discovery_offset = (SACN_UNIVERSE_DISCOVERY_OFFSET - SACN_FRAMING_OFFSET);
+      if (discovery_offset < datalen)
+      {
+        size_t discovery_len = (datalen - discovery_offset);
+        size_t name_offset = (SACN_SOURCE_NAME_OFFSET - SACN_FRAMING_OFFSET);
+        handle_sacn_universe_discovery_packet(thread_id, &data[discovery_offset], discovery_len, sender_cid, from_addr,
+                                              (char*)(&data[name_offset]));
+      }
+    }
+
+    // TODO: sACN sync
+  }
 }
 
 /*
