@@ -1886,11 +1886,7 @@ TEST_F(TestSourceState, ResetSourceUniverseNetworkingWorks)
             kEtcPalErrOk);
   InitTestData(source, kTestUniverseConfig.universe, kTestBuffer, kTestBuffer2);
 
-#if SACN_DYNAMIC_MEM
-  free(universe_state->netints.netints);
-  universe_state->netints.netints = nullptr;
-#endif
-  universe_state->netints.num_netints = 0u;
+  CLEAR_BUF(&universe_state->netints, netints);
 
   EXPECT_EQ(GetSource(source)->num_netints, 0u);
 

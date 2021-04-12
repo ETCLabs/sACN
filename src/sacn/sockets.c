@@ -101,12 +101,8 @@ etcpal_error_t sacn_sockets_init(void)
   {
     clear_source_networking();
 
-#if SACN_DYNAMIC_MEM
-    if (receiver_sys_netints.sys_netints)
-      free(receiver_sys_netints.sys_netints);
-    if (source_detector_sys_netints.sys_netints)
-      free(source_detector_sys_netints.sys_netints);
-#endif
+    CLEAR_BUF(&receiver_sys_netints, sys_netints);
+    CLEAR_BUF(&source_detector_sys_netints, sys_netints);
   }
 
   return res;
@@ -115,14 +111,9 @@ etcpal_error_t sacn_sockets_init(void)
 void sacn_sockets_deinit(void)
 {
   clear_source_networking();
-#if SACN_DYNAMIC_MEM
-  if (receiver_sys_netints.sys_netints)
-    free(receiver_sys_netints.sys_netints);
-  if (source_detector_sys_netints.sys_netints)
-    free(source_detector_sys_netints.sys_netints);
-#endif
-  receiver_sys_netints.num_sys_netints = 0;
-  source_detector_sys_netints.num_sys_netints = 0;
+
+  CLEAR_BUF(&receiver_sys_netints, sys_netints);
+  CLEAR_BUF(&source_detector_sys_netints, sys_netints);
 }
 
 etcpal_error_t sacn_sockets_reset_source(void)
@@ -133,22 +124,14 @@ etcpal_error_t sacn_sockets_reset_source(void)
 
 etcpal_error_t sacn_sockets_reset_receiver(void)
 {
-#if SACN_DYNAMIC_MEM
-  if (receiver_sys_netints.sys_netints)
-    free(receiver_sys_netints.sys_netints);
-#endif
-  receiver_sys_netints.num_sys_netints = 0;
+  CLEAR_BUF(&receiver_sys_netints, sys_netints);
 
   return receiver_sockets_init(&receiver_sys_netints);
 }
 
 etcpal_error_t sacn_sockets_reset_source_detector(void)
 {
-#if SACN_DYNAMIC_MEM
-  if (source_detector_sys_netints.sys_netints)
-    free(source_detector_sys_netints.sys_netints);
-#endif
-  source_detector_sys_netints.num_sys_netints = 0;
+  CLEAR_BUF(&source_detector_sys_netints, sys_netints);
 
   return receiver_sockets_init(&source_detector_sys_netints);
 }
@@ -741,13 +724,11 @@ void clear_source_networking()
   }
 
 #if SACN_DYNAMIC_MEM
-  if (source_sys_netints.sys_netints)
-    free(source_sys_netints.sys_netints);
   if (multicast_send_sockets)
     free(multicast_send_sockets);
 #endif
 
-  source_sys_netints.num_sys_netints = 0;
+  CLEAR_BUF(&source_sys_netints, sys_netints);
 }
 
 etcpal_error_t validate_netint_config(SacnMcastInterface* netints, size_t num_netints,
@@ -808,10 +789,9 @@ etcpal_error_t init_internal_netints(SacnInternalNetintArray* internal_netints, 
 
   if (result == kEtcPalErrOk)
   {
-#if SACN_DYNAMIC_MEM
-    if (internal_netints->netints)
-      free(internal_netints->netints);
+    CLEAR_BUF(internal_netints, netints);
 
+#if SACN_DYNAMIC_MEM
     internal_netints->netints = calloc(num_valid_netints, sizeof(EtcPalMcastNetintId));
 
     if (!internal_netints->netints)

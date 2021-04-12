@@ -30,7 +30,7 @@ extern "C" {
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_detector_state_init);
 DECLARE_FAKE_VOID_FUNC(sacn_source_detector_state_deinit);
 DECLARE_FAKE_VALUE_FUNC(size_t, get_source_detector_netints, const SacnSourceDetector*, EtcPalMcastNetintId*, size_t);
-DECLARE_FAKE_VOID_FUNC(handle_sacn_universe_discovery_packet, sacn_thread_id_t, const uint8_t*, size_t,
+DECLARE_FAKE_VOID_FUNC(handle_sacn_universe_discovery_packet, SacnRecvThreadContext*, const uint8_t*, size_t,
                        const EtcPalUuid*, const EtcPalSockAddr*, const char*);
 
 void sacn_source_detector_state_reset_all_fakes(void);

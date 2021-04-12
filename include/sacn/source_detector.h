@@ -44,6 +44,9 @@
  *
  * sACN sources often periodically send Universe Discovery packets to announce what universes they are sourcing.
  * Use this API to monitor such traffic for your own needs.
+ *
+ * There can only ever be one instance of the source detector, but that instance still needs to be created and can be
+ * destroyed.
  * 
  * Usage:
  * @code

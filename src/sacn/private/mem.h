@@ -37,6 +37,19 @@
 extern "C" {
 #endif
 
+#if SACN_DYNAMIC_MEM
+#define CLEAR_BUF(ptr, buf_name) \
+  do                             \
+  {                              \
+    if ((ptr)->buf_name)         \
+      free((ptr)->buf_name);     \
+    (ptr)->buf_name = NULL;      \
+    (ptr)->num_##buf_name = 0;   \
+  } while (0)
+#else
+#define CLEAR_BUF(ptr, buf_name) (ptr)->num_##buf_name = 0
+#endif
+
 etcpal_error_t sacn_mem_init(unsigned int num_threads);
 void sacn_mem_deinit(void);
 
@@ -124,7 +137,12 @@ void remove_sacn_receiver(SacnReceiver* receiver);
 // sACN Source Detector memory API
 etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, SacnMcastInterface* netints,
                                         size_t num_netints, SacnSourceDetector** detector_state);
+etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, SacnUniverseDiscoverySource** source_state);
+bool replace_universe_discovery_universes(SacnUniverseDiscoverySource* source, size_t replace_start_index,
+                                          const uint16_t* replacement_universes, size_t num_replacement_universes);
 SacnSourceDetector* get_sacn_source_detector();
+etcpal_error_t lookup_universe_discovery_source(const EtcPalUuid* cid, SacnUniverseDiscoverySource** source_state);
+etcpal_error_t remove_sacn_universe_discovery_source(const EtcPalUuid* cid);
 void remove_sacn_source_detector();
 
 #ifdef __cplusplus

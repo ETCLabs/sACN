@@ -188,8 +188,7 @@ typedef struct TerminationSetSource
  * Types used by the sACN Source Detector module
  *****************************************************************************/
 
-typedef struct SacnSourceDetector SacnSourceDetector;
-struct SacnSourceDetector
+typedef struct SacnSourceDetector
 {
   // Identification
   sacn_thread_id_t thread_id;
@@ -219,7 +218,61 @@ struct SacnSourceDetector
 
   /* What IP networking the source detector will support.  The default is #kSacnIpV4AndIpV6. */
   sacn_ip_support_t ip_supported;
-};
+} SacnSourceDetector;
+
+typedef struct SacnUniverseDiscoverySource
+{
+  EtcPalUuid cid;  // This must be the first member.
+
+  SACN_DECLARE_BUF(uint16_t, universes, SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE);
+  size_t num_universes;
+  bool universes_dirty;  // The universe list has un-notified changes.
+
+  EtcPalTimer expiration_timer;
+  size_t next_universe_index;
+  int next_page;
+} SacnUniverseDiscoverySource;
+
+typedef struct SacnUniverseDiscoveryPage
+{
+  const EtcPalUuid* sender_cid;
+  const EtcPalSockAddr* from_addr;
+  const char* source_name;
+  int page;
+  int last_page;
+  const uint16_t* universes;
+  size_t num_universes;
+} SacnUniverseDiscoveryPage;
+
+/******************************************************************************
+ * Notifications delivered by the sACN Source Detector module
+ *****************************************************************************/
+
+typedef struct SourceDetectorSourceUpdatedNotification
+{
+  SacnSourceDetectorSourceUpdatedCallback callback;
+  const EtcPalUuid* cid;
+  const char* name;
+#if SACN_DYNAMIC_MEM
+  uint16_t* sourced_universes;
+#else
+  uint16_t sourced_universes[SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE];
+#endif
+  size_t num_sourced_universes;
+  void* context;
+} SourceDetectorSourceUpdatedNotification;
+
+#if SACN_DYNAMIC_MEM
+#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT \
+  {                                              \
+    NULL, NULL, NULL, NULL, 0, NULL              \
+  }
+#else
+#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT \
+  {                                              \
+    NULL, NULL, NULL, {0}, 0, NULL               \
+  }
+#endif
 
 /******************************************************************************
  * Types used by the sACN Receive module
@@ -237,7 +290,7 @@ typedef struct SacnReceiver SacnReceiver;
 struct SacnReceiver
 {
   // Identification
-  SacnReceiverKeys keys;
+  SacnReceiverKeys keys;  // This must be the first member.
   sacn_thread_id_t thread_id;
 
   // Sockets / network interface info
@@ -400,6 +453,7 @@ typedef struct SacnRecvThreadContext
   SacnReceiver* receivers;
   size_t num_receivers;
 
+  // Only one thread will ever have a source detector, because the library can only create one source detector instance.
   SacnSourceDetector* source_detector;
 
   // We do most interactions with sockets from the same thread that we receive from them, to avoid
@@ -426,22 +480,19 @@ typedef struct SacnRecvThreadContext
 /******************************************************************************
  * Types used by the sACN Merge Receiver module
  *****************************************************************************/
-typedef struct SacnMergeReceiverSource SacnMergeReceiverSource;
-struct SacnMergeReceiverSource
+typedef struct SacnMergeReceiverSource
 {
   EtcPalUuid cid;  // This must be the first struct member.
   sacn_source_id_t id;
   bool pending;
-};
-typedef struct SacnCidFromSourceId SacnCidFromSourceId;
-struct SacnCidFromSourceId
+} SacnMergeReceiverSource;
+typedef struct SacnCidFromSourceId
 {
   sacn_source_id_t id;  // This must be the first struct member.
   EtcPalUuid cid;
-};
+} SacnCidFromSourceId;
 
-typedef struct SacnMergeReceiver SacnMergeReceiver;
-struct SacnMergeReceiver
+typedef struct SacnMergeReceiver
 {
   sacn_merge_receiver_t merge_receiver_handle;
   sacn_dmx_merger_t merger_handle;
@@ -456,7 +507,7 @@ struct SacnMergeReceiver
 
   int num_pending_sources;
   bool sampling;
-};
+} SacnMergeReceiver;
 
 /******************************************************************************
  * Notifications delivered by the sACN Merge Receiver module
@@ -523,8 +574,7 @@ typedef struct SacnUnicastDestination
   int num_terminations_sent;
 } SacnUnicastDestination;
 
-typedef struct SacnSourceUniverse SacnSourceUniverse;
-struct SacnSourceUniverse
+typedef struct SacnSourceUniverse
 {
   uint16_t universe_id;  // This must be the first struct member.
 
@@ -555,10 +605,9 @@ struct SacnSourceUniverse
   bool send_unicast_only;
 
   SacnInternalNetintArray netints;
-};
+} SacnSourceUniverse;
 
-typedef struct SacnSource SacnSource;
-struct SacnSource
+typedef struct SacnSource
 {
   sacn_source_t handle;  // This must be the first struct member.
 
@@ -590,7 +639,7 @@ struct SacnSource
   size_t num_netints;
 
   uint8_t universe_discovery_send_buf[SACN_MTU];
-};
+} SacnSource;
 
 typedef enum
 {

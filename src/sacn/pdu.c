@@ -79,6 +79,41 @@ bool parse_framing_layer_vector(const uint8_t* buf, size_t buflen, uint32_t* vec
   return true;
 }
 
+bool parse_sacn_universe_discovery_layer(const uint8_t* buf, size_t buflen, int* page, int* last_page,
+                                         const uint8_t** universes, size_t* num_universes)
+{
+  // Check the input parameters including buffer size
+  if (!buf || !page || !last_page || !universes || !num_universes || buflen < SACN_DATA_PACKET_MIN_SIZE)
+    return false;
+
+  // Check PDU length
+  int pdu_length = ACN_PDU_LENGTH(buf);
+  if (pdu_length < 8)
+    return false;
+
+  // Check the vector
+  if (etcpal_unpack_u32b(&buf[2]) != VECTOR_UNIVERSE_DISCOVERY_UNIVERSE_LIST)
+    return false;
+
+  *page = buf[6];
+  *last_page = buf[7];
+  *universes = &buf[8];
+  *num_universes = (pdu_length - 8) / 2;
+
+  return true;
+}
+
+bool parse_sacn_universe_list(const uint8_t* buf, int num_universes, uint16_t* universe_list)
+{
+  if (!buf || (num_universes < 0) || !universe_list)
+    return false;
+
+  for (int i = 0; i < num_universes; ++i)
+    universe_list[i] = etcpal_unpack_u16b(&buf[i * 2]);
+
+  return true;
+}
+
 int pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const EtcPalUuid* source_cid)
 {
   uint8_t* pcur = buf;

@@ -32,7 +32,7 @@ void sacn_source_detector_state_deinit(void);
 size_t get_source_detector_netints(const SacnSourceDetector* detector, EtcPalMcastNetintId* netints,
                                    size_t netints_size);
 
-void handle_sacn_universe_discovery_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
+void handle_sacn_universe_discovery_packet(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
                                            const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr,
                                            const char* source_name);
 

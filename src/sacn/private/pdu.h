@@ -50,6 +50,8 @@ extern "C" {
 #define SACN_DATA_HEADER_SIZE 126
 #define SACN_SYNC_PDU_SIZE 49
 #define SACN_UNIVERSE_DISCOVERY_HEADER_SIZE 120
+#define SACN_MAX_UNIVERSES_PER_PAGE 512
+
 #define SACN_PRI_OFFSET 108
 #define SACN_SEQ_OFFSET 111
 #define SACN_OPTS_OFFSET 112
@@ -116,6 +118,9 @@ extern "C" {
 bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* header, uint8_t* seq, bool* terminated,
                             const uint8_t** pdata);
 bool parse_framing_layer_vector(const uint8_t* buf, size_t buflen, uint32_t* vector);
+bool parse_sacn_universe_discovery_layer(const uint8_t* buf, size_t buflen, int* page, int* last_page,
+                                         const uint8_t** universes, size_t* num_universes);
+bool parse_sacn_universe_list(const uint8_t* buf, int num_universes, uint16_t* universe_list);
 int pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const EtcPalUuid* source_cid);
 int pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t vector, const char* source_name,
                                  uint8_t priority, uint16_t sync_address, uint8_t seq_num, bool preview,

@@ -77,6 +77,7 @@
 #define ALLOC_TRACKED_SOURCE() malloc(sizeof(SacnTrackedSource))
 #define ALLOC_MERGE_RECEIVER_SOURCE() malloc(sizeof(SacnMergeReceiverSource))
 #define ALLOC_CID_FROM_SOURCE_ID() malloc(sizeof(SacnCidFromSourceId))
+#define ALLOC_UNIVERSE_DISCOVERY_SOURCE() malloc(sizeof(SacnUniverseDiscoverySource))
 #define FREE_RECEIVER(ptr)        \
   do                              \
   {                               \
@@ -89,6 +90,7 @@
 #define FREE_TRACKED_SOURCE(ptr) free(ptr)
 #define FREE_MERGE_RECEIVER_SOURCE(ptr) free(ptr)
 #define FREE_CID_FROM_SOURCE_ID(ptr) free(ptr)
+#define FREE_UNIVERSE_DISCOVERY_SOURCE(ptr) free(ptr)
 
 #else  // SACN_DYNAMIC_MEM
 
@@ -109,10 +111,12 @@
 #define ALLOC_TRACKED_SOURCE() etcpal_mempool_alloc(sacnrecv_tracked_sources)
 #define ALLOC_MERGE_RECEIVER_SOURCE() etcpal_mempool_alloc(sacnmergerecv_sources)
 #define ALLOC_CID_FROM_SOURCE_ID() etcpal_mempool_alloc(sacnmergerecv_cids_from_ids)
+#define ALLOC_UNIVERSE_DISCOVERY_SOURCE() etcpal_mempool_alloc(sacnsrcdetect_sources)
 #define FREE_RECEIVER(ptr) etcpal_mempool_free(sacnrecv_receivers, ptr)
 #define FREE_TRACKED_SOURCE(ptr) etcpal_mempool_free(sacnrecv_tracked_sources, ptr)
 #define FREE_MERGE_RECEIVER_SOURCE(ptr) etcpal_mempool_free(sacnmergerecv_sources, ptr)
 #define FREE_CID_FROM_SOURCE_ID(ptr) etcpal_mempool_free(sacnmergerecv_cids_from_ids, ptr)
+#define FREE_UNIVERSE_DISCOVERY_SOURCE(ptr) etcpal_mempool_free(sacnsrcdetect_sources, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
 
@@ -201,11 +205,13 @@ ETCPAL_MEMPOOL_DEFINE(sacnrecv_tracked_sources, SacnTrackedSource, SACN_RECEIVER
 ETCPAL_MEMPOOL_DEFINE(sacnrecv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODES);
 ETCPAL_MEMPOOL_DEFINE(sacnmergerecv_sources, SacnMergeReceiverSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
 ETCPAL_MEMPOOL_DEFINE(sacnmergerecv_cids_from_ids, SacnCidFromSourceId, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+ETCPAL_MEMPOOL_DEFINE(sacnsrcdetect_sources, SacnUniverseDiscoverySource, SACN_SOURCE_DETECTOR_MAX_SOURCES);
 #endif
 
 static EtcPalRbTree receivers;
 static EtcPalRbTree receivers_by_universe;
 static SacnSourceDetector source_detector;
+static EtcPalRbTree universe_discovery_sources;
 
 /*********************** Private function prototypes *************************/
 
@@ -290,6 +296,7 @@ static void merge_receiver_sources_tree_dealloc(const EtcPalRbTree* self, EtcPal
 static void cids_from_source_ids_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+static void universe_discovery_sources_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 
 // Sources initialization/deinitialization
 static etcpal_error_t init_sources(void);
@@ -995,24 +1002,10 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
   {
     ++mem_bufs.num_sources;
   }
-  else
+  else if (source)
   {
-#if SACN_DYNAMIC_MEM
-    if (source)
-    {
-      if (source->universes)
-      {
-        free(source->universes);
-        source->universes = NULL;
-      }
-
-      if (source->netints)
-      {
-        free(source->netints);
-        source->netints = NULL;
-      }
-    }
-#endif  // SACN_DYNAMIC_MEM
+    CLEAR_BUF(source, universes);
+    CLEAR_BUF(source, netints);
   }
 
   *source_state = source;
@@ -1108,19 +1101,8 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
   }
   else
   {
-#if SACN_DYNAMIC_MEM
-    if (universe->netints.netints)
-    {
-      free(universe->netints.netints);
-      universe->netints.netints = NULL;
-    }
-
-    if (universe->unicast_dests)
-    {
-      free(universe->unicast_dests);
-      universe->unicast_dests = NULL;
-    }
-#endif
+    CLEAR_BUF(&universe->netints, netints);
+    CLEAR_BUF(universe, unicast_dests);
   }
 
   *universe_state = universe;
@@ -1271,12 +1253,8 @@ void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index)
 // Needs lock
 void remove_sacn_source_universe(SacnSource* source, size_t index)
 {
-#if SACN_DYNAMIC_MEM
-  if (source->universes[index].unicast_dests)
-    free(source->universes[index].unicast_dests);
-  if (source->universes[index].netints.netints)
-    free(source->universes[index].netints.netints);
-#endif
+  CLEAR_BUF(&source->universes[index], unicast_dests);
+  CLEAR_BUF(&source->universes[index].netints, netints);
   REMOVE_AT_INDEX(source, SacnSourceUniverse, universes, index);
 }
 
@@ -1284,12 +1262,8 @@ void remove_sacn_source_universe(SacnSource* source, size_t index)
 void remove_sacn_source(size_t index)
 {
 #if SACN_SOURCE_ENABLED
-#if SACN_DYNAMIC_MEM
-  if (mem_bufs.sources[index].universes)
-    free(mem_bufs.sources[index].universes);
-  if (mem_bufs.sources[index].netints)
-    free(mem_bufs.sources[index].netints);
-#endif  // SACN_DYNAMIC_MEM
+  CLEAR_BUF(&mem_bufs.sources[index], universes);
+  CLEAR_BUF(&mem_bufs.sources[index], netints);
 
   REMOVE_AT_INDEX((&mem_bufs), SacnSource, sources, index);
 #else   // SACN_SOURCE_ENABLED
@@ -1521,9 +1495,85 @@ etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, 
   return res;
 }
 
+etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, SacnUniverseDiscoverySource** source_state)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+  SacnUniverseDiscoverySource* src = NULL;
+
+  if (etcpal_rbtree_find(&universe_discovery_sources, cid))
+    result = kEtcPalErrExists;
+
+  if (result == kEtcPalErrOk)
+  {
+    src = ALLOC_UNIVERSE_DISCOVERY_SOURCE();
+
+    if (!src)
+      result = kEtcPalErrNoMem;
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    src->cid = *cid;
+
+    src->universes_dirty = true;
+    src->num_universes = 0;
+#if SACN_DYNAMIC_MEM
+    src->universes = calloc(INITIAL_CAPACITY, sizeof(uint16_t));
+    src->universes_capacity = src->universes ? INITIAL_CAPACITY : 0;
+
+    if (!src->universes)
+      result = kEtcPalErrNoMem;
+#endif
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    etcpal_timer_start(&src->expiration_timer, SACN_UNIVERSE_DISCOVERY_INTERVAL * 2);
+    src->next_universe_index = 0;
+    src->next_page = 0;
+
+    result = etcpal_rbtree_insert(&universe_discovery_sources, src);
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    if (source_state)
+      *source_state = src;
+  }
+  else if (src)
+  {
+    FREE_UNIVERSE_DISCOVERY_SOURCE(src);
+  }
+
+  return result;
+}
+
+bool replace_universe_discovery_universes(SacnUniverseDiscoverySource* source, size_t replace_start_index,
+                                          const uint16_t* replacement_universes, size_t num_replacement_universes)
+{
+  CHECK_CAPACITY(source, (replace_start_index + num_replacement_universes), universes, uint16_t,
+                 SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE, false);
+
+  memcpy(&source->universes[replace_start_index], replacement_universes, num_replacement_universes * sizeof(uint16_t));
+  source->num_universes = (replace_start_index + num_replacement_universes);
+
+  return true;
+}
+
 SacnSourceDetector* get_sacn_source_detector()
 {
   return source_detector.created ? &source_detector : NULL;
+}
+
+etcpal_error_t lookup_universe_discovery_source(const EtcPalUuid* cid, SacnUniverseDiscoverySource** source_state)
+{
+  *source_state = (SacnUniverseDiscoverySource*)etcpal_rbtree_find(&universe_discovery_sources, cid);
+  return (*source_state) ? kEtcPalErrOk : kEtcPalErrNotFound;
+}
+
+etcpal_error_t remove_sacn_universe_discovery_source(const EtcPalUuid* cid)
+{
+  return etcpal_rbtree_remove_with_cb(&universe_discovery_sources, cid, universe_discovery_sources_tree_dealloc);
 }
 
 void remove_sacn_source_detector()
@@ -1904,12 +1954,9 @@ void deinit_status_lists_entry(SacnSourceStatusLists* status_lists)
 {
   SACN_ASSERT(status_lists);
 
-  if (status_lists->offline)
-    free(status_lists->offline);
-  if (status_lists->online)
-    free(status_lists->online);
-  if (status_lists->unknown)
-    free(status_lists->unknown);
+  CLEAR_BUF(status_lists, offline);
+  CLEAR_BUF(status_lists, online);
+  CLEAR_BUF(status_lists, unknown);
 }
 
 void deinit_to_erase_bufs(void)
@@ -1944,11 +1991,8 @@ void deinit_recv_thread_context_buf(void)
 void deinit_recv_thread_context_entry(SacnRecvThreadContext* recv_thread_context)
 {
   SACN_ASSERT(recv_thread_context);
-
-  if (recv_thread_context->dead_sockets)
-    free(recv_thread_context->dead_sockets);
-  if (recv_thread_context->socket_refs)
-    free(recv_thread_context->socket_refs);
+  CLEAR_BUF(recv_thread_context, dead_sockets);
+  CLEAR_BUF(recv_thread_context, socket_refs);
 }
 
 void deinit_universe_data_buf(void)
@@ -1984,9 +2028,7 @@ void deinit_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_buf)
 void deinit_sources_lost_entry(SourcesLostNotification* sources_lost)
 {
   SACN_ASSERT(sources_lost);
-
-  if (sources_lost->lost_sources)
-    free(sources_lost->lost_sources);
+  CLEAR_BUF(sources_lost, lost_sources);
 }
 
 void deinit_source_pap_lost_buf(void)
@@ -2159,6 +2201,16 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
   node_dealloc(node);
 }
 
+void universe_discovery_sources_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
+{
+  ETCPAL_UNUSED_ARG(self);
+
+  SacnUniverseDiscoverySource* source = (SacnUniverseDiscoverySource*)node->value;
+  CLEAR_BUF(source, universes);
+  FREE_UNIVERSE_DISCOVERY_SOURCE(source);
+  node_dealloc(node);
+}
+
 etcpal_error_t init_sources(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
@@ -2186,11 +2238,11 @@ void deinit_sources(void)
   {
     if (sources_initialized)
     {
+      CLEAR_BUF(&mem_bufs, sources);
 #if SACN_DYNAMIC_MEM
-      free(mem_bufs.sources);
       mem_bufs.sources_capacity = 0;
-#endif  // SACN_DYNAMIC_MEM
-      mem_bufs.num_sources = 0;
+#endif
+
       sources_initialized = false;
     }
 
@@ -2254,11 +2306,11 @@ void deinit_merge_receivers(void)
       for (size_t i = 0; i < mem_bufs.num_merge_receivers; ++i)
         clear_sacn_merge_receiver_sources(&mem_bufs.merge_receivers[i]);
 
+      CLEAR_BUF(&mem_bufs, merge_receivers);
 #if SACN_DYNAMIC_MEM
-      free(mem_bufs.merge_receivers);
       mem_bufs.merge_receivers_capacity = 0;
 #endif  // SACN_DYNAMIC_MEM
-      mem_bufs.num_merge_receivers = 0;
+
       merge_receivers_initialized = false;
     }
 
@@ -2268,11 +2320,22 @@ void deinit_merge_receivers(void)
 
 etcpal_error_t init_source_detector(void)
 {
-  source_detector.created = false;
-  return kEtcPalErrOk;
+  etcpal_error_t res = kEtcPalErrOk;
+
+#if !SACN_DYNAMIC_MEM
+  res |= etcpal_mempool_init(sacnsrcdetect_sources);
+#endif
+
+  if (res == kEtcPalErrOk)
+  {
+    etcpal_rbtree_init(&universe_discovery_sources, uuid_compare, node_alloc, node_dealloc);
+    source_detector.created = false;
+  }
+
+  return res;
 }
 
 void deinit_source_detector(void)
 {
-  // Nothing to do here
+  etcpal_rbtree_clear_with_cb(&universe_discovery_sources, universe_discovery_sources_tree_dealloc);
 }

@@ -70,11 +70,11 @@ static etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_c
 static void sacn_receive_thread(void* arg);
 
 // Receiving incoming data
-static void handle_incoming(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
+static void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
                             const EtcPalSockAddr* from_addr);
 static void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
                                     const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr);
-static void handle_sacn_extended_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
+static void handle_sacn_extended_packet(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
                                         const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr);
 static void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
                                     SourcePapLostNotification* source_pap_lost, bool* notify);
@@ -424,7 +424,7 @@ void read_network_and_process(SacnRecvThreadContext* context)
   etcpal_error_t read_res = sacn_read(context, &read_result);
   if (read_res == kEtcPalErrOk)
   {
-    handle_incoming(context->thread_id, read_result.data, read_result.data_len, &read_result.from_addr);
+    handle_incoming(context, read_result.data, read_result.data_len, &read_result.from_addr);
   }
   else if (read_res != kEtcPalErrTimedOut)
   {
@@ -513,12 +513,13 @@ void sacn_receive_thread(void* arg)
 /*
  * Handle an incoming data packet on a receiver socket.
  *
- * [in] thread_id ID for the thread in which the incoming data was received.
+ * [in] context Context for the thread in which the incoming data was received.
  * [in] data Incoming data buffer.
  * [in] datalen Size of data buffer.
  * [in] from_addr Network address from which the data was received.
  */
-void handle_incoming(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen, const EtcPalSockAddr* from_addr)
+void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
+                     const EtcPalSockAddr* from_addr)
 {
   AcnUdpPreamble preamble;
   if (!acn_parse_udp_preamble(data, datalen, &preamble))
@@ -529,9 +530,9 @@ void handle_incoming(sacn_thread_id_t thread_id, const uint8_t* data, size_t dat
   while (acn_parse_root_layer_pdu(preamble.rlp_block, preamble.rlp_block_len, &rlp, &lpdu))
   {
     if (rlp.vector == ACN_VECTOR_ROOT_E131_DATA)
-      handle_sacn_data_packet(thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr);
+      handle_sacn_data_packet(context->thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr);
     else if (rlp.vector == ACN_VECTOR_ROOT_E131_EXTENDED)
-      handle_sacn_extended_packet(thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr);
+      handle_sacn_extended_packet(context, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr);
   }
 }
 
@@ -667,13 +668,13 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 /*
  * Handle an sACN Extended packet that has been unpacked from a Root Layer PDU.
  *
- * [in] thread_id ID for the thread in which the data packet was received.
+ * [in] context Context for the thread in which the extended packet was received.
  * [in] data Buffer containing the data packet.
  * [in] datalen Size of buffer.
  * [in] sender_cid CID from which the data was received.
  * [in] from_addr Network address from which the data was received.
  */
-void handle_sacn_extended_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
+void handle_sacn_extended_packet(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
                                  const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr)
 {
   uint32_t vector;
@@ -686,7 +687,7 @@ void handle_sacn_extended_packet(sacn_thread_id_t thread_id, const uint8_t* data
       {
         size_t discovery_len = (datalen - discovery_offset);
         size_t name_offset = (SACN_SOURCE_NAME_OFFSET - SACN_FRAMING_OFFSET);
-        handle_sacn_universe_discovery_packet(thread_id, &data[discovery_offset], discovery_len, sender_cid, from_addr,
+        handle_sacn_universe_discovery_packet(context, &data[discovery_offset], discovery_len, sender_cid, from_addr,
                                               (char*)(&data[name_offset]));
       }
     }
