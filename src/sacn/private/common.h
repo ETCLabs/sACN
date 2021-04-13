@@ -201,7 +201,7 @@ typedef struct SacnSourceDetector
 
   // State tracking
   bool created;
-  bool suppress_limit_exceeded_notification;
+  bool suppress_source_limit_exceeded_notification;
 
   // Configured callbacks
   SacnSourceDetectorCallbacks callbacks;
@@ -223,10 +223,13 @@ typedef struct SacnSourceDetector
 typedef struct SacnUniverseDiscoverySource
 {
   EtcPalUuid cid;  // This must be the first member.
+  char name[SACN_SOURCE_NAME_MAX_LEN];
 
   SACN_DECLARE_BUF(uint16_t, universes, SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE);
   size_t num_universes;
   bool universes_dirty;  // The universe list has un-notified changes.
+  size_t last_notified_universe_count;
+  bool suppress_universe_limit_exceeded_notification;
 
   EtcPalTimer expiration_timer;
   size_t next_universe_index;
@@ -273,6 +276,48 @@ typedef struct SourceDetectorSourceUpdatedNotification
     NULL, NULL, NULL, {0}, 0, NULL               \
   }
 #endif
+
+typedef struct SourceDetectorExpiredSource
+{
+  EtcPalUuid cid;
+  char name[SACN_SOURCE_NAME_MAX_LEN];
+} SourceDetectorExpiredSource;
+
+#define SRC_DETECTOR_EXPIRED_SOURCE_DEFAULT_INIT \
+  {                                              \
+    {{0}}, { 0 }                                 \
+  }
+
+typedef struct SourceDetectorSourceExpiredNotification
+{
+  SacnSourceDetectorSourceExpiredCallback callback;
+  SACN_DECLARE_BUF(SourceDetectorExpiredSource, expired_sources, SACN_SOURCE_DETECTOR_MAX_SOURCES);
+  size_t num_expired_sources;
+  void* context;
+} SourceDetectorSourceExpiredNotification;
+
+#if SACN_DYNAMIC_MEM
+#define SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT \
+  {                                              \
+    NULL, NULL, 0, 0, NULL                       \
+  }
+#else
+#define SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT              \
+  {                                                           \
+    NULL, {SRC_DETECTOR_EXPIRED_SOURCE_DEFAULT_INIT}, 0, NULL \
+  }
+#endif
+
+typedef struct SourceDetectorLimitExceededNotification
+{
+  SacnSourceDetectorLimitExceededCallback callback;
+  void* context;
+} SourceDetectorLimitExceededNotification;
+
+#define SRC_DETECTOR_LIMIT_EXCEEDED_DEFAULT_INIT \
+  {                                              \
+    NULL, NULL                                   \
+  }
 
 /******************************************************************************
  * Types used by the sACN Receive module

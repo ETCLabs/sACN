@@ -33,6 +33,11 @@
 #include "etcpal/mempool.h"
 #endif
 
+// Suppress strncpy() warning on Windows/MSVC.
+#ifdef _MSC_VER
+#pragma warning(disable : 4996)
+#endif
+
 /**************************** Private constants ******************************/
 
 #define INITIAL_CAPACITY 8
@@ -1480,7 +1485,7 @@ etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, 
 
   if (res == kEtcPalErrOk)
   {
-    source_detector.suppress_limit_exceeded_notification = false;
+    source_detector.suppress_source_limit_exceeded_notification = false;
 
     source_detector.callbacks = config->callbacks;
     source_detector.source_count_max = config->source_count_max;
@@ -1495,7 +1500,8 @@ etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, 
   return res;
 }
 
-etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, SacnUniverseDiscoverySource** source_state)
+etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const char* name,
+                                                  SacnUniverseDiscoverySource** source_state)
 {
   etcpal_error_t result = kEtcPalErrOk;
   SacnUniverseDiscoverySource* src = NULL;
@@ -1514,9 +1520,12 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, SacnUni
   if (result == kEtcPalErrOk)
   {
     src->cid = *cid;
+    strncpy(src->name, name, SACN_SOURCE_NAME_MAX_LEN);
 
     src->universes_dirty = true;
     src->num_universes = 0;
+    src->last_notified_universe_count = 0;
+    src->suppress_universe_limit_exceeded_notification = false;
 #if SACN_DYNAMIC_MEM
     src->universes = calloc(INITIAL_CAPACITY, sizeof(uint16_t));
     src->universes_capacity = src->universes ? INITIAL_CAPACITY : 0;
@@ -1548,16 +1557,63 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, SacnUni
   return result;
 }
 
-bool replace_universe_discovery_universes(SacnUniverseDiscoverySource* source, size_t replace_start_index,
-                                          const uint16_t* replacement_universes, size_t num_replacement_universes)
+etcpal_error_t add_sacn_source_detector_expired_source(SourceDetectorSourceExpiredNotification* source_expired,
+                                                       const EtcPalUuid* cid, const char* name)
 {
+  if (!source_expired || !cid || !name)
+    return kEtcPalErrInvalid;
+
+#if SACN_DYNAMIC_MEM
+  if (!source_expired->expired_sources)
+  {
+    source_expired->expired_sources = calloc(INITIAL_CAPACITY, sizeof(SourceDetectorExpiredSource));
+    if (source_expired->expired_sources)
+      source_expired->expired_sources_capacity = INITIAL_CAPACITY;
+    else
+      return kEtcPalErrNoMem;
+  }
+#endif
+
+  CHECK_ROOM_FOR_ONE_MORE(source_expired, expired_sources, SourceDetectorExpiredSource,
+                          SACN_SOURCE_DETECTOR_MAX_SOURCES, kEtcPalErrNoMem);
+
+  source_expired->expired_sources[source_expired->num_expired_sources].cid = *cid;
+  strncpy(source_expired->expired_sources[source_expired->num_expired_sources].name, name, SACN_SOURCE_NAME_MAX_LEN);
+  ++source_expired->num_expired_sources;
+
+  return kEtcPalErrOk;
+}
+
+/*
+ * If num_replacement_universes is too big, no replacement will occur, and this will return the maximum number for
+ * num_replacement_universes that will fit. Otherwise, this will return num_replacement_universes.
+ */
+size_t replace_universe_discovery_universes(SacnUniverseDiscoverySource* source, size_t replace_start_index,
+                                            const uint16_t* replacement_universes, size_t num_replacement_universes,
+                                            size_t dynamic_universe_limit)
+{
+#if SACN_DYNAMIC_MEM
+  if ((dynamic_universe_limit != SACN_SOURCE_DETECTOR_INFINITE) &&
+      ((replace_start_index + num_replacement_universes) > dynamic_universe_limit))
+  {
+    return (dynamic_universe_limit - replace_start_index);
+  }
+#else
+  ETCPAL_UNUSED_ARG(dynamic_universe_limit);
+#endif
+
+#if SACN_DYNAMIC_MEM
+  size_t capacity_fail_return_value = 0;
+#else
+  size_t capacity_fail_return_value = (SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE - replace_start_index);
+#endif
   CHECK_CAPACITY(source, (replace_start_index + num_replacement_universes), universes, uint16_t,
-                 SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE, false);
+                 SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE, capacity_fail_return_value);
 
   memcpy(&source->universes[replace_start_index], replacement_universes, num_replacement_universes * sizeof(uint16_t));
   source->num_universes = (replace_start_index + num_replacement_universes);
 
-  return true;
+  return num_replacement_universes;
 }
 
 SacnSourceDetector* get_sacn_source_detector()
@@ -1569,6 +1625,22 @@ etcpal_error_t lookup_universe_discovery_source(const EtcPalUuid* cid, SacnUnive
 {
   *source_state = (SacnUniverseDiscoverySource*)etcpal_rbtree_find(&universe_discovery_sources, cid);
   return (*source_state) ? kEtcPalErrOk : kEtcPalErrNotFound;
+}
+
+SacnUniverseDiscoverySource* get_first_universe_discovery_source(EtcPalRbIter* iterator)
+{
+  etcpal_rbiter_init(iterator);
+  return (SacnUniverseDiscoverySource*)etcpal_rbiter_first(iterator, &universe_discovery_sources);
+}
+
+SacnUniverseDiscoverySource* get_next_universe_discovery_source(EtcPalRbIter* iterator)
+{
+  return (SacnUniverseDiscoverySource*)etcpal_rbiter_next(iterator);
+}
+
+size_t get_num_universe_discovery_sources()
+{
+  return etcpal_rbtree_size(&universe_discovery_sources);
 }
 
 etcpal_error_t remove_sacn_universe_discovery_source(const EtcPalUuid* cid)

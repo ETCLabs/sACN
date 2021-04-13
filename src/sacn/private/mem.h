@@ -137,11 +137,18 @@ void remove_sacn_receiver(SacnReceiver* receiver);
 // sACN Source Detector memory API
 etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, SacnMcastInterface* netints,
                                         size_t num_netints, SacnSourceDetector** detector_state);
-etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, SacnUniverseDiscoverySource** source_state);
-bool replace_universe_discovery_universes(SacnUniverseDiscoverySource* source, size_t replace_start_index,
-                                          const uint16_t* replacement_universes, size_t num_replacement_universes);
+etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const char* name,
+                                                  SacnUniverseDiscoverySource** source_state);
+etcpal_error_t add_sacn_source_detector_expired_source(SourceDetectorSourceExpiredNotification* source_expired,
+                                                       const EtcPalUuid* cid, const char* name);
+size_t replace_universe_discovery_universes(SacnUniverseDiscoverySource* source, size_t replace_start_index,
+                                            const uint16_t* replacement_universes, size_t num_replacement_universes,
+                                            size_t dynamic_universe_limit);
 SacnSourceDetector* get_sacn_source_detector();
 etcpal_error_t lookup_universe_discovery_source(const EtcPalUuid* cid, SacnUniverseDiscoverySource** source_state);
+SacnUniverseDiscoverySource* get_first_universe_discovery_source(EtcPalRbIter* iterator);
+SacnUniverseDiscoverySource* get_next_universe_discovery_source(EtcPalRbIter* iterator);
+size_t get_num_universe_discovery_sources();
 etcpal_error_t remove_sacn_universe_discovery_source(const EtcPalUuid* cid);
 void remove_sacn_source_detector();
 

@@ -171,19 +171,18 @@ typedef void (*SacnSourceDetectorSourceUpdatedCallback)(const EtcPalUuid* cid, c
 typedef void (*SacnSourceDetectorSourceExpiredCallback)(const EtcPalUuid* cid, const char* name, void* context);
 
 /**
- * @brief Notify that the module has run out of memory to track universes or sources
+ * @brief Notify that the module has run out of memory to track universes or sources.
  *
  * If #SACN_DYNAMIC_MEM was defined to 1 when sACN was compiled (the default on non-embedded
  * platforms), and the configuration you pass to sacn_source_detector_create() has source_count_max and
- * universes_per_source_max set to #SACN_SOURCE_DETECTOR_INFINITE, this callback will never be called and may be set
- * to NULL.
+ * universes_per_source_max set to #SACN_SOURCE_DETECTOR_INFINITE, this callback will never be called (except for the
+ * rare case where a heap allocation function fails) and may be set to NULL.
  *
- * if #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max is ignored and
- * #SACN_SOURCE_DETECTOR_MAX_SOURCES and #SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE are used instead.
+ * If #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max and universes_per_source_max are
+ * ignored and #SACN_SOURCE_DETECTOR_MAX_SOURCES and #SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE are used instead.
  *
- * This callback is rate-limited: it will only be called when the first universe discovery packet is received that takes
- * the module beyond a memory limit.  After that, it will not be called until the number of sources or universes has
- * dropped below the limit and hits it again.
+ * This callback is rate-limited: it will only be called the first time a source or universe limit is exceeded.  After
+ * that, it will not be called until the number of sources or universes has dropped below their limit and hits it again.
  *
  * @param[in] context Context pointer that was given at the creation of the source detector instance.
  */

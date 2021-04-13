@@ -107,17 +107,84 @@ void handle_sacn_universe_discovery_packet(SacnRecvThreadContext* context, const
 }
 
 // Takes lock
+void process_source_detector(SacnRecvThreadContext* recv_thread_context)
+{
+  SacnSourceDetector* source_detector = NULL;
+
+  if (sacn_lock())
+  {
+    source_detector = recv_thread_context->source_detector;
+    sacn_unlock();
+  }
+
+  if (source_detector)
+  {
+    SourceDetectorSourceExpiredNotification source_expired = SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT;
+
+    if (sacn_lock())
+    {
+      EtcPalRbIter iter;
+      for (SacnUniverseDiscoverySource* source = get_first_universe_discovery_source(&iter); source;
+           source = get_next_universe_discovery_source(&iter))
+      {
+        if (etcpal_timer_is_expired(&source->expiration_timer))
+        {
+          add_sacn_source_detector_expired_source(&source_expired, &source->cid, source->name);
+          source_detector->suppress_source_limit_exceeded_notification = false;
+        }
+      }
+
+      for (size_t i = 0; i < source_expired.num_expired_sources; ++i)
+        remove_sacn_universe_discovery_source(&source_expired.expired_sources[i].cid);
+
+      sacn_unlock();
+    }
+
+    if (source_expired.callback)
+    {
+      for (size_t i = 0; i < source_expired.num_expired_sources; ++i)
+      {
+        source_expired.callback(&source_expired.expired_sources[i].cid, source_expired.expired_sources[i].name,
+                                source_expired.context);
+      }
+    }
+
+    CLEAR_BUF(&source_expired, expired_sources);
+  }
+}
+
+// Takes lock
 void process_universe_discovery_page(SacnSourceDetector* source_detector, const SacnUniverseDiscoveryPage* page)
 {
   SourceDetectorSourceUpdatedNotification source_updated = SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT;
+  SourceDetectorLimitExceededNotification limit_exceeded = SRC_DETECTOR_LIMIT_EXCEEDED_DEFAULT_INIT;
 
   if (sacn_lock())
   {
     SacnUniverseDiscoverySource* source = NULL;
-    if (lookup_universe_discovery_source(page->sender_cid, &source) != kEtcPalErrOk)
-      add_sacn_universe_discovery_source(page->sender_cid, &source);  // TODO: Handle source limit exceeded
+    etcpal_error_t source_result = lookup_universe_discovery_source(page->sender_cid, &source);
 
-    if (source)
+    if (source_result == kEtcPalErrNotFound)
+    {
+#if SACN_DYNAMIC_MEM
+      if ((source_detector->source_count_max != SACN_SOURCE_DETECTOR_INFINITE) &&
+          (get_num_universe_discovery_sources() >= (size_t)source_detector->source_count_max))
+      {
+        source_result = kEtcPalErrNoMem;
+      }
+#endif
+      if (source_result != kEtcPalErrNoMem)
+        source_result = add_sacn_universe_discovery_source(page->sender_cid, page->source_name, &source);
+    }
+
+    if ((source_result == kEtcPalErrNoMem) && !source_detector->suppress_source_limit_exceeded_notification)
+    {
+      source_detector->suppress_source_limit_exceeded_notification = true;
+      limit_exceeded.callback = source_detector->callbacks.limit_exceeded;
+      limit_exceeded.context = source_detector->callbacks.context;
+    }
+
+    if (source_result == kEtcPalErrOk)
     {
       etcpal_timer_reset(&source->expiration_timer);
 
@@ -139,8 +206,27 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
           source->universes_dirty = true;
 
           // Remove the remainder of the current universe list and then append.
-          replace_universe_discovery_universes(source, source->next_universe_index, page->universes,
-                                               page->num_universes);
+          size_t replace_result = replace_universe_discovery_universes(
+              source, source->next_universe_index, page->universes, page->num_universes,
+              (size_t)source_detector->universes_per_source_max);
+
+          // If there's not enough room for this page:
+          if (replace_result < page->num_universes)
+          {
+            if (replace_result > 0)
+            {
+              // Fit as many universes as possible.
+              replace_universe_discovery_universes(source, source->next_universe_index, page->universes, replace_result,
+                                                   source_detector->universes_per_source_max);
+            }
+
+            if (!source->suppress_universe_limit_exceeded_notification)
+            {
+              source->suppress_universe_limit_exceeded_notification = true;
+              limit_exceeded.callback = source_detector->callbacks.limit_exceeded;
+              limit_exceeded.context = source_detector->callbacks.context;
+            }
+          }
         }
 
         if (page->page < page->last_page)
@@ -155,7 +241,11 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
 
           if (source->universes_dirty)
           {
+            if (source->num_universes < source->last_notified_universe_count)
+              source->suppress_universe_limit_exceeded_notification = false;
+
             source->universes_dirty = false;
+            source->last_notified_universe_count = source->num_universes;
 
             source_updated.callback = source_detector->callbacks.source_updated;
             source_updated.cid = page->sender_cid;
@@ -184,6 +274,9 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
                             source_updated.num_sourced_universes ? source_updated.sourced_universes : NULL,
                             source_updated.num_sourced_universes, source_updated.context);
   }
+
+  if (limit_exceeded.callback)
+    limit_exceeded.callback(limit_exceeded.context);
 
   CLEAR_BUF(&source_updated, sourced_universes);
 }

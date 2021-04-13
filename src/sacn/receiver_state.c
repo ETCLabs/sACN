@@ -444,6 +444,7 @@ void read_network_and_process(SacnRecvThreadContext* context)
   if (etcpal_timer_is_expired(&context->periodic_timer))
   {
     process_receivers(context);
+    process_source_detector(context);
     etcpal_timer_reset(&context->periodic_timer);
   }
 }
