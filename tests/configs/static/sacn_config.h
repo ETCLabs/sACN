@@ -19,3 +19,6 @@ void SacnTestingAssertHandler(const char* expression, const char* file, unsigned
 
 #define SACN_SOURCE_MAX_SOURCES 10
 #define SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE 2048
+
+#define SACN_SOURCE_DETECTOR_MAX_SOURCES 10
+#define SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE 3000

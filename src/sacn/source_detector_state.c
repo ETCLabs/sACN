@@ -23,14 +23,6 @@
 
 #include "sacn/private/source_detector_state.h"
 
-/****************************** Private macros *******************************/
-
-/***************************** Private constants *****************************/
-
-/****************************** Private types ********************************/
-
-/**************************** Private variables ******************************/
-
 /*********************** Private function prototypes *************************/
 
 static void process_universe_discovery_page(SacnSourceDetector* source_detector, const SacnUniverseDiscoveryPage* page);
@@ -49,6 +41,7 @@ void sacn_source_detector_state_deinit(void)
   // Nothing to do
 }
 
+// Needs lock
 size_t get_source_detector_netints(const SacnSourceDetector* detector, EtcPalMcastNetintId* netints,
                                    size_t netints_size)
 {
@@ -109,19 +102,12 @@ void handle_sacn_universe_discovery_packet(SacnRecvThreadContext* context, const
 // Takes lock
 void process_source_detector(SacnRecvThreadContext* recv_thread_context)
 {
-  SacnSourceDetector* source_detector = NULL;
+  SourceDetectorSourceExpiredNotification source_expired = SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT;
 
   if (sacn_lock())
   {
-    source_detector = recv_thread_context->source_detector;
-    sacn_unlock();
-  }
-
-  if (source_detector)
-  {
-    SourceDetectorSourceExpiredNotification source_expired = SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT;
-
-    if (sacn_lock())
+    SacnSourceDetector* source_detector = recv_thread_context->source_detector;
+    if (source_detector)
     {
       EtcPalRbIter iter;
       for (SacnUniverseDiscoverySource* source = get_first_universe_discovery_source(&iter); source;
@@ -136,21 +122,21 @@ void process_source_detector(SacnRecvThreadContext* recv_thread_context)
 
       for (size_t i = 0; i < source_expired.num_expired_sources; ++i)
         remove_sacn_universe_discovery_source(&source_expired.expired_sources[i].cid);
-
-      sacn_unlock();
     }
 
-    if (source_expired.callback)
-    {
-      for (size_t i = 0; i < source_expired.num_expired_sources; ++i)
-      {
-        source_expired.callback(&source_expired.expired_sources[i].cid, source_expired.expired_sources[i].name,
-                                source_expired.context);
-      }
-    }
-
-    CLEAR_BUF(&source_expired, expired_sources);
+    sacn_unlock();
   }
+
+  if (source_expired.callback)
+  {
+    for (size_t i = 0; i < source_expired.num_expired_sources; ++i)
+    {
+      source_expired.callback(&source_expired.expired_sources[i].cid, source_expired.expired_sources[i].name,
+                              source_expired.context);
+    }
+  }
+
+  CLEAR_BUF(&source_expired, expired_sources);
 }
 
 // Takes lock

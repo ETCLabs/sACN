@@ -17,20 +17,6 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-/*********** CHRISTIAN's BIG OL' TODO LIST: *************************************
- - Implement this & get documentation in place, including the overal C & C++ "how to use" comments.
- - Clean up any constants for this API in opts.h.  For example, any of the source detector thread priorities or
- receive timeouts.
- - Test c & c++
- - Make sure everything works with static & dynamic memory.
- - Example app for both C & C++.
- - Make the example detector use the new api.
- - This entire project should build without warnings!!
- - Make sure the functionality for create & reset_networking work with and without good_interfaces, in all combinations
- (nill, small array, large array, etc).
-*/
-////////////////////////////////////////////
-
 #include "sacn/source_detector.h"
 
 #include <limits.h>
@@ -47,14 +33,6 @@
 #include "etcpal/mempool.h"
 #endif
 
-/***************************** Private constants *****************************/
-
-/****************************** Private macros *******************************/
-
-/**************************** Private variables ******************************/
-
-/*********************** Private function prototypes *************************/
-
 /*************************** Function definitions ****************************/
 
 /**************************************************************************************************
@@ -64,14 +42,13 @@
 /* Initialize the sACN Source Detector module. Internal function called from sacn_init(). */
 etcpal_error_t sacn_source_detector_init(void)
 {
-  // TODO CHRISTIAN
-  return kEtcPalErrOk;
+  return kEtcPalErrOk;  // Nothing to do here.
 }
 
 /* Deinitialize the sACN Source Detector module. Internal function called from sacn_deinit(). */
 void sacn_source_detector_deinit(void)
 {
-  // TODO CHRISTIAN
+  // Nothing to do here.
 }
 
 /**
@@ -159,7 +136,8 @@ void sacn_source_detector_destroy()
 }
 
 /**
- * @brief Resets the underlying network sockets and packet receipt state for the sACN Source Detector.
+ * @brief Updates the source detector system network interfaces. Also resets the underlying network sockets for the sACN
+ * Source Detector if it was created.
  *
  * This is typically used when the application detects that the list of networking interfaces has changed.
  *
@@ -178,7 +156,6 @@ void sacn_source_detector_destroy()
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: The detector has not been created yet.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_detector_reset_networking(SacnMcastInterface* netints, size_t num_netints)
