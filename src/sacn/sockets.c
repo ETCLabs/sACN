@@ -63,9 +63,6 @@ static void clear_source_networking();
 static etcpal_error_t validate_netint_config(SacnMcastInterface* netints, size_t num_netints,
                                              const SacnMcastInterface* sys_netints, size_t num_sys_netints,
                                              size_t* num_valid_netints);
-static etcpal_error_t init_internal_netints(SacnInternalNetintArray* internal_netints, SacnMcastInterface* app_netints,
-                                            size_t num_app_netints, const SacnMcastInterface* sys_netints,
-                                            size_t num_sys_netints);
 static etcpal_error_t test_sacn_receiver_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str,
                                                 SacnMcastInterface* sys_netints, size_t* num_sys_netints);
 static etcpal_error_t test_sacn_source_netint(const EtcPalMcastNetintId* netint_id, const char* addr_str);
@@ -569,22 +566,23 @@ void sacn_send_unicast(sacn_ip_support_t ip_supported, const uint8_t* send_buf, 
 etcpal_error_t sacn_initialize_receiver_netints(SacnInternalNetintArray* receiver_netints,
                                                 SacnMcastInterface* app_netints, size_t num_app_netints)
 {
-  return init_internal_netints(receiver_netints, app_netints, num_app_netints, receiver_sys_netints.sys_netints,
-                               receiver_sys_netints.num_sys_netints);
+  return sacn_initialize_internal_netints(receiver_netints, app_netints, num_app_netints,
+                                          receiver_sys_netints.sys_netints, receiver_sys_netints.num_sys_netints);
 }
 
 etcpal_error_t sacn_initialize_source_detector_netints(SacnInternalNetintArray* source_detector_netints,
                                                        SacnMcastInterface* app_netints, size_t num_app_netints)
 {
-  return init_internal_netints(source_detector_netints, app_netints, num_app_netints,
-                               source_detector_sys_netints.sys_netints, source_detector_sys_netints.num_sys_netints);
+  return sacn_initialize_internal_netints(source_detector_netints, app_netints, num_app_netints,
+                                          source_detector_sys_netints.sys_netints,
+                                          source_detector_sys_netints.num_sys_netints);
 }
 
 etcpal_error_t sacn_initialize_source_netints(SacnInternalNetintArray* source_netints, SacnMcastInterface* app_netints,
                                               size_t num_app_netints)
 {
-  return init_internal_netints(source_netints, app_netints, num_app_netints, source_sys_netints.sys_netints,
-                               source_sys_netints.num_sys_netints);
+  return sacn_initialize_internal_netints(source_netints, app_netints, num_app_netints, source_sys_netints.sys_netints,
+                                          source_sys_netints.num_sys_netints);
 }
 
 etcpal_error_t source_sockets_init()
@@ -726,6 +724,8 @@ void clear_source_networking()
 #if SACN_DYNAMIC_MEM
   if (multicast_send_sockets)
     free(multicast_send_sockets);
+
+  multicast_send_sockets = NULL;
 #endif
 
   CLEAR_BUF(&source_sys_netints, sys_netints);
@@ -776,9 +776,9 @@ etcpal_error_t validate_netint_config(SacnMcastInterface* netints, size_t num_ne
   return (*num_valid_netints > 0) ? kEtcPalErrOk : kEtcPalErrNoNetints;
 }
 
-etcpal_error_t init_internal_netints(SacnInternalNetintArray* internal_netints, SacnMcastInterface* app_netints,
-                                     size_t num_app_netints, const SacnMcastInterface* sys_netints,
-                                     size_t num_sys_netints)
+etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* internal_netints,
+                                                SacnMcastInterface* app_netints, size_t num_app_netints,
+                                                const SacnMcastInterface* sys_netints, size_t num_sys_netints)
 {
   size_t num_valid_netints = 0u;
   etcpal_error_t result =
@@ -916,9 +916,9 @@ void add_sacn_source_sys_netint(const EtcPalMcastNetintId* netint_id, etcpal_err
   if (add_sacn_sys_netint(netint_id, status, source_sys_netints.sys_netints, &source_sys_netints.num_sys_netints))
   {
     if (status == kEtcPalErrOk)
-      create_multicast_send_socket(netint_id, &multicast_send_sockets[source_sys_netints.num_sys_netints]);
+      create_multicast_send_socket(netint_id, &multicast_send_sockets[source_sys_netints.num_sys_netints - 1]);
     else
-      multicast_send_sockets[source_sys_netints.num_sys_netints] = ETCPAL_SOCKET_INVALID;
+      multicast_send_sockets[source_sys_netints.num_sys_netints - 1] = ETCPAL_SOCKET_INVALID;
   }
   // Else already added - don't add it again
 }

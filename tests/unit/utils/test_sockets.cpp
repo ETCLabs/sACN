@@ -135,4 +135,79 @@ TEST_F(TestSockets, SocketCleanedUpOnSubscribeFailure)
             etcpal_close_fake.call_count - initial_close_call_count);
 }
 
-// TODO: Tests for sockets.h functions currently not covered here?
+TEST_F(TestSockets, AddReceiverSocketWorks)
+{
+  SacnRecvThreadContext* context = get_recv_thread_context(0);
+  ASSERT_NE(context, nullptr);
+  ASSERT_NE(context->socket_refs, nullptr);
+
+  etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
+  uint16_t universe = 1u;
+  for (size_t i = 0u; i < 8u; i += 2u)
+  {
+    for (size_t j = 0u; j < SACN_RECEIVER_MAX_SUBS_PER_SOCKET; ++j)
+    {
+      EXPECT_EQ(context->num_socket_refs, j ? (i + 2u) : i);
+
+      EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV4, universe, fake_netint_ids_.data(), fake_netint_ids_.size(),
+                                         &sock),
+                kEtcPalErrOk);
+      EXPECT_EQ(context->num_socket_refs, j ? (i + 2u) : (i + 1u));
+      EXPECT_EQ(context->socket_refs[i].ip_type, kEtcPalIpTypeV4);
+      EXPECT_EQ(context->socket_refs[i].refcount, j + 1u);
+      EXPECT_EQ(context->socket_refs[i].sock, sock);
+
+      EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV6, universe, fake_netint_ids_.data(), fake_netint_ids_.size(),
+                                         &sock),
+                kEtcPalErrOk);
+      EXPECT_EQ(context->num_socket_refs, i + 2u);
+      EXPECT_EQ(context->socket_refs[i + 1u].ip_type, kEtcPalIpTypeV6);
+      EXPECT_EQ(context->socket_refs[i + 1u].refcount, j + 1u);
+      EXPECT_EQ(context->socket_refs[i + 1u].sock, sock);
+
+      ++universe;
+    }
+  }
+}
+
+TEST_F(TestSockets, InitializeInternalNetintsWorks)
+{
+  std::vector<SacnMcastInterface> sys_netints = {
+      {{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},         {{kEtcPalIpTypeV6, 2u}, kEtcPalErrNetwork},
+      {{kEtcPalIpTypeV4, 3u}, kEtcPalErrConnClosed}, {{kEtcPalIpTypeV6, 4u}, kEtcPalErrSys},
+      {{kEtcPalIpTypeV4, 5u}, kEtcPalErrOk},         {{kEtcPalIpTypeV6, 6u}, kEtcPalErrOk}};
+  std::vector<SacnMcastInterface> app_netints = {
+      {{kEtcPalIpTypeV4, 0u}, kEtcPalErrOk}, {{kEtcPalIpTypeInvalid, 1u}, kEtcPalErrOk},
+      {{kEtcPalIpTypeV6, 1u}, kEtcPalErrOk}, {{kEtcPalIpTypeV6, 2u}, kEtcPalErrOk},
+      {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}, {{kEtcPalIpTypeV6, 4u}, kEtcPalErrOk},
+      {{kEtcPalIpTypeV4, 5u}, kEtcPalErrOk}, {{kEtcPalIpTypeV6, 6u}, kEtcPalErrOk},
+      {{kEtcPalIpTypeV4, 7u}, kEtcPalErrOk}};
+
+  std::vector<etcpal_error_t> expected_statuses = {kEtcPalErrInvalid, kEtcPalErrInvalid,    kEtcPalErrNotFound,
+                                                   kEtcPalErrNetwork, kEtcPalErrConnClosed, kEtcPalErrSys,
+                                                   kEtcPalErrOk,      kEtcPalErrOk,         kEtcPalErrNotFound};
+  std::vector<EtcPalMcastNetintId> expected_internal_netints = {{kEtcPalIpTypeV4, 5u}, {kEtcPalIpTypeV6, 6u}};
+
+  ASSERT_EQ(app_netints.size(), expected_statuses.size());
+
+  SacnInternalNetintArray internal_netint_array;
+#if SACN_DYNAMIC_MEM
+  internal_netint_array.netints = nullptr;
+  internal_netint_array.netints_capacity = 0u;
+#endif
+  internal_netint_array.num_netints = 0u;
+
+  sacn_initialize_internal_netints(&internal_netint_array, app_netints.data(), app_netints.size(), sys_netints.data(),
+                                   sys_netints.size());
+
+  for (size_t i = 0u; i < app_netints.size(); ++i)
+    EXPECT_EQ(app_netints[i].status, expected_statuses[i]);
+
+  EXPECT_EQ(internal_netint_array.num_netints, expected_internal_netints.size());
+
+  for (size_t i = 0u; i < internal_netint_array.num_netints; ++i)
+  {
+    EXPECT_EQ(internal_netint_array.netints[i].index, expected_internal_netints[i].index);
+    EXPECT_EQ(internal_netint_array.netints[i].ip_type, expected_internal_netints[i].ip_type);
+  }
+}

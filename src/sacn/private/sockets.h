@@ -51,6 +51,9 @@ etcpal_error_t sacn_initialize_source_detector_netints(SacnInternalNetintArray* 
                                                        SacnMcastInterface* app_netints, size_t num_app_netints);
 etcpal_error_t sacn_initialize_source_netints(SacnInternalNetintArray* source_netints, SacnMcastInterface* app_netints,
                                               size_t num_app_netints);
+etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* internal_netints,
+                                                SacnMcastInterface* app_netints, size_t num_app_netints,
+                                                const SacnMcastInterface* sys_netints, size_t num_sys_netints);
 
 void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAddr* ip);
 etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,

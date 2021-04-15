@@ -115,6 +115,8 @@ void process_source_detector(SacnRecvThreadContext* recv_thread_context)
       {
         if (etcpal_timer_is_expired(&source->expiration_timer))
         {
+          source_expired.callback = source_detector->callbacks.source_expired;
+          source_expired.context = source_detector->callbacks.context;
           add_sacn_source_detector_expired_source(&source_expired, &source->cid, source->name);
           source_detector->suppress_source_limit_exceeded_notification = false;
         }
@@ -176,7 +178,13 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
 
       // The pages are tracked here to make sure that source_updated only notifies when the universe list is a complete
       // set of consecutive pages, from 0 to the last page. It's assumed the pages have been sent in order.
-      if ((page->page == 0) || (page->page == source->next_page))
+      if ((page->page != 0) && (page->page != source->next_page))
+      {
+        // Out of sequence - start over.
+        source->next_universe_index = 0;
+        source->next_page = 0;
+      }
+      else  // This page begins or continues a sequence of consecutive pages.
       {
         if (page->page == 0)
         {
@@ -185,7 +193,9 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
         }
 
         // If this page modifies the universe list:
-        if ((page->num_universes > (source->num_universes - source->next_universe_index)) ||
+        size_t num_remaining_universes = (source->num_universes - source->next_universe_index);
+        if ((page->num_universes > num_remaining_universes) ||
+            ((page->page == page->last_page) && (page->num_universes < num_remaining_universes)) ||
             (memcmp(&source->universes[source->next_universe_index], page->universes,
                     page->num_universes * sizeof(uint16_t)) != 0))
         {
@@ -224,6 +234,10 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
         {
           source->next_universe_index = 0;
           source->next_page = 0;
+
+          // Verify the list is in ascending order if dirty. If not ascending, declare not dirty to filter.
+          for (size_t i = 1; source->universes_dirty && (i < source->num_universes); ++i)
+            source->universes_dirty = (source->universes[i - 1] < source->universes[i]);
 
           if (source->universes_dirty)
           {

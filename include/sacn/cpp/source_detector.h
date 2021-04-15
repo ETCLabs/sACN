@@ -134,7 +134,8 @@ public:
      * This passes the source's current universe list, but you will only get this callback when the module detects
      * that the source is new or the list has somehow changed.
      *
-     * The list of sourced universes is guaranteed by the protocol to be numerically sorted.
+     * The protocol requires the list of sourced universes to be numerically sorted. The library enforces this rule by
+     * checking that the universe list is in ascending order before notifying.
      *
      * @param[in] cid The CID of the source.
      * @param[in] name The UTF-8 name string.
