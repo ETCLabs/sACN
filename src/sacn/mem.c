@@ -225,7 +225,9 @@ static void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, s
 
 static size_t get_merge_receiver_index(sacn_merge_receiver_t handle, bool* found);
 
+#if SACN_SOURCE_ENABLED
 static size_t get_source_index(sacn_source_t handle, bool* found);
+#endif
 static size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found);
 static size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found);
 static size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found);
@@ -1689,12 +1691,12 @@ size_t get_merge_receiver_index(sacn_merge_receiver_t handle, bool* found)
   return index;
 }
 
+#if SACN_SOURCE_ENABLED
 size_t get_source_index(sacn_source_t handle, bool* found)
 {
   *found = false;
   size_t index = 0;
 
-#if SACN_SOURCE_ENABLED
   while (!(*found) && (index < mem_bufs.num_sources))
   {
     if (mem_bufs.sources[index].handle == handle)
@@ -1702,12 +1704,10 @@ size_t get_source_index(sacn_source_t handle, bool* found)
     else
       ++index;
   }
-#else
-  ETCPAL_UNUSED_ARG(handle);
-#endif
 
   return index;
 }
+#endif
 
 size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found)
 {

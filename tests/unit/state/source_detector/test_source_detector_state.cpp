@@ -99,7 +99,7 @@ protected:
   void ProcessUniverseDiscoveryPage(const etcpal::Uuid& cid, const std::vector<uint16_t>& complete_universe_list,
                                     uint8_t page_number)
   {
-    int last_page = (complete_universe_list.size() / 512);
+    size_t last_page = (complete_universe_list.size() / 512u);
 
     uint8_t buf[SACN_MTU] = {0};
 

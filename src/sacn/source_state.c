@@ -50,10 +50,14 @@ static bool thread_initialized = false;
 
 /*********************** Private function prototypes *************************/
 
+#if SACN_SOURCE_ENABLED
 static bool source_handle_in_use(int handle_val, void* cookie);
+#endif
 
 static etcpal_error_t start_tick_thread();
+#if SACN_SOURCE_ENABLED
 static void stop_tick_thread();
+#endif
 
 static void source_thread_function(void* arg);
 
@@ -106,6 +110,7 @@ void sacn_source_state_deinit(void)
 #endif
 }
 
+#if SACN_SOURCE_ENABLED
 bool source_handle_in_use(int handle_val, void* cookie)
 {
   ETCPAL_UNUSED_ARG(cookie);
@@ -113,6 +118,7 @@ bool source_handle_in_use(int handle_val, void* cookie)
   SacnSource* tmp = NULL;
   return (handle_val == SACN_SOURCE_INVALID) || (lookup_source(handle_val, &tmp) == kEtcPalErrOk);
 }
+#endif
 
 // Needs lock
 etcpal_error_t start_tick_thread()
@@ -123,6 +129,7 @@ etcpal_error_t start_tick_thread()
   return etcpal_thread_create(&source_thread_handle, &params, source_thread_function, NULL);
 }
 
+#if SACN_SOURCE_ENABLED
 // Takes lock
 void stop_tick_thread()
 {
@@ -138,6 +145,7 @@ void stop_tick_thread()
   // Wait for thread-based sources to terminate (assuming application already cleaned up manual sources)
   etcpal_thread_join(&thread_handle);
 }
+#endif
 
 // Takes lock
 void source_thread_function(void* arg)
@@ -209,10 +217,10 @@ int process_sources(process_sources_behavior_t behavior)
 {
   int num_sources_tracked = 0;
 
-  // Iterate the sources backwards to allow for removals (i must not be unsigned)
-  for (int i = get_num_sources() - 1; i >= 0; --i)
+  size_t initial_num_sources = get_num_sources();  // Actual may change, so keep initial for iteration.
+  for (size_t i = 0; i < initial_num_sources; ++i)
   {
-    SacnSource* source = get_source(i);
+    SacnSource* source = get_source(initial_num_sources - 1 - i);
 
     // If this is the kind of source we want to process (manual vs. thread-based)
     bool process_manual = (behavior == kProcessManualSources);
@@ -231,7 +239,7 @@ int process_sources(process_sources_behavior_t behavior)
 
       // Clean up this source if needed
       if (source->terminating && (source->num_universes == 0))
-        remove_sacn_source(i);
+        remove_sacn_source(initial_num_sources - 1 - i);
     }
   }
 
@@ -252,17 +260,17 @@ void process_universe_discovery(SacnSource* source)
 // Needs lock
 void process_universes(SacnSource* source)
 {
-  // Iterate the universes backwards to allow for removals (i must not be unsigned)
-  for (int i = source->num_universes - 1; i >= 0; --i)
+  size_t initial_num_universes = source->num_universes;  // Actual may change, so keep initial for iteration.
+  for (size_t i = 0; i < initial_num_universes; ++i)
   {
-    SacnSourceUniverse* universe = &source->universes[i];
+    SacnSourceUniverse* universe = &source->universes[initial_num_universes - 1 - i];
 
     // Unicast destination-specific processing
     process_unicast_dests(source, universe);
 
     // Either transmit start codes 0x00 & 0xDD, or terminate and clean up universe
     if (universe->terminating)
-      process_universe_termination(source, i);
+      process_universe_termination(source, initial_num_universes - 1 - i);
     else
       transmit_levels_and_paps_when_needed(source, universe);
   }
@@ -271,10 +279,10 @@ void process_universes(SacnSource* source)
 // Needs lock
 void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe)
 {
-  // Iterate unicast destinations backwards to allow for removals (i must not be unsigned)
-  for (int i = universe->num_unicast_dests - 1; i >= 0; --i)
+  size_t initial_num_unicast_dests = universe->num_unicast_dests;  // Actual may change, so keep initial for iteration.
+  for (size_t i = 0; i < initial_num_unicast_dests; ++i)
   {
-    SacnUnicastDestination* dest = &universe->unicast_dests[i];
+    SacnUnicastDestination* dest = &universe->unicast_dests[initial_num_unicast_dests - 1 - i];
 
     // Terminate and clean up this unicast destination if needed
     if (dest->terminating)
@@ -283,7 +291,7 @@ void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe)
         send_termination_unicast(source, universe, dest);
 
       if ((dest->num_terminations_sent >= 3) || !universe->has_level_data)
-        remove_sacn_unicast_dest(universe, i);
+        remove_sacn_unicast_dest(universe, initial_num_unicast_dests - 1 - i);
     }
   }
 }

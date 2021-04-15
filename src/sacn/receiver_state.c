@@ -78,7 +78,9 @@ static void handle_sacn_extended_packet(SacnRecvThreadContext* context, const ui
                                         const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr);
 static void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
                                     SourcePapLostNotification* source_pap_lost, bool* notify);
+#if SACN_ETC_PRIORITY_EXTENSION
 static void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* notify);
+#endif
 static void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_cid, const SacnHeaderData* header,
                                     uint8_t seq, SacnTrackedSource** new_source,
                                     SourceLimitExceededNotification* source_limit_exceeded, bool* notify);

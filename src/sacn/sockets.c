@@ -712,7 +712,9 @@ void clear_source_networking()
   if (ipv6_unicast_send_socket != ETCPAL_SOCKET_INVALID)
     etcpal_close(ipv6_unicast_send_socket);
 
+#if SACN_DYNAMIC_MEM
   if (multicast_send_sockets)
+#endif
   {
     for (size_t i = 0; i < source_sys_netints.num_sys_netints; ++i)
     {
@@ -784,7 +786,7 @@ etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* interna
   etcpal_error_t result =
       validate_netint_config(app_netints, num_app_netints, sys_netints, num_sys_netints, &num_valid_netints);
 
-  SacnMcastInterface* netints_to_use = app_netints ? app_netints : sys_netints;
+  const SacnMcastInterface* netints_to_use = app_netints ? app_netints : sys_netints;
   size_t num_netints_to_use = app_netints ? num_app_netints : num_sys_netints;
 
   if (result == kEtcPalErrOk)

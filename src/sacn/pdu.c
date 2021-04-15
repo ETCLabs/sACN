@@ -103,12 +103,12 @@ bool parse_sacn_universe_discovery_layer(const uint8_t* buf, size_t buflen, int*
   return true;
 }
 
-bool parse_sacn_universe_list(const uint8_t* buf, int num_universes, uint16_t* universe_list)
+bool parse_sacn_universe_list(const uint8_t* buf, size_t num_universes, uint16_t* universe_list)
 {
-  if (!buf || (num_universes < 0) || !universe_list)
+  if (!buf || !universe_list)
     return false;
 
-  for (int i = 0; i < num_universes; ++i)
+  for (size_t i = 0; i < num_universes; ++i)
     universe_list[i] = etcpal_unpack_u16b(&buf[i * 2]);
 
   return true;

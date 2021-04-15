@@ -379,12 +379,12 @@ TEST_F(TestSourceState, ProcessSourcesCountsSources)
   AddSource(config);
   AddSource(config);
   AddSource(config);
-  int num_manual_sources = get_num_sources();
+  int num_manual_sources = (int)get_num_sources();
 
   config.manually_process_source = false;
   AddSource(config);
   AddSource(config);
-  int num_threaded_sources = (get_num_sources() - num_manual_sources);
+  int num_threaded_sources = ((int)get_num_sources() - num_manual_sources);
 
   VERIFY_LOCKING_AND_RETURN_VALUE(take_lock_and_process_sources(kProcessManualSources), num_manual_sources);
   VERIFY_LOCKING_AND_RETURN_VALUE(take_lock_and_process_sources(kProcessThreadedSources), num_threaded_sources);
@@ -604,7 +604,9 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
     sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                               const EtcPalMcastNetintId*) {
       if (IS_UNIVERSE_DISCOVERY(send_buf))
+      {
         EXPECT_EQ(send_buf[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET], current_test_iteration);
+      }
     };
 
     for (int j = 0; j < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE; ++j)
@@ -807,7 +809,7 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateCorrectly)
   {
     uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->seq_num;
 
-    current_remote_addr_index = (kTestRemoteAddrs.size() - 1);
+    current_remote_addr_index = ((int)kTestRemoteAddrs.size() - 1);
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
     for (size_t j = 0u; j < kTestRemoteAddrs.size(); ++j)
@@ -1130,8 +1132,6 @@ TEST_F(TestSourceState, InitializeSourceThreadWorks)
     EXPECT_NE(id, nullptr);
     EXPECT_EQ(params->priority, (unsigned int)ETCPAL_THREAD_DEFAULT_PRIORITY);
     EXPECT_EQ(params->stack_size, (unsigned int)ETCPAL_THREAD_DEFAULT_STACK);
-    if (params->thread_name)
-      EXPECT_EQ(strcmp(params->thread_name, ETCPAL_THREAD_DEFAULT_NAME), 0);
     EXPECT_EQ(params->platform_data, nullptr);
     EXPECT_NE(thread_fn, nullptr);
     EXPECT_EQ(thread_arg, nullptr);
@@ -1706,7 +1706,7 @@ TEST_F(TestSourceState, SetSourceNameWorks)
   char* name_in_discovery_buffer = (char*)(&GetSource(source)->universe_discovery_send_buf[SACN_SOURCE_NAME_OFFSET]);
   EXPECT_EQ(strncmp(name_in_discovery_buffer, kTestName.c_str(), kTestName.length()), 0);
 
-  for (int i = kTestName.length(); i < SACN_SOURCE_NAME_MAX_LEN; ++i)
+  for (size_t i = kTestName.length(); i < (size_t)SACN_SOURCE_NAME_MAX_LEN; ++i)
   {
     EXPECT_EQ(GetSource(source)->name[i], '\0');
     EXPECT_EQ(name_in_discovery_buffer[i], '\0');
@@ -1719,7 +1719,7 @@ TEST_F(TestSourceState, SetSourceNameWorks)
     EXPECT_EQ(strncmp(name_in_level_buffer, kTestName.c_str(), kTestName.length()), 0);
     EXPECT_EQ(strncmp(name_in_pap_buffer, kTestName.c_str(), kTestName.length()), 0);
 
-    for (int i = kTestName.length(); i < SACN_SOURCE_NAME_MAX_LEN; ++i)
+    for (size_t i = kTestName.length(); i < (size_t)SACN_SOURCE_NAME_MAX_LEN; ++i)
     {
       EXPECT_EQ(name_in_level_buffer[i], '\0');
       EXPECT_EQ(name_in_pap_buffer[i], '\0');

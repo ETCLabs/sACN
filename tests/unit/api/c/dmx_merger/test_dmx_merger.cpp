@@ -39,8 +39,6 @@
 #define TestDmxMergerUpdate TestDmxMergerUpdateStatic
 #endif
 
-constexpr uint16_t VALID_UNIVERSE_ID = 1;
-constexpr uint16_t INVALID_UNIVERSE_ID = 0;
 constexpr uint8_t VALID_PRIORITY = 100;
 constexpr uint8_t LOW_PRIORITY = 1;
 constexpr uint8_t HIGH_PRIORITY = 200;
@@ -1221,7 +1219,7 @@ TEST_F(TestDmxMerger, StopSourcePapErrNotInitWorks)
 TEST_F(TestDmxMerger, SourceIsValidWorks)
 {
   sacn_source_id_t slot_owners_array[DMX_ADDRESS_COUNT];
-  memset(slot_owners_array, 1u, DMX_ADDRESS_COUNT);       // Fill with non-zero values.
+  memset(slot_owners_array, 1u, DMX_ADDRESS_COUNT * sizeof(sacn_source_id_t));  // Fill with non-zero values.
   slot_owners_array[1] = SACN_DMX_MERGER_SOURCE_INVALID;  // Set one of them to invalid.
 
   EXPECT_EQ(SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, 0), true);

@@ -181,7 +181,7 @@ protected:
     uint8_t result[SACN_MTU] = {0};
     uint8_t expected[SACN_MTU] = {0};
     int result_length = pack_sacn_root_layer(result, pdu_length, extended, &source_cid);
-    int expected_length = InitRootLayer(expected, pdu_length, extended, source_cid) - expected;
+    int expected_length = (int)(InitRootLayer(expected, pdu_length, extended, source_cid) - expected);
 
     EXPECT_EQ(result_length, expected_length);
     EXPECT_EQ(memcmp(result, expected, result_length), 0);
@@ -195,9 +195,9 @@ protected:
     uint8_t expected[SACN_MTU] = {0};
     int result_length = pack_sacn_data_framing_layer(result, slot_count, vector, source_name, priority, sync_address,
                                                      seq_num, preview, terminated, force_sync, universe_id);
-    int expected_length = InitFramingLayer(expected, slot_count, vector, source_name, priority, seq_num, preview,
-                                           terminated, universe_id) -
-                          expected;
+    int expected_length = (int)(InitFramingLayer(expected, slot_count, vector, source_name, priority, seq_num, preview,
+                                                 terminated, universe_id) -
+                                expected);
 
     EXPECT_EQ(result_length, expected_length);
     EXPECT_EQ(memcmp(result, expected, result_length), 0);
@@ -208,7 +208,7 @@ protected:
     uint8_t result[SACN_MTU] = {0};
     uint8_t expected[SACN_MTU] = {0};
     int result_length = pack_sacn_dmp_layer_header(result, start_code, slot_count);
-    int expected_length = InitDmpLayer(expected, start_code, slot_count, nullptr) - expected;
+    int expected_length = (int)(InitDmpLayer(expected, start_code, slot_count, nullptr) - expected);
 
     EXPECT_EQ(result_length, expected_length);
     EXPECT_EQ(memcmp(result, expected, result_length), 0);
