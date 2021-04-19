@@ -1553,6 +1553,7 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const c
   }
   else if (src)
   {
+    CLEAR_BUF(src, universes);
     FREE_UNIVERSE_DISCOVERY_SOURCE(src);
   }
 
@@ -2269,6 +2270,7 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
 
   SacnReceiver* receiver = (SacnReceiver*)node->value;
   etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
+  CLEAR_BUF(&receiver->netints, netints);
   FREE_RECEIVER(receiver);
   node_dealloc(node);
 }
@@ -2310,6 +2312,18 @@ void deinit_sources(void)
   {
     if (sources_initialized)
     {
+      for (size_t i = 0; i < mem_bufs.num_sources; ++i)
+      {
+        for (size_t j = 0; j < mem_bufs.sources[i].num_universes; ++j)
+        {
+          CLEAR_BUF(&mem_bufs.sources[i].universes[j].netints, netints);
+          CLEAR_BUF(&mem_bufs.sources[i].universes[j], unicast_dests);
+        }
+
+        CLEAR_BUF(&mem_bufs.sources[i], universes);
+        CLEAR_BUF(&mem_bufs.sources[i], netints);
+      }
+
       CLEAR_BUF(&mem_bufs, sources);
 #if SACN_DYNAMIC_MEM
       mem_bufs.sources_capacity = 0;
@@ -2410,4 +2424,5 @@ etcpal_error_t init_source_detector(void)
 void deinit_source_detector(void)
 {
   etcpal_rbtree_clear_with_cb(&universe_discovery_sources, universe_discovery_sources_tree_dealloc);
+  CLEAR_BUF(&source_detector.netints, netints);
 }

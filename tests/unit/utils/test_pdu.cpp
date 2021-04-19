@@ -23,6 +23,7 @@
 #include "etcpal_mock/common.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
+#include "sacn_mock/private/common.h"
 #include "gtest/gtest.h"
 #include "fff.h"
 
@@ -43,6 +44,7 @@ protected:
   void SetUp() override
   {
     etcpal_reset_all_fakes();
+    sacn_common_reset_all_fakes();
 
     memset(test_buffer_, 0, SACN_MTU);
   }

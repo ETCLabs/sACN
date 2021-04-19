@@ -593,8 +593,9 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
         SacnMergeReceiverSource* source = NULL;
         if (lookup_merge_receiver_source(merge_receiver, &lost_sources[i].cid, &source) == kEtcPalErrOk)
         {
-          remove_sacn_merge_receiver_source(merge_receiver, source->id);
-          remove_sacn_dmx_merger_source(merge_receiver->merger_handle, source->id);
+          sacn_source_id_t source_id = source->id;
+          remove_sacn_merge_receiver_source(merge_receiver, source_id);
+          remove_sacn_dmx_merger_source(merge_receiver->merger_handle, source_id);
         }
       }
 

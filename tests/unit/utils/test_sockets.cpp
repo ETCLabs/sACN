@@ -26,6 +26,7 @@
 #include "etcpal/cpp/inet.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
+#include "sacn_mock/private/common.h"
 #include "gtest/gtest.h"
 #include "fff.h"
 
@@ -48,6 +49,7 @@ protected:
   void SetUp() override
   {
     etcpal_reset_all_fakes();
+    sacn_common_reset_all_fakes();
 
     // Add a fake IPv4-only interface
     EtcPalNetintInfo fake_netint_v4;
@@ -210,4 +212,6 @@ TEST_F(TestSockets, InitializeInternalNetintsWorks)
     EXPECT_EQ(internal_netint_array.netints[i].index, expected_internal_netints[i].index);
     EXPECT_EQ(internal_netint_array.netints[i].ip_type, expected_internal_netints[i].ip_type);
   }
+
+  CLEAR_BUF(&internal_netint_array, netints);
 }

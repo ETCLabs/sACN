@@ -24,6 +24,7 @@
 #include "etcpal_mock/common.h"
 #include "sacn/private/common.h"
 #include "sacn/private/opts.h"
+#include "sacn_mock/private/common.h"
 #include "gtest/gtest.h"
 #include "fff.h"
 
@@ -52,6 +53,7 @@ protected:
   void SetUp() override
   {
     etcpal_reset_all_fakes();
+    sacn_common_reset_all_fakes();
     ASSERT_EQ(sacn_mem_init(kTestNumThreads), kEtcPalErrOk);
   }
 
