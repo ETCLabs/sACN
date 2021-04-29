@@ -14,7 +14,8 @@ The sACN library must be globally initialized before using the Receiver API. See
 An sACN receiver instance can listen on one universe at a time, but the universe it listens on can
 be changed at any time. A receiver begins listening when it is created. To create an sACN receiver
 instance, use the `sacn_receiver_create()` function in C, or instantiate an sacn::Receiver and call
-its `Startup()` function in C++.
+its `Startup()` function in C++. A receiver can later be destroyed by calling
+`sacn_receiver_destroy()` in C or `Shutdown()` in C++.
 
 The sACN Receiver API is an asynchronous, callback-oriented API. Part of the initial configuration
 for a receiver instance is to specify the callbacks for the library to use. In C, these are
@@ -40,6 +41,9 @@ config.callbacks.source_limit_exceeded = my_source_limit_exceeded_callback; // o
 
 sacn_receiver_t my_receiver_handle;
 sacn_receiver_create(&config, &my_receiver_handle);
+
+// To destroy the receiver when you're done with it:
+sacn_receiver_destroy(my_receiver_handle);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
@@ -52,6 +56,9 @@ MyNotifyHandler my_notify_handler;
 receiver.Startup(config, my_notify_handler);
 // Or do this if Startup is being called within the NotifyHandler-derived class:
 receiver.Startup(config, *this);
+
+// To destroy the receiver when you're done with it:
+receiver.Shutdown();
 ```
 <!-- CODE_BLOCK_END -->
 
