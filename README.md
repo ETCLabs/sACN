@@ -13,7 +13,7 @@ source detector have not been implemented yet.
 ## Building
 
 For instructions on building the sACN library, as well as an sACN overview and in-depth
-documentation, please see the [documentation](http://etclabs.github.io/sACN).
+documentation, please see the [documentation](https://etclabs.github.io/sACNDocs).
 
 ## Standard Version
 
