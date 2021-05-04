@@ -203,6 +203,8 @@ public:
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
   static etcpal::Error ResetNetworking(std::vector<UniverseNetintList>& netints);
 
+  void setFPS(uint16_t fps);
+
 private:
   class TranslatedUniverseConfig
   {
@@ -913,15 +915,20 @@ inline Source::TranslatedUniverseConfig::TranslatedUniverseConfig(const Universe
         0,
         settings.sync_universe
       }
-{
-  // clang-format on
-
-  if (!settings.unicast_destinations.empty())
   {
-    unicast_destinations_.reserve(settings.unicast_destinations.size());
-    std::transform(settings.unicast_destinations.begin(), settings.unicast_destinations.end(),
-                   std::back_inserter(unicast_destinations_), [](const etcpal::IpAddr& dest) { return dest.get(); });
+    // clang-format on
+
+    if (!settings.unicast_destinations.empty())
+    {
+      unicast_destinations_.reserve(settings.unicast_destinations.size());
+      std::transform(settings.unicast_destinations.begin(), settings.unicast_destinations.end(),
+                     std::back_inserter(unicast_destinations_), [](const etcpal::IpAddr& dest) { return dest.get(); });
+    }
   }
+
+inline void Source::setFPS(uint16_t fps)
+{
+  set_fps(fps);
 }
 
 };  // namespace sacn

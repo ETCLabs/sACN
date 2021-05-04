@@ -207,6 +207,8 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUnivers
 size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, EtcPalMcastNetintId* netints,
                                           size_t netints_size);
 
+void set_fps(uint16_t fps);
+
 #ifdef __cplusplus
 }
 #endif

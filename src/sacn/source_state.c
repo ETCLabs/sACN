@@ -37,7 +37,7 @@
 
 /****************************** Private macros *******************************/
 
-#define SOURCE_THREAD_INTERVAL 23
+//#define SOURCE_THREAD_INTERVAL 23
 #define NUM_PRE_SUPPRESSION_PACKETS 4
 #define IS_PART_OF_UNIVERSE_DISCOVERY(universe) (universe->has_level_data && !universe->send_unicast_only)
 
@@ -47,6 +47,7 @@ static IntHandleManager source_handle_mgr;
 static bool shutting_down = false;
 static etcpal_thread_t source_thread_handle;
 static bool thread_initialized = false;
+static uint16_t source_thread_interval = 23;
 
 /*********************** Private function prototypes *************************/
 
@@ -82,6 +83,11 @@ static void zero_levels_where_paps_are_zero(SacnSourceUniverse* universe_state);
 static void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id);
 
 /*************************** Function definitions ****************************/
+
+void set_send_fps(uint16_t fps)
+{
+  source_thread_interval = (uint16_t) (1000 / fps);
+}
 
 etcpal_error_t sacn_source_state_init(void)
 {
@@ -156,8 +162,8 @@ void source_thread_function(void* arg)
   int num_thread_based_sources = 0;
 
   EtcPalTimer interval_timer;
-  etcpal_timer_start(&interval_timer, SOURCE_THREAD_INTERVAL);
-
+  //etcpal_timer_start(&interval_timer, SOURCE_THREAD_INTERVAL);
+  etcpal_timer_start(&interval_timer, source_thread_interval);
   // This thread will keep running as long as sACN is initialized (while keep_running_thread is true). On
   // deinitialization, the thread keeps running until there are no more thread-based sources (while
   // num_thread_based_sources > 0).

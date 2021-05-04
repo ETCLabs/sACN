@@ -1208,3 +1208,12 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
 
   return total_num_network_interfaces;
 }
+
+void set_fps(uint16_t fps)
+{
+#if SACN_SOURCE_ENABLED
+   set_send_fps(fps);
+#else
+  ETCPAL_UNUSED_ARG(fps);
+#endif
+}

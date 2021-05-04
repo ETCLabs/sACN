@@ -75,6 +75,7 @@ void disable_pap_data(SacnSourceUniverse* universe);
 void clear_source_netints(SacnSource* source);
 etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUniverse* universe,
                                                 SacnMcastInterface* netints, size_t num_netints);
+void set_send_fps(uint16_t fps);
 
 #ifdef __cplusplus
 }
