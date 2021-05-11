@@ -95,7 +95,7 @@ void mark_sources_online(const SacnRemoteSourceInternal* online_sources, size_t 
     for (TerminationSet* ts = term_set_list; ts; ts = ts->next)
     {
       // Remove the source from the termination set if it exists, as it is confirmed online.
-      etcpal_rbtree_remove_with_cb(&ts->sources, &online_src->cid, source_remove_callback);
+      etcpal_rbtree_remove_with_cb(&ts->sources, &online_src->handle, source_remove_callback);
     }
   }
 }
@@ -126,7 +126,7 @@ void mark_sources_offline(const SacnLostSourceInternal* offline_sources, size_t 
     {
       // See if the source is in this termination set.
       TerminationSet* ts = *ts_ptr;
-      TerminationSetSource* ts_src = etcpal_rbtree_find(&ts->sources, &offline_src->cid);
+      TerminationSetSource* ts_src = etcpal_rbtree_find(&ts->sources, &offline_src->handle);
       if (ts_src)
       {
         if (!found_source)
@@ -162,7 +162,7 @@ void mark_sources_offline(const SacnLostSourceInternal* offline_sources, size_t 
         TerminationSetSource* ts_src_new = ALLOC_TERM_SET_SOURCE();
         if (ts_src_new)
         {
-          ts_src_new->cid = offline_src->cid;
+          ts_src_new->handle = offline_src->handle;
           ts_src_new->name = offline_src->name;
           ts_src_new->offline = true;
           ts_src_new->terminated = offline_src->terminated;
@@ -176,7 +176,7 @@ void mark_sources_offline(const SacnLostSourceInternal* offline_sources, size_t 
               ts_src_new = ALLOC_TERM_SET_SOURCE();
               if (ts_src_new)
               {
-                ts_src_new->cid = unknown_src->cid;
+                ts_src_new->handle = unknown_src->handle;
                 ts_src_new->name = unknown_src->name;
                 ts_src_new->offline = false;
                 ts_src_new->terminated = false;
@@ -243,14 +243,15 @@ void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification
         {
           if (ts_src->offline)
           {
-            if (add_lost_source(sources_lost, &ts_src->cid, ts_src->name, ts_src->terminated))
+            if (add_lost_source(sources_lost, ts_src->handle, get_remote_source_cid(ts_src->handle), ts_src->name,
+                                ts_src->terminated))
             {
               ++num_expired_sources_this_ts;
             }
             else if (SACN_CAN_LOG(ETCPAL_LOG_ERR))
             {
               char cid_str[ETCPAL_UUID_BYTES];
-              etcpal_uuid_to_string(&ts_src->cid, cid_str);
+              etcpal_uuid_to_string(get_remote_source_cid(ts_src->handle), cid_str);
               SACN_LOG_ERR("Couldn't allocate memory to notify that source %s was lost!", cid_str);
             }
           }
@@ -311,9 +312,9 @@ int term_set_source_compare(const EtcPalRbTree* tree, const void* value_a, const
 {
   ETCPAL_UNUSED_ARG(tree);
 
-  TerminationSetSource* a = (TerminationSetSource*)value_a;
-  TerminationSetSource* b = (TerminationSetSource*)value_b;
-  return ETCPAL_UUID_CMP(&a->cid, &b->cid);
+  sacn_remote_source_t* a = (sacn_remote_source_t*)value_a;
+  sacn_remote_source_t* b = (sacn_remote_source_t*)value_b;
+  return (*a > *b) - (*a < *b);
 }
 
 EtcPalRbNode* node_alloc(void)

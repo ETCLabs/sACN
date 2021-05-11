@@ -117,13 +117,13 @@ void process_source_detector(SacnRecvThreadContext* recv_thread_context)
         {
           source_expired.callback = source_detector->callbacks.source_expired;
           source_expired.context = source_detector->callbacks.context;
-          add_sacn_source_detector_expired_source(&source_expired, &source->cid, source->name);
+          add_sacn_source_detector_expired_source(&source_expired, source->handle, source->name);
           source_detector->suppress_source_limit_exceeded_notification = false;
         }
       }
 
       for (size_t i = 0; i < source_expired.num_expired_sources; ++i)
-        remove_sacn_universe_discovery_source(&source_expired.expired_sources[i].cid);
+        remove_sacn_universe_discovery_source(source_expired.expired_sources[i].handle);
     }
 
     sacn_unlock();
@@ -133,8 +133,8 @@ void process_source_detector(SacnRecvThreadContext* recv_thread_context)
   {
     for (size_t i = 0; i < source_expired.num_expired_sources; ++i)
     {
-      source_expired.callback(&source_expired.expired_sources[i].cid, source_expired.expired_sources[i].name,
-                              source_expired.context);
+      source_expired.callback(source_expired.expired_sources[i].handle, &source_expired.expired_sources[i].cid,
+                              source_expired.expired_sources[i].name, source_expired.context);
     }
   }
 
@@ -150,7 +150,8 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
   if (sacn_lock())
   {
     SacnUniverseDiscoverySource* source = NULL;
-    etcpal_error_t source_result = lookup_universe_discovery_source(page->sender_cid, &source);
+    etcpal_error_t source_result =
+        lookup_universe_discovery_source(get_remote_source_handle(page->sender_cid), &source);
 
     if (source_result == kEtcPalErrNotFound)
     {
@@ -270,7 +271,7 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
 
   if (source_updated.callback)
   {
-    source_updated.callback(source_updated.cid, source_updated.name,
+    source_updated.callback(source_updated.handle, source_updated.cid, source_updated.name,
                             source_updated.num_sourced_universes ? source_updated.sourced_universes : NULL,
                             source_updated.num_sourced_universes, source_updated.context);
   }

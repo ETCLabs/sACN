@@ -67,11 +67,12 @@ typedef int sacn_dmx_merger_t;
 /** An invalid sACN merger handle value. */
 #define SACN_DMX_MERGER_INVALID -1
 
-/** The sources on a merger have a short id that is used in the owned levels, rather than a UUID.*/
-typedef uint16_t sacn_source_id_t;
+/** A source handle used by the DMX merger, could represent a remote source or another logical source (e.g. a local DMX
+ * port). */
+typedef uint16_t sacn_dmx_merger_source_t;
 
-/** An invalid source id handle value. */
-#define SACN_DMX_MERGER_SOURCE_INVALID ((sacn_source_id_t)-1)
+/** An invalid DMX merger source handle value. */
+#define SACN_DMX_MERGER_SOURCE_INVALID ((sacn_dmx_merger_source_t)-1)
 
 /** A set of configuration information for a merger instance. */
 typedef struct SacnDmxMergerConfig
@@ -99,7 +100,7 @@ typedef struct SacnDmxMergerConfig
       and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of 0 (not
       sourced).
       Memory is owned by the application.*/
-  sacn_source_id_t* slot_owners;
+  sacn_dmx_merger_source_t* slot_owners;
 
   /** The maximum number of sources this merger will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
       This parameter is ignored when configured to use static memory -- #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used
@@ -138,7 +139,7 @@ typedef struct SacnDmxMergerConfig
 typedef struct SacnDmxMergerSource
 {
   /** The merger's ID for the DMX source. */
-  sacn_source_id_t id;
+  sacn_dmx_merger_source_t id;
 
   /** The DMX NULL start code data (0 - 255). */
   uint8_t levels[DMX_ADDRESS_COUNT];
@@ -162,17 +163,17 @@ typedef struct SacnDmxMergerSource
 etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle);
 etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle);
 
-etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_source_id_t* source_id);
-etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_source_id_t source);
-const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_source_id_t source);
+etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t* source_id);
+etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source);
+const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source);
 
-etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_source_id_t source,
+etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
                                              const uint8_t* new_levels, size_t new_levels_count);
-etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_source_id_t source, const uint8_t* paps,
+etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t* paps,
                                            size_t paps_count);
-etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger, sacn_source_id_t source,
+etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
                                                         uint8_t universe_priority);
-etcpal_error_t sacn_dmx_merger_remove_paps(sacn_dmx_merger_t merger, sacn_source_id_t source);
+etcpal_error_t sacn_dmx_merger_remove_paps(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source);
 
 #ifdef __cplusplus
 }

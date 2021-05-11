@@ -83,14 +83,14 @@ public:
      * if the source forces the packet, or if the source sends a data packet without a sync universe.
      * TODO: this version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
      *
-     * @param handle The receiver's handle.
+     * @param receiver_handle The receiver's handle.
      * @param source_addr IP address & port of the packet source.
      * @param header The sACN header data.
      * @param pdata The DMX data.  Use header.slot_count to determine the length of this array.
      * @param is_sampling True if this data was received during the sampling period, false otherwise.
      */
-    virtual void HandleUniverseData(Handle handle, const etcpal::SockAddr& source_addr, const SacnHeaderData& header,
-                                    const uint8_t* pdata, bool is_sampling) = 0;
+    virtual void HandleUniverseData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
+                                    const SacnHeaderData& header, const uint8_t* pdata, bool is_sampling) = 0;
 
     /**
      * @brief Notify that one or more sources have entered a source loss state.
@@ -232,13 +232,13 @@ private:
  */
 namespace internal
 {
-extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t handle, const EtcPalSockAddr* source_addr,
+extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t receiver_handle, const EtcPalSockAddr* source_addr,
                                               const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling,
                                               void* context)
 {
   if (source_addr && header && context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(handle, *source_addr, *header, pdata,
+    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(receiver_handle, *source_addr, *header, pdata,
                                                                        is_sampling);
   }
 }

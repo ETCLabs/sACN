@@ -98,10 +98,10 @@ documentation for more information about when it is called and when it isn't.
 
 <!-- CODE_BLOCK_START -->
 ```c
-void my_universe_data_callback(sacn_receiver_t handle, const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
+void my_universe_data_callback(sacn_receiver_t receiver_handle, const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
                                const uint8_t* pdata, bool is_sampling, void* context)
 {
-  // Check handle and/or context as necessary...
+  // Check receiver_handle and/or context as necessary...
 
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // header fields available:
@@ -130,7 +130,7 @@ void my_universe_data_callback(sacn_receiver_t handle, const EtcPalSockAddr* sou
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleUniverseData(Handle handle, const etcpal::SockAddr& source_addr,
+void MyNotifyHandler::HandleUniverseData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
                                          const SacnHeaderData& header, const uint8_t* pdata, bool is_sampling)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the

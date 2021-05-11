@@ -153,13 +153,13 @@ typedef struct SacnInternalNetintArray
 
 typedef struct SacnRemoteSourceInternal
 {
-  EtcPalUuid cid;
+  sacn_remote_source_t handle;
   const char* name;
 } SacnRemoteSourceInternal;
 
 typedef struct SacnLostSourceInternal
 {
-  EtcPalUuid cid;
+  sacn_remote_source_t handle;
   const char* name;
   bool terminated;
 } SacnLostSourceInternal;
@@ -178,7 +178,7 @@ struct TerminationSet
  * determined to be online. */
 typedef struct TerminationSetSource
 {
-  EtcPalUuid cid;  // Must remain the first element in the struct for red-black tree lookup.
+  sacn_remote_source_t handle;  // Must remain the first element in the struct for red-black tree lookup.
   const char* name;
   bool offline;
   bool terminated;
@@ -222,7 +222,7 @@ typedef struct SacnSourceDetector
 
 typedef struct SacnUniverseDiscoverySource
 {
-  EtcPalUuid cid;  // This must be the first member.
+  sacn_remote_source_t handle;  // This must be the first member.
   char name[SACN_SOURCE_NAME_MAX_LEN];
 
   SACN_DECLARE_BUF(uint16_t, universes, SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE);
@@ -254,6 +254,7 @@ typedef struct SacnUniverseDiscoveryPage
 typedef struct SourceDetectorSourceUpdatedNotification
 {
   SacnSourceDetectorSourceUpdatedCallback callback;
+  sacn_remote_source_t handle;
   const EtcPalUuid* cid;
   const char* name;
 #if SACN_DYNAMIC_MEM
@@ -266,26 +267,27 @@ typedef struct SourceDetectorSourceUpdatedNotification
 } SourceDetectorSourceUpdatedNotification;
 
 #if SACN_DYNAMIC_MEM
-#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT \
-  {                                              \
-    NULL, NULL, NULL, NULL, 0, NULL              \
+#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT                \
+  {                                                             \
+    NULL, SACN_REMOTE_SOURCE_INVALID, NULL, NULL, NULL, 0, NULL \
   }
 #else
-#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT \
-  {                                              \
-    NULL, NULL, NULL, {0}, 0, NULL               \
+#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT               \
+  {                                                            \
+    NULL, SACN_REMOTE_SOURCE_INVALID, NULL, NULL, {0}, 0, NULL \
   }
 #endif
 
 typedef struct SourceDetectorExpiredSource
 {
+  sacn_remote_source_t handle;
   EtcPalUuid cid;
   char name[SACN_SOURCE_NAME_MAX_LEN];
 } SourceDetectorExpiredSource;
 
 #define SRC_DETECTOR_EXPIRED_SOURCE_DEFAULT_INIT \
   {                                              \
-    {{0}}, { 0 }                                 \
+    SACN_REMOTE_SOURCE_INVALID, {{0}}, { 0 }     \
   }
 
 typedef struct SourceDetectorSourceExpiredNotification
@@ -393,7 +395,7 @@ typedef enum
 /* An sACN source that is being tracked on a given universe. */
 typedef struct SacnTrackedSource
 {
-  EtcPalUuid cid;  // This must be the first member of this struct.
+  sacn_remote_source_t handle;  // This must be the first member of this struct.
   char name[SACN_SOURCE_NAME_MAX_LEN];
   EtcPalTimer packet_timer;
   uint8_t seq;
@@ -406,6 +408,19 @@ typedef struct SacnTrackedSource
   EtcPalTimer pap_timer;
 #endif
 } SacnTrackedSource;
+
+typedef struct SacnRemoteSourceHandle
+{
+  EtcPalUuid cid;  // This must be the first member of this struct.
+  sacn_remote_source_t handle;
+} SacnRemoteSourceHandle;
+
+typedef struct SacnRemoteSourceCid
+{
+  sacn_remote_source_t handle;  // This must be the first member of this struct.
+  EtcPalUuid cid;
+  size_t refcount;
+} SacnRemoteSourceCid;
 
 typedef enum
 {
@@ -421,7 +436,7 @@ typedef enum
 typedef struct UniverseDataNotification
 {
   SacnUniverseDataCallback callback;
-  sacn_receiver_t handle;
+  sacn_receiver_t receiver_handle;
   uint16_t universe;
   bool is_sampling;
   SacnHeaderData header;
@@ -527,15 +542,9 @@ typedef struct SacnRecvThreadContext
  *****************************************************************************/
 typedef struct SacnMergeReceiverSource
 {
-  EtcPalUuid cid;  // This must be the first struct member.
-  sacn_source_id_t id;
+  sacn_remote_source_t handle;  // This must be the first struct member.
   bool pending;
 } SacnMergeReceiverSource;
-typedef struct SacnCidFromSourceId
-{
-  sacn_source_id_t id;  // This must be the first struct member.
-  EtcPalUuid cid;
-} SacnCidFromSourceId;
 
 typedef struct SacnMergeReceiver
 {
@@ -545,10 +554,9 @@ typedef struct SacnMergeReceiver
   bool use_pap;
 
   uint8_t slots[DMX_ADDRESS_COUNT];
-  sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
+  sacn_dmx_merger_source_t slot_owners[DMX_ADDRESS_COUNT];
 
   EtcPalRbTree sources;
-  EtcPalRbTree cids_from_ids;
 
   int num_pending_sources;
   bool sampling;
@@ -564,7 +572,7 @@ typedef struct MergeReceiverMergedDataNotification
   sacn_merge_receiver_t handle;
   uint16_t universe;
   uint8_t slots[DMX_ADDRESS_COUNT];
-  sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
+  sacn_remote_source_t slot_owners[DMX_ADDRESS_COUNT];
   void* context;
 } MergeReceiverMergedDataNotification;
 
@@ -576,7 +584,7 @@ typedef struct MergeReceiverMergedDataNotification
 typedef struct MergeReceiverNonDmxNotification
 {
   SacnMergeReceiverNonDmxCallback callback;
-  sacn_merge_receiver_t handle;
+  sacn_merge_receiver_t receiver_handle;
   uint16_t universe;
   const EtcPalSockAddr* source_addr;
   const SacnHeaderData* header;

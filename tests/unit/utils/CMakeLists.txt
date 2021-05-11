@@ -11,6 +11,7 @@ set(TEST_UTILS_SOURCES
   ${SACN_SRC}/sacn/mem.c
   ${SACN_SRC}/sacn/sockets.c
   ${SACN_SRC}/sacn/pdu.c
+  ${SACN_SRC}/sacn/util.c
   ${SACN_SRC}/sacn_mock/common.c
 )
 

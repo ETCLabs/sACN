@@ -88,8 +88,8 @@
  *
  * Callback demonstrations:
  * @code
- * void my_source_updated(const EtcPalUuid* cid, const char* name, const uint16_t* sourced_universes,
- *                        size_t num_sourced_universes, void* context)
+ * void my_source_updated(sacn_remote_source_t handle, const EtcPalUuid* cid, const char* name,
+ *                        const uint16_t* sourced_universes, size_t num_sourced_universes, void* context)
  * {
  *   if (cid && name)
  *   {
@@ -110,7 +110,7 @@
  *   }
  * }
  *
- * void my_source_expired(const EtcPalUuid* cid, const char* name, void* context)
+ * void my_source_expired(sacn_remote_source_t handle, const EtcPalUuid* cid, const char* name, void* context)
  * {
  *   if (cid && name)
  *   {
@@ -150,6 +150,7 @@ extern "C" {
  * The protocol requires the list of sourced universes to be numerically sorted. The library enforces this rule by
  * checking that the universe list is in ascending order before notifying.
  *
+ * @param[in] handle The handle uniquely identifying the source.
  * @param[in] cid The CID of the source.
  * @param[in] name The null-terminated UTF-8 string.
  * @param[in] sourced_universes Numerically sorted array of the currently sourced universes.  Will be NULL if the source
@@ -158,18 +159,20 @@ extern "C" {
  * transmitting any universes.
  * @param[in] context Context pointer that was given at the creation of the source detector instance.
  */
-typedef void (*SacnSourceDetectorSourceUpdatedCallback)(const EtcPalUuid* cid, const char* name,
-                                                        const uint16_t* sourced_universes, size_t num_sourced_universes,
-                                                        void* context);
+typedef void (*SacnSourceDetectorSourceUpdatedCallback)(sacn_remote_source_t handle, const EtcPalUuid* cid,
+                                                        const char* name, const uint16_t* sourced_universes,
+                                                        size_t num_sourced_universes, void* context);
 
 /**
  * @brief Notify that a source is no longer transmitting Universe Discovery messages.
  *
+ * @param[in] handle The handle uniquely identifying the source.
  * @param[in] cid The CID of the source.
  * @param[in] name The null-terminated UTF-8 string.
  * @param[in] context Context pointer that was given at the creation of the source detector instance.
  */
-typedef void (*SacnSourceDetectorSourceExpiredCallback)(const EtcPalUuid* cid, const char* name, void* context);
+typedef void (*SacnSourceDetectorSourceExpiredCallback)(sacn_remote_source_t handle, const EtcPalUuid* cid,
+                                                        const char* name, void* context);
 
 /**
  * @brief Notify that the module has run out of memory to track universes or sources.

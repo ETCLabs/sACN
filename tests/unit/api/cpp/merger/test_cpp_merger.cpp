@@ -80,10 +80,10 @@ protected:
 
   static uint8_t slots_[DMX_ADDRESS_COUNT];
   static uint8_t paps_[DMX_ADDRESS_COUNT];
-  static sacn_source_id_t slot_owners_[DMX_ADDRESS_COUNT];
+  static sacn_dmx_merger_source_t slot_owners_[DMX_ADDRESS_COUNT];
 
   static etcpal_error_t test_return_value_;
-  static sacn_source_id_t test_source_handle_;
+  static sacn_dmx_merger_source_t test_source_handle_;
   static sacn::DmxMerger::Settings settings_default_;
 };
 
@@ -94,10 +94,10 @@ const SacnHeaderData TestMerger::kTestHeader = {{0}};
 const uint8_t TestMerger::kTestPdata[] = {};
 
 etcpal_error_t TestMerger::test_return_value_;
-sacn_source_id_t TestMerger::test_source_handle_;
+sacn_dmx_merger_source_t TestMerger::test_source_handle_;
 uint8_t TestMerger::slots_[] = {};
 uint8_t TestMerger::paps_[] = {};
-sacn_source_id_t TestMerger::slot_owners_[] = {};
+sacn_dmx_merger_source_t TestMerger::slot_owners_[] = {};
 sacn::DmxMerger::Settings TestMerger::settings_default_(nullptr);
 
 TEST_F(TestMerger, SettingsConstructorWorks)
@@ -168,7 +168,7 @@ TEST_F(TestMerger, ShutdownWorks)
 
 TEST_F(TestMerger, AddSourceWorks)
 {
-  sacn_dmx_merger_add_source_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_source_id_t* source_id) {
+  sacn_dmx_merger_add_source_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t* source_id) {
     EXPECT_NE(source_id, nullptr);
 
     EXPECT_EQ(merger, kTestMergerHandle);
@@ -200,7 +200,7 @@ TEST_F(TestMerger, AddSourceWorks)
 
 TEST_F(TestMerger, RemoveSourceWorks)
 {
-  sacn_dmx_merger_remove_source_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_source_id_t source) {
+  sacn_dmx_merger_remove_source_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source) {
     EXPECT_EQ(merger, kTestMergerHandle);
     EXPECT_EQ(source, test_source_handle_);
     return test_return_value_;
@@ -217,7 +217,7 @@ TEST_F(TestMerger, RemoveSourceWorks)
 
 TEST_F(TestMerger, GetSourceInfoWorks)
 {
-  sacn_dmx_merger_get_source_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_source_id_t source) {
+  sacn_dmx_merger_get_source_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source) {
     EXPECT_EQ(merger, kTestMergerHandle);
     EXPECT_EQ(source, test_source_handle_);
     return &kTestSource;
@@ -233,7 +233,7 @@ TEST_F(TestMerger, GetSourceInfoWorks)
 
 TEST_F(TestMerger, UpdateLevelsWorks)
 {
-  sacn_dmx_merger_update_levels_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_source_id_t source,
+  sacn_dmx_merger_update_levels_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
                                                       const uint8_t* new_levels, size_t new_levels_count) {
         EXPECT_EQ(merger, kTestMergerHandle);
         EXPECT_EQ(source, test_source_handle_);
@@ -255,7 +255,7 @@ TEST_F(TestMerger, UpdateLevelsWorks)
 
 TEST_F(TestMerger, UpdatePapsWorks)
 {
-  sacn_dmx_merger_update_paps_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_source_id_t source,
+  sacn_dmx_merger_update_paps_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
                                                     const uint8_t* paps, size_t paps_count) {
         EXPECT_EQ(merger, kTestMergerHandle);
         EXPECT_EQ(source, test_source_handle_);
@@ -277,7 +277,7 @@ TEST_F(TestMerger, UpdatePapsWorks)
 
 TEST_F(TestMerger, UpdateUniversePriorityWorks)
 {
-  sacn_dmx_merger_update_universe_priority_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_source_id_t source,
+  sacn_dmx_merger_update_universe_priority_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
                                                                  uint8_t universe_priority) {
         EXPECT_EQ(merger, kTestMergerHandle);
         EXPECT_EQ(source, test_source_handle_);
@@ -298,7 +298,7 @@ TEST_F(TestMerger, UpdateUniversePriorityWorks)
 
 TEST_F(TestMerger, StopSourcePapWorks)
 {
-  sacn_dmx_merger_remove_paps_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_source_id_t source) {
+  sacn_dmx_merger_remove_paps_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source) {
     EXPECT_EQ(merger, kTestMergerHandle);
     EXPECT_EQ(source, test_source_handle_);
     return test_return_value_;

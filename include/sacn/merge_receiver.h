@@ -73,14 +73,13 @@ typedef int sacn_merge_receiver_t;
  * @param[in] universe The universe this merge receiver is monitoring.
  * @param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe. This buffer is
  * owned by the library.
- * @param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source_ids.  If a value in the buffer is
- *           #SACN_DMX_MERGER_SOURCE_INVALID, the corresponding slot is not currently controlled. You can also use
- *           #SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, index) to check the slot validity. This buffer is owned by
- * the library.
+ * @param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source handles.  If a value in the buffer is
+ * #SACN_REMOTE_SOURCE_INVALID, the corresponding slot is not currently controlled. This buffer is owned by the
+ * library.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
 typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle, uint16_t universe,
-                                                    const uint8_t* slots, const sacn_source_id_t* slot_owners,
+                                                    const uint8_t* slots, const sacn_remote_source_t* slot_owners,
                                                     void* context);
 
 /**
@@ -96,7 +95,7 @@ typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle
  * if the source forces the packet, or if the source sends a data packet without a sync universe.
  * TODO: this version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
  *
- * @param[in] handle The handle to the merge receiver instance.
+ * @param[in] receiver_handle The handle to the merge receiver instance.
  * @param[in] universe The universe this merge receiver is monitoring.
  * @param[in] source_addr The network address from which the sACN packet originated.
  * @param[in] header The header data of the sACN packet.
@@ -104,7 +103,7 @@ typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle
  * owned by the library.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t handle, uint16_t universe,
+typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t receiver_handle, uint16_t universe,
                                                 const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
                                                 const uint8_t* pdata, void* context);
 
@@ -187,9 +186,6 @@ etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(const SacnMerge
                                                                  size_t num_netint_lists);
 size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, EtcPalMcastNetintId* netints,
                                                   size_t netints_size);
-sacn_source_id_t sacn_merge_receiver_get_source_id(sacn_merge_receiver_t handle, const EtcPalUuid* source_cid);
-etcpal_error_t sacn_merge_receiver_get_source_cid(sacn_merge_receiver_t handle, sacn_source_id_t source_id,
-                                                  EtcPalUuid* source_cid);
 
 #ifdef __cplusplus
 }

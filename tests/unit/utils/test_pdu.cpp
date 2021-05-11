@@ -383,7 +383,7 @@ TEST_F(TestPdu, ParseSacnDataPacketWorks)
 
 TEST_F(TestPdu, ParseSacnDataPacketHandlesInvalid)
 {
-  static const SacnHeaderData kValidHeader = {kEtcPalNullUuid, "Test Name", 1u, 100u, true, 0x00, 3u};
+  static const SacnHeaderData kValidHeader = {kEtcPalNullUuid, 1u, "Test Name", 1u, 100u, true, 0x00, 3u};
   static const std::vector<uint8_t> kValidData = {1u, 2u, 3u};
   static constexpr size_t kBufLenTooShort = 87u;
   static constexpr uint32_t kNonDataVector = (VECTOR_E131_DATA_PACKET + 123u);

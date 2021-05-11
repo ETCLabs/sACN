@@ -387,10 +387,10 @@ static etcpal_error_t console_change_listening_universe(const SacnReceiverCallba
  * this data would be acted upon somehow. We just update some stats about the source of the data,
  * and store the first few slots.
  */
-static void handle_universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr,
+static void handle_universe_data(sacn_receiver_t receiver_handle, const EtcPalSockAddr* source_addr,
                                  const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling, void* context)
 {
-  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(receiver_handle);
   ETCPAL_UNUSED_ARG(source_addr);
   ETCPAL_UNUSED_ARG(is_sampling);
 

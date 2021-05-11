@@ -37,7 +37,7 @@ destroyed automatically when sACN deinitializes.
 // These buffers are updated on each merger call with the merge results.
 uint8_t slots[DMX_ADDRESS_COUNT];
 uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
-sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
+sacn_dmx_merger_source_t slot_owners[DMX_ADDRESS_COUNT];
 
 // Merger configuration used for the initialization of each merger:
 SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
@@ -59,7 +59,7 @@ sacn_dmx_merger_destroy(merger_handle);
 // They must be valid as long as the merger is using them.
 uint8_t slots[DMX_ADDRESS_COUNT];
 uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
-sacn_source_id_t slot_owners[DMX_ADDRESS_COUNT];
+sacn_dmx_merger_source_t slot_owners[DMX_ADDRESS_COUNT];
 
 // Merger configuration used for the initialization of each merger:
 sacn::DmxMerger::Settings settings(slots);
@@ -86,7 +86,7 @@ output.
 <!-- CODE_BLOCK_START -->
 ```c
 // Add a couple of sources, which are tracked with handles.
-sacn_source_id_t source_1_handle, source_2_handle;
+sacn_dmx_merger_source_t source_1_handle, source_2_handle;
 
 sacn_dmx_merger_add_source(merger_handle, &source_1_handle);
 sacn_dmx_merger_add_source(merger_handle, &source_2_handle);
@@ -99,8 +99,8 @@ sacn_dmx_merger_remove_source(merger_handle, source_2_handle);
 ```cpp
 // Add a couple of sources, which are tracked with handles.
 // AddSource may also return an error, which is not checked for in this example.
-sacn_source_id_t source_1_handle = merger.AddSource().value();
-sacn_source_id_t source_2_handle = merger.AddSource().value();
+sacn_dmx_merger_source_t source_1_handle = merger.AddSource().value();
+sacn_dmx_merger_source_t source_2_handle = merger.AddSource().value();
 
 // Sources can later be removed individually, which updates the merger's output.
 merger.RemoveSource(source_1_handle);

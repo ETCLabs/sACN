@@ -60,8 +60,8 @@ static constexpr SacnReceiverCallbacks kTestCallbacks = {
 static constexpr SacnReceiverConfig kTestReceiverConfig = {kTestUniverse, kTestCallbacks,
                                                            SACN_RECEIVER_INFINITE_SOURCES, 0u, kSacnIpV4AndIpV6};
 static constexpr SacnSourceDetectorConfig kTestSourceDetectorConfig = {
-    {[](const EtcPalUuid*, const char*, const uint16_t*, size_t, void*) {},
-     [](const EtcPalUuid*, const char*, void*) {}, nullptr, nullptr},
+    {[](sacn_remote_source_t, const EtcPalUuid*, const char*, const uint16_t*, size_t, void*) {},
+     [](sacn_remote_source_t, const EtcPalUuid*, const char*, void*) {}, nullptr, nullptr},
     SACN_SOURCE_DETECTOR_INFINITE,
     SACN_SOURCE_DETECTOR_INFINITE,
     kSacnIpV4AndIpV6};
@@ -84,6 +84,21 @@ static constexpr bool kTestPreview = false;
 
 static constexpr etcpal_socket_t kTestSocket = static_cast<etcpal_socket_t>(7);
 static TerminationSet kTestTermSet = {{0u, 0u}, {nullptr, nullptr, 0u, nullptr, nullptr, nullptr}, nullptr};
+
+static const EtcPalUuid& GetCid(const SacnRemoteSourceInternal& src)
+{
+  return *(get_remote_source_cid(src.handle));
+}
+
+static const EtcPalUuid& GetCid(const SacnLostSourceInternal& src)
+{
+  return *(get_remote_source_cid(src.handle));
+}
+
+static sacn_remote_source_t GetHandle(const EtcPalUuid& cid)
+{
+  return get_remote_source_handle(&cid);
+}
 
 class TestReceiverState : public ::testing::Test
 {
@@ -927,6 +942,60 @@ TEST_F(TestReceiverThread, UniverseDataWorks)
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 }
 
+TEST_F(TestReceiverThread, UniverseDataSourceHandleWorks)
+{
+  static sacn_remote_source_t first_handle = SACN_REMOTE_SOURCE_INVALID;
+
+  EtcPalUuid cid1 = etcpal::Uuid::V4().get();
+  EtcPalUuid cid2 = etcpal::Uuid::V4().get();
+  EtcPalUuid cid3 = etcpal::Uuid::V4().get();
+
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool, void*) {
+    first_handle = header->source_handle;
+    EXPECT_NE(first_handle, SACN_REMOTE_SOURCE_INVALID);
+  };
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, cid1);
+  RunThreadCycle();
+
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool,
+                                      void*) { EXPECT_EQ(header->source_handle, first_handle + 1u); };
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, cid2);
+  RunThreadCycle();
+
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool,
+                                      void*) { EXPECT_EQ(header->source_handle, first_handle + 2u); };
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, cid3);
+  RunThreadCycle();
+
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool,
+                                      void*) { EXPECT_EQ(header->source_handle, first_handle + 2u); };
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, cid3);
+  RunThreadCycle();
+
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool,
+                                      void*) { EXPECT_EQ(header->source_handle, first_handle + 1u); };
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, cid2);
+  RunThreadCycle();
+
+  universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnHeaderData* header,
+                                      const uint8_t*, bool, void*) { EXPECT_EQ(header->source_handle, first_handle); };
+
+  InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, cid1);
+  RunThreadCycle();
+
+  EXPECT_EQ(universe_data_fake.call_count, 6u);
+}
+
 TEST_F(TestReceiverThread, UniverseDataFiltersTerminating)
 {
   InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), SACN_OPTVAL_TERMINATED);
@@ -1166,7 +1235,7 @@ TEST_F(TestReceiverThread, SourceGoesOnlineCorrectly)
   auto source_is_online = [](const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
                              TerminationSet*) {
     EXPECT_EQ(num_online_sources, 1u);
-    EXPECT_EQ(ETCPAL_UUID_CMP(&online_sources->cid, &kTestCid), 0);
+    EXPECT_EQ(ETCPAL_UUID_CMP(&GetCid(online_sources[0]), &kTestCid), 0);
   };
   auto source_is_not_online = [](const SacnRemoteSourceInternal*, size_t num_online_sources, TerminationSet*) {
     EXPECT_EQ(num_online_sources, 0u);
@@ -1203,7 +1272,7 @@ TEST_F(TestReceiverThread, SourceGoesUnknownCorrectly)
   auto source_is_unknown = [](const SacnLostSourceInternal*, size_t, const SacnRemoteSourceInternal* unknown_sources,
                               size_t num_unknown_sources, TerminationSet**, uint32_t) {
     EXPECT_EQ(num_unknown_sources, 1u);
-    EXPECT_EQ(ETCPAL_UUID_CMP(&unknown_sources->cid, &kTestCid), 0);
+    EXPECT_EQ(ETCPAL_UUID_CMP(&GetCid(unknown_sources[0]), &kTestCid), 0);
   };
   auto source_is_not_unknown = [](const SacnLostSourceInternal*, size_t, const SacnRemoteSourceInternal*,
                                   size_t num_unknown_sources, TerminationSet**,
@@ -1255,7 +1324,7 @@ TEST_F(TestReceiverThread, TimedOutSourceGoesOfflineCorrectly)
   auto source_is_offline = [](const SacnLostSourceInternal* offline_sources, size_t num_offline_sources,
                               const SacnRemoteSourceInternal*, size_t, TerminationSet**, uint32_t) {
     EXPECT_EQ(num_offline_sources, 1u);
-    EXPECT_EQ(ETCPAL_UUID_CMP(&offline_sources->cid, &kTestCid), 0);
+    EXPECT_EQ(ETCPAL_UUID_CMP(&GetCid(offline_sources[0]), &kTestCid), 0);
   };
   auto source_is_not_offline = [](const SacnLostSourceInternal*, size_t num_offline_sources,
                                   const SacnRemoteSourceInternal*, size_t, TerminationSet**,
@@ -1291,7 +1360,7 @@ TEST_F(TestReceiverThread, TerminatedSourceGoesOfflineCorrectly)
   auto source_is_offline = [](const SacnLostSourceInternal* offline_sources, size_t num_offline_sources,
                               const SacnRemoteSourceInternal*, size_t, TerminationSet**, uint32_t) {
     EXPECT_EQ(num_offline_sources, 1u);
-    EXPECT_EQ(ETCPAL_UUID_CMP(&offline_sources->cid, &kTestCid), 0);
+    EXPECT_EQ(ETCPAL_UUID_CMP(&GetCid(offline_sources[0]), &kTestCid), 0);
   };
   auto source_is_not_offline = [](const SacnLostSourceInternal*, size_t num_offline_sources,
                                   const SacnRemoteSourceInternal*, size_t, TerminationSet**,
@@ -1358,15 +1427,17 @@ TEST_F(TestReceiverThread, StatusListsTrackMultipleSources)
                                              const SacnRemoteSourceInternal* unknown_sources,
                                              size_t num_unknown_sources, TerminationSet**, uint32_t) {
     EXPECT_EQ(num_offline_sources, 2u);
-    EXPECT_TRUE(list_includes_cids(offline_sources[0].cid, offline_sources[1].cid, offline_cid_1, offline_cid_2));
+    EXPECT_TRUE(
+        list_includes_cids(GetCid(offline_sources[0]), GetCid(offline_sources[1]), offline_cid_1, offline_cid_2));
     EXPECT_EQ(num_unknown_sources, 2u);
-    EXPECT_TRUE(list_includes_cids(unknown_sources[0].cid, unknown_sources[1].cid, unknown_cid_1, unknown_cid_2));
+    EXPECT_TRUE(
+        list_includes_cids(GetCid(unknown_sources[0]), GetCid(unknown_sources[1]), unknown_cid_1, unknown_cid_2));
   };
 
   mark_sources_online_fake.custom_fake = [](const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
                                             TerminationSet*) {
     EXPECT_EQ(num_online_sources, 2u);
-    EXPECT_TRUE(list_includes_cids(online_sources[0].cid, online_sources[1].cid, online_cid_1, online_cid_2));
+    EXPECT_TRUE(list_includes_cids(GetCid(online_sources[0]), GetCid(online_sources[1]), online_cid_1, online_cid_2));
   };
 
   unsigned int expected_mark_sources_offline_count = mark_sources_offline_fake.call_count + 1u;
@@ -1395,7 +1466,7 @@ TEST_F(TestReceiverThread, SourcesLostWorks)
 
   get_expired_sources_fake.custom_fake = [](TerminationSet**, SourcesLostNotification* sources_lost) {
     for (size_t i = 0u; i < kNumLostSources; ++i)
-      add_lost_source(sources_lost, &lost_source_cids[i], kTestName, (i % 2) == 0);
+      add_lost_source(sources_lost, GetHandle(lost_source_cids[i]), &lost_source_cids[i], kTestName, (i % 2) == 0);
   };
 
   sources_lost_fake.custom_fake = [](sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
@@ -1534,7 +1605,7 @@ TEST_F(TestReceiverThread, SourceLimitExceededWorks)
   InitTestData(0x00u, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), SACN_OPTVAL_TERMINATED, last_cid);
   etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
   get_expired_sources_fake.custom_fake = [](TerminationSet**, SourcesLostNotification* sources_lost) {
-    add_lost_source(sources_lost, &last_cid, kTestName, true);
+    add_lost_source(sources_lost, GetHandle(last_cid), &last_cid, kTestName, true);
   };
   RunThreadCycle();
   EXPECT_EQ(source_limit_exceeded_fake.call_count, 1u);

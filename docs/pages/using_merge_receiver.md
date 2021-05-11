@@ -143,7 +143,7 @@ of other sACN packets on the universe.
 <!-- CODE_BLOCK_START -->
 ```c
 void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, const uint8_t* slots, 
-                               const sacn_source_id_t* slot_owners, void* context)
+                               const sacn_remote_source_t* slot_owners, void* context)
 {
   // Check handle and/or context as necessary...
 
@@ -154,7 +154,7 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, 
   // Example for an sACN-enabled fixture...
   for (int i = 0; i < MY_DMX_FOOTPRINT; ++i)
   {
-    if (!SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, my_start_addr + i))
+    if (slot_owners[my_start_addr + i] == SACN_REMOTE_SOURCE_INVALID)
     {
       // One of the slots in my DMX footprint does not have a valid source
       return;
@@ -168,7 +168,7 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, 
 <!-- CODE_BLOCK_MID -->
 ```cpp
 void MyNotifyHandler::HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
-                                       const sacn_source_id_t* slot_owners)
+                                       const RemoteSourceHandle* slot_owners)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // fields available:
@@ -177,7 +177,7 @@ void MyNotifyHandler::HandleMergedData(Handle handle, uint16_t universe, const u
   // Example for an sACN-enabled fixture...
   for (int i = 0; i < MY_DMX_FOOTPRINT; ++i)
   {
-    if (!SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, my_start_addr + i))
+    if (slot_owners[my_start_addr + i] == kInvalidRemoteSourceHandle)
     {
       // One of the slots in my DMX footprint does not have a valid source
       return;
@@ -195,10 +195,10 @@ non-DMX data callback.
 
 <!-- CODE_BLOCK_START -->
 ```c
-void my_universe_non_dmx_callback(sacn_merge_receiver_t handle, uint16_t universe, const EtcPalSockAddr* source_addr, 
+void my_universe_non_dmx_callback(sacn_merge_receiver_t receiver_handle, uint16_t universe, const EtcPalSockAddr* source_addr, 
                                   const SacnHeaderData* header, const uint8_t* pdata, void* context)
 {
-  // Check handle and/or context as necessary...
+  // Check receiver_handle and/or context as necessary...
 
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // header fields available:
@@ -216,7 +216,7 @@ void my_universe_non_dmx_callback(sacn_merge_receiver_t handle, uint16_t univers
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleNonDmxData(Handle handle, uint16_t universe, const etcpal::SockAddr& source_addr,
+void MyNotifyHandler::HandleNonDmxData(Handle receiver_handle, uint16_t universe, const etcpal::SockAddr& source_addr,
                                        const SacnHeaderData& header, const uint8_t* pdata)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
@@ -241,14 +241,14 @@ the source IDs are passed in. To obtain the CID in this case, use the get source
 <!-- CODE_BLOCK_START -->
 ```c
 void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, const uint8_t* slots, 
-                               const sacn_source_id_t* slot_owners, void* context)
+                               const sacn_remote_source_t* slot_owners, void* context)
 {
   // Check handle and/or context as necessary...
 
   for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
   {
     EtcPalUuid cid;
-    etcpal_error_t result = sacn_merge_receiver_get_source_cid(handle, slot_owners[i], &cid);
+    etcpal_error_t result = sacn_get_remote_source_cid(slot_owners[i], &cid);
 
     if(result == kEtcPalErrOk)
     {
@@ -264,12 +264,12 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, 
 <!-- CODE_BLOCK_MID -->
 ```cpp
 void MyNotifyHandler::HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
-                                       const sacn_source_id_t* slot_owners)
+                                       const RemoteSourceHandle* slot_owners)
 {
   for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
   {
     // merge_receivers_ is a map between handles and merge receiver objects
-    auto cid = merge_receivers_[handle].GetSourceCid(slot_owners[i]);
+    auto cid = sacn::GetRemoteSourceCid(slot_owners[i]);
 
     if(cid)
     {

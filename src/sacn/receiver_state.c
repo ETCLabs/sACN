@@ -597,7 +597,8 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     }
 
     bool notify = false;
-    SacnTrackedSource* src = (SacnTrackedSource*)etcpal_rbtree_find(&receiver->sources, sender_cid);
+    header->source_handle = get_remote_source_handle(sender_cid);
+    SacnTrackedSource* src = (SacnTrackedSource*)etcpal_rbtree_find(&receiver->sources, &header->source_handle);
     if (src)
     {
       // Check to see if the 'stream terminated' bit is set in the options
@@ -641,6 +642,9 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     else if (!is_termination_packet)
     {
       process_new_source_data(receiver, sender_cid, header, seq, &src, source_limit_exceeded, &notify);
+
+      if (src)
+        header->source_handle = src->handle;
     }
     // Else we weren't tracking this source before and it is a termination packet. Ignore.
 
@@ -654,7 +658,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
       if (notify)
       {
         universe_data->callback = receiver->callbacks.universe_data;
-        universe_data->handle = receiver->keys.handle;
+        universe_data->receiver_handle = receiver->keys.handle;
         universe_data->universe = receiver->keys.universe;
         universe_data->is_sampling = receiver->sampling;
         universe_data->context = receiver->callbacks.context;
@@ -762,7 +766,8 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
         // Source stopped sending PAP but is still sending DMX.
         // In this case, also notify the source_pap_lost callback.
         source_pap_lost->callback = receiver->callbacks.source_pap_lost;
-        source_pap_lost->source.cid = src->cid;
+        source_pap_lost->source.handle = src->handle;
+        source_pap_lost->source.cid = *(get_remote_source_cid(src->handle));
         ETCPAL_MSVC_NO_DEP_WRN strcpy(source_pap_lost->source.name, src->name);
         source_pap_lost->context = receiver->callbacks.context;
         source_pap_lost->handle = receiver->keys.handle;
@@ -914,9 +919,9 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
                               source_pap_lost->context);
   }
 
-  if (universe_data->handle != SACN_RECEIVER_INVALID && universe_data->callback)
+  if (universe_data->receiver_handle != SACN_RECEIVER_INVALID && universe_data->callback)
   {
-    universe_data->callback(universe_data->handle, from_addr, &universe_data->header, universe_data->pdata,
+    universe_data->callback(universe_data->receiver_handle, from_addr, &universe_data->header, universe_data->pdata,
                             universe_data->is_sampling, universe_data->context);
   }
 }
@@ -1016,7 +1021,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
       if (SACN_CAN_LOG(ETCPAL_LOG_DEBUG))
       {
         char cid_str[ETCPAL_UUID_STRING_BYTES];
-        etcpal_uuid_to_string(&src->cid, cid_str);
+        etcpal_uuid_to_string(get_remote_source_cid(src->handle), cid_str);
         SACN_LOG_DEBUG("Removing internally tracked source %s", cid_str);
       }
     }
@@ -1030,7 +1035,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
   get_expired_sources(&receiver->term_sets, sources_lost);
 
   for (size_t i = 0; i < num_to_erase; ++i)
-    remove_receiver_source(receiver, &to_erase[i]->cid);
+    remove_receiver_source(receiver, to_erase[i]->handle);
 
   if (sources_lost->num_lost_sources > 0)
   {
@@ -1040,7 +1045,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
     sources_lost->universe = receiver->keys.universe;
 
     for (size_t i = 0; i < sources_lost->num_lost_sources; ++i)
-      remove_receiver_source(receiver, &sources_lost->lost_sources[i].cid);
+      remove_receiver_source(receiver, sources_lost->lost_sources[i].handle);
 
     receiver->suppress_limit_exceeded_notification = false;
   }
@@ -1090,10 +1095,10 @@ void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_
 {
   if (etcpal_timer_is_expired(&src->packet_timer))
   {
-    if (!add_offline_source(status_lists, &src->cid, src->name, src->terminated) && SACN_CAN_LOG(ETCPAL_LOG_ERR))
+    if (!add_offline_source(status_lists, src->handle, src->name, src->terminated) && SACN_CAN_LOG(ETCPAL_LOG_ERR))
     {
       char cid_str[ETCPAL_UUID_BYTES];
-      etcpal_uuid_to_string(&src->cid, cid_str);
+      etcpal_uuid_to_string(get_remote_source_cid(src->handle), cid_str);
       SACN_LOG_ERR(
           "Couldn't allocate memory to add offline source %s to status list. This could be a bug or resource "
           "exhaustion issue.",
@@ -1102,10 +1107,10 @@ void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_
   }
   else if (src->dmx_received_since_last_tick)
   {
-    if (!add_online_source(status_lists, &src->cid, src->name) && SACN_CAN_LOG(ETCPAL_LOG_ERR))
+    if (!add_online_source(status_lists, src->handle, src->name) && SACN_CAN_LOG(ETCPAL_LOG_ERR))
     {
       char cid_str[ETCPAL_UUID_BYTES];
-      etcpal_uuid_to_string(&src->cid, cid_str);
+      etcpal_uuid_to_string(get_remote_source_cid(src->handle), cid_str);
       SACN_LOG_ERR(
           "Couldn't allocate memory to add online source %s to status list. This could be a bug or resource "
           "exhaustion issue.",
@@ -1115,10 +1120,10 @@ void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_
   }
   else
   {
-    if (!add_unknown_source(status_lists, &src->cid, src->name) && SACN_CAN_LOG(ETCPAL_LOG_ERR))
+    if (!add_unknown_source(status_lists, src->handle, src->name) && SACN_CAN_LOG(ETCPAL_LOG_ERR))
     {
       char cid_str[ETCPAL_UUID_BYTES];
-      etcpal_uuid_to_string(&src->cid, cid_str);
+      etcpal_uuid_to_string(get_remote_source_cid(src->handle), cid_str);
       SACN_LOG_ERR(
           "Couldn't allocate memory to add undetermined source %s to status list. This could be a bug or resource "
           "exhaustion issue.",

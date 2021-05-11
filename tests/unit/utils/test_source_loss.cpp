@@ -40,12 +40,12 @@
 
 bool operator<(const SacnRemoteSourceInternal& a, const SacnRemoteSourceInternal& b)
 {
-  return a.cid < b.cid;
+  return a.handle < b.handle;
 }
 
 bool operator==(const SacnRemoteSourceInternal& a, const SacnRemoteSourceInternal& b)
 {
-  return (a.cid == b.cid && (0 == std::strcmp(a.name, b.name)));
+  return (a.handle == b.handle && (0 == std::strcmp(a.name, b.name)));
 }
 
 class TestSourceLoss : public ::testing::Test
@@ -64,10 +64,14 @@ protected:
 
     sources_.reserve(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
     test_names_.reserve(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+
     for (size_t i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
+      sacn_remote_source_t next_handle = SACN_REMOTE_SOURCE_INVALID;
+      ASSERT_EQ(add_remote_source_handle(&etcpal::Uuid::V4().get(), &next_handle), kEtcPalErrOk);
+
       test_names_.push_back("test name " + std::to_string(i));
-      sources_.push_back(SacnRemoteSourceInternal{etcpal::Uuid::V4().get(), test_names_[i].c_str()});
+      sources_.push_back(SacnRemoteSourceInternal{next_handle, test_names_[i].c_str()});
     }
     std::sort(sources_.begin(), sources_.end());
   }
@@ -85,7 +89,7 @@ protected:
     expired_sources.reserve(num_lost_sources);
     std::transform(lost_sources, lost_sources + num_lost_sources, std::back_inserter(expired_sources),
                    [](const SacnLostSource& src) {
-                     return SacnRemoteSourceInternal{src.cid, src.name};
+                     return SacnRemoteSourceInternal{src.handle, src.name};
                    });
 
     std::sort(expired_sources.begin(), expired_sources.end());
@@ -107,7 +111,7 @@ TEST_F(TestSourceLoss, AllSourcesOfflineAtOnce)
   offline_sources.reserve(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   std::transform(sources_.begin(), sources_.end(), std::back_inserter(offline_sources),
                  [](const SacnRemoteSourceInternal& source) {
-                   return SacnLostSourceInternal{source.cid, source.name, true};
+                   return SacnLostSourceInternal{source.handle, source.name, true};
                  });
   mark_sources_offline(offline_sources.data(), offline_sources.size(), sources_.data(), sources_.size(),
                        &term_set_list_, 1000);
@@ -138,7 +142,7 @@ TEST_F(TestSourceLoss, AllSourcesOfflineOneByOne)
   for (size_t i = 0; i < sources_.size() - 1; ++i)
   {
     SacnLostSourceInternal offline;
-    offline.cid = sources_[i].cid;
+    offline.handle = sources_[i].handle;
     offline.name = sources_[i].name;
     offline.terminated = false;
     mark_sources_offline(&offline, 1, &sources_[i + 1], sources_.size() - i - 1, &term_set_list_, 1000);
@@ -149,7 +153,7 @@ TEST_F(TestSourceLoss, AllSourcesOfflineOneByOne)
   }
 
   SacnLostSourceInternal offline;
-  offline.cid = sources_[sources_.size() - 1].cid;
+  offline.handle = sources_[sources_.size() - 1].handle;
   offline.name = sources_[sources_.size() - 1].name;
   offline.terminated = false;
   mark_sources_offline(&offline, 1, nullptr, 0, &term_set_list_, 1000);
@@ -182,7 +186,7 @@ TEST_F(TestSourceLoss, WorstCaseEachSourceOfflineIndividually)
 
   for (size_t i = 0; i < sources_.size(); ++i)
   {
-    offline.push_back(SacnLostSourceInternal{sources_[i].cid, sources_[i].name, false});
+    offline.push_back(SacnLostSourceInternal{sources_[i].handle, sources_[i].name, false});
     if (i < sources_.size() - 1)
     {
       mark_sources_offline(offline.data(), offline.size(), &sources_[i + 1], sources_.size() - i - 1, &term_set_list_,
@@ -229,7 +233,7 @@ TEST_F(TestSourceLoss, EachSourceOfflineThenOnline)
 {
   for (size_t i = 0; i < sources_.size(); ++i)
   {
-    SacnLostSourceInternal offline{sources_[i].cid, sources_[i].name, false};
+    SacnLostSourceInternal offline{sources_[i].handle, sources_[i].name, false};
     if (i < sources_.size() - 1)
       mark_sources_offline(&offline, 1, &sources_[i + 1], sources_.size() - i - 1, &term_set_list_, 1000);
     else
@@ -263,7 +267,7 @@ TEST_F(TestSourceLoss, ClearListWorks)
   // theoretical number of termination sets.
   for (size_t i = 0; i < sources_.size(); ++i)
   {
-    offline.push_back(SacnLostSourceInternal{sources_[i].cid, sources_[i].name, false});
+    offline.push_back(SacnLostSourceInternal{sources_[i].handle, sources_[i].name, false});
     if (i < sources_.size() - 1)
     {
       mark_sources_offline(offline.data(), offline.size(), &sources_[i + 1], sources_.size() - i - 1, &term_set_list_,

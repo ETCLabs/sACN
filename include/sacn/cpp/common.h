@@ -27,6 +27,7 @@
 
 #include "etcpal/cpp/error.h"
 #include "etcpal/cpp/log.h"
+#include "etcpal/cpp/uuid.h"
 #include "sacn/common.h"
 
 /**
@@ -47,6 +48,10 @@
  */
 namespace sacn
 {
+/** A source discovered on an sACN network that has a CID - used by Receiver and Merge Receiver. */
+using RemoteSourceHandle = sacn_remote_source_t;
+/** An invalid RemoteSourceHandle value. */
+constexpr RemoteSourceHandle kInvalidRemoteSourceHandle = SACN_REMOTE_SOURCE_INVALID;
 
 /**
  * @ingroup sacn_cpp_common
@@ -94,6 +99,45 @@ inline etcpal::Error Init(const etcpal::Logger& logger)
 inline void Deinit()
 {
   return sacn_deinit();
+}
+
+/**
+ * @ingroup sacn_cpp_common
+ * @brief Converts a remote source CID to the corresponding handle, or #SACN_REMOTE_SOURCE_INVALID if not found.
+ *
+ * This is a simple conversion from a remote source CID to it's corresponding remote source handle. A handle will be
+ * returned only if it is a source that has been discovered by a receiver, merge receiver, or source detector.
+ *
+ * @param[in] source_cid The UUID of the remote source CID.
+ * @return The remote source handle, or #SACN_REMOTE_SOURCE_INVALID if not found.
+ */
+inline RemoteSourceHandle GetRemoteSourceHandle(const etcpal::Uuid& source_cid)
+{
+  return sacn_get_remote_source_handle(&source_cid.get());
+}
+
+/**
+ * @ingroup sacn_cpp_common
+ * @brief Converts a remote source handle to the corresponding source CID.
+ *
+ * @param[in] source_handle The handle of the remote source.
+ *
+ * @return The UUID of the source CID if there was no error.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotFound: The source handle does not match a source that was found by a receiver, merge receiver,
+ * or source detector.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+inline etcpal::Expected<etcpal::Uuid> GetRemoteSourceCid(RemoteSourceHandle source_handle)
+{
+  EtcPalUuid cid;
+  etcpal_error_t error = sacn_get_remote_source_cid(source_handle, &cid);
+  etcpal::Uuid cid_to_return = cid;
+
+  if (error == kEtcPalErrOk)
+    return cid_to_return;
+
+  return error;
 }
 
 };  // namespace sacn

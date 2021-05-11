@@ -37,8 +37,8 @@
 #define TestSourceDetectorState TestSourceDetectorStateStatic
 #endif
 
-FAKE_VOID_FUNC(source_updated, const EtcPalUuid*, const char*, const uint16_t*, size_t, void*);
-FAKE_VOID_FUNC(source_expired, const EtcPalUuid*, const char*, void*);
+FAKE_VOID_FUNC(source_updated, sacn_remote_source_t, const EtcPalUuid*, const char*, const uint16_t*, size_t, void*);
+FAKE_VOID_FUNC(source_expired, sacn_remote_source_t, const EtcPalUuid*, const char*, void*);
 FAKE_VOID_FUNC(limit_exceeded, void*);
 
 static const EtcPalSockAddr kTestSourceAddr = {SACN_PORT, etcpal::IpAddr::FromString("10.101.1.1").get()};
@@ -177,8 +177,8 @@ TEST_F(TestSourceDetectorState, SourceUpdatedWorks)
 
   test_cid = etcpal::Uuid::V4();
 
-  source_updated_fake.custom_fake = [](const EtcPalUuid* cid, const char* name, const uint16_t* sourced_universes,
-                                       size_t num_sourced_universes, void* context) {
+  source_updated_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name,
+                                       const uint16_t* sourced_universes, size_t num_sourced_universes, void* context) {
     EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cid.get()), 0);
     EXPECT_EQ(strcmp(name, kTestName.c_str()), 0);
 
@@ -195,7 +195,8 @@ TEST_F(TestSourceDetectorState, SourceUpdatedWorks)
   ProcessUniverseDiscoveryPage(test_cid, universe_list_1, 1u);
   EXPECT_EQ(source_updated_fake.call_count, 1u);
 
-  source_updated_fake.custom_fake = [](const EtcPalUuid* cid, const char* name, const uint16_t* sourced_universes,
+  source_updated_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name,
+                                       const uint16_t* sourced_universes,
                                        size_t num_sourced_universes, void* context) {
     EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cid.get()), 0);
     EXPECT_EQ(strcmp(name, kTestName.c_str()), 0);
@@ -225,7 +226,8 @@ TEST_F(TestSourceDetectorState, SourceUpdatedFiltersDroppedLists)
   for (uint16_t universe = 0u; universe < kNumUniverses; ++universe)
     universe_list.push_back(universe);
 
-  source_updated_fake.custom_fake = [](const EtcPalUuid*, const char*, const uint16_t* sourced_universes,
+  source_updated_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid*, const char*,
+                                       const uint16_t* sourced_universes,
                                        size_t num_sourced_universes, void*) {
     for (size_t i = 0u; i < num_sourced_universes; ++i)
       EXPECT_EQ(sourced_universes[i], universe_list[i]);
@@ -285,7 +287,7 @@ TEST_F(TestSourceDetectorState, SourceExpiredWorksAllAtOnce)
   etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL * 2u);
 
   static unsigned int index = 0u;
-  source_expired_fake.custom_fake = [](const EtcPalUuid* cid, const char* name, void* context) {
+  source_expired_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name, void* context) {
     EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cids[index].get()), 0);
     EXPECT_EQ(strcmp(name, kTestName.c_str()), 0);
     EXPECT_EQ(context, nullptr);
@@ -314,7 +316,7 @@ TEST_F(TestSourceDetectorState, SourceExpiredWorksOneAtATime)
   etcpal_getms_fake.return_val += ((SACN_UNIVERSE_DISCOVERY_INTERVAL * 2u) - (200u * kNumSources));
 
   static unsigned int index = 0u;
-  source_expired_fake.custom_fake = [](const EtcPalUuid* cid, const char* name, void* context) {
+  source_expired_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name, void* context) {
     EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cids[index].get()), 0);
     EXPECT_EQ(strcmp(name, kTestName.c_str()), 0);
     EXPECT_EQ(context, nullptr);
@@ -369,8 +371,8 @@ TEST_F(TestSourceDetectorState, UniverseLimitExceededWorks)
 
   static etcpal::Uuid test_cid = etcpal::Uuid::V4();
 
-  source_updated_fake.custom_fake = [](const EtcPalUuid* cid, const char* name, const uint16_t* sourced_universes,
-                                       size_t num_sourced_universes, void* context) {
+  source_updated_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name,
+                                       const uint16_t* sourced_universes, size_t num_sourced_universes, void* context) {
     EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cid.get()), 0);
     EXPECT_EQ(strcmp(name, kTestName.c_str()), 0);
 
@@ -494,8 +496,8 @@ TEST_F(TestSourceDetectorState, SourceUpdatedWorksWithEmptyUniverseList)
   std::vector<uint16_t> universe_list;
   etcpal::Uuid test_cid = etcpal::Uuid::V4();
 
-  source_updated_fake.custom_fake = [](const EtcPalUuid*, const char*, const uint16_t* sourced_universes,
-                                       size_t num_sourced_universes, void*) {
+  source_updated_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid*, const char*,
+                                       const uint16_t* sourced_universes, size_t num_sourced_universes, void*) {
     EXPECT_EQ(sourced_universes, nullptr);
     EXPECT_EQ(num_sourced_universes, 0u);
   };

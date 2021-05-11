@@ -38,7 +38,7 @@ etcpal_error_t sacn_merge_receiver_init(void);
 void sacn_merge_receiver_deinit(void);
 
 // Receiver callbacks
-void merge_receiver_universe_data(sacn_receiver_t handle, const EtcPalSockAddr* source_addr,
+void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalSockAddr* source_addr,
                                   const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling, void* context);
 void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
                                  size_t num_lost_sources, void* context);

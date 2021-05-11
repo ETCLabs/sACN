@@ -26,6 +26,7 @@
 #include "sacn/private/common.h"
 #include "sacn/private/opts.h"
 #include "sacn/private/pdu.h"
+#include "sacn/private/util.h"
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>
@@ -80,8 +81,9 @@
 /* Macros for dynamic allocation. */
 #define ALLOC_RECEIVER() malloc(sizeof(SacnReceiver))
 #define ALLOC_TRACKED_SOURCE() malloc(sizeof(SacnTrackedSource))
+#define ALLOC_REMOTE_SOURCE_HANDLE() malloc(sizeof(SacnRemoteSourceHandle))
+#define ALLOC_REMOTE_SOURCE_CID() malloc(sizeof(SacnRemoteSourceCid))
 #define ALLOC_MERGE_RECEIVER_SOURCE() malloc(sizeof(SacnMergeReceiverSource))
-#define ALLOC_CID_FROM_SOURCE_ID() malloc(sizeof(SacnCidFromSourceId))
 #define ALLOC_UNIVERSE_DISCOVERY_SOURCE() malloc(sizeof(SacnUniverseDiscoverySource))
 #define FREE_RECEIVER(ptr)        \
   do                              \
@@ -93,8 +95,9 @@
     free(ptr);                    \
   } while (0)
 #define FREE_TRACKED_SOURCE(ptr) free(ptr)
+#define FREE_REMOTE_SOURCE_HANDLE(ptr) free(ptr)
+#define FREE_REMOTE_SOURCE_CID(ptr) free(ptr)
 #define FREE_MERGE_RECEIVER_SOURCE(ptr) free(ptr)
-#define FREE_CID_FROM_SOURCE_ID(ptr) free(ptr)
 #define FREE_UNIVERSE_DISCOVERY_SOURCE(ptr) free(ptr)
 
 #else  // SACN_DYNAMIC_MEM
@@ -114,13 +117,15 @@
 /* Macros for static allocation, which is done using etcpal_mempool. */
 #define ALLOC_RECEIVER() etcpal_mempool_alloc(sacnrecv_receivers)
 #define ALLOC_TRACKED_SOURCE() etcpal_mempool_alloc(sacnrecv_tracked_sources)
+#define ALLOC_REMOTE_SOURCE_HANDLE() etcpal_mempool_alloc(sacnrecv_remote_source_handles)
+#define ALLOC_REMOTE_SOURCE_CID() etcpal_mempool_alloc(sacnrecv_remote_source_cids)
 #define ALLOC_MERGE_RECEIVER_SOURCE() etcpal_mempool_alloc(sacnmergerecv_sources)
-#define ALLOC_CID_FROM_SOURCE_ID() etcpal_mempool_alloc(sacnmergerecv_cids_from_ids)
 #define ALLOC_UNIVERSE_DISCOVERY_SOURCE() etcpal_mempool_alloc(sacnsrcdetect_sources)
 #define FREE_RECEIVER(ptr) etcpal_mempool_free(sacnrecv_receivers, ptr)
 #define FREE_TRACKED_SOURCE(ptr) etcpal_mempool_free(sacnrecv_tracked_sources, ptr)
+#define FREE_REMOTE_SOURCE_HANDLE(ptr) etcpal_mempool_free(sacnrecv_remote_source_handles, ptr)
+#define FREE_REMOTE_SOURCE_CID(ptr) etcpal_mempool_free(sacnrecv_remote_source_cids, ptr)
 #define FREE_MERGE_RECEIVER_SOURCE(ptr) etcpal_mempool_free(sacnmergerecv_sources, ptr)
-#define FREE_CID_FROM_SOURCE_ID(ptr) etcpal_mempool_free(sacnmergerecv_cids_from_ids, ptr)
 #define FREE_UNIVERSE_DISCOVERY_SOURCE(ptr) etcpal_mempool_free(sacnsrcdetect_sources, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
@@ -207,14 +212,18 @@ static struct SacnMemBufs
 #if !SACN_DYNAMIC_MEM
 ETCPAL_MEMPOOL_DEFINE(sacnrecv_receivers, SacnReceiver, SACN_RECEIVER_MAX_UNIVERSES);
 ETCPAL_MEMPOOL_DEFINE(sacnrecv_tracked_sources, SacnTrackedSource, SACN_RECEIVER_TOTAL_MAX_SOURCES);
+ETCPAL_MEMPOOL_DEFINE(sacnrecv_remote_source_handles, SacnRemoteSourceHandle, SACN_RECEIVER_TOTAL_MAX_SOURCES);
+ETCPAL_MEMPOOL_DEFINE(sacnrecv_remote_source_cids, SacnRemoteSourceCid, SACN_RECEIVER_TOTAL_MAX_SOURCES);
 ETCPAL_MEMPOOL_DEFINE(sacnrecv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODES);
 ETCPAL_MEMPOOL_DEFINE(sacnmergerecv_sources, SacnMergeReceiverSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
-ETCPAL_MEMPOOL_DEFINE(sacnmergerecv_cids_from_ids, SacnCidFromSourceId, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
 ETCPAL_MEMPOOL_DEFINE(sacnsrcdetect_sources, SacnUniverseDiscoverySource, SACN_SOURCE_DETECTOR_MAX_SOURCES);
 #endif
 
 static EtcPalRbTree receivers;
 static EtcPalRbTree receivers_by_universe;
+static EtcPalRbTree remote_source_handles;
+static EtcPalRbTree remote_source_cids;
+static IntHandleManager tracked_source_handle_manager;
 static SacnSourceDetector source_detector;
 static EtcPalRbTree universe_discovery_sources;
 
@@ -293,15 +302,16 @@ static etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver);
 static void remove_receiver_from_maps(SacnReceiver* receiver);
 
 // Receiver tree node management
-static int source_id_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+static int remote_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static int uuid_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static int receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static int receiver_compare_by_universe(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static EtcPalRbNode* node_alloc(void);
 static void node_dealloc(EtcPalRbNode* node);
 static void merge_receiver_sources_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
-static void cids_from_source_ids_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+static void remote_source_handle_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+static void remote_source_cid_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void universe_discovery_sources_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 
@@ -470,7 +480,7 @@ UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id)
   {
     UniverseDataNotification* to_return = &mem_bufs.universe_data[thread_id];
     memset(to_return, 0, sizeof(UniverseDataNotification));
-    to_return->handle = SACN_RECEIVER_INVALID;
+    to_return->receiver_handle = SACN_RECEIVER_INVALID;
     return to_return;
   }
   return NULL;
@@ -488,6 +498,7 @@ SourcePapLostNotification* get_source_pap_lost(sacn_thread_id_t thread_id)
   {
     SourcePapLostNotification* to_return = &mem_bufs.source_pap_lost[thread_id];
     memset(to_return, 0, sizeof(SourcePapLostNotification));
+    to_return->source.handle = SACN_REMOTE_SOURCE_INVALID;
     to_return->handle = SACN_RECEIVER_INVALID;
     return to_return;
   }
@@ -612,20 +623,20 @@ SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id,
  * Add a new offline source to an SacnSourceStatusLists.
  *
  * [out] status_lists Status lists instance to which to append the new source.
- * [in] cid CID of the offline source.
+ * [in] handle Handle of the offline source.
  * [in] name Name of the offline source - just a reference to the name buffer stored with the
  *           corresponding SacnTrackedSource.
  * [in] terminated Whether the source was lost because its Stream_Terminated bit was set.
  * Returns true if the source was successfully added, false if memory could not be allocated.
  */
-bool add_offline_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name, bool terminated)
+bool add_offline_source(SacnSourceStatusLists* status_lists, sacn_remote_source_t handle, const char* name,
+                        bool terminated)
 {
   SACN_ASSERT(status_lists);
-  SACN_ASSERT(cid);
 
   CHECK_ROOM_FOR_ONE_MORE(status_lists, offline, SacnLostSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
-  status_lists->offline[status_lists->num_offline].cid = *cid;
+  status_lists->offline[status_lists->num_offline].handle = handle;
   status_lists->offline[status_lists->num_offline].name = name;
   status_lists->offline[status_lists->num_offline].terminated = terminated;
   ++status_lists->num_offline;
@@ -636,20 +647,19 @@ bool add_offline_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* c
  * Add a new online source to an SacnSourceStatusLists.
  *
  * [out] status_lists Status lists instance to which to append the new source.
- * [in] cid CID of the online source.
+ * [in] handle Handle of the online source.
  * [in] name Name of the online source - just a reference to the name buffer stored with the
  *           corresponding SacnTrackedSource.
  * Returns true if the source was successfully added, false if memory could not be allocated.
  */
-bool add_online_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name)
+bool add_online_source(SacnSourceStatusLists* status_lists, sacn_remote_source_t handle, const char* name)
 {
   SACN_ASSERT(status_lists);
-  SACN_ASSERT(cid);
 
   CHECK_ROOM_FOR_ONE_MORE(status_lists, online, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE,
                           false);
 
-  status_lists->online[status_lists->num_online].cid = *cid;
+  status_lists->online[status_lists->num_online].handle = handle;
   status_lists->online[status_lists->num_online].name = name;
   ++status_lists->num_online;
   return true;
@@ -659,20 +669,19 @@ bool add_online_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* ci
  * Add a new unknown-status source to an SacnSourceStatusLists.
  *
  * [out] status_lists Status lists instance to which to append the new source.
- * [in] cid CID of the unknown-status source.
+ * [in] handle Handle of the unknown-status source.
  * [in] name Name of the unknown-status source - just a reference to the name buffer stored with
  *           the corresponding SacnTrackedSource.
  * Returns true if the source was successfully added, false if memory could not be allocated.
  */
-bool add_unknown_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name)
+bool add_unknown_source(SacnSourceStatusLists* status_lists, sacn_remote_source_t handle, const char* name)
 {
   SACN_ASSERT(status_lists);
-  SACN_ASSERT(cid);
 
   CHECK_ROOM_FOR_ONE_MORE(status_lists, unknown, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE,
                           false);
 
-  status_lists->unknown[status_lists->num_unknown].cid = *cid;
+  status_lists->unknown[status_lists->num_unknown].handle = handle;
   status_lists->unknown[status_lists->num_unknown].name = name;
   ++status_lists->num_unknown;
   return true;
@@ -687,7 +696,8 @@ bool add_unknown_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* c
  * [in] terminated Whether the source was lost because its Stream_Terminated bit was set.
  * Returns true if the source was successfully added, false if memory could not be allocated.
  */
-bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* cid, const char* name, bool terminated)
+bool add_lost_source(SourcesLostNotification* sources_lost, sacn_remote_source_t handle, const EtcPalUuid* cid,
+                     const char* name, bool terminated)
 {
   SACN_ASSERT(sources_lost);
   SACN_ASSERT(cid);
@@ -695,6 +705,7 @@ bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* ci
 
   CHECK_ROOM_FOR_ONE_MORE(sources_lost, lost_sources, SacnLostSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
+  sources_lost->lost_sources[sources_lost->num_lost_sources].handle = handle;
   sources_lost->lost_sources[sources_lost->num_lost_sources].cid = *cid;
   ETCPAL_MSVC_NO_DEP_WRN strcpy(sources_lost->lost_sources[sources_lost->num_lost_sources].name, name);
   sources_lost->lost_sources[sources_lost->num_lost_sources].terminated = terminated;
@@ -828,10 +839,9 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
     merge_receiver->use_pap = config->use_pap;
 
     memset(merge_receiver->slots, 0, DMX_ADDRESS_COUNT);
-    memset(merge_receiver->slot_owners, 0, DMX_ADDRESS_COUNT * sizeof(sacn_source_id_t));
+    memset(merge_receiver->slot_owners, 0, DMX_ADDRESS_COUNT * sizeof(sacn_dmx_merger_source_t));
 
-    etcpal_rbtree_init(&merge_receiver->sources, uuid_compare, node_alloc, node_dealloc);
-    etcpal_rbtree_init(&merge_receiver->cids_from_ids, source_id_compare, node_alloc, node_dealloc);
+    etcpal_rbtree_init(&merge_receiver->sources, remote_source_compare, node_alloc, node_dealloc);
 
     merge_receiver->num_pending_sources = 0;
     merge_receiver->sampling = true;
@@ -845,39 +855,26 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
 }
 
 // Needs lock
-etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_source_id_t source_id,
-                                              const EtcPalUuid* source_cid, bool pending)
+etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_remote_source_t source_handle,
+                                              bool pending)
 {
+  etcpal_error_t result = kEtcPalErrNoMem;
+
   SacnMergeReceiverSource* src = ALLOC_MERGE_RECEIVER_SOURCE();
-  SacnCidFromSourceId* cid_from_id = ALLOC_CID_FROM_SOURCE_ID();
-
-  src->id = source_id;
-  src->cid = *source_cid;
-  src->pending = pending;
-  cid_from_id->id = source_id;
-  cid_from_id->cid = *source_cid;
-
-  etcpal_error_t result1 = etcpal_rbtree_insert(&merge_receiver->sources, src);
-  etcpal_error_t result2 = etcpal_rbtree_insert(&merge_receiver->cids_from_ids, cid_from_id);
-
-  if ((result1 != kEtcPalErrOk) || (result2 != kEtcPalErrOk))
+  if (src)
   {
-    if (result1 == kEtcPalErrOk)
-      etcpal_rbtree_remove_with_cb(&merge_receiver->sources, src, merge_receiver_sources_tree_dealloc);
-    else
+    src->handle = source_handle;
+    src->pending = pending;
+
+    result = etcpal_rbtree_insert(&merge_receiver->sources, src);
+
+    if (result != kEtcPalErrOk)
       FREE_MERGE_RECEIVER_SOURCE(src);
-
-    if (result2 == kEtcPalErrOk)
-      etcpal_rbtree_remove_with_cb(&merge_receiver->cids_from_ids, cid_from_id, cids_from_source_ids_tree_dealloc);
-    else
-      FREE_CID_FROM_SOURCE_ID(cid_from_id);
-  }
-  else if (pending)
-  {
-    ++merge_receiver->num_pending_sources;
+    else if (pending)
+      ++merge_receiver->num_pending_sources;
   }
 
-  return (result1 == kEtcPalErrOk) ? result2 : result1;
+  return result;
 }
 
 // Needs lock
@@ -900,10 +897,10 @@ etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeRece
 }
 
 // Needs lock
-etcpal_error_t lookup_merge_receiver_source(SacnMergeReceiver* merge_receiver, const EtcPalUuid* source_cid,
+etcpal_error_t lookup_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_remote_source_t source_handle,
                                             SacnMergeReceiverSource** source)
 {
-  (*source) = etcpal_rbtree_find(&merge_receiver->sources, source_cid);
+  (*source) = etcpal_rbtree_find(&merge_receiver->sources, &source_handle);
   return (*source) ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
 
@@ -927,26 +924,19 @@ void remove_sacn_merge_receiver(size_t index)
 }
 
 // Needs lock
-void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_source_id_t source_id)
+void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_remote_source_t source_handle)
 {
-  SacnCidFromSourceId* cid_from_id = etcpal_rbtree_find(&merge_receiver->cids_from_ids, &source_id);
+  SacnMergeReceiverSource* source = etcpal_rbtree_find(&merge_receiver->sources, &source_handle);
+  if (source->pending)
+    --merge_receiver->num_pending_sources;
 
-  if (cid_from_id)
-  {
-    SacnMergeReceiverSource* source = etcpal_rbtree_find(&merge_receiver->sources, &cid_from_id->cid);
-    if (source->pending)
-      --merge_receiver->num_pending_sources;
-
-    etcpal_rbtree_remove_with_cb(&merge_receiver->sources, &cid_from_id->cid, merge_receiver_sources_tree_dealloc);
-    etcpal_rbtree_remove_with_cb(&merge_receiver->cids_from_ids, &source_id, cids_from_source_ids_tree_dealloc);
-  }
+  etcpal_rbtree_remove_with_cb(&merge_receiver->sources, source, merge_receiver_sources_tree_dealloc);
 }
 
 // Needs lock
 void clear_sacn_merge_receiver_sources(SacnMergeReceiver* merge_receiver)
 {
   etcpal_rbtree_clear_with_cb(&merge_receiver->sources, merge_receiver_sources_tree_dealloc);
-  etcpal_rbtree_clear_with_cb(&merge_receiver->cids_from_ids, cids_from_source_ids_tree_dealloc);
   merge_receiver->num_pending_sources = 0;
 }
 
@@ -1320,7 +1310,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   receiver->sampling = false;
   receiver->notified_sampling_started = false;
   receiver->suppress_limit_exceeded_notification = false;
-  etcpal_rbtree_init(&receiver->sources, uuid_compare, node_alloc, node_dealloc);
+  etcpal_rbtree_init(&receiver->sources, remote_source_compare, node_alloc, node_dealloc);
   receiver->term_sets = NULL;
 
   receiver->filter_preview_data = ((config->flags & SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA) != 0);
@@ -1365,9 +1355,13 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid*
   if (!src)
     result = kEtcPalErrNoMem;
 
+  sacn_remote_source_t handle = SACN_REMOTE_SOURCE_INVALID;
+  if (result == kEtcPalErrOk)
+    result = add_remote_source_handle(sender_cid, &handle);
+
   if (result == kEtcPalErrOk)
   {
-    src->cid = *sender_cid;
+    src->handle = handle;
     ETCPAL_MSVC_NO_DEP_WRN strcpy(src->name, name);
     etcpal_timer_start(&src->packet_timer, SACN_SOURCE_LOSS_TIMEOUT);
     src->seq = seq_num;
@@ -1401,8 +1395,75 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid*
     }
 #endif
 
-    etcpal_rbtree_insert(&receiver->sources, src);
+    result = etcpal_rbtree_insert(&receiver->sources, src);
+  }
+
+  if (result == kEtcPalErrOk)
+  {
     *tracked_source_state = src;
+  }
+  else
+  {
+    if (handle != SACN_REMOTE_SOURCE_INVALID)
+      remove_remote_source_handle(handle);
+    if (src)
+      FREE_TRACKED_SOURCE(src);
+  }
+
+  return result;
+}
+
+etcpal_error_t add_remote_source_handle(const EtcPalUuid* cid, sacn_remote_source_t* handle)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+
+  SacnRemoteSourceHandle* existing_handle = (SacnRemoteSourceHandle*)etcpal_rbtree_find(&remote_source_handles, cid);
+
+  if (existing_handle)
+  {
+    SacnRemoteSourceCid* existing_cid =
+        (SacnRemoteSourceCid*)etcpal_rbtree_find(&remote_source_cids, &existing_handle->handle);
+    ++existing_cid->refcount;
+
+    *handle = existing_handle->handle;
+  }
+  else
+  {
+    SacnRemoteSourceHandle* new_handle = ALLOC_REMOTE_SOURCE_HANDLE();
+    SacnRemoteSourceCid* new_cid = ALLOC_REMOTE_SOURCE_CID();
+
+    if (new_handle && new_cid)
+    {
+      new_handle->cid = *cid;
+      new_handle->handle = (sacn_remote_source_t)get_next_int_handle(&tracked_source_handle_manager, 0xffff);
+      new_cid->handle = new_handle->handle;
+      new_cid->cid = new_handle->cid;
+      new_cid->refcount = 1;
+
+      result = etcpal_rbtree_insert(&remote_source_handles, new_handle);
+
+      if (result == kEtcPalErrOk)
+        result = etcpal_rbtree_insert(&remote_source_cids, new_cid);
+
+      if (result == kEtcPalErrOk)
+        *handle = new_handle->handle;
+    }
+    else
+    {
+      result = kEtcPalErrNoMem;
+    }
+
+    if (result != kEtcPalErrOk)
+    {
+      if (new_handle)
+      {
+        etcpal_rbtree_remove(&remote_source_handles, new_handle);
+        FREE_REMOTE_SOURCE_HANDLE(new_handle);
+      }
+
+      if (new_cid)
+        FREE_REMOTE_SOURCE_CID(new_cid);
+    }
   }
 
   return result;
@@ -1421,6 +1482,30 @@ etcpal_error_t lookup_receiver_by_universe(uint16_t universe, SacnReceiver** rec
   *receiver_state = (SacnReceiver*)etcpal_rbtree_find(&receivers_by_universe, &lookup_keys);
 
   return (*receiver_state) ? kEtcPalErrOk : kEtcPalErrNotFound;
+}
+
+sacn_remote_source_t get_remote_source_handle(const EtcPalUuid* source_cid)
+{
+  sacn_remote_source_t result = SACN_REMOTE_SOURCE_INVALID;
+
+  SacnRemoteSourceHandle* tree_result = (SacnRemoteSourceHandle*)etcpal_rbtree_find(&remote_source_handles, source_cid);
+
+  if (tree_result)
+    result = tree_result->handle;
+
+  return result;
+}
+
+const EtcPalUuid* get_remote_source_cid(sacn_remote_source_t handle)
+{
+  const EtcPalUuid* result = NULL;
+
+  SacnRemoteSourceCid* tree_result = (SacnRemoteSourceCid*)etcpal_rbtree_find(&remote_source_cids, &handle);
+
+  if (tree_result)
+    result = &tree_result->cid;
+
+  return result;
 }
 
 SacnReceiver* get_first_receiver(EtcPalRbIter* iterator)
@@ -1453,9 +1538,40 @@ etcpal_error_t clear_receiver_sources(SacnReceiver* receiver)
   return etcpal_rbtree_clear_with_cb(&receiver->sources, source_tree_dealloc);
 }
 
-etcpal_error_t remove_receiver_source(SacnReceiver* receiver, const EtcPalUuid* cid)
+etcpal_error_t remove_remote_source_handle(sacn_remote_source_t handle)
 {
-  return etcpal_rbtree_remove_with_cb(&receiver->sources, cid, source_tree_dealloc);
+  etcpal_error_t handle_result = kEtcPalErrOk;
+  etcpal_error_t cid_result = kEtcPalErrOk;
+
+  SacnRemoteSourceCid* existing_cid = (SacnRemoteSourceCid*)etcpal_rbtree_find(&remote_source_cids, &handle);
+
+  if (existing_cid)
+  {
+    if (existing_cid->refcount <= 1)
+    {
+      handle_result =
+          etcpal_rbtree_remove_with_cb(&remote_source_handles, &existing_cid->cid, remote_source_handle_tree_dealloc);
+      cid_result = etcpal_rbtree_remove_with_cb(&remote_source_cids, &handle, remote_source_cid_tree_dealloc);
+    }
+    else
+    {
+      --existing_cid->refcount;
+    }
+  }
+  else
+  {
+    cid_result = kEtcPalErrNotFound;
+  }
+
+  if (handle_result != kEtcPalErrOk)
+    return handle_result;
+
+  return cid_result;
+}
+
+etcpal_error_t remove_receiver_source(SacnReceiver* receiver, sacn_remote_source_t handle)
+{
+  return etcpal_rbtree_remove_with_cb(&receiver->sources, &handle, source_tree_dealloc);
 }
 
 void remove_sacn_receiver(SacnReceiver* receiver)
@@ -1508,8 +1624,12 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const c
   etcpal_error_t result = kEtcPalErrOk;
   SacnUniverseDiscoverySource* src = NULL;
 
-  if (etcpal_rbtree_find(&universe_discovery_sources, cid))
+  sacn_remote_source_t existing_handle = get_remote_source_handle(cid);
+  if ((existing_handle != SACN_REMOTE_SOURCE_INVALID) &&
+      etcpal_rbtree_find(&universe_discovery_sources, &existing_handle))
+  {
     result = kEtcPalErrExists;
+  }
 
   if (result == kEtcPalErrOk)
   {
@@ -1519,9 +1639,13 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const c
       result = kEtcPalErrNoMem;
   }
 
+  sacn_remote_source_t handle = SACN_REMOTE_SOURCE_INVALID;
+  if (result == kEtcPalErrOk)
+    result = add_remote_source_handle(cid, &handle);
+
   if (result == kEtcPalErrOk)
   {
-    src->cid = *cid;
+    src->handle = handle;
     strncpy(src->name, name, SACN_SOURCE_NAME_MAX_LEN);
 
     src->universes_dirty = true;
@@ -1551,20 +1675,30 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const c
     if (source_state)
       *source_state = src;
   }
-  else if (src)
+  else
   {
-    CLEAR_BUF(src, universes);
-    FREE_UNIVERSE_DISCOVERY_SOURCE(src);
+    if (handle != SACN_REMOTE_SOURCE_INVALID)
+      remove_remote_source_handle(handle);
+
+    if (src)
+    {
+      CLEAR_BUF(src, universes);
+      FREE_UNIVERSE_DISCOVERY_SOURCE(src);
+    }
   }
 
   return result;
 }
 
 etcpal_error_t add_sacn_source_detector_expired_source(SourceDetectorSourceExpiredNotification* source_expired,
-                                                       const EtcPalUuid* cid, const char* name)
+                                                       sacn_remote_source_t handle, const char* name)
 {
-  if (!source_expired || !cid || !name)
+  if (!source_expired || (handle == SACN_REMOTE_SOURCE_INVALID) || !name)
     return kEtcPalErrInvalid;
+
+  const EtcPalUuid* cid = get_remote_source_cid(handle);
+  if (!cid)
+    return kEtcPalErrNotFound;
 
 #if SACN_DYNAMIC_MEM
   if (!source_expired->expired_sources)
@@ -1580,6 +1714,7 @@ etcpal_error_t add_sacn_source_detector_expired_source(SourceDetectorSourceExpir
   CHECK_ROOM_FOR_ONE_MORE(source_expired, expired_sources, SourceDetectorExpiredSource,
                           SACN_SOURCE_DETECTOR_MAX_SOURCES, kEtcPalErrNoMem);
 
+  source_expired->expired_sources[source_expired->num_expired_sources].handle = handle;
   source_expired->expired_sources[source_expired->num_expired_sources].cid = *cid;
   strncpy(source_expired->expired_sources[source_expired->num_expired_sources].name, name, SACN_SOURCE_NAME_MAX_LEN);
   ++source_expired->num_expired_sources;
@@ -1624,9 +1759,9 @@ SacnSourceDetector* get_sacn_source_detector()
   return source_detector.created ? &source_detector : NULL;
 }
 
-etcpal_error_t lookup_universe_discovery_source(const EtcPalUuid* cid, SacnUniverseDiscoverySource** source_state)
+etcpal_error_t lookup_universe_discovery_source(sacn_remote_source_t handle, SacnUniverseDiscoverySource** source_state)
 {
-  *source_state = (SacnUniverseDiscoverySource*)etcpal_rbtree_find(&universe_discovery_sources, cid);
+  *source_state = (SacnUniverseDiscoverySource*)etcpal_rbtree_find(&universe_discovery_sources, &handle);
   return (*source_state) ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
 
@@ -1646,9 +1781,9 @@ size_t get_num_universe_discovery_sources()
   return etcpal_rbtree_size(&universe_discovery_sources);
 }
 
-etcpal_error_t remove_sacn_universe_discovery_source(const EtcPalUuid* cid)
+etcpal_error_t remove_sacn_universe_discovery_source(sacn_remote_source_t handle)
 {
-  return etcpal_rbtree_remove_with_cb(&universe_discovery_sources, cid, universe_discovery_sources_tree_dealloc);
+  return etcpal_rbtree_remove_with_cb(&universe_discovery_sources, &handle, universe_discovery_sources_tree_dealloc);
 }
 
 void remove_sacn_source_detector()
@@ -2187,12 +2322,12 @@ void remove_receiver_from_maps(SacnReceiver* receiver)
   etcpal_rbtree_remove(&receivers, receiver);
 }
 
-int source_id_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
+int remote_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
 {
   ETCPAL_UNUSED_ARG(tree);
 
-  const sacn_source_id_t* a = (const sacn_source_id_t*)value_a;
-  const sacn_source_id_t* b = (const sacn_source_id_t*)value_b;
+  sacn_remote_source_t* a = (sacn_remote_source_t*)value_a;
+  sacn_remote_source_t* b = (sacn_remote_source_t*)value_b;
   return (*a > *b) - (*a < *b);
 }
 
@@ -2248,18 +2383,31 @@ void merge_receiver_sources_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode*
   node_dealloc(node);
 }
 
-void cids_from_source_ids_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
-{
-  ETCPAL_UNUSED_ARG(self);
-  FREE_CID_FROM_SOURCE_ID(node->value);
-  node_dealloc(node);
-}
-
 /* Helper function for clearing an EtcPalRbTree containing sources. */
 static void source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
+
+  sacn_remote_source_t* handle = (sacn_remote_source_t*)node->value;
+  remove_remote_source_handle(*handle);
+
   FREE_TRACKED_SOURCE(node->value);
+  node_dealloc(node);
+}
+
+/* Helper function for clearing an EtcPalRbTree containing remote source handles. */
+void remote_source_handle_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
+{
+  ETCPAL_UNUSED_ARG(self);
+  FREE_REMOTE_SOURCE_HANDLE(node->value);
+  node_dealloc(node);
+}
+
+/* Helper function for clearing an EtcPalRbTree containing remote source CIDs. */
+void remote_source_cid_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
+{
+  ETCPAL_UNUSED_ARG(self);
+  FREE_REMOTE_SOURCE_CID(node->value);
   node_dealloc(node);
 }
 
@@ -2280,6 +2428,7 @@ void universe_discovery_sources_tree_dealloc(const EtcPalRbTree* self, EtcPalRbN
   ETCPAL_UNUSED_ARG(self);
 
   SacnUniverseDiscoverySource* source = (SacnUniverseDiscoverySource*)node->value;
+  remove_remote_source_handle(source->handle);
   CLEAR_BUF(source, universes);
   FREE_UNIVERSE_DISCOVERY_SOURCE(source);
   node_dealloc(node);
@@ -2344,6 +2493,8 @@ etcpal_error_t init_receivers(void)
 #if !SACN_DYNAMIC_MEM
   res |= etcpal_mempool_init(sacnrecv_receivers);
   res |= etcpal_mempool_init(sacnrecv_tracked_sources);
+  res |= etcpal_mempool_init(sacnrecv_remote_source_handles);
+  res |= etcpal_mempool_init(sacnrecv_remote_source_cids);
   res |= etcpal_mempool_init(sacnrecv_rb_nodes);
 #endif
 
@@ -2351,6 +2502,8 @@ etcpal_error_t init_receivers(void)
   {
     etcpal_rbtree_init(&receivers, receiver_compare, node_alloc, node_dealloc);
     etcpal_rbtree_init(&receivers_by_universe, receiver_compare_by_universe, node_alloc, node_dealloc);
+    etcpal_rbtree_init(&remote_source_handles, uuid_compare, node_alloc, node_dealloc);
+    etcpal_rbtree_init(&remote_source_cids, remote_source_compare, node_alloc, node_dealloc);
   }
 
   return res;
@@ -2360,6 +2513,8 @@ void deinit_receivers(void)
 {
   etcpal_rbtree_clear_with_cb(&receivers, universe_tree_dealloc);
   etcpal_rbtree_clear(&receivers_by_universe);
+  etcpal_rbtree_clear_with_cb(&remote_source_handles, remote_source_handle_tree_dealloc);
+  etcpal_rbtree_clear_with_cb(&remote_source_cids, remote_source_cid_tree_dealloc);
 }
 
 etcpal_error_t init_merge_receivers(void)
@@ -2373,7 +2528,6 @@ etcpal_error_t init_merge_receivers(void)
     res = kEtcPalErrNoMem;
 #else   // SACN_DYNAMIC_MEM
   res |= etcpal_mempool_init(sacnmergerecv_sources);
-  res |= etcpal_mempool_init(sacnmergerecv_cids_from_ids);
 #endif  // SACN_DYNAMIC_MEM
   mem_bufs.num_merge_receivers = 0;
 
@@ -2414,7 +2568,7 @@ etcpal_error_t init_source_detector(void)
 
   if (res == kEtcPalErrOk)
   {
-    etcpal_rbtree_init(&universe_discovery_sources, uuid_compare, node_alloc, node_dealloc);
+    etcpal_rbtree_init(&universe_discovery_sources, remote_source_compare, node_alloc, node_dealloc);
     source_detector.created = false;
   }
 

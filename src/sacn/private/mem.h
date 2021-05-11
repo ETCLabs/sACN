@@ -69,11 +69,13 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
 SamplingStartedNotification* get_sampling_started_buffer(sacn_thread_id_t thread_id, size_t size);
 SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id, size_t size);
 
-bool add_offline_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name, bool terminated);
-bool add_online_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name);
-bool add_unknown_source(SacnSourceStatusLists* status_lists, const EtcPalUuid* cid, const char* name);
+bool add_offline_source(SacnSourceStatusLists* status_lists, sacn_remote_source_t handle, const char* name,
+                        bool terminated);
+bool add_online_source(SacnSourceStatusLists* status_lists, sacn_remote_source_t handle, const char* name);
+bool add_unknown_source(SacnSourceStatusLists* status_lists, sacn_remote_source_t handle, const char* name);
 
-bool add_lost_source(SourcesLostNotification* sources_lost, const EtcPalUuid* cid, const char* name, bool terminated);
+bool add_lost_source(SourcesLostNotification* sources_lost, sacn_remote_source_t handle, const EtcPalUuid* cid,
+                     const char* name, bool terminated);
 
 bool add_dead_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket);
 bool add_socket_ref(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket, etcpal_iptype_t ip_type,
@@ -85,15 +87,15 @@ void remove_receiver_from_list(SacnRecvThreadContext* recv_thread_context, SacnR
 // sACN Merge Receiver memory API
 etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnMergeReceiverConfig* config,
                                        SacnMergeReceiver** state);
-etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_source_id_t source_id,
-                                              const EtcPalUuid* source_cid, bool pending);
+etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_remote_source_t source_handle,
+                                              bool pending);
 etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeReceiver** state, size_t* index);
-etcpal_error_t lookup_merge_receiver_source(SacnMergeReceiver* merge_receiver, const EtcPalUuid* source_cid,
+etcpal_error_t lookup_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_remote_source_t source_handle,
                                             SacnMergeReceiverSource** source);
 SacnMergeReceiver* get_merge_receiver(size_t index);
 size_t get_num_merge_receivers();
 void remove_sacn_merge_receiver(size_t index);
-void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_source_id_t source_id);
+void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_remote_source_t source_handle);
 void clear_sacn_merge_receiver_sources(SacnMergeReceiver* merge_receiver);
 
 // sACN Source memory API
@@ -125,14 +127,19 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
 etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid* sender_cid, const char* name,
                                        uint8_t seq_num, uint8_t first_start_code,
                                        SacnTrackedSource** tracked_source_state);
+etcpal_error_t add_remote_source_handle(const EtcPalUuid* cid, sacn_remote_source_t* handle);
 etcpal_error_t lookup_receiver(sacn_receiver_t handle, SacnReceiver** receiver_state);
 etcpal_error_t lookup_receiver_by_universe(uint16_t universe, SacnReceiver** receiver_state);
+sacn_remote_source_t get_remote_source_handle(const EtcPalUuid* source_cid);
+const EtcPalUuid* get_remote_source_cid(sacn_remote_source_t handle);
 SacnReceiver* get_first_receiver(EtcPalRbIter* iterator);
 SacnReceiver* get_next_receiver(EtcPalRbIter* iterator);
 etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_universe);
 etcpal_error_t clear_receiver_sources(SacnReceiver* receiver);
-etcpal_error_t remove_receiver_source(SacnReceiver* receiver, const EtcPalUuid* cid);
+etcpal_error_t remove_remote_source_handle(sacn_remote_source_t handle);
+etcpal_error_t remove_receiver_source(SacnReceiver* receiver, sacn_remote_source_t handle);
 void remove_sacn_receiver(SacnReceiver* receiver);
+
 
 // sACN Source Detector memory API
 etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, SacnMcastInterface* netints,
@@ -140,16 +147,17 @@ etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, 
 etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const char* name,
                                                   SacnUniverseDiscoverySource** source_state);
 etcpal_error_t add_sacn_source_detector_expired_source(SourceDetectorSourceExpiredNotification* source_expired,
-                                                       const EtcPalUuid* cid, const char* name);
+                                                       sacn_remote_source_t handle, const char* name);
 size_t replace_universe_discovery_universes(SacnUniverseDiscoverySource* source, size_t replace_start_index,
                                             const uint16_t* replacement_universes, size_t num_replacement_universes,
                                             size_t dynamic_universe_limit);
 SacnSourceDetector* get_sacn_source_detector();
-etcpal_error_t lookup_universe_discovery_source(const EtcPalUuid* cid, SacnUniverseDiscoverySource** source_state);
+etcpal_error_t lookup_universe_discovery_source(sacn_remote_source_t handle,
+                                                SacnUniverseDiscoverySource** source_state);
 SacnUniverseDiscoverySource* get_first_universe_discovery_source(EtcPalRbIter* iterator);
 SacnUniverseDiscoverySource* get_next_universe_discovery_source(EtcPalRbIter* iterator);
 size_t get_num_universe_discovery_sources();
-etcpal_error_t remove_sacn_universe_discovery_source(const EtcPalUuid* cid);
+etcpal_error_t remove_sacn_universe_discovery_source(sacn_remote_source_t handle);
 void remove_sacn_source_detector();
 
 #ifdef __cplusplus

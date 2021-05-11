@@ -90,7 +90,7 @@ public:
         NULL and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of
         0 (not sourced).
         Memory is owned by the application.*/
-    sacn_source_id_t* slot_owners{nullptr};
+    sacn_dmx_merger_source_t* slot_owners{nullptr};
 
     int source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
                                                                 listen to when using dynamic memory. */
@@ -116,14 +116,14 @@ public:
   etcpal::Error Startup(const Settings& settings);
   void Shutdown();
 
-  etcpal::Expected<sacn_source_id_t> AddSource();
-  etcpal::Error RemoveSource(sacn_source_id_t source);
-  const SacnDmxMergerSource* GetSourceInfo(sacn_source_id_t source) const;
+  etcpal::Expected<sacn_dmx_merger_source_t> AddSource();
+  etcpal::Error RemoveSource(sacn_dmx_merger_source_t source);
+  const SacnDmxMergerSource* GetSourceInfo(sacn_dmx_merger_source_t source) const;
 
-  etcpal::Error UpdateLevels(sacn_source_id_t source, const uint8_t* new_levels, size_t new_levels_count);
-  etcpal::Error UpdatePaps(sacn_source_id_t source, const uint8_t* paps, size_t paps_count);
-  etcpal::Error UpdateUniversePriority(sacn_source_id_t source, uint8_t universe_priority);
-  etcpal::Error RemovePaps(sacn_source_id_t source);
+  etcpal::Error UpdateLevels(sacn_dmx_merger_source_t source, const uint8_t* new_levels, size_t new_levels_count);
+  etcpal::Error UpdatePaps(sacn_dmx_merger_source_t source, const uint8_t* paps, size_t paps_count);
+  etcpal::Error UpdateUniversePriority(sacn_dmx_merger_source_t source, uint8_t universe_priority);
+  etcpal::Error RemovePaps(sacn_dmx_merger_source_t source);
 
   constexpr Handle handle() const;
 
@@ -200,9 +200,9 @@ inline void DmxMerger::Shutdown()
  * @return #kEtcPalErrNoMem: No room to allocate memory for this source, or the max number of sources has been reached.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Expected<sacn_source_id_t> DmxMerger::AddSource()
+inline etcpal::Expected<sacn_dmx_merger_source_t> DmxMerger::AddSource()
 {
-  sacn_source_id_t result = SACN_DMX_MERGER_SOURCE_INVALID;
+  sacn_dmx_merger_source_t result = SACN_DMX_MERGER_SOURCE_INVALID;
   etcpal_error_t err = sacn_dmx_merger_add_source(handle_, &result);
   if (err == kEtcPalErrOk)
     return result;
@@ -221,7 +221,7 @@ inline etcpal::Expected<sacn_source_id_t> DmxMerger::AddSource()
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error DmxMerger::RemoveSource(sacn_source_id_t source)
+inline etcpal::Error DmxMerger::RemoveSource(sacn_dmx_merger_source_t source)
 {
   return sacn_dmx_merger_remove_source(handle_, source);
 }
@@ -236,7 +236,7 @@ inline etcpal::Error DmxMerger::RemoveSource(sacn_source_id_t source)
  * @param[in] source The id of the source.
  * @return The reference to the source data, otherwise kEtcPalErrInvalid.
  */
-inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_source_id_t source) const
+inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_dmx_merger_source_t source) const
 {
   return sacn_dmx_merger_get_source(handle_, source);
 }
@@ -256,7 +256,7 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_source_id_t sour
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error DmxMerger::UpdateLevels(sacn_source_id_t source, const uint8_t* new_levels,
+inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source, const uint8_t* new_levels,
                                              size_t new_levels_count)
 {
   return sacn_dmx_merger_update_levels(handle_, source, new_levels, new_levels_count);
@@ -281,7 +281,7 @@ inline etcpal::Error DmxMerger::UpdateLevels(sacn_source_id_t source, const uint
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error DmxMerger::UpdatePaps(sacn_source_id_t source, const uint8_t* paps, size_t paps_count)
+inline etcpal::Error DmxMerger::UpdatePaps(sacn_dmx_merger_source_t source, const uint8_t* paps, size_t paps_count)
 {
   return sacn_dmx_merger_update_paps(handle_, source, paps, paps_count);
 }
@@ -304,7 +304,7 @@ inline etcpal::Error DmxMerger::UpdatePaps(sacn_source_id_t source, const uint8_
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error DmxMerger::UpdateUniversePriority(sacn_source_id_t source, uint8_t universe_priority)
+inline etcpal::Error DmxMerger::UpdateUniversePriority(sacn_dmx_merger_source_t source, uint8_t universe_priority)
 {
   return sacn_dmx_merger_update_universe_priority(handle_, source, universe_priority);
 }
@@ -322,7 +322,7 @@ inline etcpal::Error DmxMerger::UpdateUniversePriority(sacn_source_id_t source, 
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error DmxMerger::RemovePaps(sacn_source_id_t source)
+inline etcpal::Error DmxMerger::RemovePaps(sacn_dmx_merger_source_t source)
 {
   return sacn_dmx_merger_remove_paps(handle_, source);
 }

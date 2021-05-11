@@ -78,6 +78,9 @@ static void dmx_merger_rb_node_dealloc_func(EtcPalRbNode* node);
 static bool merger_handle_in_use(int handle_val, void* cookie);
 static bool source_handle_in_use(int handle_val, void* cookie);
 
+static etcpal_error_t add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t id_to_use,
+                                 sacn_dmx_merger_source_t* id_result);
+
 static void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values,
                           uint16_t new_values_count);
 static void update_per_address_priorities(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
@@ -89,7 +92,7 @@ static void merge_source_on_all_slots(MergerState* merger, SourceState* source);
 static void free_source_state_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void free_mergers_node(const EtcPalRbTree* self, EtcPalRbNode* node);
 
-static SourceState* construct_source_state(sacn_source_id_t handle);
+static SourceState* construct_source_state(sacn_dmx_merger_source_t handle);
 static MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMergerConfig* config);
 
 /*************************** Function definitions ****************************/
@@ -230,7 +233,7 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
  * @return #kEtcPalErrNoMem: No room to allocate memory for this source, or the max number of sources has been reached.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_source_id_t* source_id)
+etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t* source_id)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
@@ -267,7 +270,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_source_
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_source_id_t source)
+etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
@@ -304,7 +307,7 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_sour
  * @param[in] source The id of the source.
  * @return The pointer to the source data, or NULL if the source wasn't found.
  */
-const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_source_id_t source)
+const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)
 {
   const SacnDmxMergerSource* result = NULL;
 
@@ -343,7 +346,7 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_source_id_t source,
+etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
                                              const uint8_t* new_levels, size_t new_levels_count)
 {
   etcpal_error_t result = kEtcPalErrOk;
@@ -395,7 +398,7 @@ etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_sour
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_source_id_t source, const uint8_t* paps,
+etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t* paps,
                                            size_t paps_count)
 {
   etcpal_error_t result = kEtcPalErrOk;
@@ -446,7 +449,7 @@ etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_source
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger, sacn_source_id_t source,
+etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
                                                         uint8_t universe_priority)
 {
   etcpal_error_t result = kEtcPalErrOk;
@@ -485,7 +488,7 @@ etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_remove_paps(sacn_dmx_merger_t merger, sacn_source_id_t source)
+etcpal_error_t sacn_dmx_merger_remove_paps(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
@@ -554,6 +557,75 @@ bool source_handle_in_use(int handle_val, void* cookie)
 
   return (handle_val == SACN_DMX_MERGER_SOURCE_INVALID) ||
          etcpal_rbtree_find(&merger_state->source_state_lookup, &handle_val);
+}
+
+// Needs lock
+// Use id_to_use as long as it's valid. Otherwise generate the ID with the merger's handle manager.
+etcpal_error_t add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t id_to_use,
+                          sacn_dmx_merger_source_t* id_result)
+{
+  MergerState* merger_state = NULL;
+  SourceState* source_state = NULL;
+
+  size_t source_count_max = SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER;
+  sacn_dmx_merger_source_t handle = SACN_DMX_MERGER_SOURCE_INVALID;
+
+  etcpal_error_t state_lookup_insert_result = kEtcPalErrOk;
+
+  // Get the merger state, or return error for invalid handle.
+  etcpal_error_t result = lookup_state(merger, SACN_DMX_MERGER_SOURCE_INVALID, &merger_state, NULL);
+
+  if (result != kEtcPalErrOk)
+    result = kEtcPalErrInvalid;
+
+  // Check if the maximum number of sources has been reached yet.
+  if (result == kEtcPalErrOk)
+  {
+#if SACN_DYNAMIC_MEM
+    source_count_max = merger_state->config.source_count_max;
+#endif
+
+    if (((source_count_max != SACN_RECEIVER_INFINITE_SOURCES) || !SACN_DYNAMIC_MEM) &&
+        (etcpal_rbtree_size(&merger_state->source_state_lookup) >= source_count_max))
+    {
+      result = kEtcPalErrNoMem;
+    }
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    // Generate a new source handle.
+    handle = (id_to_use == SACN_DMX_MERGER_SOURCE_INVALID)
+                 ? (sacn_dmx_merger_source_t)get_next_int_handle(&merger_state->source_handle_mgr, 0xffff)
+                 : id_to_use;
+
+    // Initialize source state.
+    source_state = construct_source_state(handle);
+
+    if (!source_state)
+      result = kEtcPalErrNoMem;
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    state_lookup_insert_result = etcpal_rbtree_insert(&merger_state->source_state_lookup, source_state);
+
+    if (state_lookup_insert_result != kEtcPalErrOk)
+    {
+      // Clean up and return the correct error.
+      FREE_SOURCE_STATE(source_state);
+
+      if (state_lookup_insert_result == kEtcPalErrNoMem)
+        result = kEtcPalErrNoMem;
+      else
+        result = kEtcPalErrSys;
+    }
+  }
+
+  if (result == kEtcPalErrOk)
+    *id_result = handle;
+
+  return result;
 }
 
 /*
@@ -625,7 +697,7 @@ void merge_source(MergerState* merger, SourceState* source, uint16_t slot_index)
                                                                   : source->source.universe_priority;
   bool source_stopped_sourcing = SOURCE_STOPPED_SOURCING(source, slot_index);
 
-  sacn_source_id_t winning_source = merger->winning_sources[slot_index];
+  sacn_dmx_merger_source_t winning_source = merger->winning_sources[slot_index];
   uint8_t winning_level = merger->config.slots[slot_index];
   uint8_t winning_priority = merger->winning_priorities[slot_index];
 
@@ -740,7 +812,7 @@ void free_mergers_node(const EtcPalRbTree* self, EtcPalRbNode* node)
   FREE_DMX_MERGER_RB_NODE(node);
 }
 
-SourceState* construct_source_state(sacn_source_id_t handle)
+SourceState* construct_source_state(sacn_dmx_merger_source_t handle)
 {
   SourceState* source_state = ALLOC_SOURCE_STATE();
 
@@ -799,7 +871,7 @@ MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMerge
  *
  * Call sacn_lock() before using this function or the state data.
  */
-etcpal_error_t lookup_state(sacn_dmx_merger_t merger, sacn_source_id_t source, MergerState** merger_state,
+etcpal_error_t lookup_state(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, MergerState** merger_state,
                             SourceState** source_state)
 {
   etcpal_error_t result = kEtcPalErrOk;
@@ -914,7 +986,7 @@ etcpal_error_t destroy_sacn_dmx_merger(sacn_dmx_merger_t handle)
 }
 
 // Needs lock
-etcpal_error_t remove_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_source_id_t source)
+etcpal_error_t remove_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)
 {
   MergerState* merger_state = NULL;
   SourceState* source_state = NULL;
@@ -944,72 +1016,20 @@ etcpal_error_t remove_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_sour
 }
 
 // Needs lock
-etcpal_error_t add_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_source_id_t* source_id)
+etcpal_error_t add_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t* handle)
 {
-  MergerState* merger_state = NULL;
-  SourceState* source_state = NULL;
-
-  size_t source_count_max = SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER;
-  sacn_source_id_t handle = SACN_DMX_MERGER_SOURCE_INVALID;
-
-  etcpal_error_t state_lookup_insert_result = kEtcPalErrOk;
-
-  // Get the merger state, or return error for invalid handle.
-  etcpal_error_t result = lookup_state(merger, SACN_DMX_MERGER_SOURCE_INVALID, &merger_state, NULL);
-
-  if (result != kEtcPalErrOk)
-    result = kEtcPalErrInvalid;
-
-  // Check if the maximum number of sources has been reached yet.
-  if (result == kEtcPalErrOk)
-  {
-#if SACN_DYNAMIC_MEM
-    source_count_max = merger_state->config.source_count_max;
-#endif
-
-    if (((source_count_max != SACN_RECEIVER_INFINITE_SOURCES) || !SACN_DYNAMIC_MEM) &&
-        (etcpal_rbtree_size(&merger_state->source_state_lookup) >= source_count_max))
-    {
-      result = kEtcPalErrNoMem;
-    }
-  }
-
-  if (result == kEtcPalErrOk)
-  {
-    // Generate a new source handle.
-    handle = (sacn_source_id_t)get_next_int_handle(&merger_state->source_handle_mgr, 0xffff);
-
-    // Initialize source state.
-    source_state = construct_source_state(handle);
-
-    if (!source_state)
-      result = kEtcPalErrNoMem;
-  }
-
-  if (result == kEtcPalErrOk)
-  {
-    state_lookup_insert_result = etcpal_rbtree_insert(&merger_state->source_state_lookup, source_state);
-
-    if (state_lookup_insert_result != kEtcPalErrOk)
-    {
-      // Clean up and return the correct error.
-      FREE_SOURCE_STATE(source_state);
-
-      if (state_lookup_insert_result == kEtcPalErrNoMem)
-        result = kEtcPalErrNoMem;
-      else
-        result = kEtcPalErrSys;
-    }
-  }
-
-  if (result == kEtcPalErrOk)
-    *source_id = handle;
-
-  return result;
+  return add_source(merger, SACN_DMX_MERGER_SOURCE_INVALID, handle);
 }
 
 // Needs lock
-etcpal_error_t update_sacn_dmx_merger_levels(sacn_dmx_merger_t merger, sacn_source_id_t source,
+etcpal_error_t add_sacn_dmx_merger_source_with_handle(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t handle_to_use)
+{
+  sacn_dmx_merger_source_t tmp = SACN_DMX_MERGER_SOURCE_INVALID;
+  return add_source(merger, handle_to_use, &tmp);
+}
+
+// Needs lock
+etcpal_error_t update_sacn_dmx_merger_levels(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
                                              const uint8_t* new_levels, size_t new_levels_count)
 {
   MergerState* merger_state = NULL;
@@ -1026,7 +1046,7 @@ etcpal_error_t update_sacn_dmx_merger_levels(sacn_dmx_merger_t merger, sacn_sour
 }
 
 // Needs lock
-etcpal_error_t update_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_source_id_t source, const uint8_t* paps,
+etcpal_error_t update_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t* paps,
                                            size_t paps_count)
 {
   MergerState* merger_state = NULL;
@@ -1043,7 +1063,7 @@ etcpal_error_t update_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_source
 }
 
 // Needs lock
-etcpal_error_t update_sacn_dmx_merger_universe_priority(sacn_dmx_merger_t merger, sacn_source_id_t source,
+etcpal_error_t update_sacn_dmx_merger_universe_priority(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
                                                         uint8_t universe_priority)
 {
   MergerState* merger_state = NULL;
@@ -1060,7 +1080,7 @@ etcpal_error_t update_sacn_dmx_merger_universe_priority(sacn_dmx_merger_t merger
 }
 
 // Needs lock
-etcpal_error_t remove_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_source_id_t source)
+etcpal_error_t remove_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)
 {
   MergerState* merger_state = NULL;
   SourceState* source_state = NULL;

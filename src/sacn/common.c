@@ -112,7 +112,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
       receiver_initted = ((res = sacn_receiver_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
       source_initted = ((res = sacn_source_init()) == kEtcPalErrOk);
-    if ( res == kEtcPalErrOk)
+    if (res == kEtcPalErrOk)
       merger_initted = ((res = sacn_dmx_merger_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
       merge_receiver_initted = ((res = sacn_merge_receiver_init()) == kEtcPalErrOk);
@@ -187,6 +187,70 @@ void sacn_deinit(void)
 
     sacn_log_params = NULL;
   }
+}
+
+/**
+ * @brief Converts a remote source CID to the corresponding handle, or #SACN_REMOTE_SOURCE_INVALID if not found.
+ *
+ * This is a simple conversion from a remote source CID to it's corresponding remote source handle. A handle will be
+ * returned only if it is a source that has been discovered by a receiver, merge receiver, or source detector.
+ *
+ * @param[in] source_cid The UUID of the remote source CID.
+ * @return The remote source handle, or #SACN_REMOTE_SOURCE_INVALID if not found.
+ */
+sacn_remote_source_t sacn_get_remote_source_handle(const EtcPalUuid* source_cid)
+{
+  sacn_remote_source_t result = SACN_REMOTE_SOURCE_INVALID;
+
+  if (sacn_lock())
+  {
+    result = get_remote_source_handle(source_cid);
+    sacn_unlock();
+  }
+
+  return result;
+}
+
+/**
+ * @brief Converts a remote source handle to the corresponding source CID.
+ *
+ * @param[in] source_handle The handle of the remote source.
+ * @param[out] source_cid The UUID of the source CID. Only written to if #kEtcPalErrOk is returned.
+ *
+ * @return #kEtcPalErrOk: Lookup was successful.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotFound: The source handle does not match a source that was found by a receiver, merge receiver,
+ * or source detector.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, EtcPalUuid* source_cid)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+
+  if ((source_handle == SACN_REMOTE_SOURCE_INVALID) || !source_cid)
+  {
+    result = kEtcPalErrInvalid;
+  }
+  else
+  {
+    if (sacn_lock())
+    {
+      const EtcPalUuid* cid = get_remote_source_cid(source_handle);
+
+      if (cid)
+        *source_cid = *cid;
+      else
+        result = kEtcPalErrNotFound;
+
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
+  }
+
+  return result;
 }
 
 bool sacn_lock(void)

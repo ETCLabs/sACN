@@ -82,13 +82,12 @@ public:
      * @param[in] universe The universe this merge receiver is monitoring.
      * @param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe.  This buffer
      *                  is owned by the library.
-     * @param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source_ids.  If a value in the buffer is
-     *           #SACN_DMX_MERGER_SOURCE_INVALID, the corresponding slot is not currently controlled. You can also use
-     *           #SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners, index) to check the slot validity. This buffer is owned
-     *            by the library.
+     * @param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source handles.  If a value in the buffer is
+     * sacn::kInvalidRemoteSourceHandle, the corresponding slot is not currently controlled.  This buffer is owned by
+     * the library.
      */
     virtual void HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
-                                  const sacn_source_id_t* slot_owners) = 0;
+                                  const RemoteSourceHandle* slot_owners) = 0;
 
     /**
      * @brief Notify that a non-data packet has been received.
@@ -99,14 +98,14 @@ public:
      * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
      * packets on the universe.
      *
-     * @param[in] handle The merge receiver's handle.
+     * @param[in] receiver_handle The merge receiver's handle.
      * @param[in] universe The universe this merge receiver is monitoring.
      * @param[in] source_addr The network address from which the sACN packet originated.
      * @param[in] header The header data of the sACN packet.
      * @param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count. This buffer
      *                  is owned by the library.
      */
-    virtual void HandleNonDmxData(Handle handle, uint16_t universe, const etcpal::SockAddr& source_addr,
+    virtual void HandleNonDmxData(Handle receiver_handle, uint16_t universe, const etcpal::SockAddr& source_addr,
                                   const SacnHeaderData& header, const uint8_t* pdata) = 0;
 
     /**
@@ -193,9 +192,6 @@ public:
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
   std::vector<EtcPalMcastNetintId> GetNetworkInterfaces();
 
-  etcpal::Expected<sacn_source_id_t> GetSourceId(const etcpal::Uuid& source_cid) const;
-  etcpal::Expected<etcpal::Uuid> GetSourceCid(sacn_source_id_t source) const;
-
   static etcpal::Error ResetNetworking();
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
   static etcpal::Error ResetNetworking(std::vector<NetintList>& netint_lists);
@@ -215,7 +211,7 @@ private:
 namespace internal
 {
 extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, uint16_t universe, const uint8_t* slots,
-                                                 const sacn_source_id_t* slot_owners, void* context)
+                                                 const sacn_remote_source_t* slot_owners, void* context)
 {
   if (context)
   {
@@ -223,14 +219,14 @@ extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, u
   }
 }
 
-extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t handle, uint16_t universe,
+extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t receiver_handle, uint16_t universe,
                                              const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
                                              const uint8_t* pdata, void* context)
 {
   if (context && source_addr && header)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(handle, universe, *source_addr, *header,
-                                                                          pdata);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(receiver_handle, universe, *source_addr,
+                                                                          *header, pdata);
   }
 }
 
@@ -406,41 +402,6 @@ inline std::vector<EtcPalMcastNetintId> MergeReceiver::GetNetworkInterfaces()
 }
 
 /**
- * @brief Converts a source CID to the corresponding source ID.
- *
- * This is a simple conversion from a source CID to it's corresponding source ID. A source ID will be returned only if
- * it is a source that has been discovered by the merge receiver.
- *
- * @param[in] source_cid The UUID of the source CID.
- * @return On success this will be the source ID, otherwise kEtcPalErrNotFound.
- */
-inline etcpal::Expected<sacn_source_id_t> MergeReceiver::GetSourceId(const etcpal::Uuid& source_cid) const
-{
-  sacn_source_id_t result = sacn_merge_receiver_get_source_id(handle_, &source_cid.get());
-  if (result != SACN_DMX_MERGER_SOURCE_INVALID)
-    return result;
-  return kEtcPalErrNotFound;
-}
-
-/**
- * @brief Converts a source ID to the corresponding source CID.
- *
- * @param[in] source_id The ID of the source.
- * @return On success, the source CID.
- * @return #kEtcPalErrNotFound: This merge receiver is uninitialized, or source_id does not correspond to a valid
- * source.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
- */
-inline etcpal::Expected<etcpal::Uuid> MergeReceiver::GetSourceCid(sacn_source_id_t source_id) const
-{
-  EtcPalUuid result;
-  etcpal_error_t error = sacn_merge_receiver_get_source_cid(handle_, source_id, &result);
-  if (error == kEtcPalErrOk)
-    return result;
-  return error;
-}
-
-/**
  * @brief Resets the underlying network sockets and packet receipt state for all sACN merge receivers.
  *
  * This is the overload of ResetNetworking that uses all network interfaces.
@@ -540,7 +501,7 @@ inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<NetintList>& net
 /**
  * @brief Get the current handle to the underlying C merge receiver.
  *
- * @return The handle or Receiver::kInvalidHandle.
+ * @return The handle or MergeReceiver::kInvalidHandle.
  */
 inline constexpr MergeReceiver::Handle MergeReceiver::handle() const
 {
