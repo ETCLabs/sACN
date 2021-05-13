@@ -7,5 +7,5 @@ set(TEST_SOURCE_DISABLED_SOURCES
   ${SACN_SOURCES}
 )
 
-sacn_add_test(test_source_disabled_dynamic ${SACN_TEST}/configs/source_disabled_dynamic ${TEST_SOURCE_DISABLED_SOURCES})
-sacn_add_test(test_source_disabled_static ${SACN_TEST}/configs/source_disabled_static ${TEST_SOURCE_DISABLED_SOURCES})
+sacn_add_test(unit_test_source_disabled_dynamic ${SACN_TEST}/configs/source_disabled_dynamic ${TEST_SOURCE_DISABLED_SOURCES})
+sacn_add_test(unit_test_source_disabled_static ${SACN_TEST}/configs/source_disabled_static ${TEST_SOURCE_DISABLED_SOURCES})

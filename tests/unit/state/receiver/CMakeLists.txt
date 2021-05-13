@@ -16,5 +16,5 @@ set(TEST_RECEIVER_STATE_SOURCES
 
 sacn_add_dynamic_test(test_receiver_state ${TEST_RECEIVER_STATE_SOURCES})
 sacn_add_static_test(test_receiver_state ${TEST_RECEIVER_STATE_SOURCES})
-sacn_add_test(test_receiver_state_pap_disabled_dynamic ${SACN_TEST}/configs/pap_disabled_dynamic ${TEST_RECEIVER_STATE_SOURCES})
-sacn_add_test(test_receiver_state_pap_disabled_static ${SACN_TEST}/configs/pap_disabled_static ${TEST_RECEIVER_STATE_SOURCES})
+sacn_add_test(unit_test_receiver_state_pap_disabled_dynamic ${SACN_TEST}/configs/pap_disabled_dynamic ${TEST_RECEIVER_STATE_SOURCES})
+sacn_add_test(unit_test_receiver_state_pap_disabled_static ${SACN_TEST}/configs/pap_disabled_static ${TEST_RECEIVER_STATE_SOURCES})
