@@ -1077,7 +1077,11 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 
     if (!universe->unicast_dests)
       result = kEtcPalErrNoMem;
+
+    universe->netints.netints = NULL;
+    universe->netints.netints_capacity = 0;
 #endif
+    universe->netints.num_netints = 0;
   }
 
   for (size_t i = 0; (result == kEtcPalErrOk) && (i < config->num_unicast_destinations); ++i)
@@ -1298,6 +1302,12 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
 
   receiver->ipv4_socket = ETCPAL_SOCKET_INVALID;
   receiver->ipv6_socket = ETCPAL_SOCKET_INVALID;
+
+#if SACN_DYNAMIC_MEM
+  receiver->netints.netints = NULL;
+  receiver->netints.netints_capacity = 0;
+#endif
+  receiver->netints.num_netints = 0;
 
   etcpal_error_t initialize_receiver_netints_result =
       sacn_initialize_receiver_netints(&receiver->netints, netints, num_netints);
@@ -2570,6 +2580,12 @@ etcpal_error_t init_source_detector(void)
   {
     etcpal_rbtree_init(&universe_discovery_sources, remote_source_compare, node_alloc, node_dealloc);
     source_detector.created = false;
+
+#if SACN_DYNAMIC_MEM
+    source_detector.netints.netints = NULL;
+    source_detector.netints.netints_capacity = 0;
+#endif
+    source_detector.netints.num_netints = 0;
   }
 
   return res;
