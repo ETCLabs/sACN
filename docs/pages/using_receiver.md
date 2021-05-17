@@ -47,11 +47,25 @@ sacn_receiver_destroy(my_receiver_handle);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
+// Implement the callback functions by inheriting sacn::Receiver::NotifyHandler:
+class MyNotifyHandler : public sacn::Receiver::NotifyHandler
+{
+  // Required callbacks that must be implemented:
+  void HandleUniverseData(Handle receiver_handle, const etcpal::SockAddr& source_addr, const SacnHeaderData& header,
+                          const uint8_t* pdata, bool is_sampling) override;
+  void HandleSourcesLost(Handle handle, uint16_t universe, const std::vector<SacnLostSource>& lost_sources) override;
+
+  // Optional callbacks - these don't have to be a part of MyNotifyHandler:
+  void HandleSamplingPeriodStarted(Handle handle, uint16_t universe) override;
+  void HandleSamplingPeriodEnded(Handle handle, uint16_t universe) override;
+  void HandleSourcePapLost(Handle handle, uint16_t universe, const SacnRemoteSource& source) override;
+  void HandleSourceLimitExceeded(Handle handle, uint16_t universe) override;
+};
+
+// Now to set up a receiver:
 sacn::Receiver::Settings config(1); // Instantiate config & listen on universe 1
 sacn::Receiver receiver; // Instantiate a receiver
 
-// You implement the callbacks by implementing the sacn::Receiver::NotifyHandler interface.
-// The NotifyHandler-derived instance, referred to here as my_notify_handler, must be passed in to Startup:
 MyNotifyHandler my_notify_handler;
 receiver.Startup(config, my_notify_handler);
 // Or do this if Startup is being called within the NotifyHandler-derived class:

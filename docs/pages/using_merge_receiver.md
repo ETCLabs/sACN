@@ -45,11 +45,23 @@ sacn_merge_receiver_destroy(my_merge_receiver_handle);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
+// Implement the callback functions by inheriting sacn::MergeReceiver::NotifyHandler:
+class MyNotifyHandler : public sacn::MergeReceiver::NotifyHandler
+{
+  // Required callbacks that must be implemented:
+  void HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
+                        const RemoteSourceHandle* slot_owners) override;
+  void HandleNonDmxData(Handle receiver_handle, uint16_t universe, const etcpal::SockAddr& source_addr,
+                        const SacnHeaderData& header, const uint8_t* pdata) override;
+
+  // Optional callback - this doesn't have to be a part of MyNotifyHandler:
+  void HandleSourceLimitExceeded(Handle handle, uint16_t universe) override;
+};
+
+// Now to set up a merge receiver:
 sacn::MergeReceiver::Settings config(1); // Instantiate config & listen on universe 1
 sacn::MergeReceiver merge_receiver; // Instantiate a merge receiver
 
-// You implement the callbacks by implementing the sacn::MergeReceiver::NotifyHandler interface.
-// The NotifyHandler-derived instance, referred to here as my_notify_handler, must be passed in to Startup:
 MyNotifyHandler my_notify_handler;
 merge_receiver.Startup(config, my_notify_handler);
 // Or do this if Startup is being called within the NotifyHandler-derived class:

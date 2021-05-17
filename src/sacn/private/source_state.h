@@ -41,6 +41,12 @@ typedef enum
   kSkipTerminatingUnicastDests
 } send_universe_unicast_behavior_t;
 
+typedef enum
+{
+  kTerminateAndRemove,
+  kTerminateWithoutRemoving
+} set_terminating_behavior_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -55,15 +61,14 @@ void update_levels_and_or_paps(SacnSource* source, SacnSourceUniverse* universe,
                                size_t new_values_size, const uint8_t* new_priorities, size_t new_priorities_size,
                                force_sync_behavior_t force_sync);
 void increment_sequence_number(SacnSourceUniverse* universe);
-void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf,
-                           send_universe_unicast_behavior_t behavior);
+void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
 void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
 void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bool preview);
 void set_universe_priority(const SacnSource* source, SacnSourceUniverse* universe, uint8_t priority);
-void set_unicast_dest_terminating(SacnUnicastDestination* dest);
+void set_unicast_dest_terminating(SacnUnicastDestination* dest, set_terminating_behavior_t behavior);
 void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse* universe,
                                     reset_transmission_suppression_behavior_t behavior);
-void set_universe_terminating(SacnSourceUniverse* universe);
+void set_universe_terminating(SacnSourceUniverse* universe, set_terminating_behavior_t behavior);
 void set_source_terminating(SacnSource* source);
 void set_source_name(SacnSource* source, const char* new_name);
 size_t get_source_universes(const SacnSource* source, uint16_t* universes, size_t universes_size);

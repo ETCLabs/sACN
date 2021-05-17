@@ -665,7 +665,7 @@ TEST_F(TestSource, SourceRemoveUniverseWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
-  set_universe_terminating_fake.custom_fake = [](SacnSourceUniverse* universe) {
+  set_universe_terminating_fake.custom_fake = [](SacnSourceUniverse* universe, set_terminating_behavior_t) {
     EXPECT_EQ(universe->universe_id, kTestUniverse);
   };
 
@@ -684,10 +684,10 @@ TEST_F(TestSource, SourceRemoveUniverseHandlesNotFound)
   universe_config.universe = kTestUniverse;
   sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints.data(), kTestNetints.size());
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kTerminatingAndRemoving;
   VERIFY_LOCKING(sacn_source_remove_universe(kTestHandle, kTestUniverse));
   EXPECT_EQ(set_universe_terminating_fake.call_count, 0u);
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kNotTerminating;
   VERIFY_LOCKING(sacn_source_remove_universe(kTestHandle, kTestUniverse));
   EXPECT_EQ(set_universe_terminating_fake.call_count, 1u);
 }
@@ -786,12 +786,12 @@ TEST_F(TestSource, SourceAddUnicastDestinationErrNotFoundWorks)
 
   sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints.data(), kTestNetints.size());
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kTerminatingAndRemoving;
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]),
                                   kEtcPalErrNotFound);
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kNotTerminating;
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]),
                                   kEtcPalErrOk);
@@ -828,7 +828,7 @@ TEST_F(TestSource, SourceRemoveUnicastDestinationWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
-  set_unicast_dest_terminating_fake.custom_fake = [](SacnUnicastDestination* dest) {
+  set_unicast_dest_terminating_fake.custom_fake = [](SacnUnicastDestination* dest, set_terminating_behavior_t) {
     EXPECT_EQ(etcpal_ip_cmp(&dest->dest_addr, &kTestRemoteAddrs[0]), 0);
   };
 
@@ -866,11 +866,11 @@ TEST_F(TestSource, SourceRemoveUnicastDestinationHandlesNotFound)
   SacnUnicastDestination* dest = nullptr;
   lookup_unicast_dest(GetUniverse(kTestHandle, kTestUniverse), &kTestRemoteAddrs[0], &dest);
 
-  dest->terminating = true;
+  dest->termination_state = kTerminatingAndRemoving;
   VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]));
   EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 0u);
 
-  dest->terminating = false;
+  dest->termination_state = kNotTerminating;
   VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]));
   EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 1u);
 }
@@ -907,11 +907,11 @@ TEST_F(TestSource, SourceGetUnicastDestinationsHandlesNotFound)
 
   sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints.data(), kTestNetints.size());
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kTerminatingAndRemoving;
   VERIFY_LOCKING(sacn_source_get_unicast_destinations(kTestHandle, kTestUniverse, nullptr, 0u));
   EXPECT_EQ(get_source_unicast_dests_fake.call_count, 0u);
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kNotTerminating;
   VERIFY_LOCKING(sacn_source_get_unicast_destinations(kTestHandle, kTestUniverse, nullptr, 0u));
   EXPECT_EQ(get_source_unicast_dests_fake.call_count, 1u);
 }
@@ -970,12 +970,12 @@ TEST_F(TestSource, SourceChangePriorityErrNotFoundWorks)
 
   sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints.data(), kTestNetints.size());
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kTerminatingAndRemoving;
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority),
                                   kEtcPalErrNotFound);
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kNotTerminating;
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_priority(kTestHandle, kTestUniverse, kTestPriority), kEtcPalErrOk);
 }
@@ -1031,12 +1031,12 @@ TEST_F(TestSource, SourceChangePreviewFlagErrNotFoundWorks)
 
   sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints.data(), kTestNetints.size());
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kTerminatingAndRemoving;
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true),
                                   kEtcPalErrNotFound);
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kNotTerminating;
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_change_preview_flag(kTestHandle, kTestUniverse, true), kEtcPalErrOk);
 }
@@ -1053,12 +1053,11 @@ TEST_F(TestSource, SourceSendNowWorks)
     EXPECT_EQ(memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer.data(), kTestBuffer.size()), 0);
   };
   send_universe_unicast_fake.custom_fake = [](const SacnSource* source, SacnSourceUniverse* universe,
-                                              const uint8_t* send_buf, send_universe_unicast_behavior_t behavior) {
+                                              const uint8_t* send_buf) {
     EXPECT_EQ(source->handle, kTestHandle);
     EXPECT_EQ(universe->universe_id, kTestUniverse);
     EXPECT_EQ(send_buf[SACN_DATA_HEADER_SIZE - 1], kTestStartCode);
     EXPECT_EQ(memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer.data(), kTestBuffer.size()), 0);
-    EXPECT_EQ(behavior, kSkipTerminatingUnicastDests);
   };
   increment_sequence_number_fake.custom_fake = [](SacnSourceUniverse* universe) {
     EXPECT_EQ(universe->universe_id, kTestUniverse);
@@ -1127,13 +1126,13 @@ TEST_F(TestSource, SourceSendNowErrNotFoundWorks)
 
   sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints.data(), kTestNetints.size());
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kTerminatingAndRemoving;
 
   VERIFY_LOCKING_AND_RETURN_VALUE(
       sacn_source_send_now(kTestHandle, kTestUniverse, kTestStartCode, kTestBuffer.data(), kTestBuffer.size()),
       kEtcPalErrNotFound);
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kNotTerminating;
 
   VERIFY_LOCKING_AND_RETURN_VALUE(
       sacn_source_send_now(kTestHandle, kTestUniverse, kTestStartCode, kTestBuffer.data(), kTestBuffer.size()),
@@ -1164,8 +1163,6 @@ TEST_F(TestSource, SourceUpdateValuesHandlesInvalid)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
-  VERIFY_NO_LOCKING(sacn_source_update_values(kTestHandle, kTestUniverse, nullptr, kTestBuffer.size()));
-  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
   VERIFY_NO_LOCKING(
       sacn_source_update_values(kTestHandle, kTestUniverse, kTestBuffer.data(), (DMX_ADDRESS_COUNT + 1u)));
   EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
@@ -1188,12 +1185,12 @@ TEST_F(TestSource, SourceUpdateValuesHandlesNotFound)
 
   sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints.data(), kTestNetints.size());
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kTerminatingAndRemoving;
 
   VERIFY_LOCKING(sacn_source_update_values(kTestHandle, kTestUniverse, kTestBuffer.data(), kTestBuffer.size()));
   EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kNotTerminating;
 
   VERIFY_LOCKING(sacn_source_update_values(kTestHandle, kTestUniverse, kTestBuffer.data(), kTestBuffer.size()));
   EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 1u);
@@ -1237,9 +1234,6 @@ TEST_F(TestSource, SourceUpdateValuesAndPapHandlesInvalid)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
-  VERIFY_NO_LOCKING(sacn_source_update_values_and_pap(kTestHandle, kTestUniverse, nullptr, kTestBuffer.size(),
-                                                      kTestBuffer2.data(), kTestBuffer2.size()));
-  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
   VERIFY_NO_LOCKING(sacn_source_update_values_and_pap(kTestHandle, kTestUniverse, kTestBuffer.data(),
                                                       (DMX_ADDRESS_COUNT + 1u), kTestBuffer2.data(),
                                                       kTestBuffer2.size()));
@@ -1270,13 +1264,13 @@ TEST_F(TestSource, SourceUpdateValuesAndPapHandlesNotFound)
 
   sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints.data(), kTestNetints.size());
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kTerminatingAndRemoving;
 
   VERIFY_LOCKING(sacn_source_update_values_and_pap(kTestHandle, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(),
                                                    kTestBuffer2.data(), kTestBuffer2.size()));
   EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kNotTerminating;
 
   VERIFY_LOCKING(sacn_source_update_values_and_pap(kTestHandle, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(),
                                                    kTestBuffer2.data(), kTestBuffer2.size()));
@@ -1308,8 +1302,6 @@ TEST_F(TestSource, SourceUpdateValuesAndForceSyncHandlesInvalid)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
-  VERIFY_NO_LOCKING(sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, nullptr, kTestBuffer.size()));
-  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
   VERIFY_NO_LOCKING(sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer.data(),
                                                              (DMX_ADDRESS_COUNT + 1u)));
   EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
@@ -1335,13 +1327,13 @@ TEST_F(TestSource, SourceUpdateValuesAndForceSyncHandlesNotFound)
 
   sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints.data(), kTestNetints.size());
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kTerminatingAndRemoving;
 
   VERIFY_LOCKING(
       sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer.data(), kTestBuffer.size()));
   EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kNotTerminating;
 
   VERIFY_LOCKING(
       sacn_source_update_values_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer.data(), kTestBuffer.size()));
@@ -1386,9 +1378,6 @@ TEST_F(TestSource, SourceUpdateValuesAndPapAndForceSyncHandlesInvalid)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
-  VERIFY_NO_LOCKING(sacn_source_update_values_and_pap_and_force_sync(
-      kTestHandle, kTestUniverse, nullptr, kTestBuffer.size(), kTestBuffer2.data(), kTestBuffer2.size()));
-  EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
   VERIFY_NO_LOCKING(sacn_source_update_values_and_pap_and_force_sync(kTestHandle, kTestUniverse, kTestBuffer.data(),
                                                                      (DMX_ADDRESS_COUNT + 1u), kTestBuffer2.data(),
                                                                      kTestBuffer2.size()));
@@ -1419,13 +1408,13 @@ TEST_F(TestSource, SourceUpdateValuesAndPapAndForceSyncHandlesNotFound)
 
   sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints.data(), kTestNetints.size());
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kTerminatingAndRemoving;
 
   VERIFY_LOCKING(sacn_source_update_values_and_pap_and_force_sync(
       kTestHandle, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(), kTestBuffer2.size()));
   EXPECT_EQ(update_levels_and_or_paps_fake.call_count, 0u);
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kNotTerminating;
 
   VERIFY_LOCKING(sacn_source_update_values_and_pap_and_force_sync(
       kTestHandle, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(), kTestBuffer2.size()));
@@ -1608,11 +1597,11 @@ TEST_F(TestSource, SourceGetNetintsHandlesNotFound)
 
   sacn_source_add_universe(kTestHandle, &universe_config, kTestNetints.data(), kTestNetints.size());
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = true;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kTerminatingAndRemoving;
   VERIFY_LOCKING(sacn_source_get_network_interfaces(kTestHandle, kTestUniverse, nullptr, 0u));
   EXPECT_EQ(get_source_universe_netints_fake.call_count, 0u);
 
-  GetUniverse(kTestHandle, kTestUniverse)->terminating = false;
+  GetUniverse(kTestHandle, kTestUniverse)->termination_state = kNotTerminating;
   VERIFY_LOCKING(sacn_source_get_network_interfaces(kTestHandle, kTestUniverse, nullptr, 0u));
   EXPECT_EQ(get_source_universe_netints_fake.call_count, 1u);
 }

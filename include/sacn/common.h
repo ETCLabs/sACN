@@ -59,6 +59,11 @@ typedef uint16_t sacn_remote_source_t;
 /** An invalid remote source handle value. */
 #define SACN_REMOTE_SOURCE_INVALID ((sacn_remote_source_t)-1)
 
+/** The DMX start code. */
+#define SACN_STARTCODE_DMX 0x00u
+/** The per-address priority start code. */
+#define SACN_STARTCODE_PRIORITY 0xddu
+
 /**
  * This enum defines how the API module will use IPv4 and IPv6 networking.
  */

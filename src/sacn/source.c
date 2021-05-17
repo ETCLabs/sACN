@@ -30,7 +30,6 @@
 
 /*********************** Private function prototypes *************************/
 
-
 /*************************** Function definitions ****************************/
 
 /* Initialize the sACN Source module. Internal function called from sacn_init(). */
@@ -347,8 +346,8 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if (universe_state && !universe_state->terminating)
-      set_universe_terminating(universe_state);
+    if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
+      set_universe_terminating(universe_state, kTerminateAndRemove);
 
     sacn_unlock();
   }
@@ -430,7 +429,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
     if (result == kEtcPalErrOk)
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if ((result == kEtcPalErrOk) && universe_state && universe_state->terminating)
+    if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
       result = kEtcPalErrNotFound;
 
     // Add unicast destination
@@ -476,14 +475,14 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if (universe_state && !universe_state->terminating)
+    if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
     {
       SacnUnicastDestination* unicast_dest = NULL;
       lookup_unicast_dest(universe_state, dest, &unicast_dest);
 
       // Initiate termination
-      if (unicast_dest && !unicast_dest->terminating)
-        set_unicast_dest_terminating(unicast_dest);
+      if (unicast_dest && (unicast_dest->termination_state != kTerminatingAndRemoving))
+        set_unicast_dest_terminating(unicast_dest, kTerminateAndRemove);
     }
 
     sacn_unlock();
@@ -519,7 +518,7 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
     SacnSourceUniverse* universe_state = NULL;
     if (lookup_source_and_universe(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
     {
-      if (universe_state && !universe_state->terminating)
+      if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
         total_num_dests = get_source_unicast_dests(universe_state, destinations, destinations_size);
     }
 
@@ -575,7 +574,7 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
     if (result == kEtcPalErrOk)
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if ((result == kEtcPalErrOk) && universe_state && universe_state->terminating)
+    if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
       result = kEtcPalErrNotFound;
 
     // Set the priority.
@@ -637,7 +636,7 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
     if (result == kEtcPalErrOk)
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if ((result == kEtcPalErrOk) && universe_state && universe_state->terminating)
+    if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
       result = kEtcPalErrNotFound;
 
     // Set the preview flag.
@@ -741,7 +740,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
     if (result == kEtcPalErrOk)
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if ((result == kEtcPalErrOk) && universe_state && universe_state->terminating)
+    if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
       result = kEtcPalErrNotFound;
 
     if (result == kEtcPalErrOk)
@@ -754,7 +753,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
 
       // Send on the network
       send_universe_multicast(source_state, universe_state, send_buf);
-      send_universe_unicast(source_state, universe_state, send_buf, kSkipTerminatingUnicastDests);
+      send_universe_unicast(source_state, universe_state, send_buf);
       increment_sequence_number(universe_state);
     }
 
@@ -814,21 +813,31 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t s
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
+ * @param[in] new_values A buffer of DMX values to copy from. If this pointer is NULL, the source will terminate DMX
+ * transmission without removing the universe.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
                                size_t new_values_size)
 {
 #if SACN_SOURCE_ENABLED
-  if (new_values && (new_values_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if ((new_values_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if (universe_state && !universe_state->terminating)
+    if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
+    {
+      if (!new_values)
+      {
+        set_universe_terminating(universe_state, kTerminateWithoutRemoving);
+        disable_pap_data(universe_state);
+      }
+
+      // Do this last.
       update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, kDisableForceSync);
+    }
 
     sacn_unlock();
   }
@@ -856,11 +865,12 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
+ * @param[in] new_values A buffer of DMX values to copy from. If this pointer is NULL, the source will terminate DMX
+ * transmission without removing the universe.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
- * @param[in] new_priorities A buffer of per-address priorities to copy from. Setting this to NULL will stop the
- * transmission of per-address priorities, in which case receivers will revert to the universe priority after PAP times
- * out.
+ * @param[in] new_priorities A buffer of per-address priorities to copy from. This will only be sent when DMX is also
+ * being sent. Setting this to NULL will stop the transmission of per-address priorities, in which case receivers will
+ * revert to the universe priority after PAP times out.
  * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
@@ -868,19 +878,22 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
                                        size_t new_priorities_size)
 {
 #if SACN_SOURCE_ENABLED
-  if (new_values && (new_values_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if ((new_values_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if (universe_state && !universe_state->terminating)
+    if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
     {
-      if (!new_priorities)
-        disable_pap_data(universe_state);  // This needs to be done first
+      if (!new_values)
+        set_universe_terminating(universe_state, kTerminateWithoutRemoving);
+      if (!new_values || !new_priorities)
+        disable_pap_data(universe_state);
 
-      update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
-                                new_priorities_size, kDisableForceSync);
+      // Do this last.
+      update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size,
+                                new_values ? new_priorities : NULL, new_priorities_size, kDisableForceSync);
     }
 
     sacn_unlock();
@@ -908,21 +921,31 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
+ * @param[in] new_values A buffer of DMX values to copy from. If this pointer is NULL, the source will terminate DMX
+ * transmission without removing the universe.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
                                               size_t new_values_size)
 {
 #if SACN_SOURCE_ENABLED
-  if (new_values && (new_values_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if ((new_values_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if (universe_state && !universe_state->terminating)
+    if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
+    {
+      if (!new_values)
+      {
+        set_universe_terminating(universe_state, kTerminateWithoutRemoving);
+        disable_pap_data(universe_state);
+      }
+
+      // Do this last.
       update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, kEnableForceSync);
+    }
 
     sacn_unlock();
   }
@@ -955,11 +978,12 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of dmx values to copy from. This pointer must not be NULL.
+ * @param[in] new_values A buffer of DMX values to copy from. If this pointer is NULL, the source will terminate DMX
+ * transmission without removing the universe.
  * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
- * @param[in] new_priorities A buffer of per-address priorities to copy from. Setting this to NULL will stop the
- * transmission of per-address priorities, in which case receivers will revert to the universe priority after PAP times
- * out.
+ * @param[in] new_priorities A buffer of per-address priorities to copy from. This will only be sent when DMX is also
+ * being sent. Setting this to NULL will stop the transmission of per-address priorities, in which case receivers will
+ * revert to the universe priority after PAP times out.
  * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
 void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe,
@@ -967,19 +991,22 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
                                                       const uint8_t* new_priorities, size_t new_priorities_size)
 {
 #if SACN_SOURCE_ENABLED
-  if (new_values && (new_values_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if ((new_values_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if (universe_state && !universe_state->terminating)
+    if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
     {
-      if (!new_priorities)
-        disable_pap_data(universe_state);  // This needs to be done first
+      if (!new_values)
+        set_universe_terminating(universe_state, kTerminateWithoutRemoving);
+      if (!new_values || !new_priorities)
+        disable_pap_data(universe_state);
 
-      update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, new_priorities,
-                                new_priorities_size, kEnableForceSync);
+      // Do this last.
+      update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size,
+                                new_values ? new_priorities : NULL, new_priorities_size, kEnableForceSync);
     }
 
     sacn_unlock();
@@ -1193,7 +1220,7 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
     SacnSourceUniverse* universe_state = NULL;
     if (lookup_source_and_universe(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
     {
-      if (universe_state && !universe_state->terminating)
+      if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
         total_num_network_interfaces = get_source_universe_netints(universe_state, netints, netints_size);
     }
 

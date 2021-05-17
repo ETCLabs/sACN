@@ -614,6 +614,13 @@ typedef struct MergeReceiverSourceLimitExceededNotification
  * Types used by the sACN Source module
  *****************************************************************************/
 
+typedef enum
+{
+  kTerminatingAndRemoving,
+  kTerminatingWithoutRemoving,
+  kNotTerminating
+} termination_state_t;
+
 typedef struct SacnSourceNetint
 {
   EtcPalMcastNetintId id;  // This must be the first struct member.
@@ -623,7 +630,7 @@ typedef struct SacnSourceNetint
 typedef struct SacnUnicastDestination
 {
   EtcPalIpAddr dest_addr;  // This must be the first struct member.
-  bool terminating;
+  termination_state_t termination_state;
   int num_terminations_sent;
 } SacnUnicastDestination;
 
@@ -631,7 +638,7 @@ typedef struct SacnSourceUniverse
 {
   uint16_t universe_id;  // This must be the first struct member.
 
-  bool terminating;
+  termination_state_t termination_state;
   int num_terminations_sent;
 
   uint8_t priority;

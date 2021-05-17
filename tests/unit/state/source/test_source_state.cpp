@@ -774,7 +774,7 @@ TEST_F(TestSourceState, RemovingUniversesUpdatesUniverseDiscovery)
 
   for (current_test_iteration = 0; current_test_iteration < 10; ++current_test_iteration)
   {
-    set_universe_terminating(GetUniverse(source_handle, (uint16_t)(10u - current_test_iteration)));
+    set_universe_terminating(GetUniverse(source_handle, (uint16_t)(10u - current_test_iteration)), kTerminateAndRemove);
 
     for (int i = 0; i < 3; ++i)
     {
@@ -786,7 +786,7 @@ TEST_F(TestSourceState, RemovingUniversesUpdatesUniverseDiscovery)
   }
 }
 
-TEST_F(TestSourceState, UnicastDestsWithDataTerminateCorrectly)
+TEST_F(TestSourceState, UnicastDestsWithDataTerminateAndRemove)
 {
   sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
                                           const EtcPalIpAddr* dest_addr) {
@@ -803,7 +803,10 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateCorrectly)
   AddTestUnicastDests(source, kTestUniverseConfig.universe);
 
   for (size_t i = 0u; i < kTestRemoteAddrs.size(); ++i)
-    set_unicast_dest_terminating(&GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[i]);
+  {
+    set_unicast_dest_terminating(&GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[i],
+                                 kTerminateAndRemove);
+  }
 
   for (int i = 0; i < 3; ++i)
   {
@@ -826,14 +829,92 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateCorrectly)
   EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 3u);
 }
 
-TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateCorrectly)
+TEST_F(TestSourceState, UnicastDestsWithDataTerminateWithoutRemoving)
+{
+  static int iteration = 0;
+  static bool terminations_all_sent = false;
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
+                                          const EtcPalIpAddr* dest_addr) {
+    EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
+
+    if (terminations_all_sent)
+    {
+      EXPECT_EQ(TERMINATED_OPT_SET(send_buf), 0x00u);
+    }
+    else if (current_remote_addr_index >= 0)
+    {
+      EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
+
+      EXPECT_EQ(etcpal_ip_cmp(dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
+      --current_remote_addr_index;
+    }
+
+    if ((iteration == 2) && (current_remote_addr_index < 0))
+      terminations_all_sent = true;
+  };
+
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  AddUniverse(source, kTestUniverseConfig);
+  InitTestData(source, kTestUniverseConfig.universe, kTestBuffer);
+  AddTestUnicastDests(source, kTestUniverseConfig.universe);
+
+  for (size_t i = 0u; i < kTestRemoteAddrs.size(); ++i)
+  {
+    set_unicast_dest_terminating(&GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[i],
+                                 kTerminateWithoutRemoving);
+  }
+
+  terminations_all_sent = false;
+  for (iteration = 0; iteration < 2; ++iteration)
+  {
+    uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->seq_num;
+
+    current_remote_addr_index = ((int)kTestRemoteAddrs.size() - 1);
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+    for (size_t j = 0u; j < kTestRemoteAddrs.size(); ++j)
+    {
+      EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[j].num_terminations_sent,
+                iteration + 1);
+      EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[j].termination_state,
+                kTerminatingWithoutRemoving);
+    }
+
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests, kTestRemoteAddrs.size());
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->seq_num - old_seq_num,
+              (uint8_t)(kTestRemoteAddrs.size() + 1u));  // One sequence number for each unicast termination packet +
+                                                         // one more for non-unicast, non-termination data.
+    EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, kTestUniverseConfig.universe)->level_send_buf), 0x00u);
+  }
+
+  iteration = 2;
+
+  current_remote_addr_index = ((int)kTestRemoteAddrs.size() - 1);
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  for (size_t j = 0u; j < kTestRemoteAddrs.size(); ++j)
+  {
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[j].num_terminations_sent, 0);
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[j].termination_state, kNotTerminating);
+  }
+
+  EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests, kTestRemoteAddrs.size());
+  EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, kTestUniverseConfig.universe)->level_send_buf), 0x00u);
+
+  EXPECT_GT(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size());
+}
+
+TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateAndRemove)
 {
   sacn_source_t source = AddSource(kTestSourceConfig);
   AddUniverse(source, kTestUniverseConfig);
   AddTestUnicastDests(source, kTestUniverseConfig.universe);
 
   for (size_t i = 0u; i < kTestRemoteAddrs.size(); ++i)
-    set_unicast_dest_terminating(&GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[i]);
+  {
+    set_unicast_dest_terminating(&GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[i],
+                                 kTerminateAndRemove);
+  }
 
   uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->seq_num;
 
@@ -847,7 +928,44 @@ TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateCorrectly)
   EXPECT_EQ(sacn_send_unicast_fake.call_count, 0u);
 }
 
-TEST_F(TestSourceState, UniversesWithDataTerminateCorrectly)
+TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateWithoutRemoving)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  AddUniverse(source, kTestUniverseConfig);
+  AddTestUnicastDests(source, kTestUniverseConfig.universe);
+
+  for (size_t i = 0u; i < kTestRemoteAddrs.size(); ++i)
+  {
+    set_unicast_dest_terminating(&GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[i],
+                                 kTerminateWithoutRemoving);
+  }
+
+  uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->seq_num;
+
+  EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests, kTestRemoteAddrs.size());
+
+  for (size_t j = 0u; j < kTestRemoteAddrs.size(); ++j)
+  {
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[j].termination_state,
+              kTerminatingWithoutRemoving);
+  }
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests, kTestRemoteAddrs.size());
+
+  for (size_t j = 0u; j < kTestRemoteAddrs.size(); ++j)
+  {
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[j].num_terminations_sent, 0);
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[j].termination_state, kNotTerminating);
+  }
+
+  EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->seq_num - old_seq_num, (uint8_t)0u);  // No data to send.
+
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, 0u);
+}
+
+TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
                                             const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {
@@ -875,7 +993,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateCorrectly)
     AddUniverse(source, universe_config);
     AddTestUnicastDests(source, universe_config.universe);
     InitTestData(source, universe_config.universe, kTestBuffer);
-    set_universe_terminating(GetUniverse(source, universe_config.universe));
+    set_universe_terminating(GetUniverse(source, universe_config.universe), kTerminateAndRemove);
   }
 
   for (int i = 0; i < 3; ++i)
@@ -908,7 +1026,64 @@ TEST_F(TestSourceState, UniversesWithDataTerminateCorrectly)
   EXPECT_EQ(num_universe_data_sends, kTestNetints.size() * 30u);
 }
 
-TEST_F(TestSourceState, UniversesWithoutDataTerminateCorrectly)
+TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
+{
+  sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
+                                            const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {
+    if (IS_UNIVERSE_DATA(send_buf))
+    {
+      EXPECT_EQ(universe_id, current_universe);
+      EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
+      EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
+      EXPECT_EQ(netint->ip_type, kTestNetints[current_netint_index].iface.ip_type);
+      EXPECT_EQ(netint->index, kTestNetints[current_netint_index].iface.index);
+
+      current_netint_index = (current_netint_index + 1) % kTestNetints.size();
+
+      if (current_netint_index == 0)
+        --current_universe;
+
+      ++num_universe_data_sends;
+    }
+  };
+
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (universe_config.universe = 1; universe_config.universe <= 10u; ++universe_config.universe)
+  {
+    AddUniverse(source, universe_config);
+    AddTestUnicastDests(source, universe_config.universe);
+    InitTestData(source, universe_config.universe, kTestBuffer);
+    set_universe_terminating(GetUniverse(source, universe_config.universe), kTerminateWithoutRemoving);
+  }
+
+  for (int i = 0; i < 3; ++i)
+  {
+    uint8_t old_seq_num[10];
+    for (uint16_t j = 0; j < 10u; ++j)
+      old_seq_num[j] = GetUniverse(source, j + 1u)->seq_num;
+
+    current_universe = 10;
+    current_netint_index = 0;
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+    if (i < 2)
+    {
+      for (uint16_t j = 0u; j < 10u; ++j)
+      {
+        EXPECT_EQ(GetUniverse(source, j + 1u)->num_terminations_sent, i + 1);
+        EXPECT_EQ(GetUniverse(source, j + 1u)->seq_num - old_seq_num[j], (uint8_t)(kTestRemoteAddrs.size() + 1u));
+        EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, j + 1u)->level_send_buf), 0x00u);
+      }
+    }
+
+    EXPECT_EQ(GetSource(source)->num_universes, 10u);
+  }
+
+  EXPECT_EQ(num_universe_data_sends, kTestNetints.size() * 30u);
+}
+
+TEST_F(TestSourceState, UniversesWithoutDataTerminateAndRemove)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                             const EtcPalMcastNetintId*) {
@@ -922,7 +1097,7 @@ TEST_F(TestSourceState, UniversesWithoutDataTerminateCorrectly)
   {
     AddUniverse(source, universe_config);
     AddTestUnicastDests(source, universe_config.universe);
-    set_universe_terminating(GetUniverse(source, universe_config.universe));
+    set_universe_terminating(GetUniverse(source, universe_config.universe), kTerminateAndRemove);
   }
 
   EXPECT_EQ(GetSource(source)->num_universes, 10u);
@@ -931,6 +1106,103 @@ TEST_F(TestSourceState, UniversesWithoutDataTerminateCorrectly)
 
   EXPECT_EQ(GetSource(source)->num_universes, 0u);
   EXPECT_EQ(num_universe_data_sends, 0u);
+}
+
+TEST_F(TestSourceState, UniversesWithoutDataTerminateWithoutRemoving)
+{
+  sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
+                                            const EtcPalMcastNetintId*) {
+    if (IS_UNIVERSE_DATA(send_buf))
+      ++num_universe_data_sends;
+  };
+
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  for (universe_config.universe = 1; universe_config.universe <= 10u; ++universe_config.universe)
+  {
+    AddUniverse(source, universe_config);
+    AddTestUnicastDests(source, universe_config.universe);
+    set_universe_terminating(GetUniverse(source, universe_config.universe), kTerminateWithoutRemoving);
+  }
+
+  EXPECT_EQ(GetSource(source)->num_universes, 10u);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(GetSource(source)->num_universes, 10u);
+  EXPECT_EQ(num_universe_data_sends, 0u);
+}
+
+TEST_F(TestSourceState, InterruptTerminatingWithoutRemovingWorks)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  AddUniverse(source, kTestUniverseConfig);
+  AddTestUnicastDests(source, kTestUniverseConfig.universe);
+  InitTestData(source, kTestUniverseConfig.universe, kTestBuffer);
+
+  set_universe_terminating(GetUniverse(source, kTestUniverseConfig.universe), kTerminateWithoutRemoving);
+
+  // Allow one termination before interrupting
+  sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
+                                            const EtcPalMcastNetintId*) {
+    EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
+  };
+
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t* send_buf, const EtcPalIpAddr*) {
+    EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
+  };
+
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, 0u);
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, 0u);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size());
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size());
+
+  // Now interrupt
+  sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
+                                            const EtcPalMcastNetintId*) {
+    EXPECT_EQ(TERMINATED_OPT_SET(send_buf), 0x00u);
+  };
+
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t* send_buf, const EtcPalIpAddr*) {
+    EXPECT_EQ(TERMINATED_OPT_SET(send_buf), 0x00u);
+  };
+
+  InitTestData(source, kTestUniverseConfig.universe, kTestBuffer2);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 2u);
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 2u);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 3u);
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 3u);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 4u);
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 4u);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 5u);
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 5u);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 5u);
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 5u);
+
+  etcpal_getms_fake.return_val += (SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT + 1u);
+
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+
+  EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 6u);
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 6u);
 }
 
 TEST_F(TestSourceState, OnlyActiveUniverseRemovalsUpdateCounter)
@@ -952,25 +1224,25 @@ TEST_F(TestSourceState, OnlyActiveUniverseRemovalsUpdateCounter)
 
   size_t old_count = GetSource(source)->num_active_universes;
 
-  set_universe_terminating(GetUniverse(source, inactive_universe_1));
+  set_universe_terminating(GetUniverse(source, inactive_universe_1), kTerminateAndRemove);
   for (int i = 0; i < 3; ++i)
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
   EXPECT_EQ(GetSource(source)->num_active_universes, old_count);
 
-  set_universe_terminating(GetUniverse(source, inactive_universe_2));
+  set_universe_terminating(GetUniverse(source, inactive_universe_2), kTerminateAndRemove);
   for (int i = 0; i < 3; ++i)
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
   EXPECT_EQ(GetSource(source)->num_active_universes, old_count);
 
-  set_universe_terminating(GetUniverse(source, inactive_universe_3));
+  set_universe_terminating(GetUniverse(source, inactive_universe_3), kTerminateAndRemove);
   for (int i = 0; i < 3; ++i)
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
   EXPECT_EQ(GetSource(source)->num_active_universes, old_count);
 
-  set_universe_terminating(GetUniverse(source, active_universe));
+  set_universe_terminating(GetUniverse(source, active_universe), kTerminateAndRemove);
   for (int i = 0; i < 3; ++i)
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
@@ -1005,7 +1277,7 @@ TEST_F(TestSourceState, UniverseRemovalUpdatesSourceNetints)
       EXPECT_EQ(GetSource(source)->netints[j].num_refs, j + 1u);
     }
 
-    set_universe_terminating(GetUniverse(source, (uint16_t)(i + 1u)));
+    set_universe_terminating(GetUniverse(source, (uint16_t)(i + 1u)), kTerminateAndRemove);
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
   }
 
@@ -1075,7 +1347,8 @@ TEST_F(TestSourceState, TerminatingUnicastDestsOnlySendTerminations)
   InitTestData(source, kTestUniverseConfig.universe, kTestBuffer, kTestBuffer2);
   AddTestUnicastDests(source, kTestUniverseConfig.universe);
 
-  set_unicast_dest_terminating(&GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[0]);
+  set_unicast_dest_terminating(&GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[0],
+                               kTerminateAndRemove);
 
   for (int i = 0; i < 100; ++i)
   {
@@ -1395,21 +1668,15 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
   AddTestUnicastDests(source, universe);
 
   current_remote_addr_index = 0;
-  send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer.data(),
-                        kSkipTerminatingUnicastDests);
+  send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer.data());
   EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size());
 
   unsigned int num_terminating = 0u;
   for (size_t i = 1u; i < kTestRemoteAddrs.size(); i += 2u)
   {
-    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i]);
+    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i], kTerminateAndRemove);
     ++num_terminating;
   }
-
-  current_remote_addr_index = 0;
-  send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer.data(),
-                        kIncludeTerminatingUnicastDests);
-  EXPECT_EQ(sacn_send_unicast_fake.call_count, 2u * kTestRemoteAddrs.size());
 
   sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
                                           const EtcPalIpAddr* dest_addr) {
@@ -1420,10 +1687,8 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
   };
 
   current_remote_addr_index = 0;
-  send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer.data(),
-                        kSkipTerminatingUnicastDests);
-  EXPECT_EQ(sacn_send_unicast_fake.call_count,
-            (2u * kTestRemoteAddrs.size()) + kTestRemoteAddrs.size() - num_terminating);
+  send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer.data());
+  EXPECT_EQ(sacn_send_unicast_fake.call_count, (2u * kTestRemoteAddrs.size()) - num_terminating);
 }
 
 TEST_F(TestSourceState, SendUniverseMulticastWorks)
@@ -1509,20 +1774,20 @@ TEST_F(TestSourceState, SetUnicastDestTerminatingWorks)
 
   for (size_t i = 0u; i < kTestRemoteAddrs.size(); ++i)
   {
-    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i]);
-    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].terminating, true);
+    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i], kTerminateAndRemove);
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].termination_state, kTerminatingAndRemoving);
     EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent, 0);
 
     GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent = 2;
 
-    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i]);
-    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].terminating, true);
+    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i], kTerminateAndRemove);
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].termination_state, kTerminatingAndRemoving);
     EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent, 2);
 
-    GetUniverse(source, universe)->unicast_dests[i].terminating = false;
+    GetUniverse(source, universe)->unicast_dests[i].termination_state = kNotTerminating;
 
-    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i]);
-    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].terminating, true);
+    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i], kTerminateAndRemove);
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].termination_state, kTerminatingAndRemoving);
     EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent, 0);
   }
 }
@@ -1609,37 +1874,37 @@ TEST_F(TestSourceState, SetUniverseTerminatingWorks)
   uint16_t universe = AddUniverse(source, kTestUniverseConfig);
   AddTestUnicastDests(source, universe);
 
-  set_universe_terminating(GetUniverse(source, universe));
-  EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
+  set_universe_terminating(GetUniverse(source, universe), kTerminateAndRemove);
+  EXPECT_EQ(GetUniverse(source, universe)->termination_state, kTerminatingAndRemoving);
   EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 0);
 
   for (size_t i = 0u; i < kTestRemoteAddrs.size(); ++i)
-    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].terminating, true);
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].termination_state, kTerminatingAndRemoving);
 
   GetUniverse(source, universe)->num_terminations_sent = 2;
 
   for (size_t i = 0u; i < kTestRemoteAddrs.size(); ++i)
     GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent = 2;
 
-  set_universe_terminating(GetUniverse(source, universe));
-  EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
+  set_universe_terminating(GetUniverse(source, universe), kTerminateAndRemove);
+  EXPECT_EQ(GetUniverse(source, universe)->termination_state, kTerminatingAndRemoving);
   EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 2);
 
   for (size_t i = 0u; i < kTestRemoteAddrs.size(); ++i)
     EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent, 2);
 
-  GetUniverse(source, universe)->terminating = false;
+  GetUniverse(source, universe)->termination_state = kNotTerminating;
 
   for (size_t i = 0u; i < kTestRemoteAddrs.size(); ++i)
-    GetUniverse(source, universe)->unicast_dests[i].terminating = false;
+    GetUniverse(source, universe)->unicast_dests[i].termination_state = kNotTerminating;
 
-  set_universe_terminating(GetUniverse(source, universe));
-  EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
+  set_universe_terminating(GetUniverse(source, universe), kTerminateAndRemove);
+  EXPECT_EQ(GetUniverse(source, universe)->termination_state, kTerminatingAndRemoving);
   EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 0);
 
   for (size_t i = 0u; i < kTestRemoteAddrs.size(); ++i)
   {
-    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].terminating, true);
+    EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].termination_state, kTerminatingAndRemoving);
     EXPECT_EQ(GetUniverse(source, universe)->unicast_dests[i].num_terminations_sent, 0);
   }
 }
@@ -1659,7 +1924,7 @@ TEST_F(TestSourceState, SetSourceTerminatingWorks)
   EXPECT_EQ(GetSource(source)->terminating, true);
   for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + 3u); ++universe)
   {
-    EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
+    EXPECT_EQ(GetUniverse(source, universe)->termination_state, kTerminatingAndRemoving);
     EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 0);
 
     GetUniverse(source, universe)->num_terminations_sent = 2;
@@ -1669,10 +1934,10 @@ TEST_F(TestSourceState, SetSourceTerminatingWorks)
   EXPECT_EQ(GetSource(source)->terminating, true);
   for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + 3u); ++universe)
   {
-    EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
+    EXPECT_EQ(GetUniverse(source, universe)->termination_state, kTerminatingAndRemoving);
     EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 2);
 
-    GetUniverse(source, universe)->terminating = false;
+    GetUniverse(source, universe)->termination_state = kNotTerminating;
   }
 
   GetSource(source)->terminating = false;
@@ -1681,7 +1946,7 @@ TEST_F(TestSourceState, SetSourceTerminatingWorks)
   EXPECT_EQ(GetSource(source)->terminating, true);
   for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + 3u); ++universe)
   {
-    EXPECT_EQ(GetUniverse(source, universe)->terminating, true);
+    EXPECT_EQ(GetUniverse(source, universe)->termination_state, kTerminatingAndRemoving);
     EXPECT_EQ(GetUniverse(source, universe)->num_terminations_sent, 0);
   }
 }
@@ -1765,7 +2030,7 @@ TEST_F(TestSourceState, GetSourceUniversesWorks)
   for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + kNumUniverses);
        universe += 2u)
   {
-    set_universe_terminating(GetUniverse(source, universe));
+    set_universe_terminating(GetUniverse(source, universe), kTerminateAndRemove);
     ++num_terminating;
   }
 
@@ -1805,7 +2070,7 @@ TEST_F(TestSourceState, GetSourceUnicastDestsWorks)
   size_t num_terminating = 0u;
   for (size_t i = 0u; i < kTestRemoteAddrs.size(); i += 2u)
   {
-    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i]);
+    set_unicast_dest_terminating(&GetUniverse(source, universe)->unicast_dests[i], kTerminateAndRemove);
     ++num_terminating;
   }
 

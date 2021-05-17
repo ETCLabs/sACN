@@ -28,15 +28,14 @@ DEFINE_FAKE_VALUE_FUNC(sacn_source_t, get_next_source_handle);
 DEFINE_FAKE_VOID_FUNC(update_levels_and_or_paps, SacnSource*, SacnSourceUniverse*, const uint8_t*, size_t,
                       const uint8_t*, size_t, force_sync_behavior_t);
 DEFINE_FAKE_VOID_FUNC(increment_sequence_number, SacnSourceUniverse*);
-DEFINE_FAKE_VOID_FUNC(send_universe_unicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*,
-                      send_universe_unicast_behavior_t);
+DEFINE_FAKE_VOID_FUNC(send_universe_unicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*);
 DEFINE_FAKE_VOID_FUNC(send_universe_multicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*);
 DEFINE_FAKE_VOID_FUNC(set_preview_flag, const SacnSource*, SacnSourceUniverse*, bool);
 DEFINE_FAKE_VOID_FUNC(set_universe_priority, const SacnSource*, SacnSourceUniverse*, uint8_t);
-DEFINE_FAKE_VOID_FUNC(set_unicast_dest_terminating, SacnUnicastDestination*);
+DEFINE_FAKE_VOID_FUNC(set_unicast_dest_terminating, SacnUnicastDestination*, set_terminating_behavior_t);
 DEFINE_FAKE_VOID_FUNC(reset_transmission_suppression, const SacnSource*, SacnSourceUniverse*,
                       reset_transmission_suppression_behavior_t);
-DEFINE_FAKE_VOID_FUNC(set_universe_terminating, SacnSourceUniverse*);
+DEFINE_FAKE_VOID_FUNC(set_universe_terminating, SacnSourceUniverse*, set_terminating_behavior_t);
 DEFINE_FAKE_VOID_FUNC(set_source_terminating, SacnSource*);
 DEFINE_FAKE_VOID_FUNC(set_source_name, SacnSource*, const char*);
 DEFINE_FAKE_VALUE_FUNC(size_t, get_source_universes, const SacnSource*, uint16_t*, size_t);

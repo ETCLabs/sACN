@@ -1048,7 +1048,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 
     universe->universe_id = config->universe;
 
-    universe->terminating = false;
+    universe->termination_state = kNotTerminating;
     universe->num_terminations_sent = 0;
 
     universe->priority = config->priority;
@@ -1128,7 +1128,7 @@ etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalI
 
     dest = &universe->unicast_dests[universe->num_unicast_dests++];
     dest->dest_addr = *addr;
-    dest->terminating = false;
+    dest->termination_state = kNotTerminating;
     dest->num_terminations_sent = 0;
   }
 
