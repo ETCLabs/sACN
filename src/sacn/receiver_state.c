@@ -35,7 +35,7 @@
 #include "etcpal/pack.h"
 #include "etcpal/timer.h"
 
-/****************************** Private macros *******************************/
+#if SACN_RECEIVER_ENABLED
 
 /***************************** Private constants *****************************/
 
@@ -446,7 +446,11 @@ void read_network_and_process(SacnRecvThreadContext* context)
   if (etcpal_timer_is_expired(&context->periodic_timer))
   {
     process_receivers(context);
+
+#if SACN_SOURCE_DETECTOR_ENABLED
     process_source_detector(context);
+#endif
+
     etcpal_timer_reset(&context->periodic_timer);
   }
 }
@@ -687,6 +691,7 @@ void handle_sacn_extended_packet(SacnRecvThreadContext* context, const uint8_t* 
   uint32_t vector;
   if (parse_framing_layer_vector(data, datalen, &vector))
   {
+#if SACN_SOURCE_DETECTOR_ENABLED
     if (vector == VECTOR_E131_EXTENDED_DISCOVERY)
     {
       size_t discovery_offset = (SACN_UNIVERSE_DISCOVERY_OFFSET - SACN_FRAMING_OFFSET);
@@ -698,6 +703,11 @@ void handle_sacn_extended_packet(SacnRecvThreadContext* context, const uint8_t* 
                                               (char*)(&data[name_offset]));
       }
     }
+#else   // SACN_SOURCE_DETECTOR_ENABLED
+    ETCPAL_UNUSED_ARG(context);
+    ETCPAL_UNUSED_ARG(sender_cid);
+    ETCPAL_UNUSED_ARG(from_addr);
+#endif  // SACN_SOURCE_DETECTOR_ENABLED
 
     // TODO: sACN sync
   }
@@ -1155,3 +1165,5 @@ void deliver_periodic_callbacks(const PeriodicCallbacks* periodic_callbacks)
       notif->callback(notif->handle, notif->universe, notif->lost_sources, notif->num_lost_sources, notif->context);
   }
 }
+
+#endif  // SACN_RECEIVER_ENABLED

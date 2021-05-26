@@ -25,6 +25,8 @@
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
 
+#if SACN_RECEIVER_ENABLED
+
 /****************************** Private macros *******************************/
 
 #if SACN_DYNAMIC_MEM
@@ -341,3 +343,5 @@ static void source_remove_callback(const EtcPalRbTree* tree, EtcPalRbNode* node)
   FREE_TERM_SET_SOURCE(node->value);
   node_dealloc(node);
 }
+
+#endif  // SACN_RECEIVER_ENABLED

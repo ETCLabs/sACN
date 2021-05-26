@@ -186,19 +186,20 @@
 /**
  * @brief The maximum number of sACN universes that can be listened to simultaneously.
  *
+ * If this is set to 0, the Receiver, Merge Receiver, and Source Detector APIs are disabled and no memory pools are
+ * allocated for them.
+ *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_RECEIVER_MAX_UNIVERSES
 #define SACN_RECEIVER_MAX_UNIVERSES 8
 #endif
 
-// Be sure to check SACN_RECEIVER_MAX_UNIVERSES, as it is illegal to declare a 0-size or negative-size array in C.
-#if !SACN_DYNAMIC_MEM && (SACN_RECEIVER_MAX_UNIVERSES <= 0)
-#error "SACN_RECEIVER_MAX_UNIVERSES is invalid! Please define it to be a positive, non-zero value."
-#endif
-
 /**
  * @brief The maximum number of sources that can be tracked on each universe.
+ *
+ * If this is set to 0, the Receiver, Merge Receiver, and Source Detector APIs are disabled and no memory pools are
+ * allocated for them.
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0. This includes sources at any priority; all
  * sources for a given universe are tracked, even those with a lower priority than the
@@ -210,6 +211,9 @@
 
 /**
  * @brief The total maximum number of sources that can be tracked.
+ *
+ * If this is set to 0, the Receiver, Merge Receiver, and Source Detector APIs are disabled and no memory pools are
+ * allocated for them.
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0. Defaults to #SACN_RECEIVER_MAX_UNIVERSES *
  * #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, but can be made lower if an application wants to impose a
@@ -287,9 +291,9 @@
 /**
  * @brief The maximum number of sources that can be created.
  *
- * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
+ * If this is set to 0, the Source API is disabled and no memory pools are allocated for it.
  *
- * If this is set to 0, no memory pools are allocated, and the Source API is disabled.
+ * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_SOURCE_MAX_SOURCES
 #define SACN_SOURCE_MAX_SOURCES 1
@@ -298,9 +302,9 @@
 /**
  * @brief The maximum number of universes that a source can send to simultaneously.
  *
- * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
+ * If this is set to 0, the Source API is disabled and no memory pools are allocated for it.
  *
- * If this is set to 0, no memory pools are allocated, and the Source API is disabled.
+ * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE
 #define SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE 4
@@ -332,6 +336,8 @@
 /**
  * @brief The maximum number of mergers that can be instanced.
  *
+ * If this is set to 0, the DMX Merger and Merge Receiver APIs are disabled and no memory pools are allocated for them.
+ *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_DMX_MERGER_MAX_MERGERS
@@ -340,6 +346,8 @@
 
 /**
  * @brief The maximum number of sources that can be merged on each merger instance.
+ *
+ * If this is set to 0, the DMX Merger and Merge Receiver APIs are disabled and no memory pools are allocated for them.
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
@@ -366,6 +374,8 @@
  * 
  * This number is intentionally set on the small side.  This module
  * is more likely to be needed by applications that use dynamic memory.
+ *
+ * If this is set to 0, the Source Detector API is disabled and no memory pools are allocated for it.
  * 
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
@@ -378,6 +388,8 @@
  *
  * This number is intentionally set on the small side.  This module
  * is more likely to be needed by applications that use dynamic memory.
+ *
+ * If this is set to 0, the Source Detector API is disabled and no memory pools are allocated for it.
  * 
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */

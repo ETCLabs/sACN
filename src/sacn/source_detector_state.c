@@ -23,6 +23,8 @@
 
 #include "sacn/private/source_detector_state.h"
 
+#if SACN_SOURCE_DETECTOR_ENABLED
+
 /*********************** Private function prototypes *************************/
 
 static void process_universe_discovery_page(SacnSourceDetector* source_detector, const SacnUniverseDiscoveryPage* page);
@@ -281,3 +283,5 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
 
   CLEAR_BUF(&source_updated, sourced_universes);
 }
+
+#endif  // SACN_SOURCE_DETECTOR_ENABLED

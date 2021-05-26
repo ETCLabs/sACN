@@ -33,6 +33,8 @@
 #include "etcpal/mempool.h"
 #endif
 
+#if SACN_SOURCE_DETECTOR_ENABLED
+
 /*************************** Function definitions ****************************/
 
 /**************************************************************************************************
@@ -214,3 +216,5 @@ size_t sacn_source_detector_get_network_interfaces(EtcPalMcastNetintId* netints,
 
   return total_num_network_interfaces;
 }
+
+#endif  // SACN_SOURCE_DETECTOR_ENABLED

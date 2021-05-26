@@ -27,7 +27,8 @@
 #include "etcpal/mempool.h"
 #endif
 
-/***************************** Private constants *****************************/
+#if SACN_DMX_MERGER_ENABLED
+
 /****************************** Private macros *******************************/
 
 #define SOURCE_STOPPED_SOURCING(source_state, slot_index)                                                       \
@@ -104,7 +105,7 @@ static MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnD
 /* Initialize the sACN DMX Merger module. Internal function called from sacn_init(). */
 etcpal_error_t sacn_dmx_merger_init(void)
 {
-#if ((SACN_DMX_MERGER_MAX_MERGERS <= 0) || (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER <= 0))
+#if (!SACN_DYNAMIC_MEM && ((SACN_DMX_MERGER_MAX_MERGERS <= 0) || (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER <= 0)))
   etcpal_error_t res = kEtcPalErrInvalid;
 #else
   etcpal_error_t res = kEtcPalErrOk;
@@ -1099,3 +1100,5 @@ etcpal_error_t remove_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_dmx_me
 
   return result;
 }
+
+#endif  // SACN_DMX_MERGER_ENABLED

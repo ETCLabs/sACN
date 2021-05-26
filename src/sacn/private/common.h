@@ -75,11 +75,27 @@ typedef unsigned int sacn_thread_id_t;
 
 #define UNIVERSE_ID_VALID(universe_id) ((universe_id != 0) && (universe_id < 64000))
 
+#define SACN_RECEIVER_ENABLED                                                                                 \
+  ((!SACN_DYNAMIC_MEM && (SACN_RECEIVER_MAX_UNIVERSES > 0) && (SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE > 0) && \
+    (SACN_RECEIVER_TOTAL_MAX_SOURCES > 0)) ||                                                                 \
+   SACN_DYNAMIC_MEM)
+
 #define SACN_SOURCE_ENABLED                                                                              \
   ((!SACN_DYNAMIC_MEM && (SACN_SOURCE_MAX_SOURCES > 0) && (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)) || \
    SACN_DYNAMIC_MEM)
 #define SACN_SOURCE_UNICAST_ENABLED \
   ((!SACN_DYNAMIC_MEM && (SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE > 0)) || SACN_DYNAMIC_MEM)
+
+#define SACN_DMX_MERGER_ENABLED                                                                                \
+  ((!SACN_DYNAMIC_MEM && (SACN_DMX_MERGER_MAX_MERGERS > 0) && (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER > 0)) || \
+   SACN_DYNAMIC_MEM)
+
+#define SACN_SOURCE_DETECTOR_ENABLED                                                        \
+  ((!SACN_DYNAMIC_MEM && SACN_RECEIVER_ENABLED && (SACN_SOURCE_DETECTOR_MAX_SOURCES > 0) && \
+    (SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE > 0)) ||                                 \
+   SACN_DYNAMIC_MEM)
+
+#define SACN_MERGE_RECEIVER_ENABLED (SACN_RECEIVER_ENABLED && SACN_DMX_MERGER_ENABLED)
 
 /*
  * The SACN_DECLARE_BUF() macro declares one of two different types of contiguous arrays, depending
@@ -98,6 +114,8 @@ typedef unsigned int sacn_thread_id_t;
  * - If SACN_DYNAMIC_MEM=0, it will make the declaration:
  *
  *   Foo foo[10];
+ *
+ * There are also variations of SACN_DECLARE_BUF for each API below, factoring in if the memory is enabled or not.
  */
 #if SACN_DYNAMIC_MEM
 #define SACN_DECLARE_BUF(type, name, max_static_size) \
@@ -106,6 +124,31 @@ typedef unsigned int sacn_thread_id_t;
 #else
 #define SACN_DECLARE_BUF(type, name, max_static_size) type name[max_static_size]
 #endif
+
+#if SACN_RECEIVER_ENABLED
+#define SACN_DECLARE_RECEIVER_BUF(type, name, size) SACN_DECLARE_BUF(type, name, size)
+#else
+#define SACN_DECLARE_RECEIVER_BUF(type, name, size) type* name
+#endif
+
+#if SACN_MERGE_RECEIVER_ENABLED
+#define SACN_DECLARE_MERGE_RECEIVER_BUF(type, name, size) SACN_DECLARE_BUF(type, name, size)
+#else
+#define SACN_DECLARE_MERGE_RECEIVER_BUF(type, name, size) type* name
+#endif
+
+#if SACN_SOURCE_ENABLED
+#define SACN_DECLARE_SOURCE_BUF(type, name, size) SACN_DECLARE_BUF(type, name, size)
+#else
+#define SACN_DECLARE_SOURCE_BUF(type, name, size) type* name
+#endif
+
+#if SACN_SOURCE_DETECTOR_ENABLED
+#define SACN_DECLARE_SOURCE_DETECTOR_BUF(type, name, size) SACN_DECLARE_BUF(type, name, size)
+#else
+#define SACN_DECLARE_SOURCE_DETECTOR_BUF(type, name, size) type* name
+#endif
+
 
 /******************************************************************************
  * Logging
@@ -225,7 +268,7 @@ typedef struct SacnUniverseDiscoverySource
   sacn_remote_source_t handle;  // This must be the first member.
   char name[SACN_SOURCE_NAME_MAX_LEN];
 
-  SACN_DECLARE_BUF(uint16_t, universes, SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE);
+  SACN_DECLARE_SOURCE_DETECTOR_BUF(uint16_t, universes, SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE);
   size_t num_universes;
   bool universes_dirty;  // The universe list has un-notified changes.
   size_t last_notified_universe_count;
@@ -259,8 +302,10 @@ typedef struct SourceDetectorSourceUpdatedNotification
   const char* name;
 #if SACN_DYNAMIC_MEM
   uint16_t* sourced_universes;
-#else
+#elif SACN_SOURCE_DETECTOR_ENABLED
   uint16_t sourced_universes[SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE];
+#else
+  uint16_t* sourced_universes;  // This is only here so things compile.
 #endif
   size_t num_sourced_universes;
   void* context;
@@ -271,10 +316,15 @@ typedef struct SourceDetectorSourceUpdatedNotification
   {                                                             \
     NULL, SACN_REMOTE_SOURCE_INVALID, NULL, NULL, NULL, 0, NULL \
   }
-#else
+#elif SACN_SOURCE_DETECTOR_ENABLED
 #define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT               \
   {                                                            \
     NULL, SACN_REMOTE_SOURCE_INVALID, NULL, NULL, {0}, 0, NULL \
+  }
+#else
+#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT                \
+  {                                                             \
+    NULL, SACN_REMOTE_SOURCE_INVALID, NULL, NULL, NULL, 0, NULL \
   }
 #endif
 
@@ -293,7 +343,7 @@ typedef struct SourceDetectorExpiredSource
 typedef struct SourceDetectorSourceExpiredNotification
 {
   SacnSourceDetectorSourceExpiredCallback callback;
-  SACN_DECLARE_BUF(SourceDetectorExpiredSource, expired_sources, SACN_SOURCE_DETECTOR_MAX_SOURCES);
+  SACN_DECLARE_SOURCE_DETECTOR_BUF(SourceDetectorExpiredSource, expired_sources, SACN_SOURCE_DETECTOR_MAX_SOURCES);
   size_t num_expired_sources;
   void* context;
 } SourceDetectorSourceExpiredNotification;
@@ -303,10 +353,15 @@ typedef struct SourceDetectorSourceExpiredNotification
   {                                              \
     NULL, NULL, 0, 0, NULL                       \
   }
-#else
+#elif SACN_SOURCE_DETECTOR_ENABLED
 #define SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT              \
   {                                                           \
     NULL, {SRC_DETECTOR_EXPIRED_SOURCE_DEFAULT_INIT}, 0, NULL \
+  }
+#else
+#define SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT \
+  {                                              \
+    NULL, NULL, 0, NULL                          \
   }
 #endif
 
@@ -374,11 +429,11 @@ struct SacnReceiver
 /* A set of linked lists to track the state of sources in the tick function. */
 typedef struct SacnSourceStatusLists
 {
-  SACN_DECLARE_BUF(SacnLostSourceInternal, offline, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  SACN_DECLARE_RECEIVER_BUF(SacnLostSourceInternal, offline, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  SACN_DECLARE_RECEIVER_BUF(SacnRemoteSourceInternal, online, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  SACN_DECLARE_RECEIVER_BUF(SacnRemoteSourceInternal, unknown, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_offline;
-  SACN_DECLARE_BUF(SacnRemoteSourceInternal, online, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_online;
-  SACN_DECLARE_BUF(SacnRemoteSourceInternal, unknown, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_unknown;
 } SacnSourceStatusLists;
 
@@ -450,7 +505,7 @@ typedef struct SourcesLostNotification
   SacnSourcesLostCallback callback;
   sacn_receiver_t handle;
   uint16_t universe;
-  SACN_DECLARE_BUF(SacnLostSource, lost_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  SACN_DECLARE_RECEIVER_BUF(SacnLostSource, lost_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_lost_sources;
   void* context;
 } SourcesLostNotification;
@@ -519,7 +574,7 @@ typedef struct SacnRecvThreadContext
   // We do most interactions with sockets from the same thread that we receive from them, to avoid
   // thread safety foibles on some platforms. So, sockets to add and remove from the thread's
   // polling context are queued to be acted on from the thread.
-  SACN_DECLARE_BUF(etcpal_socket_t, dead_sockets, SACN_RECEIVER_MAX_UNIVERSES * 2);
+  SACN_DECLARE_RECEIVER_BUF(etcpal_socket_t, dead_sockets, SACN_RECEIVER_MAX_UNIVERSES * 2);
   size_t num_dead_sockets;
 
   SACN_DECLARE_BUF(SocketRef, socket_refs, SACN_RECEIVER_MAX_SOCKET_REFS);
@@ -676,15 +731,7 @@ typedef struct SacnSource
 
   bool terminating;  // If in the process of terminating all universes and removing this source.
 
-#if (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)
-  SACN_DECLARE_BUF(SacnSourceUniverse, universes, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE);
-#else  // (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)
-  // These should never be used or even be allocated. Their only purpose is to prevent build errors.
-  SacnSourceUniverse* universes;
-#if SACN_DYNAMIC_MEM
-  size_t universes_capacity;
-#endif  // SACN_DYNAMIC_MEM
-#endif  // (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE > 0)
+  SACN_DECLARE_SOURCE_BUF(SacnSourceUniverse, universes, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE);
   size_t num_universes;
   size_t num_active_universes;  // Number of universes to include in universe discovery packets.
   EtcPalTimer universe_discovery_timer;

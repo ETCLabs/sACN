@@ -30,6 +30,8 @@
 #include "etcpal/rbtree.h"
 #include "etcpal/timer.h"
 
+#if SACN_SOURCE_ENABLED
+
 // Suppress strncpy() warning on Windows/MSVC.
 #ifdef _MSC_VER
 #pragma warning(disable : 4996)
@@ -50,14 +52,10 @@ static bool thread_initialized = false;
 
 /*********************** Private function prototypes *************************/
 
-#if SACN_SOURCE_ENABLED
 static bool source_handle_in_use(int handle_val, void* cookie);
-#endif
 
 static etcpal_error_t start_tick_thread();
-#if SACN_SOURCE_ENABLED
 static void stop_tick_thread();
-#endif
 
 static void source_thread_function(void* arg);
 
@@ -88,17 +86,14 @@ static void cancel_termination_if_not_removing(SacnSourceUniverse* universe);
 
 etcpal_error_t sacn_source_state_init(void)
 {
-#if SACN_SOURCE_ENABLED
   shutting_down = false;
   init_int_handle_manager(&source_handle_mgr, source_handle_in_use, NULL);
-#endif
 
   return kEtcPalErrOk;
 }
 
 void sacn_source_state_deinit(void)
 {
-#if SACN_SOURCE_ENABLED
   // Shut down the Tick thread...
   bool thread_initted = false;
   if (sacn_lock())
@@ -110,10 +105,8 @@ void sacn_source_state_deinit(void)
 
   if (thread_initted)
     stop_tick_thread();
-#endif
 }
 
-#if SACN_SOURCE_ENABLED
 bool source_handle_in_use(int handle_val, void* cookie)
 {
   ETCPAL_UNUSED_ARG(cookie);
@@ -121,7 +114,6 @@ bool source_handle_in_use(int handle_val, void* cookie)
   SacnSource* tmp = NULL;
   return (handle_val == SACN_SOURCE_INVALID) || (lookup_source(handle_val, &tmp) == kEtcPalErrOk);
 }
-#endif
 
 // Needs lock
 etcpal_error_t start_tick_thread()
@@ -132,7 +124,6 @@ etcpal_error_t start_tick_thread()
   return etcpal_thread_create(&source_thread_handle, &params, source_thread_function, NULL);
 }
 
-#if SACN_SOURCE_ENABLED
 // Takes lock
 void stop_tick_thread()
 {
@@ -148,7 +139,6 @@ void stop_tick_thread()
   // Wait for thread-based sources to terminate (assuming application already cleaned up manual sources)
   etcpal_thread_join(&thread_handle);
 }
-#endif
 
 // Takes lock
 void source_thread_function(void* arg)
@@ -821,3 +811,5 @@ void cancel_termination_if_not_removing(SacnSourceUniverse* universe)
     }
   }
 }
+
+#endif  // SACN_SOURCE_ENABLED

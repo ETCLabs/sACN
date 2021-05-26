@@ -12,3 +12,4 @@ function(sacn_add_static_test test_name)
 endfunction()
 
 add_subdirectory(api)
+add_subdirectory(config)
