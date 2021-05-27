@@ -24,7 +24,7 @@
 #include "sacn/private/mem.h"
 #include "sacn/private/pdu.h"
 
-#if SACN_SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED || DOXYGEN
 
 /*************************** Function definitions ****************************/
 
@@ -1085,4 +1085,4 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
   return total_num_network_interfaces;
 }
 
-#endif  // SACN_SOURCE_ENABLED
+#endif  // SACN_SOURCE_ENABLED || DOXYGEN

@@ -27,7 +27,7 @@
 #include "sacn/private/util.h"
 #include "sacn/private/merge_receiver.h"
 
-#if SACN_MERGE_RECEIVER_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED || DOXYGEN
 
 #if !SACN_DYNAMIC_MEM && (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER != SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE)
 #error \
@@ -663,4 +663,4 @@ void merge_receiver_source_limit_exceeded(sacn_receiver_t handle, uint16_t unive
   }
 }
 
-#endif  // SACN_MERGE_RECEIVER_ENABLED
+#endif  // SACN_MERGE_RECEIVER_ENABLED || DOXYGEN

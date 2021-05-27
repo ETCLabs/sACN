@@ -7,7 +7,7 @@ To better handle multiple source control scenarios, the 0xDD sACN start code was
 
 # Document Conventions
 The following acronyms and terms are used:
-- *sACN*,  *Streaming ACN*, *Streaming DMX*: Reference “BSR E1.31 DMX512-A Streaming Protocol”
+- *sACN*,  *Streaming ACN*, *Streaming DMX*: Reference "BSR E1.31 DMX512-A Streaming Protocol"
 - *Receiver*: A device that receives sACN
 - *Source*: A device that sends sACN. Sources are uniquely identified by their CID.
 - *DMX level(s)*: Property values associated with a Null START code data packet.
@@ -25,7 +25,7 @@ The following acronyms and terms are used:
   - Disable port or something similar as determined by the manufacture of the receiver.
 
 # Rules for using the 0xDD start code
-1. Devices will support per-address priority via the alternate start code 0xDD, which will be used to identify the sACN packet as carrying “per-address priority” values and not DMX levels.
+1. Devices will support per-address priority via the alternate start code 0xDD, which will be used to identify the sACN packet as carrying "per-address priority" values and not DMX levels.
 2. The rules apply on a per universe basis where a receiver is receiving sACN packets for the same universe from different sources.
 3. Per-address priority values consist of a series of single byte values indicating the source’s desired priority for the corresponding DMX level. Priority values can be set from 0 to 200 where 200 is the highest priority and 1 is the lowest priority.  Priority values 201 thru 255 are reserved for the receiver to use as internal priorities. 
 4. A priority value of 0 indicates that the DMX level from the source is to be ignored by the receiver.

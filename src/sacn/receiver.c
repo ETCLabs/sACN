@@ -27,7 +27,7 @@
 #include "sacn/private/receiver.h"
 #include "sacn/private/receiver_state.h"
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 
 /*************************** Function definitions ****************************/
 
@@ -537,4 +537,4 @@ etcpal_error_t change_sacn_receiver_universe(sacn_receiver_t handle, uint16_t ne
   return res;
 }
 
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN

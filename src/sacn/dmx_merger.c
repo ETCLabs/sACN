@@ -27,7 +27,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_DMX_MERGER_ENABLED
+#if SACN_DMX_MERGER_ENABLED || DOXYGEN
 
 /****************************** Private macros *******************************/
 
@@ -1101,4 +1101,4 @@ etcpal_error_t remove_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_dmx_me
   return result;
 }
 
-#endif  // SACN_DMX_MERGER_ENABLED
+#endif  // SACN_DMX_MERGER_ENABLED || DOXYGEN

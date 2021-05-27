@@ -51,10 +51,10 @@
  * @name sACN version strings
  * @{
  */
-#define SACN_VERSION_STRING      "2.0.0.5"
-#define SACN_VERSION_DATESTR     "17.May.2021"
-#define SACN_VERSION_COPYRIGHT   "Copyright 2021 ETC Inc."
-#define SACN_VERSION_PRODUCTNAME "sACN"
+#define SACN_VERSION_STRING      "2.0.0.5" /**< The 4-digit version string. */
+#define SACN_VERSION_DATESTR     "17.May.2021" /**< The date this version was released (dd.Mm.yyyy). */
+#define SACN_VERSION_COPYRIGHT   "Copyright 2021 ETC Inc." /**< The version's copyright string. */
+#define SACN_VERSION_PRODUCTNAME "sACN" /**< The version's product name. */
 /**
  * @}
  */
