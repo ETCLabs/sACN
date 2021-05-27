@@ -60,6 +60,19 @@ linux-build:
     reports:
       junit: build/tests/unit/test-results/*.xml
 
+docs-test:
+  stage: build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  tags:
+    - etc-linux-docker
+  image: python:3.8-buster
+  script:
+    - apt-get update
+    - apt-get install -y doxygen
+    - cd docs
+    - python3 generate_doxygen.py
+
 deploy-docs:
   stage: build
   rules:
