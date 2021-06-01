@@ -9,5 +9,18 @@
         "EtcPal": "external/EtcPal"
       }
     }
+  },
+  "docs": {
+    "input": {
+      "processed": [
+        "docs/pages"
+      ],
+      "unprocessed": [
+        "include/sacn",
+        "include/sacn/cpp",
+        "src/sacn",
+        "src/sacn/private/opts.h"
+      ]
+    }
   }
 }
