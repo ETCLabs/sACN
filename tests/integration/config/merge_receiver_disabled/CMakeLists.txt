@@ -7,6 +7,5 @@ set(TEST_MERGE_RECEIVER_DISABLED_SOURCES
   ${SACN_SOURCES}
 )
 
-# TODO fix sanitizer issues once more integration tests are made, then uncomment this
-# sacn_add_test(integration_test_merge_receiver_disabled_dynamic ${SACN_TEST}/configs/merge_receiver_disabled_dynamic ${TEST_MERGE_RECEIVER_DISABLED_SOURCES})
+sacn_add_test(integration_test_merge_receiver_disabled_dynamic ${SACN_TEST}/configs/merge_receiver_disabled_dynamic ${TEST_MERGE_RECEIVER_DISABLED_SOURCES})
 sacn_add_test(integration_test_merge_receiver_disabled_static ${SACN_TEST}/configs/merge_receiver_disabled_static ${TEST_MERGE_RECEIVER_DISABLED_SOURCES})

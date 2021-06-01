@@ -38,9 +38,8 @@ protected:
   {
     etcpal_reset_all_fakes();
 
-    EtcPalNetintInfo fake_netint;
     etcpal_netint_get_num_interfaces_fake.return_val = 1;
-    etcpal_netint_get_interfaces_fake.return_val = &fake_netint;
+    etcpal_netint_get_interfaces_fake.return_val = &fake_netint_;
 
     ASSERT_EQ(sacn_init(nullptr), kEtcPalErrOk);
   }
@@ -49,6 +48,8 @@ protected:
   {
     sacn_deinit();
   }
+  
+  EtcPalNetintInfo fake_netint_;
 };
 
 #if SACN_DYNAMIC_MEM

@@ -7,6 +7,5 @@ set(TEST_RECEIVER_DISABLED_SOURCES
   ${SACN_SOURCES}
 )
 
-# TODO fix sanitizer issues once more integration tests are made, then uncomment this
-# sacn_add_test(integration_test_receiver_disabled_dynamic ${SACN_TEST}/configs/receiver_disabled_dynamic ${TEST_RECEIVER_DISABLED_SOURCES})
+sacn_add_test(integration_test_receiver_disabled_dynamic ${SACN_TEST}/configs/receiver_disabled_dynamic ${TEST_RECEIVER_DISABLED_SOURCES})
 sacn_add_test(integration_test_receiver_disabled_static ${SACN_TEST}/configs/receiver_disabled_static ${TEST_RECEIVER_DISABLED_SOURCES})
