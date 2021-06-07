@@ -800,3 +800,23 @@ TEST_F(TestMem, RemoveSacnMergeReceiverSourceWorks)
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 0u);
 }
+
+TEST_F(TestMem, InitCleansUpRecvThreadContext)
+{
+  SacnRecvThreadContext* context = get_recv_thread_context(0);
+  context->running = true;
+  context->num_dead_sockets = 3u;
+  context->num_socket_refs = 3u;
+  context->new_socket_refs = 3u;
+  context->periodic_timer_started = true;
+
+  sacn_receiver_mem_deinit();
+  EXPECT_EQ(sacn_receiver_mem_init(kTestNumThreads), kEtcPalErrOk);
+
+  context = get_recv_thread_context(0);
+  EXPECT_FALSE(context->running);
+  EXPECT_EQ(context->num_dead_sockets, 0u);
+  EXPECT_EQ(context->num_socket_refs, 0u);
+  EXPECT_EQ(context->new_socket_refs, 0u);
+  EXPECT_FALSE(context->periodic_timer_started);
+}

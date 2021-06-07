@@ -50,12 +50,12 @@ etcpal_error_t sacn_receiver_mem_init(unsigned int number_of_threads)
 
   etcpal_error_t res = kEtcPalErrOk;
 
+  if (res == kEtcPalErrOk)
+    res = init_recv_thread_context_buf(number_of_threads);
 #if SACN_DYNAMIC_MEM
   res = init_status_lists_buf(number_of_threads);
   if (res == kEtcPalErrOk)
     res = init_to_erase_bufs(number_of_threads);
-  if (res == kEtcPalErrOk)
-    res = init_recv_thread_context_buf(number_of_threads);
   if (res == kEtcPalErrOk)
     res = init_universe_data_buf(number_of_threads);
   if (res == kEtcPalErrOk)
@@ -94,10 +94,10 @@ void sacn_receiver_mem_deinit(void)
   deinit_source_pap_lost_buf();
   deinit_sources_lost_bufs();
   deinit_universe_data_buf();
-  deinit_recv_thread_context_buf();
   deinit_to_erase_bufs();
   deinit_status_lists_buf();
 #endif  // SACN_DYNAMIC_MEM
+  deinit_recv_thread_context_buf();
 }
 #endif  // SACN_RECEIVER_ENABLED
 

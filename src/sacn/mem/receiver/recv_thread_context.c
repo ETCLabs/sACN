@@ -44,13 +44,11 @@ static SacnRecvThreadContext recv_thread_context[SACN_RECEIVER_MAX_THREADS];
 
 /*********************** Private function prototypes *************************/
 
-#if SACN_DYNAMIC_MEM
 // Dynamic memory initialization
 static etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context);
 
 // Dynamic memory deinitialization
 static void deinit_recv_thread_context_entry(SacnRecvThreadContext* context);
-#endif  // SACN_DYNAMIC_MEM
 
 /*************************** Function definitions ****************************/
 
@@ -174,13 +172,16 @@ void remove_receiver_from_list(SacnRecvThreadContext* context, SacnReceiver* rec
   }
 }
 
-#if SACN_DYNAMIC_MEM
-
 etcpal_error_t init_recv_thread_context_buf(unsigned int num_threads)
 {
+#if SACN_DYNAMIC_MEM
   recv_thread_context = calloc(num_threads, sizeof(SacnRecvThreadContext));
   if (!recv_thread_context)
     return kEtcPalErrNoMem;
+#else
+  if (num_threads > SACN_RECEIVER_MAX_THREADS)
+    return kEtcPalErrNoMem;
+#endif
 
   for (unsigned int i = 0; i < num_threads; ++i)
   {
@@ -195,6 +196,7 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
 {
   SACN_ASSERT(context);
 
+#if SACN_DYNAMIC_MEM
   context->dead_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
   if (!context->dead_sockets)
     return kEtcPalErrNoMem;
@@ -204,7 +206,9 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
   if (!context->socket_refs)
     return kEtcPalErrNoMem;
   context->socket_refs_capacity = INITIAL_CAPACITY;
+#endif
 
+  context->num_dead_sockets = 0;
   context->num_socket_refs = 0;
   context->new_socket_refs = 0;
 #if SACN_RECEIVER_LIMIT_BIND
@@ -214,18 +218,25 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
 
   context->source_detector = NULL;
 
+  context->running = false;
+  context->periodic_timer_started = false;
+
   return kEtcPalErrOk;
 }
 
 void deinit_recv_thread_context_buf(void)
 {
+#if SACN_DYNAMIC_MEM
   if (recv_thread_context)
+#endif
   {
     for (unsigned int i = 0; i < sacn_mem_get_num_threads(); ++i)
       deinit_recv_thread_context_entry(&recv_thread_context[i]);
 
+#if SACN_DYNAMIC_MEM
     free(recv_thread_context);
     recv_thread_context = NULL;
+#endif
   }
 }
 
@@ -235,7 +246,5 @@ void deinit_recv_thread_context_entry(SacnRecvThreadContext* context)
   CLEAR_BUF(context, dead_sockets);
   CLEAR_BUF(context, socket_refs);
 }
-
-#endif  // SACN_DYNAMIC_MEM
 
 #endif  // SACN_RECEIVER_ENABLED
