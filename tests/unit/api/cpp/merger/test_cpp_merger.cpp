@@ -57,14 +57,12 @@ protected:
     test_return_value_ = kEtcPalErrSys;
     test_source_handle_ = 456;
 
-    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_dmx_merger_init(), kEtcPalErrOk);
   }
 
   void TearDown() override
   {
     sacn_dmx_merger_deinit();
-    sacn_mem_deinit();
   }
 
   static constexpr sacn::DmxMerger::Handle kTestMergerHandle = 123;

@@ -4,7 +4,7 @@ set(TEST_MERGE_RECEIVER_SOURCES
   test_merge_receiver.cpp
   main.cpp
 
-  ${SACN_SRC}/sacn/mem.c
+  ${SACN_MEM_SOURCES}
   ${SACN_SRC}/sacn/pdu.c
   ${SACN_SRC}/sacn/merge_receiver.c
   ${SACN_SRC}/sacn/util.c

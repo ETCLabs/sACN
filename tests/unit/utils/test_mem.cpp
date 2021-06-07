@@ -54,10 +54,19 @@ protected:
   {
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
-    ASSERT_EQ(sacn_mem_init(kTestNumThreads), kEtcPalErrOk);
+    ASSERT_EQ(sacn_source_mem_init(), kEtcPalErrOk);
+    ASSERT_EQ(sacn_receiver_mem_init(kTestNumThreads), kEtcPalErrOk);
+    ASSERT_EQ(sacn_merge_receiver_mem_init(), kEtcPalErrOk);
+    ASSERT_EQ(sacn_source_detector_mem_init(), kEtcPalErrOk);
   }
 
-  void TearDown() override { sacn_mem_deinit(); }
+  void TearDown() override
+  {
+    sacn_source_detector_mem_deinit();
+    sacn_merge_receiver_mem_deinit();
+    sacn_receiver_mem_deinit();
+    sacn_source_mem_deinit();
+  }
 
   void DoForEachThread(std::function<void(sacn_thread_id_t)>&& fn)
   {

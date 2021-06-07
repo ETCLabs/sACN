@@ -166,14 +166,14 @@ protected:
       return kEtcPalErrOk;
     };
 
-    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_source_mem_init(), kEtcPalErrOk);
     ASSERT_EQ(sacn_source_init(), kEtcPalErrOk);
   }
 
   void TearDown() override
   {
     sacn_source_deinit();
-    sacn_mem_deinit();
+    sacn_source_mem_deinit();
   }
 
   void SetUpSource(sacn_source_t source_handle)

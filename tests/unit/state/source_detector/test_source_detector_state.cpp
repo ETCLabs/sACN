@@ -64,7 +64,8 @@ protected:
     RESET_FAKE(source_expired);
     RESET_FAKE(limit_exceeded);
 
-    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_receiver_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_source_detector_mem_init(), kEtcPalErrOk);
     ASSERT_EQ(sacn_source_detector_state_init(), kEtcPalErrOk);
 
     CreateDetector(kTestMaxSources, kTestMaxUniverses);
@@ -75,7 +76,8 @@ protected:
     DestroyDetector();
 
     sacn_source_detector_state_deinit();
-    sacn_mem_deinit();
+    sacn_source_detector_mem_deinit();
+    sacn_receiver_mem_deinit();
   }
 
   etcpal::Error CreateDetector(int source_count_max, int universes_per_source_max)

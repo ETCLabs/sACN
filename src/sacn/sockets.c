@@ -75,11 +75,13 @@ static etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* ne
 static etcpal_error_t create_unicast_send_socket(etcpal_iptype_t ip_type, etcpal_socket_t* socket);
 static etcpal_error_t create_receiver_socket(etcpal_iptype_t ip_type, const EtcPalSockAddr* bind_addr,
                                              bool set_sockopts, etcpal_socket_t* socket);
+#if SACN_RECEIVER_ENABLED
 static etcpal_error_t subscribe_receiver_socket(etcpal_socket_t sock, const EtcPalIpAddr* group,
                                                 const EtcPalMcastNetintId* netints, size_t num_netints);
-static etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
 static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket,
                            socket_close_behavior_t close_behavior);
+#endif  // SACN_RECEIVER_ENABLED
+static etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
 static void send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
                            const EtcPalMcastNetintId* netint);
 static void send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr);
@@ -133,6 +135,8 @@ etcpal_error_t sacn_sockets_reset_source_detector(void)
   return receiver_sockets_init(&source_detector_sys_netints);
 }
 
+#if SACN_RECEIVER_ENABLED
+
 static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t socket,
                            socket_close_behavior_t close_behavior)
 {
@@ -151,6 +155,8 @@ static void cleanup_socket(SacnRecvThreadContext* recv_thread_context, etcpal_so
     }
   }
 }
+
+#endif  // SACN_RECEIVER_ENABLED
 
 void send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
                     const EtcPalMcastNetintId* netint)
@@ -307,6 +313,8 @@ void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAdd
   }
 }
 
+#if SACN_RECEIVER_ENABLED
+
 /*
  * Creates and subscribes a socket for the given universe.
  *
@@ -402,32 +410,6 @@ void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* so
 }
 
 /*
- * Subscribes a socket to a multicast address on a single interface. Logs the failure if the
- * subscribe fails.
- *
- * [in] sock Socket for which to do the subscribe.
- * [in] group Multicast group and interface to subscribe on.
- * Returns kEtcPalErrOk on success, error code on failure.
- */
-etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group)
-{
-  etcpal_error_t res =
-      etcpal_setsockopt(sock, group->group.type == kEtcPalIpTypeV6 ? ETCPAL_IPPROTO_IPV6 : ETCPAL_IPPROTO_IP,
-                        ETCPAL_MCAST_JOIN_GROUP, group, sizeof(EtcPalGroupReq));
-  if (res != kEtcPalErrOk)
-  {
-    if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))
-    {
-      char addr_str[ETCPAL_IP_STRING_BYTES];
-      etcpal_ip_to_string(&group->group, addr_str);
-      SACN_LOG_WARNING("Error subscribing to multicast address %s on network interface index %u: '%s'", addr_str,
-                       group->ifindex, etcpal_strerror(res));
-    }
-  }
-  return res;
-}
-
-/*
  * Subscribes a socket to a multicast address on all specified network interfaces.
  *
  * [in] sock Socket for which to do the subscribes.
@@ -461,6 +443,34 @@ etcpal_error_t subscribe_receiver_socket(etcpal_socket_t sock, const EtcPalIpAdd
     }
   }
 
+  return res;
+}
+
+#endif  // SACN_RECEIVER_ENABLED
+
+/*
+ * Subscribes a socket to a multicast address on a single interface. Logs the failure if the
+ * subscribe fails.
+ *
+ * [in] sock Socket for which to do the subscribe.
+ * [in] group Multicast group and interface to subscribe on.
+ * Returns kEtcPalErrOk on success, error code on failure.
+ */
+etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group)
+{
+  etcpal_error_t res =
+      etcpal_setsockopt(sock, group->group.type == kEtcPalIpTypeV6 ? ETCPAL_IPPROTO_IPV6 : ETCPAL_IPPROTO_IP,
+                        ETCPAL_MCAST_JOIN_GROUP, group, sizeof(EtcPalGroupReq));
+  if (res != kEtcPalErrOk)
+  {
+    if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))
+    {
+      char addr_str[ETCPAL_IP_STRING_BYTES];
+      etcpal_ip_to_string(&group->group, addr_str);
+      SACN_LOG_WARNING("Error subscribing to multicast address %s on network interface index %u: '%s'", addr_str,
+                       group->ifindex, etcpal_strerror(res));
+    }
+  }
   return res;
 }
 

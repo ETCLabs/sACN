@@ -126,7 +126,7 @@ protected:
       return kEtcPalErrOk;
     };
 
-    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_receiver_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_receiver_state_init(), kEtcPalErrOk);
   }
 
@@ -135,7 +135,7 @@ protected:
     sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_socket_t*, socket_close_behavior_t) {};
 
     sacn_receiver_state_deinit();
-    sacn_mem_deinit();
+    sacn_receiver_mem_deinit();
   }
 
   SacnReceiver* AddReceiver(uint16_t universe_id = kTestUniverse,

@@ -89,9 +89,29 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
         res = kEtcPalErrSys;
     }
 
-    bool mem_initted = false;
+#if SACN_RECEIVER_ENABLED
+    bool receiver_mem_initted = false;
     if (res == kEtcPalErrOk)
-      mem_initted = ((res = sacn_mem_init(SACN_RECEIVER_MAX_THREADS)) == kEtcPalErrOk);
+      receiver_mem_initted = ((res = sacn_receiver_mem_init(SACN_RECEIVER_MAX_THREADS)) == kEtcPalErrOk);
+#endif  // SACN_RECEIVER_ENABLED
+
+#if SACN_SOURCE_ENABLED
+    bool source_mem_initted = false;
+    if (res == kEtcPalErrOk)
+      source_mem_initted = ((res = sacn_source_mem_init()) == kEtcPalErrOk);
+#endif  // SACN_SOURCE_ENABLED
+
+#if SACN_MERGE_RECEIVER_ENABLED
+    bool merge_receiver_mem_initted = false;
+    if (res == kEtcPalErrOk)
+      merge_receiver_mem_initted = ((res = sacn_merge_receiver_mem_init()) == kEtcPalErrOk);
+#endif  // SACN_MERGE_RECEIVER_ENABLED
+
+#if SACN_SOURCE_DETECTOR_ENABLED
+    bool source_detector_mem_initted = false;
+    if (res == kEtcPalErrOk)
+      source_detector_mem_initted = ((res = sacn_source_detector_mem_init()) == kEtcPalErrOk);
+#endif  // SACN_SOURCE_DETECTOR_ENABLED
 
     bool sockets_initted = false;
     if (res == kEtcPalErrOk)
@@ -171,8 +191,22 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
 #endif  // SACN_RECEIVER_ENABLED
       if (sockets_initted)
         sacn_sockets_deinit();
-      if (mem_initted)
-        sacn_mem_deinit();
+#if SACN_SOURCE_DETECTOR_ENABLED
+      if (source_detector_mem_initted)
+        sacn_source_detector_mem_deinit();
+#endif  // SACN_SOURCE_DETECTOR_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED
+      if (merge_receiver_mem_initted)
+        sacn_merge_receiver_mem_deinit();
+#endif  // SACN_MERGE_RECEIVER_ENABLED
+#if SACN_SOURCE_ENABLED
+      if (source_mem_initted)
+        sacn_source_mem_deinit();
+#endif  // SACN_SOURCE_ENABLED
+#if SACN_RECEIVER_ENABLED
+      if (receiver_mem_initted)
+        sacn_receiver_mem_deinit();
+#endif  // SACN_RECEIVER_ENABLED
       if (mutex_initted)
         etcpal_mutex_destroy(&sacn_mutex);
       if (etcpal_initted)
@@ -219,13 +253,26 @@ void sacn_deinit(void)
     sacn_source_loss_deinit();
 #endif  // SACN_RECEIVER_ENABLED
     sacn_sockets_deinit();
-    sacn_mem_deinit();
+#if SACN_SOURCE_DETECTOR_ENABLED
+    sacn_source_detector_mem_deinit();
+#endif  // SACN_SOURCE_DETECTOR_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED
+    sacn_merge_receiver_mem_deinit();
+#endif  // SACN_MERGE_RECEIVER_ENABLED
+#if SACN_SOURCE_ENABLED
+    sacn_source_mem_deinit();
+#endif  // SACN_SOURCE_ENABLED
+#if SACN_RECEIVER_ENABLED
+    sacn_receiver_mem_deinit();
+#endif  // SACN_RECEIVER_ENABLED
     etcpal_mutex_destroy(&sacn_mutex);
     etcpal_deinit(SACN_ETCPAL_FEATURES);
 
     sacn_log_params = NULL;
   }
 }
+
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 
 /**
  * @brief Converts a remote source CID to the corresponding handle, or #SACN_REMOTE_SOURCE_INVALID if not found.
@@ -290,6 +337,8 @@ etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, Et
 
   return result;
 }
+
+#endif  // SACN_RECEIVER_ENABLED
 
 bool sacn_lock(void)
 {

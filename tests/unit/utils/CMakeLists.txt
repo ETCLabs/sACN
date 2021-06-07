@@ -8,7 +8,7 @@ set(TEST_UTILS_SOURCES
   main.cpp
 
   ${SACN_SRC}/sacn/source_loss.c
-  ${SACN_SRC}/sacn/mem.c
+  ${SACN_MEM_SOURCES}
   ${SACN_SRC}/sacn/sockets.c
   ${SACN_SRC}/sacn/pdu.c
   ${SACN_SRC}/sacn/util.c

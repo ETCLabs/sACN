@@ -53,7 +53,6 @@ protected:
     sacn_source_loss_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
 
-    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_dmx_merger_init(), kEtcPalErrOk);
 
     merger_config_ = SACN_DMX_MERGER_CONFIG_INIT;
@@ -66,7 +65,6 @@ protected:
   void TearDown() override
   {
     sacn_dmx_merger_deinit();
-    sacn_mem_deinit();
   }
 
   void TestAddSourceMemLimit(bool infinite)

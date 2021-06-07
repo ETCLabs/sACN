@@ -130,7 +130,7 @@ protected:
       return kEtcPalErrOk;
     };
 
-    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_source_mem_init(), kEtcPalErrOk);
     ASSERT_EQ(sacn_source_state_init(), kEtcPalErrOk);
 
     num_universe_data_sends = 0u;
@@ -146,7 +146,7 @@ protected:
   {
     next_source_handle_ = 0;
     sacn_source_state_deinit();
-    sacn_mem_deinit();
+    sacn_source_mem_deinit();
   }
 
   sacn_source_t AddSource(const SacnSourceConfig& config)

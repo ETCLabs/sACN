@@ -56,7 +56,7 @@ protected:
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
 
-    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_receiver_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_source_loss_init(), kEtcPalErrOk);
 
     expired_sources_ = get_sources_lost_buffer(0, SACN_RECEIVER_MAX_UNIVERSES);
@@ -79,7 +79,7 @@ protected:
   void TearDown() override
   {
     sacn_source_loss_deinit();
-    sacn_mem_deinit();
+    sacn_receiver_mem_deinit();
   }
 
   void VerifySourcesMatch(const SacnLostSource* lost_sources, size_t num_lost_sources,

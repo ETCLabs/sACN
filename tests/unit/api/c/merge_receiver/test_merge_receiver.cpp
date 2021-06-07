@@ -82,14 +82,16 @@ protected:
       return kEtcPalErrOk;
     };
 
-    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_receiver_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_merge_receiver_mem_init(), kEtcPalErrOk);
     ASSERT_EQ(sacn_merge_receiver_init(), kEtcPalErrOk);
   }
 
   void TearDown() override
   {
     sacn_merge_receiver_deinit();
-    sacn_mem_deinit();
+    sacn_merge_receiver_mem_deinit();
+    sacn_receiver_mem_deinit();
   }
 
   void RunUniverseData(sacn_remote_source_t source_handle, const etcpal::Uuid& source_cid, uint8_t start_code,

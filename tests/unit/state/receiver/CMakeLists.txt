@@ -4,7 +4,7 @@ set(TEST_RECEIVER_STATE_SOURCES
   test_receiver_state.cpp
   main.cpp
 
-  ${SACN_SRC}/sacn/mem.c
+  ${SACN_MEM_SOURCES}
   ${SACN_SRC}/sacn/pdu.c
   ${SACN_SRC}/sacn/util.c
   ${SACN_SRC}/sacn/receiver_state.c

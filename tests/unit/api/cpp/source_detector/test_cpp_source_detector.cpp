@@ -47,14 +47,16 @@ protected:
     sacn_source_loss_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
 
-    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_receiver_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_source_detector_mem_init(), kEtcPalErrOk);
     ASSERT_EQ(sacn_source_detector_init(), kEtcPalErrOk);
   }
 
   void TearDown() override
   {
     sacn_source_detector_deinit();
-    sacn_mem_deinit();
+    sacn_source_detector_mem_deinit();
+    sacn_receiver_mem_deinit();
   }
 };
 

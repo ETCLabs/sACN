@@ -87,14 +87,14 @@ protected:
                      return EtcPalMcastNetintId{netint.addr.type, netint.index};
                    });
 
-    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_receiver_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_sockets_init(), kEtcPalErrOk);
   }
 
   void TearDown() override
   {
     sacn_sockets_deinit();
-    sacn_mem_deinit();
+    sacn_receiver_mem_deinit();
   }
 
   std::vector<EtcPalNetintInfo> fake_netints_;

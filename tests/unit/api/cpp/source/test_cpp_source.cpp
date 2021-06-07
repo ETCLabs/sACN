@@ -103,10 +103,10 @@ protected:
       return kEtcPalErrOk;
     };
 
-    ASSERT_EQ(sacn_mem_init(1), kEtcPalErrOk);
+    ASSERT_EQ(sacn_source_mem_init(), kEtcPalErrOk);
   }
 
-  void TearDown() override { sacn_mem_deinit(); }
+  void TearDown() override { sacn_source_mem_deinit(); }
 };
 
 TEST_F(TestSource, SettingsConstructorWorks)

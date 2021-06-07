@@ -4,7 +4,7 @@ set(TEST_SOURCE_STATE_SOURCES
   test_source_state.cpp
   main.cpp
 
-  ${SACN_SRC}/sacn/mem.c
+  ${SACN_MEM_SOURCES}
   ${SACN_SRC}/sacn/pdu.c
   ${SACN_SRC}/sacn/util.c
   ${SACN_SRC}/sacn/source_state.c
