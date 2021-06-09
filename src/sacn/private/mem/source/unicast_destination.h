@@ -35,6 +35,8 @@ etcpal_error_t lookup_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpA
                                    SacnUnicastDestination** unicast_dest);
 void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index);
 
+size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found);
+
 #ifdef __cplusplus
 }
 #endif

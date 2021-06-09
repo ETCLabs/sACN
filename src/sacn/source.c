@@ -278,17 +278,34 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     if (result == kEtcPalErrOk)
       result = lookup_source(handle, &source);
 
-    if ((result == kEtcPalErrOk) && source && source->terminating)
+    if ((result == kEtcPalErrOk) && source->terminating)
       result = kEtcPalErrNotFound;
 
-    // Initialize the universe's state.
-    SacnSourceUniverse* universe = NULL;
+    // Handle the existing universe if there is one.
     if (result == kEtcPalErrOk)
-      result = add_sacn_source_universe(source, config, netints, num_netints, &universe);
+    {
+      bool found = false;
+      size_t index = get_source_universe_index(source, config->universe, &found);
+
+      if (found)
+      {
+        SacnSourceUniverse* existing_universe = &source->universes[index];
+
+        if (existing_universe->termination_state == kTerminatingAndRemoving)
+          finish_source_universe_termination(source, index);  // Remove the old state before adding the new.
+        else
+          result = kEtcPalErrExists;
+      }
+    }
+
+    // Initialize the new universe's state.
+    SacnSourceUniverse* new_universe = NULL;
+    if (result == kEtcPalErrOk)
+      result = add_sacn_source_universe(source, config, netints, num_netints, &new_universe);
 
     // Update the source's netint tracking.
-    for (size_t i = 0; (result == kEtcPalErrOk) && (i < universe->netints.num_netints); ++i)
-      result = add_sacn_source_netint(source, &universe->netints.netints[i]);
+    for (size_t i = 0; (result == kEtcPalErrOk) && (i < new_universe->netints.num_netints); ++i)
+      result = add_sacn_source_netint(source, &new_universe->netints.netints[i]);
 
     sacn_unlock();
   }
@@ -388,13 +405,30 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
     if (result == kEtcPalErrOk)
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
+    if ((result == kEtcPalErrOk) && (universe_state->termination_state == kTerminatingAndRemoving))
       result = kEtcPalErrNotFound;
 
-    // Add unicast destination
-    SacnUnicastDestination* unicast_dest = NULL;
+    // Handle the existing unicast destination if there is one.
     if (result == kEtcPalErrOk)
-      result = add_sacn_unicast_dest(universe_state, dest, &unicast_dest);
+    {
+      bool found = false;
+      size_t index = get_unicast_dest_index(universe_state, dest, &found);
+
+      if (found)
+      {
+        SacnUnicastDestination* existing_unicast_dest = &universe_state->unicast_dests[index];
+
+        if (existing_unicast_dest->termination_state == kTerminatingAndRemoving)
+          finish_unicast_dest_termination(universe_state, index);  // Remove the old state before adding the new.
+        else
+          result = kEtcPalErrExists;
+      }
+    }
+
+    // Add unicast destination
+    SacnUnicastDestination* new_unicast_dest = NULL;
+    if (result == kEtcPalErrOk)
+      result = add_sacn_unicast_dest(universe_state, dest, &new_unicast_dest);
 
     // Initialize & reset transmission suppression
     if (result == kEtcPalErrOk)

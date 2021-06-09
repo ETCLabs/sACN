@@ -45,6 +45,8 @@ DEFINE_FAKE_VOID_FUNC(disable_pap_data, SacnSourceUniverse*);
 DEFINE_FAKE_VOID_FUNC(clear_source_netints, SacnSource*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, reset_source_universe_networking, SacnSource*, SacnSourceUniverse*,
                        SacnMcastInterface*, size_t);
+DEFINE_FAKE_VOID_FUNC(finish_source_universe_termination, SacnSource*, size_t);
+DEFINE_FAKE_VOID_FUNC(finish_unicast_dest_termination, SacnSourceUniverse*, size_t);
 
 void sacn_source_state_reset_all_fakes(void)
 {
@@ -70,4 +72,6 @@ void sacn_source_state_reset_all_fakes(void)
   RESET_FAKE(disable_pap_data);
   RESET_FAKE(clear_source_netints);
   RESET_FAKE(reset_source_universe_networking);
+  RESET_FAKE(finish_source_universe_termination);
+  RESET_FAKE(finish_unicast_dest_termination);
 }

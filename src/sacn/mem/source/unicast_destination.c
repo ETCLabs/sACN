@@ -34,36 +34,23 @@
 
 #if SACN_SOURCE_ENABLED
 
-/*********************** Private function prototypes *************************/
-
-static size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found);
-
 /*************************** Function definitions ****************************/
 
 // Needs lock
 etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
                                      SacnUnicastDestination** dest_state)
 {
-  etcpal_error_t result = kEtcPalErrOk;
-  SacnUnicastDestination* dest = NULL;
+  CHECK_ROOM_FOR_ONE_MORE(universe, unicast_dests, SacnUnicastDestination, SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE,
+                          kEtcPalErrNoMem);
 
-  if (lookup_unicast_dest(universe, addr, &dest) == kEtcPalErrOk)
-    result = kEtcPalErrExists;
-
-  if (result == kEtcPalErrOk)
-  {
-    CHECK_ROOM_FOR_ONE_MORE(universe, unicast_dests, SacnUnicastDestination, SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE,
-                            kEtcPalErrNoMem);
-
-    dest = &universe->unicast_dests[universe->num_unicast_dests++];
-    dest->dest_addr = *addr;
-    dest->termination_state = kNotTerminating;
-    dest->num_terminations_sent = 0;
-  }
+  SacnUnicastDestination* dest = &universe->unicast_dests[universe->num_unicast_dests++];
+  dest->dest_addr = *addr;
+  dest->termination_state = kNotTerminating;
+  dest->num_terminations_sent = 0;
 
   *dest_state = dest;
 
-  return result;
+  return kEtcPalErrOk;
 }
 
 // Needs lock
@@ -82,6 +69,7 @@ void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index)
   REMOVE_AT_INDEX(universe, SacnUnicastDestination, unicast_dests, index);
 }
 
+// Needs lock
 size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found)
 {
   *found = false;

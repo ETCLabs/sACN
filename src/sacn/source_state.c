@@ -287,16 +287,9 @@ void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, boo
         send_termination_unicast(source, universe, dest);
 
       if ((dest->num_terminations_sent >= 3) || !universe->has_level_data)
-      {
-        if (dest->termination_state == kTerminatingAndRemoving)
-          remove_sacn_unicast_dest(universe, initial_num_unicast_dests - 1 - i);
-        else
-          reset_unicast_dest(dest);
-      }
+        finish_unicast_dest_termination(universe, initial_num_unicast_dests - 1 - i);
       else
-      {
         *terminating = true;
-      }
     }
   }
 }
@@ -310,24 +303,7 @@ void process_universe_termination(SacnSource* source, size_t index, bool unicast
     send_termination_multicast(source, universe);
 
   if (((universe->num_terminations_sent >= 3) && !unicast_terminating) || !universe->has_level_data)
-  {
-    // Update num_active_universes if needed
-    if (IS_PART_OF_UNIVERSE_DISCOVERY(universe))
-      --source->num_active_universes;
-
-    if (universe->termination_state == kTerminatingAndRemoving)
-    {
-      // Update the netints tree
-      for (size_t i = 0; i < universe->netints.num_netints; ++i)
-        remove_from_source_netints(source, &universe->netints.netints[i]);
-
-      remove_sacn_source_universe(source, index);
-    }
-    else
-    {
-      reset_universe(universe);
-    }
-  }
+    finish_source_universe_termination(source, index);
 }
 
 // Needs lock
@@ -740,6 +716,45 @@ etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUn
     reset_transmission_suppression(source, universe, kResetLevelAndPap);
 
   return result;
+}
+
+// Needs lock
+void finish_source_universe_termination(SacnSource* source, size_t index)
+{
+  SacnSourceUniverse* universe = &source->universes[index];
+
+  // Handle unicast destinations first
+  size_t initial_num_unicast_dests = universe->num_unicast_dests;  // Actual may change, so keep initial for iteration.
+  for (size_t i = 0; i < initial_num_unicast_dests; ++i)
+    finish_unicast_dest_termination(universe, initial_num_unicast_dests - 1 - i);
+
+  // Update num_active_universes if needed
+  if (IS_PART_OF_UNIVERSE_DISCOVERY(universe))
+    --source->num_active_universes;
+
+  if (universe->termination_state == kTerminatingAndRemoving)
+  {
+    // Update the netints tree
+    for (size_t i = 0; i < universe->netints.num_netints; ++i)
+      remove_from_source_netints(source, &universe->netints.netints[i]);
+
+    remove_sacn_source_universe(source, index);
+  }
+  else
+  {
+    reset_universe(universe);
+  }
+}
+
+// Needs lock
+void finish_unicast_dest_termination(SacnSourceUniverse* universe, size_t index)
+{
+  SacnUnicastDestination* dest = &universe->unicast_dests[index];
+
+  if (dest->termination_state == kTerminatingAndRemoving)
+    remove_sacn_unicast_dest(universe, index);
+  else
+    reset_unicast_dest(dest);
 }
 
 // Needs lock

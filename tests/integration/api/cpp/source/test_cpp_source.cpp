@@ -38,6 +38,12 @@
 #pragma warning(disable : 4996)
 #endif
 
+static const std::vector<uint8_t> kTestBuffer = {
+    0x01u, 0x02u, 0x03u, 0x04u, 0x05u, 0x06u, 0x07u, 0x08u, 0x09u, 0x0Au, 0x0Bu, 0x0Cu,
+};
+
+static constexpr uint16_t kTestUniverse = 123u;
+
 static etcpal_socket_t next_socket = (etcpal_socket_t)0;
 
 class TestSource : public ::testing::Test
@@ -94,4 +100,33 @@ TEST_F(TestSource, AddingLotsOfUniversesWorks)
     EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(universe)).code(), kEtcPalErrOk);
 
   source.Shutdown();
+}
+
+TEST_F(TestSource, AddUniverseHandlesTerminationCorrectly)
+{
+  sacn::Source source;
+  EXPECT_EQ(source.Startup(sacn::Source::Settings(etcpal::Uuid::V4(), "Test Source Name")).code(), kEtcPalErrOk);
+  EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
+  source.UpdateValues(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrExists);
+  source.UpdateValues(kTestUniverse, nullptr, 0u);
+  EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrExists);
+  source.RemoveUniverse(kTestUniverse);
+  EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
+}
+
+TEST_F(TestSource, AddUnicastDestHandlesTerminationCorrectly)
+{
+  const etcpal::IpAddr kTestAddr = etcpal::IpAddr::FromString("10.101.1.1");
+
+  sacn::Source source;
+  EXPECT_EQ(source.Startup(sacn::Source::Settings(etcpal::Uuid::V4(), "Test Source Name")).code(), kEtcPalErrOk);
+  EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
+  EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrOk);
+  source.UpdateValues(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrExists);
+  source.UpdateValues(kTestUniverse, nullptr, 0u);
+  EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrExists);
+  source.RemoveUnicastDestination(kTestUniverse, kTestAddr);
+  EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrOk);
 }

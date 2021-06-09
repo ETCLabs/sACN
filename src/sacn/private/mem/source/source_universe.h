@@ -37,6 +37,8 @@ etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t univers
 etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSourceUniverse** universe_state);
 void remove_sacn_source_universe(SacnSource* source, size_t index);
 
+size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found);
+
 #ifdef __cplusplus
 }
 #endif

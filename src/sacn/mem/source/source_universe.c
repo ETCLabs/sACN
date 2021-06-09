@@ -38,10 +38,6 @@
 
 #if SACN_SOURCE_ENABLED
 
-/*********************** Private function prototypes *************************/
-
-static size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found);
-
 /*************************** Function definitions ****************************/
 
 // Needs lock
@@ -61,12 +57,6 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 #endif
 
   SacnSourceUniverse* universe = NULL;
-  if (result == kEtcPalErrOk)
-  {
-    if (lookup_universe(source, config->universe, &universe) == kEtcPalErrOk)
-      result = kEtcPalErrExists;
-  }
-
   if (result == kEtcPalErrOk)
   {
     CHECK_ROOM_FOR_ONE_MORE(source, universes, SacnSourceUniverse, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE,
@@ -128,7 +118,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
   {
     ++source->num_universes;
   }
-  else
+  else if (universe)
   {
     CLEAR_BUF(&universe->netints, netints);
     CLEAR_BUF(universe, unicast_dests);
@@ -168,6 +158,7 @@ void remove_sacn_source_universe(SacnSource* source, size_t index)
   REMOVE_AT_INDEX(source, SacnSourceUniverse, universes, index);
 }
 
+// Needs lock
 size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found)
 {
   *found = false;
