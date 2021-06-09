@@ -24,6 +24,7 @@
 #include "etcpal_mock/netint.h"
 #include "etcpal_mock/socket.h"
 #include "etcpal/cpp/inet.h"
+#include "etcpal/acn_rlp.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
 #include "sacn_mock/private/common.h"
@@ -214,4 +215,26 @@ TEST_F(TestSockets, InitializeInternalNetintsWorks)
   }
 
   CLEAR_BUF(&internal_netint_array, netints);
+}
+
+TEST_F(TestSockets, SendTransmitsMinimumLength)
+{
+  constexpr uint16_t kTestUniverseId = 123u;
+  const EtcPalIpAddr kTestAddr = etcpal::IpAddr::FromString("10.101.40.50").get();
+  static constexpr uint16_t kTestLength = 123u;
+
+  uint8_t send_buf[SACN_MTU] = {0};
+  ACN_PDU_PACK_NORMAL_LEN(&send_buf[ACN_UDP_PREAMBLE_SIZE], kTestLength);
+
+  etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void*, size_t length, int, const EtcPalSockAddr*) {
+    EXPECT_EQ(length, ACN_UDP_PREAMBLE_SIZE + kTestLength);
+    return 0;
+  };
+
+  EXPECT_EQ(etcpal_sendto_fake.call_count, 0u);
+
+  sacn_send_multicast(kTestUniverseId, kSacnIpV4AndIpV6, send_buf, &fake_netint_ids_[0]);
+  sacn_send_unicast(kSacnIpV4AndIpV6, send_buf, &kTestAddr);
+
+  EXPECT_EQ(etcpal_sendto_fake.call_count, 3u);
 }

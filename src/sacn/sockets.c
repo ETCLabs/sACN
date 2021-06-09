@@ -23,6 +23,7 @@
 #include "etcpal/netint.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
+#include "sacn/private/pdu.h"
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>
@@ -168,13 +169,17 @@ void send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t
 
   // Determine the socket to use
   etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
-  int sys_netint_index = netint_id_index_in_array(netint, source_sys_netints.sys_netints, source_sys_netints.num_sys_netints);
+  int sys_netint_index =
+      netint_id_index_in_array(netint, source_sys_netints.sys_netints, source_sys_netints.num_sys_netints);
   if ((sys_netint_index >= 0) && (sys_netint_index < (int)source_sys_netints.num_sys_netints))
     sock = multicast_send_sockets[sys_netint_index];
 
   // Try to send the data (ignore errors)
+  const size_t send_buf_length =
+      (size_t)ACN_UDP_PREAMBLE_SIZE + (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
+
   if (sock != ETCPAL_SOCKET_INVALID)
-    etcpal_sendto(sock, send_buf, SACN_MTU, 0, &dest);
+    etcpal_sendto(sock, send_buf, send_buf_length, 0, &dest);
 }
 
 void send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr)
@@ -194,7 +199,10 @@ void send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr)
     sockaddr_dest.port = SACN_PORT;
 
     // Try to send the data (ignore errors)
-    etcpal_sendto(sock, send_buf, SACN_MTU, 0, &sockaddr_dest);
+    const size_t send_buf_length =
+        (size_t)ACN_UDP_PREAMBLE_SIZE + (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
+
+    etcpal_sendto(sock, send_buf, send_buf_length, 0, &sockaddr_dest);
   }
 }
 
