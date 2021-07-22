@@ -479,9 +479,9 @@ typedef struct SacnRemoteSourceCid
 
 typedef enum
 {
-  kCloseSocketNow,
-  kQueueSocketForClose
-} socket_close_behavior_t;
+  kPerformAllSocketCleanupNow,
+  kQueueSocketCleanup
+} socket_cleanup_behavior_t;
 
 /******************************************************************************
  * Notifications delivered by the sACN receive module
@@ -547,15 +547,26 @@ typedef struct SourceLimitExceededNotification
   void* context;
 } SourceLimitExceededNotification;
 
+/* Contains commonly used information about a sACN socket used for receiving. */
+typedef struct ReceiveSocket
+{
+  etcpal_socket_t handle;  /* The socket descriptor. */
+  etcpal_iptype_t ip_type; /* The IP type used in multicast subscriptions and the bind address. */
+  bool bound;              /* True if bind was called on this socket, false otherwise. */
+  bool polling;            /* True if this socket was added to a poll context, false otherwise. */
+} ReceiveSocket;
+
+#define RECV_SOCKET_DEFAULT_INIT                              \
+  {                                                           \
+    ETCPAL_SOCKET_INVALID, kEtcPalIpTypeInvalid, false, false \
+  }
+
 /* For the shared-socket model, this represents a shared socket. */
 typedef struct SocketRef
 {
-  etcpal_socket_t sock;    /* The socket descriptor. */
-  size_t refcount;         /* How many addresses the socket is subscribed to. */
-  etcpal_iptype_t ip_type; /* The IP type used in multicast subscriptions and the bind address. */
-#if SACN_RECEIVER_LIMIT_BIND
-  bool bound; /* True if bind was called on this socket, false otherwise. */
-#endif
+  ReceiveSocket socket; /* The socket handle, IP type, and state. */
+  size_t refcount;      /* How many addresses the socket is subscribed to. */
+  bool pending;         /* Whether or not this SocketRef is pending queued operations on the thread. */
 } SocketRef;
 
 /* Holds the discrete data used by each receiver thread. */
@@ -574,7 +585,7 @@ typedef struct SacnRecvThreadContext
   // We do most interactions with sockets from the same thread that we receive from them, to avoid
   // thread safety foibles on some platforms. So, sockets to add and remove from the thread's
   // polling context are queued to be acted on from the thread.
-  SACN_DECLARE_RECEIVER_BUF(etcpal_socket_t, dead_sockets, SACN_RECEIVER_MAX_UNIVERSES * 2);
+  SACN_DECLARE_RECEIVER_BUF(ReceiveSocket, dead_sockets, SACN_RECEIVER_MAX_UNIVERSES * 2);
   size_t num_dead_sockets;
 
   SACN_DECLARE_BUF(SocketRef, socket_refs, SACN_RECEIVER_MAX_SOCKET_REFS);
@@ -587,6 +598,7 @@ typedef struct SacnRecvThreadContext
 
   // This section is only touched from the thread, outside the lock.
   EtcPalPollContext poll_context;
+  bool poll_context_initialized;
   uint8_t recv_buf[SACN_MTU];
   EtcPalTimer periodic_timer;
   bool periodic_timer_started;

@@ -269,7 +269,7 @@ etcpal_error_t sacn_receiver_reset_networking(SacnMcastInterface* netints, size_
     if (res == kEtcPalErrOk)
     {
       // All current sockets need to be removed before adding new ones.
-      remove_all_receiver_sockets(kQueueSocketForClose);
+      remove_all_receiver_sockets(kQueueSocketCleanup);
 
       EtcPalRbIter iter;
       for (SacnReceiver* receiver = get_first_receiver(&iter); (res == kEtcPalErrOk) && receiver;
@@ -358,7 +358,7 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnReceiverNet
     if (res == kEtcPalErrOk)
     {
       // All current sockets need to be removed before adding new ones.
-      remove_all_receiver_sockets(kQueueSocketForClose);
+      remove_all_receiver_sockets(kQueueSocketCleanup);
 
       // After the old sockets have been removed, initialize the new netints, sockets, and state.
       for (size_t i = 0; (res == kEtcPalErrOk) && (i < num_netint_lists); ++i)
@@ -477,7 +477,7 @@ etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_recei
   {
     if (receiver)
     {
-      remove_receiver_from_thread(receiver, kCloseSocketNow);
+      remove_receiver_from_thread(receiver);
       remove_sacn_receiver(receiver);
     }
   }
@@ -493,7 +493,7 @@ etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle)
 
   if (res == kEtcPalErrOk)
   {
-    remove_receiver_from_thread(receiver, kQueueSocketForClose);
+    remove_receiver_from_thread(receiver);
     remove_sacn_receiver(receiver);
   }
 
@@ -526,7 +526,7 @@ etcpal_error_t change_sacn_receiver_universe(sacn_receiver_t handle, uint16_t ne
   // Update the receiver's socket and subscription.
   if (res == kEtcPalErrOk)
   {
-    remove_receiver_sockets(receiver, kQueueSocketForClose);
+    remove_receiver_sockets(receiver, kQueueSocketCleanup);
     res = add_receiver_sockets(receiver);
   }
 

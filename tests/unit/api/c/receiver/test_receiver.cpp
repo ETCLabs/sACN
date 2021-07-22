@@ -154,7 +154,7 @@ TEST_F(TestReceiver, ChangeUniverseV4Works)
   // sacn_receiver_t handle = SetupUniverseChangeTest(kSacnIpV4Only);
 
   //sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
-  //                                                  socket_close_behavior_t) {
+  //                                                  socket_cleanup_behavior_t) {
   //  ASSERT_NE(socket, nullptr);
   //  EXPECT_NE(*socket, CHANGE_UNIVERSE_WORKS_FIRST_IPV6_SOCKET);
   //  EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
@@ -179,7 +179,7 @@ TEST_F(TestReceiver, ChangeUniverseV6Works)
   // sacn_receiver_t handle = SetupUniverseChangeTest(kSacnIpV6Only);
 
   //sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
-  //                                                  socket_close_behavior_t) {
+  //                                                  socket_cleanup_behavior_t) {
   //  ASSERT_NE(socket, nullptr);
   //  EXPECT_NE(*socket, CHANGE_UNIVERSE_WORKS_FIRST_IPV4_SOCKET);
   //  EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
@@ -204,7 +204,7 @@ TEST_F(TestReceiver, ChangeUniverseV4V6Works)
   // sacn_receiver_t handle = SetupUniverseChangeTest(kSacnIpV4AndIpV6);
 
   //sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
-  //                                                  socket_close_behavior_t) {
+  //                                                  socket_cleanup_behavior_t) {
   //  ASSERT_NE(socket, nullptr);
   //  EXPECT_NE(get_recv_thread_context(thread_id), nullptr);
   //};

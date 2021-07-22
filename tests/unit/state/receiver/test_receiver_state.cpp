@@ -132,7 +132,7 @@ protected:
 
   void TearDown() override
   {
-    sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_socket_t*, socket_close_behavior_t) {};
+    sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_socket_t*, socket_cleanup_behavior_t) {};
 
     sacn_receiver_state_deinit();
     sacn_receiver_mem_deinit();
@@ -212,7 +212,7 @@ protected:
   {
     if (test_receiver_)
     {
-      remove_receiver_from_thread(test_receiver_, kCloseSocketNow);
+      remove_receiver_from_thread(test_receiver_);
       remove_sacn_receiver(test_receiver_);
       test_receiver_ = nullptr;
     }
@@ -248,7 +248,7 @@ protected:
   void UpdateTestReceiverConfig(const SacnReceiverConfig& config)
   {
     sacn_receiver_t handle = test_receiver_->keys.handle;
-    remove_receiver_from_thread(test_receiver_, kQueueSocketForClose);
+    remove_receiver_from_thread(test_receiver_);
     remove_sacn_receiver(test_receiver_);
     EXPECT_EQ(add_sacn_receiver(handle, &config, kTestNetints.data(), kTestNetints.size(), &test_receiver_),
               kEtcPalErrOk);
@@ -324,8 +324,8 @@ TEST_F(TestReceiverState, DeinitRemovesAllReceiverSockets)
   assign_receiver_to_thread(AddReceiver(kTestUniverse));
 
   sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_socket_t*,
-                                                    socket_close_behavior_t close_behavior) {
-    EXPECT_EQ(close_behavior, kCloseSocketNow);
+                                                    socket_cleanup_behavior_t cleanup_behavior) {
+    EXPECT_EQ(cleanup_behavior, kPerformAllSocketCleanupNow);
   };
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
@@ -504,7 +504,7 @@ TEST_F(TestReceiverState, RemoveReceiverFromThreadWorks)
   SacnReceiver* receiver = AddReceiver();
   EXPECT_EQ(assign_receiver_to_thread(receiver), kEtcPalErrOk);
 
-  remove_receiver_from_thread(receiver, kQueueSocketForClose);
+  remove_receiver_from_thread(receiver);
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u);
   EXPECT_EQ(get_recv_thread_context(0)->receivers, nullptr);
@@ -767,20 +767,20 @@ TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesIpv4AndIpv6)
   assign_receiver_to_thread(receiver);
 
   sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
-                                                    socket_close_behavior_t close_behavior) {
+                                                    socket_cleanup_behavior_t cleanup_behavior) {
     SacnReceiver* state = nullptr;
     lookup_receiver_by_universe(kTestUniverse, &state);
 
     EXPECT_EQ(thread_id, 0u);
     EXPECT_TRUE((socket == &state->ipv4_socket) || (socket == &state->ipv6_socket));
-    EXPECT_EQ(close_behavior, kCloseSocketNow);
+    EXPECT_EQ(cleanup_behavior, kPerformAllSocketCleanupNow);
 
     *socket = ETCPAL_SOCKET_INVALID;
   };
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
 
-  remove_receiver_sockets(receiver, kCloseSocketNow);
+  remove_receiver_sockets(receiver, kPerformAllSocketCleanupNow);
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u);
 }
@@ -797,20 +797,20 @@ TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesOnlyIpv4)
   assign_receiver_to_thread(receiver);
 
   sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
-                                                    socket_close_behavior_t close_behavior) {
+                                                    socket_cleanup_behavior_t cleanup_behavior) {
     SacnReceiver* state = nullptr;
     lookup_receiver_by_universe(kTestUniverse, &state);
 
     EXPECT_EQ(thread_id, 0u);
     EXPECT_EQ(socket, &state->ipv4_socket);
-    EXPECT_EQ(close_behavior, kCloseSocketNow);
+    EXPECT_EQ(cleanup_behavior, kPerformAllSocketCleanupNow);
 
     *socket = ETCPAL_SOCKET_INVALID;
   };
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
 
-  remove_receiver_sockets(receiver, kCloseSocketNow);
+  remove_receiver_sockets(receiver, kPerformAllSocketCleanupNow);
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 1u);
 }
@@ -827,20 +827,20 @@ TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesOnlyIpv6)
   assign_receiver_to_thread(receiver);
 
   sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
-                                                    socket_close_behavior_t close_behavior) {
+                                                    socket_cleanup_behavior_t cleanup_behavior) {
     SacnReceiver* state = nullptr;
     lookup_receiver_by_universe(kTestUniverse, &state);
 
     EXPECT_EQ(thread_id, 0u);
     EXPECT_EQ(socket, &state->ipv6_socket);
-    EXPECT_EQ(close_behavior, kCloseSocketNow);
+    EXPECT_EQ(cleanup_behavior, kPerformAllSocketCleanupNow);
 
     *socket = ETCPAL_SOCKET_INVALID;
   };
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
 
-  remove_receiver_sockets(receiver, kCloseSocketNow);
+  remove_receiver_sockets(receiver, kPerformAllSocketCleanupNow);
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 1u);
 }
@@ -857,7 +857,7 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsWorks)
     assign_receiver_to_thread(AddReceiver(kTestUniverse + i));
 
   sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_socket_t* socket,
-                                                    socket_close_behavior_t close_behavior) {
+                                                    socket_cleanup_behavior_t cleanup_behavior) {
     uint16_t universe =
         kTestUniverse + ((static_cast<uint16_t>(sacn_remove_receiver_socket_fake.call_count) - 1u) / 2u);
 
@@ -865,12 +865,12 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsWorks)
     lookup_receiver_by_universe(universe, &state);
 
     EXPECT_TRUE((socket == &state->ipv4_socket) || (socket == &state->ipv6_socket));
-    EXPECT_EQ(close_behavior, kCloseSocketNow);
+    EXPECT_EQ(cleanup_behavior, kPerformAllSocketCleanupNow);
   };
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
 
-  remove_all_receiver_sockets(kCloseSocketNow);
+  remove_all_receiver_sockets(kPerformAllSocketCleanupNow);
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u * SACN_RECEIVER_MAX_UNIVERSES);
 }

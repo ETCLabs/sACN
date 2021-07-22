@@ -34,10 +34,13 @@ void deinit_recv_thread_context_buf(void);
 
 SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id);
 
-bool add_dead_socket(SacnRecvThreadContext* context, etcpal_socket_t socket);
-bool add_socket_ref(SacnRecvThreadContext* context, etcpal_socket_t socket, etcpal_iptype_t ip_type,
-                    bool bound);
-bool remove_socket_ref(SacnRecvThreadContext* context, etcpal_socket_t socket);
+bool add_dead_socket(SacnRecvThreadContext* context, const ReceiveSocket* socket);
+int add_socket_ref(SacnRecvThreadContext* context, const ReceiveSocket* socket);
+int find_socket_ref_with_room(SacnRecvThreadContext* context, etcpal_iptype_t ip_type);
+int find_socket_ref_by_type(SacnRecvThreadContext* context, etcpal_iptype_t ip_type);
+int find_socket_ref_by_handle(SacnRecvThreadContext* context, etcpal_socket_t handle);
+void mark_socket_ref_bound(SacnRecvThreadContext* context, int index);
+bool remove_socket_ref(SacnRecvThreadContext* context, int index);
 void add_receiver_to_list(SacnRecvThreadContext* context, SacnReceiver* receiver);
 void remove_receiver_from_list(SacnRecvThreadContext* context, SacnReceiver* receiver);
 

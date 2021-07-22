@@ -104,7 +104,7 @@ etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* confi
 
     if ((res != kEtcPalErrOk) && source_detector)
     {
-      remove_source_detector_from_thread(source_detector, kCloseSocketNow);
+      remove_source_detector_from_thread(source_detector);
       remove_sacn_source_detector();
     }
 
@@ -129,7 +129,7 @@ void sacn_source_detector_destroy()
     SacnSourceDetector* detector = get_sacn_source_detector();
     if (detector)
     {
-      remove_source_detector_from_thread(detector, kQueueSocketForClose);
+      remove_source_detector_from_thread(detector);
       remove_sacn_source_detector();
     }
 
@@ -178,7 +178,7 @@ etcpal_error_t sacn_source_detector_reset_networking(SacnMcastInterface* netints
       if (detector)
       {
         // All current sockets need to be removed before adding new ones.
-        remove_source_detector_sockets(detector, kQueueSocketForClose);
+        remove_source_detector_sockets(detector, kQueueSocketCleanup);
 
         res = sacn_initialize_source_detector_netints(&detector->netints, netints, num_netints);
         if (res == kEtcPalErrOk)

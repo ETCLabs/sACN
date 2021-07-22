@@ -142,10 +142,10 @@ void sacn_receiver_state_deinit(void)
     {
       SacnRecvThreadContext* thread_context = get_recv_thread_context(threads_ids_to_deinit[i]);
       if (thread_context)
-        sacn_cleanup_dead_sockets(thread_context);
+        sacn_cleanup_dead_sockets(thread_context);  // Call directly since thread is no longer running.
     }
 
-    remove_all_receiver_sockets(kCloseSocketNow);
+    remove_all_receiver_sockets(kPerformAllSocketCleanupNow);  // Thread not running, don't queue cleanup.
 
     sacn_unlock();
   }
@@ -215,7 +215,7 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver)
     res = start_receiver_thread(assigned_thread);
     if (res != kEtcPalErrOk)
     {
-      remove_receiver_sockets(receiver, kCloseSocketNow);
+      remove_receiver_sockets(receiver, kPerformAllSocketCleanupNow);  // Thread not running, don't queue the cleanup.
     }
   }
 
@@ -249,7 +249,7 @@ etcpal_error_t assign_source_detector_to_thread(SacnSourceDetector* detector)
   {
     res = start_receiver_thread(assigned_thread);
     if (res != kEtcPalErrOk)
-      remove_source_detector_sockets(detector, kCloseSocketNow);
+      remove_source_detector_sockets(detector, kPerformAllSocketCleanupNow);  // Thread not running, don't queue cleanup
   }
 
   if (res == kEtcPalErrOk)
@@ -263,15 +263,14 @@ etcpal_error_t assign_source_detector_to_thread(SacnSourceDetector* detector)
  * longer process timeouts for that receiver.
  *
  * [in,out] receiver Receiver to remove.
- * [in] socket_close_behavior Whether to close the socket immediately (e.g. on full library shutdown).
  * Returns error code indicating the result of the removal operation.
  */
-void remove_receiver_from_thread(SacnReceiver* receiver, socket_close_behavior_t socket_close_behavior)
+void remove_receiver_from_thread(SacnReceiver* receiver)
 {
   SacnRecvThreadContext* context = get_recv_thread_context(receiver->thread_id);
   if (context)
   {
-    remove_receiver_sockets(receiver, socket_close_behavior);
+    remove_receiver_sockets(receiver, (context->running ? kQueueSocketCleanup : kPerformAllSocketCleanupNow));
     remove_receiver_from_list(context, receiver);
   }
 }
@@ -281,15 +280,14 @@ void remove_receiver_from_thread(SacnReceiver* receiver, socket_close_behavior_t
  * longer process the source detector.
  *
  * [in,out] detector Source detector to remove.
- * [in] socket_close_behavior Whether to close the socket immediately (e.g. on full library shutdown).
  * Returns error code indicating the result of the removal operation.
  */
-void remove_source_detector_from_thread(SacnSourceDetector* detector, socket_close_behavior_t socket_close_behavior)
+void remove_source_detector_from_thread(SacnSourceDetector* detector)
 {
   SacnRecvThreadContext* context = get_recv_thread_context(detector->thread_id);
   if (context)
   {
-    remove_source_detector_sockets(detector, socket_close_behavior);
+    remove_source_detector_sockets(detector, (context->running ? kQueueSocketCleanup : kPerformAllSocketCleanupNow));
     context->source_detector = NULL;
   }
 }
@@ -326,7 +324,7 @@ etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
           : ipv4_res;
 
   if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, kCloseSocketNow);
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, kQueueSocketCleanup);
 
   return result;
 }
@@ -356,7 +354,7 @@ etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector)
           : ipv4_res;
 
   if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
-    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv4_socket, kCloseSocketNow);
+    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv4_socket, kQueueSocketCleanup);
 
   return result;
 }
@@ -372,28 +370,28 @@ void begin_sampling_period(SacnReceiver* receiver)
  * Remove a receiver's sockets, choosing whether to close them now or wait until the next thread cycle.
  *
  * [in/out] receiver Receiver whose sockets to remove. Socket handles are set to invalid.
- * [in] close_behavior Whether to close the sockets now or wait until the next thread cycle.
+ * [in] cleanup_behavior Whether to close the sockets now or wait until the next thread cycle.
  */
-void remove_receiver_sockets(SacnReceiver* receiver, socket_close_behavior_t close_behavior)
+void remove_receiver_sockets(SacnReceiver* receiver, socket_cleanup_behavior_t cleanup_behavior)
 {
   if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, close_behavior);
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, cleanup_behavior);
   if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, close_behavior);
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, cleanup_behavior);
 }
 
 /*
  * Remove a source detector's sockets, choosing whether to close them now or wait until the next thread cycle.
  *
  * [in/out] detector Source detector whose sockets to remove. Socket handles are set to invalid.
- * [in] close_behavior Whether to close the sockets now or wait until the next thread cycle.
+ * [in] cleanup_behavior Whether to close the sockets now or wait until the next thread cycle.
  */
-void remove_source_detector_sockets(SacnSourceDetector* detector, socket_close_behavior_t close_behavior)
+void remove_source_detector_sockets(SacnSourceDetector* detector, socket_cleanup_behavior_t cleanup_behavior)
 {
   if (detector->ipv4_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv4_socket, close_behavior);
+    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv4_socket, cleanup_behavior);
   if (detector->ipv6_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv6_socket, close_behavior);
+    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv6_socket, cleanup_behavior);
 }
 
 /*
@@ -401,13 +399,13 @@ void remove_source_detector_sockets(SacnSourceDetector* detector, socket_close_b
  *
  * The sACN lock should be locked before calling this.
  *
- * [in] close_behavior Whether to close the sockets now or wait until the next thread cycle.
+ * [in] cleanup_behavior Whether to close the sockets now or wait until the next thread cycle.
  */
-void remove_all_receiver_sockets(socket_close_behavior_t close_behavior)
+void remove_all_receiver_sockets(socket_cleanup_behavior_t cleanup_behavior)
 {
   EtcPalRbIter iter;
   for (SacnReceiver* receiver = get_first_receiver(&iter); receiver; receiver = get_next_receiver(&iter))
-    remove_receiver_sockets(receiver, close_behavior);
+    remove_receiver_sockets(receiver, cleanup_behavior);
 }
 
 /*
@@ -497,12 +495,21 @@ void sacn_receive_thread(void* arg)
   SACN_ASSERT(context);
 
   // Create the poll context
-  etcpal_error_t init_res = etcpal_poll_context_init(&context->poll_context);
-  if (init_res != kEtcPalErrOk)
+  etcpal_error_t poll_init_res = kEtcPalErrSys; 
+  if (sacn_lock())
+  {
+    poll_init_res = etcpal_poll_context_init(&context->poll_context);
+    if (poll_init_res == kEtcPalErrOk)
+      context->poll_context_initialized = true;
+
+    sacn_unlock();
+  }
+
+  if (poll_init_res != kEtcPalErrOk)
   {
     SACN_LOG_CRIT(
         "Could not create a socket poll context for sACN: '%s'. sACN Receive functionality will not work properly.",
-        etcpal_strerror(init_res));
+        etcpal_strerror(poll_init_res));
     return;
   }
 
@@ -510,7 +517,13 @@ void sacn_receive_thread(void* arg)
     read_network_and_process(context);
 
   // Destroy the poll context
-  etcpal_poll_context_deinit(&context->poll_context);
+  if (sacn_lock())
+  {
+    etcpal_poll_context_deinit(&context->poll_context);
+    context->poll_context_initialized = false;
+
+    sacn_unlock();
+  }
 }
 
 /**************************************************************************************************

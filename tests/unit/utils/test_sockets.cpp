@@ -122,20 +122,20 @@ TEST_F(TestSockets, SocketCleanedUpOnBindFailure)
 
 TEST_F(TestSockets, SocketCleanedUpOnSubscribeFailure)
 {
+  SacnRecvThreadContext* context = get_recv_thread_context(0);
+  ASSERT_NE(context, nullptr);
+ 
   etcpal_setsockopt_fake.return_val = kEtcPalErrAddrNotAvail;
 
   unsigned int initial_socket_call_count = etcpal_socket_fake.call_count;
-  unsigned int initial_close_call_count = etcpal_close_fake.call_count;
 
   etcpal_socket_t sock;
   EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV4, 1, fake_netint_ids_.data(), fake_netint_ids_.size(), &sock),
             kEtcPalErrAddrNotAvail);
-  EXPECT_EQ(etcpal_socket_fake.call_count - initial_socket_call_count,
-            etcpal_close_fake.call_count - initial_close_call_count);
+  EXPECT_EQ(etcpal_socket_fake.call_count - initial_socket_call_count, context->num_dead_sockets);
   EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV6, 1, fake_netint_ids_.data(), fake_netint_ids_.size(), &sock),
             kEtcPalErrAddrNotAvail);
-  EXPECT_EQ(etcpal_socket_fake.call_count - initial_socket_call_count,
-            etcpal_close_fake.call_count - initial_close_call_count);
+  EXPECT_EQ(etcpal_socket_fake.call_count - initial_socket_call_count, context->num_dead_sockets);
 }
 
 TEST_F(TestSockets, AddReceiverSocketWorks)
@@ -156,20 +156,246 @@ TEST_F(TestSockets, AddReceiverSocketWorks)
                                          &sock),
                 kEtcPalErrOk);
       EXPECT_EQ(context->num_socket_refs, j ? (i + 2u) : (i + 1u));
-      EXPECT_EQ(context->socket_refs[i].ip_type, kEtcPalIpTypeV4);
+      EXPECT_EQ(context->socket_refs[i].socket.ip_type, kEtcPalIpTypeV4);
       EXPECT_EQ(context->socket_refs[i].refcount, j + 1u);
-      EXPECT_EQ(context->socket_refs[i].sock, sock);
+      EXPECT_EQ(context->socket_refs[i].socket.handle, sock);
 
       EXPECT_EQ(sacn_add_receiver_socket(0, kEtcPalIpTypeV6, universe, fake_netint_ids_.data(), fake_netint_ids_.size(),
                                          &sock),
                 kEtcPalErrOk);
       EXPECT_EQ(context->num_socket_refs, i + 2u);
-      EXPECT_EQ(context->socket_refs[i + 1u].ip_type, kEtcPalIpTypeV6);
+      EXPECT_EQ(context->socket_refs[i + 1u].socket.ip_type, kEtcPalIpTypeV6);
       EXPECT_EQ(context->socket_refs[i + 1u].refcount, j + 1u);
-      EXPECT_EQ(context->socket_refs[i + 1u].sock, sock);
+      EXPECT_EQ(context->socket_refs[i + 1u].socket.handle, sock);
 
       ++universe;
     }
+  }
+}
+
+TEST_F(TestSockets, AddReceiverSocketBindsAfterRemoveUnbinds)
+{
+  static constexpr sacn_thread_id_t kThreadId = 0u;
+  static constexpr uint16_t kUniverse = 1u;
+
+  etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
+  unsigned int expected_bind_count = 0u;
+
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV4, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrOk);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  sacn_remove_receiver_socket(kThreadId, &sock, kPerformAllSocketCleanupNow);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV4, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrOk);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  // Also consider queued close, which in this case is considered unbinding.
+  sacn_remove_receiver_socket(kThreadId, &sock, kQueueSocketCleanup);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV4, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrOk);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV6, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrOk);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  sacn_remove_receiver_socket(kThreadId, &sock, kPerformAllSocketCleanupNow);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV6, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrOk);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  sacn_remove_receiver_socket(kThreadId, &sock, kQueueSocketCleanup);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV6, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrOk);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+}
+
+TEST_F(TestSockets, AddReceiverSocketBindsAfterCreateSocketFails)
+{
+  static constexpr sacn_thread_id_t kThreadId = 0u;
+  static constexpr uint16_t kUniverse = 1u;
+
+  etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
+  unsigned int expected_bind_count = 0u;
+
+  etcpal_socket_fake.custom_fake = [](unsigned int, unsigned int, etcpal_socket_t* new_sock) {
+    EXPECT_NE(new_sock, nullptr);
+    return kEtcPalErrSys;
+  };
+
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV4, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrSys);
+
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV6, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrSys);
+
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  etcpal_socket_fake.custom_fake = [](unsigned int, unsigned int, etcpal_socket_t* new_sock) {
+    EXPECT_NE(new_sock, nullptr);
+    *new_sock = next_socket++;
+    return kEtcPalErrOk;
+  };
+  etcpal_bind_fake.return_val = kEtcPalErrSys;
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV4, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrSys);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV6, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrSys);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  etcpal_bind_fake.return_val = kEtcPalErrOk;
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV4, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrOk);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV6, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrOk);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+}
+
+TEST_F(TestSockets, AddReceiverSocketBindsAfterSubscribeFails)
+{
+  static constexpr sacn_thread_id_t kThreadId = 0u;
+  static constexpr uint16_t kUniverse = 1u;
+
+  etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
+  unsigned int expected_bind_count = 0u;
+
+  etcpal_setsockopt_fake.custom_fake = [](etcpal_socket_t, int, int option_name, const void*, size_t) {
+    if (option_name == ETCPAL_MCAST_JOIN_GROUP)
+      return kEtcPalErrSys;
+    return kEtcPalErrOk;
+  };
+
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV4, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrSys);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV6, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrSys);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  etcpal_setsockopt_fake.custom_fake = [](etcpal_socket_t, int, int, const void*, size_t) {
+    return kEtcPalErrOk;
+  };
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV4, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrOk);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV6, kUniverse, fake_netint_ids_.data(),
+                                     fake_netint_ids_.size(), &sock),
+            kEtcPalErrOk);
+
+  ++expected_bind_count;
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+}
+
+TEST_F(TestSockets, AddAndRemoveReceiverSocketBindWhenNeeded)
+{
+  static constexpr sacn_thread_id_t kThreadId = 0u;
+  static constexpr uint16_t kStartUniverse = 1u;
+  static constexpr int kNumIterations = 4;
+
+  etcpal_socket_t sock[SACN_RECEIVER_MAX_SUBS_PER_SOCKET * kNumIterations * 2];
+  uint16_t universe = kStartUniverse;
+  unsigned int expected_bind_count = 0u;
+
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  for (int i = 0; i < (SACN_RECEIVER_MAX_SUBS_PER_SOCKET * kNumIterations); ++i)
+  {
+    EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV4, universe, fake_netint_ids_.data(),
+                                       fake_netint_ids_.size(), &sock[i * 2]),
+              kEtcPalErrOk);
+    EXPECT_EQ(sacn_add_receiver_socket(kThreadId, kEtcPalIpTypeV6, universe, fake_netint_ids_.data(),
+                                       fake_netint_ids_.size(), &sock[(i * 2) + 1]),
+              kEtcPalErrOk);
+
+    ++universe;
+  }
+
+#if SACN_RECEIVER_LIMIT_BIND
+  expected_bind_count += 2;
+#else
+  expected_bind_count += (kNumIterations * 2);
+#endif
+
+  EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
+
+  for (int i = 0; i < kNumIterations; ++i)
+  {
+    for (int j = 0; j < SACN_RECEIVER_MAX_SUBS_PER_SOCKET; ++j)
+    {
+      int ipv4_socket_index = ((SACN_RECEIVER_MAX_SUBS_PER_SOCKET * i) + j) * 2;
+      int ipv6_socket_index = (((SACN_RECEIVER_MAX_SUBS_PER_SOCKET * i) + j) * 2) + 1;
+      sacn_remove_receiver_socket(kThreadId, &sock[ipv4_socket_index], kPerformAllSocketCleanupNow);
+      sacn_remove_receiver_socket(kThreadId, &sock[ipv6_socket_index], kPerformAllSocketCleanupNow);
+    }
+
+#if SACN_RECEIVER_LIMIT_BIND
+    if (i < (kNumIterations - 1))
+      expected_bind_count += 2;
+#endif
+    EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
   }
 }
 

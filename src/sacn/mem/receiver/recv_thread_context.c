@@ -76,55 +76,126 @@ SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id)
  * [in] socket Dead socket.
  * Returns true if the socket was successfully added, false if memory could not be allocated.
  */
-bool add_dead_socket(SacnRecvThreadContext* context, etcpal_socket_t socket)
+bool add_dead_socket(SacnRecvThreadContext* context, const ReceiveSocket* socket)
 {
   SACN_ASSERT(context);
 
-  CHECK_ROOM_FOR_ONE_MORE(context, dead_sockets, etcpal_socket_t, SACN_RECEIVER_MAX_UNIVERSES * 2, false);
+  CHECK_ROOM_FOR_ONE_MORE(context, dead_sockets, ReceiveSocket, SACN_RECEIVER_MAX_UNIVERSES * 2, false);
 
-  context->dead_sockets[context->num_dead_sockets++] = socket;
+  context->dead_sockets[context->num_dead_sockets++] = *socket;
   return true;
 }
 
-bool add_socket_ref(SacnRecvThreadContext* context, etcpal_socket_t socket, etcpal_iptype_t ip_type,
-                    bool bound)
+// Return index in context->socket_refs or -1 if not enough room.
+int add_socket_ref(SacnRecvThreadContext* context, const ReceiveSocket* socket)
 {
-#if !SACN_RECEIVER_LIMIT_BIND
-  ETCPAL_UNUSED_ARG(bound);
-#endif
-
   SACN_ASSERT(context);
 
-  CHECK_ROOM_FOR_ONE_MORE(context, socket_refs, SocketRef, SACN_RECEIVER_MAX_SOCKET_REFS, false);
+  CHECK_ROOM_FOR_ONE_MORE(context, socket_refs, SocketRef, SACN_RECEIVER_MAX_SOCKET_REFS, -1);
 
-  context->socket_refs[context->num_socket_refs].sock = socket;
-  context->socket_refs[context->num_socket_refs].refcount = 1;
-  context->socket_refs[context->num_socket_refs].ip_type = ip_type;
-#if SACN_RECEIVER_LIMIT_BIND
-  context->socket_refs[context->num_socket_refs].bound = bound;
-#endif
+  int index = (int)context->num_socket_refs;
+
+  context->socket_refs[index].socket = *socket;
+  context->socket_refs[index].refcount = 1;
+  context->socket_refs[index].pending = true;
+
   ++context->num_socket_refs;
   ++context->new_socket_refs;
-  return true;
+
+  if (socket->bound)
+    mark_socket_ref_bound(context, index);
+
+  return index;
 }
 
-bool remove_socket_ref(SacnRecvThreadContext* context, etcpal_socket_t socket)
+// Return index in context->socket_refs or -1 if not found.
+int find_socket_ref_with_room(SacnRecvThreadContext* context, etcpal_iptype_t ip_type)
+{
+  int index = 0;
+  for (SocketRef* entry = context->socket_refs; entry < (context->socket_refs + context->num_socket_refs); ++entry)
+  {
+    if ((entry->socket.ip_type == ip_type) && (entry->refcount < SACN_RECEIVER_MAX_SUBS_PER_SOCKET))
+      return index;
+    else
+      ++index;
+  }
+
+  return -1;
+}
+
+// Return index in context->socket_refs or -1 if not found.
+int find_socket_ref_by_type(SacnRecvThreadContext* context, etcpal_iptype_t ip_type)
+{
+  int index = 0;
+  for (SocketRef* entry = context->socket_refs; entry < (context->socket_refs + context->num_socket_refs); ++entry)
+  {
+    if (entry->socket.ip_type == ip_type)
+      return index;
+    else
+      ++index;
+  }
+
+  return -1;
+}
+
+// Return index in context->socket_refs or -1 if not found.
+int find_socket_ref_by_handle(SacnRecvThreadContext* context, etcpal_socket_t handle)
+{
+  int index = 0;
+  for (SocketRef* entry = context->socket_refs; entry < (context->socket_refs + context->num_socket_refs); ++entry)
+  {
+    if (entry->socket.handle == handle)
+      return index;
+    else
+      ++index;
+  }
+
+  return -1;
+}
+
+void mark_socket_ref_bound(SacnRecvThreadContext* context, int index)
+{
+  SocketRef* ref = &context->socket_refs[index];
+  ref->socket.bound = true;
+
+#if SACN_RECEIVER_LIMIT_BIND
+  if (ref->socket.ip_type == kEtcPalIpTypeV4)
+    context->ipv4_bound = true;
+  else if (ref->socket.ip_type == kEtcPalIpTypeV6)
+    context->ipv6_bound = true;
+#endif
+}
+
+bool remove_socket_ref(SacnRecvThreadContext* context, int index)
 {
   SACN_ASSERT(context);
 
-  for (size_t i = 0; i < context->num_socket_refs; ++i)
+  SocketRef* ref = &context->socket_refs[index];
+  if (--ref->refcount == 0)
   {
-    SocketRef* ref = &context->socket_refs[i];
-    if (ref->sock == socket)
+#if SACN_RECEIVER_LIMIT_BIND
+    etcpal_iptype_t ip_type = ref->socket.ip_type;
+    bool was_bound = ref->socket.bound;
+#endif
+    bool was_pending = ref->pending;
+
+    if (index < (context->num_socket_refs - 1))
+      memmove(ref, ref + 1, (context->num_socket_refs - 1 - index) * sizeof(SocketRef));
+
+    --context->num_socket_refs;
+    if (was_pending)
+      --context->new_socket_refs;
+#if SACN_RECEIVER_LIMIT_BIND
+    if (was_bound)
     {
-      if (--ref->refcount == 0)
-      {
-        if (i < context->num_socket_refs - 1)
-          memmove(ref, ref + 1, (context->num_socket_refs - 1 - i) * sizeof(SocketRef));
-        --context->num_socket_refs;
-        return true;
-      }
+      if (ip_type == kEtcPalIpTypeV4)
+        context->ipv4_bound = false;
+      else if (ip_type == kEtcPalIpTypeV6)
+        context->ipv6_bound = false;
     }
+#endif
+
+    return true;
   }
   return false;
 }
@@ -197,7 +268,7 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
   SACN_ASSERT(context);
 
 #if SACN_DYNAMIC_MEM
-  context->dead_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
+  context->dead_sockets = calloc(INITIAL_CAPACITY, sizeof(ReceiveSocket));
   if (!context->dead_sockets)
     return kEtcPalErrNoMem;
   context->dead_sockets_capacity = INITIAL_CAPACITY;
@@ -219,6 +290,7 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
   context->source_detector = NULL;
 
   context->running = false;
+  context->poll_context_initialized = false;
   context->periodic_timer_started = false;
 
   return kEtcPalErrOk;

@@ -291,24 +291,28 @@ TEST_F(TestMem, AddDeadSocketWorks)
     SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread);
     ASSERT_NE(recv_thread_context, nullptr);
 
+    ReceiveSocket socket = RECV_SOCKET_DEFAULT_INIT;
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
     for (size_t i = 0; i < 20; ++i)
     {
-      ASSERT_TRUE(add_dead_socket(recv_thread_context, (etcpal_socket_t)i));
+      socket.handle = (etcpal_socket_t)i;
+      ASSERT_TRUE(add_dead_socket(recv_thread_context, &socket));
       EXPECT_EQ(recv_thread_context->num_dead_sockets, i + 1);
-      EXPECT_EQ(recv_thread_context->dead_sockets[i], (etcpal_socket_t)i);
+      EXPECT_EQ(recv_thread_context->dead_sockets[i].handle, (etcpal_socket_t)i);
     }
 #else
     // Test up to the maximum capacity
     for (size_t i = 0; i < SACN_RECEIVER_MAX_UNIVERSES * 2; ++i)
     {
-      ASSERT_TRUE(add_dead_socket(recv_thread_context, (etcpal_socket_t)i));
+      socket.handle = (etcpal_socket_t)i;
+      ASSERT_TRUE(add_dead_socket(recv_thread_context, &socket));
       EXPECT_EQ(recv_thread_context->num_dead_sockets, i + 1);
-      EXPECT_EQ(recv_thread_context->dead_sockets[i], (etcpal_socket_t)i);
+      EXPECT_EQ(recv_thread_context->dead_sockets[i].handle, (etcpal_socket_t)i);
     }
     // And make sure we can't add another
-    EXPECT_FALSE(add_dead_socket(recv_thread_context, (etcpal_socket_t)SACN_RECEIVER_MAX_UNIVERSES));
+    socket.handle = (etcpal_socket_t)SACN_RECEIVER_MAX_UNIVERSES;
+    EXPECT_FALSE(add_dead_socket(recv_thread_context, &socket));
 #endif
   });
 }
@@ -319,29 +323,33 @@ TEST_F(TestMem, AddSocketRefWorks)
     SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread);
     ASSERT_NE(recv_thread_context, nullptr);
 
+    ReceiveSocket new_socket = RECV_SOCKET_DEFAULT_INIT;
+
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
     for (size_t i = 0; i < 20; ++i)
     {
-      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i, kEtcPalIpTypeInvalid, false));
+      new_socket.handle = (etcpal_socket_t)i;
+      ASSERT_NE(add_socket_ref(recv_thread_context, &new_socket), -1);
       EXPECT_EQ(recv_thread_context->num_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->new_socket_refs, i + 1);
-      EXPECT_EQ(recv_thread_context->socket_refs[i].sock, (etcpal_socket_t)i);
+      EXPECT_EQ(recv_thread_context->socket_refs[i].socket.handle, (etcpal_socket_t)i);
       EXPECT_EQ(recv_thread_context->socket_refs[i].refcount, 1u);
     }
 #else
     // Test up to the maximum capacity
     for (size_t i = 0; i < SACN_RECEIVER_MAX_SOCKET_REFS; ++i)
     {
-      ASSERT_TRUE(add_socket_ref(recv_thread_context, (etcpal_socket_t)i, kEtcPalIpTypeInvalid, false));
+      new_socket.handle = (etcpal_socket_t)i;
+      ASSERT_NE(add_socket_ref(recv_thread_context, &new_socket), -1);
       EXPECT_EQ(recv_thread_context->num_socket_refs, i + 1);
       EXPECT_EQ(recv_thread_context->new_socket_refs, i + 1);
-      EXPECT_EQ(recv_thread_context->socket_refs[i].sock, (etcpal_socket_t)i);
+      EXPECT_EQ(recv_thread_context->socket_refs[i].socket.handle, (etcpal_socket_t)i);
       EXPECT_EQ(recv_thread_context->socket_refs[i].refcount, 1u);
     }
     // And make sure we can't add another
-    EXPECT_FALSE(add_socket_ref(recv_thread_context, (etcpal_socket_t)SACN_RECEIVER_MAX_SOCKET_REFS,
-                                kEtcPalIpTypeInvalid, false));
+    new_socket.handle = (etcpal_socket_t)SACN_RECEIVER_MAX_SOCKET_REFS;
+    EXPECT_EQ(add_socket_ref(recv_thread_context, &new_socket), -1);
 #endif
   });
 }
@@ -352,27 +360,45 @@ TEST_F(TestMem, RemoveSocketRefWorks)
     SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread);
     ASSERT_NE(recv_thread_context, nullptr);
 
-    recv_thread_context->socket_refs[0] = SocketRef{(etcpal_socket_t)0, 1};
-    recv_thread_context->socket_refs[1] = SocketRef{(etcpal_socket_t)1, 20};
-    recv_thread_context->socket_refs[2] = SocketRef{(etcpal_socket_t)2, 3};
+    recv_thread_context->socket_refs[0] = SocketRef{{(etcpal_socket_t)0}, 1, true};
+    recv_thread_context->socket_refs[1] = SocketRef{{(etcpal_socket_t)1}, 20, false};
+    recv_thread_context->socket_refs[2] = SocketRef{{(etcpal_socket_t)2}, 3, false};
     recv_thread_context->num_socket_refs = 3;
     recv_thread_context->new_socket_refs = 1;
 
-    // Remove a socket ref that has a refcount of 1, the other ones should be shifted
-    ASSERT_TRUE(remove_socket_ref(recv_thread_context, (etcpal_socket_t)0));
+    // Remove the first socket ref (has a refcount of 1 and is pending), the other ones should be shifted
+    ASSERT_TRUE(remove_socket_ref(recv_thread_context, 0));
 
     ASSERT_EQ(recv_thread_context->num_socket_refs, 2u);
-    EXPECT_EQ(recv_thread_context->new_socket_refs, 1u);
-    EXPECT_EQ(recv_thread_context->socket_refs[0].sock, (etcpal_socket_t)1);
+    EXPECT_EQ(recv_thread_context->new_socket_refs, 0u);
+    EXPECT_EQ(recv_thread_context->socket_refs[0].socket.handle, (etcpal_socket_t)1);
     EXPECT_EQ(recv_thread_context->socket_refs[0].refcount, 20u);
-    EXPECT_EQ(recv_thread_context->socket_refs[1].sock, (etcpal_socket_t)2);
+    EXPECT_FALSE(recv_thread_context->socket_refs[0].pending);
+    EXPECT_EQ(recv_thread_context->socket_refs[1].socket.handle, (etcpal_socket_t)2);
     EXPECT_EQ(recv_thread_context->socket_refs[1].refcount, 3u);
+    EXPECT_FALSE(recv_thread_context->socket_refs[1].pending);
 
-    // Remove one with multiple references
+    // Remove the last socket ref (multiple references), no shift should occur
     for (int i = 0; i < 2; ++i)
-      ASSERT_FALSE(remove_socket_ref(recv_thread_context, (etcpal_socket_t)2));
-    EXPECT_TRUE(remove_socket_ref(recv_thread_context, (etcpal_socket_t)2));
-    EXPECT_EQ(recv_thread_context->num_socket_refs, 1u);
+    {
+      ASSERT_FALSE(remove_socket_ref(recv_thread_context, 1));  // (etcpal_socket_t)2
+
+      ASSERT_EQ(recv_thread_context->num_socket_refs, 2u);
+      EXPECT_EQ(recv_thread_context->new_socket_refs, 0u);
+      EXPECT_EQ(recv_thread_context->socket_refs[0].socket.handle, (etcpal_socket_t)1);
+      EXPECT_EQ(recv_thread_context->socket_refs[0].refcount, 20u);
+      EXPECT_FALSE(recv_thread_context->socket_refs[0].pending);
+      EXPECT_EQ(recv_thread_context->socket_refs[1].socket.handle, (etcpal_socket_t)2);
+      EXPECT_EQ(recv_thread_context->socket_refs[1].refcount, 2u - i);
+      EXPECT_FALSE(recv_thread_context->socket_refs[1].pending);
+    }
+
+    EXPECT_TRUE(remove_socket_ref(recv_thread_context, 1));
+    ASSERT_EQ(recv_thread_context->num_socket_refs, 1u);
+    EXPECT_EQ(recv_thread_context->new_socket_refs, 0u);
+    EXPECT_EQ(recv_thread_context->socket_refs[0].socket.handle, (etcpal_socket_t)1);
+    EXPECT_EQ(recv_thread_context->socket_refs[0].refcount, 20u);
+    EXPECT_FALSE(recv_thread_context->socket_refs[0].pending);
   });
 }
 
