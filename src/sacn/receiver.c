@@ -107,16 +107,17 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
     res = kEtcPalErrInvalid;
   }
 
-  if (sacn_lock())
+  if (res == kEtcPalErrOk)
   {
-    if (res == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       res = create_sacn_receiver(config, handle, netints, num_netints);
-
-    sacn_unlock();
-  }
-  else
-  {
-    res = kEtcPalErrSys;
+      sacn_unlock();
+    }
+    else
+    {
+      res = kEtcPalErrSys;
+    }
   }
 
   return res;
@@ -141,16 +142,17 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
   if (!sacn_initialized())
     res = kEtcPalErrNotInit;
 
-  if (sacn_lock())
+  if (res == kEtcPalErrOk)
   {
-    if (res == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       res = destroy_sacn_receiver(handle);
-
-    sacn_unlock();
-  }
-  else
-  {
-    res = kEtcPalErrSys;
+      sacn_unlock();
+    }
+    else
+    {
+      res = kEtcPalErrSys;
+    }
   }
 
   return res;
@@ -176,16 +178,22 @@ etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* univ
   else if (universe_id == NULL)
     res = kEtcPalErrInvalid;
 
-  if (sacn_lock())
+  if (res == kEtcPalErrOk)
   {
-    SacnReceiver* receiver = NULL;
-    if (res == kEtcPalErrOk)
+    if (sacn_lock())
+    {
+      SacnReceiver* receiver = NULL;
       res = lookup_receiver(handle, &receiver);
 
-    if (res == kEtcPalErrOk)
-      *universe_id = receiver->keys.universe;
+      if (res == kEtcPalErrOk)
+        *universe_id = receiver->keys.universe;
 
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      res = kEtcPalErrSys;
+    }
   }
 
   return res;
@@ -217,16 +225,17 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
   else if (!UNIVERSE_ID_VALID(new_universe_id))
     res = kEtcPalErrInvalid;
 
-  if (sacn_lock())
+  if (res == kEtcPalErrOk)
   {
-    if (res == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       res = change_sacn_receiver_universe(handle, new_universe_id);
-
-    sacn_unlock();
-  }
-  else
-  {
-    res = kEtcPalErrSys;
+      sacn_unlock();
+    }
+    else
+    {
+      res = kEtcPalErrSys;
+    }
   }
 
   return res;
@@ -261,31 +270,37 @@ etcpal_error_t sacn_receiver_reset_networking(SacnMcastInterface* netints, size_
   if (!sacn_initialized())
     res = kEtcPalErrNotInit;
 
-  if (sacn_lock())
+  if (res == kEtcPalErrOk)
   {
-    if (res == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       res = sacn_sockets_reset_receiver();
 
-    if (res == kEtcPalErrOk)
-    {
-      // All current sockets need to be removed before adding new ones.
-      remove_all_receiver_sockets(kQueueSocketCleanup);
-
-      EtcPalRbIter iter;
-      for (SacnReceiver* receiver = get_first_receiver(&iter); (res == kEtcPalErrOk) && receiver;
-           receiver = get_next_receiver(&iter))
+      if (res == kEtcPalErrOk)
       {
-        res = sacn_initialize_receiver_netints(&receiver->netints, netints, num_netints);
-        if (res == kEtcPalErrOk)
-          res = add_receiver_sockets(receiver);
-        if (res == kEtcPalErrOk)
-          res = clear_term_sets_and_sources(receiver);
-        if (res == kEtcPalErrOk)
-          begin_sampling_period(receiver);
-      }
-    }
+        // All current sockets need to be removed before adding new ones.
+        remove_all_receiver_sockets(kQueueSocketCleanup);
 
-    sacn_unlock();
+        EtcPalRbIter iter;
+        for (SacnReceiver* receiver = get_first_receiver(&iter); (res == kEtcPalErrOk) && receiver;
+             receiver = get_next_receiver(&iter))
+        {
+          res = sacn_initialize_receiver_netints(&receiver->netints, netints, num_netints);
+          if (res == kEtcPalErrOk)
+            res = add_receiver_sockets(receiver);
+          if (res == kEtcPalErrOk)
+            res = clear_term_sets_and_sources(receiver);
+          if (res == kEtcPalErrOk)
+            begin_sampling_period(receiver);
+        }
+      }
+
+      sacn_unlock();
+    }
+    else
+    {
+      res = kEtcPalErrSys;
+    }
   }
 
   return res;
@@ -327,56 +342,63 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnReceiverNet
   if ((netint_lists == NULL) || (num_netint_lists == 0))
     res = kEtcPalErrInvalid;
 
-  if (sacn_lock())
+  if (res == kEtcPalErrOk)
   {
-    // Validate netint_lists. It must include all receivers and nothing more.
-    size_t total_num_receivers = 0;
-
-    EtcPalRbIter iter;
-    for (SacnReceiver* receiver = get_first_receiver(&iter); (res == kEtcPalErrOk) && receiver;
-         receiver = get_next_receiver(&iter))
+    if (sacn_lock())
     {
-      ++total_num_receivers;
+      // Validate netint_lists. It must include all receivers and nothing more.
+      size_t total_num_receivers = 0;
 
-      bool found = false;
-      for (size_t i = 0; !found && (i < num_netint_lists); ++i)
-        found = (receiver->keys.handle == netint_lists[i].handle);
-
-      if (!found)
-        res = kEtcPalErrInvalid;
-    }
-
-    if (res == kEtcPalErrOk)
-    {
-      if (num_netint_lists != total_num_receivers)
-        res = kEtcPalErrInvalid;
-    }
-
-    if (res == kEtcPalErrOk)
-      res = sacn_sockets_reset_receiver();
-
-    if (res == kEtcPalErrOk)
-    {
-      // All current sockets need to be removed before adding new ones.
-      remove_all_receiver_sockets(kQueueSocketCleanup);
-
-      // After the old sockets have been removed, initialize the new netints, sockets, and state.
-      for (size_t i = 0; (res == kEtcPalErrOk) && (i < num_netint_lists); ++i)
+      EtcPalRbIter iter;
+      for (SacnReceiver* receiver = get_first_receiver(&iter); (res == kEtcPalErrOk) && receiver;
+           receiver = get_next_receiver(&iter))
       {
-        SacnReceiver* receiver = NULL;
-        lookup_receiver(netint_lists[i].handle, &receiver);
-        res =
-            sacn_initialize_receiver_netints(&receiver->netints, netint_lists[i].netints, netint_lists[i].num_netints);
-        if (res == kEtcPalErrOk)
-          res = add_receiver_sockets(receiver);
-        if (res == kEtcPalErrOk)
-          res = clear_term_sets_and_sources(receiver);
-        if (res == kEtcPalErrOk)
-          begin_sampling_period(receiver);
-      }
-    }
+        ++total_num_receivers;
 
-    sacn_unlock();
+        bool found = false;
+        for (size_t i = 0; !found && (i < num_netint_lists); ++i)
+          found = (receiver->keys.handle == netint_lists[i].handle);
+
+        if (!found)
+          res = kEtcPalErrInvalid;
+      }
+
+      if (res == kEtcPalErrOk)
+      {
+        if (num_netint_lists != total_num_receivers)
+          res = kEtcPalErrInvalid;
+      }
+
+      if (res == kEtcPalErrOk)
+        res = sacn_sockets_reset_receiver();
+
+      if (res == kEtcPalErrOk)
+      {
+        // All current sockets need to be removed before adding new ones.
+        remove_all_receiver_sockets(kQueueSocketCleanup);
+
+        // After the old sockets have been removed, initialize the new netints, sockets, and state.
+        for (size_t i = 0; (res == kEtcPalErrOk) && (i < num_netint_lists); ++i)
+        {
+          SacnReceiver* receiver = NULL;
+          lookup_receiver(netint_lists[i].handle, &receiver);
+          res = sacn_initialize_receiver_netints(&receiver->netints, netint_lists[i].netints,
+                                                 netint_lists[i].num_netints);
+          if (res == kEtcPalErrOk)
+            res = add_receiver_sockets(receiver);
+          if (res == kEtcPalErrOk)
+            res = clear_term_sets_and_sources(receiver);
+          if (res == kEtcPalErrOk)
+            begin_sampling_period(receiver);
+        }
+      }
+
+      sacn_unlock();
+    }
+    else
+    {
+      res = kEtcPalErrSys;
+    }
   }
 
   return res;

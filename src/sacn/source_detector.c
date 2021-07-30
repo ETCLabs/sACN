@@ -93,26 +93,28 @@ etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* confi
   else if (!config || !config->callbacks.source_updated || !config->callbacks.source_expired)
     res = kEtcPalErrInvalid;
 
-  if (sacn_lock())
+  if (res == kEtcPalErrOk)
   {
-    SacnSourceDetector* source_detector = NULL;
-    if (res == kEtcPalErrOk)
+    if (sacn_lock())
+    {
+      SacnSourceDetector* source_detector = NULL;
       res = add_sacn_source_detector(config, netints, num_netints, &source_detector);
 
-    if (res == kEtcPalErrOk)
-      res = assign_source_detector_to_thread(source_detector);
+      if (res == kEtcPalErrOk)
+        res = assign_source_detector_to_thread(source_detector);
 
-    if ((res != kEtcPalErrOk) && source_detector)
-    {
-      remove_source_detector_from_thread(source_detector);
-      remove_sacn_source_detector();
+      if ((res != kEtcPalErrOk) && source_detector)
+      {
+        remove_source_detector_from_thread(source_detector);
+        remove_sacn_source_detector();
+      }
+
+      sacn_unlock();
     }
-
-    sacn_unlock();
-  }
-  else
-  {
-    res = kEtcPalErrSys;
+    else
+    {
+      res = kEtcPalErrSys;
+    }
   }
 
   return res;
@@ -167,26 +169,32 @@ etcpal_error_t sacn_source_detector_reset_networking(SacnMcastInterface* netints
   if (!sacn_initialized())
     res = kEtcPalErrNotInit;
 
-  if (sacn_lock())
+  if (res == kEtcPalErrOk)
   {
-    if (res == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       res = sacn_sockets_reset_source_detector();
 
-    if (res == kEtcPalErrOk)
-    {
-      SacnSourceDetector* detector = get_sacn_source_detector();
-      if (detector)
+      if (res == kEtcPalErrOk)
       {
-        // All current sockets need to be removed before adding new ones.
-        remove_source_detector_sockets(detector, kQueueSocketCleanup);
+        SacnSourceDetector* detector = get_sacn_source_detector();
+        if (detector)
+        {
+          // All current sockets need to be removed before adding new ones.
+          remove_source_detector_sockets(detector, kQueueSocketCleanup);
 
-        res = sacn_initialize_source_detector_netints(&detector->netints, netints, num_netints);
-        if (res == kEtcPalErrOk)
-          res = add_source_detector_sockets(detector);
+          res = sacn_initialize_source_detector_netints(&detector->netints, netints, num_netints);
+          if (res == kEtcPalErrOk)
+            res = add_source_detector_sockets(detector);
+        }
       }
-    }
 
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      res = kEtcPalErrSys;
+    }
   }
 
   return res;

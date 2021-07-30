@@ -169,12 +169,17 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
       result = kEtcPalErrInvalid;
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       result = create_sacn_dmx_merger(config, handle);
-
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;
@@ -206,12 +211,17 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
       result = kEtcPalErrNotFound;
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       result = destroy_sacn_dmx_merger(handle);
-
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;
@@ -248,12 +258,17 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_dmx_mer
       result = kEtcPalErrInvalid;
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       result = add_sacn_dmx_merger_source(merger, source_id);
-
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;
@@ -286,12 +301,17 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_dmx_
       result = kEtcPalErrInvalid;
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       result = remove_sacn_dmx_merger_source(merger, source);
-
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;
@@ -367,12 +387,17 @@ etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_dmx_
       result = kEtcPalErrInvalid;
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       result = update_sacn_dmx_merger_levels(merger, source, new_levels, new_levels_count);
-
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   // Return the final etcpal_error_t result.
@@ -419,12 +444,17 @@ etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_dmx_me
       result = kEtcPalErrInvalid;
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       result = update_sacn_dmx_merger_paps(merger, source, paps, paps_count);
-
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   // Return the final etcpal_error_t result.
@@ -463,12 +493,17 @@ etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger
   if ((result == kEtcPalErrOk) && ((merger == SACN_DMX_MERGER_INVALID) || (source == SACN_DMX_MERGER_SOURCE_INVALID)))
     result = kEtcPalErrInvalid;
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       result = update_sacn_dmx_merger_universe_priority(merger, source, universe_priority);
-
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   // Return the final etcpal_error_t result.
@@ -504,12 +539,17 @@ etcpal_error_t sacn_dmx_merger_remove_paps(sacn_dmx_merger_t merger, sacn_dmx_me
       result = kEtcPalErrNotFound;
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
       result = remove_sacn_dmx_merger_paps(merger, source);
-
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;

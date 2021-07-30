@@ -112,25 +112,29 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
     }
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    // If the Tick thread hasn't been started yet, start it if the config isn't manual.
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
     {
+      // If the Tick thread hasn't been started yet, start it if the config isn't manual.
       if (!config->manually_process_source)
         result = initialize_source_thread();
+
+      // Initialize the source's state.
+      SacnSource* source = NULL;
+      if (result == kEtcPalErrOk)
+        result = add_sacn_source(get_next_source_handle(), config, &source);
+
+      // Initialize the handle on success.
+      if (result == kEtcPalErrOk)
+        *handle = source->handle;
+
+      sacn_unlock();
     }
-
-    // Initialize the source's state.
-    SacnSource* source = NULL;
-    if (result == kEtcPalErrOk)
-      result = add_sacn_source(get_next_source_handle(), config, &source);
-
-    // Initialize the handle on success.
-    if (result == kEtcPalErrOk)
-      *handle = source->handle;
-
-    sacn_unlock();
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;
@@ -170,21 +174,27 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
       result = kEtcPalErrInvalid;
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    // Look up the source's state.
-    SacnSource* source = NULL;
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
+      // Look up the source's state.
+      SacnSource* source = NULL;
       result = lookup_source(handle, &source);
 
-    if ((result == kEtcPalErrOk) && source && source->terminating)
-      result = kEtcPalErrNotFound;
+      if ((result == kEtcPalErrOk) && source && source->terminating)
+        result = kEtcPalErrNotFound;
 
-    // Set this source's name.
-    if (result == kEtcPalErrOk)
-      set_source_name(source, new_name);
+      // Set this source's name.
+      if (result == kEtcPalErrOk)
+        set_source_name(source, new_name);
 
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;
@@ -271,43 +281,49 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     }
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    // Look up the source's state.
-    SacnSource* source = NULL;
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
+      // Look up the source's state.
+      SacnSource* source = NULL;
       result = lookup_source(handle, &source);
 
-    if ((result == kEtcPalErrOk) && source->terminating)
-      result = kEtcPalErrNotFound;
+      if ((result == kEtcPalErrOk) && source->terminating)
+        result = kEtcPalErrNotFound;
 
-    // Handle the existing universe if there is one.
-    if (result == kEtcPalErrOk)
-    {
-      bool found = false;
-      size_t index = get_source_universe_index(source, config->universe, &found);
-
-      if (found)
+      // Handle the existing universe if there is one.
+      if (result == kEtcPalErrOk)
       {
-        SacnSourceUniverse* existing_universe = &source->universes[index];
+        bool found = false;
+        size_t index = get_source_universe_index(source, config->universe, &found);
 
-        if (existing_universe->termination_state == kTerminatingAndRemoving)
-          finish_source_universe_termination(source, index);  // Remove the old state before adding the new.
-        else
-          result = kEtcPalErrExists;
+        if (found)
+        {
+          SacnSourceUniverse* existing_universe = &source->universes[index];
+
+          if (existing_universe->termination_state == kTerminatingAndRemoving)
+            finish_source_universe_termination(source, index);  // Remove the old state before adding the new.
+          else
+            result = kEtcPalErrExists;
+        }
       }
+
+      // Initialize the new universe's state.
+      SacnSourceUniverse* new_universe = NULL;
+      if (result == kEtcPalErrOk)
+        result = add_sacn_source_universe(source, config, netints, num_netints, &new_universe);
+
+      // Update the source's netint tracking.
+      for (size_t i = 0; (result == kEtcPalErrOk) && (i < new_universe->netints.num_netints); ++i)
+        result = add_sacn_source_netint(source, &new_universe->netints.netints[i]);
+
+      sacn_unlock();
     }
-
-    // Initialize the new universe's state.
-    SacnSourceUniverse* new_universe = NULL;
-    if (result == kEtcPalErrOk)
-      result = add_sacn_source_universe(source, config, netints, num_netints, &new_universe);
-
-    // Update the source's netint tracking.
-    for (size_t i = 0; (result == kEtcPalErrOk) && (i < new_universe->netints.num_netints); ++i)
-      result = add_sacn_source_netint(source, &new_universe->netints.netints[i]);
-
-    sacn_unlock();
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;
@@ -397,44 +413,50 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
       result = kEtcPalErrInvalid;
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    // Look up the state
-    SacnSource* source_state = NULL;
-    SacnSourceUniverse* universe_state = NULL;
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
+      // Look up the state
+      SacnSource* source_state = NULL;
+      SacnSourceUniverse* universe_state = NULL;
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if ((result == kEtcPalErrOk) && (universe_state->termination_state == kTerminatingAndRemoving))
-      result = kEtcPalErrNotFound;
+      if ((result == kEtcPalErrOk) && (universe_state->termination_state == kTerminatingAndRemoving))
+        result = kEtcPalErrNotFound;
 
-    // Handle the existing unicast destination if there is one.
-    if (result == kEtcPalErrOk)
-    {
-      bool found = false;
-      size_t index = get_unicast_dest_index(universe_state, dest, &found);
-
-      if (found)
+      // Handle the existing unicast destination if there is one.
+      if (result == kEtcPalErrOk)
       {
-        SacnUnicastDestination* existing_unicast_dest = &universe_state->unicast_dests[index];
+        bool found = false;
+        size_t index = get_unicast_dest_index(universe_state, dest, &found);
 
-        if (existing_unicast_dest->termination_state == kTerminatingAndRemoving)
-          finish_unicast_dest_termination(universe_state, index);  // Remove the old state before adding the new.
-        else
-          result = kEtcPalErrExists;
+        if (found)
+        {
+          SacnUnicastDestination* existing_unicast_dest = &universe_state->unicast_dests[index];
+
+          if (existing_unicast_dest->termination_state == kTerminatingAndRemoving)
+            finish_unicast_dest_termination(universe_state, index);  // Remove the old state before adding the new.
+          else
+            result = kEtcPalErrExists;
+        }
       }
+
+      // Add unicast destination
+      SacnUnicastDestination* new_unicast_dest = NULL;
+      if (result == kEtcPalErrOk)
+        result = add_sacn_unicast_dest(universe_state, dest, &new_unicast_dest);
+
+      // Initialize & reset transmission suppression
+      if (result == kEtcPalErrOk)
+        reset_transmission_suppression(source_state, universe_state, kResetLevelAndPap);
+
+      sacn_unlock();
     }
-
-    // Add unicast destination
-    SacnUnicastDestination* new_unicast_dest = NULL;
-    if (result == kEtcPalErrOk)
-      result = add_sacn_unicast_dest(universe_state, dest, &new_unicast_dest);
-
-    // Initialize & reset transmission suppression
-    if (result == kEtcPalErrOk)
-      reset_transmission_suppression(source_state, universe_state, kResetLevelAndPap);
-
-    sacn_unlock();
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;
@@ -539,22 +561,28 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
       result = kEtcPalErrInvalid;
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    // Look up the source and universe state.
-    SacnSource* source_state = NULL;
-    SacnSourceUniverse* universe_state = NULL;
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
+      // Look up the source and universe state.
+      SacnSource* source_state = NULL;
+      SacnSourceUniverse* universe_state = NULL;
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
-      result = kEtcPalErrNotFound;
+      if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
+        result = kEtcPalErrNotFound;
 
-    // Set the priority.
-    if (result == kEtcPalErrOk)
-      set_universe_priority(source_state, universe_state, new_priority);
+      // Set the priority.
+      if (result == kEtcPalErrOk)
+        set_universe_priority(source_state, universe_state, new_priority);
 
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;
@@ -594,22 +622,28 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
       result = kEtcPalErrInvalid;
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    // Look up the source and universe state.
-    SacnSource* source_state = NULL;
-    SacnSourceUniverse* universe_state = NULL;
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
+      // Look up the source and universe state.
+      SacnSource* source_state = NULL;
+      SacnSourceUniverse* universe_state = NULL;
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
-      result = kEtcPalErrNotFound;
+      if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
+        result = kEtcPalErrNotFound;
 
-    // Set the preview flag.
-    if (result == kEtcPalErrOk)
-      set_preview_flag(source_state, universe_state, new_preview_flag);
+      // Set the preview flag.
+      if (result == kEtcPalErrOk)
+        set_preview_flag(source_state, universe_state, new_preview_flag);
 
-    sacn_unlock();
+      sacn_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;
@@ -684,32 +718,39 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
     }
   }
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    // Look up state
-    SacnSource* source_state = NULL;
-    SacnSourceUniverse* universe_state = NULL;
-    if (result == kEtcPalErrOk)
+    if (sacn_lock())
+    {
+      // Look up state
+      SacnSource* source_state = NULL;
+      SacnSourceUniverse* universe_state = NULL;
       result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-    if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
-      result = kEtcPalErrNotFound;
+      if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
+        result = kEtcPalErrNotFound;
 
-    if (result == kEtcPalErrOk)
-    {
-      // Initialize send buffer
-      uint8_t send_buf[SACN_MTU];
-      init_sacn_data_send_buf(send_buf, start_code, &source_state->cid, source_state->name, universe_state->priority,
-                              universe_state->universe_id, universe_state->sync_universe, universe_state->send_preview);
-      update_send_buf_data(send_buf, buffer, (uint16_t)buflen, kDisableForceSync);
+      if (result == kEtcPalErrOk)
+      {
+        // Initialize send buffer
+        uint8_t send_buf[SACN_MTU];
+        init_sacn_data_send_buf(send_buf, start_code, &source_state->cid, source_state->name, universe_state->priority,
+                                universe_state->universe_id, universe_state->sync_universe,
+                                universe_state->send_preview);
+        update_send_buf_data(send_buf, buffer, (uint16_t)buflen, kDisableForceSync);
 
-      // Send on the network
-      send_universe_multicast(source_state, universe_state, send_buf);
-      send_universe_unicast(source_state, universe_state, send_buf);
-      increment_sequence_number(universe_state);
+        // Send on the network
+        send_universe_multicast(source_state, universe_state, send_buf);
+        send_universe_unicast(source_state, universe_state, send_buf);
+        increment_sequence_number(universe_state);
+      }
+
+      sacn_unlock();
     }
-
-    sacn_unlock();
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;
@@ -978,20 +1019,27 @@ etcpal_error_t sacn_source_reset_networking(SacnMcastInterface* netints, size_t 
   if (!sacn_initialized())
     result = kEtcPalErrNotInit;
 
-  if ((result == kEtcPalErrOk) && sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    sacn_sockets_reset_source();
-
-    for (size_t i = 0; (result == kEtcPalErrOk) && (i < get_num_sources()); ++i)
+    if (sacn_lock())
     {
-      SacnSource* source = get_source(i);
-      clear_source_netints(source);
+      sacn_sockets_reset_source();
 
-      for (size_t j = 0; (result == kEtcPalErrOk) && (j < source->num_universes); ++j)
-        result = reset_source_universe_networking(source, &source->universes[j], netints, num_netints);
+      for (size_t i = 0; (result == kEtcPalErrOk) && (i < get_num_sources()); ++i)
+      {
+        SacnSource* source = get_source(i);
+        clear_source_netints(source);
+
+        for (size_t j = 0; (result == kEtcPalErrOk) && (j < source->num_universes); ++j)
+          result = reset_source_universe_networking(source, &source->universes[j], netints, num_netints);
+      }
+
+      sacn_unlock();
     }
-
-    sacn_unlock();
+    else
+    {
+      result = kEtcPalErrSys;
+    }
   }
 
   return result;
@@ -1034,54 +1082,61 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUnivers
   if ((netint_lists == NULL) || (num_netint_lists == 0))
     result = kEtcPalErrInvalid;
 
-  if (sacn_lock())
+  if (result == kEtcPalErrOk)
   {
-    // Validate netint_lists. It must include all universes of all sources and nothing more.
-    size_t total_num_universes = 0;
-    for (size_t i = 0; (result == kEtcPalErrOk) && (i < get_num_sources()); ++i)
+    if (sacn_lock())
     {
-      for (size_t j = 0; (result == kEtcPalErrOk) && (j < get_source(i)->num_universes); ++j)
+      // Validate netint_lists. It must include all universes of all sources and nothing more.
+      size_t total_num_universes = 0;
+      for (size_t i = 0; (result == kEtcPalErrOk) && (i < get_num_sources()); ++i)
       {
-        ++total_num_universes;
-
-        bool found = false;
-        for (size_t k = 0; !found && (k < num_netint_lists); ++k)
+        for (size_t j = 0; (result == kEtcPalErrOk) && (j < get_source(i)->num_universes); ++j)
         {
-          found = ((get_source(i)->handle == netint_lists[k].handle) &&
-                   (get_source(i)->universes[j].universe_id == netint_lists[k].universe));
-        }
+          ++total_num_universes;
 
-        if (!found)
+          bool found = false;
+          for (size_t k = 0; !found && (k < num_netint_lists); ++k)
+          {
+            found = ((get_source(i)->handle == netint_lists[k].handle) &&
+                     (get_source(i)->universes[j].universe_id == netint_lists[k].universe));
+          }
+
+          if (!found)
+            result = kEtcPalErrInvalid;
+        }
+      }
+
+      if (result == kEtcPalErrOk)
+      {
+        if (num_netint_lists != total_num_universes)
           result = kEtcPalErrInvalid;
       }
-    }
 
-    if (result == kEtcPalErrOk)
+      if (result == kEtcPalErrOk)
+      {
+        sacn_sockets_reset_source();
+
+        for (size_t i = 0; i < get_num_sources(); ++i)
+          clear_source_netints(get_source(i));
+      }
+
+      for (size_t i = 0; (result == kEtcPalErrOk) && (i < num_netint_lists); ++i)
+      {
+        const SacnSourceUniverseNetintList* netint_list = &netint_lists[i];
+
+        SacnSource* source;
+        SacnSourceUniverse* universe;
+        lookup_source_and_universe(netint_list->handle, netint_list->universe, &source, &universe);
+
+        result = reset_source_universe_networking(source, universe, netint_list->netints, netint_list->num_netints);
+      }
+
+      sacn_unlock();
+    }
+    else
     {
-      if (num_netint_lists != total_num_universes)
-        result = kEtcPalErrInvalid;
+      result = kEtcPalErrSys;
     }
-
-    if (result == kEtcPalErrOk)
-    {
-      sacn_sockets_reset_source();
-
-      for (size_t i = 0; i < get_num_sources(); ++i)
-        clear_source_netints(get_source(i));
-    }
-
-    for (size_t i = 0; (result == kEtcPalErrOk) && (i < num_netint_lists); ++i)
-    {
-      const SacnSourceUniverseNetintList* netint_list = &netint_lists[i];
-
-      SacnSource* source;
-      SacnSourceUniverse* universe;
-      lookup_source_and_universe(netint_list->handle, netint_list->universe, &source, &universe);
-
-      result = reset_source_universe_networking(source, universe, netint_list->netints, netint_list->num_netints);
-    }
-
-    sacn_unlock();
   }
 
   return result;
