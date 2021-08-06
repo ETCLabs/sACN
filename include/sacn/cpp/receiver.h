@@ -400,7 +400,7 @@ inline void Receiver::Shutdown()
  *
  * @return If valid, the value is the universe id.  Otherwise, this is the underlying error the C library call returned.
  */
-etcpal::Expected<uint16_t> Receiver::GetUniverse() const
+inline etcpal::Expected<uint16_t> Receiver::GetUniverse() const
 {
   uint16_t result = 0;
   etcpal_error_t err = sacn_receiver_get_universe(handle_, &result);
