@@ -132,7 +132,8 @@ protected:
 
   void TearDown() override
   {
-    sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_socket_t*, socket_cleanup_behavior_t) {};
+    sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_socket_t*, uint16_t,
+                                                      const EtcPalMcastNetintId*, size_t, socket_cleanup_behavior_t) {};
 
     sacn_receiver_state_deinit();
     sacn_receiver_mem_deinit();
@@ -323,10 +324,9 @@ TEST_F(TestReceiverState, DeinitRemovesAllReceiverSockets)
 
   assign_receiver_to_thread(AddReceiver(kTestUniverse));
 
-  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_socket_t*,
-                                                    socket_cleanup_behavior_t cleanup_behavior) {
-    EXPECT_EQ(cleanup_behavior, kPerformAllSocketCleanupNow);
-  };
+  sacn_remove_receiver_socket_fake.custom_fake =
+      [](sacn_thread_id_t, etcpal_socket_t*, uint16_t, const EtcPalMcastNetintId*, size_t,
+         socket_cleanup_behavior_t cleanup_behavior) { EXPECT_EQ(cleanup_behavior, kPerformAllSocketCleanupNow); };
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
 
@@ -766,7 +766,8 @@ TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesIpv4AndIpv6)
   SacnReceiver* receiver = AddReceiver();
   assign_receiver_to_thread(receiver);
 
-  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
+  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket, uint16_t,
+                                                    const EtcPalMcastNetintId*, size_t,
                                                     socket_cleanup_behavior_t cleanup_behavior) {
     SacnReceiver* state = nullptr;
     lookup_receiver_by_universe(kTestUniverse, &state);
@@ -796,7 +797,8 @@ TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesOnlyIpv4)
   SacnReceiver* receiver = AddReceiver(kTestUniverse, kTestCallbacks, kSacnIpV4Only);
   assign_receiver_to_thread(receiver);
 
-  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
+  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket, uint16_t,
+                                                    const EtcPalMcastNetintId*, size_t,
                                                     socket_cleanup_behavior_t cleanup_behavior) {
     SacnReceiver* state = nullptr;
     lookup_receiver_by_universe(kTestUniverse, &state);
@@ -826,7 +828,8 @@ TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesOnlyIpv6)
   SacnReceiver* receiver = AddReceiver(kTestUniverse, kTestCallbacks, kSacnIpV6Only);
   assign_receiver_to_thread(receiver);
 
-  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket,
+  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t thread_id, etcpal_socket_t* socket, uint16_t,
+                                                    const EtcPalMcastNetintId*, size_t,
                                                     socket_cleanup_behavior_t cleanup_behavior) {
     SacnReceiver* state = nullptr;
     lookup_receiver_by_universe(kTestUniverse, &state);
@@ -856,7 +859,8 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsWorks)
   for (uint16_t i = 0u; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
     assign_receiver_to_thread(AddReceiver(kTestUniverse + i));
 
-  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_socket_t* socket,
+  sacn_remove_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_socket_t* socket, uint16_t,
+                                                    const EtcPalMcastNetintId*, size_t,
                                                     socket_cleanup_behavior_t cleanup_behavior) {
     uint16_t universe =
         kTestUniverse + ((static_cast<uint16_t>(sacn_remove_receiver_socket_fake.call_count) - 1u) / 2u);

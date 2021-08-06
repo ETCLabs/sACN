@@ -36,11 +36,15 @@ SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id);
 
 bool add_dead_socket(SacnRecvThreadContext* context, const ReceiveSocket* socket);
 int add_socket_ref(SacnRecvThreadContext* context, const ReceiveSocket* socket);
+bool add_subscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group);
+bool add_unsubscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group);
 int find_socket_ref_with_room(SacnRecvThreadContext* context, etcpal_iptype_t ip_type);
 int find_socket_ref_by_type(SacnRecvThreadContext* context, etcpal_iptype_t ip_type);
 int find_socket_ref_by_handle(SacnRecvThreadContext* context, etcpal_socket_t handle);
 void mark_socket_ref_bound(SacnRecvThreadContext* context, int index);
 bool remove_socket_ref(SacnRecvThreadContext* context, int index);
+bool remove_subscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group);
+bool remove_unsubscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group);
 void add_receiver_to_list(SacnRecvThreadContext* context, SacnReceiver* receiver);
 void remove_receiver_from_list(SacnRecvThreadContext* context, SacnReceiver* receiver);
 

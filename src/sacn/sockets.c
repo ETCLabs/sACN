@@ -78,14 +78,20 @@ static etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPa
                                             ReceiveSocket* socket);
 static void poll_add_socket(SacnRecvThreadContext* recv_thread_context, ReceiveSocket* socket);
 #if SACN_RECEIVER_ENABLED
-static etcpal_error_t subscribe_receiver_socket(etcpal_socket_t sock, const EtcPalIpAddr* group,
-                                                const EtcPalMcastNetintId* netints, size_t num_netints);
-static void cleanup_socket_ref(SacnRecvThreadContext* recv_thread_context, int index,
-                               socket_cleanup_behavior_t cleanup_behavior);
+static etcpal_error_t queue_subscription(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t sock,
+                                         const EtcPalIpAddr* group, const EtcPalMcastNetintId* netints,
+                                         size_t num_netints);
+static etcpal_error_t unsubscribe_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t sock,
+                                         const EtcPalIpAddr* group, const EtcPalMcastNetintId* netints,
+                                         size_t num_netints, socket_cleanup_behavior_t cleanup_behavior);
+static void unsubscribe_socket_ref(SacnRecvThreadContext* recv_thread_context, int ref_index, uint16_t universe,
+                                   const EtcPalMcastNetintId* netints, size_t num_netints,
+                                   socket_cleanup_behavior_t cleanup_behavior);
 static void cleanup_receive_socket(SacnRecvThreadContext* context, const ReceiveSocket* socket,
                                    socket_cleanup_behavior_t cleanup_behavior);
 #endif  // SACN_RECEIVER_ENABLED
 static etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
+static etcpal_error_t unsubscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
 static void send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
                            const EtcPalMcastNetintId* netint);
 static void send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr);
@@ -144,11 +150,17 @@ etcpal_error_t sacn_sockets_reset_source_detector(void)
 
 #if SACN_RECEIVER_ENABLED
 
-void cleanup_socket_ref(SacnRecvThreadContext* recv_thread_context, int index,
-                        socket_cleanup_behavior_t cleanup_behavior)
+void unsubscribe_socket_ref(SacnRecvThreadContext* recv_thread_context, int ref_index, uint16_t universe,
+                            const EtcPalMcastNetintId* netints, size_t num_netints,
+                            socket_cleanup_behavior_t cleanup_behavior)
 {
-  ReceiveSocket socket = recv_thread_context->socket_refs[index].socket;
-  if (remove_socket_ref(recv_thread_context, index))
+  ReceiveSocket socket = recv_thread_context->socket_refs[ref_index].socket;
+
+  EtcPalIpAddr group;
+  sacn_get_mcast_addr(socket.ip_type, universe, &group);
+
+  unsubscribe_socket(recv_thread_context, socket.handle, &group, netints, num_netints, cleanup_behavior);
+  if (remove_socket_ref(recv_thread_context, ref_index))
     cleanup_receive_socket(recv_thread_context, &socket, cleanup_behavior);
 }
 
@@ -457,7 +469,7 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
   }
 
   if (res == kEtcPalErrOk)
-    res = subscribe_receiver_socket(ref->socket.handle, &universe_mcast_addr.ip, netints, num_netints);
+    res = queue_subscription(context, ref->socket.handle, &universe_mcast_addr.ip, netints, num_netints);
 
   if (res == kEtcPalErrOk)
   {
@@ -466,7 +478,7 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
   else
   {
     if (ref_index >= 0)
-      cleanup_socket_ref(context, ref_index, kQueueSocketCleanup);
+      unsubscribe_socket_ref(context, ref_index, universe, netints, num_netints, kQueueSocketCleanup);
 
     SACN_LOG_WARNING("Couldn't create new sACN receiver socket: '%s'", etcpal_strerror(res));
   }
@@ -474,7 +486,8 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
   return res;
 }
 
-void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* socket,
+void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* socket, uint16_t universe,
+                                 const EtcPalMcastNetintId* netints, size_t num_netints,
                                  socket_cleanup_behavior_t cleanup_behavior)
 {
   SACN_ASSERT(socket != NULL);
@@ -486,22 +499,24 @@ void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* so
   int index = find_socket_ref_by_handle(context, *socket);
   SACN_ASSERT(index >= 0);
 
-  cleanup_socket_ref(context, index, cleanup_behavior);
+  unsubscribe_socket_ref(context, index, universe, netints, num_netints, cleanup_behavior);
 
   *socket = ETCPAL_SOCKET_INVALID;
 }
 
 /*
- * Subscribes a socket to a multicast address on all specified network interfaces.
+ * Queues a socket for subscription to a multicast address on all specified network interfaces.
  *
+ * [in] recv_thread_context The receiver's thread's context data.
  * [in] sock Socket for which to do the subscribes.
  * [in] group Multicast group address to subscribe the socket to.
- * [in] netints Array of network interfaces to subscribe on, or NULL to use all available interfaces.
- * [in] num_netints Number of entries in netints array, or 0 to use all available interfaces.
- * Returns kEtcPalErrOk if the subscribe was done successfully, error code otherwise.
+ * [in] netints Array of network interfaces to subscribe on. Must not be NULL.
+ * [in] num_netints Number of entries in netints array. Must be greater than 0.
+ * Returns kEtcPalErrOk if the subscribe was queued successfully, error code otherwise.
  */
-etcpal_error_t subscribe_receiver_socket(etcpal_socket_t sock, const EtcPalIpAddr* group,
-                                         const EtcPalMcastNetintId* netints, size_t num_netints)
+etcpal_error_t queue_subscription(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t sock,
+                                  const EtcPalIpAddr* group, const EtcPalMcastNetintId* netints,
+                                  size_t num_netints)
 {
   SACN_ASSERT(sock != ETCPAL_SOCKET_INVALID);
   SACN_ASSERT(group);
@@ -518,8 +533,60 @@ etcpal_error_t subscribe_receiver_socket(etcpal_socket_t sock, const EtcPalIpAdd
     if (netint->ip_type == group->type)
     {
       greq.ifindex = netint->index;
-      // Failing to subscribe on any network interface is a failure.
-      res = subscribe_on_single_interface(sock, &greq);
+
+      if (remove_unsubscribe(recv_thread_context, sock, &greq))
+        res = kEtcPalErrOk;  // Cancelling a previously queued unsub means no sub is needed.
+      else
+        res = add_subscribe(recv_thread_context, sock, &greq) ? kEtcPalErrOk : kEtcPalErrNoMem;
+
+      if (res != kEtcPalErrOk)
+        break;
+    }
+  }
+
+  return res;
+}
+
+/*
+ * Unsubscribe (or queue unsubscription of) a socket from a multicast address on all specified network interfaces.
+ *
+ * [in] recv_thread_context The receiver's thread's context data.
+ * [in] sock Socket for which to do the unsubscribes.
+ * [in] group Multicast group address to unsubscribe the socket from.
+ * [in] netints Array of network interfaces to unsubscribe from. Must not be NULL.
+ * [in] num_netints Number of entries in netints array. Must be greater than 0.
+ * [in] cleanup_behavior Determines if socket cleanup is being queued or not. If it is, the unsubscribe is also queued.
+ * Returns kEtcPalErrOk if the unsubscribe was performed or queued successfully, error code otherwise.
+ */
+etcpal_error_t unsubscribe_socket(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t sock,
+                                  const EtcPalIpAddr* group, const EtcPalMcastNetintId* netints, size_t num_netints,
+                                  socket_cleanup_behavior_t cleanup_behavior)
+{
+  SACN_ASSERT(sock != ETCPAL_SOCKET_INVALID);
+  SACN_ASSERT(group);
+  SACN_ASSERT(netints);
+  SACN_ASSERT(num_netints > 0);
+
+  etcpal_error_t res = kEtcPalErrNoNetints;
+
+  EtcPalGroupReq greq;
+  greq.group = *group;
+
+  for (const EtcPalMcastNetintId* netint = netints; netint < netints + num_netints; ++netint)
+  {
+    if (netint->ip_type == group->type)
+    {
+      greq.ifindex = netint->index;
+
+      if (remove_subscribe(recv_thread_context, sock, &greq))
+        res = kEtcPalErrOk;  // Cancelling a previously queued sub means no unsub is needed.
+      else if (cleanup_behavior == kQueueSocketCleanup)
+        res = add_unsubscribe(recv_thread_context, sock, &greq) ? kEtcPalErrOk : kEtcPalErrNoMem;
+      else if (cleanup_behavior == kPerformAllSocketCleanupNow)
+        res = unsubscribe_on_single_interface(sock, &greq);
+      else
+        res = kEtcPalErrSys;
+
       if (res != kEtcPalErrOk)
         break;
     }
@@ -550,6 +617,32 @@ etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalG
       char addr_str[ETCPAL_IP_STRING_BYTES];
       etcpal_ip_to_string(&group->group, addr_str);
       SACN_LOG_WARNING("Error subscribing to multicast address %s on network interface index %u: '%s'", addr_str,
+                       group->ifindex, etcpal_strerror(res));
+    }
+  }
+  return res;
+}
+
+/*
+ * Unsubscribes a socket from a multicast address on a single interface. Logs the failure if the
+ * unsubscribe fails.
+ *
+ * [in] sock Socket for which to do the unsubscribe.
+ * [in] group Multicast group and interface to unsubscribe on.
+ * Returns kEtcPalErrOk on success, error code on failure.
+ */
+etcpal_error_t unsubscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group)
+{
+  etcpal_error_t res =
+      etcpal_setsockopt(sock, group->group.type == kEtcPalIpTypeV6 ? ETCPAL_IPPROTO_IPV6 : ETCPAL_IPPROTO_IP,
+                        ETCPAL_MCAST_LEAVE_GROUP, group, sizeof(EtcPalGroupReq));
+  if (res != kEtcPalErrOk)
+  {
+    if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))
+    {
+      char addr_str[ETCPAL_IP_STRING_BYTES];
+      etcpal_ip_to_string(&group->group, addr_str);
+      SACN_LOG_WARNING("Error unsubscribing from multicast address %s on network interface index %u: '%s'", addr_str,
                        group->ifindex, etcpal_strerror(res));
     }
   }
@@ -587,6 +680,26 @@ void sacn_cleanup_dead_sockets(SacnRecvThreadContext* recv_thread_context)
 }
 
 #endif  // SACN_RECEIVER_ENABLED
+
+void sacn_subscribe_sockets(SacnRecvThreadContext* recv_thread_context)
+{
+  for (const SocketGroupReq* req = recv_thread_context->subscribes;
+       req < recv_thread_context->subscribes + recv_thread_context->num_subscribes; ++req)
+  {
+    subscribe_on_single_interface(req->socket, &req->group);
+  }
+  recv_thread_context->num_subscribes = 0;
+}
+
+void sacn_unsubscribe_sockets(SacnRecvThreadContext* recv_thread_context)
+{
+  for (const SocketGroupReq* req = recv_thread_context->unsubscribes;
+       req < recv_thread_context->unsubscribes + recv_thread_context->num_unsubscribes; ++req)
+  {
+    unsubscribe_on_single_interface(req->socket, &req->group);
+  }
+  recv_thread_context->num_unsubscribes = 0;
+}
 
 /*
  * Read and process input data for a thread's sockets.
@@ -935,6 +1048,10 @@ etcpal_error_t test_sacn_receiver_netint(const EtcPalMcastNetintId* netint_id, c
   if (test_res == kEtcPalErrOk)
   {
     test_res = subscribe_on_single_interface(test_socket.handle, &greq);
+
+    if (test_res == kEtcPalErrOk)
+      test_res = unsubscribe_on_single_interface(test_socket.handle, &greq);
+
     etcpal_close(test_socket.handle);
   }
 

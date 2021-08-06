@@ -97,6 +97,14 @@ typedef unsigned int sacn_thread_id_t;
 
 #define SACN_MERGE_RECEIVER_ENABLED (SACN_RECEIVER_ENABLED && SACN_DMX_MERGER_ENABLED)
 
+#if SACN_SOURCE_DETECTOR_ENABLED
+#define SACN_MAX_SUBSCRIPTIONS ((SACN_RECEIVER_MAX_UNIVERSES + 1) * 2)
+#elif SACN_RECEIVER_ENABLED
+#define SACN_MAX_SUBSCRIPTIONS (SACN_RECEIVER_MAX_UNIVERSES * 2)
+#else
+#define SACN_MAX_SUBSCRIPTIONS (0)
+#endif
+
 /*
  * The SACN_DECLARE_BUF() macro declares one of two different types of contiguous arrays, depending
  * on the value of SACN_DYNAMIC_MEM.
@@ -569,6 +577,13 @@ typedef struct SocketRef
   bool pending;         /* Whether or not this SocketRef is pending queued operations on the thread. */
 } SocketRef;
 
+/* Queued information for joining and leaving multicast groups. */
+typedef struct SocketGroupReq
+{
+  etcpal_socket_t socket; /* The socket descriptor. */
+  EtcPalGroupReq group;   /* The interface and group address to join or leave. */
+} SocketGroupReq;
+
 /* Holds the discrete data used by each receiver thread. */
 typedef struct SacnRecvThreadContext
 {
@@ -591,6 +606,13 @@ typedef struct SacnRecvThreadContext
   SACN_DECLARE_BUF(SocketRef, socket_refs, SACN_RECEIVER_MAX_SOCKET_REFS);
   size_t num_socket_refs;
   size_t new_socket_refs;
+
+  // Socket subscription operations also get queued to be acted on from the thread.
+  SACN_DECLARE_RECEIVER_BUF(SocketGroupReq, subscribes, (SACN_MAX_NETINTS * SACN_MAX_SUBSCRIPTIONS));
+  SACN_DECLARE_RECEIVER_BUF(SocketGroupReq, unsubscribes, (SACN_MAX_NETINTS * SACN_MAX_SUBSCRIPTIONS));
+  size_t num_subscribes;
+  size_t num_unsubscribes;
+
 #if SACN_RECEIVER_LIMIT_BIND
   bool ipv4_bound;
   bool ipv6_bound;

@@ -50,6 +50,9 @@ static etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* cont
 // Dynamic memory deinitialization
 static void deinit_recv_thread_context_entry(SacnRecvThreadContext* context);
 
+// Utilities
+bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_socket_t sock, const EtcPalGroupReq* group);
+
 /*************************** Function definitions ****************************/
 
 /*
@@ -106,6 +109,48 @@ int add_socket_ref(SacnRecvThreadContext* context, const ReceiveSocket* socket)
     mark_socket_ref_bound(context, index);
 
   return index;
+}
+
+/*
+ * Add a new subscribe operation to a SacnRecvThreadContext.
+ *
+ * [out] context SacnRecvThreadConstext instance to which to append the subscribe.
+ * [in] sock Socket for which to do the subscribe.
+ * [in] group Multicast group and interface to subscribe on.
+ * Returns true if the subscribe was successfully added, false if memory could not be allocated.
+ */
+bool add_subscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group)
+{
+  SACN_ASSERT(context);
+
+  CHECK_ROOM_FOR_ONE_MORE(context, subscribes, SocketGroupReq, (SACN_MAX_NETINTS * SACN_MAX_SUBSCRIPTIONS), false);
+
+  SocketGroupReq subscribe;
+  subscribe.socket = sock;
+  subscribe.group = *group;
+  context->subscribes[context->num_subscribes++] = subscribe;
+  return true;
+}
+
+/*
+ * Add a new unsubscribe operation to a SacnRecvThreadContext.
+ *
+ * [out] context SacnRecvThreadConstext instance to which to append the unsubscribe.
+ * [in] sock Socket for which to do the unsubscribe.
+ * [in] group Multicast group and interface to unsubscribe from.
+ * Returns true if the unsubscribe was successfully added, false if memory could not be allocated.
+ */
+bool add_unsubscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group)
+{
+  SACN_ASSERT(context);
+
+  CHECK_ROOM_FOR_ONE_MORE(context, unsubscribes, SocketGroupReq, (SACN_MAX_NETINTS * SACN_MAX_SUBSCRIPTIONS), false);
+
+  SocketGroupReq unsubscribe;
+  unsubscribe.socket = sock;
+  unsubscribe.group = *group;
+  context->unsubscribes[context->num_unsubscribes++] = unsubscribe;
+  return true;
 }
 
 // Return index in context->socket_refs or -1 if not found.
@@ -200,6 +245,16 @@ bool remove_socket_ref(SacnRecvThreadContext* context, int index)
   return false;
 }
 
+bool remove_subscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group)
+{
+  return remove_socket_group_req(context->subscribes, &context->num_subscribes, sock, group);
+}
+
+bool remove_unsubscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group)
+{
+  return remove_socket_group_req(context->unsubscribes, &context->num_unsubscribes, sock, group);
+}
+
 void add_receiver_to_list(SacnRecvThreadContext* context, SacnReceiver* receiver)
 {
   SacnReceiver* list_entry = context->receivers;
@@ -277,11 +332,24 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
   if (!context->socket_refs)
     return kEtcPalErrNoMem;
   context->socket_refs_capacity = INITIAL_CAPACITY;
+
+  context->subscribes = calloc(INITIAL_CAPACITY, sizeof(SocketGroupReq));
+  if (!context->subscribes)
+    return kEtcPalErrNoMem;
+  context->subscribes_capacity = INITIAL_CAPACITY;
+
+  context->unsubscribes = calloc(INITIAL_CAPACITY, sizeof(SocketGroupReq));
+  if (!context->unsubscribes)
+    return kEtcPalErrNoMem;
+  context->unsubscribes_capacity = INITIAL_CAPACITY;
 #endif
 
   context->num_dead_sockets = 0;
   context->num_socket_refs = 0;
   context->new_socket_refs = 0;
+  context->num_subscribes = 0;
+  context->num_unsubscribes = 0;
+
 #if SACN_RECEIVER_LIMIT_BIND
   context->ipv4_bound = false;
   context->ipv6_bound = false;
@@ -317,6 +385,39 @@ void deinit_recv_thread_context_entry(SacnRecvThreadContext* context)
   SACN_ASSERT(context);
   CLEAR_BUF(context, dead_sockets);
   CLEAR_BUF(context, socket_refs);
+  CLEAR_BUF(context, subscribes);
+  CLEAR_BUF(context, unsubscribes);
+}
+
+bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_socket_t sock, const EtcPalGroupReq* group)
+{
+  SACN_ASSERT(reqs);
+  SACN_ASSERT(num_reqs);
+  SACN_ASSERT(group);
+
+  size_t index = 0;
+  SocketGroupReq* req = NULL;
+  bool found = false;
+  for (size_t i = 0; !found && (i < *num_reqs); ++i)
+  {
+    req = &reqs[i];
+    if ((req->socket == sock) && (req->group.ifindex == group->ifindex) &&
+        (etcpal_ip_cmp(&req->group.group, &group->group) == 0))
+    {
+      index = i;
+      found = true;
+    }
+  }
+
+  if (found)
+  {
+    if (index < (*num_reqs - 1))
+      memmove(req, req + 1, (*num_reqs - 1 - index) * sizeof(SocketGroupReq));
+
+    --(*num_reqs);
+  }
+
+  return found;
 }
 
 #endif  // SACN_RECEIVER_ENABLED

@@ -59,12 +59,15 @@ void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAdd
 etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
                                         const EtcPalMcastNetintId* netints, size_t num_netints,
                                         etcpal_socket_t* socket);
-void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* socket,
+void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* socket, uint16_t universe,
+                                 const EtcPalMcastNetintId* netints, size_t num_netints,
                                  socket_cleanup_behavior_t cleanup_behavior);
 
 // Functions to be called from the receive thread
 void sacn_add_pending_sockets(SacnRecvThreadContext* recv_thread_context);
 void sacn_cleanup_dead_sockets(SacnRecvThreadContext* recv_thread_context);
+void sacn_subscribe_sockets(SacnRecvThreadContext* recv_thread_context);
+void sacn_unsubscribe_sockets(SacnRecvThreadContext* recv_thread_context);
 etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadResult* read_result);
 
 // Source sending functions

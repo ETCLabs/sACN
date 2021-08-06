@@ -324,7 +324,10 @@ etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
           : ipv4_res;
 
   if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, kQueueSocketCleanup);
+  {
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, receiver->keys.universe,
+                                receiver->netints.netints, receiver->netints.num_netints, kQueueSocketCleanup);
+  }
 
   return result;
 }
@@ -354,7 +357,10 @@ etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector)
           : ipv4_res;
 
   if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
-    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv4_socket, kQueueSocketCleanup);
+  {
+    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv4_socket, SACN_DISCOVERY_UNIVERSE,
+                                detector->netints.netints, detector->netints.num_netints, kQueueSocketCleanup);
+  }
 
   return result;
 }
@@ -375,9 +381,16 @@ void begin_sampling_period(SacnReceiver* receiver)
 void remove_receiver_sockets(SacnReceiver* receiver, socket_cleanup_behavior_t cleanup_behavior)
 {
   if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, cleanup_behavior);
+  {
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, receiver->keys.universe,
+                                receiver->netints.netints, receiver->netints.num_netints, cleanup_behavior);
+  }
+
   if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, cleanup_behavior);
+  {
+    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, receiver->keys.universe,
+                                receiver->netints.netints, receiver->netints.num_netints, cleanup_behavior);
+  }
 }
 
 /*
@@ -389,9 +402,16 @@ void remove_receiver_sockets(SacnReceiver* receiver, socket_cleanup_behavior_t c
 void remove_source_detector_sockets(SacnSourceDetector* detector, socket_cleanup_behavior_t cleanup_behavior)
 {
   if (detector->ipv4_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv4_socket, cleanup_behavior);
+  {
+    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv4_socket, SACN_DISCOVERY_UNIVERSE,
+                                detector->netints.netints, detector->netints.num_netints, cleanup_behavior);
+  }
+
   if (detector->ipv6_socket != ETCPAL_SOCKET_INVALID)
-    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv6_socket, cleanup_behavior);
+  {
+    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv6_socket, SACN_DISCOVERY_UNIVERSE,
+                                detector->netints.netints, detector->netints.num_netints, cleanup_behavior);
+  }
 }
 
 /*
@@ -415,8 +435,14 @@ void read_network_and_process(SacnRecvThreadContext* context)
 {
   if (sacn_lock())
   {
-    sacn_add_pending_sockets(context);
+    // Unsubscribe before subscribing to avoid surpassing the subscription limit for a socket.
+    sacn_unsubscribe_sockets(context);
+    sacn_subscribe_sockets(context);
+
+    // Also clean up dead sockets first to keep the polling socket count down.
     sacn_cleanup_dead_sockets(context);
+    sacn_add_pending_sockets(context);
+
     sacn_unlock();
   }
 
