@@ -359,7 +359,7 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
  *
  * @param[in] merger The handle to the merger.
  * @param[in] source The id of the source to modify.
- * @param[in] new_levels The new DMX levels to be copied in.
+ * @param[in] new_levels The new DMX levels to be copied in, starting from the first slot.
  * @param[in] new_levels_count The length of new_levels.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -416,7 +416,7 @@ etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_dmx_
  *
  * @param[in] merger The handle to the merger.
  * @param[in] source The id of the source to modify.
- * @param[in] paps The per-address priorities to be copied in.
+ * @param[in] paps The per-address priorities to be copied in, starting from the first slot.
  * @param[in] paps_count The length of paps.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.

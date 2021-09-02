@@ -248,7 +248,7 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_dmx_merger_sourc
  * slot, the source will only be included in the merge if it has a level and a priority at that slot.
  *
  * @param[in] source The id of the source to modify.
- * @param[in] new_levels The new DMX levels to be copied in.
+ * @param[in] new_levels The new DMX levels to be copied in, starting from the first slot.
  * @param[in] new_levels_count The length of new_levels.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -273,7 +273,7 @@ inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source, co
  * source and revert to the universe priority, call DmxMerger::RemovePaps.
  *
  * @param[in] source The id of the source to modify.
- * @param[in] paps The per-address priorities to be copied in.
+ * @param[in] paps The per-address priorities to be copied in, starting from the first slot.
  * @param[in] paps_count The length of paps.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
