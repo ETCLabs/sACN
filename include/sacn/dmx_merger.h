@@ -74,6 +74,38 @@ typedef uint16_t sacn_dmx_merger_source_t;
 /** An invalid DMX merger source handle value. */
 #define SACN_DMX_MERGER_SOURCE_INVALID ((sacn_dmx_merger_source_t)-1)
 
+/** Information required for transmitting the merger output via sACN. */
+typedef struct SacnDmxMergerTransmitParams
+{
+  /** If the merger output is being transmitted via sACN, this is set to true if per-address-priority packets should be
+      transmitted. Otherwise this is set to false.*/
+  bool per_address_priorities_active;
+
+  /** If the merger output is being transmitted via sACN, this is set to the universe priority that should be used in
+      the transmitted sACN packets.*/
+  uint8_t universe_priority;
+} SacnDmxMergerTransmitParams;
+
+/**
+ * @brief An initializer for an SacnDmxMergerTransmitParams struct.
+ *
+ * Usage:
+ * @code
+ * // Create the struct
+ * SacnDmxMergerTransmitParams transmit_params = SACN_DMX_MERGER_TRANSMIT_PARAMS_INIT;
+ * // Now pass it into the merger config
+ * SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
+ * // ...
+ * merger_config.transmit_params = &transmit_params;
+ * // ...
+ * @endcode
+ *
+ */
+#define SACN_DMX_MERGER_TRANSMIT_PARAMS_INIT \
+  {                                          \
+    false, 0                                 \
+  }
+
 /** A set of configuration information for a merger instance. */
 typedef struct SacnDmxMergerConfig
 {
@@ -81,8 +113,8 @@ typedef struct SacnDmxMergerConfig
 
   /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.  Slots that are not sourced
       are set to 0.
-      Memory is owned by the application, but while this merger exists the application must not modify this buffer
-      directly!  Doing so would affect the results of the merge.*/
+      Memory is owned by the application and must remain allocated until the merger is destroyed. While this merger
+      exists, the application must not modify this buffer directly!  Doing so would affect the results of the merge.*/
   uint8_t* slots;
 
   /********* Optional values **********/
@@ -91,15 +123,20 @@ typedef struct SacnDmxMergerConfig
       to be sent over sACN. Otherwise this can just be set to NULL. If a source with a universe priority of 0 wins, that
       priority is converted to 1. If there is no winner for a slot, then a per-address priority of 0 is used to show
       that there is no source for that slot.
-      Memory is owned by the application.*/
+      Memory is owned by the application and must remain allocated until the merger is destroyed.*/
   uint8_t* per_address_priorities;
+
+  /** This contains information required if the merger output is being transmitted via sACN. Otherwise this not needed
+      and should be set to NULL, which will save performance.
+      Memory is owned by the application and must remain allocated until the merger is destroyed.*/
+  SacnDmxMergerTransmitParams* transmit_params;
 
   /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
       #SACN_DMX_MERGER_SOURCE_INVALID to indicate that there is no winner for that slot. This is used if you
       need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to NULL
       and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of 0 (not
       sourced).
-      Memory is owned by the application.*/
+      Memory is owned by the application and must remain allocated until the merger is destroyed.*/
   sacn_dmx_merger_source_t* slot_owners;
 
   /** The maximum number of sources this merger will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
@@ -120,9 +157,9 @@ typedef struct SacnDmxMergerConfig
  * @endcode
  *
  */
-#define SACN_DMX_MERGER_CONFIG_INIT                  \
-  {                                                  \
-    NULL, NULL, NULL, SACN_RECEIVER_INFINITE_SOURCES \
+#define SACN_DMX_MERGER_CONFIG_INIT                        \
+  {                                                        \
+    NULL, NULL, NULL, NULL, SACN_RECEIVER_INFINITE_SOURCES \
   }
 
 /**

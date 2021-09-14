@@ -58,6 +58,7 @@ protected:
     merger_config_ = SACN_DMX_MERGER_CONFIG_INIT;
     merger_config_.slots = slots_;
     merger_config_.per_address_priorities = per_address_priorities_;
+    merger_config_.transmit_params = &transmit_params_;
     merger_config_.slot_owners = slot_owners_;
     merger_config_.source_count_max = SACN_RECEIVER_INFINITE_SOURCES;
   }
@@ -94,6 +95,7 @@ protected:
 
   uint8_t slots_[DMX_ADDRESS_COUNT];
   uint8_t per_address_priorities_[DMX_ADDRESS_COUNT];
+  SacnDmxMergerTransmitParams transmit_params_;
   sacn_dmx_merger_source_t slot_owners_[DMX_ADDRESS_COUNT];
   sacn_dmx_merger_t merger_handle_;
   SacnDmxMergerConfig merger_config_;
@@ -149,6 +151,12 @@ protected:
         }
       }
     }
+
+    if (paps)
+      expected_merge_paps_active_ = true;
+
+    if (priority.value_or(0) > expected_merge_universe_priority_)
+      expected_merge_universe_priority_ = priority.value_or(0);
   }
 
   void VerifyMergeResults()
@@ -165,6 +173,11 @@ protected:
       EXPECT_EQ(merger_config_.per_address_priorities[i], expected_pap) << "Test failed on iteration " << i << ".";
       EXPECT_EQ(merger_config_.slot_owners[i], expected_merge_winners_[i]) << "Test failed on iteration " << i << ".";
     }
+
+    bool expected_merge_paps_active = expected_merge_paps_active_;
+    uint8_t expected_merge_universe_priority = static_cast<uint8_t>(expected_merge_universe_priority_);
+    EXPECT_EQ(merger_config_.transmit_params->per_address_priorities_active, expected_merge_paps_active);
+    EXPECT_EQ(merger_config_.transmit_params->universe_priority, expected_merge_universe_priority);
   }
 
   void ClearExpectedMergeResults()
@@ -175,12 +188,17 @@ protected:
       expected_merge_priorities_[i] = 0;
       expected_merge_winners_[i] = SACN_DMX_MERGER_SOURCE_INVALID;
     }
+
+    expected_merge_paps_active_ = false;
+    expected_merge_universe_priority_ = 0;
   }
 
   sacn_dmx_merger_source_t merge_source_1_;
   sacn_dmx_merger_source_t merge_source_2_;
   int expected_merge_levels_[DMX_ADDRESS_COUNT];
   int expected_merge_priorities_[DMX_ADDRESS_COUNT];
+  bool expected_merge_paps_active_;
+  int expected_merge_universe_priority_;
   sacn_dmx_merger_source_t expected_merge_winners_[DMX_ADDRESS_COUNT];
 
   const std::vector<uint8_t> test_values_ascending_ = [&] {
@@ -462,6 +480,8 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
 
   EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, source_2_handle, values, DMX_ADDRESS_COUNT), kEtcPalErrOk);
   EXPECT_EQ(sacn_dmx_merger_update_paps(merger_handle_, source_2_handle, priorities, DMX_ADDRESS_COUNT), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, source_2_handle, source_2_priority_2),
+            kEtcPalErrOk);
 
   // Before removing a source, check the output.
   for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
@@ -480,6 +500,9 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
     }
   }
 
+  EXPECT_TRUE(merger_config_.transmit_params->per_address_priorities_active);
+  EXPECT_EQ(merger_config_.transmit_params->universe_priority, source_2_priority_2);
+
   // Now remove source 2 and confirm success.
   EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_2_handle), kEtcPalErrOk);
 
@@ -491,6 +514,9 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
     EXPECT_EQ(merger_config_.slot_owners[i], source_1_handle);
   }
 
+  EXPECT_FALSE(merger_config_.transmit_params->per_address_priorities_active);
+  EXPECT_EQ(merger_config_.transmit_params->universe_priority, source_1_priority);
+
   // Now remove source 1 and confirm success.
   EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_1_handle), kEtcPalErrOk);
 
@@ -501,6 +527,9 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
     EXPECT_EQ(merger_config_.per_address_priorities[i], 0u);
     EXPECT_EQ(merger_config_.slot_owners[i], SACN_DMX_MERGER_SOURCE_INVALID);
   }
+
+  EXPECT_FALSE(merger_config_.transmit_params->per_address_priorities_active);
+  EXPECT_EQ(merger_config_.transmit_params->universe_priority, 0u);
 }
 
 TEST_F(TestDmxMerger, RemoveSourceUpdatesInternalState)
@@ -795,6 +824,24 @@ TEST_F(TestDmxMergerUpdate, MergesUps3)
                                           test_values_descending_.size()),
             kEtcPalErrOk);
   EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_2_, LOW_PRIORITY), kEtcPalErrOk);
+
+  VerifyMergeResults();
+}
+
+TEST_F(TestDmxMergerUpdate, MergesUps4)
+{
+  UpdateExpectedMergeResults(merge_source_1_, 0u, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, LOW_PRIORITY, test_values_descending_, std::nullopt);
+
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_1_, test_values_ascending_.data(),
+                                          test_values_ascending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_1_, HIGH_PRIORITY), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, merge_source_2_, test_values_descending_.data(),
+                                          test_values_descending_.size()),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_2_, LOW_PRIORITY), kEtcPalErrOk);
+  EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, merge_source_1_, 0u), kEtcPalErrOk);
 
   VerifyMergeResults();
 }
@@ -1171,6 +1218,14 @@ TEST_F(TestDmxMergerUpdate, StopSourcePapWorks)
                                         test_values_ascending_.size()),
             kEtcPalErrOk);
   EXPECT_EQ(sacn_dmx_merger_remove_paps(merger_handle_, merge_source_2_), kEtcPalErrOk);
+
+  VerifyMergeResults();
+
+  ClearExpectedMergeResults();
+  UpdateExpectedMergeResults(merge_source_1_, LOW_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, HIGH_PRIORITY, test_values_descending_, std::nullopt);
+
+  EXPECT_EQ(sacn_dmx_merger_remove_paps(merger_handle_, merge_source_1_), kEtcPalErrOk);
 
   VerifyMergeResults();
 }

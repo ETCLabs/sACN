@@ -71,8 +71,8 @@ public:
 
     /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.  Slots that are not sourced
         are set to 0.
-        Memory is owned by the application, but while this merger exists the application must not modify this buffer
-        directly!  Doing so would affect the results of the merge.*/
+        Memory is owned by the application and must remain allocated until the merger is destroyed. While this merger
+        exists, the application must not modify this buffer directly!  Doing so would affect the results of the merge.*/
     uint8_t* slots{nullptr};
 
     /********* Optional values **********/
@@ -81,15 +81,20 @@ public:
         results need to be sent over sACN. Otherwise this can just be set to nullptr. If a source with a universe
         priority of 0 wins, that priority is converted to 1. If there is no winner for a slot, then a per-address
         priority of 0 is used to show that there is no source for that slot.
-        Memory is owned by the application.*/
+        Memory is owned by the application and must remain allocated until the merger is destroyed.*/
     uint8_t* per_address_priorities{nullptr};
+
+    /** This contains information required if the merger output is being transmitted via sACN. Otherwise this not needed
+        and should be set to nullptr, which will save performance.
+        Memory is owned by the application and must remain allocated until the merger is destroyed.*/
+    SacnDmxMergerTransmitParams* transmit_params{nullptr};
 
     /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
         #SACN_DMX_MERGER_SOURCE_INVALID to indicate that there is no winner for that slot. This is used if
         you need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to
         NULL and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of
         0 (not sourced).
-        Memory is owned by the application.*/
+        Memory is owned by the application and must remain allocated until the merger is destroyed.*/
     sacn_dmx_merger_source_t* slot_owners{nullptr};
 
     int source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
@@ -343,6 +348,7 @@ inline SacnDmxMergerConfig DmxMerger::TranslateConfig(const Settings& settings)
   SacnDmxMergerConfig config = {
     settings.slots,
     settings.per_address_priorities,
+    settings.transmit_params,
     settings.slot_owners,
     settings.source_count_max
   };
