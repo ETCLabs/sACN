@@ -58,7 +58,8 @@ protected:
     merger_config_ = SACN_DMX_MERGER_CONFIG_INIT;
     merger_config_.slots = slots_;
     merger_config_.per_address_priorities = per_address_priorities_;
-    merger_config_.transmit_params = &transmit_params_;
+    merger_config_.per_address_priorities_active = &per_address_priorities_active_;
+    merger_config_.universe_priority = &universe_priority_;
     merger_config_.slot_owners = slot_owners_;
     merger_config_.source_count_max = SACN_RECEIVER_INFINITE_SOURCES;
   }
@@ -95,7 +96,8 @@ protected:
 
   uint8_t slots_[DMX_ADDRESS_COUNT];
   uint8_t per_address_priorities_[DMX_ADDRESS_COUNT];
-  SacnDmxMergerTransmitParams transmit_params_;
+  bool per_address_priorities_active_;
+  uint8_t universe_priority_;
   sacn_dmx_merger_source_t slot_owners_[DMX_ADDRESS_COUNT];
   sacn_dmx_merger_t merger_handle_;
   SacnDmxMergerConfig merger_config_;
@@ -176,8 +178,8 @@ protected:
 
     bool expected_merge_paps_active = expected_merge_paps_active_;
     uint8_t expected_merge_universe_priority = static_cast<uint8_t>(expected_merge_universe_priority_);
-    EXPECT_EQ(merger_config_.transmit_params->per_address_priorities_active, expected_merge_paps_active);
-    EXPECT_EQ(merger_config_.transmit_params->universe_priority, expected_merge_universe_priority);
+    EXPECT_EQ(*merger_config_.per_address_priorities_active, expected_merge_paps_active);
+    EXPECT_EQ(*merger_config_.universe_priority, expected_merge_universe_priority);
   }
 
   void ClearExpectedMergeResults()
@@ -500,8 +502,8 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
     }
   }
 
-  EXPECT_TRUE(merger_config_.transmit_params->per_address_priorities_active);
-  EXPECT_EQ(merger_config_.transmit_params->universe_priority, source_2_priority_2);
+  EXPECT_TRUE(*merger_config_.per_address_priorities_active);
+  EXPECT_EQ(*merger_config_.universe_priority, source_2_priority_2);
 
   // Now remove source 2 and confirm success.
   EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_2_handle), kEtcPalErrOk);
@@ -514,8 +516,8 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
     EXPECT_EQ(merger_config_.slot_owners[i], source_1_handle);
   }
 
-  EXPECT_FALSE(merger_config_.transmit_params->per_address_priorities_active);
-  EXPECT_EQ(merger_config_.transmit_params->universe_priority, source_1_priority);
+  EXPECT_FALSE(*merger_config_.per_address_priorities_active);
+  EXPECT_EQ(*merger_config_.universe_priority, source_1_priority);
 
   // Now remove source 1 and confirm success.
   EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_1_handle), kEtcPalErrOk);
@@ -528,8 +530,8 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
     EXPECT_EQ(merger_config_.slot_owners[i], SACN_DMX_MERGER_SOURCE_INVALID);
   }
 
-  EXPECT_FALSE(merger_config_.transmit_params->per_address_priorities_active);
-  EXPECT_EQ(merger_config_.transmit_params->universe_priority, 0u);
+  EXPECT_FALSE(*merger_config_.per_address_priorities_active);
+  EXPECT_EQ(*merger_config_.universe_priority, 0u);
 }
 
 TEST_F(TestDmxMerger, RemoveSourceUpdatesInternalState)

@@ -84,10 +84,15 @@ public:
         Memory is owned by the application and must remain allocated until the merger is destroyed.*/
     uint8_t* per_address_priorities{nullptr};
 
-    /** This contains information required if the merger output is being transmitted via sACN. Otherwise this not needed
-        and should be set to nullptr, which will save performance.
-        Memory is owned by the application and must remain allocated until the merger is destroyed.*/
-    SacnDmxMergerTransmitParams* transmit_params{nullptr};
+    /** If any of the currently winning sources has per-address priorities, this is set to true. Otherwise this is set
+        to false. If the merger's output is transmitted by a sACN source, this can be used to determine whether
+        per-address priority packets should be sent. Otherwise this can be set to nullptr if not needed.*/
+    bool* per_address_priorities_active{nullptr};
+
+    /** This is set to the highest universe priority of the currently winning sources. If the merger's output is
+        transmitted by a sACN source, this can be used for the packets' universe priority field. Otherwise this can be
+        set to nullptr if not needed.*/
+    uint8_t* universe_priority{nullptr};
 
     /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
         #SACN_DMX_MERGER_SOURCE_INVALID to indicate that there is no winner for that slot. This is used if
@@ -348,7 +353,8 @@ inline SacnDmxMergerConfig DmxMerger::TranslateConfig(const Settings& settings)
   SacnDmxMergerConfig config = {
     settings.slots,
     settings.per_address_priorities,
-    settings.transmit_params,
+    settings.per_address_priorities_active,
+    settings.universe_priority,
     settings.slot_owners,
     settings.source_count_max
   };

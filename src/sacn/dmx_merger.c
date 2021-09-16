@@ -698,8 +698,8 @@ void update_per_address_priorities(MergerState* merger, SourceState* source, con
   // Update the relevant flags.
   source->source.address_priority_valid = true;
 
-  if (merger->config.transmit_params != NULL)
-    merger->config.transmit_params->per_address_priorities_active = true;
+  if (merger->config.per_address_priorities_active != NULL)
+    *merger->config.per_address_priorities_active = true;
 
   // Update the priority values.
   memcpy(source->source.address_priority, address_priorities, address_priorities_count);
@@ -720,8 +720,8 @@ void update_per_address_priorities(MergerState* merger, SourceState* source, con
 void update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority)
 {
   // Determine if this is the current universe priority output.
-  bool was_max = (merger->config.transmit_params != NULL) && source->has_universe_priority &&
-                 (source->source.universe_priority >= merger->config.transmit_params->universe_priority);
+  bool was_max = (merger->config.universe_priority != NULL) && source->has_universe_priority &&
+                 (source->source.universe_priority >= *merger->config.universe_priority);
 
   // Just update the existing entry, since we're not modifying a key.
   source->source.universe_priority = priority;
@@ -732,10 +732,10 @@ void update_universe_priority(MergerState* merger, SourceState* source, uint8_t 
     merge_source_on_all_slots(merger, source);
 
   // Also update the universe priority output if needed.
-  if (merger->config.transmit_params != NULL)
+  if (merger->config.universe_priority != NULL)
   {
-    if (priority >= merger->config.transmit_params->universe_priority)
-      merger->config.transmit_params->universe_priority = priority;
+    if (priority >= *merger->config.universe_priority)
+      *merger->config.universe_priority = priority;
     else if (was_max)  // This used to be the output, but may not be anymore. Recalculate.
       recalculate_pap_active_and_universe_priority(merger, SACN_DMX_MERGER_SOURCE_INVALID);
   }
@@ -870,11 +870,10 @@ void recalculate_pap_active_and_universe_priority(MergerState* merger, sacn_dmx_
     }
   } while ((source = etcpal_rbiter_next(&iter)) != NULL);
 
-  if (merger->config.transmit_params != NULL)
-  {
-    merger->config.transmit_params->per_address_priorities_active = pap_active;
-    merger->config.transmit_params->universe_priority = max_universe_priority;
-  }
+  if (merger->config.per_address_priorities_active != NULL)
+    *merger->config.per_address_priorities_active = pap_active;
+  if (merger->config.universe_priority != NULL)
+    *merger->config.universe_priority = max_universe_priority;
 }
 
 void free_source_state_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node)
@@ -937,11 +936,10 @@ MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMerge
     if (merger_state->config.per_address_priorities)
       memset(merger_state->config.per_address_priorities, 0, DMX_ADDRESS_COUNT);
 
-    if (merger_state->config.transmit_params != NULL)
-    {
-      merger_state->config.transmit_params->per_address_priorities_active = false;
-      merger_state->config.transmit_params->universe_priority = 0;
-    }
+    if (merger_state->config.per_address_priorities_active != NULL)
+      *merger_state->config.per_address_priorities_active = false;
+    if (merger_state->config.universe_priority != NULL)
+      *merger_state->config.universe_priority = 0;
 
     if (merger_state->config.slot_owners)
     {
@@ -1097,10 +1095,11 @@ etcpal_error_t remove_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_dmx_
     merge_source_on_all_slots(merger_state, source_being_removed);
 
     // Also update universe priority and PAP active outputs if needed.
-    if ((merger_state->config.transmit_params != NULL) &&
-        (((merger_state->config.transmit_params->per_address_priorities_active == true) &&
-          (source_being_removed->source.address_priority_valid)) ||
-         (source_being_removed->source.universe_priority >= merger_state->config.transmit_params->universe_priority)))
+    if (((merger_state->config.per_address_priorities_active != NULL) &&
+         (*merger_state->config.per_address_priorities_active == true) &&
+         (source_being_removed->source.address_priority_valid)) ||
+        ((merger_state->config.universe_priority != NULL) &&
+         (source_being_removed->source.universe_priority >= *merger_state->config.universe_priority)))
     {
       recalculate_pap_active_and_universe_priority(merger_state, source_being_removed->handle);
     }
@@ -1200,7 +1199,7 @@ etcpal_error_t remove_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_dmx_me
     merge_source_on_all_slots(merger_state, source_state);
 
     // Also update the PAP active output if needed.
-    if ((merger_state->config.transmit_params != NULL) && was_valid)
+    if ((merger_state->config.per_address_priorities_active != NULL) && was_valid)
       recalculate_pap_active_and_universe_priority(merger_state, SACN_DMX_MERGER_SOURCE_INVALID);
   }
 
