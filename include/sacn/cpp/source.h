@@ -201,7 +201,8 @@ public:
 
   static etcpal::Error ResetNetworking();
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
-  static etcpal::Error ResetNetworking(std::vector<UniverseNetintList>& netints);
+  static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& sys_netints,
+                                       std::vector<UniverseNetintList>& netint_lists);
 
 private:
   class TranslatedUniverseConfig
@@ -363,7 +364,7 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
 inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings)
 {
   TranslatedUniverseConfig config(settings);
-  return sacn_source_add_universe(handle_.value(), &config.get(), nullptr, 0);
+  return sacn_source_add_universe(handle_.value(), &config.get(), nullptr);
 }
 
 /**
@@ -395,9 +396,10 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings, std::
   TranslatedUniverseConfig config(settings);
 
   if (netints.empty())
-    return sacn_source_add_universe(handle_.value(), &config.get(), nullptr, 0);
+    return sacn_source_add_universe(handle_.value(), &config.get(), nullptr);
 
-  return sacn_source_add_universe(handle_.value(), &config.get(), netints.data(), netints.size());
+  SacnNetintConfig netint_config = {netints.data(), netints.size()};
+  return sacn_source_add_universe(handle_.value(), &config.get(), &netint_config);
 }
 
 /**
@@ -749,8 +751,9 @@ inline int Source::ProcessManual()
  * This is the overload of
  * ResetNetworking that uses all network interfaces.
  *
- * This is typically used when the application detects that the list of networking interfaces has changed, and wants
- * every universe to use all system network interfaces.
+ * This is typically used when the application detects that the list of networking interfaces has changed. The source
+ * API will no longer be limited to specific interfaces (the list passed into sacn::Init(), if any, is overridden for
+ * the source API, but not the other APIs). Every universe of every source is set to all system interfaces.
  *
  * After this call completes successfully, all universes of all sources are considered to be updated and have new values
  * and priorities. It's as if every source just started sending values on all their universes.
@@ -775,8 +778,10 @@ inline etcpal::Error Source::ResetNetworking()
 /**
  * @brief Resets the underlying network sockets for all universes of all sources.
  *
- * This is typically used when the application detects that the list of networking interfaces has changed, and wants
- * every universe to use the same network interfaces.
+ * This is typically used when the application detects that the list of networking interfaces has changed. This changes
+ * the list of system interfaces the source API will be limited to (the list passed into sacn::Init(), if any, is
+ * overridden for the source API, but not the other APIs). Then all universes of all sources will be configured to use
+ * all of those interfaces.
  *
  * After this call completes successfully, all universes of all sources are considered to be updated and have new values
  * and priorities. It's as if every source just started sending values on all their universes.
@@ -787,26 +792,29 @@ inline etcpal::Error Source::ResetNetworking()
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in, out] netints If !empty, this is the list of interfaces the application wants to use, and the status codes
- * are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
+ * @param sys_netints If !empty, this is the list of system interfaces the source API will be limited to, and the status
+ * codes are filled in.  If empty, the source API is allowed to use all available system interfaces.
  * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& netints)
+inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sys_netints)
 {
-  if (netints.empty())
-    return sacn_source_reset_networking(nullptr, 0);
+  if (sys_netints.empty())
+    return sacn_source_reset_networking(nullptr);
 
-  return sacn_source_reset_networking(netints.data(), netints.size());
+  SacnNetintConfig netint_config = {sys_netints.data(), sys_netints.size()};
+  return sacn_source_reset_networking(&netint_config);
 }
 
 /**
  * @brief Resets the underlying network sockets and determines network interfaces for each universe of each source.
  *
- * This is typically used when the application detects that the list of networking interfaces has changed, and wants to
- * determine what the new network interfaces should be for each universe of each source.
+ * This is typically used when the application detects that the list of networking interfaces has changed. This changes
+ * the list of system interfaces the source API will be limited to (the list passed into sacn::Init(), if any, is
+ * overridden for the source API, but not the other APIs). Then the network interfaces are specified for each universe
+ * of each source.
  *
  * After this call completes successfully, all universes of all sources are considered to be updated and have new values
  * and priorities. It's as if every source just started sending values on all their universes.
@@ -818,21 +826,25 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& ne
  * network interfaces passed in for each universe.  This will only return #kEtcPalErrNoNetints if none of the interfaces
  * work for a universe.
  *
- * @param[in, out] netint_lists Vector of lists of interfaces the application wants to use for each universe. Must not
- * be empty. Must include all universes of all sources, and nothing more. The status codes are filled in whenever
- * UniverseNetintList::netints is !empty.
+ * @param sys_netints If !empty, this is the list of system interfaces the source API will be limited to, and the status
+ * codes are filled in.  If empty, the source API is allowed to use all available system interfaces.
+ * @param[in, out] per_universe_netint_lists Vector of lists of interfaces the application wants to use for each
+ * universe. Must not be empty. Must include all universes of all sources, and nothing more. The status codes are filled
+ * in whenever UniverseNetintList::netints is !empty.
  * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided for a universe were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking(std::vector<UniverseNetintList>& netint_lists)
+inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sys_netints,
+                                             std::vector<UniverseNetintList>& per_universe_netint_lists)
 {
   std::vector<SacnSourceUniverseNetintList> netint_lists_c;
-  netint_lists_c.reserve(netint_lists.size());
-  std::transform(netint_lists.begin(), netint_lists.end(), std::back_inserter(netint_lists_c),
-                 [](UniverseNetintList& list) {
+  netint_lists_c.reserve(per_universe_netint_lists.size());
+  std::transform(
+      per_universe_netint_lists.begin(), per_universe_netint_lists.end(), std::back_inserter(netint_lists_c),
+      [](UniverseNetintList& list) {
         // clang-format off
         SacnSourceUniverseNetintList c_list = {
           list.handle,
@@ -844,7 +856,9 @@ inline etcpal::Error Source::ResetNetworking(std::vector<UniverseNetintList>& ne
 
         return c_list;
       });
-  return sacn_source_reset_networking_per_universe(netint_lists_c.data(), netint_lists_c.size());
+
+  SacnNetintConfig sys_netint_config = {sys_netints.data(), sys_netints.size()};
+  return sacn_source_reset_networking_per_universe(&sys_netint_config, netint_lists_c.data(), netint_lists_c.size());
 }
 
 /**

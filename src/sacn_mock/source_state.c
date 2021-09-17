@@ -44,7 +44,7 @@ DEFINE_FAKE_VALUE_FUNC(size_t, get_source_universe_netints, const SacnSourceUniv
 DEFINE_FAKE_VOID_FUNC(disable_pap_data, SacnSourceUniverse*);
 DEFINE_FAKE_VOID_FUNC(clear_source_netints, SacnSource*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, reset_source_universe_networking, SacnSource*, SacnSourceUniverse*,
-                       SacnMcastInterface*, size_t);
+                       const SacnNetintConfig*);
 DEFINE_FAKE_VOID_FUNC(finish_source_universe_termination, SacnSource*, size_t);
 DEFINE_FAKE_VOID_FUNC(finish_unicast_dest_termination, SacnSourceUniverse*, size_t);
 

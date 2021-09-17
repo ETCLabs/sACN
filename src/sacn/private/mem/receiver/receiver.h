@@ -32,8 +32,8 @@ extern "C" {
 etcpal_error_t init_receivers(void);
 void deinit_receivers(void);
 
-etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfig* config, SacnMcastInterface* netints,
-                                 size_t num_netints, SacnReceiver** receiver_state);
+etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfig* config,
+                                 const SacnNetintConfig* netint_config, SacnReceiver** receiver_state);
 etcpal_error_t lookup_receiver(sacn_receiver_t handle, SacnReceiver** receiver_state);
 etcpal_error_t lookup_receiver_by_universe(uint16_t universe, SacnReceiver** receiver_state);
 SacnReceiver* get_first_receiver(EtcPalRbIter* iterator);

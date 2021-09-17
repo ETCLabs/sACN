@@ -19,17 +19,17 @@
 
 #include "sacn_mock/private/sockets.h"
 
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_init);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_init, const SacnNetintConfig*);
 DEFINE_FAKE_VOID_FUNC(sacn_sockets_deinit);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_source);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_receiver);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_source_detector);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_receiver_netints, SacnInternalNetintArray*, SacnMcastInterface*,
-                       size_t);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_source, const SacnNetintConfig*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_receiver, const SacnNetintConfig*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_source_detector, const SacnNetintConfig*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_receiver_netints, SacnInternalNetintArray*,
+                       const SacnNetintConfig*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_source_detector_netints, SacnInternalNetintArray*,
-                       SacnMcastInterface*, size_t);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_source_netints, SacnInternalNetintArray*, SacnMcastInterface*,
-                       size_t);
+                       const SacnNetintConfig*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_source_netints, SacnInternalNetintArray*,
+                       const SacnNetintConfig*);
 DEFINE_FAKE_VOID_FUNC(sacn_get_mcast_addr, etcpal_iptype_t, uint16_t, EtcPalIpAddr*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_add_receiver_socket, sacn_thread_id_t, etcpal_iptype_t, uint16_t,
                        const EtcPalMcastNetintId*, size_t, etcpal_socket_t*);

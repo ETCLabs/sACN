@@ -43,7 +43,7 @@ DECLARE_FAKE_VOID_FUNC(sacn_source_destroy, sacn_source_t);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_change_name, sacn_source_t, const char*);
 
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_add_universe, sacn_source_t, const SacnSourceUniverseConfig*,
-                        SacnMcastInterface*, size_t);
+                        const SacnNetintConfig*);
 DECLARE_FAKE_VOID_FUNC(sacn_source_remove_universe, sacn_source_t, uint16_t);
 DECLARE_FAKE_VALUE_FUNC(size_t, sacn_source_get_universes, sacn_source_t, uint16_t*, size_t);
 
@@ -68,9 +68,9 @@ DECLARE_FAKE_VOID_FUNC(sacn_source_update_values_and_pap_and_force_sync, sacn_so
 
 DECLARE_FAKE_VALUE_FUNC(int, sacn_source_process_manual);
 
-DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_reset_networking, SacnMcastInterface*, size_t);
-DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_reset_networking_per_universe, const SacnSourceUniverseNetintList*,
-                        size_t);
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_reset_networking, const SacnNetintConfig*);
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_reset_networking_per_universe, const SacnNetintConfig*,
+                        const SacnSourceUniverseNetintList*, size_t);
 
 DECLARE_FAKE_VALUE_FUNC(size_t, sacn_source_get_network_interfaces, sacn_source_t, uint16_t, EtcPalMcastNetintId*,
                         size_t);

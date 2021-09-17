@@ -55,9 +55,9 @@
  * EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
  * // Initialize log_params...
  *
- * etcpal_error_t init_result = sacn_init(&log_params);
+ * etcpal_error_t init_result = sacn_init(&log_params, NULL);
  * // Or, to init without worrying about logs from the sACN library...
- * etcpal_error_t init_result = sacn_init(NULL);
+ * etcpal_error_t init_result = sacn_init(NULL, NULL);
  * 
  * SacnSourceDetectorConfig my_config = SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT;
  * my_config.callbacks.source_updated = my_source_updated;
@@ -66,11 +66,15 @@
  * 
  * SacnMcastInterface my_netints[NUM_MY_NETINTS];
  * // Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
+ * 
+ * SacnNetintConfig netint_config;
+ * netint_config.netints = my_netints;
+ * netint_config.num_netints = NUM_MY_NETINTS;
  *
  * // If you want to specify specific network interfaces to use:
- * etcpal_error_t create_result = sacn_source_detector_create(&my_config, my_netints, NUM_MY_NETINTS);
+ * etcpal_error_t create_result = sacn_source_detector_create(&my_config, &netint_config);
  * // Or, if you just want to use all network interfaces:
- * etcpal_error_t create_result = sacn_source_detector_create(&my_config, NULL, 0);
+ * etcpal_error_t create_result = sacn_source_detector_create(&my_config, NULL);
  * // Check create_result here...
  * 
  * // Now the thread is running and your callbacks will handle application-side processing.
@@ -231,11 +235,11 @@ typedef struct SacnSourceDetectorConfig
 
 void sacn_source_detector_config_init(SacnSourceDetectorConfig* config);
 
-etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* config, SacnMcastInterface* netints,
-                                           size_t num_netints);
+etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* config,
+                                           const SacnNetintConfig* netint_config);
 void sacn_source_detector_destroy();
 
-etcpal_error_t sacn_source_detector_reset_networking(SacnMcastInterface* netints, size_t num_netints);
+etcpal_error_t sacn_source_detector_reset_networking(const SacnNetintConfig* sys_netint_config);
 
 size_t sacn_source_detector_get_network_interfaces(EtcPalMcastNetintId* netints, size_t netints_size);
 

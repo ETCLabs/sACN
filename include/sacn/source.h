@@ -169,7 +169,7 @@ void sacn_source_destroy(sacn_source_t handle);
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name);
 
 etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config,
-                                        SacnMcastInterface* netints, size_t num_netints);
+                                        const SacnNetintConfig* netint_config);
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe);
 size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size_t universes_size);
 
@@ -200,9 +200,10 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 
 int sacn_source_process_manual(void);
 
-etcpal_error_t sacn_source_reset_networking(SacnMcastInterface* netints, size_t num_netints);
-etcpal_error_t sacn_source_reset_networking_per_universe(const SacnSourceUniverseNetintList* netint_lists,
-                                                         size_t num_netint_lists);
+etcpal_error_t sacn_source_reset_networking(const SacnNetintConfig* sys_netint_config);
+etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig* sys_netint_config,
+                                                         const SacnSourceUniverseNetintList* per_universe_netint_lists,
+                                                         size_t num_per_universe_netint_lists);
 
 size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, EtcPalMcastNetintId* netints,
                                           size_t netints_size);

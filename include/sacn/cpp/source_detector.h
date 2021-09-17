@@ -353,9 +353,10 @@ inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHan
   SacnSourceDetectorConfig config = TranslateConfig(settings, notify_handler);
 
   if (netints.empty())
-    return sacn_source_detector_create(&config, NULL, 0);
+    return sacn_source_detector_create(&config, NULL);
 
-  return sacn_source_detector_create(&config, netints.data(), netints.size());
+  SacnNetintConfig netint_config = {netints.data(), netints.size()};
+  return sacn_source_detector_create(&config, &netint_config);
 }
 
 /**
@@ -376,7 +377,9 @@ inline void SourceDetector::Shutdown()
  *
  * This is an override of ResetNetworking that uses all network interfaces.
  * 
- * This is typically used when the application detects that the list of networking interfaces has changed.
+ * This is typically used when the application detects that the list of networking interfaces has changed. The source
+ * detector API will no longer be limited to specific interfaces (the list passed into sacn::Init(), if any, is
+ * overridden for the source detector API, but not the other APIs). The source detector is set to all system interfaces.
  *
  * After this call completes successfully, the detector will continue as if nothing had changed. New sources could be
  * discovered, or old sources could expire.
@@ -401,7 +404,10 @@ inline etcpal::Error SourceDetector::ResetNetworking()
 /**
  * @brief Resets the underlying network sockets and packet receipt state for the sACN Source Detector.
  *
- * This is typically used when the application detects that the list of networking interfaces has changed.
+ * This is typically used when the application detects that the list of networking interfaces has changed. This changes
+ * the list of system interfaces the source detector API will be limited to (the list passed into sacn::Init(), if any,
+ * is overridden for the source detector API, but not the other APIs). The source detector is then set to those
+ * interfaces.
  *
  * After this call completes successfully, the detector will continue as if nothing had changed. New sources could be
  * discovered, or old sources could expire.
@@ -410,8 +416,8 @@ inline etcpal::Error SourceDetector::ResetNetworking()
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
- * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
+ * @param sys_netints If !empty, this is the list of system interfaces the source detector API will be limited to, and
+ * the status codes are filled in.  If empty, the source detector API is allowed to use all available system interfaces.
  * @return #kEtcPalErrOk: Network changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -419,12 +425,17 @@ inline etcpal::Error SourceDetector::ResetNetworking()
  * @return #kEtcPalErrNotFound: The detector has not yet been created.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error SourceDetector::ResetNetworking(std::vector<SacnMcastInterface>& netints)
+inline etcpal::Error SourceDetector::ResetNetworking(std::vector<SacnMcastInterface>& sys_netints)
 {
-  if (netints.empty())
-    return sacn_source_detector_reset_networking(nullptr, 0);
+  if (sys_netints.empty())
+  {
+    return sacn_source_detector_reset_networking(nullptr);
+  }
   else
-    return sacn_source_detector_reset_networking(netints.data(), netints.size());
+  {
+    SacnNetintConfig netint_config = {sys_netints.data(), sys_netints.size()};
+    return sacn_source_detector_reset_networking(&netint_config);
+  }
 }
 
 /**

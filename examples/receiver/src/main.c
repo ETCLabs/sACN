@@ -171,9 +171,11 @@ static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t univ
     netints[i].iface.ip_type = netint_list[i].addr.type;
   }
 
-  etcpal_error_t result =
-      sacn_receiver_create(&config, &listener->receiver_handle, netints,
-                           (num_sys_netints < MAX_LISTENER_NETINTS) ? num_sys_netints : MAX_LISTENER_NETINTS);
+  SacnNetintConfig netint_config;
+  netint_config.netints = netints;
+  netint_config.num_netints = (num_sys_netints < MAX_LISTENER_NETINTS) ? num_sys_netints : MAX_LISTENER_NETINTS;
+
+  etcpal_error_t result = sacn_receiver_create(&config, &listener->receiver_handle, &netint_config);
   if (result == kEtcPalErrOk)
   {
     listener->universe = universe;
@@ -559,7 +561,7 @@ int main(void)
   log_params.time_fn = NULL;
   log_params.log_mask = ETCPAL_LOG_UPTO(ETCPAL_LOG_DEBUG);
 
-  etcpal_error_t sacn_init_result = sacn_init(&log_params);
+  etcpal_error_t sacn_init_result = sacn_init(&log_params, NULL);
   if (sacn_init_result != kEtcPalErrOk)
   {
     printf("sACN initialization failed with error: '%s'\n", etcpal_strerror(sacn_init_result));

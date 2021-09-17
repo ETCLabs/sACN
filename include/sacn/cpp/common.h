@@ -60,6 +60,8 @@ constexpr RemoteSourceHandle kInvalidRemoteSourceHandle = SACN_REMOTE_SOURCE_INV
  * Wraps sacn_init(). Does all initialization required before the sACN API modules can be
  * used.
  *
+ * This is an overload of Init that allows all system network interfaces to be used by the library.
+ *
  * @param log_params (optional) Log parameters for the sACN library to use to log messages. If
  *                   not provided, no logging will be performed.
  * @return etcpal::Error::Ok(): Initialization successful.
@@ -67,7 +69,65 @@ constexpr RemoteSourceHandle kInvalidRemoteSourceHandle = SACN_REMOTE_SOURCE_INV
  */
 inline etcpal::Error Init(const EtcPalLogParams* log_params = nullptr)
 {
-  return sacn_init(log_params);
+  return sacn_init(log_params, nullptr);
+}
+
+/**
+ * @ingroup sacn_cpp_common
+ * @brief Initialize the sACN library.
+ *
+ * Wraps sacn_init(). Does all initialization required before the sACN API modules can be
+ * used.
+ *
+ * @param log_params Log parameters for the sACN library to use to log messages. If not provided, no logging will be
+ *                   performed.
+ * @param sys_netints If !empty, this is the list of system interfaces the library will be limited to, and the status
+ *                    codes are filled in.  If empty, the library is allowed to use all available system interfaces.
+ * @return etcpal::Error::Ok(): Initialization successful.
+ * @return Errors from sacn_init().
+ */
+inline etcpal::Error Init(const EtcPalLogParams* log_params, std::vector<SacnMcastInterface>& sys_netints)
+{
+  SacnNetintConfig netint_config = {sys_netints.data(), sys_netints.size()};
+  return sacn_init(log_params, &netint_config);
+}
+
+/**
+ * @ingroup sacn_cpp_common
+ * @brief Initialize the sACN library.
+ *
+ * Wraps sacn_init(). Does all initialization required before the sACN API modules can be
+ * used.
+ *
+ * This is an overload of Init that does not enable logging.
+ *
+ * @param sys_netints If !empty, this is the list of system interfaces the library will be limited to, and the status
+ *                    codes are filled in.  If empty, the library is allowed to use all available system interfaces.
+ * @return etcpal::Error::Ok(): Initialization successful.
+ * @return Errors from sacn_init().
+ */
+inline etcpal::Error Init(std::vector<SacnMcastInterface>& sys_netints)
+{
+  SacnNetintConfig netint_config = {sys_netints.data(), sys_netints.size()};
+  return sacn_init(nullptr, &netint_config);
+}
+
+/**
+ * @ingroup sacn_cpp_common
+ * @brief Initialize the sACN library.
+ *
+ * Wraps sacn_init(). Does all initialization required before the sACN API modules can be
+ * used.
+ *
+ * This is an overload of Init that allows all system network interfaces to be used by the library.
+ *
+ * @param logger Logger instance for the sACN library to use to log messages.
+ * @return etcpal::Error::Ok(): Initialization successful.
+ * @return Errors from sacn_init().
+ */
+inline etcpal::Error Init(const etcpal::Logger& logger)
+{
+  return sacn_init(&logger.log_params(), nullptr);
 }
 
 /**
@@ -78,12 +138,15 @@ inline etcpal::Error Init(const EtcPalLogParams* log_params = nullptr)
  * used.
  *
  * @param logger Logger instance for the sACN library to use to log messages.
+ * @param sys_netints If !empty, this is the list of system interfaces the library will be limited to, and the status
+ *                    codes are filled in.  If empty, the library is allowed to use all available system interfaces.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init().
  */
-inline etcpal::Error Init(const etcpal::Logger& logger)
+inline etcpal::Error Init(const etcpal::Logger& logger, std::vector<SacnMcastInterface>& sys_netints)
 {
-  return sacn_init(&logger.log_params());
+  SacnNetintConfig netint_config = {sys_netints.data(), sys_netints.size()};
+  return sacn_init(&logger.log_params(), &netint_config);
 }
 
 /**

@@ -74,10 +74,14 @@ my_universe_config.universe = my_universe;
 SacnMcastInterface my_netints[NUM_MY_NETINTS];
 // Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
 
+SacnNetintConfig netint_config;
+netint_config.netints = my_netints;
+netint_config.num_netints = NUM_MY_NETINTS;
+
 // If you want to specify specific network interfaces to use:
-sacn_source_add_universe(my_handle, &my_universe_config, my_netints, NUM_MY_NETINTS);
+sacn_source_add_universe(my_handle, &my_universe_config, &netint_config);
 // Or, if you just want to use all network interfaces:
-sacn_source_add_universe(my_handle, &my_universe_config, NULL, 0);
+sacn_source_add_universe(my_handle, &my_universe_config, NULL);
 // You can add additional universes as well, in the same way.
 
 // To remove a universe from your source when you're done transmitting on it:

@@ -115,16 +115,22 @@ protected:
     sacn_sockets_reset_all_fakes();
 
     sacn_initialize_source_netints_fake.custom_fake = [](SacnInternalNetintArray* source_netints,
-                                                         SacnMcastInterface* app_netints, size_t num_app_netints) {
-#if SACN_DYNAMIC_MEM
-      source_netints->netints = (EtcPalMcastNetintId*)calloc(num_app_netints, sizeof(EtcPalMcastNetintId));
-#endif
-      source_netints->num_netints = num_app_netints;
+                                                         const SacnNetintConfig* app_netint_config) {
+      EXPECT_NE(app_netint_config, nullptr);
 
-      for (size_t i = 0; i < num_app_netints; ++i)
+      if (app_netint_config)
       {
-        source_netints->netints[i] = app_netints[i].iface;
-        app_netints[i].status = kEtcPalErrOk;
+#if SACN_DYNAMIC_MEM
+        source_netints->netints =
+            (EtcPalMcastNetintId*)calloc(app_netint_config->num_netints, sizeof(EtcPalMcastNetintId));
+#endif
+        source_netints->num_netints = app_netint_config->num_netints;
+
+        for (size_t i = 0; i < app_netint_config->num_netints; ++i)
+        {
+          source_netints->netints[i] = app_netint_config->netints[i].iface;
+          app_netint_config->netints[i].status = kEtcPalErrOk;
+        }
       }
 
       return kEtcPalErrOk;
@@ -167,7 +173,8 @@ protected:
                        std::vector<SacnMcastInterface>& netints = kTestNetints)
   {
     SacnSourceUniverse* tmp = nullptr;
-    EXPECT_EQ(add_sacn_source_universe(GetSource(source), &config, netints.data(), netints.size(), &tmp), kEtcPalErrOk);
+    SacnNetintConfig netint_config = {netints.data(), netints.size()};
+    EXPECT_EQ(add_sacn_source_universe(GetSource(source), &config, &netint_config, &tmp), kEtcPalErrOk);
 
     for (size_t i = 0; i < netints.size(); ++i)
       EXPECT_EQ(add_sacn_source_netint(GetSource(source), &netints[i].iface), kEtcPalErrOk);
@@ -178,7 +185,8 @@ protected:
   uint16_t AddUniverse(sacn_source_t source, const SacnSourceUniverseConfig& config, SacnMcastInterface& netint)
   {
     SacnSourceUniverse* tmp = nullptr;
-    EXPECT_EQ(add_sacn_source_universe(GetSource(source), &config, &netint, 1u, &tmp), kEtcPalErrOk);
+    SacnNetintConfig netint_config = {&netint, 1u};
+    EXPECT_EQ(add_sacn_source_universe(GetSource(source), &config, &netint_config, &tmp), kEtcPalErrOk);
     EXPECT_EQ(add_sacn_source_netint(GetSource(source), &netint.iface), kEtcPalErrOk);
 
     return config.universe;
@@ -1257,9 +1265,8 @@ TEST_F(TestSourceState, UniverseRemovalUpdatesSourceNetints)
   for (size_t num_netints = kTestNetints.size(); num_netints >= 1u; --num_netints)
   {
     SacnSourceUniverse* tmp = nullptr;
-    EXPECT_EQ(add_sacn_source_universe(GetSource(source), &universe_config,
-                                       &kTestNetints[kTestNetints.size() - num_netints], num_netints, &tmp),
-              kEtcPalErrOk);
+    SacnNetintConfig netint_config = {&kTestNetints[kTestNetints.size() - num_netints], num_netints};
+    EXPECT_EQ(add_sacn_source_universe(GetSource(source), &universe_config, &netint_config, &tmp), kEtcPalErrOk);
 
     for (size_t i = kTestNetints.size() - num_netints; i < kTestNetints.size(); ++i)
       EXPECT_EQ(add_sacn_source_netint(GetSource(source), &kTestNetints[i].iface), kEtcPalErrOk);
@@ -2146,8 +2153,8 @@ TEST_F(TestSourceState, ResetSourceUniverseNetworkingWorks)
   sacn_source_t source = AddSource(kTestSourceConfig);
 
   SacnSourceUniverse* universe_state = nullptr;
-  EXPECT_EQ(add_sacn_source_universe(GetSource(source), &kTestUniverseConfig, kTestNetints.data(), kTestNetints.size(),
-                                     &universe_state),
+  SacnNetintConfig netint_config = {kTestNetints.data(), kTestNetints.size()};
+  EXPECT_EQ(add_sacn_source_universe(GetSource(source), &kTestUniverseConfig, &netint_config, &universe_state),
             kEtcPalErrOk);
   InitTestData(source, kTestUniverseConfig.universe, kTestBuffer, kTestBuffer2);
 
@@ -2157,9 +2164,7 @@ TEST_F(TestSourceState, ResetSourceUniverseNetworkingWorks)
 
   etcpal_getms_fake.return_val = kTestGetMsValue;
 
-  EXPECT_EQ(
-      reset_source_universe_networking(GetSource(source), universe_state, kTestNetints.data(), kTestNetints.size()),
-      kEtcPalErrOk);
+  EXPECT_EQ(reset_source_universe_networking(GetSource(source), universe_state, &netint_config), kEtcPalErrOk);
   EXPECT_EQ(universe_state->netints.num_netints, kTestNetints.size());
   EXPECT_EQ(GetSource(source)->num_netints, kTestNetints.size());
 

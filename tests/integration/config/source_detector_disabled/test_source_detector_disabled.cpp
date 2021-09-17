@@ -40,7 +40,7 @@ protected:
     etcpal_netint_get_num_interfaces_fake.return_val = 1;
     etcpal_netint_get_interfaces_fake.return_val = &fake_netint_;
 
-    ASSERT_EQ(sacn_init(nullptr), kEtcPalErrOk);
+    ASSERT_EQ(sacn_init(nullptr, nullptr), kEtcPalErrOk);
   }
 
   void TearDown() override
@@ -55,7 +55,7 @@ protected:
 TEST_F(TestSourceDetectorDisabled, SourceDetectorIsEnabledInDynamicMode)
 {
   // Run the API functions to confirm everything links.
-  sacn_source_detector_create(nullptr, nullptr, 0);
-  sacn_source_detector_reset_networking(nullptr, 0);
+  sacn_source_detector_create(nullptr, nullptr);
+  sacn_source_detector_reset_networking(nullptr);
 }
 #endif  // SACN_DYNAMIC_MEM

@@ -60,7 +60,7 @@ protected:
     sacn_sockets_reset_all_fakes();
 
     sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* internal_netints,
-                                                           SacnMcastInterface*, size_t) {
+                                                           const SacnNetintConfig*) {
 #if SACN_DYNAMIC_MEM
       internal_netints->netints = NULL;
       internal_netints->netints_capacity = 0;
@@ -99,7 +99,7 @@ protected:
     };
 
     sacn_receiver_t handle;
-    sacn_receiver_create(&config, &handle, nullptr, 0);
+    sacn_receiver_create(&config, &handle, nullptr);
 
     clear_term_set_list_fake.custom_fake = [](TerminationSet* list) { EXPECT_EQ(list, nullptr); };
 
@@ -261,13 +261,13 @@ TEST_F(TestReceiver, ChangeUniverseErrExistsWorks)
   config.universe_id = CHANGE_UNIVERSE_RECEIVER_EXISTS_UNIVERSE;
 
   sacn_receiver_t handle_existing_receiver;
-  sacn_receiver_create(&config, &handle_existing_receiver, nullptr, 0);
+  sacn_receiver_create(&config, &handle_existing_receiver, nullptr);
 
   config.universe_id = CHANGE_UNIVERSE_NO_RECEIVER_UNIVERSE_1;
   ++get_next_receiver_handle_fake.return_val;
 
   sacn_receiver_t handle_changing_receiver;
-  sacn_receiver_create(&config, &handle_changing_receiver, nullptr, 0);
+  sacn_receiver_create(&config, &handle_changing_receiver, nullptr);
 
   etcpal_error_t change_universe_no_err_exists_result =
       sacn_receiver_change_universe(handle_changing_receiver, CHANGE_UNIVERSE_NO_RECEIVER_UNIVERSE_2);
@@ -292,7 +292,7 @@ TEST_F(TestReceiver, ChangeUniverseErrNotFoundWorks)
   config.universe_id = CHANGE_UNIVERSE_VALID_UNIVERSE_1;
 
   sacn_receiver_t handle;
-  sacn_receiver_create(&config, &handle, nullptr, 0);
+  sacn_receiver_create(&config, &handle, nullptr);
 
   etcpal_error_t change_universe_found_result = sacn_receiver_change_universe(handle, CHANGE_UNIVERSE_VALID_UNIVERSE_2);
   EXPECT_NE(change_universe_found_result, kEtcPalErrNotFound);

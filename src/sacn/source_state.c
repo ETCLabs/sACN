@@ -705,9 +705,9 @@ void clear_source_netints(SacnSource* source)
 
 // Needs lock
 etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUniverse* universe,
-                                                SacnMcastInterface* netints, size_t num_netints)
+                                                const SacnNetintConfig* netint_config)
 {
-  etcpal_error_t result = sacn_initialize_source_netints(&universe->netints, netints, num_netints);
+  etcpal_error_t result = sacn_initialize_source_netints(&universe->netints, netint_config);
 
   for (size_t k = 0; (result == kEtcPalErrOk) && (k < universe->netints.num_netints); ++k)
     result = add_sacn_source_netint(source, &universe->netints.netints[k]);

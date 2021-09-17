@@ -41,8 +41,8 @@ static SacnSourceDetector source_detector;
 
 /*************************** Function definitions ****************************/
 
-etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, SacnMcastInterface* netints,
-                                        size_t num_netints, SacnSourceDetector** detector_state)
+etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, const SacnNetintConfig* netint_config,
+                                        SacnSourceDetector** detector_state)
 {
   SACN_ASSERT(config);
 
@@ -58,7 +58,7 @@ etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, 
     source_detector.ipv4_socket = ETCPAL_SOCKET_INVALID;
     source_detector.ipv6_socket = ETCPAL_SOCKET_INVALID;
 
-    res = sacn_initialize_source_detector_netints(&source_detector.netints, netints, num_netints);
+    res = sacn_initialize_source_detector_netints(&source_detector.netints, netint_config);
   }
 
   if (res == kEtcPalErrOk)

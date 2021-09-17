@@ -40,7 +40,7 @@ protected:
     etcpal_netint_get_num_interfaces_fake.return_val = 1;
     etcpal_netint_get_interfaces_fake.return_val = &fake_netint_;
 
-    ASSERT_EQ(sacn_init(nullptr), kEtcPalErrOk);
+    ASSERT_EQ(sacn_init(nullptr, nullptr), kEtcPalErrOk);
   }
 
   void TearDown() override

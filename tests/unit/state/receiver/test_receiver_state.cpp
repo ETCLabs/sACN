@@ -111,16 +111,22 @@ protected:
     sacn_source_loss_reset_all_fakes();
 
     sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* receiver_netints,
-                                                           SacnMcastInterface* app_netints, size_t num_app_netints) {
-#if SACN_DYNAMIC_MEM
-      receiver_netints->netints = (EtcPalMcastNetintId*)calloc(num_app_netints, sizeof(EtcPalMcastNetintId));
-#endif
-      receiver_netints->num_netints = num_app_netints;
+                                                           const SacnNetintConfig* app_netint_config) {
+      EXPECT_NE(app_netint_config, nullptr);
 
-      for (size_t i = 0; i < num_app_netints; ++i)
+      if (app_netint_config)
       {
-        receiver_netints->netints[i] = app_netints[i].iface;
-        app_netints[i].status = kEtcPalErrOk;
+#if SACN_DYNAMIC_MEM
+        receiver_netints->netints =
+            (EtcPalMcastNetintId*)calloc(app_netint_config->num_netints, sizeof(EtcPalMcastNetintId));
+#endif
+        receiver_netints->num_netints = app_netint_config->num_netints;
+
+        for (size_t i = 0; i < app_netint_config->num_netints; ++i)
+        {
+          receiver_netints->netints[i] = app_netint_config->netints[i].iface;
+          app_netint_config->netints[i].status = kEtcPalErrOk;
+        }
       }
 
       return kEtcPalErrOk;
@@ -154,7 +160,8 @@ protected:
   SacnReceiver* AddReceiver(const SacnReceiverConfig& config)
   {
     SacnReceiver* receiver = nullptr;
-    EXPECT_EQ(add_sacn_receiver(next_receiver_handle_++, &config, kTestNetints.data(), kTestNetints.size(), &receiver),
+    SacnNetintConfig netint_config = {kTestNetints.data(), kTestNetints.size()};
+    EXPECT_EQ(add_sacn_receiver(next_receiver_handle_++, &config, &netint_config, &receiver),
               kEtcPalErrOk);
 
     return receiver;
@@ -163,7 +170,8 @@ protected:
   SacnSourceDetector* AddSourceDetector(const SacnSourceDetectorConfig& config = kTestSourceDetectorConfig)
   {
     SacnSourceDetector* detector = nullptr;
-    EXPECT_EQ(add_sacn_source_detector(&config, kTestNetints.data(), kTestNetints.size(), &detector), kEtcPalErrOk);
+    SacnNetintConfig netint_config = {kTestNetints.data(), kTestNetints.size()};
+    EXPECT_EQ(add_sacn_source_detector(&config, &netint_config, &detector), kEtcPalErrOk);
 
     return detector;
   }
@@ -251,8 +259,9 @@ protected:
     sacn_receiver_t handle = test_receiver_->keys.handle;
     remove_receiver_from_thread(test_receiver_);
     remove_sacn_receiver(test_receiver_);
-    EXPECT_EQ(add_sacn_receiver(handle, &config, kTestNetints.data(), kTestNetints.size(), &test_receiver_),
-              kEtcPalErrOk);
+
+    SacnNetintConfig netint_config = {kTestNetints.data(), kTestNetints.size()};
+    EXPECT_EQ(add_sacn_receiver(handle, &config, &netint_config, &test_receiver_), kEtcPalErrOk);
     begin_sampling_period(test_receiver_);
     EXPECT_EQ(assign_receiver_to_thread(test_receiver_), kEtcPalErrOk);
   }

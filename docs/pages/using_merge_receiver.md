@@ -37,8 +37,20 @@ config.callbacks.universe_data = my_universe_data_callback;
 config.callbacks.universe_non_dmx = my_universe_non_dmx_callback;
 config.callbacks.source_limit_exceeded = my_source_limit_exceeded_callback; // optional, can be NULL
 
+SacnMcastInterface my_netints[NUM_MY_NETINTS];
+// Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
+
+SacnNetintConfig netint_config;
+netint_config.netints = my_netints;
+netint_config.num_netints = NUM_MY_NETINTS;
+
 sacn_merge_receiver_t my_merge_receiver_handle;
-sacn_merge_receiver_create(&config, &my_merge_receiver_handle);
+
+// If you want to specify specific network interfaces to use:
+sacn_merge_receiver_create(&config, &my_merge_receiver_handle, &netint_config);
+// Or, if you just want to use all network interfaces:
+sacn_merge_receiver_create(&config, &my_merge_receiver_handle, NULL);
+// You can add additional merge receivers as well, in the same way.
 
 // To destroy the merge receiver when you're done with it:
 sacn_merge_receiver_destroy(my_merge_receiver_handle);
@@ -66,6 +78,9 @@ MyNotifyHandler my_notify_handler;
 merge_receiver.Startup(config, my_notify_handler);
 // Or do this if Startup is being called within the NotifyHandler-derived class:
 merge_receiver.Startup(config, *this);
+// Or do this to specify custom interfaces for the merge receiver to use:
+std::vector<SacnMcastInterface> my_netints;  // Assuming my_netints is initialized by the application...
+merge_receiver.Startup(config, my_notify_handler, my_netints);
 
 // To destroy the merge receiver when you're done with it:
 merge_receiver.Shutdown();

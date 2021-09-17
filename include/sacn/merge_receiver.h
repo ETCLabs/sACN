@@ -177,13 +177,14 @@ typedef struct SacnMergeReceiverNetintList
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
 
 etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle,
-                                          SacnMcastInterface* netints, size_t num_netints);
+                                          const SacnNetintConfig* netint_config);
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle);
 etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id);
-etcpal_error_t sacn_merge_receiver_reset_networking(SacnMcastInterface* netints, size_t num_netints);
-etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(const SacnMergeReceiverNetintList* netint_lists,
-                                                                 size_t num_netint_lists);
+etcpal_error_t sacn_merge_receiver_reset_networking(const SacnNetintConfig* sys_netint_config);
+etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(
+    const SacnNetintConfig* sys_netint_config, const SacnMergeReceiverNetintList* per_receiver_netint_lists,
+    size_t num_per_receiver_netint_lists);
 size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, EtcPalMcastNetintId* netints,
                                                   size_t netints_size);
 

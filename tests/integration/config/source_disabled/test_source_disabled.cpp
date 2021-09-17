@@ -41,7 +41,7 @@ protected:
     etcpal_netint_get_num_interfaces_fake.return_val = 1;
     etcpal_netint_get_interfaces_fake.return_val = &fake_netint_;
 
-    ASSERT_EQ(sacn_init(nullptr), kEtcPalErrOk);
+    ASSERT_EQ(sacn_init(nullptr, nullptr), kEtcPalErrOk);
   }
 
   void TearDown() override
@@ -58,14 +58,14 @@ TEST_F(TestSourceDisabled, SourceIsEnabledInDynamicMode)
   // Run the API functions to confirm everything links.
   sacn_source_create(nullptr, nullptr);
   sacn_source_change_name(SACN_SOURCE_INVALID, nullptr);
-  sacn_source_add_universe(SACN_SOURCE_INVALID, nullptr, nullptr, 0u);
+  sacn_source_add_universe(SACN_SOURCE_INVALID, nullptr, nullptr);
   sacn_source_add_unicast_destination(SACN_SOURCE_INVALID, 0u, nullptr);
   sacn_source_change_priority(SACN_SOURCE_INVALID, 0u, 0u);
   sacn_source_change_preview_flag(SACN_SOURCE_INVALID, 0u, false);
   sacn_source_change_synchronization_universe(SACN_SOURCE_INVALID, 0u, 0u);
   sacn_source_send_now(SACN_SOURCE_INVALID, 0u, 0u, nullptr, 0u);
   sacn_source_send_synchronization(SACN_SOURCE_INVALID, 0u);
-  sacn_source_reset_networking(nullptr, 0u);
-  sacn_source_reset_networking_per_universe(nullptr, 0u);
+  sacn_source_reset_networking(nullptr);
+  sacn_source_reset_networking_per_universe(nullptr, nullptr, 0u);
 }
 #endif

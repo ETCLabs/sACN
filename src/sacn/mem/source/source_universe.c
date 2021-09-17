@@ -42,7 +42,7 @@
 
 // Needs lock
 etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniverseConfig* config,
-                                        SacnMcastInterface* netints, size_t num_netints,
+                                        const SacnNetintConfig* netint_config,
                                         SacnSourceUniverse** universe_state)
 {
   etcpal_error_t result = kEtcPalErrOk;
@@ -112,7 +112,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
   }
 
   if (result == kEtcPalErrOk)
-    result = sacn_initialize_source_netints(&universe->netints, netints, num_netints);
+    result = sacn_initialize_source_netints(&universe->netints, netint_config);
 
   if (result == kEtcPalErrOk)
   {

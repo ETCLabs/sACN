@@ -39,8 +39,20 @@ config.callbacks.sampling_period_started = my_sampling_period_started_callback; 
 config.callbacks.source_pap_lost = my_source_pap_lost_callback; // optional, can be NULL
 config.callbacks.source_limit_exceeded = my_source_limit_exceeded_callback; // optional, can be NULL
 
+SacnMcastInterface my_netints[NUM_MY_NETINTS];
+// Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
+
+SacnNetintConfig netint_config;
+netint_config.netints = my_netints;
+netint_config.num_netints = NUM_MY_NETINTS;
+
 sacn_receiver_t my_receiver_handle;
-sacn_receiver_create(&config, &my_receiver_handle);
+
+// If you want to specify specific network interfaces to use:
+sacn_receiver_create(&config, &my_receiver_handle, &netint_config);
+// Or, if you just want to use all network interfaces:
+sacn_receiver_create(&config, &my_receiver_handle, NULL);
+// You can add additional receivers as well, in the same way.
 
 // To destroy the receiver when you're done with it:
 sacn_receiver_destroy(my_receiver_handle);
@@ -70,6 +82,9 @@ MyNotifyHandler my_notify_handler;
 receiver.Startup(config, my_notify_handler);
 // Or do this if Startup is being called within the NotifyHandler-derived class:
 receiver.Startup(config, *this);
+// Or do this to specify custom interfaces for the receiver to use:
+std::vector<SacnMcastInterface> my_netints;  // Assuming my_netints is initialized by the application...
+receiver.Startup(config, my_notify_handler, my_netints);
 
 // To destroy the receiver when you're done with it:
 receiver.Shutdown();

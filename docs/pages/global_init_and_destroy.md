@@ -12,9 +12,9 @@ ETC library modules.
 EtcPalLogParams log_params = ETCPAL_LOG_PARAMS_INIT;
 // Initialize log_params...
 
-sacn_init(&log_params);
+sacn_init(&log_params, NULL);
 // Or, to init without worrying about logs from the sACN library...
-sacn_init(NULL);
+sacn_init(NULL, NULL);
 
 // During shutdown:
 sacn_deinit();

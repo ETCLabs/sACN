@@ -71,8 +71,8 @@ protected:
     RESET_FAKE(universe_non_dmx);
     RESET_FAKE(source_limit_exceeded);
 
-    create_sacn_receiver_fake.custom_fake = [](const SacnReceiverConfig*, sacn_receiver_t* handle, SacnMcastInterface*,
-                                               size_t) {
+    create_sacn_receiver_fake.custom_fake = [](const SacnReceiverConfig*, sacn_receiver_t* handle,
+                                               const SacnNetintConfig*) {
       *handle = kTestHandle;
       return kEtcPalErrOk;
     };
@@ -143,7 +143,7 @@ TEST_F(TestMergeReceiver, CreateWorks)
 {
   SacnMergeReceiverConfig config = kTestConfig;
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
-  EXPECT_EQ(sacn_merge_receiver_create(&config, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&config, &handle, nullptr), kEtcPalErrOk);
 
   EXPECT_EQ(handle, kTestHandle);
   EXPECT_EQ(create_sacn_receiver_fake.call_count, 1u);
@@ -157,8 +157,8 @@ TEST_F(TestMergeReceiver, CreateWorks)
   EXPECT_EQ(get_num_merge_receivers(), 1u);
 
   // Now test failure cleanup
-  create_sacn_receiver_fake.custom_fake = [](const SacnReceiverConfig*, sacn_receiver_t* handle, SacnMcastInterface*,
-                                             size_t) {
+  create_sacn_receiver_fake.custom_fake = [](const SacnReceiverConfig*, sacn_receiver_t* handle,
+                                             const SacnNetintConfig*) {
     *handle = kTestHandle2;
     return kEtcPalErrOk;
   };
@@ -168,7 +168,7 @@ TEST_F(TestMergeReceiver, CreateWorks)
   };
 
   ++config.universe_id;
-  EXPECT_EQ(sacn_merge_receiver_create(&config, &handle, nullptr, 0u), kEtcPalErrSys);
+  EXPECT_EQ(sacn_merge_receiver_create(&config, &handle, nullptr), kEtcPalErrSys);
 
   EXPECT_EQ(get_num_merge_receivers(), 1u);
 
@@ -179,7 +179,7 @@ TEST_F(TestMergeReceiver, CreateWorks)
 TEST_F(TestMergeReceiver, DestroyWorks)
 {
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
-  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
   EXPECT_EQ(get_num_merge_receivers(), 1u);
 
   EXPECT_EQ(sacn_merge_receiver_destroy(handle), kEtcPalErrOk);
@@ -191,7 +191,7 @@ TEST_F(TestMergeReceiver, ChangeUniverseWorks)
   static constexpr size_t kNumSources = 5u;
 
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
-  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
 
   SacnMergeReceiver* merge_receiver = nullptr;
   ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver, nullptr), kEtcPalErrOk);
@@ -224,27 +224,27 @@ TEST_F(TestMergeReceiver, ResetNetworkingPerReceiverWorks)
     netint_lists[i].num_netints = 0u;
   }
 
-  sacn_receiver_reset_networking_per_receiver_fake.custom_fake = [](const SacnReceiverNetintList* netint_lists,
-                                                                    size_t num_netint_lists) {
-    for (size_t i = 0u; i < kNumNetintLists; ++i)
-    {
-      EXPECT_EQ(netint_lists[i].handle, (sacn_receiver_t)i);
-      EXPECT_EQ(netint_lists[i].netints, nullptr);
-      EXPECT_EQ(netint_lists[i].num_netints, 0u);
-      EXPECT_EQ(num_netint_lists, kNumNetintLists);
-    }
+  sacn_receiver_reset_networking_per_receiver_fake.custom_fake =
+      [](const SacnNetintConfig*, const SacnReceiverNetintList* netint_lists, size_t num_netint_lists) {
+        for (size_t i = 0u; i < kNumNetintLists; ++i)
+        {
+          EXPECT_EQ(netint_lists[i].handle, (sacn_receiver_t)i);
+          EXPECT_EQ(netint_lists[i].netints, nullptr);
+          EXPECT_EQ(netint_lists[i].num_netints, 0u);
+          EXPECT_EQ(num_netint_lists, kNumNetintLists);
+        }
 
-    return kEtcPalErrOk;
-  };
+        return kEtcPalErrOk;
+      };
 
-  EXPECT_EQ(sacn_merge_receiver_reset_networking_per_receiver(netint_lists, kNumNetintLists), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_reset_networking_per_receiver(nullptr, netint_lists, kNumNetintLists), kEtcPalErrOk);
   EXPECT_EQ(sacn_receiver_reset_networking_per_receiver_fake.call_count, 1u);
 }
 
 TEST_F(TestMergeReceiver, UniverseDataAddsPapSourceAfterSampling)
 {
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
-  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
 
   RunSamplingStarted();
   RunSamplingEnded();
@@ -289,7 +289,7 @@ TEST_F(TestMergeReceiver, UniverseDataAddsPapSourceAfterSampling)
 TEST_F(TestMergeReceiver, UniverseDataAddsNoPapSourceAfterSampling)
 {
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
-  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
 
   RunSamplingStarted();
   RunSamplingEnded();
@@ -323,7 +323,7 @@ TEST_F(TestMergeReceiver, UniverseDataAddsNoPapSourceAfterSampling)
 TEST_F(TestMergeReceiver, PendingSourceBlocksUniverseData)
 {
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
-  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
 
   RunSamplingStarted();
   RunSamplingEnded();
@@ -420,7 +420,7 @@ TEST_F(TestMergeReceiver, PendingSourceBlocksUniverseData)
 TEST_F(TestMergeReceiver, MultiplePendingSourcesBlockUniverseData)
 {
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
-  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
 
   RunSamplingStarted();
   RunSamplingEnded();
@@ -473,7 +473,7 @@ TEST_F(TestMergeReceiver, MultiplePendingSourcesBlockUniverseData)
 TEST_F(TestMergeReceiver, SamplingPeriodBlocksUniverseData)
 {
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
-  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
 
   RunSamplingStarted();
 
@@ -513,7 +513,7 @@ TEST_F(TestMergeReceiver, SamplingPeriodBlocksUniverseData)
 TEST_F(TestMergeReceiver, UniverseDataHandlesSourcesLost)
 {
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
-  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
 
   RunSamplingStarted();
   RunSamplingEnded();
@@ -568,7 +568,7 @@ TEST_F(TestMergeReceiver, UniverseDataHandlesSourcesLost)
 TEST_F(TestMergeReceiver, UniverseDataHandlesPapLost)
 {
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
-  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
 
   RunSamplingStarted();
   RunSamplingEnded();
@@ -590,7 +590,7 @@ TEST_F(TestMergeReceiver, UniverseDataHandlesPapLost)
 TEST_F(TestMergeReceiver, UniverseNonDmxWorks)
 {
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
-  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
 
   static const etcpal::Uuid kCid = etcpal::Uuid::V4();
 
@@ -637,7 +637,7 @@ TEST_F(TestMergeReceiver, UniverseNonDmxWorks)
 TEST_F(TestMergeReceiver, SourceLimitExceededWorks)
 {
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
-  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
 
   source_limit_exceeded_fake.custom_fake = [](sacn_merge_receiver_t handle, uint16_t universe, void*) {
     EXPECT_EQ(handle, kTestHandle);
@@ -671,7 +671,7 @@ TEST_F(TestMergeReceiver, PapBlockedWhenUsePapDisabled)
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
   SacnMergeReceiverConfig config = kTestConfig;
   config.use_pap = false;
-  EXPECT_EQ(sacn_merge_receiver_create(&config, &handle, nullptr, 0u), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_create(&config, &handle, nullptr), kEtcPalErrOk);
 
   RunSamplingStarted();
   RunSamplingEnded();

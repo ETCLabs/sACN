@@ -25,20 +25,20 @@ DEFINE_FAKE_VOID_FUNC(sacn_receiver_deinit);
 DEFINE_FAKE_VOID_FUNC(sacn_receiver_config_init, SacnReceiverConfig*);
 
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_create, const SacnReceiverConfig*, sacn_receiver_t*,
-                       SacnMcastInterface*, size_t);
+                       const SacnNetintConfig*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_destroy, sacn_receiver_t);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_get_universe, sacn_receiver_t, uint16_t*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_change_universe, sacn_receiver_t, uint16_t);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_reset_networking, SacnMcastInterface*, size_t);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_reset_networking_per_receiver, const SacnReceiverNetintList*,
-                       size_t);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_reset_networking, const SacnNetintConfig*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_reset_networking_per_receiver, const SacnNetintConfig*,
+                       const SacnReceiverNetintList*, size_t);
 DEFINE_FAKE_VALUE_FUNC(size_t, sacn_receiver_get_network_interfaces, sacn_receiver_t, EtcPalMcastNetintId*, size_t);
 
 DEFINE_FAKE_VOID_FUNC(sacn_receiver_set_expired_wait, uint32_t);
 DEFINE_FAKE_VALUE_FUNC(uint32_t, sacn_receiver_get_expired_wait);
 
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, create_sacn_receiver, const SacnReceiverConfig*, sacn_receiver_t*,
-                       SacnMcastInterface*, size_t);
+                       const SacnNetintConfig*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, destroy_sacn_receiver, sacn_receiver_t);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, change_sacn_receiver_universe, sacn_receiver_t, uint16_t);
 

@@ -58,11 +58,14 @@ static etcpal_mutex_t sacn_mutex;
  *
  * @param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
  *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
+ * @param[in, out] sys_netint_config Optional. If non-NULL, this is the list of system interfaces the library will be
+ * limited to, and the status codes are filled in.  If NULL, the library is allowed to use all available system
+ * interfaces.
  * @return #kEtcPalErrOk: Initialization successful.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
+etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConfig* sys_netint_config)
 {
   etcpal_error_t res = kEtcPalErrAlready;
 
@@ -115,7 +118,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params)
 
     bool sockets_initted = false;
     if (res == kEtcPalErrOk)
-      sockets_initted = ((res = sacn_sockets_init()) == kEtcPalErrOk);
+      sockets_initted = ((res = sacn_sockets_init(sys_netint_config)) == kEtcPalErrOk);
 
 #if SACN_RECEIVER_ENABLED
     bool source_loss_initted = false;

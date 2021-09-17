@@ -271,13 +271,14 @@ typedef struct SacnReceiverNetintList
 void sacn_receiver_config_init(SacnReceiverConfig* config);
 
 etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle,
-                                    SacnMcastInterface* netints, size_t num_netints);
+                                    const SacnNetintConfig* netint_config);
 etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle);
 etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id);
-etcpal_error_t sacn_receiver_reset_networking(SacnMcastInterface* netints, size_t num_netints);
-etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnReceiverNetintList* netint_lists,
-                                                           size_t num_netint_lists);
+etcpal_error_t sacn_receiver_reset_networking(const SacnNetintConfig* sys_netint_config);
+etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfig* sys_netint_config,
+                                                           const SacnReceiverNetintList* per_receiver_netint_lists,
+                                                           size_t num_per_receiver_netint_lists);
 size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, EtcPalMcastNetintId* netints, size_t netints_size);
 
 void sacn_receiver_set_expired_wait(uint32_t wait_ms);

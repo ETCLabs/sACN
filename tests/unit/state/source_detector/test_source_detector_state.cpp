@@ -89,7 +89,7 @@ protected:
     config.source_count_max = source_count_max;
     config.universes_per_source_max = universes_per_source_max;
 
-    return add_sacn_source_detector(&config, nullptr, 0, &detector_);
+    return add_sacn_source_detector(&config, nullptr, &detector_);
   }
 
   void DestroyDetector()

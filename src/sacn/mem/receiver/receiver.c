@@ -97,8 +97,8 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
  * [in] config Receiver configuration data.
  * Returns the new initialized receiver instance, or NULL if out of memory.
  */
-etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfig* config, SacnMcastInterface* netints,
-                                 size_t num_netints, SacnReceiver** receiver_state)
+etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfig* config,
+                                 const SacnNetintConfig* netint_config, SacnReceiver** receiver_state)
 {
   SACN_ASSERT(config);
 
@@ -128,7 +128,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   receiver->netints.num_netints = 0;
 
   etcpal_error_t initialize_receiver_netints_result =
-      sacn_initialize_receiver_netints(&receiver->netints, netints, num_netints);
+      sacn_initialize_receiver_netints(&receiver->netints, netint_config);
   if (initialize_receiver_netints_result != kEtcPalErrOk)
   {
     FREE_RECEIVER(receiver);

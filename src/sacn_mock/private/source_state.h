@@ -52,7 +52,7 @@ DECLARE_FAKE_VALUE_FUNC(size_t, get_source_universe_netints, const SacnSourceUni
 DECLARE_FAKE_VOID_FUNC(disable_pap_data, SacnSourceUniverse*);
 DECLARE_FAKE_VOID_FUNC(clear_source_netints, SacnSource*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, reset_source_universe_networking, SacnSource*, SacnSourceUniverse*,
-                        SacnMcastInterface*, size_t);
+                        const SacnNetintConfig*);
 DECLARE_FAKE_VOID_FUNC(finish_source_universe_termination, SacnSource*, size_t);
 DECLARE_FAKE_VOID_FUNC(finish_unicast_dest_termination, SacnSourceUniverse*, size_t);
 

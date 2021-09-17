@@ -40,7 +40,7 @@ protected:
     etcpal_netint_get_num_interfaces_fake.return_val = 1;
     etcpal_netint_get_interfaces_fake.return_val = &fake_netint_;
 
-    ASSERT_EQ(sacn_init(nullptr), kEtcPalErrOk);
+    ASSERT_EQ(sacn_init(nullptr, nullptr), kEtcPalErrOk);
   }
 
   void TearDown() override
@@ -55,11 +55,11 @@ protected:
 TEST_F(TestMergeReceiverDisabled, MergeReceiverIsEnabledInDynamicMode)
 {
   // Run the API functions to confirm everything links.
-  sacn_merge_receiver_create(nullptr, nullptr, nullptr, 0);
+  sacn_merge_receiver_create(nullptr, nullptr, nullptr);
   sacn_merge_receiver_destroy(SACN_MERGE_RECEIVER_INVALID);
   sacn_merge_receiver_get_universe(SACN_MERGE_RECEIVER_INVALID, nullptr);
   sacn_merge_receiver_change_universe(SACN_MERGE_RECEIVER_INVALID, 0);
-  sacn_merge_receiver_reset_networking(nullptr, 0);
-  sacn_merge_receiver_reset_networking_per_receiver(nullptr, 0);
+  sacn_merge_receiver_reset_networking(nullptr);
+  sacn_merge_receiver_reset_networking_per_receiver(nullptr, nullptr, 0);
 }
 #endif  // SACN_DYNAMIC_MEM

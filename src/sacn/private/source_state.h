@@ -79,7 +79,7 @@ size_t get_source_universe_netints(const SacnSourceUniverse* universe, EtcPalMca
 void disable_pap_data(SacnSourceUniverse* universe);
 void clear_source_netints(SacnSource* source);
 etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUniverse* universe,
-                                                SacnMcastInterface* netints, size_t num_netints);
+                                                const SacnNetintConfig* netint_config);
 void finish_source_universe_termination(SacnSource* source, size_t index);
 void finish_unicast_dest_termination(SacnSourceUniverse* universe, size_t index);
 

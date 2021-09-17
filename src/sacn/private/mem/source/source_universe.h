@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniverseConfig* config,
-                                        SacnMcastInterface* netints, size_t num_netints,
+                                        const SacnNetintConfig* netint_config,
                                         SacnSourceUniverse** universe_state);
 etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t universe, SacnSource** source_state,
                                           SacnSourceUniverse** universe_state);

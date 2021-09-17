@@ -135,7 +135,20 @@ typedef struct SacnMcastInterface
   etcpal_error_t status;
 } SacnMcastInterface;
 
-etcpal_error_t sacn_init(const EtcPalLogParams* log_params);
+/**
+ * Network interface configuration information to give the sACN library. Multicast traffic will be restricted to the
+ * network interfaces given. The statuses are filled in for each interface.
+ */
+typedef struct SacnNetintConfig
+{
+  /** An array of network interface IDs to which to restrict sACN traffic. The statuses are filled in for each
+      interface. */
+  SacnMcastInterface* netints;
+  /** Size of netints array. */
+  size_t num_netints;
+} SacnNetintConfig;
+
+etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConfig* sys_netint_config);
 void sacn_deinit(void);
 
 sacn_remote_source_t sacn_get_remote_source_handle(const EtcPalUuid* source_cid);
