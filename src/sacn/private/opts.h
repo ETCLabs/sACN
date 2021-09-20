@@ -359,6 +359,46 @@
  * @}
  */
 
+/***************************** sACN Merge Receiver Options *****************************/
+
+/**
+ * @defgroup sacnopts_merge_receiver sACN Merge Receiver Options
+ * @ingroup sacnopts
+ *
+ * Configuration options for the @ref sacn_merge_receiver module.
+ * @{
+ */
+
+/**
+ * @brief Whether to enable or disable the merge receiver without affecting the other sACN APIs.
+ * 
+ * Set this to 1 to enable the merge receiver, or 0 to disable it. The default is for the merge receiver to be enabled
+ * if the DMX merger and receiver are both enabled.
+ * 
+ * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
+ */
+#ifndef SACN_MERGE_RECEIVER_ENABLE
+#define SACN_MERGE_RECEIVER_ENABLE                                                      \
+  ((SACN_RECEIVER_MAX_UNIVERSES > 0) && (SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE > 0) && \
+   (SACN_RECEIVER_TOTAL_MAX_SOURCES > 0) && (SACN_DMX_MERGER_MAX_MERGERS > 0) &&        \
+   (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER > 0))
+#endif
+
+#if !SACN_DYNAMIC_MEM && SACN_MERGE_RECEIVER_ENABLE &&                                      \
+    ((SACN_RECEIVER_MAX_UNIVERSES <= 0) || (SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE <= 0) || \
+     (SACN_RECEIVER_TOTAL_MAX_SOURCES <= 0))
+#error "Error: SACN_MERGE_RECEIVER_ENABLE was set to 1, but the sACN Receiver API is disabled!"
+#endif
+
+#if !SACN_DYNAMIC_MEM && SACN_MERGE_RECEIVER_ENABLE && \
+    ((SACN_DMX_MERGER_MAX_MERGERS <= 0) || (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER <= 0))
+#error "Error: SACN_MERGE_RECEIVER_ENABLE was set to 1, but the sACN DMX Merger API is disabled!"
+#endif
+
+/**
+ * @}
+ */
+
 /***************************** sACN Source Detector Options *****************************/
 
 /**
