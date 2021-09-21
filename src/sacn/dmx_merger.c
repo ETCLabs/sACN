@@ -125,7 +125,7 @@ etcpal_error_t sacn_dmx_merger_init(void)
   {
     etcpal_rbtree_init(&mergers, merger_state_lookup_compare_func, dmx_merger_rb_node_alloc_func,
                        dmx_merger_rb_node_dealloc_func);
-    init_int_handle_manager(&merger_handle_mgr, merger_handle_in_use, NULL);
+    init_int_handle_manager(&merger_handle_mgr, -1, merger_handle_in_use, NULL);
   }
 
   return res;
@@ -638,7 +638,7 @@ etcpal_error_t add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t id_
   {
     // Generate a new source handle.
     handle = (id_to_use == SACN_DMX_MERGER_SOURCE_INVALID)
-                 ? (sacn_dmx_merger_source_t)get_next_int_handle(&merger_state->source_handle_mgr, 0xffff)
+                 ? (sacn_dmx_merger_source_t)get_next_int_handle(&merger_state->source_handle_mgr)
                  : id_to_use;
 
     // Initialize source state.
@@ -925,7 +925,7 @@ MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMerge
   {
     // Initialize merger state.
     merger_state->handle = handle;
-    init_int_handle_manager(&merger_state->source_handle_mgr, source_handle_in_use, merger_state);
+    init_int_handle_manager(&merger_state->source_handle_mgr, 0xffff, source_handle_in_use, merger_state);
 
     etcpal_rbtree_init(&merger_state->source_state_lookup, source_state_lookup_compare_func,
                        dmx_merger_rb_node_alloc_func, dmx_merger_rb_node_dealloc_func);
@@ -1016,7 +1016,7 @@ etcpal_error_t create_sacn_dmx_merger(const SacnDmxMergerConfig* config, sacn_dm
   etcpal_error_t result = kEtcPalErrOk;
 
   // Allocate merger state.
-  merger_state = construct_merger_state(get_next_int_handle(&merger_handle_mgr, -1), config);
+  merger_state = construct_merger_state(get_next_int_handle(&merger_handle_mgr), config);
 
   // Verify there was enough memory.
   if (!merger_state)

@@ -25,6 +25,7 @@
 #include "sacn/private/sockets.h"
 #include "sacn/private/source_state.h"
 #include "sacn/private/util.h"
+#include "etcpal/handle_manager.h"
 #include "etcpal/netint.h"
 #include "etcpal/pack.h"
 #include "etcpal/rbtree.h"
@@ -87,7 +88,7 @@ static void cancel_termination_if_not_removing(SacnSourceUniverse* universe);
 etcpal_error_t sacn_source_state_init(void)
 {
   shutting_down = false;
-  init_int_handle_manager(&source_handle_mgr, source_handle_in_use, NULL);
+  init_int_handle_manager(&source_handle_mgr, -1, source_handle_in_use, NULL);
 
   return kEtcPalErrOk;
 }
@@ -202,7 +203,7 @@ etcpal_error_t initialize_source_thread()
 // Needs lock
 sacn_source_t get_next_source_handle()
 {
-  return (sacn_source_t)get_next_int_handle(&source_handle_mgr, -1);
+  return (sacn_source_t)get_next_int_handle(&source_handle_mgr);
 }
 
 // Needs lock

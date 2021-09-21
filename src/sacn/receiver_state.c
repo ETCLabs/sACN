@@ -31,6 +31,7 @@
 #include "sacn/private/util.h"
 #include "etcpal/acn_pdu.h"
 #include "etcpal/acn_rlp.h"
+#include "etcpal/handle_manager.h"
 #include "etcpal/netint.h"
 #include "etcpal/pack.h"
 #include "etcpal/timer.h"
@@ -103,7 +104,7 @@ static void deliver_periodic_callbacks(const PeriodicCallbacks* periodic_callbac
 
 etcpal_error_t sacn_receiver_state_init(void)
 {
-  init_int_handle_manager(&handle_mgr, receiver_handle_in_use, NULL);
+  init_int_handle_manager(&handle_mgr, -1, receiver_handle_in_use, NULL);
   expired_wait = SACN_DEFAULT_EXPIRED_WAIT_MS;
 
   return kEtcPalErrOk;
@@ -153,7 +154,7 @@ void sacn_receiver_state_deinit(void)
 
 sacn_receiver_t get_next_receiver_handle()
 {
-  return get_next_int_handle(&handle_mgr, -1);
+  return get_next_int_handle(&handle_mgr);
 }
 
 size_t get_receiver_netints(const SacnReceiver* receiver, EtcPalMcastNetintId* netints, size_t netints_size)

@@ -21,6 +21,7 @@
 
 #include <stddef.h>
 #include "etcpal/common.h"
+#include "etcpal/handle_manager.h"
 #include "etcpal/rbtree.h"
 #include "sacn/private/common.h"
 #include "sacn/private/opts.h"
@@ -89,7 +90,7 @@ etcpal_error_t init_remote_sources(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
 
-  init_int_handle_manager(&remote_source_handle_manager, remote_source_handle_in_use, NULL);
+  init_int_handle_manager(&remote_source_handle_manager, 0xffff, remote_source_handle_in_use, NULL);
 
 #if !SACN_DYNAMIC_MEM
   res |= etcpal_mempool_init(sacnrecv_remote_source_handles);
@@ -135,7 +136,7 @@ etcpal_error_t add_remote_source_handle(const EtcPalUuid* cid, sacn_remote_sourc
     if (new_handle && new_cid)
     {
       new_handle->cid = *cid;
-      new_handle->handle = (sacn_remote_source_t)get_next_int_handle(&remote_source_handle_manager, 0xffff);
+      new_handle->handle = (sacn_remote_source_t)get_next_int_handle(&remote_source_handle_manager);
       new_cid->handle = new_handle->handle;
       new_cid->cid = new_handle->cid;
       new_cid->refcount = 1;

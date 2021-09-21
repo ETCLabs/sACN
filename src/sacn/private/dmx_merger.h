@@ -30,6 +30,7 @@
 #include <stdint.h>
 #include "sacn/dmx_merger.h"
 #include "sacn/private/util.h"
+#include "etcpal/handle_manager.h"
 #include "etcpal/rbtree.h"
 
 #ifdef __cplusplus
