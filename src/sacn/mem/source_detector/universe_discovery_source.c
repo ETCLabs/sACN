@@ -55,16 +55,16 @@
 #else   // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
-#define ALLOC_UNIVERSE_DISCOVERY_SOURCE() etcpal_mempool_alloc(sacnsrcdetect_sources)
-#define FREE_UNIVERSE_DISCOVERY_SOURCE(ptr) etcpal_mempool_free(sacnsrcdetect_sources, ptr)
+#define ALLOC_UNIVERSE_DISCOVERY_SOURCE() etcpal_mempool_alloc(sacn_pool_srcdetect_sources)
+#define FREE_UNIVERSE_DISCOVERY_SOURCE(ptr) etcpal_mempool_free(sacn_pool_srcdetect_sources, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
 
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM
-ETCPAL_MEMPOOL_DEFINE(sacnsrcdetect_sources, SacnUniverseDiscoverySource, SACN_SOURCE_DETECTOR_MAX_SOURCES);
-ETCPAL_MEMPOOL_DEFINE(sacnsrcdetect_rb_nodes, EtcPalRbNode, SACN_UNIVERSE_DISCOVERY_SOURCE_MAX_RB_NODES);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_srcdetect_sources, SacnUniverseDiscoverySource, SACN_SOURCE_DETECTOR_MAX_SOURCES);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_srcdetect_rb_nodes, EtcPalRbNode, SACN_UNIVERSE_DISCOVERY_SOURCE_MAX_RB_NODES);
 #endif  // !SACN_DYNAMIC_MEM
 
 static EtcPalRbTree universe_discovery_sources;
@@ -85,8 +85,8 @@ etcpal_error_t init_universe_discovery_sources(void)
   etcpal_error_t res = kEtcPalErrOk;
 
 #if !SACN_DYNAMIC_MEM
-  res |= etcpal_mempool_init(sacnsrcdetect_sources);
-  res |= etcpal_mempool_init(sacnsrcdetect_rb_nodes);
+  res |= etcpal_mempool_init(sacn_pool_srcdetect_sources);
+  res |= etcpal_mempool_init(sacn_pool_srcdetect_rb_nodes);
 #endif
 
   if (res == kEtcPalErrOk)
@@ -250,7 +250,7 @@ EtcPalRbNode* universe_discovery_source_node_alloc(void)
 #if SACN_DYNAMIC_MEM
   return (EtcPalRbNode*)malloc(sizeof(EtcPalRbNode));
 #else
-  return etcpal_mempool_alloc(sacnsrcdetect_rb_nodes);
+  return etcpal_mempool_alloc(sacn_pool_srcdetect_rb_nodes);
 #endif
 }
 
@@ -259,7 +259,7 @@ void universe_discovery_source_node_dealloc(EtcPalRbNode* node)
 #if SACN_DYNAMIC_MEM
   free(node);
 #else
-  etcpal_mempool_free(sacnsrcdetect_rb_nodes, node);
+  etcpal_mempool_free(sacn_pool_srcdetect_rb_nodes, node);
 #endif
 }
 

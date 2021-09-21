@@ -46,21 +46,21 @@
 #define ALLOC_DMX_MERGER_RB_NODE() malloc(sizeof(EtcPalRbNode))
 #define FREE_DMX_MERGER_RB_NODE(ptr) free(ptr)
 #else
-#define ALLOC_SOURCE_STATE() etcpal_mempool_alloc(sacnmerge_source_states)
-#define FREE_SOURCE_STATE(ptr) etcpal_mempool_free(sacnmerge_source_states, ptr)
-#define ALLOC_MERGER_STATE() etcpal_mempool_alloc(sacnmerge_merger_states)
-#define FREE_MERGER_STATE(ptr) etcpal_mempool_free(sacnmerge_merger_states, ptr)
-#define ALLOC_DMX_MERGER_RB_NODE() etcpal_mempool_alloc(sacnmerge_rb_nodes)
-#define FREE_DMX_MERGER_RB_NODE(ptr) etcpal_mempool_free(sacnmerge_rb_nodes, ptr)
+#define ALLOC_SOURCE_STATE() etcpal_mempool_alloc(sacn_pool_merge_source_states)
+#define FREE_SOURCE_STATE(ptr) etcpal_mempool_free(sacn_pool_merge_source_states, ptr)
+#define ALLOC_MERGER_STATE() etcpal_mempool_alloc(sacn_pool_merge_merger_states)
+#define FREE_MERGER_STATE(ptr) etcpal_mempool_free(sacn_pool_merge_merger_states, ptr)
+#define ALLOC_DMX_MERGER_RB_NODE() etcpal_mempool_alloc(sacn_pool_merge_rb_nodes)
+#define FREE_DMX_MERGER_RB_NODE(ptr) etcpal_mempool_free(sacn_pool_merge_rb_nodes, ptr)
 #endif
 
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM
-ETCPAL_MEMPOOL_DEFINE(sacnmerge_source_states, SourceState,
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_merge_source_states, SourceState,
                       (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_MERGERS));
-ETCPAL_MEMPOOL_DEFINE(sacnmerge_merger_states, MergerState, SACN_DMX_MERGER_MAX_MERGERS);
-ETCPAL_MEMPOOL_DEFINE(sacnmerge_rb_nodes, EtcPalRbNode,
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_merge_merger_states, MergerState, SACN_DMX_MERGER_MAX_MERGERS);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_merge_rb_nodes, EtcPalRbNode,
                       (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_MERGERS * 2) +
                           SACN_DMX_MERGER_MAX_MERGERS);
 #endif
@@ -114,11 +114,11 @@ etcpal_error_t sacn_dmx_merger_init(void)
 
 #if !SACN_DYNAMIC_MEM
   if (res == kEtcPalErrOk)
-    res = etcpal_mempool_init(sacnmerge_source_states);
+    res = etcpal_mempool_init(sacn_pool_merge_source_states);
   if (res == kEtcPalErrOk)
-    res = etcpal_mempool_init(sacnmerge_merger_states);
+    res = etcpal_mempool_init(sacn_pool_merge_merger_states);
   if (res == kEtcPalErrOk)
-    res = etcpal_mempool_init(sacnmerge_rb_nodes);
+    res = etcpal_mempool_init(sacn_pool_merge_rb_nodes);
 #endif
 
   if (res == kEtcPalErrOk)

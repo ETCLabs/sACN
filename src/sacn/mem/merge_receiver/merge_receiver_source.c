@@ -48,16 +48,16 @@
 #else   // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
-#define ALLOC_MERGE_RECEIVER_SOURCE() etcpal_mempool_alloc(sacnmergerecv_sources)
-#define FREE_MERGE_RECEIVER_SOURCE(ptr) etcpal_mempool_free(sacnmergerecv_sources, ptr)
+#define ALLOC_MERGE_RECEIVER_SOURCE() etcpal_mempool_alloc(sacn_pool_mergerecv_sources)
+#define FREE_MERGE_RECEIVER_SOURCE(ptr) etcpal_mempool_free(sacn_pool_mergerecv_sources, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
 
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM
-ETCPAL_MEMPOOL_DEFINE(sacnmergerecv_sources, SacnMergeReceiverSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
-ETCPAL_MEMPOOL_DEFINE(sacnmergerecv_source_rb_nodes, EtcPalRbNode, SACN_MERGE_RECEIVER_SOURCE_MAX_RB_NODES);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_mergerecv_sources, SacnMergeReceiverSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_mergerecv_source_rb_nodes, EtcPalRbNode, SACN_MERGE_RECEIVER_SOURCE_MAX_RB_NODES);
 #endif  // !SACN_DYNAMIC_MEM
 
 /*********************** Private function prototypes *************************/
@@ -72,8 +72,8 @@ etcpal_error_t init_merge_receiver_sources(void)
   etcpal_error_t res = kEtcPalErrOk;
 
 #if !SACN_DYNAMIC_MEM
-  res |= etcpal_mempool_init(sacnmergerecv_sources);
-  res |= etcpal_mempool_init(sacnmergerecv_source_rb_nodes);
+  res |= etcpal_mempool_init(sacn_pool_mergerecv_sources);
+  res |= etcpal_mempool_init(sacn_pool_mergerecv_source_rb_nodes);
 #endif  // !SACN_DYNAMIC_MEM
 
   return res;
@@ -132,7 +132,7 @@ EtcPalRbNode* merge_receiver_source_node_alloc(void)
 #if SACN_DYNAMIC_MEM
   return (EtcPalRbNode*)malloc(sizeof(EtcPalRbNode));
 #else
-  return etcpal_mempool_alloc(sacnmergerecv_source_rb_nodes);
+  return etcpal_mempool_alloc(sacn_pool_mergerecv_source_rb_nodes);
 #endif
 }
 
@@ -141,7 +141,7 @@ void merge_receiver_source_node_dealloc(EtcPalRbNode* node)
 #if SACN_DYNAMIC_MEM
   free(node);
 #else
-  etcpal_mempool_free(sacnmergerecv_source_rb_nodes, node);
+  etcpal_mempool_free(sacn_pool_mergerecv_source_rb_nodes, node);
 #endif
 }
 

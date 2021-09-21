@@ -35,18 +35,18 @@
 #define FREE_TERM_SET_SOURCE(ptr) free(ptr)
 #define FREE_TERM_SET(ptr) free(ptr)
 #else
-#define ALLOC_TERM_SET_SOURCE() etcpal_mempool_alloc(sacn_term_set_sources)
-#define ALLOC_TERM_SET() etcpal_mempool_alloc(sacn_term_sets)
-#define FREE_TERM_SET_SOURCE(ptr) etcpal_mempool_free(sacn_term_set_sources, ptr)
-#define FREE_TERM_SET(ptr) etcpal_mempool_free(sacn_term_sets, ptr)
+#define ALLOC_TERM_SET_SOURCE() etcpal_mempool_alloc(sacn_pool_term_set_sources)
+#define ALLOC_TERM_SET() etcpal_mempool_alloc(sacn_pool_term_sets)
+#define FREE_TERM_SET_SOURCE(ptr) etcpal_mempool_free(sacn_pool_term_set_sources, ptr)
+#define FREE_TERM_SET(ptr) etcpal_mempool_free(sacn_pool_term_sets, ptr)
 #endif
 
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM
-ETCPAL_MEMPOOL_DEFINE(sacn_term_set_sources, TerminationSetSource, SACN_MAX_TERM_SET_SOURCES);
-ETCPAL_MEMPOOL_DEFINE(sacn_term_sets, TerminationSet, SACN_MAX_TERM_SETS);
-ETCPAL_MEMPOOL_DEFINE(sacn_source_loss_rb_nodes, EtcPalRbNode, SACN_SOURCE_LOSS_MAX_RB_NODES);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_term_set_sources, TerminationSetSource, SACN_MAX_TERM_SET_SOURCES);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_term_sets, TerminationSet, SACN_MAX_TERM_SETS);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_source_loss_rb_nodes, EtcPalRbNode, SACN_SOURCE_LOSS_MAX_RB_NODES);
 #endif
 
 /*********************** Private function prototypes *************************/
@@ -65,9 +65,9 @@ etcpal_error_t sacn_source_loss_init(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
 #if !SACN_DYNAMIC_MEM
-  res |= etcpal_mempool_init(sacn_term_set_sources);
-  res |= etcpal_mempool_init(sacn_term_sets);
-  res |= etcpal_mempool_init(sacn_source_loss_rb_nodes);
+  res |= etcpal_mempool_init(sacn_pool_term_set_sources);
+  res |= etcpal_mempool_init(sacn_pool_term_sets);
+  res |= etcpal_mempool_init(sacn_pool_source_loss_rb_nodes);
 #endif
   return res;
 }
@@ -324,7 +324,7 @@ EtcPalRbNode* node_alloc(void)
 #if SACN_DYNAMIC_MEM
   return (EtcPalRbNode*)malloc(sizeof(EtcPalRbNode));
 #else
-  return etcpal_mempool_alloc(sacn_source_loss_rb_nodes);
+  return etcpal_mempool_alloc(sacn_pool_source_loss_rb_nodes);
 #endif
 }
 
@@ -333,7 +333,7 @@ void node_dealloc(EtcPalRbNode* node)
 #if SACN_DYNAMIC_MEM
   free(node);
 #else
-  etcpal_mempool_free(sacn_source_loss_rb_nodes, node);
+  etcpal_mempool_free(sacn_pool_source_loss_rb_nodes, node);
 #endif
 }
 

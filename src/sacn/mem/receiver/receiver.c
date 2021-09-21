@@ -60,16 +60,16 @@
 #else  // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
-#define ALLOC_RECEIVER() etcpal_mempool_alloc(sacnrecv_receivers)
-#define FREE_RECEIVER(ptr) etcpal_mempool_free(sacnrecv_receivers, ptr)
+#define ALLOC_RECEIVER() etcpal_mempool_alloc(sacn_pool_recv_receivers)
+#define FREE_RECEIVER(ptr) etcpal_mempool_free(sacn_pool_recv_receivers, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
 
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM
-ETCPAL_MEMPOOL_DEFINE(sacnrecv_receivers, SacnReceiver, SACN_RECEIVER_MAX_UNIVERSES);
-ETCPAL_MEMPOOL_DEFINE(sacnrecv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODES);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_receivers, SacnReceiver, SACN_RECEIVER_MAX_UNIVERSES);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_RB_NODES);
 #endif  // !SACN_DYNAMIC_MEM
 
 static EtcPalRbTree receivers;
@@ -255,7 +255,7 @@ EtcPalRbNode* receiver_node_alloc(void)
 #if SACN_DYNAMIC_MEM
   return (EtcPalRbNode*)malloc(sizeof(EtcPalRbNode));
 #else
-  return etcpal_mempool_alloc(sacnrecv_rb_nodes);
+  return etcpal_mempool_alloc(sacn_pool_recv_rb_nodes);
 #endif
 }
 
@@ -264,7 +264,7 @@ void receiver_node_dealloc(EtcPalRbNode* node)
 #if SACN_DYNAMIC_MEM
   free(node);
 #else
-  etcpal_mempool_free(sacnrecv_rb_nodes, node);
+  etcpal_mempool_free(sacn_pool_recv_rb_nodes, node);
 #endif
 }
 
@@ -285,8 +285,8 @@ etcpal_error_t init_receivers(void)
   etcpal_error_t res = kEtcPalErrOk;
 
 #if !SACN_DYNAMIC_MEM
-  res |= etcpal_mempool_init(sacnrecv_receivers);
-  res |= etcpal_mempool_init(sacnrecv_rb_nodes);
+  res |= etcpal_mempool_init(sacn_pool_recv_receivers);
+  res |= etcpal_mempool_init(sacn_pool_recv_rb_nodes);
 #endif  // !SACN_DYNAMIC_MEM
 
   if (res == kEtcPalErrOk)

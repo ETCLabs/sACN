@@ -52,21 +52,21 @@
 #else   // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
-#define ALLOC_REMOTE_SOURCE_HANDLE() etcpal_mempool_alloc(sacnrecv_remote_source_handles)
-#define ALLOC_REMOTE_SOURCE_CID() etcpal_mempool_alloc(sacnrecv_remote_source_cids)
-#define FREE_REMOTE_SOURCE_HANDLE(ptr) etcpal_mempool_free(sacnrecv_remote_source_handles, ptr)
-#define FREE_REMOTE_SOURCE_CID(ptr) etcpal_mempool_free(sacnrecv_remote_source_cids, ptr)
+#define ALLOC_REMOTE_SOURCE_HANDLE() etcpal_mempool_alloc(sacn_pool_recv_remote_source_handles)
+#define ALLOC_REMOTE_SOURCE_CID() etcpal_mempool_alloc(sacn_pool_recv_remote_source_cids)
+#define FREE_REMOTE_SOURCE_HANDLE(ptr) etcpal_mempool_free(sacn_pool_recv_remote_source_handles, ptr)
+#define FREE_REMOTE_SOURCE_CID(ptr) etcpal_mempool_free(sacn_pool_recv_remote_source_cids, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
 
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM
-ETCPAL_MEMPOOL_DEFINE(sacnrecv_remote_source_handles, SacnRemoteSourceHandle,
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_remote_source_handles, SacnRemoteSourceHandle,
                       SACN_RECEIVER_TOTAL_MAX_SOURCES + SACN_SOURCE_DETECTOR_MAX_SOURCES);
-ETCPAL_MEMPOOL_DEFINE(sacnrecv_remote_source_cids, SacnRemoteSourceCid,
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_remote_source_cids, SacnRemoteSourceCid,
                       SACN_RECEIVER_TOTAL_MAX_SOURCES + SACN_SOURCE_DETECTOR_MAX_SOURCES);
-ETCPAL_MEMPOOL_DEFINE(sacnrecv_remote_source_rb_nodes, EtcPalRbNode, SACN_REMOTE_SOURCES_MAX_RB_NODES);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_remote_source_rb_nodes, EtcPalRbNode, SACN_REMOTE_SOURCES_MAX_RB_NODES);
 #endif  // !SACN_DYNAMIC_MEM
 
 static EtcPalRbTree remote_source_handles;
@@ -93,9 +93,9 @@ etcpal_error_t init_remote_sources(void)
   init_int_handle_manager(&remote_source_handle_manager, 0xffff, remote_source_handle_in_use, NULL);
 
 #if !SACN_DYNAMIC_MEM
-  res |= etcpal_mempool_init(sacnrecv_remote_source_handles);
-  res |= etcpal_mempool_init(sacnrecv_remote_source_cids);
-  res |= etcpal_mempool_init(sacnrecv_remote_source_rb_nodes);
+  res |= etcpal_mempool_init(sacn_pool_recv_remote_source_handles);
+  res |= etcpal_mempool_init(sacn_pool_recv_remote_source_cids);
+  res |= etcpal_mempool_init(sacn_pool_recv_remote_source_rb_nodes);
 #endif  // !SACN_DYNAMIC_MEM
 
   if (res == kEtcPalErrOk)
@@ -270,7 +270,7 @@ EtcPalRbNode* remote_source_node_alloc(void)
 #if SACN_DYNAMIC_MEM
   return (EtcPalRbNode*)malloc(sizeof(EtcPalRbNode));
 #else
-  return etcpal_mempool_alloc(sacnrecv_remote_source_rb_nodes);
+  return etcpal_mempool_alloc(sacn_pool_recv_remote_source_rb_nodes);
 #endif
 }
 
@@ -279,7 +279,7 @@ void remote_source_node_dealloc(EtcPalRbNode* node)
 #if SACN_DYNAMIC_MEM
   free(node);
 #else
-  etcpal_mempool_free(sacnrecv_remote_source_rb_nodes, node);
+  etcpal_mempool_free(sacn_pool_recv_remote_source_rb_nodes, node);
 #endif
 }
 

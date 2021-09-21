@@ -50,16 +50,16 @@
 #else   // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
-#define ALLOC_TRACKED_SOURCE() etcpal_mempool_alloc(sacnrecv_tracked_sources)
-#define FREE_TRACKED_SOURCE(ptr) etcpal_mempool_free(sacnrecv_tracked_sources, ptr)
+#define ALLOC_TRACKED_SOURCE() etcpal_mempool_alloc(sacn_pool_recv_tracked_sources)
+#define FREE_TRACKED_SOURCE(ptr) etcpal_mempool_free(sacn_pool_recv_tracked_sources, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
 
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM
-ETCPAL_MEMPOOL_DEFINE(sacnrecv_tracked_sources, SacnTrackedSource, SACN_RECEIVER_TOTAL_MAX_SOURCES);
-ETCPAL_MEMPOOL_DEFINE(sacnrecv_tracked_source_rb_nodes, EtcPalRbNode, SACN_TRACKED_SOURCE_MAX_RB_NODES);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_tracked_sources, SacnTrackedSource, SACN_RECEIVER_TOTAL_MAX_SOURCES);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_tracked_source_rb_nodes, EtcPalRbNode, SACN_TRACKED_SOURCE_MAX_RB_NODES);
 #endif  // !SACN_DYNAMIC_MEM
 
 /*********************** Private function prototypes *************************/
@@ -74,8 +74,8 @@ etcpal_error_t init_tracked_sources(void)
   etcpal_error_t res = kEtcPalErrOk;
 
 #if !SACN_DYNAMIC_MEM
-  res |= etcpal_mempool_init(sacnrecv_tracked_sources);
-  res |= etcpal_mempool_init(sacnrecv_tracked_source_rb_nodes);
+  res |= etcpal_mempool_init(sacn_pool_recv_tracked_sources);
+  res |= etcpal_mempool_init(sacn_pool_recv_tracked_source_rb_nodes);
 #endif  // !SACN_DYNAMIC_MEM
 
   return res;
@@ -193,7 +193,7 @@ void tracked_source_node_dealloc(EtcPalRbNode* node)
 #if SACN_DYNAMIC_MEM
   free(node);
 #else
-  etcpal_mempool_free(sacnrecv_tracked_source_rb_nodes, node);
+  etcpal_mempool_free(sacn_pool_recv_tracked_source_rb_nodes, node);
 #endif
 }
 
