@@ -120,7 +120,7 @@ bool source_handle_in_use(int handle_val, void* cookie)
 etcpal_error_t start_tick_thread()
 {
   shutting_down = false;
-  EtcPalThreadParams params = ETCPAL_THREAD_PARAMS_INIT;
+  EtcPalThreadParams params = {SACN_SOURCE_THREAD_PRIORITY, SACN_SOURCE_THREAD_STACK, SACN_SOURCE_THREAD_NAME, NULL};
 
   return etcpal_thread_create(&source_thread_handle, &params, source_thread_function, NULL);
 }

@@ -41,7 +41,7 @@
 /***************************** Private constants *****************************/
 
 static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PRIORITY, SACN_RECEIVER_THREAD_STACK,
-                                                         "sACN Receive Thread", NULL};
+                                                         SACN_RECEIVER_THREAD_NAME, NULL};
 
 /****************************** Private types ********************************/
 

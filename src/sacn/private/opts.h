@@ -168,6 +168,15 @@
 #define SACN_RECEIVER_THREAD_STACK ETCPAL_THREAD_DEFAULT_STACK
 #endif
 
+/**
+ * @brief The name to assign each sACN receiver thread.
+ *
+ * This is useful for distinguishing the receiver threads from other threads when debugging.
+ */
+#ifndef SACN_RECEIVER_THREAD_NAME
+#define SACN_RECEIVER_THREAD_NAME "sACN Receive Thread"
+#endif
+
 /* Infinite read blocks are not supported due to the potential for hangs on shutdown. */
 #if defined(SACN_RECEIVER_READ_TIMEOUT_MS) && SACN_RECEIVER_READ_TIMEOUT_MS < 0
 #undef SACN_RECEIVER_READ_TIMEOUT_MS /* It will get the default value below */
@@ -280,6 +289,33 @@
  * Configuration options for the @ref sacn_source module.
  * @{
  */
+
+/**
+ * @brief The priority of the sACN source thread.
+ *
+ * This is usually only meaningful on real-time systems.
+ */
+#ifndef SACN_SOURCE_THREAD_PRIORITY
+#define SACN_SOURCE_THREAD_PRIORITY ETCPAL_THREAD_DEFAULT_PRIORITY
+#endif
+
+/**
+ * @brief The stack size of the sACN source thread.
+ *
+ * It's usually only necessary to worry about this on real-time or embedded systems.
+ */
+#ifndef SACN_SOURCE_THREAD_STACK
+#define SACN_SOURCE_THREAD_STACK ETCPAL_THREAD_DEFAULT_STACK
+#endif
+
+/**
+ * @brief The name to assign the sACN source thread.
+ *
+ * This is useful for distinguishing the source thread from other threads when debugging.
+ */
+#ifndef SACN_SOURCE_THREAD_NAME
+#define SACN_SOURCE_THREAD_NAME "sACN Source Thread"
+#endif
 
 /** @cond */
 /* TODO investigate. Windows value was 20 */
