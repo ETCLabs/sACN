@@ -170,7 +170,7 @@ of other sACN packets on the universe.
 <!-- CODE_BLOCK_START -->
 ```c
 void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, const uint8_t* slots, 
-                               const sacn_remote_source_t* slot_owners, void* context)
+                               const sacn_remote_source_t* slot_owners, size_t active_source_count, void* context)
 {
   // Check handle and/or context as necessary...
 
@@ -195,7 +195,7 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, 
 <!-- CODE_BLOCK_MID -->
 ```cpp
 void MyNotifyHandler::HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
-                                       const RemoteSourceHandle* slot_owners)
+                                       const RemoteSourceHandle* slot_owners, size_t active_source_count)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // fields available:
