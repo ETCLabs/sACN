@@ -479,6 +479,7 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
         memcpy(merged_data_notification.slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
         memcpy(merged_data_notification.slot_owners, merge_receiver->slot_owners,
                DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+        merged_data_notification.num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);
         merged_data_notification.context = merge_receiver->callbacks.callback_context;
       }
 
@@ -501,7 +502,7 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
   {
     merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
                                       merged_data_notification.slots, merged_data_notification.slot_owners,
-                                      merged_data_notification.context);
+                                      merged_data_notification.num_active_sources, merged_data_notification.context);
   }
 
   if (non_dmx_notification.callback)
@@ -540,7 +541,8 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
         merged_data_notification.universe = universe;
         memcpy(merged_data_notification.slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
         memcpy(merged_data_notification.slot_owners, merge_receiver->slot_owners,
-               DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t        
+               DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+        merged_data_notification.num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);
         merged_data_notification.context = merge_receiver->callbacks.callback_context;
       }
     }
@@ -552,7 +554,7 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
   {
     merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
                                       merged_data_notification.slots, merged_data_notification.slot_owners,
-                                      merged_data_notification.context);
+                                      merged_data_notification.num_active_sources, merged_data_notification.context);
   }
 }
 
@@ -593,7 +595,8 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, vo
         merged_data_notification.universe = universe;
         memcpy(merged_data_notification.slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
         memcpy(merged_data_notification.slot_owners, merge_receiver->slot_owners,
-               DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t        
+               DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t   
+        merged_data_notification.num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);     
         merged_data_notification.context = merge_receiver->callbacks.callback_context;
       }
     }
@@ -605,7 +608,7 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, vo
   {
     merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
                                       merged_data_notification.slots, merged_data_notification.slot_owners,
-                                      merged_data_notification.context);
+                                      merged_data_notification.num_active_sources, merged_data_notification.context);
   }
 }
 
@@ -631,7 +634,8 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
         merged_data_notification.universe = universe;
         memcpy(merged_data_notification.slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
         memcpy(merged_data_notification.slot_owners, merge_receiver->slot_owners,
-               DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t        
+               DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t   
+        merged_data_notification.num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);     
         merged_data_notification.context = merge_receiver->callbacks.callback_context;
       }
     }
@@ -643,7 +647,7 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
   {
     merged_data_notification.callback(merged_data_notification.handle, merged_data_notification.universe,
                                       merged_data_notification.slots, merged_data_notification.slot_owners,
-                                      merged_data_notification.context);
+                                      merged_data_notification.num_active_sources, merged_data_notification.context);
   }
 }
 

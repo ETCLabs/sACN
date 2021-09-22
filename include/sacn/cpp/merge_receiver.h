@@ -85,9 +85,10 @@ public:
      * @param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source handles.  If a value in the buffer is
      * sacn::kInvalidRemoteSourceHandle, the corresponding slot is not currently controlled.  This buffer is owned by
      * the library.
+     * @param[in] num_active_sources The current number of sources considered to be active on the current universe.
      */
     virtual void HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
-                                  const RemoteSourceHandle* slot_owners) = 0;
+                                  const RemoteSourceHandle* slot_owners, size_t num_active_sources) = 0;
 
     /**
      * @brief Notify that a non-data packet has been received.
@@ -212,11 +213,13 @@ private:
 namespace internal
 {
 extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, uint16_t universe, const uint8_t* slots,
-                                                 const sacn_remote_source_t* slot_owners, void* context)
+                                                 const sacn_remote_source_t* slot_owners, size_t num_active_sources,
+                                                 void* context)
 {
   if (context)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleMergedData(handle, universe, slots, slot_owners);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleMergedData(handle, universe, slots, slot_owners,
+                                                                          num_active_sources);
   }
 }
 

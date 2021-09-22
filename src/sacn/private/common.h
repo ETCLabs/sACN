@@ -662,12 +662,13 @@ typedef struct MergeReceiverMergedDataNotification
   uint16_t universe;
   uint8_t slots[DMX_ADDRESS_COUNT];
   sacn_remote_source_t slot_owners[DMX_ADDRESS_COUNT];
+  size_t num_active_sources;
   void* context;
 } MergeReceiverMergedDataNotification;
 
-#define MERGE_RECV_MERGED_DATA_DEFAULT_INIT              \
-  {                                                      \
-    NULL, SACN_MERGE_RECEIVER_INVALID, 0, {0}, {0}, NULL \
+#define MERGE_RECV_MERGED_DATA_DEFAULT_INIT                 \
+  {                                                         \
+    NULL, SACN_MERGE_RECEIVER_INVALID, 0, {0}, {0}, 0, NULL \
   }
 
 typedef struct MergeReceiverNonDmxNotification

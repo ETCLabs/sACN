@@ -76,11 +76,12 @@ typedef int sacn_merge_receiver_t;
  * @param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source handles.  If a value in the buffer is
  * #SACN_REMOTE_SOURCE_INVALID, the corresponding slot is not currently controlled. This buffer is owned by the
  * library.
+ * @param[in] num_active_sources The current number of sources considered to be active on the current universe.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
 typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle, uint16_t universe,
                                                     const uint8_t* slots, const sacn_remote_source_t* slot_owners,
-                                                    void* context);
+                                                    size_t num_active_sources, void* context);
 
 /**
  * @brief Notify that a non-data packet has been received.
