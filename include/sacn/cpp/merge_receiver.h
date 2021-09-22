@@ -25,6 +25,8 @@
  * @brief C++ wrapper for the sACN Merge Receiver API
  */
 
+#include "sacn/cpp/common.h"
+
 #include "sacn/merge_receiver.h"
 #include "etcpal/cpp/inet.h"
 #include "etcpal/cpp/uuid.h"

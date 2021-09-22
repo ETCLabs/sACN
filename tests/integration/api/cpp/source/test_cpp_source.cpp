@@ -17,13 +17,13 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
+#include "sacn/cpp/source.h"
+
 #include <limits>
 #include "etcpal/cpp/uuid.h"
 #include "etcpal_mock/common.h"
 #include "etcpal_mock/netint.h"
 #include "etcpal_mock/socket.h"
-#include "sacn/cpp/common.h"
-#include "sacn/cpp/source.h"
 #include "sacn/private/opts.h"
 #include "gtest/gtest.h"
 

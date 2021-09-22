@@ -25,6 +25,8 @@
  * @brief C++ wrapper for the sACN DMX Merger API
  */
 
+#include "sacn/cpp/common.h"
+
 #include "sacn/dmx_merger.h"
 #include "etcpal/cpp/inet.h"
 

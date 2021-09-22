@@ -17,7 +17,6 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include "sacn/cpp/common.h"
 #include "sacn/cpp/source.h"
 
 #include <limits>

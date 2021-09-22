@@ -27,6 +27,8 @@
 
 #include <vector>
 
+#include "sacn/cpp/common.h"
+
 #include "sacn/receiver.h"
 #include "etcpal/cpp/inet.h"
 

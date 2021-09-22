@@ -25,6 +25,8 @@
  * @brief C++ wrapper for the sACN Source API
  */
 
+#include "sacn/cpp/common.h"
+
 #include <cstring>
 #include "sacn/source.h"
 #include "etcpal/cpp/uuid.h"

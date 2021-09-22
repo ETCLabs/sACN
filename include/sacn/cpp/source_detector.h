@@ -25,6 +25,8 @@
  * @brief C++ wrapper for the sACN Source Detector API
  */
 
+#include "sacn/cpp/common.h"
+
 #include <vector>
 
 #include "sacn/source_detector.h"
