@@ -37,9 +37,9 @@
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
-static SacnRecvThreadContext* recv_thread_context;
+static SacnRecvThreadContext* sacn_pool_recv_thread_context;
 #else  // SACN_DYNAMIC_MEM
-static SacnRecvThreadContext recv_thread_context[SACN_RECEIVER_MAX_THREADS];
+static SacnRecvThreadContext sacn_pool_recv_thread_context[SACN_RECEIVER_MAX_THREADS];
 #endif  // SACN_DYNAMIC_MEM
 
 /*********************** Private function prototypes *************************/
@@ -65,7 +65,7 @@ SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id)
 {
   if (thread_id < sacn_mem_get_num_threads())
   {
-    SacnRecvThreadContext* to_return = &recv_thread_context[thread_id];
+    SacnRecvThreadContext* to_return = &sacn_pool_recv_thread_context[thread_id];
     to_return->thread_id = thread_id;
     return to_return;
   }
@@ -301,8 +301,8 @@ void remove_receiver_from_list(SacnRecvThreadContext* context, SacnReceiver* rec
 etcpal_error_t init_recv_thread_context_buf(unsigned int num_threads)
 {
 #if SACN_DYNAMIC_MEM
-  recv_thread_context = calloc(num_threads, sizeof(SacnRecvThreadContext));
-  if (!recv_thread_context)
+  sacn_pool_recv_thread_context = calloc(num_threads, sizeof(SacnRecvThreadContext));
+  if (!sacn_pool_recv_thread_context)
     return kEtcPalErrNoMem;
 #else
   if (num_threads > SACN_RECEIVER_MAX_THREADS)
@@ -311,7 +311,7 @@ etcpal_error_t init_recv_thread_context_buf(unsigned int num_threads)
 
   for (unsigned int i = 0; i < num_threads; ++i)
   {
-    etcpal_error_t res = init_recv_thread_context_entry(&recv_thread_context[i]);
+    etcpal_error_t res = init_recv_thread_context_entry(&sacn_pool_recv_thread_context[i]);
     if (res != kEtcPalErrOk)
       return res;
   }
@@ -367,15 +367,15 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
 void deinit_recv_thread_context_buf(void)
 {
 #if SACN_DYNAMIC_MEM
-  if (recv_thread_context)
+  if (sacn_pool_recv_thread_context)
 #endif
   {
     for (unsigned int i = 0; i < sacn_mem_get_num_threads(); ++i)
-      deinit_recv_thread_context_entry(&recv_thread_context[i]);
+      deinit_recv_thread_context_entry(&sacn_pool_recv_thread_context[i]);
 
 #if SACN_DYNAMIC_MEM
-    free(recv_thread_context);
-    recv_thread_context = NULL;
+    free(sacn_pool_recv_thread_context);
+    sacn_pool_recv_thread_context = NULL;
 #endif
   }
 }

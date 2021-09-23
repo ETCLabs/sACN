@@ -52,7 +52,7 @@ static struct SacnMergeReceiverMem
 {
   SACN_DECLARE_MERGE_RECEIVER_BUF(SacnMergeReceiver, merge_receivers, MAX_MERGE_RECEIVERS);
   size_t num_merge_receivers;
-} merge_receiver_mem;
+} sacn_pool_merge_receiver_mem;
 
 /*********************** Private function prototypes *************************/
 
@@ -72,10 +72,10 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
 
   if (result == kEtcPalErrOk)
   {
-    CHECK_ROOM_FOR_ONE_MORE((&merge_receiver_mem), merge_receivers, SacnMergeReceiver, MAX_MERGE_RECEIVERS,
+    CHECK_ROOM_FOR_ONE_MORE((&sacn_pool_merge_receiver_mem), merge_receivers, SacnMergeReceiver, MAX_MERGE_RECEIVERS,
                             kEtcPalErrNoMem);
 
-    merge_receiver = &merge_receiver_mem.merge_receivers[merge_receiver_mem.num_merge_receivers];
+    merge_receiver = &sacn_pool_merge_receiver_mem.merge_receivers[sacn_pool_merge_receiver_mem.num_merge_receivers];
 
     merge_receiver->merge_receiver_handle = handle;
     merge_receiver->merger_handle = SACN_DMX_MERGER_INVALID;
@@ -91,7 +91,7 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
     merge_receiver->num_pending_sources = 0;
     merge_receiver->sampling = true;
 
-    ++merge_receiver_mem.num_merge_receivers;
+    ++sacn_pool_merge_receiver_mem.num_merge_receivers;
   }
 
   *state = merge_receiver;
@@ -106,7 +106,7 @@ etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeRece
   size_t idx = get_merge_receiver_index(handle, &found);
   if (found)
   {
-    *state = &merge_receiver_mem.merge_receivers[idx];
+    *state = &sacn_pool_merge_receiver_mem.merge_receivers[idx];
     if (index)
       *index = idx;
   }
@@ -121,20 +121,20 @@ etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeRece
 // Needs lock
 SacnMergeReceiver* get_merge_receiver(size_t index)
 {
-  return (index < merge_receiver_mem.num_merge_receivers) ? &merge_receiver_mem.merge_receivers[index] : NULL;
+  return (index < sacn_pool_merge_receiver_mem.num_merge_receivers) ? &sacn_pool_merge_receiver_mem.merge_receivers[index] : NULL;
 }
 
 // Needs lock
 size_t get_num_merge_receivers()
 {
-  return merge_receiver_mem.num_merge_receivers;
+  return sacn_pool_merge_receiver_mem.num_merge_receivers;
 }
 
 // Needs lock
 void remove_sacn_merge_receiver(size_t index)
 {
-  clear_sacn_merge_receiver_sources(&merge_receiver_mem.merge_receivers[index]);
-  REMOVE_AT_INDEX((&merge_receiver_mem), SacnMergeReceiver, merge_receivers, index);
+  clear_sacn_merge_receiver_sources(&sacn_pool_merge_receiver_mem.merge_receivers[index]);
+  REMOVE_AT_INDEX((&sacn_pool_merge_receiver_mem), SacnMergeReceiver, merge_receivers, index);
 }
 
 size_t get_merge_receiver_index(sacn_merge_receiver_t handle, bool* found)
@@ -142,9 +142,9 @@ size_t get_merge_receiver_index(sacn_merge_receiver_t handle, bool* found)
   *found = false;
   size_t index = 0;
 
-  while (!(*found) && (index < merge_receiver_mem.num_merge_receivers))
+  while (!(*found) && (index < sacn_pool_merge_receiver_mem.num_merge_receivers))
   {
-    if (merge_receiver_mem.merge_receivers[index].merge_receiver_handle == handle)
+    if (sacn_pool_merge_receiver_mem.merge_receivers[index].merge_receiver_handle == handle)
       *found = true;
     else
       ++index;
@@ -158,12 +158,12 @@ etcpal_error_t init_merge_receivers(void)
   etcpal_error_t res = kEtcPalErrOk;
 
 #if SACN_DYNAMIC_MEM
-  merge_receiver_mem.merge_receivers = calloc(INITIAL_CAPACITY, sizeof(SacnMergeReceiver));
-  merge_receiver_mem.merge_receivers_capacity = merge_receiver_mem.merge_receivers ? INITIAL_CAPACITY : 0;
-  if (!merge_receiver_mem.merge_receivers)
+  sacn_pool_merge_receiver_mem.merge_receivers = calloc(INITIAL_CAPACITY, sizeof(SacnMergeReceiver));
+  sacn_pool_merge_receiver_mem.merge_receivers_capacity = sacn_pool_merge_receiver_mem.merge_receivers ? INITIAL_CAPACITY : 0;
+  if (!sacn_pool_merge_receiver_mem.merge_receivers)
     res = kEtcPalErrNoMem;
 #endif
-  merge_receiver_mem.num_merge_receivers = 0;
+  sacn_pool_merge_receiver_mem.num_merge_receivers = 0;
 
   if (res == kEtcPalErrOk)
     merge_receivers_initialized = true;
@@ -177,15 +177,15 @@ void deinit_merge_receivers(void)
   {
     if (merge_receivers_initialized)
     {
-      for (size_t i = 0; i < merge_receiver_mem.num_merge_receivers; ++i)
-        clear_sacn_merge_receiver_sources(&merge_receiver_mem.merge_receivers[i]);
+      for (size_t i = 0; i < sacn_pool_merge_receiver_mem.num_merge_receivers; ++i)
+        clear_sacn_merge_receiver_sources(&sacn_pool_merge_receiver_mem.merge_receivers[i]);
 
-      CLEAR_BUF(&merge_receiver_mem, merge_receivers);
+      CLEAR_BUF(&sacn_pool_merge_receiver_mem, merge_receivers);
 #if SACN_DYNAMIC_MEM
-      merge_receiver_mem.merge_receivers_capacity = 0;
+      sacn_pool_merge_receiver_mem.merge_receivers_capacity = 0;
 #endif  // SACN_DYNAMIC_MEM
 
-      memset(&merge_receiver_mem, 0, sizeof merge_receiver_mem);
+      memset(&sacn_pool_merge_receiver_mem, 0, sizeof sacn_pool_merge_receiver_mem);
 
       merge_receivers_initialized = false;
     }

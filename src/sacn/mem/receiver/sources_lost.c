@@ -44,9 +44,9 @@ typedef struct SourcesLostNotificationBuf
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
-static SourcesLostNotificationBuf* sources_lost;
+static SourcesLostNotificationBuf* sacn_pool_sources_lost;
 #else
-static SourcesLostNotificationBuf sources_lost[SACN_RECEIVER_MAX_THREADS];
+static SourcesLostNotificationBuf sacn_pool_sources_lost[SACN_RECEIVER_MAX_THREADS];
 #endif
 
 /*********************** Private function prototypes *************************/
@@ -77,7 +77,7 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
 {
   if (thread_id < sacn_mem_get_num_threads())
   {
-    SourcesLostNotificationBuf* notifications = &sources_lost[thread_id];
+    SourcesLostNotificationBuf* notifications = &sacn_pool_sources_lost[thread_id];
 
     // This one cannot use CHECK_CAPACITY() because of a special case in the initialization of the
     // reallocated buffer
@@ -152,13 +152,13 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
 
 etcpal_error_t init_sources_lost_bufs(unsigned int num_threads)
 {
-  sources_lost = calloc(num_threads, sizeof(SourcesLostNotificationBuf));
-  if (!sources_lost)
+  sacn_pool_sources_lost = calloc(num_threads, sizeof(SourcesLostNotificationBuf));
+  if (!sacn_pool_sources_lost)
     return kEtcPalErrNoMem;
 
   for (unsigned int i = 0; i < num_threads; ++i)
   {
-    etcpal_error_t res = init_sources_lost_buf(&sources_lost[i]);
+    etcpal_error_t res = init_sources_lost_buf(&sacn_pool_sources_lost[i]);
     if (res != kEtcPalErrOk)
       return res;
   }
@@ -193,12 +193,12 @@ etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr
 
 void deinit_sources_lost_bufs(void)
 {
-  if (sources_lost)
+  if (sacn_pool_sources_lost)
   {
     for (unsigned int i = 0; i < sacn_mem_get_num_threads(); ++i)
-      deinit_sources_lost_buf(&sources_lost[i]);
-    free(sources_lost);
-    sources_lost = NULL;
+      deinit_sources_lost_buf(&sacn_pool_sources_lost[i]);
+    free(sacn_pool_sources_lost);
+    sacn_pool_sources_lost = NULL;
   }
 }
 

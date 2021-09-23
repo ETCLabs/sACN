@@ -44,7 +44,7 @@ static struct SacnSourceMem
 {
   SACN_DECLARE_SOURCE_BUF(SacnSource, sources, SACN_SOURCE_MAX_SOURCES);
   size_t num_sources;
-} source_mem;
+} sacn_pool_source_mem;
 
 /*********************** Private function prototypes *************************/
 
@@ -62,9 +62,9 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
 
   if (result == kEtcPalErrOk)
   {
-    CHECK_ROOM_FOR_ONE_MORE((&source_mem), sources, SacnSource, SACN_SOURCE_MAX_SOURCES, kEtcPalErrNoMem);
+    CHECK_ROOM_FOR_ONE_MORE((&sacn_pool_source_mem), sources, SacnSource, SACN_SOURCE_MAX_SOURCES, kEtcPalErrNoMem);
 
-    source = &source_mem.sources[source_mem.num_sources];
+    source = &sacn_pool_source_mem.sources[sacn_pool_source_mem.num_sources];
   }
 
   if (result == kEtcPalErrOk)
@@ -108,7 +108,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
 
   if (result == kEtcPalErrOk)
   {
-    ++source_mem.num_sources;
+    ++sacn_pool_source_mem.num_sources;
   }
   else if (source)
   {
@@ -126,27 +126,27 @@ etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state)
 {
   bool found = false;
   size_t index = get_source_index(handle, &found);
-  *source_state = found ? &source_mem.sources[index] : NULL;
+  *source_state = found ? &sacn_pool_source_mem.sources[index] : NULL;
   return found ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
 
 SacnSource* get_source(size_t index)
 {
-  return (index < source_mem.num_sources) ? &source_mem.sources[index] : NULL;
+  return (index < sacn_pool_source_mem.num_sources) ? &sacn_pool_source_mem.sources[index] : NULL;
 }
 
 size_t get_num_sources()
 {
-  return source_mem.num_sources;
+  return sacn_pool_source_mem.num_sources;
 }
 
 // Needs lock
 void remove_sacn_source(size_t index)
 {
-  CLEAR_BUF(&source_mem.sources[index], universes);
-  CLEAR_BUF(&source_mem.sources[index], netints);
+  CLEAR_BUF(&sacn_pool_source_mem.sources[index], universes);
+  CLEAR_BUF(&sacn_pool_source_mem.sources[index], netints);
 
-  REMOVE_AT_INDEX((&source_mem), SacnSource, sources, index);
+  REMOVE_AT_INDEX((&sacn_pool_source_mem), SacnSource, sources, index);
 }
 
 size_t get_source_index(sacn_source_t handle, bool* found)
@@ -154,9 +154,9 @@ size_t get_source_index(sacn_source_t handle, bool* found)
   *found = false;
   size_t index = 0;
 
-  while (!(*found) && (index < source_mem.num_sources))
+  while (!(*found) && (index < sacn_pool_source_mem.num_sources))
   {
-    if (source_mem.sources[index].handle == handle)
+    if (sacn_pool_source_mem.sources[index].handle == handle)
       *found = true;
     else
       ++index;
@@ -169,12 +169,12 @@ etcpal_error_t init_sources(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
 #if SACN_DYNAMIC_MEM
-  source_mem.sources = calloc(INITIAL_CAPACITY, sizeof(SacnSource));
-  source_mem.sources_capacity = source_mem.sources ? INITIAL_CAPACITY : 0;
-  if (!source_mem.sources)
+  sacn_pool_source_mem.sources = calloc(INITIAL_CAPACITY, sizeof(SacnSource));
+  sacn_pool_source_mem.sources_capacity = sacn_pool_source_mem.sources ? INITIAL_CAPACITY : 0;
+  if (!sacn_pool_source_mem.sources)
     res = kEtcPalErrNoMem;
 #endif  // SACN_DYNAMIC_MEM
-  source_mem.num_sources = 0;
+  sacn_pool_source_mem.num_sources = 0;
 
   if (res == kEtcPalErrOk)
     sources_initialized = true;
@@ -189,24 +189,24 @@ void deinit_sources(void)
   {
     if (sources_initialized)
     {
-      for (size_t i = 0; i < source_mem.num_sources; ++i)
+      for (size_t i = 0; i < sacn_pool_source_mem.num_sources; ++i)
       {
-        for (size_t j = 0; j < source_mem.sources[i].num_universes; ++j)
+        for (size_t j = 0; j < sacn_pool_source_mem.sources[i].num_universes; ++j)
         {
-          CLEAR_BUF(&source_mem.sources[i].universes[j].netints, netints);
-          CLEAR_BUF(&source_mem.sources[i].universes[j], unicast_dests);
+          CLEAR_BUF(&sacn_pool_source_mem.sources[i].universes[j].netints, netints);
+          CLEAR_BUF(&sacn_pool_source_mem.sources[i].universes[j], unicast_dests);
         }
 
-        CLEAR_BUF(&source_mem.sources[i], universes);
-        CLEAR_BUF(&source_mem.sources[i], netints);
+        CLEAR_BUF(&sacn_pool_source_mem.sources[i], universes);
+        CLEAR_BUF(&sacn_pool_source_mem.sources[i], netints);
       }
 
-      CLEAR_BUF(&source_mem, sources);
+      CLEAR_BUF(&sacn_pool_source_mem, sources);
 #if SACN_DYNAMIC_MEM
-      source_mem.sources_capacity = 0;
+      sacn_pool_source_mem.sources_capacity = 0;
 #endif
 
-      memset(&source_mem, 0, sizeof source_mem);
+      memset(&sacn_pool_source_mem, 0, sizeof sacn_pool_source_mem);
 
       sources_initialized = false;
     }

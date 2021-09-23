@@ -44,9 +44,9 @@ typedef struct SamplingEndedNotificationBuf
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
-static SamplingEndedNotificationBuf* sampling_ended;
+static SamplingEndedNotificationBuf* sacn_pool_sampling_ended;
 #else
-static SamplingEndedNotificationBuf sampling_ended[SACN_RECEIVER_MAX_THREADS];
+static SamplingEndedNotificationBuf sacn_pool_sampling_ended[SACN_RECEIVER_MAX_THREADS];
 #endif
 
 /*********************** Private function prototypes *************************/
@@ -74,7 +74,7 @@ SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id,
 {
   if (thread_id < sacn_mem_get_num_threads())
   {
-    SamplingEndedNotificationBuf* notifications = &sampling_ended[thread_id];
+    SamplingEndedNotificationBuf* notifications = &sacn_pool_sampling_ended[thread_id];
 
     CHECK_CAPACITY(notifications, size, buf, SamplingEndedNotification, SACN_RECEIVER_MAX_UNIVERSES, NULL);
 
@@ -92,13 +92,13 @@ SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id,
 
 etcpal_error_t init_sampling_ended_bufs(unsigned int num_threads)
 {
-  sampling_ended = calloc(num_threads, sizeof(SamplingEndedNotificationBuf));
-  if (!sampling_ended)
+  sacn_pool_sampling_ended = calloc(num_threads, sizeof(SamplingEndedNotificationBuf));
+  if (!sacn_pool_sampling_ended)
     return kEtcPalErrNoMem;
 
   for (unsigned int i = 0; i < num_threads; ++i)
   {
-    etcpal_error_t res = init_sampling_ended_buf(&sampling_ended[i]);
+    etcpal_error_t res = init_sampling_ended_buf(&sacn_pool_sampling_ended[i]);
     if (res != kEtcPalErrOk)
       return res;
   }
@@ -119,12 +119,12 @@ etcpal_error_t init_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_en
 
 void deinit_sampling_ended_bufs(void)
 {
-  if (sampling_ended)
+  if (sacn_pool_sampling_ended)
   {
     for (unsigned int i = 0; i < sacn_mem_get_num_threads(); ++i)
-      deinit_sampling_ended_buf(&sampling_ended[i]);
-    free(sampling_ended);
-    sampling_ended = NULL;
+      deinit_sampling_ended_buf(&sacn_pool_sampling_ended[i]);
+    free(sacn_pool_sampling_ended);
+    sacn_pool_sampling_ended = NULL;
   }
 }
 

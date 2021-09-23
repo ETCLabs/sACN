@@ -37,9 +37,9 @@
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
-static SourcePapLostNotification* source_pap_lost;
+static SourcePapLostNotification* sacn_pool_source_pap_lost;
 #else
-static SourcePapLostNotification source_pap_lost[SACN_RECEIVER_MAX_THREADS];
+static SourcePapLostNotification sacn_pool_source_pap_lost[SACN_RECEIVER_MAX_THREADS];
 #endif
 
 /*************************** Function definitions ****************************/
@@ -54,7 +54,7 @@ SourcePapLostNotification* get_source_pap_lost(sacn_thread_id_t thread_id)
 {
   if (thread_id < sacn_mem_get_num_threads())
   {
-    SourcePapLostNotification* to_return = &source_pap_lost[thread_id];
+    SourcePapLostNotification* to_return = &sacn_pool_source_pap_lost[thread_id];
     memset(to_return, 0, sizeof(SourcePapLostNotification));
     to_return->source.handle = SACN_REMOTE_SOURCE_INVALID;
     to_return->handle = SACN_RECEIVER_INVALID;
@@ -67,18 +67,18 @@ SourcePapLostNotification* get_source_pap_lost(sacn_thread_id_t thread_id)
 
 etcpal_error_t init_source_pap_lost_buf(unsigned int num_threads)
 {
-  source_pap_lost = calloc(num_threads, sizeof(SourcePapLostNotification));
-  if (!source_pap_lost)
+  sacn_pool_source_pap_lost = calloc(num_threads, sizeof(SourcePapLostNotification));
+  if (!sacn_pool_source_pap_lost)
     return kEtcPalErrNoMem;
   return kEtcPalErrOk;
 }
 
 void deinit_source_pap_lost_buf(void)
 {
-  if (source_pap_lost)
+  if (sacn_pool_source_pap_lost)
   {
-    free(source_pap_lost);
-    source_pap_lost = NULL;
+    free(sacn_pool_source_pap_lost);
+    sacn_pool_source_pap_lost = NULL;
   }
 }
 

@@ -44,9 +44,9 @@ typedef struct SamplingStartedNotificationBuf
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
-static SamplingStartedNotificationBuf* sampling_started;
+static SamplingStartedNotificationBuf* sacn_pool_sampling_started;
 #else
-static SamplingStartedNotificationBuf sampling_started[SACN_RECEIVER_MAX_THREADS];
+static SamplingStartedNotificationBuf sacn_pool_sampling_started[SACN_RECEIVER_MAX_THREADS];
 #endif
 
 /*********************** Private function prototypes *************************/
@@ -74,7 +74,7 @@ SamplingStartedNotification* get_sampling_started_buffer(sacn_thread_id_t thread
 {
   if (thread_id < sacn_mem_get_num_threads())
   {
-    SamplingStartedNotificationBuf* notifications = &sampling_started[thread_id];
+    SamplingStartedNotificationBuf* notifications = &sacn_pool_sampling_started[thread_id];
 
     CHECK_CAPACITY(notifications, size, buf, SamplingStartedNotification, SACN_RECEIVER_MAX_UNIVERSES, NULL);
 
@@ -92,13 +92,13 @@ SamplingStartedNotification* get_sampling_started_buffer(sacn_thread_id_t thread
 
 etcpal_error_t init_sampling_started_bufs(unsigned int num_threads)
 {
-  sampling_started = calloc(num_threads, sizeof(SamplingStartedNotificationBuf));
-  if (!sampling_started)
+  sacn_pool_sampling_started = calloc(num_threads, sizeof(SamplingStartedNotificationBuf));
+  if (!sacn_pool_sampling_started)
     return kEtcPalErrNoMem;
 
   for (unsigned int i = 0; i < num_threads; ++i)
   {
-    etcpal_error_t res = init_sampling_started_buf(&sampling_started[i]);
+    etcpal_error_t res = init_sampling_started_buf(&sacn_pool_sampling_started[i]);
     if (res != kEtcPalErrOk)
       return res;
   }
@@ -119,12 +119,12 @@ etcpal_error_t init_sampling_started_buf(SamplingStartedNotificationBuf* samplin
 
 void deinit_sampling_started_bufs(void)
 {
-  if (sampling_started)
+  if (sacn_pool_sampling_started)
   {
     for (unsigned int i = 0; i < sacn_mem_get_num_threads(); ++i)
-      deinit_sampling_started_buf(&sampling_started[i]);
-    free(sampling_started);
-    sampling_started = NULL;
+      deinit_sampling_started_buf(&sacn_pool_sampling_started[i]);
+    free(sacn_pool_sampling_started);
+    sacn_pool_sampling_started = NULL;
   }
 }
 

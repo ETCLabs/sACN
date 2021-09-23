@@ -37,9 +37,9 @@
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
-static SacnSourceStatusLists* status_lists;
+static SacnSourceStatusLists* sacn_pool_status_lists;
 #else
-static SacnSourceStatusLists status_lists[SACN_RECEIVER_MAX_THREADS];
+static SacnSourceStatusLists sacn_pool_status_lists[SACN_RECEIVER_MAX_THREADS];
 #endif
 
 /*********************** Private function prototypes *************************/
@@ -66,7 +66,7 @@ SacnSourceStatusLists* get_status_lists(sacn_thread_id_t thread_id)
 {
   if (thread_id < sacn_mem_get_num_threads())
   {
-    SacnSourceStatusLists* to_return = &status_lists[thread_id];
+    SacnSourceStatusLists* to_return = &sacn_pool_status_lists[thread_id];
     zero_status_lists(to_return);
     return to_return;
   }
@@ -154,13 +154,13 @@ void zero_status_lists(SacnSourceStatusLists* lists)
 
 etcpal_error_t init_status_lists_buf(unsigned int num_threads)
 {
-  status_lists = calloc(num_threads, sizeof(SacnSourceStatusLists));
-  if (!status_lists)
+  sacn_pool_status_lists = calloc(num_threads, sizeof(SacnSourceStatusLists));
+  if (!sacn_pool_status_lists)
     return kEtcPalErrNoMem;
 
   for (unsigned int i = 0; i < num_threads; ++i)
   {
-    etcpal_error_t res = init_status_lists_entry(&status_lists[i]);
+    etcpal_error_t res = init_status_lists_entry(&sacn_pool_status_lists[i]);
     if (res != kEtcPalErrOk)
       return res;
   }
@@ -202,12 +202,12 @@ etcpal_error_t init_status_lists_entry(SacnSourceStatusLists* lists)
 
 void deinit_status_lists_buf(void)
 {
-  if (status_lists)
+  if (sacn_pool_status_lists)
   {
     for (unsigned int i = 0; i < sacn_mem_get_num_threads(); ++i)
-      deinit_status_lists_entry(&status_lists[i]);
-    free(status_lists);
-    status_lists = NULL;
+      deinit_status_lists_entry(&sacn_pool_status_lists[i]);
+    free(sacn_pool_status_lists);
+    sacn_pool_status_lists = NULL;
   }
 }
 

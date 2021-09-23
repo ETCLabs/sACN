@@ -37,9 +37,9 @@
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
-static UniverseDataNotification* universe_data;
+static UniverseDataNotification* sacn_pool_universe_data;
 #else
-static UniverseDataNotification universe_data[SACN_RECEIVER_MAX_THREADS];
+static UniverseDataNotification sacn_pool_universe_data[SACN_RECEIVER_MAX_THREADS];
 #endif
 
 /*************************** Function definitions ****************************/
@@ -54,7 +54,7 @@ UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id)
 {
   if (thread_id < sacn_mem_get_num_threads())
   {
-    UniverseDataNotification* to_return = &universe_data[thread_id];
+    UniverseDataNotification* to_return = &sacn_pool_universe_data[thread_id];
     memset(to_return, 0, sizeof(UniverseDataNotification));
     to_return->receiver_handle = SACN_RECEIVER_INVALID;
     return to_return;
@@ -66,18 +66,18 @@ UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id)
 
 etcpal_error_t init_universe_data_buf(unsigned int num_threads)
 {
-  universe_data = calloc(num_threads, sizeof(UniverseDataNotification));
-  if (!universe_data)
+  sacn_pool_universe_data = calloc(num_threads, sizeof(UniverseDataNotification));
+  if (!sacn_pool_universe_data)
     return kEtcPalErrNoMem;
   return kEtcPalErrOk;
 }
 
 void deinit_universe_data_buf(void)
 {
-  if (universe_data)
+  if (sacn_pool_universe_data)
   {
-    free(universe_data);
-    universe_data = NULL;
+    free(sacn_pool_universe_data);
+    sacn_pool_universe_data = NULL;
   }
 }
 

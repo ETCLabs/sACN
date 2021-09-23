@@ -45,7 +45,7 @@ static struct SacnState
 {
   bool initted;
   EtcPalLogParams log_params;
-} sacn_state;
+} sacn_pool_sacn_state;
 
 static etcpal_mutex_t sacn_mutex;
 
@@ -69,15 +69,15 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
 {
   etcpal_error_t res = kEtcPalErrAlready;
 
-  if (!sacn_state.initted)
+  if (!sacn_pool_sacn_state.initted)
   {
     res = kEtcPalErrOk;
 
     // Init the log params early so the other modules can log things on initialization
     if (log_params)
     {
-      sacn_state.log_params = *log_params;
-      sacn_log_params = &sacn_state.log_params;
+      sacn_pool_sacn_state.log_params = *log_params;
+      sacn_log_params = &sacn_pool_sacn_state.log_params;
     }
 
     bool etcpal_initted = false;
@@ -161,7 +161,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
 
     if (res == kEtcPalErrOk)
     {
-      sacn_state.initted = true;
+      sacn_pool_sacn_state.initted = true;
     }
     else
     {
@@ -233,9 +233,9 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
  */
 void sacn_deinit(void)
 {
-  if (sacn_state.initted)
+  if (sacn_pool_sacn_state.initted)
   {
-    sacn_state.initted = false;
+    sacn_pool_sacn_state.initted = false;
 
 #if SACN_SOURCE_DETECTOR_ENABLED
     sacn_source_detector_deinit();
@@ -355,5 +355,5 @@ void sacn_unlock(void)
 
 bool sacn_initialized(void)
 {
-  return sacn_state.initted;
+  return sacn_pool_sacn_state.initted;
 }
