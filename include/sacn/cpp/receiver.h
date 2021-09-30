@@ -31,6 +31,7 @@
 
 #include "sacn/receiver.h"
 #include "etcpal/cpp/inet.h"
+#include "etcpal/cpp/opaque_id.h"
 
 /**
  * @defgroup sacn_receiver_cpp sACN Receiver API
@@ -40,6 +41,14 @@
 
 namespace sacn
 {
+
+namespace detail
+{
+class ReceiverHandleType
+{
+};
+};  // namespace detail
+
 /**
  * @ingroup sacn_receiver_cpp
  * @brief An instance of sACN Receiver functionality; see @ref using_receiver.
@@ -53,9 +62,7 @@ class Receiver
 {
 public:
   /** A handle type used by the sACN library to identify receiver instances. */
-  using Handle = sacn_receiver_t;
-  /** An invalid Handle value. */
-  static constexpr Handle kInvalidHandle = SACN_RECEIVER_INVALID;
+  using Handle = etcpal::OpaqueId<detail::ReceiverHandleType, sacn_receiver_t, SACN_RECEIVER_INVALID>;
 
   /**
    * @ingroup sacn_receiver_cpp
@@ -234,7 +241,7 @@ public:
 private:
   SacnReceiverConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
 
-  Handle handle_{kInvalidHandle};
+  Handle handle_;
 };
 
 /**
@@ -249,8 +256,8 @@ extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t receiver_handle, c
 {
   if (source_addr && source_info && universe_data && context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(receiver_handle, *source_addr, *source_info,
-                                                                       *universe_data);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(Receiver::Handle(receiver_handle), *source_addr,
+                                                                       *source_info, *universe_data);
   }
 }
 
@@ -260,7 +267,7 @@ extern "C" inline void ReceiverCbSourcesLost(sacn_receiver_t handle, uint16_t un
   if (context && lost_sources && (num_lost_sources > 0))
   {
     std::vector<SacnLostSource> lost_vec(lost_sources, lost_sources + num_lost_sources);
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesLost(handle, universe, lost_vec);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcesLost(Receiver::Handle(handle), universe, lost_vec);
   }
 }
 
@@ -268,7 +275,7 @@ extern "C" inline void ReceiverCbSamplingPeriodStarted(sacn_receiver_t handle, u
 {
   if (context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSamplingPeriodStarted(handle, universe);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSamplingPeriodStarted(Receiver::Handle(handle), universe);
   }
 }
 
@@ -276,7 +283,7 @@ extern "C" inline void ReceiverCbSamplingPeriodEnded(sacn_receiver_t handle, uin
 {
   if (context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSamplingPeriodEnded(handle, universe);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSamplingPeriodEnded(Receiver::Handle(handle), universe);
   }
 }
 
@@ -285,7 +292,7 @@ extern "C" inline void ReceiverCbPapLost(sacn_receiver_t handle, uint16_t univer
 {
   if (context && source)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcePapLost(handle, universe, *source);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourcePapLost(Receiver::Handle(handle), universe, *source);
   }
 }
 
@@ -293,7 +300,7 @@ extern "C" inline void ReceiverCbSourceLimitExceeded(sacn_receiver_t handle, uin
 {
   if (context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(handle, universe);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(Receiver::Handle(handle), universe);
   }
 }
 
@@ -390,11 +397,22 @@ inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& 
 {
   SacnReceiverConfig config = TranslateConfig(settings, notify_handler);
 
-  if (netints.empty())
-    return sacn_receiver_create(&config, &handle_, NULL);
+  sacn_receiver_t c_handle = SACN_RECEIVER_INVALID;
+  etcpal::Error result = kEtcPalErrOk;
 
-  SacnNetintConfig netint_config = {netints.data(), netints.size()};
-  return sacn_receiver_create(&config, &handle_, &netint_config);
+  if (netints.empty())
+  {
+    result = sacn_receiver_create(&config, &c_handle, NULL);
+  }
+  else
+  {
+    SacnNetintConfig netint_config = {netints.data(), netints.size()};
+    result = sacn_receiver_create(&config, &c_handle, &netint_config);
+  }
+
+  handle_.SetValue(c_handle);
+
+  return result;
 }
 
 /**
@@ -405,8 +423,8 @@ inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& 
  */
 inline void Receiver::Shutdown()
 {
-  sacn_receiver_destroy(handle_);
-  handle_ = kInvalidHandle;
+  sacn_receiver_destroy(handle_.value());
+  handle_.Clear();
 }
 
 /**
@@ -417,7 +435,7 @@ inline void Receiver::Shutdown()
 inline etcpal::Expected<uint16_t> Receiver::GetUniverse() const
 {
   uint16_t result = 0;
-  etcpal_error_t err = sacn_receiver_get_universe(handle_, &result);
+  etcpal_error_t err = sacn_receiver_get_universe(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
   else
@@ -434,7 +452,7 @@ inline etcpal::Expected<uint16_t> Receiver::GetUniverse() const
 inline etcpal::Expected<SacnRecvUniverseSubrange> Receiver::GetFootprint() const
 {
   SacnRecvUniverseSubrange result;
-  etcpal_error_t err = sacn_receiver_get_footprint(handle_, &result);
+  etcpal_error_t err = sacn_receiver_get_footprint(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
   else
@@ -460,7 +478,7 @@ inline etcpal::Expected<SacnRecvUniverseSubrange> Receiver::GetFootprint() const
  */
 inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
 {
-  return sacn_receiver_change_universe(handle_, new_universe_id);
+  return sacn_receiver_change_universe(handle_.value(), new_universe_id);
 }
 
 /**
@@ -475,7 +493,7 @@ inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
  */
 inline etcpal::Error Receiver::ChangeFootprint(const SacnRecvUniverseSubrange& new_footprint)
 {
-  return sacn_receiver_change_footprint(handle_, &new_footprint);
+  return sacn_receiver_change_footprint(handle_.value(), &new_footprint);
 }
 
 /**
@@ -492,7 +510,7 @@ inline etcpal::Error Receiver::ChangeFootprint(const SacnRecvUniverseSubrange& n
 inline etcpal::Error Receiver::ChangeUniverseAndFootprint(uint16_t new_universe_id,
                                                           const SacnRecvUniverseSubrange& new_footprint)
 {
-  return sacn_receiver_change_universe_and_footprint(handle_, new_universe_id, &new_footprint);
+  return sacn_receiver_change_universe_and_footprint(handle_.value(), new_universe_id, &new_footprint);
 }
 
 /**
@@ -510,7 +528,7 @@ inline std::vector<EtcPalMcastNetintId> Receiver::GetNetworkInterfaces()
   do
   {
     netints.resize(size_guess);
-    num_netints = sacn_receiver_get_network_interfaces(handle_, netints.data(), netints.size());
+    num_netints = sacn_receiver_get_network_interfaces(handle_.value(), netints.data(), netints.size());
     size_guess = num_netints + 4u;
   } while (num_netints > netints.size());
 
@@ -657,9 +675,9 @@ inline etcpal::Error Receiver::ResetNetworking(std::vector<SacnMcastInterface>& 
 }
 
 /**
- * @brief Get the current handle to the underlying C sacn_receiver.
+ * @brief Get the current handle to the underlying C receiver.
  *
- * @return The handle or Receiver::kInvalidHandle.
+ * @return The handle, which will only be valid if the receiver has been successfully created using Startup().
  */
 inline constexpr Receiver::Handle Receiver::handle() const
 {

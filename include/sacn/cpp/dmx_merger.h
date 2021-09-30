@@ -29,6 +29,7 @@
 
 #include "sacn/dmx_merger.h"
 #include "etcpal/cpp/inet.h"
+#include "etcpal/cpp/opaque_id.h"
 
 /**
  * @defgroup sacn_dmx_merger_cpp sACN DMX Merger API
@@ -38,6 +39,14 @@
 
 namespace sacn
 {
+
+namespace detail
+{
+class DmxMergerHandleType
+{
+};
+};  // namespace detail
+
 /**
  * @ingroup sacn_dmx_merger_cpp
  * @brief An instance of sACN DMX Merger functionality; see @ref using_dmx_merger.
@@ -59,9 +68,7 @@ class DmxMerger
 {
 public:
   /** A handle type used by the sACN library to identify merger instances. */
-  using Handle = sacn_dmx_merger_t;
-  /** An invalid Handle value. */
-  static constexpr Handle kInvalidHandle = SACN_DMX_MERGER_INVALID;
+  using Handle = etcpal::OpaqueId<detail::DmxMergerHandleType, sacn_dmx_merger_t, SACN_DMX_MERGER_INVALID>;
 
   /**
    * @ingroup sacn_dmx_merger_cpp
@@ -142,7 +149,7 @@ public:
 private:
   SacnDmxMergerConfig TranslateConfig(const Settings& settings);
 
-  Handle handle_{kInvalidHandle};
+  Handle handle_;
 };
 
 /**
@@ -178,7 +185,13 @@ inline bool DmxMerger::Settings::IsValid() const
 inline etcpal::Error DmxMerger::Startup(const Settings& settings)
 {
   SacnDmxMergerConfig config = TranslateConfig(settings);
-  return sacn_dmx_merger_create(&config, &handle_);
+
+  sacn_dmx_merger_t c_handle = SACN_DMX_MERGER_INVALID;
+  etcpal::Error result = sacn_dmx_merger_create(&config, &c_handle);
+
+  handle_.SetValue(c_handle);
+
+  return result;
 }
 
 /**
@@ -193,8 +206,8 @@ inline etcpal::Error DmxMerger::Startup(const Settings& settings)
  */
 inline void DmxMerger::Shutdown()
 {
-  sacn_dmx_merger_destroy(handle_);
-  handle_ = kInvalidHandle;
+  sacn_dmx_merger_destroy(handle_.value());
+  handle_.Clear();
 }
 
 /**
@@ -215,7 +228,7 @@ inline void DmxMerger::Shutdown()
 inline etcpal::Expected<sacn_dmx_merger_source_t> DmxMerger::AddSource()
 {
   sacn_dmx_merger_source_t result = SACN_DMX_MERGER_SOURCE_INVALID;
-  etcpal_error_t err = sacn_dmx_merger_add_source(handle_, &result);
+  etcpal_error_t err = sacn_dmx_merger_add_source(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
   else
@@ -235,7 +248,7 @@ inline etcpal::Expected<sacn_dmx_merger_source_t> DmxMerger::AddSource()
  */
 inline etcpal::Error DmxMerger::RemoveSource(sacn_dmx_merger_source_t source)
 {
-  return sacn_dmx_merger_remove_source(handle_, source);
+  return sacn_dmx_merger_remove_source(handle_.value(), source);
 }
 
 /**
@@ -250,7 +263,7 @@ inline etcpal::Error DmxMerger::RemoveSource(sacn_dmx_merger_source_t source)
  */
 inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_dmx_merger_source_t source) const
 {
-  return sacn_dmx_merger_get_source(handle_, source);
+  return sacn_dmx_merger_get_source(handle_.value(), source);
 }
 
 /**
@@ -271,7 +284,7 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_dmx_merger_sourc
 inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source, const uint8_t* new_levels,
                                              size_t new_levels_count)
 {
-  return sacn_dmx_merger_update_levels(handle_, source, new_levels, new_levels_count);
+  return sacn_dmx_merger_update_levels(handle_.value(), source, new_levels, new_levels_count);
 }
 
 /**
@@ -295,7 +308,7 @@ inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source, co
  */
 inline etcpal::Error DmxMerger::UpdatePaps(sacn_dmx_merger_source_t source, const uint8_t* paps, size_t paps_count)
 {
-  return sacn_dmx_merger_update_paps(handle_, source, paps, paps_count);
+  return sacn_dmx_merger_update_paps(handle_.value(), source, paps, paps_count);
 }
 
 /**
@@ -318,7 +331,7 @@ inline etcpal::Error DmxMerger::UpdatePaps(sacn_dmx_merger_source_t source, cons
  */
 inline etcpal::Error DmxMerger::UpdateUniversePriority(sacn_dmx_merger_source_t source, uint8_t universe_priority)
 {
-  return sacn_dmx_merger_update_universe_priority(handle_, source, universe_priority);
+  return sacn_dmx_merger_update_universe_priority(handle_.value(), source, universe_priority);
 }
 
 /**
@@ -336,13 +349,13 @@ inline etcpal::Error DmxMerger::UpdateUniversePriority(sacn_dmx_merger_source_t 
  */
 inline etcpal::Error DmxMerger::RemovePaps(sacn_dmx_merger_source_t source)
 {
-  return sacn_dmx_merger_remove_paps(handle_, source);
+  return sacn_dmx_merger_remove_paps(handle_.value(), source);
 }
 
 /**
- * @brief Get the current handle to the underlying C sacn_receiver.
+ * @brief Get the current handle to the underlying C DMX merger.
  *
- * @return The handle or Receiver::kInvalidHandle.
+ * @return The handle, which will only be valid if the DMX merger has been successfully created using Startup().
  */
 inline constexpr DmxMerger::Handle DmxMerger::handle() const
 {

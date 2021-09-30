@@ -888,7 +888,7 @@ inline std::vector<EtcPalMcastNetintId> Source::GetNetworkInterfaces(uint16_t un
 }
 
 /**
- * @brief Get the current handle to the underlying C sacn_source.
+ * @brief Get the current handle to the underlying C source.
  *
  * @return The handle, which will only be valid if the source has been successfully created using Startup().
  */

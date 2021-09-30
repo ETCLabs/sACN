@@ -89,7 +89,7 @@ namespace sacn
  * Callback demonstrations:
  * @code
  * void MyNotifyHandler::HandleSourceUpdated(sacn::RemoteSourceHandle handle, const etcpal::Uuid& cid,
-                                             const std::string& name, const std::vector<uint16_t>& sourced_universes)
+ *                                           const std::string& name, const std::vector<uint16_t>& sourced_universes)
  * {
  *   std::cout << "Source Detector: Source " << cid.ToString() << " (name " << name << ") ";
  *   if(!sourced_universes.empty())

@@ -29,6 +29,7 @@
 
 #include "sacn/merge_receiver.h"
 #include "etcpal/cpp/inet.h"
+#include "etcpal/cpp/opaque_id.h"
 #include "etcpal/cpp/uuid.h"
 
 /**
@@ -39,6 +40,14 @@
 
 namespace sacn
 {
+
+namespace detail
+{
+class MergeReceiverHandleType
+{
+};
+};  // namespace detail
+
 /**
  * @ingroup sacn_merge_receiver_cpp
  * @brief An instance of sACN Merge Receiver functionality; see @ref using_merge_receiver.
@@ -52,9 +61,7 @@ class MergeReceiver
 {
 public:
   /** A handle type used by the sACN library to identify merge receiver instances. */
-  using Handle = sacn_merge_receiver_t;
-  /** An invalid Handle value. */
-  static constexpr Handle kInvalidHandle = SACN_MERGE_RECEIVER_INVALID;
+  using Handle = etcpal::OpaqueId<detail::MergeReceiverHandleType, sacn_merge_receiver_t, SACN_MERGE_RECEIVER_INVALID>;
 
   /**
    * @ingroup sacn_merge_receiver_cpp
@@ -208,7 +215,7 @@ public:
 private:
   SacnMergeReceiverConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
 
-  Handle handle_{kInvalidHandle};
+  Handle handle_;
 };
 
 /**
@@ -222,7 +229,7 @@ extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, c
 {
   if (context && merged_data)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleMergedData(handle, *merged_data);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleMergedData(MergeReceiver::Handle(handle), *merged_data);
   }
 }
 
@@ -232,8 +239,8 @@ extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t receiver_hand
 {
   if (context && source_addr && source_info && universe_data)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(receiver_handle, *source_addr, *source_info,
-                                                                          *universe_data);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(MergeReceiver::Handle(receiver_handle),
+                                                                          *source_addr, *source_info, *universe_data);
   }
 }
 
@@ -242,7 +249,8 @@ extern "C" inline void MergeReceiverCbSourceLimitExceeded(sacn_merge_receiver_t 
 {
   if (context)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(handle, universe);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(MergeReceiver::Handle(handle),
+                                                                                   universe);
   }
 }
 
@@ -334,11 +342,22 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
 {
   SacnMergeReceiverConfig config = TranslateConfig(settings, notify_handler);
 
-  if (netints.empty())
-    return sacn_merge_receiver_create(&config, &handle_, NULL);
+  sacn_merge_receiver_t c_handle = SACN_MERGE_RECEIVER_INVALID;
+  etcpal::Error result = kEtcPalErrOk;
 
-  SacnNetintConfig netint_config = {netints.data(), netints.size()};
-  return sacn_merge_receiver_create(&config, &handle_, &netint_config);
+  if (netints.empty())
+  {
+    result = sacn_merge_receiver_create(&config, &c_handle, NULL);
+  }
+  else
+  {
+    SacnNetintConfig netint_config = {netints.data(), netints.size()};
+    result = sacn_merge_receiver_create(&config, &c_handle, &netint_config);
+  }
+
+  handle_.SetValue(c_handle);
+
+  return result;
 }
 
 /**
@@ -349,8 +368,8 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
  */
 inline void MergeReceiver::Shutdown()
 {
-  sacn_merge_receiver_destroy(handle_);
-  handle_ = kInvalidHandle;
+  sacn_merge_receiver_destroy(handle_.value());
+  handle_.Clear();
 }
 
 /**
@@ -361,7 +380,7 @@ inline void MergeReceiver::Shutdown()
 inline etcpal::Expected<uint16_t> MergeReceiver::GetUniverse() const
 {
   uint16_t result = 0;
-  etcpal_error_t err = sacn_merge_receiver_get_universe(handle_, &result);
+  etcpal_error_t err = sacn_merge_receiver_get_universe(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
   else
@@ -378,7 +397,7 @@ inline etcpal::Expected<uint16_t> MergeReceiver::GetUniverse() const
 inline etcpal::Expected<SacnRecvUniverseSubrange> MergeReceiver::GetFootprint() const
 {
   SacnRecvUniverseSubrange result;
-  etcpal_error_t err = sacn_merge_receiver_get_footprint(handle_, &result);
+  etcpal_error_t err = sacn_merge_receiver_get_footprint(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
   else
@@ -402,7 +421,7 @@ inline etcpal::Expected<SacnRecvUniverseSubrange> MergeReceiver::GetFootprint() 
  */
 inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
 {
-  return sacn_merge_receiver_change_universe(handle_, new_universe_id);
+  return sacn_merge_receiver_change_universe(handle_.value(), new_universe_id);
 }
 
 /**
@@ -416,7 +435,7 @@ inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
  */
 inline etcpal::Error MergeReceiver::ChangeFootprint(const SacnRecvUniverseSubrange& new_footprint)
 {
-  return sacn_merge_receiver_change_footprint(handle_, &new_footprint);
+  return sacn_merge_receiver_change_footprint(handle_.value(), &new_footprint);
 }
 
 /**
@@ -432,7 +451,7 @@ inline etcpal::Error MergeReceiver::ChangeFootprint(const SacnRecvUniverseSubran
 inline etcpal::Error MergeReceiver::ChangeUniverseAndFootprint(uint16_t new_universe_id,
                                                                const SacnRecvUniverseSubrange& new_footprint)
 {
-  return sacn_merge_receiver_change_universe_and_footprint(handle_, new_universe_id, &new_footprint);
+  return sacn_merge_receiver_change_universe_and_footprint(handle_.value(), new_universe_id, &new_footprint);
 }
 
 /**
@@ -450,7 +469,7 @@ inline std::vector<EtcPalMcastNetintId> MergeReceiver::GetNetworkInterfaces()
   do
   {
     netints.resize(size_guess);
-    num_netints = sacn_merge_receiver_get_network_interfaces(handle_, netints.data(), netints.size());
+    num_netints = sacn_merge_receiver_get_network_interfaces(handle_.value(), netints.data(), netints.size());
     size_guess = num_netints + 4u;
   } while (num_netints > netints.size());
 
@@ -573,7 +592,7 @@ inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterfa
 /**
  * @brief Get the current handle to the underlying C merge receiver.
  *
- * @return The handle or MergeReceiver::kInvalidHandle.
+ * @return The handle, which will only be valid if the merge receiver has been successfully created using Startup().
  */
 inline constexpr MergeReceiver::Handle MergeReceiver::handle() const
 {

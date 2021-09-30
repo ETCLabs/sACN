@@ -64,7 +64,7 @@ protected:
     sacn_dmx_merger_deinit();
   }
 
-  static constexpr sacn::DmxMerger::Handle kTestMergerHandle = 123;
+  static constexpr sacn_dmx_merger_t kTestMergerHandle = 123;
   static constexpr uint8_t kTestPriority = 123;
   static constexpr size_t kTestNewValuesCount = 123;
   static constexpr size_t kTestAddressPrioritiesCount = 456;
@@ -141,7 +141,7 @@ TEST_F(TestMerger, StartupWorks)
   etcpal::Error result = merger.Startup(settings);
 
   EXPECT_EQ(sacn_dmx_merger_create_fake.call_count, 1u);
-  EXPECT_EQ(merger.handle(), kTestMergerHandle);
+  EXPECT_EQ(merger.handle().value(), kTestMergerHandle);
   EXPECT_EQ(result.code(), test_return_value_);
 }
 
@@ -158,7 +158,7 @@ TEST_F(TestMerger, ShutdownWorks)
   merger.Shutdown();
 
   EXPECT_EQ(sacn_dmx_merger_destroy_fake.call_count, 1u);
-  EXPECT_EQ(merger.handle(), sacn::DmxMerger::kInvalidHandle);
+  EXPECT_FALSE(merger.handle().IsValid());
 }
 
 TEST_F(TestMerger, AddSourceWorks)
