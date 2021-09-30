@@ -47,7 +47,7 @@ protected:
     sacn_sockets_reset_all_fakes();
 
     ASSERT_EQ(sacn_receiver_mem_init(1), kEtcPalErrOk);
-    ASSERT_EQ(sacn_merge_receiver_mem_init(), kEtcPalErrOk);
+    ASSERT_EQ(sacn_merge_receiver_mem_init(1), kEtcPalErrOk);
     ASSERT_EQ(sacn_merge_receiver_init(), kEtcPalErrOk);
   }
 

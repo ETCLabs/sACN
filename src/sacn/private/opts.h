@@ -201,7 +201,7 @@
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_RECEIVER_MAX_UNIVERSES
-#define SACN_RECEIVER_MAX_UNIVERSES 8
+#define SACN_RECEIVER_MAX_UNIVERSES 1
 #endif
 
 /**
@@ -215,7 +215,7 @@
  * highest-priority source.
  */
 #ifndef SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE
-#define SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE 8
+#define SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE 4
 #endif
 
 /**
@@ -275,6 +275,12 @@
  */
 #undef SACN_RECEIVER_MAX_THREADS
 #define SACN_RECEIVER_MAX_THREADS 1
+
+/**
+ * @brief Currently unconfigurable; will be configurable in the future.
+ */
+#undef SACN_RECEIVER_MAX_FOOTPRINT
+#define SACN_RECEIVER_MAX_FOOTPRINT 512
 
 /**
  * @}
@@ -390,6 +396,12 @@
 #ifndef SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER
 #define SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE
 #endif
+
+/**
+ * @brief Currently unconfigurable; will be configurable in the future.
+ */
+#undef SACN_DMX_MERGER_MAX_SLOTS
+#define SACN_DMX_MERGER_MAX_SLOTS 512
 
 /**
  * @}

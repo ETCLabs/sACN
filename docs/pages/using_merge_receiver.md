@@ -61,10 +61,9 @@ sacn_merge_receiver_destroy(my_merge_receiver_handle);
 class MyNotifyHandler : public sacn::MergeReceiver::NotifyHandler
 {
   // Required callbacks that must be implemented:
-  void HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
-                        const RemoteSourceHandle* slot_owners) override;
-  void HandleNonDmxData(Handle receiver_handle, uint16_t universe, const etcpal::SockAddr& source_addr,
-                        const SacnHeaderData& header, const uint8_t* pdata) override;
+  void HandleMergedData(Handle handle, const SacnRecvMergedData& merged_data) override;
+  void HandleNonDmxData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
+                        const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data) override;
 
   // Optional callback - this doesn't have to be a part of MyNotifyHandler:
   void HandleSourceLimitExceeded(Handle handle, uint16_t universe) override;
@@ -116,22 +115,71 @@ if (result)
 ```
 <!-- CODE_BLOCK_END -->
 
+### Footprints
+
+TODO: Custom footprints are not yet implemented, so the footprint will always be the full universe.
+
+A merge receiver can also be configured to listen to a specific range of slots within the universe,
+which is called the footprint. For example, networked fixtures might use this to only retrieve data
+about slots within their DMX footprint. The footprint is initially specified in the merge receiver
+config, but it is optional, so it defaults to the full universe if it isn't specified in the
+config. There are also functions to get and change the footprint, including a function that can
+change both the universe and footprint at once.
+
+<!-- CODE_BLOCK_START -->
+```c
+// Get the current footprint
+SacnRecvUniverseSubrange current_footprint;
+sacn_merge_receiver_get_footprint(my_receiver_handle, &current_footprint);
+
+// Change the footprint, but keep the universe the same
+SacnRecvUniverseSubrange new_footprint;
+new_footprint.first_slot = 20;
+new_footprint.num_slots = 10;
+sacn_merge_receiver_change_footprint(my_receiver_handle, &new_footprint);
+
+// Change both the universe and the footprint at once
+uint16_t new_universe = current_universe + 1;
+new_footprint.first_slot = 40;
+new_footprint.num_slots = 20;
+sacn_merge_receiver_change_universe_and_footprint(my_receiver_handle, new_universe, &new_footprint);
+```
+<!-- CODE_BLOCK_MID -->
+```cpp
+// Get the universe currently being listened to
+auto current_footprint = merge_receiver.GetFootprint();
+if (current_footprint)
+{
+  // Change the footprint, but keep the universe the same
+  SacnRecvUniverseSubrange new_footprint;
+  new_footprint.first_slot = current_footprint.first_slot + 10;
+  new_footprint.num_slots = current_footprint.num_slots;
+  merge_receiver.ChangeFootprint(new_footprint);
+
+  // Change both the universe and the footprint at once
+  new_footprint.first_slot += 10;
+  uint16_t new_universe = 100u;
+  merge_receiver.ChangeUniverseAndFootprint(new_universe, new_footprint);
+}
+```
+<!-- CODE_BLOCK_END -->
+
 ## Merging
 
-Once a merge receiver has been created, it will begin listening for data on the configured
-universe. When DMX level or priority data arrives, or a source is lost, it performs a merge. This
-is where it determines the correct DMX level and source for each slot of the universe, since there
-may be multiple sources transmitting on the same universe. It does this by selecting the source
-with the highest priority. If there are multiple sources at that priority, then it selects the
-source with the highest level. That is the Highest Takes Precedence (HTP) merge algorithm.
+Once a merge receiver has been created, it will begin listening for data on the configured universe
+and footprint. When DMX level or priority data arrives, or a source is lost, it performs a merge.
+This is where it determines the correct DMX level and source for each slot of the footprint, since
+there may be multiple sources transmitting on the same universe. It does this by selecting the
+source with the highest priority. If there are multiple sources at that priority, then it selects
+the source with the highest level. That is the Highest Takes Precedence (HTP) merge algorithm.
 
 ## Receiving sACN Data
 
-The merged data callback is called whenever there are new merge results for the universe being
-listened to, pending the sampling period. The sampling period occurs when a receiver starts
-listening on a new universe or a new set of interfaces. Universe data is merged as it comes in
-during this period, but the notification of this data doesn't occur until after the sampling period
-ends. This removes flicker as various sources in the network are discovered.
+The merged data callback is called whenever there are new merge results, pending the sampling
+period. The sampling period occurs when a receiver starts listening on a new universe, new
+footprint, or new set of interfaces. Universe data is merged as it comes in during this period, but
+the notification of this data doesn't occur until after the sampling period ends. This removes
+flicker as various sources in the network are discovered.
 
 This callback will be called in multiple ways:
 
@@ -169,49 +217,51 @@ of other sACN packets on the universe.
 
 <!-- CODE_BLOCK_START -->
 ```c
-void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, const uint8_t* slots, 
-                               const sacn_remote_source_t* slot_owners, size_t active_source_count, void* context)
+void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMergedData* merged_data, void* context)
 {
   // Check handle and/or context as necessary...
 
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // fields available:
-  printf("Got new merge results on universe %u\n", universe);
+  printf("Got new merge results on universe %u\n", merged_data->universe_id);
 
   // Example for an sACN-enabled fixture...
-  for (int i = 0; i < MY_DMX_FOOTPRINT; ++i)
+  for (int i = 0; i < merged_data->slot_range.num_slots; ++i)  // For each slot in my DMX footprint
   {
-    if (slot_owners[my_start_addr + i] == SACN_REMOTE_SOURCE_INVALID)
+    // merged_data->slot_owners[0] always represents the owner of the first slot in the footprint
+    if (merged_data->slot_owners[i] == SACN_REMOTE_SOURCE_INVALID)
     {
       // One of the slots in my DMX footprint does not have a valid source
       return;
     }
   }
 
-  memcpy(my_data_buf, &slots[my_start_addr], MY_DMX_FOOTPRINT);
+  // merged_data->slots[0] will always be the first slot of the footprint
+  memcpy(my_data_buf, merged_data->slots, merged_data->slot_range.num_slots);
   // Act on the data somehow
 }
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
-                                       const RemoteSourceHandle* slot_owners, size_t active_source_count)
+void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& merged_data)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // fields available:
-  std::cout << "Got new merge results on universe " << universe << "\n";
+  std::cout << "Got new merge results on universe " << merged_data.universe_id << "\n";
 
   // Example for an sACN-enabled fixture...
-  for (int i = 0; i < MY_DMX_FOOTPRINT; ++i)
+  for (int i = 0; i < merged_data.slot_range.num_slots; ++i)  // For each slot in my DMX footprint
   {
-    if (slot_owners[my_start_addr + i] == kInvalidRemoteSourceHandle)
+    // merged_data.slot_owners[0] always represents the owner of the first slot in the footprint
+    if (merged_data.slot_owners[i] == kInvalidRemoteSourceHandle)
     {
       // One of the slots in my DMX footprint does not have a valid source
       return;
     }
   }
 
-  memcpy(my_data_buf, &slots[my_start_addr], MY_DMX_FOOTPRINT);
+  // merged_data.slots[0] will always be the first slot of the footprint
+  memcpy(my_data_buf, merged_data.slots, merged_data.slot_range.num_slots);
   // Act on the data somehow
 }
 ```
@@ -222,8 +272,9 @@ non-DMX data callback.
 
 <!-- CODE_BLOCK_START -->
 ```c
-void my_universe_non_dmx_callback(sacn_merge_receiver_t receiver_handle, uint16_t universe, const EtcPalSockAddr* source_addr, 
-                                  const SacnHeaderData* header, const uint8_t* pdata, void* context)
+void my_universe_non_dmx_callback(sacn_merge_receiver_t receiver_handle, const EtcPalSockAddr* source_addr,
+                                  const SacnRemoteSource* source_info, const SacnRecvUniverseData* universe_data,
+                                  void* context)
 {
   // Check receiver_handle and/or context as necessary...
 
@@ -233,24 +284,25 @@ void my_universe_non_dmx_callback(sacn_merge_receiver_t receiver_handle, uint16_
   etcpal_ip_to_string(&source_addr->ip, addr_str);
 
   char cid_str[ETCPAL_UUID_STRING_BYTES];
-  etcpal_uuid_to_string(&header->cid, cid_str);
+  etcpal_uuid_to_string(&source_info->cid, cid_str);
 
   printf("Got non-DMX sACN update from source %s (address %s:%u, name %s) on universe %u, priority %u, start code %u\n",
-         cid_str, addr_str, source_addr->port, header->source_name, universe, header->priority, header->start_code);
+         cid_str, addr_str, source_addr->port, source_info->name, universe_data->universe_id, universe_data->priority,
+         universe_data->start_code);
 
   // Act on the data somehow
 }
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleNonDmxData(Handle receiver_handle, uint16_t universe, const etcpal::SockAddr& source_addr,
-                                       const SacnHeaderData& header, const uint8_t* pdata)
+void MyNotifyHandler::HandleNonDmxData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
+                                       const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // header fields available:
-  std::cout << "Got non-DMX sACN update from source " << etcpal::Uuid(header.cid).ToString() << " (address " 
-            << source_addr.ToString() << ", name " << header.source_name << ") on universe " << universe 
-            << ", priority " << header.priority << ", start code " << header.start_code << "\n";
+  std::cout << "Got non-DMX sACN update from source " << etcpal::Uuid(source_info.cid).ToString() << " (address " 
+            << source_addr.ToString() << ", name " << source_info.name << ") on universe " << universe_data.universe_id 
+            << ", priority " << universe_data.priority << ", start code " << universe_data.start_code << "\n";
 
   // Act on the data somehow
 }
@@ -261,21 +313,21 @@ void MyNotifyHandler::HandleNonDmxData(Handle receiver_handle, uint16_t universe
 
 The data callbacks include data originating from one or more sources transmitting on the current
 universe. Each source has a _Component Identifier_ (CID), which is a UUID that is unique to that
-source. The CID should be used as a primary key to differentiate sources. It is provided directly
-in the non-DMX callback, in the #SacnHeaderData struct. However, in the merged data callback, only
-the source IDs are passed in. To obtain the CID in this case, use the get source CID function.
+source. Each source also has a handle that should be used as a primary key, differentiating it
+from other sources. This source data is provided directly in the non-DMX callback, in the
+#SacnRemoteSource struct. However, in the merged data callback, only the source handles are
+passed in. To obtain the CID in this case, use the get source CID function.
 
 <!-- CODE_BLOCK_START -->
 ```c
-void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, const uint8_t* slots, 
-                               const sacn_remote_source_t* slot_owners, void* context)
+void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMergedData* merged_data, void* context)
 {
   // Check handle and/or context as necessary...
 
-  for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+  for(unsigned int i = 0; i < merged_data->slot_range.num_slots; ++i)
   {
     EtcPalUuid cid;
-    etcpal_error_t result = sacn_get_remote_source_cid(slot_owners[i], &cid);
+    etcpal_error_t result = sacn_get_remote_source_cid(merged_data->slot_owners[i], &cid);
 
     if(result == kEtcPalErrOk)
     {
@@ -283,25 +335,23 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, uint16_t universe, 
       char cid_str[ETCPAL_UUID_STRING_BYTES];
       etcpal_uuid_to_string(&cid, cid_str);
 
-      printf("Slot %u CID: %s\n", i, cid_str);
+      printf("Slot %u CID: %s\n", (merged_data->slot_range.first_slot + i), cid_str);
     }
   }
 }
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
-                                       const RemoteSourceHandle* slot_owners)
+void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& merged_data)
 {
-  for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+  for(unsigned int i = 0; i < merged_data.slot_range.num_slots; ++i)
   {
-    // merge_receivers_ is a map between handles and merge receiver objects
-    auto cid = sacn::GetRemoteSourceCid(slot_owners[i]);
+    auto cid = sacn::GetRemoteSourceCid(merged_data.slot_owners[i]);
 
     if(cid)
     {
       // You wouldn't normally print a message on each sACN update, but this is just for demonstration:
-      std::cout << "Slot " << i << " CID: " << cid->ToString() << "\n";
+      std::cout << "Slot " << (merged_data.slot_range.first_slot + i) << " CID: " << cid->ToString() << "\n";
     }
   }
 }

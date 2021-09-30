@@ -67,7 +67,7 @@ public:
     virtual ~NotifyHandler() = default;
 
     /**
-     * @brief Notify that a data packet has been received.
+     * @brief Notify that new universe data within the configured footprint has been received.
      *
      * This will not be called if the Stream_Terminated bit is set, or if the Preview_Data bit is set and preview
      * packets are being filtered.
@@ -87,12 +87,12 @@ public:
      *
      * @param receiver_handle The receiver's handle.
      * @param source_addr IP address & port of the packet source.
-     * @param header The sACN header data.
-     * @param pdata The DMX data.  Use header.slot_count to determine the length of this array.
-     * @param is_sampling True if this data was received during the sampling period, false otherwise.
+     * @param source_info Information about the source that sent this data.
+     * @param universe_data The universe data (and relevant information about that data), starting from the first slot
+     * of the currently configured footprint.
      */
     virtual void HandleUniverseData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
-                                    const SacnHeaderData& header, const uint8_t* pdata, bool is_sampling) = 0;
+                                    const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data) = 0;
 
     /**
      * @brief Notify that one or more sources have entered a source loss state.
@@ -163,8 +163,13 @@ public:
 
     /********* Optional values **********/
 
-    int source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
-                                                                listen to when using dynamic memory. */
+    /** The footprint within the universe to monitor. TODO: Currently unimplemented and thus ignored. */
+    SacnRecvUniverseSubrange footprint{1, DMX_ADDRESS_COUNT};
+
+    /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
+        When configured to use static memory, this parameter is only used if it's less than
+        #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE -- otherwise #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.*/
+    int source_count_max{SACN_RECEIVER_INFINITE_SOURCES};
     unsigned int flags{0}; /**< A set of option flags. See the C API's "sACN receiver flags". */
 
     sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6}; /**< What IP networking the receiver will support. */
@@ -209,7 +214,10 @@ public:
                         std::vector<SacnMcastInterface>& netints);
   void Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
+  etcpal::Expected<SacnRecvUniverseSubrange> GetFootprint() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
+  etcpal::Error ChangeFootprint(const SacnRecvUniverseSubrange& new_footprint);
+  etcpal::Error ChangeUniverseAndFootprint(uint16_t new_universe_id, const SacnRecvUniverseSubrange& new_footprint);
   std::vector<EtcPalMcastNetintId> GetNetworkInterfaces();
 
   // Lesser used functions.  These apply to all instances of this class.
@@ -236,13 +244,13 @@ private:
 namespace internal
 {
 extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t receiver_handle, const EtcPalSockAddr* source_addr,
-                                              const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling,
-                                              void* context)
+                                              const SacnRemoteSource* source_info,
+                                              const SacnRecvUniverseData* universe_data, void* context)
 {
-  if (source_addr && header && context)
+  if (source_addr && source_info && universe_data && context)
   {
-    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(receiver_handle, *source_addr, *header, pdata,
-                                                                       is_sampling);
+    static_cast<Receiver::NotifyHandler*>(context)->HandleUniverseData(receiver_handle, *source_addr, *source_info,
+                                                                       *universe_data);
   }
 }
 
@@ -275,7 +283,7 @@ extern "C" inline void ReceiverCbSamplingPeriodEnded(sacn_receiver_t handle, uin
 extern "C" inline void ReceiverCbPapLost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
                                          void* context)
 {
-  if (source && context)
+  if (context && source)
   {
     static_cast<Receiver::NotifyHandler*>(context)->HandleSourcePapLost(handle, universe, *source);
   }
@@ -309,7 +317,9 @@ inline Receiver::Settings::Settings(uint16_t new_universe_id) : universe_id(new_
  */
 inline bool Receiver::Settings::IsValid() const
 {
-  return (universe_id > 0);
+  return (universe_id > 0) && (footprint.start_address >= 1) && (footprint.start_address <= DMX_ADDRESS_COUNT) &&
+         (footprint.address_count >= 1) &&
+         (footprint.address_count <= (DMX_ADDRESS_COUNT - footprint.start_address + 1));
 }
 
 /**
@@ -400,7 +410,7 @@ inline void Receiver::Shutdown()
 }
 
 /**
- * @brief Get the universe this class is listening to.
+ * @brief Get the universe this receiver is listening to.
  *
  * @return If valid, the value is the universe id.  Otherwise, this is the underlying error the C library call returned.
  */
@@ -415,7 +425,24 @@ inline etcpal::Expected<uint16_t> Receiver::GetUniverse() const
 }
 
 /**
- * @brief Change the universe this class is listening to.
+ * @brief Get the footprint within the universe this receiver is listening to.
+ *
+ * TODO: At this time, custom footprints are not supported by this library, so the full 512-slot footprint is returned.
+ *
+ * @return If valid, the value is the footprint.  Otherwise, this is the underlying error the C library call returned.
+ */
+inline etcpal::Expected<SacnRecvUniverseSubrange> Receiver::GetFootprint() const
+{
+  SacnRecvUniverseSubrange result;
+  etcpal_error_t err = sacn_receiver_get_footprint(handle_, &result);
+  if (err == kEtcPalErrOk)
+    return result;
+  else
+    return err;
+}
+
+/**
+ * @brief Change the universe this receiver is listening to.
  *
  * An sACN receiver can only listen on one universe at a time. After this call completes successfully, the receiver is
  * in a sampling period for the new universe and will provide HandleSamplingPeriodStarted() and
@@ -434,6 +461,38 @@ inline etcpal::Expected<uint16_t> Receiver::GetUniverse() const
 inline etcpal::Error Receiver::ChangeUniverse(uint16_t new_universe_id)
 {
   return sacn_receiver_change_universe(handle_, new_universe_id);
+}
+
+/**
+ * @brief Change the footprint within the universe this receiver is listening to. TODO: Not yet implemented.
+ *
+ * After this call completes successfully, the receiver is in a sampling period for the new footprint and will provide
+ * HandleSamplingPeriodStarted() and HandleSamplingPeriodEnded() notifications, as well as HandleUniverseData()
+ * notifications as packets are received for the new footprint.
+ *
+ * @param[in] new_footprint New footprint that this receiver should listen to.
+ * @return #kEtcPalErrNotImpl: Not yet implemented.
+ */
+inline etcpal::Error Receiver::ChangeFootprint(const SacnRecvUniverseSubrange& new_footprint)
+{
+  return sacn_receiver_change_footprint(handle_, &new_footprint);
+}
+
+/**
+ * @brief Change the universe and footprint this receiver is listening to. TODO: Not yet implemented.
+ *
+ * After this call completes successfully, the receiver is in a sampling period for the new footprint and will provide
+ * HandleSamplingPeriodStarted() and HandleSamplingPeriodEnded() notifications, as well as HandleUniverseData()
+ * notifications as packets are received for the new footprint.
+ *
+ * @param[in] new_universe_id New universe number that this receiver should listen to.
+ * @param[in] new_footprint New footprint within the universe.
+ * @return #kEtcPalErrNotImpl: Not yet implemented.
+ */
+inline etcpal::Error Receiver::ChangeUniverseAndFootprint(uint16_t new_universe_id,
+                                                          const SacnRecvUniverseSubrange& new_footprint)
+{
+  return sacn_receiver_change_universe_and_footprint(handle_, new_universe_id, &new_footprint);
 }
 
 /**
@@ -621,6 +680,7 @@ inline SacnReceiverConfig Receiver::TranslateConfig(const Settings& settings, No
       internal::ReceiverCbSourceLimitExceeded,
       &notify_handler
     },
+    settings.footprint,
     settings.source_count_max,
     settings.flags,
     settings.ip_supported

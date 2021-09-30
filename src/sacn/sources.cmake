@@ -13,6 +13,9 @@ set(SACN_MEM_HEADERS
   ${SACN_SRC}/sacn/private/mem.h
   ${SACN_SRC}/sacn/private/mem/merge_receiver/merge_receiver.h
   ${SACN_SRC}/sacn/private/mem/merge_receiver/merge_receiver_source.h
+  ${SACN_SRC}/sacn/private/mem/merge_receiver/merged_data.h
+  ${SACN_SRC}/sacn/private/mem/merge_receiver/non_dmx.h
+  ${SACN_SRC}/sacn/private/mem/merge_receiver/source_limit_exceeded.h
   ${SACN_SRC}/sacn/private/mem/receiver/receiver.h
   ${SACN_SRC}/sacn/private/mem/receiver/recv_thread_context.h
   ${SACN_SRC}/sacn/private/mem/receiver/remote_source.h
@@ -54,6 +57,9 @@ set(SACN_MEM_SOURCES
   ${SACN_SRC}/sacn/mem.c
   ${SACN_SRC}/sacn/mem/merge_receiver/merge_receiver.c
   ${SACN_SRC}/sacn/mem/merge_receiver/merge_receiver_source.c
+  ${SACN_SRC}/sacn/mem/merge_receiver/merged_data.c
+  ${SACN_SRC}/sacn/mem/merge_receiver/non_dmx.c
+  ${SACN_SRC}/sacn/mem/merge_receiver/source_limit_exceeded.c
   ${SACN_SRC}/sacn/mem/receiver/receiver.c
   ${SACN_SRC}/sacn/mem/receiver/recv_thread_context.c
   ${SACN_SRC}/sacn/mem/receiver/remote_source.c

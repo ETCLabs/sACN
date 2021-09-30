@@ -82,13 +82,13 @@ static void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSou
 #if SACN_ETC_PRIORITY_EXTENSION
 static void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* notify);
 #endif
-static void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_cid, const SacnHeaderData* header,
-                                    uint8_t seq, SacnTrackedSource** new_source,
+static void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* source_info,
+                                    const SacnRecvUniverseData* universe_data, uint8_t seq,
+                                    SacnTrackedSource** new_source,
                                     SourceLimitExceededNotification* source_limit_exceeded, bool* notify);
 static bool check_sequence(int8_t new_seq, int8_t old_seq);
-static void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid* sender_cid,
-                                      const SacnHeaderData* header,
-                                      SourceLimitExceededNotification* source_limit_exceeded,
+static void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const SacnRemoteSource* source_info,
+                                      uint16_t universe_id, SourceLimitExceededNotification* source_limit_exceeded,
                                       SourcePapLostNotification* source_pap_lost,
                                       UniverseDataNotification* universe_data);
 
@@ -608,10 +608,10 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
   bool is_termination_packet;
   bool parse_res = false;
 
-  SacnHeaderData* header = &universe_data->header;
-  header->cid = *sender_cid;
+  universe_data->source_info.cid = *sender_cid;
 
-  parse_res = parse_sacn_data_packet(data, datalen, header, &seq, &is_termination_packet, &universe_data->pdata);
+  parse_res = parse_sacn_data_packet(data, datalen, &universe_data->source_info, &seq, &is_termination_packet,
+                                     &universe_data->universe_data);
 
   if (!parse_res)
   {
@@ -626,14 +626,14 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 
   // Ignore SACN_STARTCODE_PRIORITY packets if SACN_ETC_PRIORITY_EXTENSION is disabled.
 #if !SACN_ETC_PRIORITY_EXTENSION
-  if (header->start_code == SACN_STARTCODE_PRIORITY)
+  if (universe_data->universe_data.start_code == SACN_STARTCODE_PRIORITY)
     return;
 #endif
 
   if (sacn_lock())
   {
     SacnReceiver* receiver = NULL;
-    if (lookup_receiver_by_universe(header->universe_id, &receiver) != kEtcPalErrOk)
+    if (lookup_receiver_by_universe(universe_data->universe_data.universe_id, &receiver) != kEtcPalErrOk)
     {
       // We are not listening to this universe.
       sacn_unlock();
@@ -641,8 +641,9 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     }
 
     bool notify = false;
-    header->source_handle = get_remote_source_handle(sender_cid);
-    SacnTrackedSource* src = (SacnTrackedSource*)etcpal_rbtree_find(&receiver->sources, &header->source_handle);
+    universe_data->source_info.handle = get_remote_source_handle(sender_cid);
+    SacnTrackedSource* src =
+        (SacnTrackedSource*)etcpal_rbtree_find(&receiver->sources, &universe_data->source_info.handle);
     if (src)
     {
       // Check to see if the 'stream terminated' bit is set in the options
@@ -668,44 +669,47 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
       src->seq = seq;
 
       // Based on the start code, update the timers.
-      if (header->start_code == SACN_STARTCODE_DMX)
+      if (universe_data->universe_data.start_code == SACN_STARTCODE_DMX)
       {
         process_null_start_code(receiver, src, source_pap_lost, &notify);
       }
 #if SACN_ETC_PRIORITY_EXTENSION
-      else if (header->start_code == SACN_STARTCODE_PRIORITY)
+      else if (universe_data->universe_data.start_code == SACN_STARTCODE_PRIORITY)
       {
         process_pap(receiver, src, &notify);
       }
 #endif
-      else if (header->start_code != SACN_STARTCODE_PRIORITY)
+      else if (universe_data->universe_data.start_code != SACN_STARTCODE_PRIORITY)
       {
         notify = true;
       }
     }
     else if (!is_termination_packet)
     {
-      process_new_source_data(receiver, sender_cid, header, seq, &src, source_limit_exceeded, &notify);
+      process_new_source_data(receiver, &universe_data->source_info, &universe_data->universe_data, seq, &src,
+                              source_limit_exceeded, &notify);
 
       if (src)
-        header->source_handle = src->handle;
+        universe_data->source_info.handle = src->handle;
     }
     // Else we weren't tracking this source before and it is a termination packet. Ignore.
 
     if (src)
     {
-      if (header->preview && receiver->filter_preview_data)
+      if (universe_data->universe_data.preview && receiver->filter_preview_data)
       {
         notify = false;
       }
 
       if (notify)
       {
-        universe_data->callback = receiver->callbacks.universe_data;
+        universe_data->api_callback = receiver->api_callbacks.universe_data;
+        universe_data->internal_callback = receiver->internal_callbacks.universe_data;
         universe_data->receiver_handle = receiver->keys.handle;
-        universe_data->universe = receiver->keys.universe;
-        universe_data->is_sampling = receiver->sampling;
-        universe_data->context = receiver->callbacks.context;
+        universe_data->universe_data.universe_id = receiver->keys.universe;
+        universe_data->universe_data.is_sampling = receiver->sampling;
+        universe_data->thread_id = thread_id;
+        universe_data->context = receiver->api_callbacks.context;
       }
     }
 
@@ -713,7 +717,8 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
   }
 
   // Deliver callbacks if applicable.
-  deliver_receive_callbacks(from_addr, sender_cid, header, source_limit_exceeded, source_pap_lost, universe_data);
+  deliver_receive_callbacks(from_addr, &universe_data->source_info, universe_data->universe_data.universe_id,
+                            source_limit_exceeded, source_pap_lost, universe_data);
 }
 
 /*
@@ -815,13 +820,15 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
       {
         // Source stopped sending PAP but is still sending DMX.
         // In this case, also notify the source_pap_lost callback.
-        source_pap_lost->callback = receiver->callbacks.source_pap_lost;
+        source_pap_lost->api_callback = receiver->api_callbacks.source_pap_lost;
+        source_pap_lost->internal_callback = receiver->internal_callbacks.source_pap_lost;
         source_pap_lost->source.handle = src->handle;
         source_pap_lost->source.cid = *(get_remote_source_cid(src->handle));
         ETCPAL_MSVC_NO_DEP_WRN strcpy(source_pap_lost->source.name, src->name);
-        source_pap_lost->context = receiver->callbacks.context;
         source_pap_lost->handle = receiver->keys.handle;
         source_pap_lost->universe = receiver->keys.universe;
+        source_pap_lost->thread_id = receiver->thread_id;
+        source_pap_lost->context = receiver->api_callbacks.context;
 
         src->recv_state = kRecvStateHaveDmxOnly;
       }
@@ -872,22 +879,22 @@ void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* not
  *
  * [in,out] receiver Receiver for which this source data was received - new source is added to its
  *                   tree.
- * [in] sender_cid CID of the sACN source that sent this data.
- * [in] header Header data contained in the sACN packet.
+ * [in] source_info Information about the sACN source that sent this data.
+ * [in] universe_data Information about the initial universe data detected from this source.
  * [in] seq Sequence number of the sACN packet.
  * [out] source_limit_exceeded Notification data to deliver if a source limit exceeded
  * condition should be forwarded to the app.
  * [out] notify Whether or not to forward the data to the user in a notification.
  */
-void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_cid, const SacnHeaderData* header,
-                             uint8_t seq, SacnTrackedSource** new_source,
+void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* source_info,
+                             const SacnRecvUniverseData* universe_data, uint8_t seq, SacnTrackedSource** new_source,
                              SourceLimitExceededNotification* source_limit_exceeded, bool* notify)
 {
 #if SACN_ETC_PRIORITY_EXTENSION
-  if ((header->start_code != SACN_STARTCODE_DMX) && (header->start_code != SACN_STARTCODE_PRIORITY))
+  if ((universe_data->start_code != SACN_STARTCODE_DMX) && (universe_data->start_code != SACN_STARTCODE_PRIORITY))
     return;
 #else
-  if (header->start_code != SACN_STARTCODE_DMX)
+  if (universe_data->start_code != SACN_STARTCODE_DMX)
     return;
 #endif
 
@@ -895,20 +902,20 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
   *notify = true;
 
   // A new source has appeared!
-  if (add_sacn_tracked_source(receiver, sender_cid, header->source_name, seq, header->start_code, new_source) ==
-      kEtcPalErrOk)
+  if (add_sacn_tracked_source(receiver, &source_info->cid, source_info->name, seq, universe_data->start_code,
+                              new_source) == kEtcPalErrOk)
   {
 #if SACN_ETC_PRIORITY_EXTENSION
-    if ((receiver->sampling && (header->start_code == SACN_STARTCODE_PRIORITY)) || !receiver->sampling)
+    if ((receiver->sampling && (universe_data->start_code == SACN_STARTCODE_PRIORITY)) || !receiver->sampling)
       *notify = false;
 #endif
 
     if (SACN_CAN_LOG(ETCPAL_LOG_DEBUG))
     {
       char cid_str[ETCPAL_UUID_STRING_BYTES];
-      etcpal_uuid_to_string(sender_cid, cid_str);
-      SACN_LOG_DEBUG("Tracking new source %s (%s) with initial start code 0x%02x", header->source_name, cid_str,
-                     header->start_code);
+      etcpal_uuid_to_string(&source_info->cid, cid_str);
+      SACN_LOG_DEBUG("Tracking new source %s (%s) with initial start code 0x%02x", source_info->name, cid_str,
+                     universe_data->start_code);
     }
   }
   else
@@ -917,10 +924,12 @@ void process_new_source_data(SacnReceiver* receiver, const EtcPalUuid* sender_ci
     if (!receiver->suppress_limit_exceeded_notification)
     {
       receiver->suppress_limit_exceeded_notification = true;
-      source_limit_exceeded->callback = receiver->callbacks.source_limit_exceeded;
-      source_limit_exceeded->context = receiver->callbacks.context;
+      source_limit_exceeded->api_callback = receiver->api_callbacks.source_limit_exceeded;
+      source_limit_exceeded->internal_callback = receiver->internal_callbacks.source_limit_exceeded;
       source_limit_exceeded->handle = receiver->keys.handle;
       source_limit_exceeded->universe = receiver->keys.universe;
+      source_limit_exceeded->thread_id = receiver->thread_id;
+      source_limit_exceeded->context = receiver->api_callbacks.context;
     }
   }
 }
@@ -938,12 +947,13 @@ bool check_sequence(int8_t new_seq, int8_t old_seq)
   return (seqnum_cmp > 0 || seqnum_cmp <= -20);
 }
 
-void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid* sender_cid,
-                               const SacnHeaderData* header, SourceLimitExceededNotification* source_limit_exceeded,
+void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const SacnRemoteSource* source_info,
+                               uint16_t universe_id, SourceLimitExceededNotification* source_limit_exceeded,
                                SourcePapLostNotification* source_pap_lost, UniverseDataNotification* universe_data)
 {
 #if !SACN_LOGGING_ENABLED
-  ETCPAL_UNUSED_ARG(header);
+  ETCPAL_UNUSED_ARG(source_info);
+  ETCPAL_UNUSED_ARG(universe_id);
 #endif
 
   if (source_limit_exceeded->handle != SACN_RECEIVER_INVALID)
@@ -951,28 +961,54 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const EtcPalUuid
     if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))
     {
       char cid_str[ETCPAL_UUID_STRING_BYTES];
-      etcpal_uuid_to_string(sender_cid, cid_str);
+      etcpal_uuid_to_string(&source_info->cid, cid_str);
       SACN_LOG_WARNING(
           "No room to track new sACN source %s (%s) on universe %u. This message will only be logged once each "
           "time the maximum number of sources is exceeded.",
-          header->source_name, cid_str, header->universe_id);
+          source_info->name, cid_str, universe_id);
     }
 
-    if (source_limit_exceeded->callback)
-      source_limit_exceeded->callback(source_limit_exceeded->handle, source_limit_exceeded->universe,
-                                      source_limit_exceeded->context);
+    if (source_limit_exceeded->internal_callback)
+    {
+      source_limit_exceeded->internal_callback(source_limit_exceeded->handle, source_limit_exceeded->universe,
+                                               source_limit_exceeded->thread_id);
+    }
+
+    if (source_limit_exceeded->api_callback)
+    {
+      source_limit_exceeded->api_callback(source_limit_exceeded->handle, source_limit_exceeded->universe,
+                                          source_limit_exceeded->context);
+    }
   }
 
-  if (source_pap_lost->handle != SACN_RECEIVER_INVALID && source_pap_lost->callback)
+  if (source_pap_lost->handle != SACN_RECEIVER_INVALID)
   {
-    source_pap_lost->callback(source_pap_lost->handle, source_pap_lost->universe, &source_pap_lost->source,
-                              source_pap_lost->context);
+    if (source_pap_lost->internal_callback)
+    {
+      source_pap_lost->internal_callback(source_pap_lost->handle, source_pap_lost->universe, &source_pap_lost->source,
+                                         source_pap_lost->thread_id);
+    }
+
+    if (source_pap_lost->api_callback)
+    {
+      source_pap_lost->api_callback(source_pap_lost->handle, source_pap_lost->universe, &source_pap_lost->source,
+                                    source_pap_lost->context);
+    }
   }
 
-  if (universe_data->receiver_handle != SACN_RECEIVER_INVALID && universe_data->callback)
+  if (universe_data->receiver_handle != SACN_RECEIVER_INVALID)
   {
-    universe_data->callback(universe_data->receiver_handle, from_addr, &universe_data->header, universe_data->pdata,
-                            universe_data->is_sampling, universe_data->context);
+    if (universe_data->internal_callback)
+    {
+      universe_data->internal_callback(universe_data->receiver_handle, from_addr, &universe_data->source_info,
+                                       &universe_data->universe_data, universe_data->thread_id);
+    }
+
+    if (universe_data->api_callback)
+    {
+      universe_data->api_callback(universe_data->receiver_handle, from_addr, &universe_data->source_info,
+                                  &universe_data->universe_data, universe_data->context);
+    }
   }
 }
 
@@ -1013,20 +1049,26 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
       if (!receiver->notified_sampling_started)
       {
         receiver->notified_sampling_started = true;
-        sampling_started[num_sampling_started].callback = receiver->callbacks.sampling_period_started;
-        sampling_started[num_sampling_started].context = receiver->callbacks.context;
+        sampling_started[num_sampling_started].api_callback = receiver->api_callbacks.sampling_period_started;
+        sampling_started[num_sampling_started].internal_callback = receiver->internal_callbacks.sampling_period_started;
         sampling_started[num_sampling_started].handle = receiver->keys.handle;
         sampling_started[num_sampling_started].universe = receiver->keys.universe;
+        sampling_started[num_sampling_started].thread_id = receiver->thread_id;
+        sampling_started[num_sampling_started].context = receiver->api_callbacks.context;
+
         ++num_sampling_started;
       }
 
       if (receiver->sampling && etcpal_timer_is_expired(&receiver->sample_timer))
       {
         receiver->sampling = false;
-        sampling_ended[num_sampling_ended].callback = receiver->callbacks.sampling_period_ended;
-        sampling_ended[num_sampling_ended].context = receiver->callbacks.context;
+        sampling_ended[num_sampling_ended].api_callback = receiver->api_callbacks.sampling_period_ended;
+        sampling_ended[num_sampling_ended].internal_callback = receiver->internal_callbacks.sampling_period_ended;
         sampling_ended[num_sampling_ended].handle = receiver->keys.handle;
         sampling_ended[num_sampling_ended].universe = receiver->keys.universe;
+        sampling_ended[num_sampling_ended].thread_id = receiver->thread_id;
+        sampling_ended[num_sampling_ended].context = receiver->api_callbacks.context;
+
         ++num_sampling_ended;
       }
 
@@ -1089,10 +1131,12 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
 
   if (sources_lost->num_lost_sources > 0)
   {
-    sources_lost->callback = receiver->callbacks.sources_lost;
-    sources_lost->context = receiver->callbacks.context;
+    sources_lost->api_callback = receiver->api_callbacks.sources_lost;
+    sources_lost->internal_callback = receiver->internal_callbacks.sources_lost;
     sources_lost->handle = receiver->keys.handle;
     sources_lost->universe = receiver->keys.universe;
+    sources_lost->thread_id = receiver->thread_id;
+    sources_lost->context = receiver->api_callbacks.context;
 
     for (size_t i = 0; i < sources_lost->num_lost_sources; ++i)
       remove_receiver_source(receiver, sources_lost->lost_sources[i].handle);
@@ -1187,22 +1231,32 @@ void deliver_periodic_callbacks(const PeriodicCallbacks* periodic_callbacks)
   for (const SamplingStartedNotification* notif = periodic_callbacks->sampling_started_arr;
        notif < periodic_callbacks->sampling_started_arr + periodic_callbacks->num_sampling_started; ++notif)
   {
-    if (notif->callback)
-      notif->callback(notif->handle, notif->universe, notif->context);
+    if (notif->internal_callback)
+      notif->internal_callback(notif->handle, notif->universe, notif->thread_id);
+    if (notif->api_callback)
+      notif->api_callback(notif->handle, notif->universe, notif->context);
   }
 
   for (const SamplingEndedNotification* notif = periodic_callbacks->sampling_ended_arr;
        notif < periodic_callbacks->sampling_ended_arr + periodic_callbacks->num_sampling_ended; ++notif)
   {
-    if (notif->callback)
-      notif->callback(notif->handle, notif->universe, notif->context);
+    if (notif->internal_callback)
+      notif->internal_callback(notif->handle, notif->universe, notif->thread_id);
+    if (notif->api_callback)
+      notif->api_callback(notif->handle, notif->universe, notif->context);
   }
 
   for (const SourcesLostNotification* notif = periodic_callbacks->sources_lost_arr;
        notif < periodic_callbacks->sources_lost_arr + periodic_callbacks->num_sources_lost; ++notif)
   {
-    if (notif->callback)
-      notif->callback(notif->handle, notif->universe, notif->lost_sources, notif->num_lost_sources, notif->context);
+    if (notif->internal_callback)
+    {
+      notif->internal_callback(notif->handle, notif->universe, notif->lost_sources, notif->num_lost_sources,
+                               notif->thread_id);
+    }
+
+    if (notif->api_callback)
+      notif->api_callback(notif->handle, notif->universe, notif->lost_sources, notif->num_lost_sources, notif->context);
   }
 }
 

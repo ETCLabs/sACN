@@ -75,6 +75,50 @@ typedef int sacn_receiver_t;
  */
 #define SACN_DEFAULT_EXPIRED_WAIT_MS 1000u
 
+/** Defines a range of addresses within a sACN universe. */
+typedef struct SacnRecvUniverseSubrange
+{
+  int start_address; /**< The first address in the range (any value between 1 and 512 inclusive). */
+  int address_count;  /**< The number of addresses in the range. */
+} SacnRecvUniverseSubrange;
+
+/**
+ * A complete description of newly received universe data within the configured footprint.
+ */
+typedef struct SacnRecvUniverseData
+{
+  /**
+   * The sACN Universe identifier. Valid range is 1-63999, inclusive.
+   */
+  uint16_t universe_id;
+  /**
+   * The priority of the sACN data. Valid range is 0-200, inclusive.
+   */
+  uint8_t priority;
+  /**
+   * Whether the Preview_Data bit is set for the sACN data. From E1.31: "Indicates that the data in
+   * this packet is intended for use in visualization or media server preview applications and
+   * shall not be used to generate live output."
+   */
+  bool preview;
+  /**
+   * True if this data was received during the sampling period, false otherwise.
+   */
+  bool is_sampling;
+  /**
+   * The start code of the DMX data.
+   */
+  uint8_t start_code;
+  /**
+   * The range of slots represented by this data (the intersection of the received data with the configured footprint).
+   */
+  SacnRecvUniverseSubrange slot_range;
+  /**
+   * Pointer to the slot values at the location indicated by slot_range.
+   */
+  const uint8_t* slots;
+} SacnRecvUniverseData;
+
 /** Information about a remote sACN source being tracked by a receiver. */
 typedef struct SacnRemoteSource
 {
@@ -112,7 +156,7 @@ typedef struct SacnLostSource
  */
 
 /**
- * @brief Notify that a data packet has been received.
+ * @brief Notify that new universe data within the configured footprint has been received.
  *
  * This will not be called if the Stream_Terminated bit is set, or if the Preview_Data bit is set and preview packets
  * are being filtered.
@@ -128,17 +172,18 @@ typedef struct SacnLostSource
  *
  * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
  * if the source forces the packet, or if the source sends a data packet without a sync universe.
- * TODO: this version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
+ * 
+ * @todo This version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
  *
  * @param[in] receiver_handle Handle to the receiver instance for which universe data was received.
  * @param[in] source_addr The network address from which the sACN packet originated.
- * @param[in] header The header data of the sACN packet.
- * @param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count.
- * @param[in] is_sampling True if this data was received during the sampling period, false otherwise.
+ * @param[in] source_info Information about the source that sent this data.
+ * @param[in] universe_data The universe data (and relevant information about that data), starting from the first slot
+ * of the currently configured footprint.
  * @param[in] context Context pointer that was given at the creation of the receiver instance.
  */
 typedef void (*SacnUniverseDataCallback)(sacn_receiver_t receiver_handle, const EtcPalSockAddr* source_addr,
-                                         const SacnHeaderData* header, const uint8_t* pdata, bool is_sampling,
+                                         const SacnRemoteSource* source_info, const SacnRecvUniverseData* universe_data,
                                          void* context);
 
 /**
@@ -200,9 +245,9 @@ typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t handle, uint16_t unive
  * If #SACN_DYNAMIC_MEM was defined to 1 when sACN was compiled (the default on non-embedded
  * platforms), and the configuration you pass to sacn_receiver_create() has source_count_max set to
  * #SACN_RECEIVER_INFINITE_SOURCES, this callback will never be called and may be set to NULL.
-
- * if #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max is ignored and
- * #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.
+ *
+ * If #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max is only used if it's less than
+ * #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, otherwise #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.
  *
  * This callback is rate-limited: it will only be called when the first sACN packet is received
  * from a source beyond the limit specified. After that, it will not be called again until the number of sources sending
@@ -215,7 +260,7 @@ typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t handle, uint16_t unive
 typedef void (*SacnSourceLimitExceededCallback)(sacn_receiver_t handle, uint16_t universe, void* context);
 
 /** A set of callback functions that the library uses to notify the application about sACN events. */
-typedef struct SacnRecvCallbacks
+typedef struct SacnReceiverCallbacks
 {
   SacnUniverseDataCallback universe_data;                    /**< Required */
   SacnSourcesLostCallback sources_lost;                      /**< Required */
@@ -238,9 +283,12 @@ typedef struct SacnReceiverConfig
 
   /********* Optional values **********/
 
+  /** The footprint within the universe to monitor. TODO: Currently unimplemented and thus ignored. */
+  SacnRecvUniverseSubrange footprint;
+
   /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
-      This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used
-     instead.*/
+      When configured to use static memory, this parameter is only used if it's less than
+      #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE -- otherwise #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.*/
   int source_count_max;
   /** A set of option flags. See "sACN receiver flags". */
   unsigned int flags;
@@ -250,9 +298,10 @@ typedef struct SacnReceiverConfig
 } SacnReceiverConfig;
 
 /** A default-value initializer for an SacnReceiverConfig struct. */
-#define SACN_RECEIVER_CONFIG_DEFAULT_INIT                                                        \
-  {                                                                                              \
-    0, {NULL, NULL, NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, 0, kSacnIpV4AndIpV6 \
+#define SACN_RECEIVER_CONFIG_DEFAULT_INIT                                                               \
+  {                                                                                                     \
+    0, {NULL, NULL, NULL, NULL, NULL, NULL}, {1, DMX_ADDRESS_COUNT}, SACN_RECEIVER_INFINITE_SOURCES, 0, \
+        kSacnIpV4AndIpV6                                                                                \
   }
 
 /** A set of network interfaces for a particular receiver. */
@@ -274,7 +323,11 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
                                     const SacnNetintConfig* netint_config);
 etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle);
 etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* universe_id);
+etcpal_error_t sacn_receiver_get_footprint(sacn_receiver_t handle, SacnRecvUniverseSubrange* footprint);
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id);
+etcpal_error_t sacn_receiver_change_footprint(sacn_receiver_t handle, const SacnRecvUniverseSubrange* new_footprint);
+etcpal_error_t sacn_receiver_change_universe_and_footprint(sacn_receiver_t handle, uint16_t new_universe_id,
+                                                           const SacnRecvUniverseSubrange* new_footprint);
 etcpal_error_t sacn_receiver_reset_networking(const SacnNetintConfig* sys_netint_config);
 etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfig* sys_netint_config,
                                                            const SacnReceiverNetintList* per_receiver_netint_lists,

@@ -55,6 +55,35 @@ typedef int sacn_merge_receiver_t;
 #define SACN_MERGE_RECEIVER_INVALID SACN_RECEIVER_INVALID
 
 /**
+ * Newly updated merged data within the configured footprint.
+ */
+typedef struct SacnRecvMergedData
+{
+  /**
+   * The sACN Universe identifier. Valid range is 1-63999, inclusive.
+   */
+  uint16_t universe_id;
+  /**
+   * The range of slots represented by this data (the configured footprint).
+   */
+  SacnRecvUniverseSubrange slot_range;
+  /**
+   * The merged levels for the universe at the location indicated by slot_range. This buffer is owned by the library.
+   */
+  const uint8_t* slots;
+  /**
+   * The source handles of the owners of the slots within slot_range.  If a value in the buffer is
+   * #SACN_REMOTE_SOURCE_INVALID, the corresponding slot is not currently controlled. This buffer is owned by the
+   * library.
+   */
+  const sacn_remote_source_t* slot_owners;
+  /**
+   * The current number of sources considered to be active on the current universe.
+   */
+  size_t num_active_sources;
+} SacnRecvMergedData;
+
+/**
  * @brief Notify that a new data packet has been received and merged.
  *
  * This callback will be called in multiple ways:
@@ -70,43 +99,37 @@ typedef int sacn_merge_receiver_t;
  * packets on the universe.
  *
  * @param[in] handle The handle to the merge receiver instance.
- * @param[in] universe The universe this merge receiver is monitoring.
- * @param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe. This buffer is
- * owned by the library.
- * @param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source handles.  If a value in the buffer is
- * #SACN_REMOTE_SOURCE_INVALID, the corresponding slot is not currently controlled. This buffer is owned by the
- * library.
- * @param[in] num_active_sources The current number of sources considered to be active on the current universe.
+ * @param[in] merged_data The merged data (and relevant information about that data), starting from the first slot
+ * of the currently configured footprint.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle, uint16_t universe,
-                                                    const uint8_t* slots, const sacn_remote_source_t* slot_owners,
-                                                    size_t num_active_sources, void* context);
+typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle, const SacnRecvMergedData* merged_data,
+                                                    void* context);
 
 /**
  * @brief Notify that a non-data packet has been received.
  *
- * When an established source sends a sACN data packet that doesn't contain DMX values or priorities, the raw packet is
- * immediately and synchronously passed to this callback.
+ * When an established source sends a sACN data packet that doesn't contain DMX values or priorities, the raw data
+ * within the configured footprint is immediately and synchronously passed to this callback.
  *
  * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
  * packets on the universe.
  *
  * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
  * if the source forces the packet, or if the source sends a data packet without a sync universe.
- * TODO: this version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
+ * 
+ * @todo This version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
  *
  * @param[in] receiver_handle The handle to the merge receiver instance.
- * @param[in] universe The universe this merge receiver is monitoring.
  * @param[in] source_addr The network address from which the sACN packet originated.
- * @param[in] header The header data of the sACN packet.
- * @param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count. This buffer is
- * owned by the library.
+ * @param[in] source_info Information about the source that sent this data.
+ * @param[in] universe_data The universe data (and relevant information about that data), starting from the first slot
+ * of the currently configured footprint.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t receiver_handle, uint16_t universe,
-                                                const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
-                                                const uint8_t* pdata, void* context);
+typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t receiver_handle,
+                                                const EtcPalSockAddr* source_addr, const SacnRemoteSource* source_info,
+                                                const SacnRecvUniverseData* universe_data, void* context);
 
 /**
  * @brief Notify that more than the configured maximum number of sources are currently sending on
@@ -142,9 +165,12 @@ typedef struct SacnMergeReceiverConfig
 
   /********* Optional values **********/
 
+  /** The footprint within the universe to monitor. TODO: Currently unimplemented and thus ignored. */
+  SacnRecvUniverseSubrange footprint;
+
   /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
-      This parameter is ignored when configured to use static memory -- #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used
-      instead.*/
+      This parameter is ignored when configured to use static memory -- the lower of
+      #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER or #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.*/
   int source_count_max;
 
   /** If true, this allows per-address priorities (if any are received) to be fed into the merger. If false, received
@@ -157,9 +183,9 @@ typedef struct SacnMergeReceiverConfig
 } SacnMergeReceiverConfig;
 
 /** A default-value initializer for an SacnMergeReceiverConfig struct. */
-#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                         \
-  {                                                                                     \
-    0, {NULL, NULL, NULL, NULL}, SACN_RECEIVER_INFINITE_SOURCES, true, kSacnIpV4AndIpV6 \
+#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                                                 \
+  {                                                                                                             \
+    0, {NULL, NULL, NULL, NULL}, {1, DMX_ADDRESS_COUNT}, SACN_RECEIVER_INFINITE_SOURCES, true, kSacnIpV4AndIpV6 \
   }
 
 /** A set of network interfaces for a particular merge receiver. */
@@ -181,7 +207,12 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
                                           const SacnNetintConfig* netint_config);
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle);
 etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id);
+etcpal_error_t sacn_merge_receiver_get_footprint(sacn_merge_receiver_t handle, SacnRecvUniverseSubrange* footprint);
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id);
+etcpal_error_t sacn_merge_receiver_change_footprint(sacn_merge_receiver_t handle,
+                                                    const SacnRecvUniverseSubrange* new_footprint);
+etcpal_error_t sacn_merge_receiver_change_universe_and_footprint(sacn_merge_receiver_t handle, uint16_t new_universe_id,
+                                                                 const SacnRecvUniverseSubrange* new_footprint);
 etcpal_error_t sacn_merge_receiver_reset_networking(const SacnNetintConfig* sys_netint_config);
 etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(
     const SacnNetintConfig* sys_netint_config, const SacnMergeReceiverNetintList* per_receiver_netint_lists,

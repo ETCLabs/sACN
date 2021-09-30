@@ -75,14 +75,14 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     universe->seq_num = 0;
 
     universe->level_packets_sent_before_suppression = 0;
-    init_sacn_data_send_buf(universe->level_send_buf, 0x00, &source->cid, source->name, config->priority,
+    init_sacn_data_send_buf(universe->level_send_buf, SACN_STARTCODE_DMX, &source->cid, source->name, config->priority,
                             config->universe, config->sync_universe, config->send_preview);
     universe->has_level_data = false;
 
 #if SACN_ETC_PRIORITY_EXTENSION
     universe->pap_packets_sent_before_suppression = 0;
-    init_sacn_data_send_buf(universe->pap_send_buf, 0xDD, &source->cid, source->name, config->priority,
-                            config->universe, config->sync_universe, config->send_preview);
+    init_sacn_data_send_buf(universe->pap_send_buf, SACN_STARTCODE_PRIORITY, &source->cid, source->name,
+                            config->priority, config->universe, config->sync_universe, config->send_preview);
     universe->has_pap_data = false;
 #endif
 

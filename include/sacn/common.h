@@ -78,47 +78,6 @@ typedef enum
 } sacn_ip_support_t;
 
 /**
- * The data present in the header of an sACN data packet.
- */
-typedef struct SacnHeaderData
-{
-  /**
-   * The source's Component Identifier (CID).
-   */
-  EtcPalUuid cid;
-  /**
-   * The source's handle, uniquely identifying the source.
-   */
-  sacn_remote_source_t source_handle;
-  /**
-   * A user-assigned name for displaying the identity of a source.
-   */
-  char source_name[SACN_SOURCE_NAME_MAX_LEN];
-  /**
-   * The sACN Universe identifier. Valid range is 1-63999, inclusive.
-   */
-  uint16_t universe_id;
-  /**
-   * The priority of the sACN data. Valid range is 0-200, inclusive.
-   */
-  uint8_t priority;
-  /**
-   * Whether the Preview_Data bit is set for the sACN data. From E1.31: "Indicates that the data in
-   * this packet is intended for use in visualization or media server preview applications and
-   * shall not be used to generate live output."
-   */
-  bool preview;
-  /**
-   * The start code of the DMX data.
-   */
-  uint8_t start_code;
-  /**
-   * The number of slots in the DMX data.
-   */
-  uint16_t slot_count;
-} SacnHeaderData;
-
-/**
  * On input, this structure is used to indicate a network interface to use.
  * On output, this structure indicates whether or not the operation was a success.
  */

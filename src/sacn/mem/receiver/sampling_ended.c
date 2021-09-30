@@ -80,7 +80,10 @@ SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id,
 
     memset(notifications->buf, 0, size * sizeof(SamplingEndedNotification));
     for (size_t i = 0; i < size; ++i)
+    {
       notifications->buf[i].handle = SACN_RECEIVER_INVALID;
+      notifications->buf[i].thread_id = SACN_THREAD_ID_INVALID;
+    }
 
     return notifications->buf;
   }

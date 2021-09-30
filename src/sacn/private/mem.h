@@ -35,6 +35,9 @@
 
 #include "sacn/private/mem/merge_receiver/merge_receiver.h"
 #include "sacn/private/mem/merge_receiver/merge_receiver_source.h"
+#include "sacn/private/mem/merge_receiver/merged_data.h"
+#include "sacn/private/mem/merge_receiver/non_dmx.h"
+#include "sacn/private/mem/merge_receiver/source_limit_exceeded.h"
 #include "sacn/private/mem/receiver/receiver.h"
 #include "sacn/private/mem/receiver/recv_thread_context.h"
 #include "sacn/private/mem/receiver/remote_source.h"
@@ -66,7 +69,7 @@ etcpal_error_t sacn_source_mem_init(void);
 void sacn_source_mem_deinit(void);
 etcpal_error_t sacn_source_detector_mem_init(void);
 void sacn_source_detector_mem_deinit(void);
-etcpal_error_t sacn_merge_receiver_mem_init(void);
+etcpal_error_t sacn_merge_receiver_mem_init(unsigned int number_of_threads);
 void sacn_merge_receiver_mem_deinit(void);
 
 #ifdef __cplusplus

@@ -57,6 +57,8 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
   if (config)
   {
     memset(config, 0, sizeof(SacnReceiverConfig));
+    config->footprint.start_address = 1;
+    config->footprint.address_count = SACN_RECEIVER_MAX_FOOTPRINT;
     config->source_count_max = SACN_RECEIVER_INFINITE_SOURCES;
   }
 }
@@ -110,7 +112,7 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
   {
     if (sacn_lock())
     {
-      res = create_sacn_receiver(config, handle, netint_config);
+      res = create_sacn_receiver(config, handle, netint_config, NULL);
       sacn_unlock();
     }
     else
@@ -199,6 +201,41 @@ etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* univ
 }
 
 /**
+ * @brief Get the footprint within the universe on which a sACN receiver is currently listening.
+ *
+ * @todo At this time, custom footprints are not supported by this library, so the full 512-slot footprint is returned.
+ *
+ * @param[in] handle Handle to the receiver that we want to query.
+ * @param[out] footprint The retrieved footprint.
+ * @return #kEtcPalErrOk: Footprint retrieved successfully.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_receiver_get_footprint(sacn_receiver_t handle, SacnRecvUniverseSubrange* footprint)
+{
+  etcpal_error_t result = kEtcPalErrOk;
+
+  if (!footprint)
+    result = kEtcPalErrInvalid;
+
+  if (result == kEtcPalErrOk)
+  {
+    uint16_t tmp = 0;
+    result = sacn_receiver_get_universe(handle, &tmp);
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    footprint->start_address = 1;
+    footprint->address_count = DMX_ADDRESS_COUNT;
+  }
+
+  return result;
+}
+
+/**
  * @brief Change the universe on which an sACN receiver is listening.
  *
  * An sACN receiver can only listen on one universe at a time. After this call completes successfully, the receiver is
@@ -238,6 +275,47 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
   }
 
   return res;
+}
+
+/**
+ * @brief Change the footprint within the universe on which an sACN receiver is listening. TODO: Not yet implemented.
+ *
+ * After this call completes successfully, the receiver is in a sampling period for the new footprint and will provide
+ * SamplingPeriodStarted() and SamplingPeriodEnded() notifications, as well as UniverseData() notifications as packets
+ * are received for the new footprint.
+ *
+ * @param[in] handle Handle to the receiver for which to change the universe.
+ * @param[in] new_footprint New footprint that this receiver should listen to.
+ * @return #kEtcPalErrNotImpl: Not yet implemented.
+ */
+etcpal_error_t sacn_receiver_change_footprint(sacn_receiver_t handle, const SacnRecvUniverseSubrange* new_footprint)
+{
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(new_footprint);
+
+  return kEtcPalErrNotImpl;
+}
+
+/**
+ * @brief Change the universe and footprint on which an sACN receiver is listening. TODO: Not yet implemented.
+ *
+ * After this call completes successfully, the receiver is in a sampling period for the new footprint and will provide
+ * SamplingPeriodStarted() and SamplingPeriodEnded() notifications, as well as UniverseData() notifications as packets
+ * are received for the new footprint.
+ *
+ * @param[in] handle Handle to the receiver for which to change the universe.
+ * @param[in] new_universe_id New universe number that this receiver should listen to.
+ * @param[in] new_footprint New footprint within the universe.
+ * @return #kEtcPalErrNotImpl: Not yet implemented.
+ */
+etcpal_error_t sacn_receiver_change_universe_and_footprint(sacn_receiver_t handle, uint16_t new_universe_id,
+                                                           const SacnRecvUniverseSubrange* new_footprint)
+{
+  ETCPAL_UNUSED_ARG(handle);
+  ETCPAL_UNUSED_ARG(new_universe_id);
+  ETCPAL_UNUSED_ARG(new_footprint);
+
+  return kEtcPalErrNotImpl;
 }
 
 /**
@@ -491,10 +569,12 @@ uint32_t sacn_receiver_get_expired_wait()
 
 // Needs lock
 etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_receiver_t* handle,
-                                    const SacnNetintConfig* netint_config)
+                                    const SacnNetintConfig* netint_config,
+                                    const SacnReceiverInternalCallbacks* internal_callbacks)
 {
   SacnReceiver* receiver = NULL;
-  etcpal_error_t res = add_sacn_receiver(get_next_receiver_handle(), config, netint_config, &receiver);
+  etcpal_error_t res =
+      add_sacn_receiver(get_next_receiver_handle(), config, netint_config, internal_callbacks, &receiver);
 
   if (res == kEtcPalErrOk)
   {

@@ -28,7 +28,12 @@ DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_create, const SacnReceiverC
                        const SacnNetintConfig*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_destroy, sacn_receiver_t);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_get_universe, sacn_receiver_t, uint16_t*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_get_footprint, sacn_receiver_t, SacnRecvUniverseSubrange*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_change_universe, sacn_receiver_t, uint16_t);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_change_footprint, sacn_receiver_t,
+                       const SacnRecvUniverseSubrange*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_change_universe_and_footprint, sacn_receiver_t, uint16_t,
+                       const SacnRecvUniverseSubrange*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_reset_networking, const SacnNetintConfig*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_receiver_reset_networking_per_receiver, const SacnNetintConfig*,
                        const SacnReceiverNetintList*, size_t);
@@ -38,7 +43,7 @@ DEFINE_FAKE_VOID_FUNC(sacn_receiver_set_expired_wait, uint32_t);
 DEFINE_FAKE_VALUE_FUNC(uint32_t, sacn_receiver_get_expired_wait);
 
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, create_sacn_receiver, const SacnReceiverConfig*, sacn_receiver_t*,
-                       const SacnNetintConfig*);
+                       const SacnNetintConfig*, const SacnReceiverInternalCallbacks*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, destroy_sacn_receiver, sacn_receiver_t);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, change_sacn_receiver_universe, sacn_receiver_t, uint16_t);
 
@@ -51,7 +56,10 @@ void sacn_receiver_reset_all_fakes(void)
   RESET_FAKE(sacn_receiver_create);
   RESET_FAKE(sacn_receiver_destroy);
   RESET_FAKE(sacn_receiver_get_universe);
+  RESET_FAKE(sacn_receiver_get_footprint);
   RESET_FAKE(sacn_receiver_change_universe);
+  RESET_FAKE(sacn_receiver_change_footprint);
+  RESET_FAKE(sacn_receiver_change_universe_and_footprint);
   RESET_FAKE(sacn_receiver_reset_networking);
   RESET_FAKE(sacn_receiver_reset_networking_per_receiver);
   RESET_FAKE(sacn_receiver_get_network_interfaces);

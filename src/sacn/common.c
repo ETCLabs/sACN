@@ -107,7 +107,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
 #if SACN_MERGE_RECEIVER_ENABLED
     bool merge_receiver_mem_initted = false;
     if (res == kEtcPalErrOk)
-      merge_receiver_mem_initted = ((res = sacn_merge_receiver_mem_init()) == kEtcPalErrOk);
+      merge_receiver_mem_initted = ((res = sacn_merge_receiver_mem_init(SACN_RECEIVER_MAX_THREADS)) == kEtcPalErrOk);
 #endif  // SACN_MERGE_RECEIVER_ENABLED
 
 #if SACN_SOURCE_DETECTOR_ENABLED

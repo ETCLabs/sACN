@@ -81,35 +81,32 @@ public:
      * packets on the universe.
      *
      * @param[in] handle The merge receiver's handle.
-     * @param[in] universe The universe this merge receiver is monitoring.
-     * @param[in] slots Buffer of #DMX_ADDRESS_COUNT bytes containing the merged levels for the universe.  This buffer
-     *                  is owned by the library.
-     * @param[in] slot_owners Buffer of #DMX_ADDRESS_COUNT source handles.  If a value in the buffer is
-     * sacn::kInvalidRemoteSourceHandle, the corresponding slot is not currently controlled.  This buffer is owned by
-     * the library.
-     * @param[in] num_active_sources The current number of sources considered to be active on the current universe.
+     * @param[in] merged_data The merged data (and relevant information about that data), starting from the first slot
+     * of the currently configured footprint.
      */
-    virtual void HandleMergedData(Handle handle, uint16_t universe, const uint8_t* slots,
-                                  const RemoteSourceHandle* slot_owners, size_t num_active_sources) = 0;
+    virtual void HandleMergedData(Handle handle, const SacnRecvMergedData& merged_data) = 0;
 
     /**
      * @brief Notify that a non-data packet has been received.
      *
-     * When an established source sends a sACN data packet that doesn't contain DMX values or priorities, the raw packet
-     * is immediately and synchronously passed to this callback.
+     * When an established source sends a sACN data packet that doesn't contain DMX values or priorities, the raw data
+     * within the configured footprint is immediately and synchronously passed to this callback.
      *
      * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
      * packets on the universe.
      *
+     * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
+     * if the source forces the packet, or if the source sends a data packet without a sync universe.
+     * TODO: this version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
+     *
      * @param[in] receiver_handle The merge receiver's handle.
-     * @param[in] universe The universe this merge receiver is monitoring.
      * @param[in] source_addr The network address from which the sACN packet originated.
-     * @param[in] header The header data of the sACN packet.
-     * @param[in] pdata Pointer to the data buffer. Size of the buffer is indicated by header->slot_count. This buffer
-     *                  is owned by the library.
+     * @param[in] source_info Information about the source that sent this data.
+     * @param[in] universe_data The universe data (and relevant information about that data), starting from the first
+     * slot of the currently configured footprint.
      */
-    virtual void HandleNonDmxData(Handle receiver_handle, uint16_t universe, const etcpal::SockAddr& source_addr,
-                                  const SacnHeaderData& header, const uint8_t* pdata) = 0;
+    virtual void HandleNonDmxData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
+                                  const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data) = 0;
 
     /**
      * @brief Notify that more than the configured maximum number of sources are currently sending on
@@ -139,6 +136,9 @@ public:
     uint16_t universe_id{0};
 
     /********* Optional values **********/
+
+    /** The footprint within the universe to monitor. TODO: Currently unimplemented and thus ignored. */
+    SacnRecvUniverseSubrange footprint{1, DMX_ADDRESS_COUNT};
 
     /** The maximum number of sources this universe will listen to when using dynamic memory. */
     int source_count_max{SACN_RECEIVER_INFINITE_SOURCES};
@@ -192,7 +192,10 @@ public:
                         std::vector<SacnMcastInterface>& netints);
   void Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
+  etcpal::Expected<SacnRecvUniverseSubrange> GetFootprint() const;
   etcpal::Error ChangeUniverse(uint16_t new_universe_id);
+  etcpal::Error ChangeFootprint(const SacnRecvUniverseSubrange& new_footprint);
+  etcpal::Error ChangeUniverseAndFootprint(uint16_t new_universe_id, const SacnRecvUniverseSubrange& new_footprint);
   std::vector<EtcPalMcastNetintId> GetNetworkInterfaces();
 
   static etcpal::Error ResetNetworking();
@@ -214,25 +217,23 @@ private:
  */
 namespace internal
 {
-extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, uint16_t universe, const uint8_t* slots,
-                                                 const sacn_remote_source_t* slot_owners, size_t num_active_sources,
+extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, const SacnRecvMergedData* merged_data,
                                                  void* context)
 {
-  if (context)
+  if (context && merged_data)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleMergedData(handle, universe, slots, slot_owners,
-                                                                          num_active_sources);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleMergedData(handle, *merged_data);
   }
 }
 
-extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t receiver_handle, uint16_t universe,
-                                             const EtcPalSockAddr* source_addr, const SacnHeaderData* header,
-                                             const uint8_t* pdata, void* context)
+extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t receiver_handle, const EtcPalSockAddr* source_addr,
+                                             const SacnRemoteSource* source_info,
+                                             const SacnRecvUniverseData* universe_data, void* context)
 {
-  if (context && source_addr && header)
+  if (context && source_addr && source_info && universe_data)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(receiver_handle, universe, *source_addr,
-                                                                          *header, pdata);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(receiver_handle, *source_addr, *source_info,
+                                                                          *universe_data);
   }
 }
 
@@ -263,7 +264,9 @@ inline MergeReceiver::Settings::Settings(uint16_t new_universe_id) : universe_id
 /** Determine whether a MergeReciever Settings instance contains valid data for sACN operation. */
 inline bool MergeReceiver::Settings::IsValid() const
 {
-  return (universe_id > 0);
+  return (universe_id > 0) && (footprint.start_address >= 1) && (footprint.start_address <= DMX_ADDRESS_COUNT) &&
+         (footprint.address_count >= 1) &&
+         (footprint.address_count <= (DMX_ADDRESS_COUNT - footprint.start_address + 1));
 }
 
 /**
@@ -351,7 +354,7 @@ inline void MergeReceiver::Shutdown()
 }
 
 /**
- * @brief Get the universe this class is listening to.
+ * @brief Get the universe this merge receiver is listening to.
  *
  * @return If valid, the value is the universe id.  Otherwise, this is the underlying error the C library call returned.
  */
@@ -359,6 +362,23 @@ inline etcpal::Expected<uint16_t> MergeReceiver::GetUniverse() const
 {
   uint16_t result = 0;
   etcpal_error_t err = sacn_merge_receiver_get_universe(handle_, &result);
+  if (err == kEtcPalErrOk)
+    return result;
+  else
+    return err;
+}
+
+/**
+ * @brief Get the footprint within the universe this merge receiver is listening to.
+ *
+ * TODO: At this time, custom footprints are not supported by this library, so the full 512-slot footprint is returned.
+ *
+ * @return If valid, the value is the footprint.  Otherwise, this is the underlying error the C library call returned.
+ */
+inline etcpal::Expected<SacnRecvUniverseSubrange> MergeReceiver::GetFootprint() const
+{
+  SacnRecvUniverseSubrange result;
+  etcpal_error_t err = sacn_merge_receiver_get_footprint(handle_, &result);
   if (err == kEtcPalErrOk)
     return result;
   else
@@ -383,6 +403,36 @@ inline etcpal::Expected<uint16_t> MergeReceiver::GetUniverse() const
 inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
 {
   return sacn_merge_receiver_change_universe(handle_, new_universe_id);
+}
+
+/**
+ * @brief Change the footprint within the universe this merge receiver is listening to. TODO: Not yet implemented.
+ *
+ * After this call completes, a new sampling period will occur, and then underlying updates will generate new calls to
+ * HandleMergedData().
+ * 
+ * @param[in] new_footprint New footprint that this merge receiver should listen to.
+ * @return #kEtcPalErrNotImpl: Not yet implemented.
+ */
+inline etcpal::Error MergeReceiver::ChangeFootprint(const SacnRecvUniverseSubrange& new_footprint)
+{
+  return sacn_merge_receiver_change_footprint(handle_, &new_footprint);
+}
+
+/**
+ * @brief Change the universe and footprint this merge receiver is listening to. TODO: Not yet implemented.
+ *
+ * After this call completes, a new sampling period will occur, and then underlying updates will generate new calls to
+ * HandleMergedData().
+ * 
+ * @param[in] new_universe_id New universe number that this merge receiver should listen to.
+ * @param[in] new_footprint New footprint within the universe.
+ * @return #kEtcPalErrNotImpl: Not yet implemented.
+ */
+inline etcpal::Error MergeReceiver::ChangeUniverseAndFootprint(uint16_t new_universe_id,
+                                                               const SacnRecvUniverseSubrange& new_footprint)
+{
+  return sacn_merge_receiver_change_universe_and_footprint(handle_, new_universe_id, &new_footprint);
 }
 
 /**
@@ -541,6 +591,7 @@ inline SacnMergeReceiverConfig MergeReceiver::TranslateConfig(const Settings& se
       internal::MergeReceiverCbSourceLimitExceeded,
       &notify_handler
     },
+    settings.footprint,
     settings.source_count_max,
     settings.use_pap,
     settings.ip_supported

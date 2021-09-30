@@ -97,7 +97,10 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid*
   size_t max_number_of_sources = receiver->source_count_max;
   bool infinite_sources = (max_number_of_sources == SACN_RECEIVER_INFINITE_SOURCES);
 #else
-  size_t max_number_of_sources = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE;
+  size_t max_number_of_sources = ((receiver->source_count_max > SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE) ||
+                                  (receiver->source_count_max == SACN_RECEIVER_INFINITE_SOURCES))
+                                     ? SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE
+                                     : receiver->source_count_max;
   bool infinite_sources = false;
 #endif
 

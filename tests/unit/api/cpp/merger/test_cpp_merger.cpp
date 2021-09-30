@@ -72,7 +72,6 @@ protected:
   static const SacnDmxMergerSource kTestSource;
   static const uint8_t kTestNewValues[DMX_ADDRESS_COUNT];
   static const uint8_t kTestAddressPriorities[DMX_ADDRESS_COUNT];
-  static const SacnHeaderData kTestHeader;
   static const uint8_t kTestPdata[DMX_ADDRESS_COUNT];
 
   static uint8_t slots_[DMX_ADDRESS_COUNT];
@@ -87,7 +86,6 @@ protected:
 const SacnDmxMergerSource TestMerger::kTestSource = {0};
 const uint8_t TestMerger::kTestNewValues[] = {};
 const uint8_t TestMerger::kTestAddressPriorities[] = {};
-const SacnHeaderData TestMerger::kTestHeader = {{0}};
 const uint8_t TestMerger::kTestPdata[] = {};
 
 etcpal_error_t TestMerger::test_return_value_;

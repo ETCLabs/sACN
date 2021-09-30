@@ -147,14 +147,26 @@ void sacn_source_detector_mem_deinit(void)
 #endif  // SACN_SOURCE_DETECTOR_ENABLED
 
 #if SACN_MERGE_RECEIVER_ENABLED
-etcpal_error_t sacn_merge_receiver_mem_init(void)
+etcpal_error_t sacn_merge_receiver_mem_init(unsigned int number_of_threads)
 {
+#if !SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(number_of_threads);
+#endif
+
   etcpal_error_t res = kEtcPalErrOk;
 
   if (res == kEtcPalErrOk)
     res = init_merge_receiver_sources();
   if (res == kEtcPalErrOk)
     res = init_merge_receivers();
+#if SACN_DYNAMIC_MEM
+  if (res == kEtcPalErrOk)
+    res = init_merged_data_buf(number_of_threads);
+  if (res == kEtcPalErrOk)
+    res = init_non_dmx_buf(number_of_threads);
+  if (res == kEtcPalErrOk)
+    res = init_merge_receiver_source_limit_exceeded_buf(number_of_threads);
+#endif
 
   // Clean up
   if (res != kEtcPalErrOk)
@@ -165,6 +177,11 @@ etcpal_error_t sacn_merge_receiver_mem_init(void)
 
 void sacn_merge_receiver_mem_deinit(void)
 {
+#if SACN_DYNAMIC_MEM
+  deinit_merge_receiver_source_limit_exceeded_buf();
+  deinit_non_dmx_buf();
+  deinit_merged_data_buf();
+#endif
   deinit_merge_receivers();
 }
 #endif  // SACN_MERGE_RECEIVER_ENABLED

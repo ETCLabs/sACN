@@ -17,8 +17,8 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#ifndef SACN_PRIVATE_RECEIVER_MEM_H_
-#define SACN_PRIVATE_RECEIVER_MEM_H_
+#ifndef SACN_PRIVATE_MERGED_DATA_MEM_H_
+#define SACN_PRIVATE_MERGED_DATA_MEM_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -29,22 +29,14 @@
 extern "C" {
 #endif
 
-etcpal_error_t init_receivers(void);
-void deinit_receivers(void);
+etcpal_error_t init_merged_data_buf(unsigned int num_threads);
+void deinit_merged_data_buf(void);
 
-etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfig* config,
-                                 const SacnNetintConfig* netint_config,
-                                 const SacnReceiverInternalCallbacks* internal_callbacks,
-                                 SacnReceiver** receiver_state);
-etcpal_error_t lookup_receiver(sacn_receiver_t handle, SacnReceiver** receiver_state);
-etcpal_error_t lookup_receiver_by_universe(uint16_t universe, SacnReceiver** receiver_state);
-SacnReceiver* get_first_receiver(EtcPalRbIter* iterator);
-SacnReceiver* get_next_receiver(EtcPalRbIter* iterator);
-etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_universe);
-void remove_sacn_receiver(SacnReceiver* receiver);
+// This is processed from the context of receiving data, so there is only one per thread.
+MergeReceiverMergedDataNotification* get_merged_data(sacn_thread_id_t thread_id);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SACN_PRIVATE_RECEIVER_MEM_H_ */
+#endif /* SACN_PRIVATE_MERGED_DATA_MEM_H_ */

@@ -112,8 +112,8 @@ extern "C" {
 #define SET_PAGE(bufptr, page) (bufptr[SACN_UNIVERSE_DISCOVERY_PAGE_OFFSET] = page)
 #define SET_LAST_PAGE(bufptr, last_page) (bufptr[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET] = last_page)
 
-bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* header, uint8_t* seq, bool* terminated,
-                            const uint8_t** pdata);
+bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnRemoteSource* source_info, uint8_t* seq,
+                            bool* terminated, SacnRecvUniverseData* universe_data);
 bool parse_framing_layer_vector(const uint8_t* buf, size_t buflen, uint32_t* vector);
 bool parse_sacn_universe_discovery_layer(const uint8_t* buf, size_t buflen, int* page, int* last_page,
                                          const uint8_t** universes, size_t* num_universes);

@@ -1341,7 +1341,7 @@ TEST_F(TestSourceState, TerminatingUnicastDestsOnlySendTerminations)
       EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
 
       uint8_t start_code = send_buf[SACN_DATA_HEADER_SIZE - 1];
-      EXPECT_EQ(start_code, 0x00u);
+      EXPECT_EQ(start_code, SACN_STARTCODE_DMX);
     }
     else
     {
@@ -1368,7 +1368,7 @@ TEST_F(TestSourceState, PapNotTransmittedIfNotAdded)
 {
   sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t* send_buf, const EtcPalIpAddr*) {
     uint8_t start_code = send_buf[SACN_DATA_HEADER_SIZE - 1];
-    EXPECT_EQ(start_code, 0x00u);
+    EXPECT_EQ(start_code, SACN_STARTCODE_DMX);
   };
 
   sacn_source_t source = AddSource(kTestSourceConfig);

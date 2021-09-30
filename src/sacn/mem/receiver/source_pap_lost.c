@@ -58,6 +58,7 @@ SourcePapLostNotification* get_source_pap_lost(sacn_thread_id_t thread_id)
     memset(to_return, 0, sizeof(SourcePapLostNotification));
     to_return->source.handle = SACN_REMOTE_SOURCE_INVALID;
     to_return->handle = SACN_RECEIVER_INVALID;
+    to_return->thread_id = SACN_THREAD_ID_INVALID;
     return to_return;
   }
   return NULL;

@@ -17,7 +17,7 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include "sacn/private/mem/receiver/universe_data.h"
+#include "sacn/private/mem/merge_receiver/merged_data.h"
 
 #include <stddef.h>
 #include "etcpal/common.h"
@@ -32,32 +32,33 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED
 
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
-static UniverseDataNotification* sacn_pool_universe_data;
+static MergeReceiverMergedDataNotification* sacn_pool_merged_data;
 #else
-static UniverseDataNotification sacn_pool_universe_data[SACN_RECEIVER_MAX_THREADS];
+static MergeReceiverMergedDataNotification sacn_pool_merged_data[SACN_RECEIVER_MAX_THREADS];
 #endif
 
 /*************************** Function definitions ****************************/
 
 /*
- * Get the UniverseDataNotification instance for a given thread. The instance will be initialized
+ * Get the MergeReceiverMergedDataNotification instance for a given thread. The instance will be initialized
  * to default values.
  *
  * Returns the instance or NULL if the thread ID was invalid.
  */
-UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id)
+MergeReceiverMergedDataNotification* get_merged_data(sacn_thread_id_t thread_id)
 {
   if (thread_id < sacn_mem_get_num_threads())
   {
-    UniverseDataNotification* to_return = &sacn_pool_universe_data[thread_id];
-    memset(to_return, 0, sizeof(UniverseDataNotification));
-    to_return->receiver_handle = SACN_RECEIVER_INVALID;
-    to_return->thread_id = SACN_THREAD_ID_INVALID;
+    MergeReceiverMergedDataNotification* to_return = &sacn_pool_merged_data[thread_id];
+    memset(to_return, 0, sizeof(MergeReceiverMergedDataNotification));
+    to_return->handle = SACN_MERGE_RECEIVER_INVALID;
+    to_return->slot_range.start_address = 1;
+    to_return->slot_range.address_count = DMX_ADDRESS_COUNT;
     return to_return;
   }
   return NULL;
@@ -65,23 +66,23 @@ UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id)
 
 #if SACN_DYNAMIC_MEM
 
-etcpal_error_t init_universe_data_buf(unsigned int num_threads)
+etcpal_error_t init_merged_data_buf(unsigned int num_threads)
 {
-  sacn_pool_universe_data = calloc(num_threads, sizeof(UniverseDataNotification));
-  if (!sacn_pool_universe_data)
+  sacn_pool_merged_data = calloc(num_threads, sizeof(MergeReceiverMergedDataNotification));
+  if (!sacn_pool_merged_data)
     return kEtcPalErrNoMem;
   return kEtcPalErrOk;
 }
 
-void deinit_universe_data_buf(void)
+void deinit_merged_data_buf(void)
 {
-  if (sacn_pool_universe_data)
+  if (sacn_pool_merged_data)
   {
-    free(sacn_pool_universe_data);
-    sacn_pool_universe_data = NULL;
+    free(sacn_pool_merged_data);
+    sacn_pool_merged_data = NULL;
   }
 }
 
 #endif  // SACN_DYNAMIC_MEM
 
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_MERGE_RECEIVER_ENABLED

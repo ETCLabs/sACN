@@ -31,11 +31,11 @@
 #define SACN_DATA_PACKET_MIN_SIZE 88
 #define SACN_DMPVECT_SET_PROPERTY 0x02
 
-bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* header, uint8_t* seq, bool* terminated,
-                            const uint8_t** pdata)
+bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnRemoteSource* source_info, uint8_t* seq,
+                            bool* terminated, SacnRecvUniverseData* universe_data)
 {
   // Check the input parameters including buffer size
-  if (!buf || !header || !seq || !terminated || !pdata || buflen < SACN_DATA_PACKET_MIN_SIZE)
+  if (!buf || !source_info || !seq || !terminated || !universe_data || buflen < SACN_DATA_PACKET_MIN_SIZE)
     return false;
 
   // Check the framing layer vector
@@ -51,21 +51,22 @@ bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnHeaderData* h
 
   // Make sure the length of the slot data as communicated by the slot count doesn't overflow the
   // data buffer. Slot count value on the wire includes the start code, so subtract 1.
-  header->slot_count = etcpal_unpack_u16b(&buf[85]) - 1;
-  *pdata = &buf[88];
-  if (*pdata + header->slot_count > buf + buflen)
+  universe_data->slot_range.start_address = 1;  // TODO: Re-evaluate where this is initialized after footprint implemented
+  universe_data->slot_range.address_count = etcpal_unpack_u16b(&buf[85]) - 1;
+  universe_data->slots = &buf[88];
+  if (universe_data->slots + universe_data->slot_range.address_count > buf + buflen)
     return false;
 
-  strncpy(header->source_name, (char*)&buf[6], SACN_SOURCE_NAME_MAX_LEN);
+  strncpy(source_info->name, (char*)&buf[6], SACN_SOURCE_NAME_MAX_LEN);
   // Just in case the string is not null terminated even though it is required to be
-  header->source_name[SACN_SOURCE_NAME_MAX_LEN - 1] = '\0';
-  header->priority = buf[70];
-  // TODO header->sync_address = etcpal_unpack_u16b(&buf[71]);
+  source_info->name[SACN_SOURCE_NAME_MAX_LEN - 1] = '\0';
+  universe_data->priority = buf[70];
+  // TODO universe_data->sync_address = etcpal_unpack_u16b(&buf[71]);
   *seq = buf[73];
-  header->preview = (bool)(buf[74] & SACN_OPTVAL_PREVIEW);
+  universe_data->preview = (bool)(buf[74] & SACN_OPTVAL_PREVIEW);
   *terminated = (bool)(buf[74] & SACN_OPTVAL_TERMINATED);
-  header->universe_id = etcpal_unpack_u16b(&buf[75]);
-  header->start_code = buf[87];
+  universe_data->universe_id = etcpal_unpack_u16b(&buf[75]);
+  universe_data->start_code = buf[87];
   return true;
 }
 
@@ -288,7 +289,7 @@ void init_sacn_data_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPal
                              bool send_preview)
 
 {
-  memset(send_buf, 0, SACN_MTU);
+  memset(send_buf, 0, SACN_DATA_PACKET_MTU);
   int written = 0;
   written += pack_sacn_root_layer(send_buf, SACN_DATA_HEADER_SIZE, false, source_cid);
   written += pack_sacn_data_framing_layer(&send_buf[written], 0, VECTOR_E131_DATA_PACKET, source_name, priority,

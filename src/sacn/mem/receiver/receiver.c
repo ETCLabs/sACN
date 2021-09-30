@@ -94,11 +94,16 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
  * Allocate a new receiver instances and do essential first initialization, in preparation for
  * creating the sockets and subscriptions.
  *
+ * [in] handle Handle to use for this receiver.
  * [in] config Receiver configuration data.
- * Returns the new initialized receiver instance, or NULL if out of memory.
+ * [in] netint_config Network interface list for the receiver to use.
+ * [in] internal_callbacks If NULL, callbacks from config are used. Otherwise these are called instead.
+ * [out] receiver_state The new initialized receiver instance, or NULL if out of memory.
+ * Returns an error or kEtcPalErrOk.
  */
 etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfig* config,
-                                 const SacnNetintConfig* netint_config, SacnReceiver** receiver_state)
+                                 const SacnNetintConfig* netint_config,
+                                 const SacnReceiverInternalCallbacks* internal_callbacks, SacnReceiver** receiver_state)
 {
   SACN_ASSERT(config);
 
@@ -143,7 +148,21 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
 
   receiver->filter_preview_data = ((config->flags & SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA) != 0);
 
-  receiver->callbacks = config->callbacks;
+  receiver->api_callbacks = config->callbacks;
+
+  if (internal_callbacks)
+  {
+    receiver->internal_callbacks = *internal_callbacks;
+  }
+  else
+  {
+    receiver->internal_callbacks.universe_data = NULL;
+    receiver->internal_callbacks.sources_lost = NULL;
+    receiver->internal_callbacks.sampling_period_started = NULL;
+    receiver->internal_callbacks.sampling_period_ended = NULL;
+    receiver->internal_callbacks.source_pap_lost = NULL;
+    receiver->internal_callbacks.source_limit_exceeded = NULL;
+  }
 
   receiver->source_count_max = config->source_count_max;
 

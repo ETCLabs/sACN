@@ -141,9 +141,11 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
 {
   for (SourcesLostNotification* notification = sources_lost_arr; notification < sources_lost_arr + size; ++notification)
   {
-    notification->callback = NULL;
+    notification->api_callback = NULL;
+    notification->internal_callback = NULL;
     notification->handle = SACN_RECEIVER_INVALID;
     notification->num_lost_sources = 0;
+    notification->thread_id = SACN_THREAD_ID_INVALID;
     notification->context = NULL;
   }
 }

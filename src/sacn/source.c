@@ -657,7 +657,7 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
  * This function will update the packet buffers with the new sync universe. If this universe is transmitting NULL start
  * code or PAP data, the logic that slows down packet transmission due to inactivity will be reset.
  *
- * TODO: At this time, synchronization is not supported by this library.
+ * @todo At this time, synchronization is not supported by this library.
  *
  * @param[in] handle Handle to the source to change.
  * @param[in] universe The universe to change.
@@ -732,7 +732,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
       if (result == kEtcPalErrOk)
       {
         // Initialize send buffer
-        uint8_t send_buf[SACN_MTU];
+        uint8_t send_buf[SACN_DATA_PACKET_MTU];
         init_sacn_data_send_buf(send_buf, start_code, &source_state->cid, source_state->name, universe_state->priority,
                                 universe_state->universe_id, universe_state->sync_universe,
                                 universe_state->send_preview);
@@ -760,7 +760,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
  *
  * This will cause the source to transmit a synchronization packet on the given synchronization universe.
  *
- * TODO: At this time, synchronization is not supported by this library, so this function is not implemented.
+ * @todo At this time, synchronization is not supported by this library, so this function is not implemented.
  *
  * @param[in] handle Handle to the source.
  * @param[in] sync_universe The synchronization universe to send on.
@@ -879,7 +879,7 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
  *
  * If no synchronization universe is configured, this function acts like a direct call to sacn_source_update_values().
  *
- * TODO: At this time, synchronization is not supported by this library.
+ * @todo At this time, synchronization is not supported by this library.
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
@@ -929,7 +929,7 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
  * If no synchronization universe is configured, this function acts like a direct call to
  * sacn_source_update_values_and_pap().
  *
- * TODO: At this time, synchronization is not supported by this library.
+ * @todo At this time, synchronization is not supported by this library.
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
