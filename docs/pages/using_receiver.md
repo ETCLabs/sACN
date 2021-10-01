@@ -139,14 +139,14 @@ sacn_receiver_get_footprint(my_receiver_handle, &current_footprint);
 
 // Change the footprint, but keep the universe the same
 SacnRecvUniverseSubrange new_footprint;
-new_footprint.first_slot = 20;
-new_footprint.num_slots = 10;
+new_footprint.start_address = 20;
+new_footprint.address_count = 10;
 sacn_receiver_change_footprint(my_receiver_handle, &new_footprint);
 
 // Change both the universe and the footprint at once
 uint16_t new_universe = current_universe + 1;
-new_footprint.first_slot = 40;
-new_footprint.num_slots = 20;
+new_footprint.start_address = 40;
+new_footprint.address_count = 20;
 sacn_receiver_change_universe_and_footprint(my_receiver_handle, new_universe, &new_footprint);
 ```
 <!-- CODE_BLOCK_MID -->
@@ -157,12 +157,12 @@ if (current_footprint)
 {
   // Change the footprint, but keep the universe the same
   SacnRecvUniverseSubrange new_footprint;
-  new_footprint.first_slot = current_footprint.first_slot + 10;
-  new_footprint.num_slots = current_footprint.num_slots;
+  new_footprint.start_address = current_footprint.start_address + 10;
+  new_footprint.address_count = current_footprint.address_count;
   receiver.ChangeFootprint(new_footprint);
 
   // Change both the universe and the footprint at once
-  new_footprint.first_slot += 10;
+  new_footprint.start_address += 10;
   uint16_t new_universe = 100u;
   receiver.ChangeUniverseAndFootprint(new_universe, new_footprint);
 }
@@ -200,8 +200,8 @@ void my_universe_data_callback(sacn_receiver_t receiver_handle, const EtcPalSock
     printf("\n");
 
   // Example for an sACN-enabled fixture...
-  if ((universe_data->start_code == 0x00) && (universe_data->slot_range.first_slot == my_start_addr) &&
-      (universe_data->slot_range.num_slots == MY_DMX_FOOTPRINT))
+  if ((universe_data->start_code == 0x00) && (universe_data->slot_range.start_address == my_start_addr) &&
+      (universe_data->slot_range.address_count == MY_DMX_FOOTPRINT))
   {
     memcpy(my_data_buf, pdata, MY_DMX_FOOTPRINT);  // pdata[0] will always be the first slot of the footprint
     // Act on the data somehow
@@ -226,8 +226,8 @@ void MyNotifyHandler::HandleUniverseData(Handle receiver_handle, const etcpal::S
     std::cout << "\n";
 
   // Example for an sACN-enabled fixture...
-  if ((universe_data.start_code == 0x00) && (universe_data.slot_range.first_slot == my_start_addr) &&
-      (universe_data.slot_range.num_slots == MY_DMX_FOOTPRINT))
+  if ((universe_data.start_code == 0x00) && (universe_data.slot_range.start_address == my_start_addr) &&
+      (universe_data.slot_range.address_count == MY_DMX_FOOTPRINT))
   {
     memcpy(my_data_buf, pdata, MY_DMX_FOOTPRINT);  // pdata[0] will always be the first slot of the footprint
     // Act on the data somehow

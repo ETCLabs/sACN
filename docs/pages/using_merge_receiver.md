@@ -134,14 +134,14 @@ sacn_merge_receiver_get_footprint(my_receiver_handle, &current_footprint);
 
 // Change the footprint, but keep the universe the same
 SacnRecvUniverseSubrange new_footprint;
-new_footprint.first_slot = 20;
-new_footprint.num_slots = 10;
+new_footprint.start_address = 20;
+new_footprint.address_count = 10;
 sacn_merge_receiver_change_footprint(my_receiver_handle, &new_footprint);
 
 // Change both the universe and the footprint at once
 uint16_t new_universe = current_universe + 1;
-new_footprint.first_slot = 40;
-new_footprint.num_slots = 20;
+new_footprint.start_address = 40;
+new_footprint.address_count = 20;
 sacn_merge_receiver_change_universe_and_footprint(my_receiver_handle, new_universe, &new_footprint);
 ```
 <!-- CODE_BLOCK_MID -->
@@ -152,12 +152,12 @@ if (current_footprint)
 {
   // Change the footprint, but keep the universe the same
   SacnRecvUniverseSubrange new_footprint;
-  new_footprint.first_slot = current_footprint.first_slot + 10;
-  new_footprint.num_slots = current_footprint.num_slots;
+  new_footprint.start_address = current_footprint.start_address + 10;
+  new_footprint.address_count = current_footprint.address_count;
   merge_receiver.ChangeFootprint(new_footprint);
 
   // Change both the universe and the footprint at once
-  new_footprint.first_slot += 10;
+  new_footprint.start_address += 10;
   uint16_t new_universe = 100u;
   merge_receiver.ChangeUniverseAndFootprint(new_universe, new_footprint);
 }
@@ -226,7 +226,7 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
   printf("Got new merge results on universe %u\n", merged_data->universe_id);
 
   // Example for an sACN-enabled fixture...
-  for (int i = 0; i < merged_data->slot_range.num_slots; ++i)  // For each slot in my DMX footprint
+  for (int i = 0; i < merged_data->slot_range.address_count; ++i)  // For each slot in my DMX footprint
   {
     // merged_data->slot_owners[0] always represents the owner of the first slot in the footprint
     if (merged_data->slot_owners[i] == SACN_REMOTE_SOURCE_INVALID)
@@ -237,7 +237,7 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
   }
 
   // merged_data->slots[0] will always be the first slot of the footprint
-  memcpy(my_data_buf, merged_data->slots, merged_data->slot_range.num_slots);
+  memcpy(my_data_buf, merged_data->slots, merged_data->slot_range.address_count);
   // Act on the data somehow
 }
 ```
@@ -250,7 +250,7 @@ void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& 
   std::cout << "Got new merge results on universe " << merged_data.universe_id << "\n";
 
   // Example for an sACN-enabled fixture...
-  for (int i = 0; i < merged_data.slot_range.num_slots; ++i)  // For each slot in my DMX footprint
+  for (int i = 0; i < merged_data.slot_range.address_count; ++i)  // For each slot in my DMX footprint
   {
     // merged_data.slot_owners[0] always represents the owner of the first slot in the footprint
     if (merged_data.slot_owners[i] == kInvalidRemoteSourceHandle)
@@ -261,7 +261,7 @@ void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& 
   }
 
   // merged_data.slots[0] will always be the first slot of the footprint
-  memcpy(my_data_buf, merged_data.slots, merged_data.slot_range.num_slots);
+  memcpy(my_data_buf, merged_data.slots, merged_data.slot_range.address_count);
   // Act on the data somehow
 }
 ```
@@ -324,7 +324,7 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
 {
   // Check handle and/or context as necessary...
 
-  for(unsigned int i = 0; i < merged_data->slot_range.num_slots; ++i)
+  for(unsigned int i = 0; i < merged_data->slot_range.address_count; ++i)
   {
     EtcPalUuid cid;
     etcpal_error_t result = sacn_get_remote_source_cid(merged_data->slot_owners[i], &cid);
@@ -335,7 +335,7 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
       char cid_str[ETCPAL_UUID_STRING_BYTES];
       etcpal_uuid_to_string(&cid, cid_str);
 
-      printf("Slot %u CID: %s\n", (merged_data->slot_range.first_slot + i), cid_str);
+      printf("Slot %u CID: %s\n", (merged_data->slot_range.start_address + i), cid_str);
     }
   }
 }
@@ -344,14 +344,14 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
 ```cpp
 void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& merged_data)
 {
-  for(unsigned int i = 0; i < merged_data.slot_range.num_slots; ++i)
+  for(unsigned int i = 0; i < merged_data.slot_range.address_count; ++i)
   {
     auto cid = sacn::GetRemoteSourceCid(merged_data.slot_owners[i]);
 
     if(cid)
     {
       // You wouldn't normally print a message on each sACN update, but this is just for demonstration:
-      std::cout << "Slot " << (merged_data.slot_range.first_slot + i) << " CID: " << cid->ToString() << "\n";
+      std::cout << "Slot " << (merged_data.slot_range.start_address + i) << " CID: " << cid->ToString() << "\n";
     }
   }
 }
