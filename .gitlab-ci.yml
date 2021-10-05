@@ -8,9 +8,6 @@ variables:
   GIT_STRATEGY: clone
   GIT_SUBMODULE_STRATEGY: normal
   GLOBAL_CMAKE_OPTIONS: -DSACN_BUILD_TESTS=ON -DSACN_BUILD_EXAMPLES=ON
-  NEW_BUILD_VERSION:
-    value: "CHANGE-ME"
-    description: "The new build version to deploy in the format M.m.p.b"
 
 windows-build:
   stage: build
@@ -19,7 +16,7 @@ windows-build:
   script:
     - mkdir build
     - cd build
-    - cmake -G "Visual Studio 15 2017 Win64" $env:GLOBAL_CMAKE_OPTIONS ..
+    - cmake -G "Visual Studio 16 2019" -A x64 $env:GLOBAL_CMAKE_OPTIONS ..
     - cmake --build . --config Release -j
     - ctest -C Release --output-on-failure
   artifacts:
@@ -46,7 +43,7 @@ linux-build:
   stage: build
   tags:
     - etc-linux-docker
-  image: rikorose/gcc-cmake:latest
+  image: etc-docker.artifactory-mid.etcconnect.com/etc/common-tech/gcc-cmake:latest
   variables:
     CMAKE_ASAN_DEFINITIONS: -DCMAKE_C_FLAGS="-fsanitize=address" -DCMAKE_CXX_FLAGS="-fsanitize=address" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
   script:
@@ -66,12 +63,10 @@ docs-test:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   tags:
     - etc-linux-docker
-  image: python:3.8-buster
+  image: etc-docker.artifactory-mid.etcconnect.com/etc/common-tech/doxygen:1.9.1
   script:
-    - apt-get update
-    - apt-get install -y doxygen
-    - cd docs
-    - python3 generate_doxygen.py
+    - pip install --upgrade etclibtool
+    - etclibtool docs -c tools/ci/etclibtool_config.json --warn-as-error . 1.9.1
 
 deploy-docs:
   stage: build
@@ -79,31 +74,17 @@ deploy-docs:
     - if: '$CI_COMMIT_REF_NAME == "main"'
   tags:
     - etc-linux-docker
-  image: python:3.8-buster
+  image: etc-docker.artifactory-mid.etcconnect.com/etc/common-tech/doxygen:1.9.1
   variables:
     GH_REPO_NAME: sACNDocs
     GH_REPO_REF: github.com/ETCLabs/sACNDocs.git
     GH_REPO_TOKEN: $SVC_ETCLABS_REPO_TOKEN
   script:
-    - apt-get update
-    - apt-get install -y doxygen
+    - pip install --upgrade etclibtool
     - chmod +x tools/ci/publish_docs.sh
     - tools/ci/publish_docs.sh
 
-
-deploy-versioned-build:
-  stage: deploy
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_NAME == "main"'
-  tags:
-    - etc-linux-docker
-  image: python:3.8
-  script:
-    - pip config set global.extra-index-url https://artifactory-mid.etcconnect.com/artifactory/api/pypi/ETC-PyPI/simple
-    - pip config set global.trusted-host artifactory-mid.etcconnect.com
-    - pip install etclibtool
-    - git config user.name "GitLab CI"
-    - git config user.email "noreply.gitlab@etcconnect.com"
-    - git config http.sslVerify false
-    - etclibtool version --config ./tools/ci/etclibtool_config.json --from-ci --user ${BUILDNETWORKING_USER}:${BUILDNETWORKING_PASS} . ${NEW_BUILD_VERSION}
-    - git push "https://project_139_bot:${REPO_PUSH_TOKEN}@gitlab.etcconnect.com/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME} --tags
+include:
+  - project: 'etc/common-tech/tools/gitlab-ci-util'
+    ref: v1.4.0
+    file: '/ci-yml/deploy-versioned-build.yml'
