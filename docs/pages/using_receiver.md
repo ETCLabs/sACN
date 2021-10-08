@@ -203,7 +203,8 @@ void my_universe_data_callback(sacn_receiver_t receiver_handle, const EtcPalSock
   if ((universe_data->start_code == 0x00) && (universe_data->slot_range.start_address == my_start_addr) &&
       (universe_data->slot_range.address_count == MY_DMX_FOOTPRINT))
   {
-    memcpy(my_data_buf, pdata, MY_DMX_FOOTPRINT);  // pdata[0] will always be the first slot of the footprint
+    // pdata[0] will always be the first slot of the footprint
+    memcpy(my_data_buf, universe_data->slots, MY_DMX_FOOTPRINT);
     // Act on the data somehow
   }
 }
@@ -229,7 +230,8 @@ void MyNotifyHandler::HandleUniverseData(Handle receiver_handle, const etcpal::S
   if ((universe_data.start_code == 0x00) && (universe_data.slot_range.start_address == my_start_addr) &&
       (universe_data.slot_range.address_count == MY_DMX_FOOTPRINT))
   {
-    memcpy(my_data_buf, pdata, MY_DMX_FOOTPRINT);  // pdata[0] will always be the first slot of the footprint
+    // pdata[0] will always be the first slot of the footprint
+    memcpy(my_data_buf, universe_data.slots, MY_DMX_FOOTPRINT);
     // Act on the data somehow
   }
 }
