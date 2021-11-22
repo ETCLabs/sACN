@@ -50,8 +50,17 @@ typedef struct MergerState
   IntHandleManager source_handle_mgr;
   EtcPalRbTree source_state_lookup;
   SacnDmxMergerConfig config;
-  uint8_t winning_priorities[DMX_ADDRESS_COUNT];        // These have not been converted to PAPs.
-  sacn_dmx_merger_source_t winning_sources[DMX_ADDRESS_COUNT];  // This is needed if config.slot_owners is NULL.
+
+  /* The highest priorities (may be PAP or universe priority). */
+  uint8_t winning_priorities[DMX_ADDRESS_COUNT];
+
+  /* Specifies winners (or lack thereof) for each slot. For any slot, a source that isn't sourcing a level (due to
+   * SacnDmxMergerSource::valid_level_count) can still end up here as long as it is sourcing the highest priority for
+   * that slot. */
+  sacn_dmx_merger_source_t winning_sources[DMX_ADDRESS_COUNT];
+
+  /* A bit array to track if each winner slot is sourced. Each array element (byte) tracks 8 slots (bits). */
+  uint8_t winner_is_sourced[DMX_ADDRESS_COUNT / 8];
 } MergerState;
 
 etcpal_error_t sacn_dmx_merger_init();
