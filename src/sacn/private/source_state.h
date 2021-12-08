@@ -57,9 +57,9 @@ void sacn_source_state_deinit(void);
 int take_lock_and_process_sources(process_sources_behavior_t behavior);
 etcpal_error_t initialize_source_thread();
 sacn_source_t get_next_source_handle();
-void update_levels_and_or_paps(SacnSource* source, SacnSourceUniverse* universe, const uint8_t* new_values,
-                               size_t new_values_size, const uint8_t* new_priorities, size_t new_priorities_size,
-                               force_sync_behavior_t force_sync);
+void update_levels_and_or_pap(SacnSource* source, SacnSourceUniverse* universe, const uint8_t* new_values,
+                              size_t new_values_size, const uint8_t* new_priorities, size_t new_priorities_size,
+                              force_sync_behavior_t force_sync);
 void increment_sequence_number(SacnSourceUniverse* universe);
 void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
 void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);

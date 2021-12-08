@@ -128,9 +128,9 @@ std::vector<uint16_t> universes = my_source.GetUniverses();
 ```
 <!-- CODE_BLOCK_END -->
 
-## Update Values 
+## Update Levels and Per-Address Priorities
 
-At this point, once you have new data to transmit, you can use the Update Values functionality to
+At this point, once you have new data to transmit, you can use one of the Update functions to
 copy in the NULL start code or per-address priority (PAP) data that should be transmitted on the
 network. Assuming you didn't set the manually_process_source setting to true, the source thread
 will take care of actually sending the data. Otherwise, you'll need to call the Process Manual
@@ -141,27 +141,27 @@ library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0.
 
 <!-- CODE_BLOCK_START -->
 ```c
-// Initialize my_values_buffer and (possibly) my_priorities_buffer with the values you want to send...
-uint8_t my_values_buffer[DMX_ADDRESS_COUNT];
+// Initialize my_levels_buffer and (possibly) my_priorities_buffer with the data you want to send...
+uint8_t my_levels_buffer[DMX_ADDRESS_COUNT];
 uint8_t my_priorities_buffer[DMX_ADDRESS_COUNT];
 
-// Now copy in the new values to send. Then the source thread will handle transmitting the 
+// Now copy in the new data to send. Then the source thread will handle transmitting the 
 // data (unless you set manually_process_source to true in the SacnSourceConfig).
-sacn_source_update_values(my_handle, my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
+sacn_source_update_levels(my_handle, my_universe, my_levels_buffer, DMX_ADDRESS_COUNT);
 // Or if you're using per-address priorities:
-sacn_source_update_values_and_pap(my_handle, my_universe, my_values_buffer, DMX_ADDRESS_COUNT, my_priorities_buffer, DMX_ADDRESS_COUNT);
+sacn_source_update_levels_and_pap(my_handle, my_universe, my_levels_buffer, DMX_ADDRESS_COUNT, my_priorities_buffer, DMX_ADDRESS_COUNT);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-// Initialize my_values_buffer and (possibly) my_priorities_buffer with the values you want to send...
-uint8_t my_values_buffer[DMX_ADDRESS_COUNT];
+// Initialize my_levels_buffer and (possibly) my_priorities_buffer with the data you want to send...
+uint8_t my_levels_buffer[DMX_ADDRESS_COUNT];
 uint8_t my_priorities_buffer[DMX_ADDRESS_COUNT];
 
-// Now copy in the new values to send. Then the source thread will handle transmitting the 
+// Now copy in the new data to send. Then the source thread will handle transmitting the 
 // data (unless you set manually_process_source to true in the Source::Settings).
-my_source.UpdateValues(my_universe, my_values_buffer, DMX_ADDRESS_COUNT);
+my_source.UpdateLevels(my_universe, my_levels_buffer, DMX_ADDRESS_COUNT);
 // Or if you're using per-address priorities:
-my_source.UpdateValues(my_universe, my_values_buffer, DMX_ADDRESS_COUNT, my_priorities_buffer, DMX_ADDRESS_COUNT);
+my_source.UpdateLevelsAndPap(my_universe, my_levels_buffer, DMX_ADDRESS_COUNT, my_priorities_buffer, DMX_ADDRESS_COUNT);
 ```
 <!-- CODE_BLOCK_END -->
 
@@ -224,7 +224,7 @@ std::vector<etcpal::IpAddr> unicast_dests = my_source.GetUnicastDestinations(my_
 
 ## Custom Start Codes
 
-The Update Values functions only allow you to send start code 0x00 (NULL) and 0xDD (PAP) data. If
+The Update functions only allow you to send start code 0x00 (NULL) and 0xDD (PAP) data. If
 you want to send data for a different start code, you'll need to use the Send Now function to
 transmit that data synchronously.
 

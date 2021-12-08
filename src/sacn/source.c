@@ -81,7 +81,7 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
  *
  * This creates the instance of the source and begins sending universe discovery packets for it (which will list no
  * universes until start code data begins transmitting). No start code data is sent until sacn_source_add_universe() and
- * a variant of sacn_source_update_values() is called.
+ * a variant of sacn_source_update_levels() is called.
  *
  * @param[in] config Configuration parameters for the sACN source to be created. If any of these parameters are invalid,
  * #kEtcPalErrInvalid will be returned. This includes if the source name's length (including the null terminator) is
@@ -230,11 +230,11 @@ void sacn_source_destroy(sacn_source_t handle)
  * @brief Add a universe to an sACN source.
  *
  * Adds a universe to a source.
- * After this call completes, the applicaton must call a variant of sacn_source_update_values() to mark it ready for
+ * After this call completes, the applicaton must call a variant of sacn_source_update_levels() to mark it ready for
  * processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe Discovery packets
- * once a variant of sacn_source_update_values() is called.
+ * once a variant of sacn_source_update_levels() is called.
  *
  * Note that a universe is considered as successfully added if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -781,24 +781,24 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t s
 }
 
 /**
- * @brief Copies the universe's dmx values into the packet to be sent on the next threaded or manual update.
+ * @brief Copies the universe's DMX levels into the packet to be sent on the next threaded or manual update.
  *
- * This function will update the outgoing packet values, and reset the logic that slows down packet transmission due to
+ * This function will update the outgoing packet data, and reset the logic that slows down packet transmission due to
  * inactivity.
  *
  * When you don't have per-address priority changes to make, use this function. Otherwise, use
- * sacn_source_update_values_and_pap().
+ * sacn_source_update_levels_and_pap().
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of DMX values to copy from. If this pointer is NULL, the source will terminate DMX
+ * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
-                               size_t new_values_size)
+void sacn_source_update_levels(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
+                               size_t new_levels_size)
 {
-  if ((new_values_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if ((new_levels_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -806,14 +806,14 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
 
     if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
     {
-      if (!new_values)
+      if (!new_levels)
       {
         set_universe_terminating(universe_state, kTerminateWithoutRemoving);
         disable_pap_data(universe_state);
       }
 
       // Do this last.
-      update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, kDisableForceSync);
+      update_levels_and_or_pap(source_state, universe_state, new_levels, new_levels_size, NULL, 0, kDisableForceSync);
     }
 
     sacn_unlock();
@@ -821,34 +821,33 @@ void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const ui
 }
 
 /**
- * @brief Copies the universe's dmx values and per-address priorities into packets that are sent on the next threaded or
+ * @brief Copies the universe's DMX levels and per-address priorities into packets that are sent on the next threaded or
  * manual update.
  *
- * This function will update the outgoing packet values for both DMX and per-address priority data, and reset the logic
+ * This function will update the outgoing packet data for both DMX and per-address priority data, and reset the logic
  * that slows down packet transmission due to inactivity.
  *
- * The application should adhere to the rules for per-address priority (PAP) specified in
- * https://etclabs.github.io/sACN/docs/head/per_address_priority.html. This API will adhere to the rules within the
- * scope of the implementation. This includes handling transmission suppression and the order in which DMX and PAP
- * packets are sent. This also includes automatically setting levels to 0, even if the application specified a different
- * level, for each slot that the application assigns a PAP of 0 (by setting the PAP to 0 or reducing the number of
- * PAPs).
+ * The application should adhere to the rules for per-address priority (PAP) specified in @ref per_address_priority.
+ * This API will adhere to the rules within the scope of the implementation. This includes handling transmission
+ * suppression and the order in which DMX and PAP packets are sent. This also includes automatically setting levels to
+ * 0, even if the application specified a different level, for each slot that the application assigns a PAP of 0 (by
+ * setting the PAP to 0 or reducing the PAP count).
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of DMX values to copy from. If this pointer is NULL, the source will terminate DMX
+ * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This will only be sent when DMX is also
  * being sent. Setting this to NULL will stop the transmission of per-address priorities, in which case receivers will
  * revert to the universe priority after PAP times out.
  * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
-                                       size_t new_values_size, const uint8_t* new_priorities,
+void sacn_source_update_levels_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
+                                       size_t new_levels_size, const uint8_t* new_priorities,
                                        size_t new_priorities_size)
 {
-  if ((new_values_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if ((new_levels_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -856,14 +855,14 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
 
     if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
     {
-      if (!new_values)
+      if (!new_levels)
         set_universe_terminating(universe_state, kTerminateWithoutRemoving);
-      if (!new_values || !new_priorities)
+      if (!new_levels || !new_priorities)
         disable_pap_data(universe_state);
 
       // Do this last.
-      update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size,
-                                new_values ? new_priorities : NULL, new_priorities_size, kDisableForceSync);
+      update_levels_and_or_pap(source_state, universe_state, new_levels, new_levels_size,
+                               new_levels ? new_priorities : NULL, new_priorities_size, kDisableForceSync);
     }
 
     sacn_unlock();
@@ -871,26 +870,26 @@ void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, 
 }
 
 /**
- * @brief Like sacn_source_update_values(), but also sets the force_sync flag on the packet.
+ * @brief Like sacn_source_update_levels(), but also sets the force_sync flag on the packet.
  *
- * This function will update the outgoing packet values to be sent on the next threaded or manual update, and will reset
+ * This function will update the outgoing packet data to be sent on the next threaded or manual update, and will reset
  * the logic that slows down packet transmission due to inactivity. Additionally, the packet to be sent will have its
  * force_synchronization option flag set.
  *
- * If no synchronization universe is configured, this function acts like a direct call to sacn_source_update_values().
+ * If no synchronization universe is configured, this function acts like a direct call to sacn_source_update_levels().
  *
  * @todo At this time, synchronization is not supported by this library.
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of DMX values to copy from. If this pointer is NULL, the source will terminate DMX
+ * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
-                                              size_t new_values_size)
+void sacn_source_update_levels_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
+                                              size_t new_levels_size)
 {
-  if ((new_values_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if ((new_levels_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -898,14 +897,14 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
 
     if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
     {
-      if (!new_values)
+      if (!new_levels)
       {
         set_universe_terminating(universe_state, kTerminateWithoutRemoving);
         disable_pap_data(universe_state);
       }
 
       // Do this last.
-      update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size, NULL, 0, kEnableForceSync);
+      update_levels_and_or_pap(source_state, universe_state, new_levels, new_levels_size, NULL, 0, kEnableForceSync);
     }
 
     sacn_unlock();
@@ -913,39 +912,38 @@ void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t uni
 }
 
 /**
- * @brief Like sacn_source_update_values_and_pap(), but also sets the force_sync flag on the packet.
+ * @brief Like sacn_source_update_levels_and_pap(), but also sets the force_sync flag on the packet.
  *
- * This function will update the outgoing packet values to be sent on the next threaded or manual update, and will reset
+ * This function will update the outgoing packet data to be sent on the next threaded or manual update, and will reset
  * the logic that slows down packet transmission due to inactivity. Additionally, both packets to be sent by this call
  * will have their force_synchronization option flags set.
  *
- * The application should adhere to the rules for per-address priority (PAP) specified in
- * https://etclabs.github.io/sACN/docs/head/per_address_priority.html. This API will adhere to the rules within the
- * scope of the implementation. This includes handling transmission suppression and the order in which DMX and PAP
- * packets are sent. This also includes automatically setting levels to 0, even if the application specified a different
- * level, for each slot that the application assigns a PAP of 0 (by setting the PAP to 0 or reducing the number of
- * PAPs).
+ * The application should adhere to the rules for per-address priority (PAP) specified in @ref per_address_priority.
+ * This API will adhere to the rules within the scope of the implementation. This includes handling transmission
+ * suppression and the order in which DMX and PAP packets are sent. This also includes automatically setting levels to
+ * 0, even if the application specified a different level, for each slot that the application assigns a PAP of 0 (by
+ * setting the PAP to 0 or reducing the PAP count).
  *
  * If no synchronization universe is configured, this function acts like a direct call to
- * sacn_source_update_values_and_pap().
+ * sacn_source_update_levels_and_pap().
  *
  * @todo At this time, synchronization is not supported by this library.
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of DMX values to copy from. If this pointer is NULL, the source will terminate DMX
+ * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This will only be sent when DMX is also
  * being sent. Setting this to NULL will stop the transmission of per-address priorities, in which case receivers will
  * revert to the universe priority after PAP times out.
  * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe,
-                                                      const uint8_t* new_values, size_t new_values_size,
+void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe,
+                                                      const uint8_t* new_levels, size_t new_levels_size,
                                                       const uint8_t* new_priorities, size_t new_priorities_size)
 {
-  if ((new_values_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if ((new_levels_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -953,14 +951,14 @@ void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint
 
     if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
     {
-      if (!new_values)
+      if (!new_levels)
         set_universe_terminating(universe_state, kTerminateWithoutRemoving);
-      if (!new_values || !new_priorities)
+      if (!new_levels || !new_priorities)
         disable_pap_data(universe_state);
 
       // Do this last.
-      update_levels_and_or_paps(source_state, universe_state, new_values, new_values_size,
-                                new_values ? new_priorities : NULL, new_priorities_size, kEnableForceSync);
+      update_levels_and_or_pap(source_state, universe_state, new_levels, new_levels_size,
+                               new_levels ? new_priorities : NULL, new_priorities_size, kEnableForceSync);
     }
 
     sacn_unlock();
@@ -996,8 +994,8 @@ int sacn_source_process_manual(void)
  * overridden for the source API, but not the other APIs). Then all universes of all sources will be configured to use
  * all of those interfaces.
  *
- * After this call completes successfully, all universes of all sources are considered to be updated and have new values
- * and priorities. It's as if every source just started sending values on all their universes.
+ * After this call completes successfully, all universes of all sources are considered to be updated and have new levels
+ * and priorities. It's as if every source just started sending levels on all their universes.
  *
  * If this call fails, the caller must call sacn_source_destroy() on all sources, because the source API may be in an
  * invalid state.
@@ -1054,8 +1052,8 @@ etcpal_error_t sacn_source_reset_networking(const SacnNetintConfig* sys_netint_c
  * overridden for the source API, but not the other APIs). Then the network interfaces are specified for each universe
  * of each source.
  *
- * After this call completes successfully, all universes of all sources are considered to be updated and have new values
- * and priorities. It's as if every source just started sending values on all their universes.
+ * After this call completes successfully, all universes of all sources are considered to be updated and have new levels
+ * and priorities. It's as if every source just started sending levels on all their universes.
  *
  * If this call fails, the caller must call sacn_source_destroy() on all sources, because the source API may be in an
  * invalid state.

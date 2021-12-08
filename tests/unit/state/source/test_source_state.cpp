@@ -201,11 +201,10 @@ protected:
   }
 
   void InitTestData(sacn_source_t source, uint16_t universe, const std::vector<uint8_t>& levels,
-                    const std::vector<uint8_t>& paps = std::vector<uint8_t>())
+                    const std::vector<uint8_t>& pap = std::vector<uint8_t>())
   {
-    update_levels_and_or_paps(GetSource(source), GetUniverse(source, universe),
-                              levels.empty() ? nullptr : levels.data(), levels.size(),
-                              paps.empty() ? nullptr : paps.data(), paps.size(), kDisableForceSync);
+    update_levels_and_or_pap(GetSource(source), GetUniverse(source, universe), levels.empty() ? nullptr : levels.data(),
+                             levels.size(), pap.empty() ? nullptr : pap.data(), pap.size(), kDisableForceSync);
   }
 
   void AddUniverseForUniverseDiscovery(sacn_source_t source_handle, SacnSourceUniverseConfig& universe_config,
@@ -1291,17 +1290,17 @@ TEST_F(TestSourceState, UniverseRemovalUpdatesSourceNetints)
   EXPECT_EQ(GetSource(source)->num_netints, 0u);
 }
 
-TEST_F(TestSourceState, TransmitsLevelsAndPapsCorrectlyAtDefaultInterval)
+TEST_F(TestSourceState, TransmitsLevelsAndPapCorrectlyAtDefaultInterval)
 {
   TestLevelPapTransmission(SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
 }
 
-TEST_F(TestSourceState, TransmitsLevelsAndPapsCorrectlyAtShortInterval)
+TEST_F(TestSourceState, TransmitsLevelsAndPapCorrectlyAtShortInterval)
 {
   TestLevelPapTransmission(100);
 }
 
-TEST_F(TestSourceState, TransmitsLevelsAndPapsCorrectlyAtLongInterval)
+TEST_F(TestSourceState, TransmitsLevelsAndPapCorrectlyAtLongInterval)
 {
   TestLevelPapTransmission(2000);
 }
@@ -1436,7 +1435,7 @@ TEST_F(TestSourceState, GetNextSourceHandleWorks)
   }
 }
 
-TEST_F(TestSourceState, UpdateLevelsAndPapsWorks)
+TEST_F(TestSourceState, UpdateLevelsAndPapWorks)
 {
   sacn_source_t source = AddSource(kTestSourceConfig);
   uint16_t universe = AddUniverse(source, kTestUniverseConfig);
@@ -1447,8 +1446,8 @@ TEST_F(TestSourceState, UpdateLevelsAndPapsWorks)
 
   etcpal_getms_fake.return_val = kTestGetMsValue;
 
-  update_levels_and_or_paps(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(),
-                            kTestBuffer2.size(), kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(),
+                           kTestBuffer2.size(), kDisableForceSync);
 
   EXPECT_EQ(memcmp(&universe_state->level_send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer.data(), kTestBuffer.size()), 0);
   EXPECT_EQ(memcmp(&universe_state->pap_send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer2.data(), kTestBuffer2.size()), 0);
@@ -1469,8 +1468,8 @@ TEST_F(TestSourceState, UpdateOnlyLevelsWorks)
 
   etcpal_getms_fake.return_val = kTestGetMsValue;
 
-  update_levels_and_or_paps(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), nullptr, 0u,
-                            kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), nullptr, 0u,
+                           kDisableForceSync);
 
   EXPECT_EQ(memcmp(&universe_state->level_send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer.data(), kTestBuffer.size()), 0);
   EXPECT_EQ(universe_state->has_level_data, true);
@@ -1479,7 +1478,7 @@ TEST_F(TestSourceState, UpdateOnlyLevelsWorks)
   EXPECT_NE(universe_state->pap_keep_alive_timer.reset_time, kTestGetMsValue);
 }
 
-TEST_F(TestSourceState, UpdateOnlyPapsWorks)
+TEST_F(TestSourceState, UpdateOnlyPapWorks)
 {
   sacn_source_t source = AddSource(kTestSourceConfig);
   uint16_t universe = AddUniverse(source, kTestUniverseConfig);
@@ -1490,8 +1489,8 @@ TEST_F(TestSourceState, UpdateOnlyPapsWorks)
 
   etcpal_getms_fake.return_val = kTestGetMsValue;
 
-  update_levels_and_or_paps(source_state, universe_state, nullptr, 0u, kTestBuffer2.data(), kTestBuffer2.size(),
-                            kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, nullptr, 0u, kTestBuffer2.data(), kTestBuffer2.size(),
+                           kDisableForceSync);
 
   EXPECT_EQ(memcmp(&universe_state->pap_send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer2.data(), kTestBuffer2.size()), 0);
   EXPECT_EQ(universe_state->has_level_data, false);
@@ -1500,7 +1499,7 @@ TEST_F(TestSourceState, UpdateOnlyPapsWorks)
   EXPECT_EQ(universe_state->pap_keep_alive_timer.reset_time, kTestGetMsValue);
 }
 
-TEST_F(TestSourceState, UpdateOnlyLevelsSavesPaps)
+TEST_F(TestSourceState, UpdateOnlyLevelsSavesPap)
 {
   sacn_source_t source = AddSource(kTestSourceConfig);
   uint16_t universe = AddUniverse(source, kTestUniverseConfig);
@@ -1510,12 +1509,12 @@ TEST_F(TestSourceState, UpdateOnlyLevelsSavesPaps)
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
   etcpal_getms_fake.return_val = kTestGetMsValue;
-  update_levels_and_or_paps(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer.data(),
-                            kTestBuffer.size(), kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer.data(),
+                           kTestBuffer.size(), kDisableForceSync);
 
   etcpal_getms_fake.return_val = kTestGetMsValue2;
-  update_levels_and_or_paps(source_state, universe_state, kTestBuffer2.data(), kTestBuffer2.size(), nullptr, 0u,
-                            kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, kTestBuffer2.data(), kTestBuffer2.size(), nullptr, 0u,
+                           kDisableForceSync);
 
   EXPECT_EQ(memcmp(&universe_state->pap_send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer.data(), kTestBuffer.size()), 0);
   EXPECT_EQ(universe_state->has_pap_data, true);
@@ -1523,7 +1522,7 @@ TEST_F(TestSourceState, UpdateOnlyLevelsSavesPaps)
   EXPECT_EQ(universe_state->pap_keep_alive_timer.reset_time, kTestGetMsValue);
 }
 
-TEST_F(TestSourceState, UpdateOnlyPapsSavesLevels)
+TEST_F(TestSourceState, UpdateOnlyPapSavesLevels)
 {
   sacn_source_t source = AddSource(kTestSourceConfig);
   uint16_t universe = AddUniverse(source, kTestUniverseConfig);
@@ -1533,12 +1532,12 @@ TEST_F(TestSourceState, UpdateOnlyPapsSavesLevels)
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
   etcpal_getms_fake.return_val = kTestGetMsValue;
-  update_levels_and_or_paps(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer.data(),
-                            kTestBuffer.size(), kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer.data(),
+                           kTestBuffer.size(), kDisableForceSync);
 
   etcpal_getms_fake.return_val = kTestGetMsValue2;
-  update_levels_and_or_paps(source_state, universe_state, nullptr, 0u, kTestBuffer2.data(), kTestBuffer2.size(),
-                            kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, nullptr, 0u, kTestBuffer2.data(), kTestBuffer2.size(),
+                           kDisableForceSync);
 
   EXPECT_EQ(memcmp(&universe_state->level_send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer.data(), kTestBuffer.size()), 0);
   EXPECT_EQ(universe_state->has_level_data, true);
@@ -1546,7 +1545,7 @@ TEST_F(TestSourceState, UpdateOnlyPapsSavesLevels)
   EXPECT_EQ(universe_state->pap_keep_alive_timer.reset_time, kTestGetMsValue2);
 }
 
-TEST_F(TestSourceState, LevelsZeroWhereverPapsAreZeroed)
+TEST_F(TestSourceState, LevelsZeroWhereverPapAreZeroed)
 {
   sacn_source_t source = AddSource(kTestSourceConfig);
   uint16_t universe = AddUniverse(source, kTestUniverseConfig);
@@ -1559,14 +1558,14 @@ TEST_F(TestSourceState, LevelsZeroWhereverPapsAreZeroed)
 
   std::vector<uint8_t> pap_buffer = kTestBuffer2;
 
-  update_levels_and_or_paps(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), pap_buffer.data(),
-                            pap_buffer.size(), kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), pap_buffer.data(),
+                           pap_buffer.size(), kDisableForceSync);
 
   for (size_t i = 0u; i < pap_buffer.size(); i += 2)
     pap_buffer[i] = 0u;
 
-  update_levels_and_or_paps(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), pap_buffer.data(),
-                            pap_buffer.size(), kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), pap_buffer.data(),
+                           pap_buffer.size(), kDisableForceSync);
 
   for (size_t i = 0u; i < kTestBuffer.size(); ++i)
   {
@@ -1576,8 +1575,8 @@ TEST_F(TestSourceState, LevelsZeroWhereverPapsAreZeroed)
       EXPECT_EQ(universe_state->level_send_buf[SACN_DATA_HEADER_SIZE + i], 0u);
   }
 
-  update_levels_and_or_paps(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), nullptr, 0u,
-                            kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), nullptr, 0u,
+                           kDisableForceSync);
 
   for (size_t i = 0u; i < kTestBuffer.size(); ++i)
   {
@@ -1588,14 +1587,14 @@ TEST_F(TestSourceState, LevelsZeroWhereverPapsAreZeroed)
   }
 
   disable_pap_data(universe_state);
-  update_levels_and_or_paps(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), nullptr, 0u,
-                            kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), nullptr, 0u,
+                           kDisableForceSync);
 
   for (size_t i = 0u; i < kTestBuffer.size(); ++i)
     EXPECT_GT(universe_state->level_send_buf[SACN_DATA_HEADER_SIZE + i], 0u);
 
-  update_levels_and_or_paps(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), &kTestPriority, 1u,
-                            kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), &kTestPriority, 1u,
+                           kDisableForceSync);
 
   for (size_t i = 0u; i < kTestBuffer.size(); ++i)
   {
@@ -1616,11 +1615,11 @@ TEST_F(TestSourceState, UpdateLevelsIncrementsActiveUniversesCorrectly)
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
   EXPECT_EQ(source_state->num_active_universes, 0u);
-  update_levels_and_or_paps(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), nullptr, 0u,
-                            kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), nullptr, 0u,
+                           kDisableForceSync);
   EXPECT_EQ(source_state->num_active_universes, 1u);
-  update_levels_and_or_paps(source_state, universe_state, kTestBuffer2.data(), kTestBuffer2.size(), nullptr, 0u,
-                            kDisableForceSync);
+  update_levels_and_or_pap(source_state, universe_state, kTestBuffer2.data(), kTestBuffer2.size(), nullptr, 0u,
+                           kDisableForceSync);
   EXPECT_EQ(source_state->num_active_universes, 1u);
 
   SacnSourceUniverseConfig unicast_only_config = kTestUniverseConfig;
@@ -1630,8 +1629,8 @@ TEST_F(TestSourceState, UpdateLevelsIncrementsActiveUniversesCorrectly)
   SacnSourceUniverse* unicast_only_universe_state = nullptr;
   lookup_source_and_universe(source, unicast_only_universe, &source_state, &unicast_only_universe_state);
 
-  update_levels_and_or_paps(source_state, unicast_only_universe_state, kTestBuffer.data(), kTestBuffer.size(), nullptr,
-                            0u, kDisableForceSync);
+  update_levels_and_or_pap(source_state, unicast_only_universe_state, kTestBuffer.data(), kTestBuffer.size(), nullptr,
+                           0u, kDisableForceSync);
   EXPECT_EQ(source_state->num_active_universes, 1u);
 }
 

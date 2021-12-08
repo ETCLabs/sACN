@@ -314,7 +314,7 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
  *
  * After this call completes, a new sampling period will occur, and then underlying updates will generate new calls to
  * SacnMergeReceiverMergedDataCallback().
- * 
+ *
  * @param[in] handle Handle to the merge receiver for which to change the universe.
  * @param[in] new_footprint New footprint that this receiver should listen to.
  * @return #kEtcPalErrNotImpl: Not yet implemented.
@@ -333,7 +333,7 @@ etcpal_error_t sacn_merge_receiver_change_footprint(sacn_merge_receiver_t handle
  *
  * After this call completes, a new sampling period will occur, and then underlying updates will generate new calls to
  * SacnMergeReceiverMergedDataCallback().
- * 
+ *
  * @param[in] handle Handle to the merge receiver for which to change the universe.
  * @param[in] new_universe_id New universe number that this merge receiver should listen to.
  * @param[in] new_footprint New footprint within the universe.
@@ -350,7 +350,8 @@ etcpal_error_t sacn_merge_receiver_change_universe_and_footprint(sacn_merge_rece
 }
 
 /**
- * @brief Resets underlying network sockets and packet receipt state, determines network interfaces for all merge receivers.
+ * @brief Resets underlying network sockets and packet receipt state, determines network interfaces for all merge
+ * receivers.
  *
  * This is typically used when the application detects that the list of networking interfaces has changed. This changes
  * the list of system interfaces the receiver (and by extension, merge receiver) API will be limited to (the list passed
@@ -501,8 +502,8 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
         SacnMergeReceiverSource* source = NULL;
         if (lookup_merge_receiver_source(merge_receiver, source_handle, &source) == kEtcPalErrOk)
         {
-          // The source is pending until the first 0x00 packet is received. After the sampling period, this indicates that
-          // 0xDD must have either already been notified or timed out.
+          // The source is pending until the first 0x00 packet is received. After the sampling period, this indicates
+          // that 0xDD must have either already been notified or timed out.
           if (source->pending && (universe_data->start_code == SACN_STARTCODE_DMX))
           {
             source->pending = false;
@@ -519,7 +520,8 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
         }
 
         bool new_merge_occurred = false;
-        if ((universe_data->slot_range.address_count > 0) && (universe_data->slot_range.address_count <= DMX_ADDRESS_COUNT))
+        if ((universe_data->slot_range.address_count > 0) &&
+            (universe_data->slot_range.address_count <= DMX_ADDRESS_COUNT))
         {
           if (universe_data->start_code == SACN_STARTCODE_DMX)
           {
@@ -531,8 +533,8 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
           }
           else if ((universe_data->start_code == SACN_STARTCODE_PRIORITY) && merge_receiver->use_pap)
           {
-            update_sacn_dmx_merger_paps(merge_receiver->merger_handle, merger_source_handle, universe_data->slots,
-                                        universe_data->slot_range.address_count);
+            update_sacn_dmx_merger_pap(merge_receiver->merger_handle, merger_source_handle, universe_data->slots,
+                                       universe_data->slot_range.address_count);
             new_merge_occurred = true;
           }
         }
@@ -575,14 +577,15 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
       merged_data.slot_owners = merged_data_notification->slot_owners;
       merged_data.num_active_sources = merged_data_notification->num_active_sources;
 
-      merged_data_notification->callback(merged_data_notification->handle, &merged_data, merged_data_notification->context);
+      merged_data_notification->callback(merged_data_notification->handle, &merged_data,
+                                         merged_data_notification->context);
     }
 
     if (non_dmx_notification->callback)
     {
       non_dmx_notification->callback(non_dmx_notification->receiver_handle, non_dmx_notification->source_addr,
-                                    non_dmx_notification->source_info, non_dmx_notification->universe_data,
-                                    non_dmx_notification->context);
+                                     non_dmx_notification->source_info, non_dmx_notification->universe_data,
+                                     non_dmx_notification->context);
     }
   }
   else if (!merged_data_notification)
@@ -614,7 +617,8 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
           remove_sacn_merge_receiver_source(merge_receiver, lost_sources[i].handle);
 
           // The receiver handle is interchangable with the DMX Merger source IDs, so use it here via cast.
-          remove_sacn_dmx_merger_source(merge_receiver->merger_handle, (sacn_dmx_merger_source_t)lost_sources[i].handle);
+          remove_sacn_dmx_merger_source(merge_receiver->merger_handle,
+                                        (sacn_dmx_merger_source_t)lost_sources[i].handle);
         }
 
         if (!merge_receiver->sampling && (merge_receiver->num_pending_sources == 0))
@@ -644,7 +648,8 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
       merged_data.slot_owners = merged_data_notification->slot_owners;
       merged_data.num_active_sources = merged_data_notification->num_active_sources;
 
-      merged_data_notification->callback(merged_data_notification->handle, &merged_data, merged_data_notification->context);
+      merged_data_notification->callback(merged_data_notification->handle, &merged_data,
+                                         merged_data_notification->context);
     }
   }
   else
@@ -692,8 +697,8 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
           merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
           memcpy(merged_data_notification->slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
           memcpy(merged_data_notification->slot_owners, merge_receiver->slot_owners,
-                 DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t   
-          merged_data_notification->num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);     
+                 DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+          merged_data_notification->num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);
           merged_data_notification->context = merge_receiver->callbacks.callback_context;
         }
       }
@@ -710,7 +715,8 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
       merged_data.slot_owners = merged_data_notification->slot_owners;
       merged_data.num_active_sources = merged_data_notification->num_active_sources;
 
-      merged_data_notification->callback(merged_data_notification->handle, &merged_data, merged_data_notification->context);
+      merged_data_notification->callback(merged_data_notification->handle, &merged_data,
+                                         merged_data_notification->context);
     }
   }
   else
@@ -733,7 +739,7 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
           merge_receiver->use_pap)
       {
         // The receiver handle is interchangable with the DMX Merger source IDs, so use it here via cast.
-        remove_sacn_dmx_merger_paps(merge_receiver->merger_handle, (sacn_dmx_merger_source_t)source->handle);
+        remove_sacn_dmx_merger_pap(merge_receiver->merger_handle, (sacn_dmx_merger_source_t)source->handle);
 
         if (!merge_receiver->sampling && (merge_receiver->num_pending_sources == 0))
         {
@@ -744,8 +750,8 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
           merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
           memcpy(merged_data_notification->slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
           memcpy(merged_data_notification->slot_owners, merge_receiver->slot_owners,
-                 DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t   
-          merged_data_notification->num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);     
+                 DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+          merged_data_notification->num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);
           merged_data_notification->context = merge_receiver->callbacks.callback_context;
         }
       }
@@ -762,7 +768,8 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
       merged_data.slot_owners = merged_data_notification->slot_owners;
       merged_data.num_active_sources = merged_data_notification->num_active_sources;
 
-      merged_data_notification->callback(merged_data_notification->handle, &merged_data, merged_data_notification->context);
+      merged_data_notification->callback(merged_data_notification->handle, &merged_data,
+                                         merged_data_notification->context);
     }
   }
   else

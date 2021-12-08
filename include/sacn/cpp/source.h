@@ -109,7 +109,7 @@ public:
     /********* Required values **********/
 
     /** The universe number. At this time, only values from 1 - 63999 are accepted.
-        You cannot have a source send more than one stream of values to a single universe. */
+        You cannot have a source send more than one stream of levels to a single universe. */
     uint16_t universe{0};
 
     /********* Optional values **********/
@@ -188,12 +188,12 @@ public:
   etcpal::Error SendNow(uint16_t universe, uint8_t start_code, const uint8_t* buffer, size_t buflen);
   etcpal::Error SendSynchronization(uint16_t universe);
 
-  void UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size);
-  void UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size, const uint8_t* new_priorities,
-                    size_t new_priorities_size);
-  void UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size);
-  void UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size,
-                                const uint8_t* new_priorities, size_t new_priorities_size);
+  void UpdateLevels(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size);
+  void UpdateLevelsAndPap(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size,
+                          const uint8_t* new_priorities, size_t new_priorities_size);
+  void UpdateLevelsAndForceSync(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size);
+  void UpdateLevelsAndPapAndForceSync(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size,
+                                      const uint8_t* new_priorities, size_t new_priorities_size);
 
   std::vector<EtcPalMcastNetintId> GetNetworkInterfaces(uint16_t universe);
 
@@ -284,8 +284,8 @@ inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handl
  * @brief Create a new sACN source to send sACN data.
  *
  * This creates the instance of the source and begins sending universe discovery packets for it (which will list no
- * universes until start code data begins transmitting). No start code data is sent until AddUniverse() and a variant of
- * UpdateValues() is called.
+ * universes until start code data begins transmitting). No start code data is sent until AddUniverse() and one of the
+ * Update functions are called.
  *
  * @param[in] settings Configuration parameters for the sACN source to be created. If any of these parameters are
  * invalid, #kEtcPalErrInvalid will be returned. This includes if the source name's length (including the null
@@ -345,10 +345,10 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
  * @brief Add a universe to an sACN source, which will use all network interfaces.
  *
  * Adds a universe to a source. All network interfaces will be used.
- * After this call completes, the applicaton must call a variant of UpdateValues() to mark it ready for processing.
+ * After this call completes, the applicaton must call one of the Update functions to mark it ready for processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
- * Discovery packets once a variant of UpdateValues() is called.
+ * Discovery packets once one of the Update functions are called.
  *
  * Note that a universe is considered as successfully added if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -373,10 +373,10 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings)
  * @brief Add a universe to an sACN source, which will use the network interfaces passed in.
  *
  * Adds a universe to a source. Only the network interfaces passed in will be used.
- * After this call completes, the applicaton must call a variant of UpdateValues() to mark it ready for processing.
+ * After this call completes, the applicaton must call one of the Update functions to mark it ready for processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
- * Discovery packets once a variant of UpdateValues() is called.
+ * Discovery packets once one of the Update functions are called.
  *
  * Note that a universe is considered as successfully added if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
@@ -623,106 +623,103 @@ inline etcpal::Error Source::SendSynchronization(uint16_t sync_universe)
 }
 
 /**
- * @brief Copies the universe's dmx values into the packet to be sent on the next threaded or manual update.
+ * @brief Copies the universe's DMX levels into the packet to be sent on the next threaded or manual update.
  *
- * This function will update the outgoing packet values, and reset the logic that slows down packet transmission due to
+ * This function will update the outgoing packet data, and reset the logic that slows down packet transmission due to
  * inactivity.
  *
- * When you don't have per-address priority changes to make, use this function. Otherwise, use
- * the version of UpdateValues() that takes a per-address priority buffer.
+ * When you don't have per-address priority changes to make, use this function. Otherwise, use UpdateLevelsAndPap().
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of DMX values to copy from. If this pointer is NULL, the source will terminate DMX
+ * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size)
+inline void Source::UpdateLevels(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size)
 {
-  sacn_source_update_values(handle_.value(), universe, new_values, new_values_size);
+  sacn_source_update_levels(handle_.value(), universe, new_levels, new_levels_size);
 }
 
 /**
- * @brief Copies the universe's dmx values and per-address priorities into packets that are sent on the next threaded or
+ * @brief Copies the universe's DMX levels and per-address priorities into packets that are sent on the next threaded or
  * manual update.
  *
- * This function will update the outgoing packet values for both DMX and per-address priority data, and reset the logic
+ * This function will update the outgoing packet data for both DMX and per-address priority data, and reset the logic
  * that slows down packet transmission due to inactivity.
  *
- * The application should adhere to the rules for per-address priority (PAP) specified in
- * https://etclabs.github.io/sACN/docs/head/per_address_priority.html. This API will adhere to the rules within the
- * scope of the implementation. This includes handling transmission suppression and the order in which DMX and PAP
- * packets are sent. This also includes automatically setting levels to 0, even if the application specified a different
- * level, for each slot that the application assigns a PAP of 0 (by setting the PAP to 0 or reducing the number of
- * PAPs).
+ * The application should adhere to the rules for per-address priority (PAP) specified in @ref per_address_priority.
+ * This API will adhere to the rules within the scope of the implementation. This includes handling transmission
+ * suppression and the order in which DMX and PAP packets are sent. This also includes automatically setting levels to
+ * 0, even if the application specified a different level, for each slot that the application assigns a PAP of 0 (by
+ * setting the PAP to 0 or reducing the PAP count).
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of DMX values to copy from. If this pointer is NULL, the source will terminate DMX
+ * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This will only be sent when DMX is also
  * being sent. This may be NULL if you are not using per-address priorities or want to stop using per-address
  * priorities.
  * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-inline void Source::UpdateValues(uint16_t universe, const uint8_t* new_values, size_t new_values_size,
-                                 const uint8_t* new_priorities, size_t new_priorities_size)
+inline void Source::UpdateLevelsAndPap(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size,
+                                       const uint8_t* new_priorities, size_t new_priorities_size)
 {
-  sacn_source_update_values_and_pap(handle_.value(), universe, new_values, new_values_size, new_priorities,
+  sacn_source_update_levels_and_pap(handle_.value(), universe, new_levels, new_levels_size, new_priorities,
                                     new_priorities_size);
 }
 
 /**
- * @brief Like UpdateValues(), but also sets the force_sync flag on the packet.
+ * @brief Like UpdateLevels(), but also sets the force_sync flag on the packet.
  *
- * This function will update the outgoing packet values to be sent on the next threaded or manual update, and will reset
+ * This function will update the outgoing packet data to be sent on the next threaded or manual update, and will reset
  * the logic that slows down packet transmission due to inactivity. Additionally, the packet to be sent will have its
  * force_synchronization option flag set.
  *
- * If no synchronization universe is configured, this function acts like a direct call to UpdateValues().
+ * If no synchronization universe is configured, this function acts like a direct call to UpdateLevels().
  *
  * TODO: At this time, synchronization is not supported by this library.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of DMX values to copy from. If this pointer is NULL, the source will terminate DMX
+ * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size)
+inline void Source::UpdateLevelsAndForceSync(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size)
 {
-  sacn_source_update_values_and_force_sync(handle_.value(), universe, new_values, new_values_size);
+  sacn_source_update_levels_and_force_sync(handle_.value(), universe, new_levels, new_levels_size);
 }
 
 /**
- * @brief Like UpdateValues(), but also sets the force_sync flag on the packet.
+ * @brief Like UpdateLevelsAndPap(), but also sets the force_sync flag on the packet.
  *
- * This function will update the outgoing packet values to be sent on the next threaded or manual update, and will reset
+ * This function will update the outgoing packet data to be sent on the next threaded or manual update, and will reset
  * the logic that slows down packet transmission due to inactivity. Additionally, both packets to be sent by this call
  * will have their force_synchronization option flags set.
  *
- * The application should adhere to the rules for per-address priority (PAP) specified in
- * https://etclabs.github.io/sACN/docs/head/per_address_priority.html. This API will adhere to the rules within the
- * scope of the implementation. This includes handling transmission suppression and the order in which DMX and PAP
- * packets are sent. This also includes automatically setting levels to 0, even if the application specified a different
- * level, for each slot that the application assigns a PAP of 0 (by setting the PAP to 0 or reducing the number of
- * PAPs).
+ * The application should adhere to the rules for per-address priority (PAP) specified in @ref per_address_priority.
+ * This API will adhere to the rules within the scope of the implementation. This includes handling transmission
+ * suppression and the order in which DMX and PAP packets are sent. This also includes automatically setting levels to
+ * 0, even if the application specified a different level, for each slot that the application assigns a PAP of 0 (by
+ * setting the PAP to 0 or reducing the PAP count).
  *
- * If no synchronization universe is configured, this function acts like a direct call to UpdateValues().
+ * If no synchronization universe is configured, this function acts like a direct call to UpdateLevelsAndPap().
  *
  * TODO: At this time, synchronization is not supported by this library.
  *
  * @param[in] universe Universe to update.
- * @param[in] new_values A buffer of DMX values to copy from. If this pointer is NULL, the source will terminate DMX
+ * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_values_size Size of new_values. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This will only be sent when DMX is also
  * being sent. This may be NULL if you are not using per-address priorities or want to stop using per-address
  * priorities.
  * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-inline void Source::UpdateValuesAndForceSync(uint16_t universe, const uint8_t* new_values, size_t new_values_size,
-                                             const uint8_t* new_priorities, size_t new_priorities_size)
+inline void Source::UpdateLevelsAndPapAndForceSync(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size,
+                                                   const uint8_t* new_priorities, size_t new_priorities_size)
 {
-  sacn_source_update_values_and_pap_and_force_sync(handle_.value(), universe, new_values, new_values_size,
+  sacn_source_update_levels_and_pap_and_force_sync(handle_.value(), universe, new_levels, new_levels_size,
                                                    new_priorities, new_priorities_size);
 }
 
@@ -757,8 +754,8 @@ inline int Source::ProcessManual()
  * API will no longer be limited to specific interfaces (the list passed into sacn::Init(), if any, is overridden for
  * the source API, but not the other APIs). Every universe of every source is set to all system interfaces.
  *
- * After this call completes successfully, all universes of all sources are considered to be updated and have new values
- * and priorities. It's as if every source just started sending values on all their universes.
+ * After this call completes successfully, all universes of all sources are considered to be updated and have new levels
+ * and priorities. It's as if every source just started sending levels on all their universes.
  *
  * If this call fails, the caller must call Shutdown() on all sources, because the source API may be in an
  * invalid state.
@@ -785,8 +782,8 @@ inline etcpal::Error Source::ResetNetworking()
  * overridden for the source API, but not the other APIs). Then all universes of all sources will be configured to use
  * all of those interfaces.
  *
- * After this call completes successfully, all universes of all sources are considered to be updated and have new values
- * and priorities. It's as if every source just started sending values on all their universes.
+ * After this call completes successfully, all universes of all sources are considered to be updated and have new levels
+ * and priorities. It's as if every source just started sending levels on all their universes.
  *
  * If this call fails, the caller must call Shutdown() on all sources, because the source API may be in an
  * invalid state.
@@ -818,8 +815,8 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sy
  * overridden for the source API, but not the other APIs). Then the network interfaces are specified for each universe
  * of each source.
  *
- * After this call completes successfully, all universes of all sources are considered to be updated and have new values
- * and priorities. It's as if every source just started sending values on all their universes.
+ * After this call completes successfully, all universes of all sources are considered to be updated and have new levels
+ * and priorities. It's as if every source just started sending levels on all their universes.
  *
  * If this call fails, the caller must call Shutdown() on all sources, because the source API may be in an
  * invalid state.

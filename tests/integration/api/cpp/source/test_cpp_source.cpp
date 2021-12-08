@@ -107,9 +107,9 @@ TEST_F(TestSource, AddUniverseHandlesTerminationCorrectly)
   sacn::Source source;
   EXPECT_EQ(source.Startup(sacn::Source::Settings(etcpal::Uuid::V4(), "Test Source Name")).code(), kEtcPalErrOk);
   EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
-  source.UpdateValues(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  source.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
   EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrExists);
-  source.UpdateValues(kTestUniverse, nullptr, 0u);
+  source.UpdateLevels(kTestUniverse, nullptr, 0u);
   EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrExists);
   source.RemoveUniverse(kTestUniverse);
   EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
@@ -123,9 +123,9 @@ TEST_F(TestSource, AddUnicastDestHandlesTerminationCorrectly)
   EXPECT_EQ(source.Startup(sacn::Source::Settings(etcpal::Uuid::V4(), "Test Source Name")).code(), kEtcPalErrOk);
   EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
   EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrOk);
-  source.UpdateValues(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  source.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
   EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrExists);
-  source.UpdateValues(kTestUniverse, nullptr, 0u);
+  source.UpdateLevels(kTestUniverse, nullptr, 0u);
   EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrExists);
   source.RemoveUnicastDestination(kTestUniverse, kTestAddr);
   EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrOk);

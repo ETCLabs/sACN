@@ -59,11 +59,11 @@ DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_change_synchronization_unive
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_send_now, sacn_source_t, uint16_t, uint8_t, const uint8_t*, size_t);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_send_synchronization, sacn_source_t, uint16_t);
 
-DECLARE_FAKE_VOID_FUNC(sacn_source_update_values, sacn_source_t, uint16_t, const uint8_t*, size_t);
-DECLARE_FAKE_VOID_FUNC(sacn_source_update_values_and_pap, sacn_source_t, uint16_t, const uint8_t*, size_t,
+DECLARE_FAKE_VOID_FUNC(sacn_source_update_levels, sacn_source_t, uint16_t, const uint8_t*, size_t);
+DECLARE_FAKE_VOID_FUNC(sacn_source_update_levels_and_pap, sacn_source_t, uint16_t, const uint8_t*, size_t,
                        const uint8_t*, size_t);
-DECLARE_FAKE_VOID_FUNC(sacn_source_update_values_and_force_sync, sacn_source_t, uint16_t, const uint8_t*, size_t);
-DECLARE_FAKE_VOID_FUNC(sacn_source_update_values_and_pap_and_force_sync, sacn_source_t, uint16_t, const uint8_t*,
+DECLARE_FAKE_VOID_FUNC(sacn_source_update_levels_and_force_sync, sacn_source_t, uint16_t, const uint8_t*, size_t);
+DECLARE_FAKE_VOID_FUNC(sacn_source_update_levels_and_pap_and_force_sync, sacn_source_t, uint16_t, const uint8_t*,
                        size_t, const uint8_t*, size_t);
 
 DECLARE_FAKE_VALUE_FUNC(int, sacn_source_process_manual);

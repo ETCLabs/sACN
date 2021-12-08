@@ -113,7 +113,7 @@ typedef struct SacnSourceUniverseConfig
   /********* Required values **********/
 
   /** The universe number. At this time, only values from 1 - 63999 are accepted.
-      You cannot have a source send more than one stream of values to a single universe. */
+      You cannot have a source send more than one stream of levels to a single universe. */
   uint16_t universe;
 
   /********* Optional values **********/
@@ -187,15 +187,15 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
                                     size_t buflen);
 etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t universe);
 
-void sacn_source_update_values(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
-                               size_t new_values_size);
-void sacn_source_update_values_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
-                                       size_t new_values_size, const uint8_t* new_priorities,
+void sacn_source_update_levels(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
+                               size_t new_levels_size);
+void sacn_source_update_levels_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
+                                       size_t new_levels_size, const uint8_t* new_priorities,
                                        size_t new_priorities_size);
-void sacn_source_update_values_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
-                                              size_t new_values_size);
-void sacn_source_update_values_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe,
-                                                      const uint8_t* new_values, size_t new_values_size,
+void sacn_source_update_levels_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
+                                              size_t new_levels_size);
+void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe,
+                                                      const uint8_t* new_levels, size_t new_levels_size,
                                                       const uint8_t* new_priorities, size_t new_priorities_size);
 
 int sacn_source_process_manual(void);

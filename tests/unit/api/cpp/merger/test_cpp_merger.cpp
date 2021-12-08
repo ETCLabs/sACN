@@ -59,10 +59,7 @@ protected:
     ASSERT_EQ(sacn_dmx_merger_init(), kEtcPalErrOk);
   }
 
-  void TearDown() override
-  {
-    sacn_dmx_merger_deinit();
-  }
+  void TearDown() override { sacn_dmx_merger_deinit(); }
 
   static constexpr sacn_dmx_merger_t kTestMergerHandle = 123;
   static constexpr uint8_t kTestPriority = 123;
@@ -75,7 +72,7 @@ protected:
   static const uint8_t kTestPdata[DMX_ADDRESS_COUNT];
 
   static uint8_t slots_[DMX_ADDRESS_COUNT];
-  static uint8_t paps_[DMX_ADDRESS_COUNT];
+  static uint8_t pap_[DMX_ADDRESS_COUNT];
   static sacn_dmx_merger_source_t slot_owners_[DMX_ADDRESS_COUNT];
 
   static etcpal_error_t test_return_value_;
@@ -91,7 +88,7 @@ const uint8_t TestMerger::kTestPdata[] = {};
 etcpal_error_t TestMerger::test_return_value_;
 sacn_dmx_merger_source_t TestMerger::test_source_handle_;
 uint8_t TestMerger::slots_[] = {};
-uint8_t TestMerger::paps_[] = {};
+uint8_t TestMerger::pap_[] = {};
 sacn_dmx_merger_source_t TestMerger::slot_owners_[] = {};
 sacn::DmxMerger::Settings TestMerger::settings_default_(nullptr);
 
@@ -121,7 +118,7 @@ TEST_F(TestMerger, StartupWorks)
     if (config)
     {
       EXPECT_EQ(config->slots, slots_);
-      EXPECT_EQ(config->per_address_priorities, paps_);
+      EXPECT_EQ(config->per_address_priorities, pap_);
       EXPECT_EQ(config->slot_owners, slot_owners_);
       EXPECT_EQ(config->source_count_max, SACN_RECEIVER_INFINITE_SOURCES);
     }
@@ -135,7 +132,7 @@ TEST_F(TestMerger, StartupWorks)
   sacn::DmxMerger merger;
 
   sacn::DmxMerger::Settings settings(slots_);
-  settings.per_address_priorities = paps_;
+  settings.per_address_priorities = pap_;
   settings.slot_owners = slot_owners_;
 
   etcpal::Error result = merger.Startup(settings);
@@ -230,12 +227,12 @@ TEST_F(TestMerger, UpdateLevelsWorks)
 {
   sacn_dmx_merger_update_levels_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
                                                       const uint8_t* new_levels, size_t new_levels_count) {
-        EXPECT_EQ(merger, kTestMergerHandle);
-        EXPECT_EQ(source, test_source_handle_);
-        EXPECT_EQ(new_levels, kTestNewValues);
-        EXPECT_EQ(new_levels_count, kTestNewValuesCount);
+    EXPECT_EQ(merger, kTestMergerHandle);
+    EXPECT_EQ(source, test_source_handle_);
+    EXPECT_EQ(new_levels, kTestNewValues);
+    EXPECT_EQ(new_levels_count, kTestNewValuesCount);
 
-        return test_return_value_;
+    return test_return_value_;
   };
 
   sacn::DmxMerger merger;
@@ -248,32 +245,32 @@ TEST_F(TestMerger, UpdateLevelsWorks)
   EXPECT_EQ(result.code(), test_return_value_);
 }
 
-TEST_F(TestMerger, UpdatePapsWorks)
+TEST_F(TestMerger, UpdatePapWorks)
 {
-  sacn_dmx_merger_update_paps_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
-                                                    const uint8_t* paps, size_t paps_count) {
-        EXPECT_EQ(merger, kTestMergerHandle);
-        EXPECT_EQ(source, test_source_handle_);
-        EXPECT_EQ(paps, kTestAddressPriorities);
-        EXPECT_EQ(paps_count, kTestAddressPrioritiesCount);
+  sacn_dmx_merger_update_pap_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
+                                                   const uint8_t* pap, size_t pap_count) {
+    EXPECT_EQ(merger, kTestMergerHandle);
+    EXPECT_EQ(source, test_source_handle_);
+    EXPECT_EQ(pap, kTestAddressPriorities);
+    EXPECT_EQ(pap_count, kTestAddressPrioritiesCount);
 
-        return test_return_value_;
-      };
+    return test_return_value_;
+  };
 
   sacn::DmxMerger merger;
 
   merger.Startup(settings_default_);
 
-  etcpal::Error result = merger.UpdatePaps(test_source_handle_, kTestAddressPriorities, kTestAddressPrioritiesCount);
+  etcpal::Error result = merger.UpdatePap(test_source_handle_, kTestAddressPriorities, kTestAddressPrioritiesCount);
 
-  EXPECT_EQ(sacn_dmx_merger_update_paps_fake.call_count, 1u);
+  EXPECT_EQ(sacn_dmx_merger_update_pap_fake.call_count, 1u);
   EXPECT_EQ(result.code(), test_return_value_);
 }
 
 TEST_F(TestMerger, UpdateUniversePriorityWorks)
 {
-  sacn_dmx_merger_update_universe_priority_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
-                                                                 uint8_t universe_priority) {
+  sacn_dmx_merger_update_universe_priority_fake.custom_fake =
+      [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, uint8_t universe_priority) {
         EXPECT_EQ(merger, kTestMergerHandle);
         EXPECT_EQ(source, test_source_handle_);
         EXPECT_EQ(universe_priority, kTestPriority);
@@ -293,7 +290,7 @@ TEST_F(TestMerger, UpdateUniversePriorityWorks)
 
 TEST_F(TestMerger, StopSourcePapWorks)
 {
-  sacn_dmx_merger_remove_paps_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source) {
+  sacn_dmx_merger_remove_pap_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source) {
     EXPECT_EQ(merger, kTestMergerHandle);
     EXPECT_EQ(source, test_source_handle_);
     return test_return_value_;
@@ -303,8 +300,8 @@ TEST_F(TestMerger, StopSourcePapWorks)
 
   merger.Startup(settings_default_);
 
-  etcpal::Error result = merger.RemovePaps(test_source_handle_);
+  etcpal::Error result = merger.RemovePap(test_source_handle_);
 
-  EXPECT_EQ(sacn_dmx_merger_remove_paps_fake.call_count, 1u);
+  EXPECT_EQ(sacn_dmx_merger_remove_pap_fake.call_count, 1u);
   EXPECT_EQ(result.code(), test_return_value_);
 }

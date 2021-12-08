@@ -140,9 +140,9 @@ public:
   const SacnDmxMergerSource* GetSourceInfo(sacn_dmx_merger_source_t source) const;
 
   etcpal::Error UpdateLevels(sacn_dmx_merger_source_t source, const uint8_t* new_levels, size_t new_levels_count);
-  etcpal::Error UpdatePaps(sacn_dmx_merger_source_t source, const uint8_t* paps, size_t paps_count);
+  etcpal::Error UpdatePap(sacn_dmx_merger_source_t source, const uint8_t* pap, size_t pap_count);
   etcpal::Error UpdateUniversePriority(sacn_dmx_merger_source_t source, uint8_t universe_priority);
-  etcpal::Error RemovePaps(sacn_dmx_merger_source_t source);
+  etcpal::Error RemovePap(sacn_dmx_merger_source_t source);
 
   constexpr Handle handle() const;
 
@@ -288,27 +288,27 @@ inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source, co
 }
 
 /**
- * @brief Updates a source's per-address priorities (PAPs) and recalculates outputs.
+ * @brief Updates a source's per-address priorities (PAP) and recalculates outputs.
  *
- * This function updates the per-address priorities (PAPs) of the specified source, and then triggers the recalculation
+ * This function updates the per-address priorities (PAP) of the specified source, and then triggers the recalculation
  * of each slot. For each slot, the source will only be included in the merge if it has a level and a priority at that
  * slot.
  *
- * If PAPs are not specified for all slots, then the remaining slots will default to a PAP of 0. To remove PAPs for this
- * source and revert to the universe priority, call DmxMerger::RemovePaps.
+ * If PAP is not specified for all slots, then the remaining slots will default to a PAP of 0. To remove PAP for this
+ * source and revert to the universe priority, call DmxMerger::RemovePap.
  *
  * @param[in] source The id of the source to modify.
- * @param[in] paps The per-address priorities to be copied in, starting from the first slot.
- * @param[in] paps_count The length of paps.
+ * @param[in] pap The per-address priorities to be copied in, starting from the first slot.
+ * @param[in] pap_count The length of pap.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error DmxMerger::UpdatePaps(sacn_dmx_merger_source_t source, const uint8_t* paps, size_t paps_count)
+inline etcpal::Error DmxMerger::UpdatePap(sacn_dmx_merger_source_t source, const uint8_t* pap, size_t pap_count)
 {
-  return sacn_dmx_merger_update_paps(handle_.value(), source, paps, paps_count);
+  return sacn_dmx_merger_update_pap(handle_.value(), source, pap, pap_count);
 }
 
 /**
@@ -317,8 +317,8 @@ inline etcpal::Error DmxMerger::UpdatePaps(sacn_dmx_merger_source_t source, cons
  * This function updates the universe priority of the specified source, and then triggers the recalculation of each
  * slot. For each slot, the source will only be included in the merge if it has a level and a priority at that slot.
  *
- * If per-address priorities (PAPs) were previously specified for this source with DmxMerger::UpdatePaps, then the
- * universe priority can have no effect on the merge results until the application calls DmxMerger::RemovePaps, at which
+ * If per-address priorities (PAP) were previously specified for this source with DmxMerger::UpdatePap, then the
+ * universe priority can have no effect on the merge results until the application calls DmxMerger::RemovePap, at which
  * point the priorities of each slot will revert to the universe priority passed in here.
  *
  * @param[in] source The id of the source to modify.
@@ -347,9 +347,9 @@ inline etcpal::Error DmxMerger::UpdateUniversePriority(sacn_dmx_merger_source_t 
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error DmxMerger::RemovePaps(sacn_dmx_merger_source_t source)
+inline etcpal::Error DmxMerger::RemovePap(sacn_dmx_merger_source_t source)
 {
-  return sacn_dmx_merger_remove_paps(handle_.value(), source);
+  return sacn_dmx_merger_remove_pap(handle_.value(), source);
 }
 
 /**

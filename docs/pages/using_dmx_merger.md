@@ -2,7 +2,7 @@
 
 The sACN DMX Merger API provides a software merger that takes level (NULL start code) and priority
 data as input and outputs the merged levels, along with source IDs and per-address priorities
-(PAPs) for each merged level. This API exposes both a C and C++ language interface. The C++
+(PAP) for each merged level. This API exposes both a C and C++ language interface. The C++
 interface is a header-only wrapper around the C interface.
 
 Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
@@ -139,22 +139,22 @@ slots will be treated as if they had a per-address priority of 0.
 
 The way to input this data for a source is to pass it in directly, using one of the update
 functions. The application can use these functions to update the levels, universe priority, and/or
-per-address priorities (PAPs) individually. Keep in mind that both a level and a priority (universe
+per-address priorities (PAP) individually. Keep in mind that both a level and a priority (universe
 or PAP) must be inputted for a slot before the source can be factored into the merge for that slot.
 
 <!-- CODE_BLOCK_START -->
 ```c
 uint8_t levels[DMX_ADDRESS_COUNT];
-uint8_t paps[DMX_ADDRESS_COUNT];
+uint8_t pap[DMX_ADDRESS_COUNT];
 uint8_t universe_priority;
-// Initialize levels, paps, and universe_priority here...
+// Initialize levels, pap, and universe_priority here...
 
 // To update levels:
 sacn_dmx_merger_update_levels(merger_handle, source_1_handle, levels, DMX_ADDRESS_COUNT);
 
 // Then call one of these to update priority:
 sacn_dmx_merger_update_universe_priority(merger_handle, source_1_handle, universe_priority);
-sacn_dmx_merger_update_paps(merger_handle, source_1_handle, paps, DMX_ADDRESS_COUNT);
+sacn_dmx_merger_update_pap(merger_handle, source_1_handle, pap, DMX_ADDRESS_COUNT);
 
 // Now the source has been factored into the merge results, which are printed here.
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
@@ -165,16 +165,16 @@ for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
 <!-- CODE_BLOCK_MID -->
 ```cpp
 uint8_t levels[DMX_ADDRESS_COUNT];
-uint8_t paps[DMX_ADDRESS_COUNT];
+uint8_t pap[DMX_ADDRESS_COUNT];
 uint8_t universe_priority;
-// Initialize levels, paps, and universe_priority here...
+// Initialize levels, pap, and universe_priority here...
 
 // To update levels:
 merger.UpdateLevels(source_1_handle, levels, DMX_ADDRESS_COUNT);
 
 // Then call one of these to update priority:
 merger.UpdateUniversePriority(source_1_handle, universe_priority);
-merger.UpdatePaps(source_1_handle, paps, DMX_ADDRESS_COUNT);
+merger.UpdatePap(source_1_handle, pap, DMX_ADDRESS_COUNT);
 
 // Now the source has been factored into the merge results, which are printed here.
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)

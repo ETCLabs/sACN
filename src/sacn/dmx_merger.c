@@ -63,7 +63,8 @@
 #define IS_SOURCING_WINNING_PRIORITY(source, merger, slot) \
   IS_SOURCED_WINNING_PRIORITY(SOURCE_MERGE_PRIORITY(source, slot), merger, slot)
 
-/* This determines if the given priority is sourced and winning in a similar manner (see IS_SOURCING_WINNING_PRIORITY). */
+/* This determines if the given priority is sourced and winning in a similar manner (see IS_SOURCING_WINNING_PRIORITY).
+ */
 
 /* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
 
@@ -455,27 +456,27 @@ etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_dmx_
 }
 
 /**
- * @brief Updates a source's per-address priorities (PAPs) and recalculates outputs.
+ * @brief Updates a source's per-address priorities (PAP) and recalculates outputs.
  *
- * This function updates the per-address priorities (PAPs) of the specified source, and then triggers the recalculation
+ * This function updates the per-address priorities (PAP) of the specified source, and then triggers the recalculation
  * of each slot. For each slot, the source will only be included in the merge if it has a level and a priority at that
  * slot.
  *
- * If PAPs are not specified for all slots, then the remaining slots will default to a PAP of 0. To remove PAPs for this
- * source and revert to the universe priority, call sacn_dmx_merger_remove_paps.
+ * If PAP is not specified for all slots, then the remaining slots will default to a PAP of 0. To remove PAP for this
+ * source and revert to the universe priority, call sacn_dmx_merger_remove_pap.
  *
  * @param[in] merger The handle to the merger.
  * @param[in] source The id of the source to modify.
- * @param[in] paps The per-address priorities to be copied in, starting from the first slot.
- * @param[in] paps_count The length of paps.
+ * @param[in] pap The per-address priorities to be copied in, starting from the first slot.
+ * @param[in] pap_count The length of pap.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t* paps,
-                                           size_t paps_count)
+etcpal_error_t sacn_dmx_merger_update_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t* pap,
+                                          size_t pap_count)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
@@ -488,9 +489,9 @@ etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_dmx_me
   {
     if ((merger == SACN_DMX_MERGER_INVALID) || (source == SACN_DMX_MERGER_SOURCE_INVALID))
       result = kEtcPalErrInvalid;
-    if (paps_count > DMX_ADDRESS_COUNT)
+    if (pap_count > DMX_ADDRESS_COUNT)
       result = kEtcPalErrInvalid;
-    if (!paps || (paps_count == 0))
+    if (!pap || (pap_count == 0))
       result = kEtcPalErrInvalid;
   }
 
@@ -498,7 +499,7 @@ etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_dmx_me
   {
     if (sacn_lock())
     {
-      result = update_sacn_dmx_merger_paps(merger, source, paps, paps_count);
+      result = update_sacn_dmx_merger_pap(merger, source, pap, pap_count);
       sacn_unlock();
     }
     else
@@ -517,8 +518,8 @@ etcpal_error_t sacn_dmx_merger_update_paps(sacn_dmx_merger_t merger, sacn_dmx_me
  * This function updates the universe priority of the specified source, and then triggers the recalculation of each
  * slot. For each slot, the source will only be included in the merge if it has a level and a priority at that slot.
  *
- * If per-address priorities (PAPs) were previously specified for this source with sacn_dmx_merger_update_paps, then the
- * universe priority can have no effect on the merge results until the application calls sacn_dmx_merger_remove_paps, at
+ * If per-address priorities (PAP) were previously specified for this source with sacn_dmx_merger_update_pap, then the
+ * universe priority can have no effect on the merge results until the application calls sacn_dmx_merger_remove_pap, at
  * which point the priorities of each slot will revert to the universe priority passed in here.
  *
  * @param[in] merger The handle to the merger.
@@ -574,7 +575,7 @@ etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_dmx_merger_remove_paps(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)
+etcpal_error_t sacn_dmx_merger_remove_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
@@ -593,7 +594,7 @@ etcpal_error_t sacn_dmx_merger_remove_paps(sacn_dmx_merger_t merger, sacn_dmx_me
   {
     if (sacn_lock())
     {
-      result = remove_sacn_dmx_merger_paps(merger, source);
+      result = remove_sacn_dmx_merger_pap(merger, source);
       sacn_unlock();
     }
     else
@@ -771,7 +772,7 @@ void update_per_address_priorities(MergerState* merger, SourceState* source, con
                                    uint16_t address_priorities_count)
 {
   // Update the relevant flags.
-  bool paps_were_invalid = !source->source.address_priority_valid;
+  bool pap_was_invalid = !source->source.address_priority_valid;
   source->source.address_priority_valid = true;
 
   if (merger->config.per_address_priorities_active != NULL)
@@ -783,7 +784,7 @@ void update_per_address_priorities(MergerState* merger, SourceState* source, con
     uint8_t new_pap = (i < address_priorities_count) ? address_priorities[i] : 0;
 
     // If this priority has changed:
-    if (paps_were_invalid || (new_pap != source->source.address_priority[i]))
+    if (pap_was_invalid || (new_pap != source->source.address_priority[i]))
     {
       // Update the source data.
       source->source.address_priority[i] = new_pap;
@@ -807,7 +808,6 @@ void update_universe_priority(MergerState* merger, SourceState* source, uint8_t 
     // Determine if this is the current universe priority output.
     bool was_max = (merger->config.universe_priority != NULL) && source->has_universe_priority &&
                    (source->source.universe_priority >= *merger->config.universe_priority);
-
 
     // Just update the existing entry, since we're not modifying a key.
     source->source.universe_priority = priority;
@@ -881,7 +881,7 @@ void update_winner_from_new_priority(MergerState* merger, const SourceState* win
 {
   if (new_priority == kUnsourcedPriority)
   {
-    merger->winning_priorities[slot_index] = 0; 
+    merger->winning_priorities[slot_index] = 0;
     merger->winning_sources[slot_index] = SACN_DMX_MERGER_SOURCE_INVALID;
   }
   else
@@ -957,9 +957,9 @@ void merge_new_level(MergerState* merger, const SourceState* source, size_t slot
 }
 
 /*
- * Merge a source's new universe priority on all slots. Only called when PAPs are invalid.
+ * Merge a source's new universe priority on all slots. Only called when PAP is invalid.
  *
- * Universe priority might not be present yet, such as when removing PAPs when no universe priority was ever specified.
+ * Universe priority might not be present yet, such as when removing PAP when no universe priority was ever specified.
  *
  * This requires sacn_lock to be taken before calling.
  */
@@ -978,7 +978,7 @@ void merge_new_universe_priority(MergerState* merger, const SourceState* source)
 }
 
 /*
- * Merge a source's new priority on a slot. This can be used for both PAPs and universe priorities.
+ * Merge a source's new priority on a slot. This can be used for both PAP and universe priorities.
  *
  * If source_priority is a PAP, then 0 should be translated to kUnsourcedPriority by the caller.
  *
@@ -1336,8 +1336,8 @@ etcpal_error_t update_sacn_dmx_merger_levels(sacn_dmx_merger_t merger, sacn_dmx_
 }
 
 // Needs lock
-etcpal_error_t update_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t* paps,
-                                           size_t paps_count)
+etcpal_error_t update_sacn_dmx_merger_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t* pap,
+                                          size_t pap_count)
 {
   MergerState* merger_state = NULL;
   SourceState* source_state = NULL;
@@ -1346,8 +1346,8 @@ etcpal_error_t update_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_dmx_me
   etcpal_error_t result = lookup_state(merger, source, &merger_state, &source_state);
 
   // Update this source's per-address-priority data.
-  if ((result == kEtcPalErrOk) && paps)
-    update_per_address_priorities(merger_state, source_state, paps, (uint16_t)paps_count);
+  if ((result == kEtcPalErrOk) && pap)
+    update_per_address_priorities(merger_state, source_state, pap, (uint16_t)pap_count);
 
   return result;
 }
@@ -1370,7 +1370,7 @@ etcpal_error_t update_sacn_dmx_merger_universe_priority(sacn_dmx_merger_t merger
 }
 
 // Needs lock
-etcpal_error_t remove_sacn_dmx_merger_paps(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)
+etcpal_error_t remove_sacn_dmx_merger_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)
 {
   MergerState* merger_state = NULL;
   SourceState* source_state = NULL;

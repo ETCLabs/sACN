@@ -43,11 +43,8 @@ protected:
     ASSERT_EQ(sacn_init(nullptr, nullptr), kEtcPalErrOk);
   }
 
-  void TearDown() override
-  {
-    sacn_deinit();
-  }
-  
+  void TearDown() override { sacn_deinit(); }
+
   EtcPalNetintInfo fake_netint_;
 };
 
@@ -60,8 +57,8 @@ TEST_F(TestDmxMergerDisabled, DmxMergerIsEnabledInDynamicMode)
   sacn_dmx_merger_add_source(SACN_DMX_MERGER_INVALID, nullptr);
   sacn_dmx_merger_remove_source(SACN_DMX_MERGER_INVALID, SACN_DMX_MERGER_SOURCE_INVALID);
   sacn_dmx_merger_update_levels(SACN_DMX_MERGER_INVALID, SACN_DMX_MERGER_SOURCE_INVALID, nullptr, 0);
-  sacn_dmx_merger_update_paps(SACN_DMX_MERGER_INVALID, SACN_DMX_MERGER_SOURCE_INVALID, nullptr, 0);
+  sacn_dmx_merger_update_pap(SACN_DMX_MERGER_INVALID, SACN_DMX_MERGER_SOURCE_INVALID, nullptr, 0);
   sacn_dmx_merger_update_universe_priority(SACN_DMX_MERGER_INVALID, SACN_DMX_MERGER_SOURCE_INVALID, 0);
-  sacn_dmx_merger_remove_paps(SACN_DMX_MERGER_INVALID, SACN_DMX_MERGER_SOURCE_INVALID);
+  sacn_dmx_merger_remove_pap(SACN_DMX_MERGER_INVALID, SACN_DMX_MERGER_SOURCE_INVALID);
 }
 #endif  // SACN_DYNAMIC_MEM

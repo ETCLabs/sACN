@@ -510,7 +510,7 @@ TEST_F(TestSource, SendSynchronizationWorks)
 
 TEST_F(TestSource, UpdateValuesWorks)
 {
-  sacn_source_update_values_fake.custom_fake = [](sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
+  sacn_source_update_levels_fake.custom_fake = [](sacn_source_t handle, uint16_t universe, const uint8_t* new_values,
                                                   size_t new_values_size) {
     EXPECT_EQ(handle, kTestHandle);
     EXPECT_EQ(universe, kTestUniverse);
@@ -521,13 +521,13 @@ TEST_F(TestSource, UpdateValuesWorks)
   sacn::Source source;
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
-  source.UpdateValues(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
-  EXPECT_EQ(sacn_source_update_values_fake.call_count, 1u);
+  source.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  EXPECT_EQ(sacn_source_update_levels_fake.call_count, 1u);
 }
 
 TEST_F(TestSource, UpdateValuesAndPapWorks)
 {
-  sacn_source_update_values_and_pap_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
+  sacn_source_update_levels_and_pap_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
                                                           const uint8_t* new_values, size_t new_values_size,
                                                           const uint8_t* new_priorities, size_t new_priorities_size) {
     EXPECT_EQ(handle, kTestHandle);
@@ -541,13 +541,14 @@ TEST_F(TestSource, UpdateValuesAndPapWorks)
   sacn::Source source;
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
-  source.UpdateValues(kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(), kTestBuffer2.size());
-  EXPECT_EQ(sacn_source_update_values_and_pap_fake.call_count, 1u);
+  source.UpdateLevelsAndPap(kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(),
+                            kTestBuffer2.size());
+  EXPECT_EQ(sacn_source_update_levels_and_pap_fake.call_count, 1u);
 }
 
 TEST_F(TestSource, UpdateValuesAndForceSyncWorks)
 {
-  sacn_source_update_values_and_force_sync_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
+  sacn_source_update_levels_and_force_sync_fake.custom_fake = [](sacn_source_t handle, uint16_t universe,
                                                                  const uint8_t* new_values, size_t new_values_size) {
     EXPECT_EQ(handle, kTestHandle);
     EXPECT_EQ(universe, kTestUniverse);
@@ -558,13 +559,13 @@ TEST_F(TestSource, UpdateValuesAndForceSyncWorks)
   sacn::Source source;
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
-  source.UpdateValuesAndForceSync(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
-  EXPECT_EQ(sacn_source_update_values_and_force_sync_fake.call_count, 1u);
+  source.UpdateLevelsAndForceSync(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  EXPECT_EQ(sacn_source_update_levels_and_force_sync_fake.call_count, 1u);
 }
 
 TEST_F(TestSource, UpdateValuesAndPapAndForceSyncWorks)
 {
-  sacn_source_update_values_and_pap_and_force_sync_fake.custom_fake =
+  sacn_source_update_levels_and_pap_and_force_sync_fake.custom_fake =
       [](sacn_source_t handle, uint16_t universe, const uint8_t* new_values, size_t new_values_size,
          const uint8_t* new_priorities, size_t new_priorities_size) {
         EXPECT_EQ(handle, kTestHandle);
@@ -578,9 +579,9 @@ TEST_F(TestSource, UpdateValuesAndPapAndForceSyncWorks)
   sacn::Source source;
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
-  source.UpdateValuesAndForceSync(kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(),
-                                  kTestBuffer2.size());
-  EXPECT_EQ(sacn_source_update_values_and_pap_and_force_sync_fake.call_count, 1u);
+  source.UpdateLevelsAndPapAndForceSync(kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), kTestBuffer2.data(),
+                                        kTestBuffer2.size());
+  EXPECT_EQ(sacn_source_update_levels_and_pap_and_force_sync_fake.call_count, 1u);
 }
 
 TEST_F(TestSource, ProcessManualWorks)

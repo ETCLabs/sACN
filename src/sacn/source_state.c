@@ -65,7 +65,7 @@ static void process_universe_discovery(SacnSource* source);
 static void process_universes(SacnSource* source);
 static void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, bool* terminating);
 static void process_universe_termination(SacnSource* source, size_t index, bool unicast_terminating);
-static void transmit_levels_and_paps_when_needed(SacnSource* source, SacnSourceUniverse* universe);
+static void transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe);
 static void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe);
 static void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe,
                                      SacnUnicastDestination* dest);
@@ -74,9 +74,9 @@ static int pack_universe_discovery_page(SacnSource* source, size_t* universe_ind
 static void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_levels,
                           size_t new_levels_size, force_sync_behavior_t force_sync);
 #if SACN_ETC_PRIORITY_EXTENSION
-static void update_paps(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_priorities,
-                        size_t new_priorities_size, force_sync_behavior_t force_sync);
-static void zero_levels_where_paps_are_zero(SacnSourceUniverse* universe_state);
+static void update_pap(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_priorities,
+                       size_t new_priorities_size, force_sync_behavior_t force_sync);
+static void zero_levels_where_pap_is_zero(SacnSourceUniverse* universe_state);
 #endif
 static void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id);
 static void reset_unicast_dest(SacnUnicastDestination* dest);
@@ -265,7 +265,7 @@ void process_universes(SacnSource* source)
 
     // Either transmit start codes 0x00 & 0xDD, or terminate and clean up universe
     if (universe->termination_state == kNotTerminating)
-      transmit_levels_and_paps_when_needed(source, universe);
+      transmit_levels_and_pap_when_needed(source, universe);
     else
       process_universe_termination(source, initial_num_universes - 1 - i, unicast_terminating);
   }
@@ -308,7 +308,7 @@ void process_universe_termination(SacnSource* source, size_t index, bool unicast
 }
 
 // Needs lock
-void transmit_levels_and_paps_when_needed(SacnSource* source, SacnSourceUniverse* universe)
+void transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe)
 {
   // If 0x00 data is ready to send
   if (universe->has_level_data && ((universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
@@ -491,7 +491,7 @@ void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state,
   universe_state->has_level_data = true;
 #if SACN_ETC_PRIORITY_EXTENSION
   if (universe_state->has_pap_data)
-    zero_levels_where_paps_are_zero(universe_state);  // PAPs must already be updated!
+    zero_levels_where_pap_is_zero(universe_state);  // PAP must already be updated!
 #endif
 
   reset_transmission_suppression(source_state, universe_state, kResetLevel);
@@ -502,8 +502,8 @@ void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state,
 
 #if SACN_ETC_PRIORITY_EXTENSION
 // Needs lock
-void update_paps(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_priorities,
-                 size_t new_priorities_size, force_sync_behavior_t force_sync)
+void update_pap(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_priorities,
+                size_t new_priorities_size, force_sync_behavior_t force_sync)
 {
   update_send_buf_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, force_sync);
   universe_state->has_pap_data = true;
@@ -511,7 +511,7 @@ void update_paps(SacnSource* source_state, SacnSourceUniverse* universe_state, c
 }
 
 // Needs lock
-void zero_levels_where_paps_are_zero(SacnSourceUniverse* universe_state)
+void zero_levels_where_pap_is_zero(SacnSourceUniverse* universe_state)
 {
   uint16_t level_count = etcpal_unpack_u16b(&universe_state->level_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET]) - 1;
   uint16_t pap_count = etcpal_unpack_u16b(&universe_state->pap_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET]) - 1;
@@ -524,16 +524,16 @@ void zero_levels_where_paps_are_zero(SacnSourceUniverse* universe_state)
 #endif
 
 // Needs lock
-void update_levels_and_or_paps(SacnSource* source, SacnSourceUniverse* universe, const uint8_t* new_levels,
-                               size_t new_levels_size, const uint8_t* new_priorities, size_t new_priorities_size,
-                               force_sync_behavior_t force_sync)
+void update_levels_and_or_pap(SacnSource* source, SacnSourceUniverse* universe, const uint8_t* new_levels,
+                              size_t new_levels_size, const uint8_t* new_priorities, size_t new_priorities_size,
+                              force_sync_behavior_t force_sync)
 {
   if (source && universe)
   {
 #if SACN_ETC_PRIORITY_EXTENSION
-    // Make sure PAPs are updated before levels.
+    // Make sure PAP is updated before levels.
     if (new_priorities)
-      update_paps(source, universe, new_priorities, new_priorities_size, force_sync);
+      update_pap(source, universe, new_priorities, new_priorities_size, force_sync);
 #endif
     if (new_levels)
       update_levels(source, universe, new_levels, new_levels_size, force_sync);
