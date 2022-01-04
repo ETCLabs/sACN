@@ -49,8 +49,8 @@ extern "C" {
  * Global constants, macros, types, etc.
  *****************************************************************************/
 
-#define SACN_DATA_PACKET_MTU 637
-#define SACN_UNIVERSE_DISCOVERY_PACKET_MTU 1143
+#define SACN_DATA_PACKET_MTU 638
+#define SACN_UNIVERSE_DISCOVERY_PACKET_MTU 1144
 #define SACN_MTU SACN_UNIVERSE_DISCOVERY_PACKET_MTU
 #define SACN_PORT 5568
 

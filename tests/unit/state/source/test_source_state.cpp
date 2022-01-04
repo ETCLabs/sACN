@@ -345,6 +345,13 @@ protected:
   }
 
   sacn_source_t next_source_handle_ = 0;
+
+  const std::vector<uint8_t> test_buffer_512_slots_ = [&] {
+    std::vector<uint8_t> vect(DMX_ADDRESS_COUNT);
+    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+      vect[i] = 100;
+    return vect;
+  }();
 };
 
 TEST_F(TestSourceState, DeinitJoinsInitializedThread)
@@ -2178,4 +2185,24 @@ TEST_F(TestSourceState, ResetSourceUniverseNetworkingWorks)
 
   EXPECT_EQ(universe_state->level_keep_alive_timer.reset_time, kTestGetMsValue);
   EXPECT_EQ(universe_state->pap_keep_alive_timer.reset_time, kTestGetMsValue);
+}
+
+TEST_F(TestSourceState, UpdateLevelsAndPapWorksWithLargestBuffers)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+
+  SacnSource* source_state = nullptr;
+  SacnSourceUniverse* universe_state = nullptr;
+  lookup_source_and_universe(source, universe, &source_state, &universe_state);
+
+  update_levels_and_or_pap(source_state, universe_state, test_buffer_512_slots_.data(), test_buffer_512_slots_.size(),
+                           test_buffer_512_slots_.data(), test_buffer_512_slots_.size(), kDisableForceSync);
+
+  EXPECT_EQ(memcmp(&universe_state->level_send_buf[SACN_DATA_HEADER_SIZE], test_buffer_512_slots_.data(),
+                   test_buffer_512_slots_.size()),
+            0);
+  EXPECT_EQ(memcmp(&universe_state->pap_send_buf[SACN_DATA_HEADER_SIZE], test_buffer_512_slots_.data(),
+                   test_buffer_512_slots_.size()),
+            0);
 }
