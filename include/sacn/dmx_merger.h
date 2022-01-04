@@ -143,8 +143,7 @@ typedef struct SacnDmxMergerConfig
 #define SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, slot_index) \
   (slot_owners_array[slot_index] != SACN_DMX_MERGER_SOURCE_INVALID)
 
-/** The current input data for a single source of the merge.  This is exposed only for informational purposes, as the
-    application calls a variant of sacn_dmx_merger_update_source to do the actual update. */
+/** The current input data for a single source of the merge.  This is exposed as read-only information. */
 typedef struct SacnDmxMergerSource
 {
   /** The merger's ID for the DMX source. */
@@ -159,13 +158,14 @@ typedef struct SacnDmxMergerSource
   /** The sACN per-universe priority (0 - 200). */
   uint8_t universe_priority;
 
-  /** Whether or not the address_priority buffer is valid. */
-  bool address_priority_valid;
-
   /** The sACN per-address (startcode 0xdd) priority (1-255, 0 means not sourced).
-      If the source does not have per-address priority, then address_priority_valid will be false, and this array should
-      be ignored. */
+      If the source is using universe priority, then using_universe_priority will be true, and this array contains the
+      universe priority converted to per-address priorities (so 0 is converted to 1s) for all 512 slots. These are the
+      priorities that will actually be used for the merge. */
   uint8_t address_priority[DMX_ADDRESS_COUNT];
+
+  /** Whether or not the source is currently using universe priority (converted to address priorities) for the merge. */
+  bool using_universe_priority;
 
 } SacnDmxMergerSource;
 

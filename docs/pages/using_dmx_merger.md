@@ -120,12 +120,11 @@ slot. Otherwise, it will be as if the source were not sourcing that slot.
 
 There is a key distinction in how the merger interprets the lowest priority. The lowest universe
 priority is 0, but the lowest per-address priority is 1. This is because a per-address priority of
-0 indicates that the source is not sending any levels to the corresponding slot. Therefore, if
-Source A has a universe priority of 0 and a level of 10, and Source B has a per-address priority of
-0 and a level of 50, Source A will still win despite having a lower level. This is because
-per-address priority 0 indicates that there is no level at this slot at all, whereas universe
-priority 0 simply indicates the lowest priority. If Source B had a per-address priority of 1, then
-Source B would win no matter what the levels were.
+0 indicates that the source is not sending any levels to the corresponding slot. The solution the
+merger uses is to always track priorities per-address. If a source only has a universe priority,
+that priority is used for each slot, except if it equals 0 - in that case, it is converted to 1.
+This means the merger will treat a universe priority of 0 as equivalent to a universe priority of
+1, as well as per-address priorities equal to 1.
 
 The merger may output per-address priorities if configured to do so by initializing
 per_address_priorities in the merger config/settings. If a universe priority of 1 or above wins a
@@ -135,12 +134,15 @@ slot. If a per-address priority wins, that same value is used for the per-addres
 The merger only outputs a per-address priority of 0 if there is no winner for that slot.
 
 Also keep in mind that if less than 512 per-address priorities are inputted, then the remaining
-slots will be treated as if they had a per-address priority of 0.
+slots will be treated as if they had a per-address priority of 0. Likewise, if less than 512 levels
+are inputted, the remaining slots will be treated as if they had a level of 0, but they may still
+have non-zero priorities.
 
 The way to input this data for a source is to pass it in directly, using one of the update
 functions. The application can use these functions to update the levels, universe priority, and/or
-per-address priorities (PAP) individually. Keep in mind that both a level and a priority (universe
-or PAP) must be inputted for a slot before the source can be factored into the merge for that slot.
+per-address priorities (PAP) individually. The source won't be factored into the merge output until
+one of the update priority functions are called. If the update levels function hasn't been called
+at this point, and the source still wins a slot, then the merger will output a level of 0. 
 
 <!-- CODE_BLOCK_START -->
 ```c

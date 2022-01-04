@@ -202,15 +202,16 @@ the one with the highest NULL start code level wins (HTP).
 
 There is a key distinction in how the merger interprets the lowest priority. The lowest universe
 priority is 0, but the lowest per-address priority is 1. This is because a per-address priority of
-0 indicates that the source is not sending any levels to the corresponding slot. Therefore, if
-source A has a universe priority of 0 and a level of 10, and source B has a per-address priority of
-0 and a level of 50, source A will still win despite having a lower level. This is because
-per-address priority 0 indicates that there is no level at this slot at all, whereas universe
-priority 0 simply indicates the lowest priority. If source B had a per-address priority of 1, then
-source B would win no matter what the levels were.
+0 indicates that the source is not sending any levels to the corresponding slot. The solution the
+merger uses is to always track priorities per-address. If a source only has a universe priority,
+that priority is used for each slot, except if it equals 0 - in that case, it is converted to 1.
+This means the merger will treat a universe priority of 0 as equivalent to a universe priority of
+1, as well as per-address priorities equal to 1.
 
 Also keep in mind that if less than 512 per-address priorities are received, then the remaining
-slots will be treated as if they had a per-address priority of 0.
+slots will be treated as if they had a per-address priority of 0. Likewise, if less than 512 levels
+are received, the remaining slots will be treated as if they had a level of 0, but they may still
+have non-zero priorities.
 
 This callback should be processed quickly, since it will interfere with the receipt and processing
 of other sACN packets on the universe.

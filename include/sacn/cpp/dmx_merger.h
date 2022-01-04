@@ -93,9 +93,9 @@ public:
         Memory is owned by the application and must remain allocated until the merger is destroyed.*/
     uint8_t* per_address_priorities{nullptr};
 
-    /** If any of the currently winning sources has per-address priorities, this is set to true. Otherwise this is set
-        to false. If the merger's output is transmitted by a sACN source, this can be used to determine whether
-        per-address priority packets should be sent. Otherwise this can be set to nullptr if not needed.*/
+    /** If the merger output is being transmitted via sACN, this is set to true if per-address-priority packets should
+        be transmitted. Otherwise this is set to false. This can be set to nullptr if not needed, which can save some
+        performance.*/
     bool* per_address_priorities_active{nullptr};
 
     /** This is set to the highest universe priority of the currently winning sources. If the merger's output is
@@ -270,11 +270,13 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_dmx_merger_sourc
  * @brief Updates a source's levels and recalculates outputs.
  *
  * This function updates the levels of the specified source, and then triggers the recalculation of each slot. For each
- * slot, the source will only be included in the merge if it has a level and a priority at that slot.
+ * slot, the source will only be included in the merge if it has a priority at that slot. Otherwise the level will be
+ * saved for when a priority is eventually inputted.
  *
  * @param[in] source The id of the source to modify.
  * @param[in] new_levels The new DMX levels to be copied in, starting from the first slot.
- * @param[in] new_levels_count The length of new_levels.
+ * @param[in] new_levels_count The length of new_levels. If this is less than DMX_ADDRESS_COUNT, the levels for all
+ * remaining slots will be set to 0.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -291,8 +293,7 @@ inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source, co
  * @brief Updates a source's per-address priorities (PAP) and recalculates outputs.
  *
  * This function updates the per-address priorities (PAP) of the specified source, and then triggers the recalculation
- * of each slot. For each slot, the source will only be included in the merge if it has a level and a priority at that
- * slot.
+ * of each slot. For each slot, the source will only be included in the merge if it has a priority at that slot.
  *
  * If PAP is not specified for all slots, then the remaining slots will default to a PAP of 0. To remove PAP for this
  * source and revert to the universe priority, call DmxMerger::RemovePap.
@@ -315,11 +316,14 @@ inline etcpal::Error DmxMerger::UpdatePap(sacn_dmx_merger_source_t source, const
  * @brief Updates a source's universe priority and recalculates outputs.
  *
  * This function updates the universe priority of the specified source, and then triggers the recalculation of each
- * slot. For each slot, the source will only be included in the merge if it has a level and a priority at that slot.
+ * slot. For each slot, the source will only be included in the merge if it has a priority at that slot.
  *
- * If per-address priorities (PAP) were previously specified for this source with DmxMerger::UpdatePap, then the
+ * If this source currently has per-address priorities (PAP) via DmxMerger::UpdatePap, then the
  * universe priority can have no effect on the merge results until the application calls DmxMerger::RemovePap, at which
  * point the priorities of each slot will revert to the universe priority passed in here.
+ *
+ * If this source doesn't have PAP, then the universe priority is converted into PAP for each slot. These are the
+ * priorities used for the merge. This means a universe priority of 0 will be converted to a PAP of 1.
  *
  * @param[in] source The id of the source to modify.
  * @param[in] universe_priority The universe-level priority of the source.

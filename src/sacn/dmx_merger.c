@@ -31,40 +31,9 @@
 
 /****************************** Private macros *******************************/
 
-#define MARK_WINNER_SOURCED(merger_state, slot_index) \
-  (merger_state->winner_is_sourced[slot_index / 8] |= (1 << (slot_index % 8)))
-#define MARK_WINNER_UNSOURCED(merger_state, slot_index) \
-  (merger_state->winner_is_sourced[slot_index / 8] &= ~(1 << (slot_index % 8)))
-#define IS_WINNER_SOURCED(merger_state, slot_index) \
-  ((merger_state->winner_is_sourced[slot_index / 8] & (1 << (slot_index % 8))) != 0)
-
-/* The next macros define ways to obtain the MergeLevel/MergePriority types. */
-#define WINNING_MERGE_LEVEL(merger_state, slot_index) \
-  (IS_WINNER_SOURCED(merger_state, slot_index) ? merger_state->config.slots[slot_index] : kUnsourcedLevel)
-#define WINNING_MERGE_PRIORITY(merger_state, slot_index)                         \
-  ((merger_state->winning_sources[slot_index] == SACN_DMX_MERGER_SOURCE_INVALID) \
-       ? kUnsourcedPriority                                                      \
-       : merger_state->winning_priorities[slot_index])
-
-#define SOURCE_MERGE_LEVEL(source_state, slot_index) \
-  ((slot_index < source_state->source.valid_level_count) ? source_state->source.levels[slot_index] : kUnsourcedLevel)
-#define SOURCE_MERGE_PRIORITY(source_state, slot_index)            \
-  (source_state->source.address_priority_valid                     \
-       ? ((source_state->source.address_priority[slot_index] == 0) \
-              ? kUnsourcedPriority                                 \
-              : source_state->source.address_priority[slot_index]) \
-       : (source_state->has_universe_priority ? source_state->source.universe_priority : kUnsourcedPriority))
-
-/* Determines if the given priority is sourced and winning on the given slot. Comparing directly
- * against winning_priorities (without using WINNING_MERGE_PRIORITY) means that kUnsourcedPriority will always fail. */
-#define IS_SOURCED_WINNING_PRIORITY(merge_priority, merger, slot) (merge_priority == merger->winning_priorities[slot])
-
-/* Determines if the given source is actively sourcing the winning priority for the given slot. */
-#define IS_SOURCING_WINNING_PRIORITY(source, merger, slot) \
-  IS_SOURCED_WINNING_PRIORITY(SOURCE_MERGE_PRIORITY(source, slot), merger, slot)
-
-/* This determines if the given priority is sourced and winning in a similar manner (see IS_SOURCING_WINNING_PRIORITY).
- */
+#define PAP_ACTIVE(source_state) (!(source_state)->source.using_universe_priority)
+#define SET_PAP_ACTIVE(source_state) ((source_state)->source.using_universe_priority = false)
+#define SET_PAP_INACTIVE(source_state) ((source_state)->source.using_universe_priority = true)
 
 /* Macros for dynamic vs static allocation. Static allocation is done using etcpal_mempool. */
 
@@ -83,20 +52,6 @@
 #define ALLOC_DMX_MERGER_RB_NODE() etcpal_mempool_alloc(sacn_pool_merge_rb_nodes)
 #define FREE_DMX_MERGER_RB_NODE(ptr) etcpal_mempool_free(sacn_pool_merge_rb_nodes, ptr)
 #endif
-
-/****************************** Private types ********************************/
-
-/* These data types are used to store levels/priorities with the option of an "unsourced" value
- * (kUnsourcedLevel/kUnsourcedPriority). */
-typedef int MergeLevel;
-typedef int MergePriority;
-
-/**************************** Private constants ******************************/
-
-/* These constants represent a level or priority that is not being sourced. Only used internally with
- * MergeLevel/MergePriority values. These are defined as negative so that they will be lower than all sourced values. */
-static const MergeLevel kUnsourcedLevel = -1;
-static const MergePriority kUnsourcedPriority = -1;
 
 /**************************** Private variables ******************************/
 
@@ -128,18 +83,25 @@ static etcpal_error_t add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_sourc
 
 static void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values,
                           uint16_t new_values_count);
-static void update_per_address_priorities(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
-                                          uint16_t address_priorities_count);
+static void update_pap(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
+                       uint16_t address_priorities_count);
 static void update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority);
-static void update_winner_from_new_level(MergerState* merger, const SourceState* winner, MergeLevel new_level,
-                                         size_t slot_index);
-static void update_winner_from_new_priority(MergerState* merger, const SourceState* winner, MergePriority new_priority,
-                                            size_t slot_index);
-static void merge_new_level(MergerState* merger, const SourceState* source, size_t slot, MergeLevel source_level);
-static void merge_new_universe_priority(MergerState* merger, const SourceState* source);
-static void merge_new_priority(MergerState* merger, const SourceState* source, size_t slot,
-                               MergePriority source_priority);
-static void recalculate_pap_active_and_universe_priority(MergerState* merger, sacn_dmx_merger_source_t skip_this);
+static void update_levels_single_source(MergerState* merger, SourceState* source, const uint8_t* new_values,
+                                        size_t old_values_count, size_t new_values_count);
+static void update_levels_multi_source(MergerState* merger, SourceState* source, const uint8_t* new_values,
+                                       size_t old_values_count, size_t new_values_count);
+static void update_pap_single_source(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
+                                     size_t old_pap_count, size_t new_pap_count);
+static void update_pap_multi_source(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
+                                    size_t old_pap_count, size_t new_pap_count);
+static void update_universe_priority_single_source(MergerState* merger, SourceState* source, uint8_t pap);
+static void update_universe_priority_multi_source(MergerState* merger, SourceState* source, uint8_t pap);
+static void merge_new_level(MergerState* merger, const SourceState* source, size_t slot);
+static void merge_new_priority(MergerState* merger, const SourceState* source, size_t slot);
+static void recalculate_winning_level(MergerState* merger, const SourceState* source, size_t slot);
+static void recalculate_winning_priority(MergerState* merger, const SourceState* source, size_t slot);
+static void recalculate_pap_active(MergerState* merger);
+static void recalculate_universe_priority(MergerState* merger);
 
 static void free_source_state_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node);
 static void free_mergers_node(const EtcPalRbTree* self, EtcPalRbNode* node);
@@ -406,12 +368,14 @@ const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, 
  * @brief Updates a source's levels and recalculates outputs.
  *
  * This function updates the levels of the specified source, and then triggers the recalculation of each slot. For each
- * slot, the source will only be included in the merge if it has a level and a priority at that slot.
+ * slot, the source will only be included in the merge if it has a priority at that slot. Otherwise the level will be
+ * saved for when a priority is eventually inputted.
  *
  * @param[in] merger The handle to the merger.
  * @param[in] source The id of the source to modify.
  * @param[in] new_levels The new DMX levels to be copied in, starting from the first slot.
- * @param[in] new_levels_count The length of new_levels.
+ * @param[in] new_levels_count The length of new_levels. If this is less than DMX_ADDRESS_COUNT, the levels for all
+ * remaining slots will be set to 0.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -459,8 +423,7 @@ etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_dmx_
  * @brief Updates a source's per-address priorities (PAP) and recalculates outputs.
  *
  * This function updates the per-address priorities (PAP) of the specified source, and then triggers the recalculation
- * of each slot. For each slot, the source will only be included in the merge if it has a level and a priority at that
- * slot.
+ * of each slot. For each slot, the source will only be included in the merge if it has a priority at that slot.
  *
  * If PAP is not specified for all slots, then the remaining slots will default to a PAP of 0. To remove PAP for this
  * source and revert to the universe priority, call sacn_dmx_merger_remove_pap.
@@ -516,11 +479,14 @@ etcpal_error_t sacn_dmx_merger_update_pap(sacn_dmx_merger_t merger, sacn_dmx_mer
  * @brief Updates a source's universe priority and recalculates outputs.
  *
  * This function updates the universe priority of the specified source, and then triggers the recalculation of each
- * slot. For each slot, the source will only be included in the merge if it has a level and a priority at that slot.
+ * slot. For each slot, the source will only be included in the merge if it has a priority at that slot.
  *
- * If per-address priorities (PAP) were previously specified for this source with sacn_dmx_merger_update_pap, then the
+ * If this source currently has per-address priorities (PAP) via sacn_dmx_merger_update_pap, then the
  * universe priority can have no effect on the merge results until the application calls sacn_dmx_merger_remove_pap, at
  * which point the priorities of each slot will revert to the universe priority passed in here.
+ *
+ * If this source doesn't have PAP, then the universe priority is converted into PAP for each slot. These are the
+ * priorities used for the merge. This means a universe priority of 0 will be converted to a PAP of 1.
  *
  * @param[in] merger The handle to the merger.
  * @param[in] source The id of the source to modify.
@@ -730,37 +696,11 @@ void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_
   size_t old_values_count = source->source.valid_level_count;
   source->source.valid_level_count = new_values_count;
 
-  size_t slot = 0;
-
-  // Update and merge *changed* sourced levels that were sourced before.
-  while ((slot < old_values_count) && (slot < new_values_count))
-  {
-    if (new_values[slot] != source->source.levels[slot])
-    {
-      source->source.levels[slot] = new_values[slot];
-      merge_new_level(merger, source, slot, new_values[slot]);
-    }
-
-    ++slot;
-  }
-
-  // Update and merge all sourced levels that were unsourced before.
-  while (slot < new_values_count)
-  {
-    source->source.levels[slot] = new_values[slot];
-    merge_new_level(merger, source, slot, new_values[slot]);
-
-    ++slot;
-  }
-
-  // Finally, update and merge all unsourced levels that were sourced before.
-  while (slot < old_values_count)
-  {
-    source->source.levels[slot] = 0;
-    merge_new_level(merger, source, slot, kUnsourcedLevel);
-
-    ++slot;
-  }
+  // Copy instead of merging if there's only one source.
+  if (etcpal_rbtree_size(&merger->source_state_lookup) == 1)
+    update_levels_single_source(merger, source, new_values, old_values_count, new_values_count);
+  else
+    update_levels_multi_source(merger, source, new_values, old_values_count, new_values_count);
 }
 
 /*
@@ -768,31 +708,22 @@ void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_
  *
  * This requires sacn_lock to be taken before calling.
  */
-void update_per_address_priorities(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
-                                   uint16_t address_priorities_count)
+void update_pap(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
+                uint16_t address_priorities_count)
 {
-  // Update the relevant flags.
-  bool pap_was_invalid = !source->source.address_priority_valid;
-  source->source.address_priority_valid = true;
+  size_t old_pap_count = source->pap_count;
+  source->pap_count = address_priorities_count;
+
+  SET_PAP_ACTIVE(source);
 
   if (merger->config.per_address_priorities_active != NULL)
-    *merger->config.per_address_priorities_active = true;
+    *(merger->config.per_address_priorities_active) = true;
 
-  // Update and merge priorities that have changed.
-  for (size_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
-  {
-    uint8_t new_pap = (i < address_priorities_count) ? address_priorities[i] : 0;
-
-    // If this priority has changed:
-    if (pap_was_invalid || (new_pap != source->source.address_priority[i]))
-    {
-      // Update the source data.
-      source->source.address_priority[i] = new_pap;
-
-      // Run the merge.
-      merge_new_priority(merger, source, i, (new_pap == 0) ? kUnsourcedPriority : new_pap);
-    }
-  }
+  // Copy instead of merging if there's only one source.
+  if (etcpal_rbtree_size(&merger->source_state_lookup) == 1)
+    update_pap_single_source(merger, source, address_priorities, old_pap_count, address_priorities_count);
+  else
+    update_pap_multi_source(merger, source, address_priorities, old_pap_count, address_priorities_count);
 }
 
 /*
@@ -802,245 +733,350 @@ void update_per_address_priorities(MergerState* merger, SourceState* source, con
  */
 void update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority)
 {
-  // If the universe priority actually changed:
-  if (!source->has_universe_priority || (source->source.universe_priority != priority))
+  // There's no need to do anything if the universe priority hasn't changed.
+  if ((priority != source->source.universe_priority) || source->universe_priority_uninitialized)
   {
+    source->universe_priority_uninitialized = false;
+
     // Determine if this is the current universe priority output.
-    bool was_max = (merger->config.universe_priority != NULL) && source->has_universe_priority &&
-                   (source->source.universe_priority >= *merger->config.universe_priority);
+    bool was_max = (merger->config.universe_priority != NULL) &&
+                   (source->source.universe_priority >= *(merger->config.universe_priority));
+
+    // Also determine if there's only one source or multiple sources in the merger.
+    bool single_source = (etcpal_rbtree_size(&merger->source_state_lookup) == 1);
 
     // Just update the existing entry, since we're not modifying a key.
     source->source.universe_priority = priority;
-    source->has_universe_priority = true;
 
-    // Run the merge now if there are no per-address priorities.
-    if (!source->source.address_priority_valid)
-      merge_new_universe_priority(merger, source);
+    // If there are no per-address priorities:
+    if (source->source.using_universe_priority)
+    {
+      // Convert to PAP.
+      uint8_t pap = (priority == 0) ? 1 : priority;
+
+      // Just copy to output if there's only one source, otherwise merge each changed priority.
+      if (single_source)
+        update_universe_priority_single_source(merger, source, pap);
+      else
+        update_universe_priority_multi_source(merger, source, pap);
+    }
 
     // Also update the universe priority output if needed.
     if (merger->config.universe_priority != NULL)
     {
-      if (priority >= *merger->config.universe_priority)
-        *merger->config.universe_priority = priority;
+      if (single_source || (priority >= *(merger->config.universe_priority)))
+        *(merger->config.universe_priority) = priority;
       else if (was_max)  // This used to be the output, but may not be anymore. Recalculate.
-        recalculate_pap_active_and_universe_priority(merger, SACN_DMX_MERGER_SOURCE_INVALID);
+        recalculate_universe_priority(merger);
     }
   }
 }
 
 /*
- * Updates newly determined winning merge values caused by a new level. Assumes the priority at the given slot is being
- * sourced.
+ * Copies new levels into the source and the outputs. Assumes all arguments are valid. Assumes there is only one source.
  *
  * This requires sacn_lock to be taken before calling.
  */
-void update_winner_from_new_level(MergerState* merger, const SourceState* winner, MergeLevel new_level,
-                                  size_t slot_index)
+void update_levels_single_source(MergerState* merger, SourceState* source, const uint8_t* new_values,
+                                 size_t old_values_count, size_t new_values_count)
 {
-  if (new_level == kUnsourcedLevel)
+  memcpy(source->source.levels, new_values, new_values_count);
+
+  for (size_t i = 0; i < new_values_count; ++i)
   {
-    MARK_WINNER_UNSOURCED(merger, slot_index);
-
-    merger->config.slots[slot_index] = 0;
-
-    if (merger->config.slot_owners)
-      merger->config.slot_owners[slot_index] = SACN_DMX_MERGER_SOURCE_INVALID;
-
-    if (merger->config.per_address_priorities)
-      merger->config.per_address_priorities[slot_index] = 0;
-  }
-  else
-  {
-    MARK_WINNER_SOURCED(merger, slot_index);
-
-    merger->config.slots[slot_index] = (uint8_t)new_level;
-
-    if (merger->config.slot_owners)
-      merger->config.slot_owners[slot_index] = winner->handle;
-
-    if (merger->config.per_address_priorities)
-    {
-      /* The winning priority at this slot must be sourced at this point, but it might not have been written to the
-       * config output yet (i.e. when the level was previously unsourced), so do that now. */
-      uint8_t winning_priority = merger->winning_priorities[slot_index];
-      merger->config.per_address_priorities[slot_index] = (winning_priority == 0) ? 1 : winning_priority;
-    }
+    if (merger->config.per_address_priorities[i] > 0)
+      merger->config.slots[i] = new_values[i];
   }
 
-  // All that winning_sources requires is a winning priority - it doesn't matter if the level is unsourced.
-  merger->winning_sources[slot_index] = winner->handle;
+  // If there are less levels than last time, make sure the remaining levels are 0.
+  if (old_values_count > new_values_count)
+  {
+    memset(&source->source.levels[new_values_count], 0, old_values_count - new_values_count);
+    memset(&merger->config.slots[new_values_count], 0, old_values_count - new_values_count);
+  }
 }
 
 /*
- * Updates newly determined winning merge values caused by a new priority.
+ * Updates the source levels and recalculates outputs. Assumes all arguments are valid. Assumes there are multiple
+ * sources.
  *
  * This requires sacn_lock to be taken before calling.
  */
-void update_winner_from_new_priority(MergerState* merger, const SourceState* winner, MergePriority new_priority,
-                                     size_t slot_index)
+void update_levels_multi_source(MergerState* merger, SourceState* source, const uint8_t* new_values,
+                                size_t old_values_count, size_t new_values_count)
 {
-  if (new_priority == kUnsourcedPriority)
+  for (size_t i = 0; i < new_values_count; ++i)
   {
-    merger->winning_priorities[slot_index] = 0;
-    merger->winning_sources[slot_index] = SACN_DMX_MERGER_SOURCE_INVALID;
-  }
-  else
-  {
-    // Even if the level is not sourced, the source should be tracked as a winner (internally).
-    merger->winning_priorities[slot_index] = (uint8_t)new_priority;
-    merger->winning_sources[slot_index] = winner->handle;
+    if (new_values[i] != source->source.levels[i])
+    {
+      source->source.levels[i] = new_values[i];
+      merge_new_level(merger, source, i);
+    }
   }
 
-  if ((new_priority == kUnsourcedPriority) || (slot_index >= winner->source.valid_level_count))
+  // If there are less levels than last time, make sure the remaining levels are 0.
+  for (size_t i = new_values_count; i < old_values_count; ++i)
   {
-    MARK_WINNER_UNSOURCED(merger, slot_index);
-
-    merger->config.slots[slot_index] = 0;
-
-    if (merger->config.per_address_priorities)
-      merger->config.per_address_priorities[slot_index] = 0;
-
-    if (merger->config.slot_owners)
-      merger->config.slot_owners[slot_index] = SACN_DMX_MERGER_SOURCE_INVALID;
-  }
-  else
-  {
-    MARK_WINNER_SOURCED(merger, slot_index);
-
-    merger->config.slots[slot_index] = winner->source.levels[slot_index];
-
-    if (merger->config.per_address_priorities)
-      merger->config.per_address_priorities[slot_index] = (new_priority == 0) ? 1 : (uint8_t)new_priority;
-
-    if (merger->config.slot_owners)
-      merger->config.slot_owners[slot_index] = winner->handle;
+    if (source->source.levels[i] > 0)
+    {
+      source->source.levels[i] = 0;
+      merge_new_level(merger, source, i);
+    }
   }
 }
 
 /*
- * Merge a source's new level on a slot.
+ * Copies the new PAP into the source and the outputs. Also updates slot and owner outputs. Assumes all arguments are
+ * valid. Assumes there is only one source.
  *
  * This requires sacn_lock to be taken before calling.
  */
-void merge_new_level(MergerState* merger, const SourceState* source, size_t slot, MergeLevel source_level)
+void update_pap_single_source(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
+                              size_t old_pap_count, size_t new_pap_count)
 {
-  if (IS_SOURCING_WINNING_PRIORITY(source, merger, slot))
+  memcpy(source->source.address_priority, address_priorities, new_pap_count);
+  memcpy(merger->config.per_address_priorities, address_priorities, new_pap_count);
+
+  for (size_t i = 0; i < new_pap_count; ++i)
   {
-    MergeLevel current_winning_level = WINNING_MERGE_LEVEL(merger, slot);
-
-    if (source_level > current_winning_level)
+    if (address_priorities[i] == 0)
     {
-      update_winner_from_new_level(merger, source, source_level, slot);
+      merger->config.slots[i] = 0;
+      merger->config.slot_owners[i] = SACN_DMX_MERGER_SOURCE_INVALID;
     }
-    else if ((source->handle == merger->winning_sources[slot]) && (source_level < current_winning_level))
+    else
     {
-      MergeLevel highest_level = source_level;
-      const SourceState* winner = source;
+      merger->config.slots[i] = source->source.levels[i];
+      merger->config.slot_owners[i] = source->handle;
+    }
+  }
 
-      EtcPalRbIter tree_iter;
-      etcpal_rbiter_init(&tree_iter);
-      const SourceState* src = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
-      do
-      {
-        if ((src->handle != source->handle) && IS_SOURCING_WINNING_PRIORITY(src, merger, slot) &&
-            (SOURCE_MERGE_LEVEL(src, slot) > highest_level))
-        {
-          highest_level = src->source.levels[slot];
-          winner = src;
-        }
-      } while ((src = etcpal_rbiter_next(&tree_iter)) != NULL);
+  // If there are less priorities than last time, make sure the remaining priorities are 0.
+  if (old_pap_count > new_pap_count)
+  {
+    memset(&source->source.address_priority[new_pap_count], 0, old_pap_count - new_pap_count);
+    memset(&merger->config.per_address_priorities[new_pap_count], 0, old_pap_count - new_pap_count);
 
-      // Save the final winning values.
-      update_winner_from_new_level(merger, winner, highest_level, slot);
+    for (size_t i = new_pap_count; i < old_pap_count; ++i)
+    {
+      merger->config.slots[i] = 0;
+      merger->config.slot_owners[i] = SACN_DMX_MERGER_SOURCE_INVALID;
     }
   }
 }
 
 /*
- * Merge a source's new universe priority on all slots. Only called when PAP is invalid.
- *
- * Universe priority might not be present yet, such as when removing PAP when no universe priority was ever specified.
+ * Updates the source per-address-priorities and recalculates outputs. Assumes all arguments are valid. Assumes there
+ * are multiple sources.
  *
  * This requires sacn_lock to be taken before calling.
  */
-void merge_new_universe_priority(MergerState* merger, const SourceState* source)
+void update_pap_multi_source(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
+                             size_t old_pap_count, size_t new_pap_count)
 {
-  if (source->has_universe_priority)
+  for (size_t i = 0; i < new_pap_count; ++i)
   {
-    for (size_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
-      merge_new_priority(merger, source, i, source->source.universe_priority);
+    if (address_priorities[i] != source->source.address_priority[i])
+    {
+      source->source.address_priority[i] = address_priorities[i];
+      merge_new_priority(merger, source, i);
+    }
   }
-  else
+
+  // If there are less priorities than last time, make sure the remaining priorities are 0.
+  for (size_t i = new_pap_count; i < old_pap_count; ++i)
   {
-    for (size_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
-      merge_new_priority(merger, source, i, kUnsourcedPriority);
+    if (source->source.address_priority[i] > 0)
+    {
+      source->source.address_priority[i] = 0;
+      merge_new_priority(merger, source, i);
+    }
   }
 }
 
 /*
- * Merge a source's new priority on a slot. This can be used for both PAP and universe priorities.
- *
- * If source_priority is a PAP, then 0 should be translated to kUnsourcedPriority by the caller.
+ * Copies the new universe priority (converted to PAP) into the source and the outputs. Also updates slot and owner
+ * outputs. Assumes all arguments are valid. Assumes there is only one source. Assumes the universe priority changed.
  *
  * This requires sacn_lock to be taken before calling.
  */
-void merge_new_priority(MergerState* merger, const SourceState* source, size_t slot, MergePriority source_priority)
+void update_universe_priority_single_source(MergerState* merger, SourceState* source, uint8_t pap)
 {
-  MergePriority current_winning_priority = WINNING_MERGE_PRIORITY(merger, slot);
+  memset(source->source.address_priority, pap, DMX_ADDRESS_COUNT);
+  memset(merger->config.per_address_priorities, pap, DMX_ADDRESS_COUNT);
 
-  if (source_priority > current_winning_priority)
+  for (size_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    merger->config.slot_owners[i] = source->handle;
+
+  memcpy(merger->config.slots, source->source.levels, DMX_ADDRESS_COUNT);
+}
+
+/*
+ * Updates the source universe priority and recalculates outputs if needed. Assumes all arguments are valid. Assumes
+ * there are multiple sources. Assumes the universe priority changed.
+ *
+ * This requires sacn_lock to be taken before calling.
+ */
+void update_universe_priority_multi_source(MergerState* merger, SourceState* source, uint8_t pap)
+{
+  // At this point the universe priority has been confirmed to have changed, so update & merge everything.
+  memset(source->source.address_priority, pap, DMX_ADDRESS_COUNT);
+  for (size_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    merge_new_priority(merger, source, i);
+}
+
+/*
+ * Merge a source's new level on a slot. Assumes the priority has not changed since the last merge.
+ *
+ * This requires sacn_lock to be taken before calling.
+ */
+void merge_new_level(MergerState* merger, const SourceState* source, size_t slot)
+{
+  // Perform HTP merge when source priority is non-zero and equal to current winning priority.
+  if ((source->source.address_priority[slot] > 0) &&
+      (source->source.address_priority[slot] == merger->config.per_address_priorities[slot]))
   {
-    update_winner_from_new_priority(merger, source, source_priority, slot);
-  }
-  else if (source->handle != merger->winning_sources[slot])
-  {
-    if (IS_SOURCED_WINNING_PRIORITY(source_priority, merger, slot) &&
-        (SOURCE_MERGE_LEVEL(source, slot) > WINNING_MERGE_LEVEL(merger, slot)))
+    // Take ownership if source level is greater than current level.
+    if (source->source.levels[slot] > merger->config.slots[slot])
     {
-      update_winner_from_new_priority(merger, source, source_priority, slot);
+      // In merger->config, slots and slot_owners are guaranteed to be non-NULL.
+      merger->config.slots[slot] = source->source.levels[slot];
+      merger->config.slot_owners[slot] = source->handle;
     }
-  }
-  else  // source->handle == merger->winning_sources[i]
-  {
-    if (source_priority < current_winning_priority)
+    // If this source is the current owner and its level decreased, check for a new owner.
+    else if ((source->handle == merger->config.slot_owners[slot]) &&
+             (source->source.levels[slot] < merger->config.slots[slot]))
     {
-      MergePriority highest_priority = source_priority;
-      MergeLevel winner_level = SOURCE_MERGE_LEVEL(source, slot);
-      const SourceState* winner = source;
-
-      EtcPalRbIter tree_iter;
-      etcpal_rbiter_init(&tree_iter);
-      const SourceState* src = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
-      do
-      {
-        if (src->handle != source->handle)
-        {
-          MergeLevel src_level = SOURCE_MERGE_LEVEL(src, slot);
-          MergePriority src_priority = SOURCE_MERGE_PRIORITY(src, slot);
-
-          if ((src_priority > highest_priority) || ((src_priority == highest_priority) && (src_level > winner_level)))
-          {
-            highest_priority = src_priority;
-            winner_level = src_level;
-            winner = src;
-          }
-        }
-      } while ((src = etcpal_rbiter_next(&tree_iter)) != NULL);
-
-      // Save the final winning values.
-      update_winner_from_new_priority(merger, winner, highest_priority, slot);
+      recalculate_winning_level(merger, source, slot);
     }
   }
 }
 
 /*
- * Recalculate the per_address_priorities_active and universe_priority merger outputs.
+ * Merge a source's new priority on a slot. Assumes the level has not changed since the last merge.
  *
  * This requires sacn_lock to be taken before calling.
  */
-void recalculate_pap_active_and_universe_priority(MergerState* merger, sacn_dmx_merger_source_t skip_this)
+void merge_new_priority(MergerState* merger, const SourceState* source, size_t slot)
+{
+  // Take ownership if source priority is greater than current priority.
+  if (source->source.address_priority[slot] > merger->config.per_address_priorities[slot])
+  {
+    // In merger->config, slots and slot_owners and per_address_priorities are guaranteed to be non-NULL.
+    merger->config.slots[slot] = source->source.levels[slot];
+    merger->config.slot_owners[slot] = source->handle;
+    merger->config.per_address_priorities[slot] = source->source.address_priority[slot];
+  }
+  // If this source is not the current owner but has the same priority, take ownership if it has a higher level.
+  else if (source->handle != merger->config.slot_owners[slot])
+  {
+    if ((source->source.address_priority[slot] > 0) &&
+        (source->source.address_priority[slot] == merger->config.per_address_priorities[slot]) &&
+        (source->source.levels[slot] > merger->config.slots[slot]))
+    {
+      merger->config.slots[slot] = source->source.levels[slot];
+      merger->config.slot_owners[slot] = source->handle;
+      merger->config.per_address_priorities[slot] = source->source.address_priority[slot];
+    }
+  }
+  // If this source is the current owner and its priority decreased, check for a new owner.
+  else if (source->source.address_priority[slot] < merger->config.per_address_priorities[slot])
+  {
+    recalculate_winning_priority(merger, source, slot);
+  }
+}
+
+/*
+ * Recalculate the winning level on a slot. Assumes the priority has not changed since the last merge.
+ *
+ * This requires sacn_lock to be taken before calling.
+ */
+void recalculate_winning_level(MergerState* merger, const SourceState* source, size_t slot)
+{
+  // Start with this source as the owner.
+  merger->config.slots[slot] = source->source.levels[slot];
+
+  // Now check if any other sources beat the current source.
+  EtcPalRbIter tree_iter;
+  etcpal_rbiter_init(&tree_iter);
+  const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
+  do
+  {
+    // Make this source the new owner if it has the same priority and a higher level.
+    if ((candidate->handle != source->handle) &&
+        (candidate->source.address_priority[slot] == merger->config.per_address_priorities[slot]) &&
+        (candidate->source.levels[slot] > merger->config.slots[slot]))
+    {
+      merger->config.slots[slot] = candidate->source.levels[slot];
+      merger->config.slot_owners[slot] = candidate->handle;
+    }
+  } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
+}
+
+/*
+ * Recalculate the winning priority on a slot. Assumes the level has not changed since the last merge.
+ *
+ * This requires sacn_lock to be taken before calling.
+ */
+void recalculate_winning_priority(MergerState* merger, const SourceState* source, size_t slot)
+{
+  // Start with this source as the owner.
+  merger->config.per_address_priorities[slot] = source->source.address_priority[slot];
+
+  // When unsourced, set the level to 0 and owner to invalid.
+  if (source->source.address_priority[slot] == 0)
+  {
+    merger->config.slots[slot] = 0;
+    merger->config.slot_owners[slot] = SACN_DMX_MERGER_SOURCE_INVALID;
+  }
+
+  // Now check if any other sources beat the current source.
+  EtcPalRbIter tree_iter;
+  etcpal_rbiter_init(&tree_iter);
+  const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
+  do
+  {
+    // Make this source the new owner if it has the same priority and a higher level OR a higher priority.
+    if ((candidate->handle != source->handle) &&
+        ((candidate->source.address_priority[slot] > merger->config.per_address_priorities[slot]) ||
+         ((candidate->source.address_priority[slot] == merger->config.per_address_priorities[slot]) &&
+          (candidate->source.levels[slot] > merger->config.slots[slot]))))
+    {
+      merger->config.slots[slot] = candidate->source.levels[slot];
+      merger->config.slot_owners[slot] = candidate->handle;
+      merger->config.per_address_priorities[slot] = candidate->source.address_priority[slot];
+    }
+  } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
+}
+
+/*
+ * Recalculate the per_address_priorities_active merger output (assumes it's non-NULL).
+ *
+ * This requires sacn_lock to be taken before calling.
+ */
+void recalculate_pap_active(MergerState* merger)
 {
   bool pap_active = false;
+
+  EtcPalRbIter iter;
+  etcpal_rbiter_init(&iter);
+  SourceState* source = etcpal_rbiter_first(&iter, &merger->source_state_lookup);
+  do
+  {
+    if (PAP_ACTIVE(source))
+      pap_active = true;
+  } while (!pap_active && ((source = etcpal_rbiter_next(&iter)) != NULL));
+
+  *(merger->config.per_address_priorities_active) = pap_active;
+}
+
+/*
+ * Recalculate the universe_priority merger output (assumes it's non-NULL).
+ *
+ * This requires sacn_lock to be taken before calling.
+ */
+void recalculate_universe_priority(MergerState* merger)
+{
   uint8_t max_universe_priority = 0;
 
   EtcPalRbIter iter;
@@ -1048,19 +1084,11 @@ void recalculate_pap_active_and_universe_priority(MergerState* merger, sacn_dmx_
   SourceState* source = etcpal_rbiter_first(&iter, &merger->source_state_lookup);
   do
   {
-    if (source->handle != skip_this)
-    {
-      if (source->source.address_priority_valid)
-        pap_active = true;
-      if (source->has_universe_priority && (source->source.universe_priority > max_universe_priority))
-        max_universe_priority = source->source.universe_priority;
-    }
+    if (source->source.universe_priority > max_universe_priority)
+      max_universe_priority = source->source.universe_priority;
   } while ((source = etcpal_rbiter_next(&iter)) != NULL);
 
-  if (merger->config.per_address_priorities_active != NULL)
-    *merger->config.per_address_priorities_active = pap_active;
-  if (merger->config.universe_priority != NULL)
-    *merger->config.universe_priority = max_universe_priority;
+  *(merger->config.universe_priority) = max_universe_priority;
 }
 
 void free_source_state_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node)
@@ -1096,9 +1124,10 @@ SourceState* construct_source_state(sacn_dmx_merger_source_t handle)
     memset(source_state->source.levels, 0, DMX_ADDRESS_COUNT);
     source_state->source.valid_level_count = 0;
     source_state->source.universe_priority = 0;
-    source_state->source.address_priority_valid = false;
+    source_state->source.using_universe_priority = true;
     memset(source_state->source.address_priority, 0, DMX_ADDRESS_COUNT);
-    source_state->has_universe_priority = false;
+    source_state->pap_count = 0;
+    source_state->universe_priority_uninitialized = true;
   }
 
   return source_state;
@@ -1120,25 +1149,21 @@ MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMerge
     merger_state->config = *config;
     memset(merger_state->config.slots, 0, DMX_ADDRESS_COUNT);
 
-    if (merger_state->config.per_address_priorities)
-      memset(merger_state->config.per_address_priorities, 0, DMX_ADDRESS_COUNT);
+    if (merger_state->config.per_address_priorities == NULL)  // We need to track this - use internal storage.
+      merger_state->config.per_address_priorities = merger_state->pap_internal;
+
+    memset(merger_state->config.per_address_priorities, 0, DMX_ADDRESS_COUNT);
+
+    if (merger_state->config.slot_owners == NULL)  // We need to track this - use internal storage.
+      merger_state->config.slot_owners = merger_state->owners_internal;
+
+    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+      merger_state->config.slot_owners[i] = SACN_DMX_MERGER_SOURCE_INVALID;
 
     if (merger_state->config.per_address_priorities_active != NULL)
-      *merger_state->config.per_address_priorities_active = false;
+      *(merger_state->config.per_address_priorities_active) = false;
     if (merger_state->config.universe_priority != NULL)
-      *merger_state->config.universe_priority = 0;
-
-    if (merger_state->config.slot_owners)
-    {
-      for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
-        merger_state->config.slot_owners[i] = SACN_DMX_MERGER_SOURCE_INVALID;
-    }
-
-    memset(merger_state->winning_priorities, 0, DMX_ADDRESS_COUNT);
-    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
-      merger_state->winning_sources[i] = SACN_DMX_MERGER_SOURCE_INVALID;
-
-    memset(merger_state->winner_is_sourced, 0, DMX_ADDRESS_COUNT / 8);
+      *(merger_state->config.universe_priority) = 0;
   }
 
   return merger_state;
@@ -1280,17 +1305,23 @@ etcpal_error_t remove_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_dmx_
   if (result == kEtcPalErrOk)
   {
     // Merge the source with unsourced priorities to remove this source from the merge output.
+    memset(source_being_removed->source.address_priority, 0, DMX_ADDRESS_COUNT);
     for (size_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
-      merge_new_priority(merger_state, source_being_removed, i, kUnsourcedPriority);
+      merge_new_priority(merger_state, source_being_removed, i);
 
     // Also update universe priority and PAP active outputs if needed.
-    if (((merger_state->config.per_address_priorities_active != NULL) &&
-         (*merger_state->config.per_address_priorities_active == true) &&
-         (source_being_removed->source.address_priority_valid)) ||
-        ((merger_state->config.universe_priority != NULL) &&
-         (source_being_removed->source.universe_priority >= *merger_state->config.universe_priority)))
+    if ((merger_state->config.per_address_priorities_active != NULL) &&
+        (*(merger_state->config.per_address_priorities_active) == true) && PAP_ACTIVE(source_being_removed))
     {
-      recalculate_pap_active_and_universe_priority(merger_state, source_being_removed->handle);
+      SET_PAP_INACTIVE(source_being_removed);
+      recalculate_pap_active(merger_state);
+    }
+
+    if ((merger_state->config.universe_priority != NULL) &&
+        (source_being_removed->source.universe_priority >= *(merger_state->config.universe_priority)))
+    {
+      source_being_removed->source.universe_priority = 0;
+      recalculate_universe_priority(merger_state);
     }
 
     // Now that the output no longer refers to this source, remove the source from the lookup trees and free its
@@ -1347,7 +1378,7 @@ etcpal_error_t update_sacn_dmx_merger_pap(sacn_dmx_merger_t merger, sacn_dmx_mer
 
   // Update this source's per-address-priority data.
   if ((result == kEtcPalErrOk) && pap)
-    update_per_address_priorities(merger_state, source_state, pap, (uint16_t)pap_count);
+    update_pap(merger_state, source_state, pap, (uint16_t)pap_count);
 
   return result;
 }
@@ -1380,16 +1411,21 @@ etcpal_error_t remove_sacn_dmx_merger_pap(sacn_dmx_merger_t merger, sacn_dmx_mer
 
   if (result == kEtcPalErrOk)
   {
-    // Update the address_priority_valid flag.
-    bool was_valid = source_state->source.address_priority_valid;
-    source_state->source.address_priority_valid = false;
+    // Update the using_universe_priority flag.
+    bool pap_was_active = PAP_ACTIVE(source_state);
+    SET_PAP_INACTIVE(source_state);
 
-    // Merge all the slots again. It will use universe priority this time.
-    merge_new_universe_priority(merger_state, source_state);
+    // Merge all the slots again. This time it will use universe priority (converted to PAP).
+    memset(source_state->source.address_priority,
+           (source_state->source.universe_priority == 0) ? 1 : source_state->source.universe_priority,
+           DMX_ADDRESS_COUNT);
+
+    for (size_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
+      merge_new_priority(merger_state, source_state, i);
 
     // Also update the PAP active output if needed.
-    if ((merger_state->config.per_address_priorities_active != NULL) && was_valid)
-      recalculate_pap_active_and_universe_priority(merger_state, SACN_DMX_MERGER_SOURCE_INVALID);
+    if ((merger_state->config.per_address_priorities_active != NULL) && pap_was_active)
+      recalculate_pap_active(merger_state);
   }
 
   return result;
