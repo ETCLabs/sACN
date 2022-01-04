@@ -122,7 +122,7 @@ protected:
     universe_data.priority = priority;
     universe_data.start_code = start_code;
     universe_data.slot_range.address_count = static_cast<uint16_t>(pdata.size());
-    universe_data.slots = pdata.data();
+    universe_data.values = pdata.data();
     merge_receiver_universe_data(kTestHandle, &kTestSourceAddr, &remote_source, &universe_data, 0u);
   }
 

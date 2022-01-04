@@ -35,15 +35,15 @@ destroyed automatically when sACN deinitializes.
 <!-- CODE_BLOCK_START -->
 ```c
 // These buffers are updated on each merger call with the merge results.
-uint8_t slots[DMX_ADDRESS_COUNT];
+uint8_t merged_levels[DMX_ADDRESS_COUNT];
 uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
-sacn_dmx_merger_source_t slot_owners[DMX_ADDRESS_COUNT];
+sacn_dmx_merger_source_t owners[DMX_ADDRESS_COUNT];
 
 // Merger configuration used for the initialization of each merger:
 SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
-merger_config.slots = slots;
+merger_config.levels = merged_levels;
 merger_config.per_address_priorities = per_address_priorities;
-merger_config.slot_owners = slot_owners;
+merger_config.owners = owners;
 
 // Initialize a merger and obtain its handle.
 sacn_dmx_merger_t merger_handle;
@@ -57,14 +57,14 @@ sacn_dmx_merger_destroy(merger_handle);
 ```cpp
 // These buffers are updated on each merger call with the merge results.
 // They must be valid as long as the merger is using them.
-uint8_t slots[DMX_ADDRESS_COUNT];
+uint8_t merged_levels[DMX_ADDRESS_COUNT];
 uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
-sacn_dmx_merger_source_t slot_owners[DMX_ADDRESS_COUNT];
+sacn_dmx_merger_source_t owners[DMX_ADDRESS_COUNT];
 
 // Merger configuration used for the initialization of each merger:
-sacn::DmxMerger::Settings settings(slots);
+sacn::DmxMerger::Settings settings(merged_levels);
 settings.per_address_priorities = per_address_priorities;
-settings.slot_owners = slot_owners;
+settings.owners = owners;
 
 // Initialize a merger.
 sacn::DmxMerger merger;
@@ -161,7 +161,7 @@ sacn_dmx_merger_update_pap(merger_handle, source_1_handle, pap, DMX_ADDRESS_COUN
 // Now the source has been factored into the merge results, which are printed here.
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
 {
-  printf("Slot %u:\n Level: %u\n PAP: %u\n Source ID: %u\n", i, slots[i], per_address_priorities[i], slot_owners[i]);
+  printf("Slot %u:\n Level: %u\n PAP: %u\n Source ID: %u\n", i, merged_levels[i], per_address_priorities[i], owners[i]);
 }
 ```
 <!-- CODE_BLOCK_MID -->
@@ -181,8 +181,8 @@ merger.UpdatePap(source_1_handle, pap, DMX_ADDRESS_COUNT);
 // Now the source has been factored into the merge results, which are printed here.
 for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
 {
-  std::cout << "Slot " << i << ":\n Level: " << slots[i] << ":\n PAP: " << per_address_priorities[i] << "\n Source ID: "
-            << slot_owners[i] << "\n";
+  std::cout << "Slot " << i << ":\n Level: " << merged_levels[i] << ":\n PAP: " << per_address_priorities[i] << "\n Source ID: "
+            << owners[i] << "\n";
 }
 ```
 <!-- CODE_BLOCK_END -->

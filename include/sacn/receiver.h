@@ -116,7 +116,7 @@ typedef struct SacnRecvUniverseData
   /**
    * Pointer to the slot values at the location indicated by slot_range.
    */
-  const uint8_t* slots;
+  const uint8_t* values;
 } SacnRecvUniverseData;
 
 /** Information about a remote sACN source being tracked by a receiver. */

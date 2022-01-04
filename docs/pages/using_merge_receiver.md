@@ -229,16 +229,16 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
   // Example for an sACN-enabled fixture...
   for (int i = 0; i < merged_data->slot_range.address_count; ++i)  // For each slot in my DMX footprint
   {
-    // merged_data->slot_owners[0] always represents the owner of the first slot in the footprint
-    if (merged_data->slot_owners[i] == SACN_REMOTE_SOURCE_INVALID)
+    // merged_data->owners[0] always represents the owner of the first slot in the footprint
+    if (merged_data->owners[i] == SACN_REMOTE_SOURCE_INVALID)
     {
       // One of the slots in my DMX footprint does not have a valid source
       return;
     }
   }
 
-  // merged_data->slots[0] will always be the first slot of the footprint
-  memcpy(my_data_buf, merged_data->slots, merged_data->slot_range.address_count);
+  // merged_data->levels[0] will always be the level of the first slot of the footprint
+  memcpy(my_data_buf, merged_data->levels, merged_data->slot_range.address_count);
   // Act on the data somehow
 }
 ```
@@ -253,16 +253,16 @@ void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& 
   // Example for an sACN-enabled fixture...
   for (int i = 0; i < merged_data.slot_range.address_count; ++i)  // For each slot in my DMX footprint
   {
-    // merged_data.slot_owners[0] always represents the owner of the first slot in the footprint
-    if (merged_data.slot_owners[i] == kInvalidRemoteSourceHandle)
+    // merged_data.owners[0] always represents the owner of the first slot in the footprint
+    if (merged_data.owners[i] == kInvalidRemoteSourceHandle)
     {
       // One of the slots in my DMX footprint does not have a valid source
       return;
     }
   }
 
-  // merged_data.slots[0] will always be the first slot of the footprint
-  memcpy(my_data_buf, merged_data.slots, merged_data.slot_range.address_count);
+  // merged_data.levels[0] will always be the level of the first slot of the footprint
+  memcpy(my_data_buf, merged_data.levels, merged_data.slot_range.address_count);
   // Act on the data somehow
 }
 ```
@@ -328,7 +328,7 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
   for(unsigned int i = 0; i < merged_data->slot_range.address_count; ++i)
   {
     EtcPalUuid cid;
-    etcpal_error_t result = sacn_get_remote_source_cid(merged_data->slot_owners[i], &cid);
+    etcpal_error_t result = sacn_get_remote_source_cid(merged_data->owners[i], &cid);
 
     if(result == kEtcPalErrOk)
     {
@@ -347,7 +347,7 @@ void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& 
 {
   for(unsigned int i = 0; i < merged_data.slot_range.address_count; ++i)
   {
-    auto cid = sacn::GetRemoteSourceCid(merged_data.slot_owners[i]);
+    auto cid = sacn::GetRemoteSourceCid(merged_data.owners[i]);
 
     if(cid)
     {

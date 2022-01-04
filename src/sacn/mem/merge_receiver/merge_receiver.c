@@ -82,8 +82,8 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
     merge_receiver->callbacks = config->callbacks;
     merge_receiver->use_pap = config->use_pap;
 
-    memset(merge_receiver->slots, 0, DMX_ADDRESS_COUNT);
-    memset(merge_receiver->slot_owners, 0, DMX_ADDRESS_COUNT * sizeof(sacn_dmx_merger_source_t));
+    memset(merge_receiver->levels, 0, DMX_ADDRESS_COUNT);
+    memset(merge_receiver->owners, 0, DMX_ADDRESS_COUNT * sizeof(sacn_dmx_merger_source_t));
 
     etcpal_rbtree_init(&merge_receiver->sources, remote_source_compare, merge_receiver_source_node_alloc,
                        merge_receiver_source_node_dealloc);

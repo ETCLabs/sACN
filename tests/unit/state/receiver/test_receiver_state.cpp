@@ -998,7 +998,7 @@ TEST_F(TestReceiverThread, UniverseDataWorks)
     EXPECT_EQ(universe_data->preview, kTestPreview);
     EXPECT_EQ(universe_data->start_code, SACN_STARTCODE_DMX);
     EXPECT_EQ(universe_data->slot_range.address_count, kTestBuffer.size());
-    EXPECT_EQ(memcmp(universe_data->slots, kTestBuffer.data(), kTestBuffer.size()), 0);
+    EXPECT_EQ(memcmp(universe_data->values, kTestBuffer.data(), kTestBuffer.size()), 0);
     EXPECT_EQ(universe_data->is_sampling, true);
     EXPECT_EQ(context, &kTestContext);
   };

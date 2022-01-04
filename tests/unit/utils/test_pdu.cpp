@@ -62,9 +62,11 @@ protected:
     InitDmpLayer(pcur, universe_data);
   }
 
-  uint8_t* InitRootLayer(uint8_t* output, const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data)
+  uint8_t* InitRootLayer(uint8_t* output, const SacnRemoteSource& source_info,
+                         const SacnRecvUniverseData& universe_data)
   {
-    return InitRootLayer(output, SACN_DATA_HEADER_SIZE + universe_data.slot_range.address_count, false, source_info.cid);
+    return InitRootLayer(output, SACN_DATA_HEADER_SIZE + universe_data.slot_range.address_count, false,
+                         source_info.cid);
   }
 
   uint8_t* InitRootLayer(uint8_t* output, int pdu_length, bool extended, const EtcPalUuid& source_cid)
@@ -90,8 +92,8 @@ protected:
                             universe_data.priority, seq, universe_data.preview, terminated, universe_data.universe_id);
   }
 
-  uint8_t* InitFramingLayer(uint8_t* output, int slot_count, uint32_t vector, const char* source_name,
-                            uint8_t priority, uint8_t seq_num, bool preview, bool terminated, uint16_t universe_id)
+  uint8_t* InitFramingLayer(uint8_t* output, int slot_count, uint32_t vector, const char* source_name, uint8_t priority,
+                            uint8_t seq_num, bool preview, bool terminated, uint16_t universe_id)
   {
     uint8_t* pcur = output;
 
@@ -125,7 +127,7 @@ protected:
 
   uint8_t* InitDmpLayer(uint8_t* output, const SacnRecvUniverseData& universe_data)
   {
-    return InitDmpLayer(output, universe_data.start_code, universe_data.slot_range.address_count, universe_data.slots);
+    return InitDmpLayer(output, universe_data.start_code, universe_data.slot_range.address_count, universe_data.values);
   }
 
   uint8_t* InitDmpLayer(uint8_t* output, uint8_t start_code, int slot_count, const uint8_t* pdata)
@@ -177,7 +179,7 @@ protected:
     EXPECT_EQ(universe_data_out.slot_range.address_count, universe_data.slot_range.address_count);
     EXPECT_EQ(seq_out, seq);
     EXPECT_EQ(terminated_out, terminated);
-    EXPECT_EQ(memcmp(universe_data_out.slots, universe_data.slots, universe_data.slot_range.address_count), 0);
+    EXPECT_EQ(memcmp(universe_data_out.values, universe_data.values, universe_data.slot_range.address_count), 0);
   }
 
   void TestPackRootLayer(uint16_t pdu_length, bool extended, const EtcPalUuid& source_cid)
@@ -358,7 +360,7 @@ TEST_F(TestPdu, ParseSacnDataPacketWorks)
   universe_data.preview = true;
   universe_data.start_code = SACN_STARTCODE_DMX;
   universe_data.slot_range.address_count = static_cast<uint16_t>(data1.size());
-  universe_data.slots = data1.data();
+  universe_data.values = data1.data();
 
   TestParseDataPacket(source_info, universe_data, 1u, false);
 
@@ -370,7 +372,7 @@ TEST_F(TestPdu, ParseSacnDataPacketWorks)
   universe_data.preview = false;
   universe_data.start_code = SACN_STARTCODE_PRIORITY;
   universe_data.slot_range.address_count = static_cast<uint16_t>(data2.size());
-  universe_data.slots = data2.data();
+  universe_data.values = data2.data();
   TestParseDataPacket(source_info, universe_data, 10u, true);
 
   std::vector<uint8_t> max_data;
@@ -383,7 +385,7 @@ TEST_F(TestPdu, ParseSacnDataPacketWorks)
   universe_data.preview = true;
   universe_data.start_code = 0xFF;
   universe_data.slot_range.address_count = DMX_ADDRESS_COUNT;
-  universe_data.slots = max_data.data();
+  universe_data.values = max_data.data();
   TestParseDataPacket(source_info, universe_data, 0xFFu, true);
 }
 

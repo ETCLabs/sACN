@@ -39,7 +39,6 @@
 
 namespace sacn
 {
-
 namespace detail
 {
 class DmxMergerHandleType
@@ -82,7 +81,7 @@ public:
         are set to 0.
         Memory is owned by the application and must remain allocated until the merger is destroyed. While this merger
         exists, the application must not modify this buffer directly!  Doing so would affect the results of the merge.*/
-    uint8_t* slots{nullptr};
+    uint8_t* levels{nullptr};
 
     /********* Optional values **********/
 
@@ -109,7 +108,7 @@ public:
         NULL and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of
         0 (not sourced).
         Memory is owned by the application and must remain allocated until the merger is destroyed.*/
-    sacn_dmx_merger_source_t* slot_owners{nullptr};
+    sacn_dmx_merger_source_t* owners{nullptr};
 
     int source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
                                                                 listen to when using dynamic memory. */
@@ -117,11 +116,11 @@ public:
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
 
-    /** Initializes merger settings with the slots output pointer. This constructor is not marked explicit on purpose so
-        that a Settings instance can be implicitly constructed from a slots output pointer, if that's all the
+    /** Initializes merger settings with the levels output pointer. This constructor is not marked explicit on purpose
+       so that a Settings instance can be implicitly constructed from a levels output pointer, if that's all the
         application needs.
      */
-    Settings(uint8_t* slots_ptr);
+    Settings(uint8_t* levels_ptr);
 
     bool IsValid() const;
   };
@@ -157,7 +156,7 @@ private:
  *
  * Optional members can be modified directly in the struct.
  */
-inline DmxMerger::Settings::Settings(uint8_t* slots_ptr) : slots(slots_ptr)
+inline DmxMerger::Settings::Settings(uint8_t* levels_ptr) : levels(levels_ptr)
 {
 }
 
@@ -166,7 +165,7 @@ inline DmxMerger::Settings::Settings(uint8_t* slots_ptr) : slots(slots_ptr)
  */
 inline bool DmxMerger::Settings::IsValid() const
 {
-  return (slots != nullptr);
+  return (levels != nullptr);
 }
 
 /**
@@ -216,7 +215,7 @@ inline void DmxMerger::Shutdown()
  * Adds a new source to the merger, if the maximum number of sources hasn't been reached.
  * The returned source id is used for two purposes:
  *   - It is the handle for calls that need to access the source data.
- *   - It is the source identifer that is put into the slot_owners buffer that was passed
+ *   - It is the source identifer that is put into the owners buffer that was passed
  *     in the DmxMergerUniverseConfig structure when creating the merger.
  *
  * @return The successfully added source_id.
@@ -276,7 +275,7 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_dmx_merger_sourc
  * @param[in] source The id of the source to modify.
  * @param[in] new_levels The new DMX levels to be copied in, starting from the first slot.
  * @param[in] new_levels_count The length of new_levels. If this is less than DMX_ADDRESS_COUNT, the levels for all
- * remaining slots will be set to 0.
+ * remaining levels will be set to 0.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -295,7 +294,7 @@ inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source, co
  * This function updates the per-address priorities (PAP) of the specified source, and then triggers the recalculation
  * of each slot. For each slot, the source will only be included in the merge if it has a priority at that slot.
  *
- * If PAP is not specified for all slots, then the remaining slots will default to a PAP of 0. To remove PAP for this
+ * If PAP is not specified for all levels, then the remaining levels will default to a PAP of 0. To remove PAP for this
  * source and revert to the universe priority, call DmxMerger::RemovePap.
  *
  * @param[in] source The id of the source to modify.
@@ -370,11 +369,11 @@ inline SacnDmxMergerConfig DmxMerger::TranslateConfig(const Settings& settings)
 {
   // clang-format off
   SacnDmxMergerConfig config = {
-    settings.slots,
+    settings.levels,
     settings.per_address_priorities,
     settings.per_address_priorities_active,
     settings.universe_priority,
-    settings.slot_owners,
+    settings.owners,
     settings.source_count_max
   };
   // clang-format on

@@ -412,7 +412,7 @@ TEST_F(TestMem, ValidInitializedUniverseData)
     EXPECT_EQ(universe_data->api_callback, nullptr);
     EXPECT_EQ(universe_data->internal_callback, nullptr);
     EXPECT_EQ(universe_data->receiver_handle, SACN_RECEIVER_INVALID);
-    EXPECT_EQ(universe_data->universe_data.slots, nullptr);
+    EXPECT_EQ(universe_data->universe_data.values, nullptr);
     EXPECT_EQ(universe_data->thread_id, SACN_THREAD_ID_INVALID);
     EXPECT_EQ(universe_data->context, nullptr);
   });
@@ -437,7 +437,7 @@ TEST_F(TestMem, UniverseDataIsReZeroedWithEachGet)
   EXPECT_EQ(universe_data->api_callback, nullptr);
   EXPECT_EQ(universe_data->internal_callback, nullptr);
   EXPECT_EQ(universe_data->receiver_handle, SACN_RECEIVER_INVALID);
-  EXPECT_EQ(universe_data->universe_data.slots, nullptr);
+  EXPECT_EQ(universe_data->universe_data.values, nullptr);
   EXPECT_EQ(universe_data->thread_id, SACN_THREAD_ID_INVALID);
   EXPECT_EQ(universe_data->context, nullptr);
 }

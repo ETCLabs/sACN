@@ -429,7 +429,7 @@ static void handle_universe_data(sacn_receiver_t receiver_handle, const EtcPalSo
       size_t values_len = (universe_data->slot_range.address_count < NUM_SLOTS_DISPLAYED)
                               ? universe_data->slot_range.address_count
                               : NUM_SLOTS_DISPLAYED;
-      memcpy(source->last_update, universe_data->slots, values_len);
+      memcpy(source->last_update, universe_data->values, values_len);
       memset(source->last_update + values_len, 0, NUM_SLOTS_DISPLAYED - values_len);
     }
 

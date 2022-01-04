@@ -203,8 +203,8 @@ void my_universe_data_callback(sacn_receiver_t receiver_handle, const EtcPalSock
   if ((universe_data->start_code == 0x00) && (universe_data->slot_range.start_address == my_start_addr) &&
       (universe_data->slot_range.address_count == MY_DMX_FOOTPRINT))
   {
-    // pdata[0] will always be the first slot of the footprint
-    memcpy(my_data_buf, universe_data->slots, MY_DMX_FOOTPRINT);
+    // values[0] will always be the level of the first slot of the footprint
+    memcpy(my_data_buf, universe_data->values, MY_DMX_FOOTPRINT);
     // Act on the data somehow
   }
 }
@@ -230,8 +230,8 @@ void MyNotifyHandler::HandleUniverseData(Handle receiver_handle, const etcpal::S
   if ((universe_data.start_code == 0x00) && (universe_data.slot_range.start_address == my_start_addr) &&
       (universe_data.slot_range.address_count == MY_DMX_FOOTPRINT))
   {
-    // pdata[0] will always be the first slot of the footprint
-    memcpy(my_data_buf, universe_data.slots, MY_DMX_FOOTPRINT);
+    // values[0] will always be the level of the first slot of the footprint
+    memcpy(my_data_buf, universe_data.values, MY_DMX_FOOTPRINT);
     // Act on the data somehow
   }
 }
@@ -293,11 +293,11 @@ precedence over lower-priority data.
 
 ETC has extended the sACN standard with a method of tracking priority on a per-address basis. This
 is implemented by sending an alternate START code packet on the same universe periodically - the
-START code is `0xdd`. When receiving a data packet with the start code `0xdd`, the slots in that
-packet are to be interpreted as a priority value from 1 to 200 for the corresponding slot in the
+START code is `0xdd`. When receiving a data packet with the start code `0xdd`, the values in that
+packet are to be interpreted as a priority value from 1 to 200 for the corresponding level in the
 DMX (NULL START code) packets. A value of 0 indicates "not sourced", meaning the source is not
-sending NULL START code data to that slot. Likewise, if less than 512 `0xdd` slots are received,
-then the slots beyond the last `0xdd` slot should also be treated as not sourced. Receivers which
+sending NULL START code data to that slot. Likewise, if less than 512 `0xdd` values are received,
+then the values beyond the last `0xdd` slot should also be treated as not sourced. Receivers which
 wish to implement the per-address priority extension should make sure that
 #SACN_ETC_PRIORITY_EXTENSION is set to 1, check for the `0xdd` start code, and handle the data
 accordingly.
@@ -333,7 +333,7 @@ be received, and the source PAP lost callback will not be called.
 When multiple sources are sending on the same universe at the same priority, receiver
 implementations are responsible for designating a merge algorithm to merge the data from the
 sources together. The most commonly-used algorithm is Highest Takes Precedence (HTP), where the
-numerically highest value for each slot from any source is the one that is acted upon.
+numerically highest level for each slot from any source is the one that is acted upon.
 
 The sACN library provides a couple of APIs to facilitate merging. The first, the DMX merger API,
 provides a software merger that takes NULL start code and priority data as input and outputs the

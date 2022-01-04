@@ -5,12 +5,12 @@ team, to react predictably in the event that multiple sACN Sources are lost in q
 
 Consider the following scenario:
 ~~~
-+----------------+  +----------------+
-| Source 1       |  | Source 2       |           +----------+
-| Priority: 90   |  | Priority: 100  |           | Receiver |
-| All slots 0xff |  | All slots 0x00 |           +----------+
-+----------------+  +----------------+                ||
-        ||                  ||                        ||
++-----------------+  +-----------------+
+| Source 1        |  | Source 2        |         +----------+
+| Priority: 90    |  | Priority: 100   |         | Receiver |
+| All levels 0xff |  | All levels 0x00 |         +----------+
++-----------------+  +-----------------+              ||
+        ||                   ||                       ||
       ====================================================
       |                  Network switch                  |
       ====================================================
@@ -21,7 +21,7 @@ which the receiver is listening. Then, the receiver is disconnected from the swi
 starts a source loss (network data loss) timer for both sources.
 
 The timer for Source 2 could easily expire first, in which case the receiver will for a brief time
-consider Source 1 to have taken over. This will result in a short flash of all of the DMX slots on
+consider Source 1 to have taken over. This will result in a short flash of all of the DMX levels on
 that universe to full, before the source loss timer for Source 1 also expires.
 
 To avoid this unwanted behavior, the algorithm is specified as follows:

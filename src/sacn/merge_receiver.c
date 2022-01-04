@@ -138,8 +138,8 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
         *handle = merge_receiver_handle;
 
         SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
-        merger_config.slots = merge_receiver->slots;
-        merger_config.slot_owners = merge_receiver->slot_owners;
+        merger_config.levels = merge_receiver->levels;
+        merger_config.owners = merge_receiver->owners;
         merger_config.source_count_max = config->source_count_max;
         result = create_sacn_dmx_merger(&merger_config, &merger_handle);
       }
@@ -525,7 +525,7 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
         {
           if (universe_data->start_code == SACN_STARTCODE_DMX)
           {
-            update_sacn_dmx_merger_levels(merge_receiver->merger_handle, merger_source_handle, universe_data->slots,
+            update_sacn_dmx_merger_levels(merge_receiver->merger_handle, merger_source_handle, universe_data->values,
                                           universe_data->slot_range.address_count);
             update_sacn_dmx_merger_universe_priority(merge_receiver->merger_handle, merger_source_handle,
                                                      universe_data->priority);
@@ -533,7 +533,7 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
           }
           else if ((universe_data->start_code == SACN_STARTCODE_PRIORITY) && merge_receiver->use_pap)
           {
-            update_sacn_dmx_merger_pap(merge_receiver->merger_handle, merger_source_handle, universe_data->slots,
+            update_sacn_dmx_merger_pap(merge_receiver->merger_handle, merger_source_handle, universe_data->values,
                                        universe_data->slot_range.address_count);
             new_merge_occurred = true;
           }
@@ -547,8 +547,8 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
           merged_data_notification->universe = universe_data->universe_id;
           merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
           merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-          memcpy(merged_data_notification->slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
-          memcpy(merged_data_notification->slot_owners, merge_receiver->slot_owners,
+          memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
+          memcpy(merged_data_notification->owners, merge_receiver->owners,
                  DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
           merged_data_notification->num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);
           merged_data_notification->context = merge_receiver->callbacks.callback_context;
@@ -573,8 +573,8 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
       SacnRecvMergedData merged_data;
       merged_data.universe_id = merged_data_notification->universe;
       merged_data.slot_range = merged_data_notification->slot_range;
-      merged_data.slots = merged_data_notification->slots;
-      merged_data.slot_owners = merged_data_notification->slot_owners;
+      merged_data.levels = merged_data_notification->levels;
+      merged_data.owners = merged_data_notification->owners;
       merged_data.num_active_sources = merged_data_notification->num_active_sources;
 
       merged_data_notification->callback(merged_data_notification->handle, &merged_data,
@@ -628,8 +628,8 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
           merged_data_notification->universe = universe;
           merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
           merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-          memcpy(merged_data_notification->slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
-          memcpy(merged_data_notification->slot_owners, merge_receiver->slot_owners,
+          memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
+          memcpy(merged_data_notification->owners, merge_receiver->owners,
                  DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
           merged_data_notification->num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);
           merged_data_notification->context = merge_receiver->callbacks.callback_context;
@@ -644,8 +644,8 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
       SacnRecvMergedData merged_data;
       merged_data.universe_id = merged_data_notification->universe;
       merged_data.slot_range = merged_data_notification->slot_range;
-      merged_data.slots = merged_data_notification->slots;
-      merged_data.slot_owners = merged_data_notification->slot_owners;
+      merged_data.levels = merged_data_notification->levels;
+      merged_data.owners = merged_data_notification->owners;
       merged_data.num_active_sources = merged_data_notification->num_active_sources;
 
       merged_data_notification->callback(merged_data_notification->handle, &merged_data,
@@ -695,8 +695,8 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
           merged_data_notification->universe = universe;
           merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
           merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-          memcpy(merged_data_notification->slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
-          memcpy(merged_data_notification->slot_owners, merge_receiver->slot_owners,
+          memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
+          memcpy(merged_data_notification->owners, merge_receiver->owners,
                  DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
           merged_data_notification->num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);
           merged_data_notification->context = merge_receiver->callbacks.callback_context;
@@ -711,8 +711,8 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
       SacnRecvMergedData merged_data;
       merged_data.universe_id = merged_data_notification->universe;
       merged_data.slot_range = merged_data_notification->slot_range;
-      merged_data.slots = merged_data_notification->slots;
-      merged_data.slot_owners = merged_data_notification->slot_owners;
+      merged_data.levels = merged_data_notification->levels;
+      merged_data.owners = merged_data_notification->owners;
       merged_data.num_active_sources = merged_data_notification->num_active_sources;
 
       merged_data_notification->callback(merged_data_notification->handle, &merged_data,
@@ -748,8 +748,8 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
           merged_data_notification->universe = universe;
           merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
           merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-          memcpy(merged_data_notification->slots, merge_receiver->slots, DMX_ADDRESS_COUNT);
-          memcpy(merged_data_notification->slot_owners, merge_receiver->slot_owners,
+          memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
+          memcpy(merged_data_notification->owners, merge_receiver->owners,
                  DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
           merged_data_notification->num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);
           merged_data_notification->context = merge_receiver->callbacks.callback_context;
@@ -764,8 +764,8 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
       SacnRecvMergedData merged_data;
       merged_data.universe_id = merged_data_notification->universe;
       merged_data.slot_range = merged_data_notification->slot_range;
-      merged_data.slots = merged_data_notification->slots;
-      merged_data.slot_owners = merged_data_notification->slot_owners;
+      merged_data.levels = merged_data_notification->levels;
+      merged_data.owners = merged_data_notification->owners;
       merged_data.num_active_sources = merged_data_notification->num_active_sources;
 
       merged_data_notification->callback(merged_data_notification->handle, &merged_data,

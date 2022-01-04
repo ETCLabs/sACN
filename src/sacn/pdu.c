@@ -53,8 +53,8 @@ bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnRemoteSource*
   // data buffer. Slot count value on the wire includes the start code, so subtract 1.
   universe_data->slot_range.start_address = 1;  // TODO: Re-evaluate where this is initialized after footprint implemented
   universe_data->slot_range.address_count = etcpal_unpack_u16b(&buf[85]) - 1;
-  universe_data->slots = &buf[88];
-  if (universe_data->slots + universe_data->slot_range.address_count > buf + buflen)
+  universe_data->values = &buf[88];
+  if (universe_data->values + universe_data->slot_range.address_count > buf + buflen)
     return false;
 
   strncpy(source_info->name, (char*)&buf[6], SACN_SOURCE_NAME_MAX_LEN);

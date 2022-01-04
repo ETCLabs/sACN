@@ -71,9 +71,9 @@ protected:
   static const uint8_t kTestAddressPriorities[DMX_ADDRESS_COUNT];
   static const uint8_t kTestPdata[DMX_ADDRESS_COUNT];
 
-  static uint8_t slots_[DMX_ADDRESS_COUNT];
+  static uint8_t levels_[DMX_ADDRESS_COUNT];
   static uint8_t pap_[DMX_ADDRESS_COUNT];
-  static sacn_dmx_merger_source_t slot_owners_[DMX_ADDRESS_COUNT];
+  static sacn_dmx_merger_source_t owners_[DMX_ADDRESS_COUNT];
 
   static etcpal_error_t test_return_value_;
   static sacn_dmx_merger_source_t test_source_handle_;
@@ -87,22 +87,22 @@ const uint8_t TestMerger::kTestPdata[] = {};
 
 etcpal_error_t TestMerger::test_return_value_;
 sacn_dmx_merger_source_t TestMerger::test_source_handle_;
-uint8_t TestMerger::slots_[] = {};
+uint8_t TestMerger::levels_[] = {};
 uint8_t TestMerger::pap_[] = {};
-sacn_dmx_merger_source_t TestMerger::slot_owners_[] = {};
+sacn_dmx_merger_source_t TestMerger::owners_[] = {};
 sacn::DmxMerger::Settings TestMerger::settings_default_(nullptr);
 
 TEST_F(TestMerger, SettingsConstructorWorks)
 {
-  sacn::DmxMerger::Settings settings(slots_);
-  EXPECT_EQ(settings.slots, slots_);
+  sacn::DmxMerger::Settings settings(levels_);
+  EXPECT_EQ(settings.levels, levels_);
   EXPECT_EQ(settings.per_address_priorities, nullptr);
-  EXPECT_EQ(settings.slot_owners, nullptr);
+  EXPECT_EQ(settings.owners, nullptr);
 }
 
 TEST_F(TestMerger, SettingsIsValidWorks)
 {
-  sacn::DmxMerger::Settings settings_valid(slots_);
+  sacn::DmxMerger::Settings settings_valid(levels_);
   sacn::DmxMerger::Settings settings_invalid(nullptr);
 
   EXPECT_EQ(settings_valid.IsValid(), true);
@@ -117,9 +117,9 @@ TEST_F(TestMerger, StartupWorks)
 
     if (config)
     {
-      EXPECT_EQ(config->slots, slots_);
+      EXPECT_EQ(config->levels, levels_);
       EXPECT_EQ(config->per_address_priorities, pap_);
-      EXPECT_EQ(config->slot_owners, slot_owners_);
+      EXPECT_EQ(config->owners, owners_);
       EXPECT_EQ(config->source_count_max, SACN_RECEIVER_INFINITE_SOURCES);
     }
 
@@ -131,9 +131,9 @@ TEST_F(TestMerger, StartupWorks)
 
   sacn::DmxMerger merger;
 
-  sacn::DmxMerger::Settings settings(slots_);
+  sacn::DmxMerger::Settings settings(levels_);
   settings.per_address_priorities = pap_;
-  settings.slot_owners = slot_owners_;
+  settings.owners = owners_;
 
   etcpal::Error result = merger.Startup(settings);
 

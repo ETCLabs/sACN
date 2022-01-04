@@ -56,8 +56,8 @@ typedef struct MergerState
    * to point to this so that the winning priorities can still be tracked. */
   uint8_t pap_internal[DMX_ADDRESS_COUNT];
 
-  /* If a merger config is passed in with slot_owners set to NULL, config.slot_owners will be set to point to this so
-   * that the merge winners can still be tracked. */
+  /* If a merger config is passed in with owners set to NULL, config.owners will be set to point to this so that the
+   * merge winners can still be tracked. */
   sacn_dmx_merger_source_t owners_internal[DMX_ADDRESS_COUNT];
 } MergerState;
 

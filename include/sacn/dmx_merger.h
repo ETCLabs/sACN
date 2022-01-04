@@ -83,7 +83,7 @@ typedef struct SacnDmxMergerConfig
       are set to 0.
       Memory is owned by the application and must remain allocated until the merger is destroyed. While this merger
       exists, the application must not modify this buffer directly!  Doing so would affect the results of the merge.*/
-  uint8_t* slots;
+  uint8_t* levels;
 
   /********* Optional values **********/
 
@@ -109,7 +109,7 @@ typedef struct SacnDmxMergerConfig
       and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of 0 (not
       sourced).
       Memory is owned by the application and must remain allocated until the merger is destroyed.*/
-  sacn_dmx_merger_source_t* slot_owners;
+  sacn_dmx_merger_source_t* owners;
 
   /** The maximum number of sources this merger will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
       This parameter is ignored when configured to use static memory -- #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used
@@ -135,13 +135,13 @@ typedef struct SacnDmxMergerConfig
   }
 
 /**
- * @brief Utility to see if a slot_owner is valid.
+ * @brief Utility to see if a slot owner is valid.
  *
- * Given a buffer of slot_owners, evaluate to true if the slot is != DMX_MERGER_SOURCE_INVALID.
+ * Given a buffer of owners, evaluate to true if the owner is != DMX_MERGER_SOURCE_INVALID.
  *
  */
-#define SACN_DMX_MERGER_SOURCE_IS_VALID(slot_owners_array, slot_index) \
-  (slot_owners_array[slot_index] != SACN_DMX_MERGER_SOURCE_INVALID)
+#define SACN_DMX_MERGER_SOURCE_IS_VALID(owners_array, slot_index) \
+  (owners_array[slot_index] != SACN_DMX_MERGER_SOURCE_INVALID)
 
 /** The current input data for a single source of the merge.  This is exposed as read-only information. */
 typedef struct SacnDmxMergerSource

@@ -681,8 +681,8 @@ typedef struct SacnMergeReceiver
   SacnMergeReceiverCallbacks callbacks;
   bool use_pap;
 
-  uint8_t slots[DMX_ADDRESS_COUNT];
-  sacn_dmx_merger_source_t slot_owners[DMX_ADDRESS_COUNT];
+  uint8_t levels[DMX_ADDRESS_COUNT];
+  sacn_dmx_merger_source_t owners[DMX_ADDRESS_COUNT];
 
   EtcPalRbTree sources;
 
@@ -700,8 +700,8 @@ typedef struct MergeReceiverMergedDataNotification
   sacn_merge_receiver_t handle;
   uint16_t universe;
   SacnRecvUniverseSubrange slot_range;
-  uint8_t slots[DMX_ADDRESS_COUNT];
-  sacn_remote_source_t slot_owners[DMX_ADDRESS_COUNT];
+  uint8_t levels[DMX_ADDRESS_COUNT];
+  sacn_remote_source_t owners[DMX_ADDRESS_COUNT];
   size_t num_active_sources;
   void* context;
 } MergeReceiverMergedDataNotification;
