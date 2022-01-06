@@ -81,15 +81,15 @@ static bool source_handle_in_use(int handle_val, void* cookie);
 static etcpal_error_t add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t id_to_use,
                                  sacn_dmx_merger_source_t* id_result);
 
-static void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values,
-                          uint16_t new_values_count);
+static void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_levels,
+                          uint16_t new_levels_count);
 static void update_pap(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
                        uint16_t address_priorities_count);
 static void update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority);
-static void update_levels_single_source(MergerState* merger, SourceState* source, const uint8_t* new_values,
-                                        size_t old_values_count, size_t new_values_count);
-static void update_levels_multi_source(MergerState* merger, SourceState* source, const uint8_t* new_values,
-                                       size_t old_values_count, size_t new_values_count);
+static void update_levels_single_source(MergerState* merger, SourceState* source, const uint8_t* new_levels,
+                                        size_t old_levels_count, size_t new_levels_count);
+static void update_levels_multi_source(MergerState* merger, SourceState* source, const uint8_t* new_levels,
+                                       size_t old_levels_count, size_t new_levels_count);
 static void update_pap_single_source(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
                                      size_t old_pap_count, size_t new_pap_count);
 static void update_pap_multi_source(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
@@ -691,16 +691,19 @@ etcpal_error_t add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t id_
  *
  * This requires sacn_lock to be taken before calling.
  */
-void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_values, uint16_t new_values_count)
+void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_levels, uint16_t new_levels_count)
 {
-  size_t old_values_count = source->source.valid_level_count;
-  source->source.valid_level_count = new_values_count;
+  size_t old_levels_count = source->source.valid_level_count;
+  source->source.valid_level_count = new_levels_count;
 
-  // Copy instead of merging if there's only one source.
-  if (etcpal_rbtree_size(&merger->source_state_lookup) == 1)
-    update_levels_single_source(merger, source, new_values, old_values_count, new_values_count);
-  else
-    update_levels_multi_source(merger, source, new_values, old_values_count, new_values_count);
+  if ((new_levels_count != old_levels_count) || (memcmp(new_levels, source->source.levels, new_levels_count) != 0))
+  {
+    // Copy instead of merging if there's only one source.
+    if (etcpal_rbtree_size(&merger->source_state_lookup) == 1)
+      update_levels_single_source(merger, source, new_levels, old_levels_count, new_levels_count);
+    else
+      update_levels_multi_source(merger, source, new_levels, old_levels_count, new_levels_count);
+  }
 }
 
 /*
@@ -714,16 +717,21 @@ void update_pap(MergerState* merger, SourceState* source, const uint8_t* address
   size_t old_pap_count = source->pap_count;
   source->pap_count = address_priorities_count;
 
-  SET_PAP_ACTIVE(source);
+  
+  if ((address_priorities_count != old_pap_count) ||
+      (memcmp(address_priorities, source->source.address_priority, address_priorities_count) != 0))
+  {
+    SET_PAP_ACTIVE(source);
 
-  if (merger->config.per_address_priorities_active != NULL)
-    *(merger->config.per_address_priorities_active) = true;
+    if (merger->config.per_address_priorities_active != NULL)
+      *(merger->config.per_address_priorities_active) = true;
 
-  // Copy instead of merging if there's only one source.
-  if (etcpal_rbtree_size(&merger->source_state_lookup) == 1)
-    update_pap_single_source(merger, source, address_priorities, old_pap_count, address_priorities_count);
-  else
-    update_pap_multi_source(merger, source, address_priorities, old_pap_count, address_priorities_count);
+    // Copy instead of merging if there's only one source.
+    if (etcpal_rbtree_size(&merger->source_state_lookup) == 1)
+      update_pap_single_source(merger, source, address_priorities, old_pap_count, address_priorities_count);
+    else
+      update_pap_multi_source(merger, source, address_priorities, old_pap_count, address_priorities_count);
+  }
 }
 
 /*
@@ -777,22 +785,22 @@ void update_universe_priority(MergerState* merger, SourceState* source, uint8_t 
  *
  * This requires sacn_lock to be taken before calling.
  */
-void update_levels_single_source(MergerState* merger, SourceState* source, const uint8_t* new_values,
-                                 size_t old_values_count, size_t new_values_count)
+void update_levels_single_source(MergerState* merger, SourceState* source, const uint8_t* new_levels,
+                                 size_t old_levels_count, size_t new_levels_count)
 {
-  memcpy(source->source.levels, new_values, new_values_count);
+  memcpy(source->source.levels, new_levels, new_levels_count);
 
-  for (size_t i = 0; i < new_values_count; ++i)
+  for (size_t i = 0; i < new_levels_count; ++i)
   {
     if (merger->config.per_address_priorities[i] > 0)
-      merger->config.levels[i] = new_values[i];
+      merger->config.levels[i] = new_levels[i];
   }
 
   // If there are less levels than last time, make sure the remaining levels are 0.
-  if (old_values_count > new_values_count)
+  if (old_levels_count > new_levels_count)
   {
-    memset(&source->source.levels[new_values_count], 0, old_values_count - new_values_count);
-    memset(&merger->config.levels[new_values_count], 0, old_values_count - new_values_count);
+    memset(&source->source.levels[new_levels_count], 0, old_levels_count - new_levels_count);
+    memset(&merger->config.levels[new_levels_count], 0, old_levels_count - new_levels_count);
   }
 }
 
@@ -802,26 +810,20 @@ void update_levels_single_source(MergerState* merger, SourceState* source, const
  *
  * This requires sacn_lock to be taken before calling.
  */
-void update_levels_multi_source(MergerState* merger, SourceState* source, const uint8_t* new_values,
-                                size_t old_values_count, size_t new_values_count)
+void update_levels_multi_source(MergerState* merger, SourceState* source, const uint8_t* new_levels,
+                                size_t old_levels_count, size_t new_levels_count)
 {
-  for (size_t i = 0; i < new_values_count; ++i)
-  {
-    if (new_values[i] != source->source.levels[i])
-    {
-      source->source.levels[i] = new_values[i];
-      merge_new_level(merger, source, i);
-    }
-  }
+  memcpy(source->source.levels, new_levels, new_levels_count);
+  for (size_t i = 0; i < new_levels_count; ++i)
+    merge_new_level(merger, source, i);
 
   // If there are less levels than last time, make sure the remaining levels are 0.
-  for (size_t i = new_values_count; i < old_values_count; ++i)
+  if (old_levels_count > new_levels_count)
   {
-    if (source->source.levels[i] > 0)
-    {
-      source->source.levels[i] = 0;
+    memset(&source->source.levels[new_levels_count], 0, old_levels_count - new_levels_count);
+
+    for (size_t i = new_levels_count; i < old_levels_count; ++i)
       merge_new_level(merger, source, i);
-    }
   }
 }
 
@@ -874,23 +876,17 @@ void update_pap_single_source(MergerState* merger, SourceState* source, const ui
 void update_pap_multi_source(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
                              size_t old_pap_count, size_t new_pap_count)
 {
+  memcpy(source->source.address_priority, address_priorities, new_pap_count);
   for (size_t i = 0; i < new_pap_count; ++i)
-  {
-    if (address_priorities[i] != source->source.address_priority[i])
-    {
-      source->source.address_priority[i] = address_priorities[i];
-      merge_new_priority(merger, source, i);
-    }
-  }
+    merge_new_priority(merger, source, i);
 
   // If there are less priorities than last time, make sure the remaining priorities are 0.
-  for (size_t i = new_pap_count; i < old_pap_count; ++i)
+  if (old_pap_count > new_pap_count)
   {
-    if (source->source.address_priority[i] > 0)
-    {
-      source->source.address_priority[i] = 0;
+    memset(&source->source.address_priority[new_pap_count], 0, old_pap_count - new_pap_count);
+
+    for (size_t i = new_pap_count; i < old_pap_count; ++i)
       merge_new_priority(merger, source, i);
-    }
   }
 }
 
@@ -1002,13 +998,17 @@ void recalculate_winning_level(MergerState* merger, const SourceState* source, s
   const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
   do
   {
-    // Make this source the new owner if it has the same priority and a higher level.
-    if ((candidate->handle != source->handle) &&
-        (candidate->source.address_priority[slot] == merger->config.per_address_priorities[slot]) &&
-        (candidate->source.levels[slot] > merger->config.levels[slot]))
+    if (candidate->handle != source->handle)
     {
-      merger->config.levels[slot] = candidate->source.levels[slot];
-      merger->config.owners[slot] = candidate->handle;
+      uint8_t candidate_level = candidate->source.levels[slot];
+
+      // Make this source the new owner if it has the same priority and a higher level.
+      if ((candidate->source.address_priority[slot] == merger->config.per_address_priorities[slot]) &&
+          (candidate_level > merger->config.levels[slot]))
+      {
+        merger->config.levels[slot] = candidate_level;
+        merger->config.owners[slot] = candidate->handle;
+      }
     }
   } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
 }
