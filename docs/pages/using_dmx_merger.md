@@ -20,13 +20,13 @@ universe that needs merging.
 
 To create a merger, a config needs to be initialized and passed into the create/startup function.
 In the config, the output array pointer for the merged slot levels must be specified. There are
-also two optional output array pointers: one for the per-address priority of each slot, and another
-for the source ID of each slot. These two are set to NULL if not used. The application owns the
-memory that it points to in the config, and must ensure that the memory provided is valid until the
-merger is destroyed. The maximum source count (the maximum number of sources the merger will merge
-when #SACN_DYNAMIC_MEM is 1) is also specified in the config, and it defaults to
-#SACN_RECEIVER_INFINITE_SOURCES. If #SACN_DYNAMIC_MEM is 0, then
-#SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used instead.
+also optional outputs: the source IDs of each slot, the per-address priorities of each slot,
+whether per-address priority packets should be transmitted to sACN, and the universe priority to
+transmit. These are set to NULL if not used. The application owns the memory that it points to in
+the config, and must ensure that the memory provided is valid until the merger is destroyed. The
+maximum source count (the maximum number of sources the merger will merge when #SACN_DYNAMIC_MEM
+is 1) is also specified in the config, and it defaults to #SACN_RECEIVER_INFINITE_SOURCES. If
+#SACN_DYNAMIC_MEM is 0, then #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used instead.
 
 Once the merger is created, the merger's functionality can be used. Mergers can also be destroyed
 individually with the destroy/shutdown function, although keep in mind that all mergers are
@@ -37,12 +37,16 @@ destroyed automatically when sACN deinitializes.
 // These buffers are updated on each merger call with the merge results.
 uint8_t merged_levels[DMX_ADDRESS_COUNT];
 uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
+bool should_transmit_per_address_priorities = false;
+uint8_t universe_priority_to_transmit = 0;
 sacn_dmx_merger_source_t owners[DMX_ADDRESS_COUNT];
 
 // Merger configuration used for the initialization of each merger:
 SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
 merger_config.levels = merged_levels;
 merger_config.per_address_priorities = per_address_priorities;
+merger_config.per_address_priorities_active = &should_transmit_per_address_priorities;
+merger_config.universe_priority = &universe_priority_to_transmit;
 merger_config.owners = owners;
 
 // Initialize a merger and obtain its handle.
@@ -59,11 +63,15 @@ sacn_dmx_merger_destroy(merger_handle);
 // They must be valid as long as the merger is using them.
 uint8_t merged_levels[DMX_ADDRESS_COUNT];
 uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
+bool should_transmit_per_address_priorities = false;
+uint8_t universe_priority_to_transmit = 0;
 sacn_dmx_merger_source_t owners[DMX_ADDRESS_COUNT];
 
 // Merger configuration used for the initialization of each merger:
 sacn::DmxMerger::Settings settings(merged_levels);
 settings.per_address_priorities = per_address_priorities;
+settings.per_address_priorities_active = &should_transmit_per_address_priorities;
+settings.universe_priority = &universe_priority_to_transmit;
 settings.owners = owners;
 
 // Initialize a merger.
