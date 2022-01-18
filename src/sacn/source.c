@@ -26,6 +26,12 @@
 
 #if SACN_SOURCE_ENABLED || DOXYGEN
 
+/**************************** Private function declarations ******************************/
+
+static size_t get_per_universe_netint_lists_index(sacn_source_t source, uint16_t universe,
+                                                  const SacnSourceUniverseNetintList* per_universe_netint_lists,
+                                                  size_t num_per_universe_netint_lists, bool* found);
+
 /*************************** Function definitions ****************************/
 
 /* Initialize the sACN Source module. Internal function called from sacn_init(). */
@@ -1097,46 +1103,53 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*
       {
         for (size_t j = 0; (result == kEtcPalErrOk) && (j < get_source(i)->num_universes); ++j)
         {
-          ++total_num_universes;
-
-          bool found = false;
-          for (size_t k = 0; !found && (k < num_per_universe_netint_lists); ++k)
+          // Universes being removed should not be factored into this.
+          if (get_source(i)->universes[j].termination_state != kTerminatingAndRemoving)
           {
-            found = ((get_source(i)->handle == per_universe_netint_lists[k].handle) &&
-                     (get_source(i)->universes[j].universe_id == per_universe_netint_lists[k].universe));
-          }
+            ++total_num_universes;
 
-          if (!found)
-            result = kEtcPalErrInvalid;
+            bool found = false;
+            get_per_universe_netint_lists_index(get_source(i)->handle, get_source(i)->universes[j].universe_id,
+                                                per_universe_netint_lists, num_per_universe_netint_lists, &found);
+
+            if (!found)
+              result = kEtcPalErrInvalid;
+          }
         }
       }
 
-      if (result == kEtcPalErrOk)
-      {
-        if (num_per_universe_netint_lists != total_num_universes)
-          result = kEtcPalErrInvalid;
-      }
+      if ((result == kEtcPalErrOk) && (num_per_universe_netint_lists != total_num_universes))
+        result = kEtcPalErrInvalid;
 
       if (result == kEtcPalErrOk)
-      {
         sacn_sockets_reset_source(sys_netint_config);
 
-        for (size_t i = 0; i < get_num_sources(); ++i)
-          clear_source_netints(get_source(i));
-      }
-
-      for (size_t i = 0; (result == kEtcPalErrOk) && (i < num_per_universe_netint_lists); ++i)
+      for (size_t i = 0; (result == kEtcPalErrOk) && (i < get_num_sources()); ++i)
       {
-        const SacnSourceUniverseNetintList* netint_list = &per_universe_netint_lists[i];
+        clear_source_netints(get_source(i));
 
-        SacnSource* source;
-        SacnSourceUniverse* universe;
-        lookup_source_and_universe(netint_list->handle, netint_list->universe, &source, &universe);
+        for (size_t j = 0; (result == kEtcPalErrOk) && (j < get_source(i)->num_universes); ++j)
+        {
+          if (get_source(i)->universes[j].termination_state == kTerminatingAndRemoving)
+          {
+            // Keep the universe netints as they are, but add them to source netints again since it was cleared.
+            for (size_t k = 0; (result == kEtcPalErrOk) && (k < get_source(i)->universes[j].netints.num_netints); ++k)
+              result = add_sacn_source_netint(get_source(i), &get_source(i)->universes[j].netints.netints[k]);
+          }
+          else
+          {
+            // Replace the universe netints, then add the new ones to the source netints.
+            size_t list_index =
+                get_per_universe_netint_lists_index(get_source(i)->handle, get_source(i)->universes[j].universe_id,
+                                                    per_universe_netint_lists, num_per_universe_netint_lists, NULL);
 
-        SacnNetintConfig universe_netint_config;
-        universe_netint_config.netints = netint_list->netints;
-        universe_netint_config.num_netints = netint_list->num_netints;
-        result = reset_source_universe_networking(source, universe, &universe_netint_config);
+            SacnNetintConfig universe_netint_config;
+            universe_netint_config.netints = per_universe_netint_lists[list_index].netints;
+            universe_netint_config.num_netints = per_universe_netint_lists[list_index].num_netints;
+            result =
+                reset_source_universe_networking(get_source(i), &get_source(i)->universes[j], &universe_netint_config);
+          }
+        }
       }
 
       sacn_unlock();
@@ -1183,3 +1196,24 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
 }
 
 #endif  // SACN_SOURCE_ENABLED || DOXYGEN
+
+size_t get_per_universe_netint_lists_index(sacn_source_t source, uint16_t universe,
+                                           const SacnSourceUniverseNetintList* per_universe_netint_lists,
+                                           size_t num_per_universe_netint_lists, bool* found)
+{
+  for (size_t i = 0; i < num_per_universe_netint_lists; ++i)
+  {
+    if ((source == per_universe_netint_lists[i].handle) && (universe == per_universe_netint_lists[i].universe))
+    {
+      if (found)
+        *found = true;
+
+      return i;
+    }
+  }
+
+  if (found)
+    *found = false;
+
+  return 0;
+}
