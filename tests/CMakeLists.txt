@@ -1,7 +1,7 @@
 set(SACN_TEST ${CMAKE_CURRENT_LIST_DIR})
 set(TEST_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-include(SacnSourceManifest)
+include(${SACN_CMAKE}/SacnSourceManifest.cmake)
 
 function(sacn_add_test test_name config_dir)
   set(target_name ${test_name})

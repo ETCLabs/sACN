@@ -18,13 +18,13 @@ discovery features to sACN. E1.31-2018 adds IPv6 support.
 ## Platforms
 
 sACN uses ETC's Platform Abstraction Layer (EtcPal) for platform abstraction, and it runs on every
-platform supported by EtcPal; that list can be found [here](https://etclabs.github.io/EtcPal/docs/head/).
+platform supported by EtcPal; that list can be found [here](https://etclabs.github.io/EtcPalDocs/head/).
 
 ## Dependencies
 
 ### EtcPal
 
 sACN depends on ETC's Platform Abstraction Library (EtcPal) for platform abstraction. EtcPal is
-included as a git submodule in the sACN repository. The sACN CMake configuration will also
-automatically detect the presence of an EtcPal directory at the same level as the sACN root
-directory, and use that as its dependency.
+included automatically in CMake builds using [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake).
+This behavior can be overridden in CMake by cloning EtcPal from its
+[repository](https://github.com/ETCLabs/EtcPal) and adding its subdirectory before sACN.

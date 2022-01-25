@@ -1,6 +1,0 @@
-[submodule "external/googletest"]
-	path = external/googletest
-	url = https://github.com/google/googletest
-[submodule "external/EtcPal"]
-	path = external/EtcPal
-	url = https://github.com/ETCLabs/EtcPal

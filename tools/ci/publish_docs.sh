@@ -43,7 +43,7 @@ git reset
 ################################################################################
 ##### Generate the Doxygen code documentation and log the output.          #####
 cd ../../..
-etclibtool docs -c tools/ci/etclibtool_config.json -o docs/build/sACNDocs . 1.9.1
+etcdevtool docs -o docs/build/sACNDocs . 1.9.1
 cd docs/build/${GH_REPO_NAME}
 
 ################################################################################

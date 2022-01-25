@@ -7,7 +7,7 @@ workflow:
 variables:
   GIT_STRATEGY: clone
   GIT_SUBMODULE_STRATEGY: normal
-  GLOBAL_CMAKE_OPTIONS: -DSACN_BUILD_TESTS=ON -DSACN_BUILD_EXAMPLES=ON
+  GLOBAL_CMAKE_OPTIONS: -DSACN_BUILD_TESTS=ON -DSACN_BUILD_EXAMPLES=ON -DSACN_WARN_AS_ERROR=ON
 
 windows-build:
   stage: build
@@ -16,7 +16,7 @@ windows-build:
   script:
     - mkdir build
     - cd build
-    - cmake -G "Visual Studio 16 2019" -A x64 $env:GLOBAL_CMAKE_OPTIONS ..
+    - cmake -G "Visual Studio 16 2019" -A x64 $env:GLOBAL_CMAKE_OPTIONS.Split(" ") ..
     - cmake --build . --config Release -j
     - ctest -C Release --output-on-failure
   artifacts:
@@ -44,12 +44,10 @@ linux-build:
   tags:
     - etc-linux-docker
   image: etc-docker.artifactory-mid.etcconnect.com/etc/common-tech/gcc-cmake:latest
-  variables:
-    CMAKE_ASAN_DEFINITIONS: -DCMAKE_C_FLAGS="-fsanitize=address" -DCMAKE_CXX_FLAGS="-fsanitize=address" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
   script:
     - mkdir build
     - cd build
-    - cmake ${GLOBAL_CMAKE_OPTIONS} ${CMAKE_ASAN_DEFINITIONS} ..
+    - cmake ${GLOBAL_CMAKE_OPTIONS} -DSACN_ENABLE_ASAN=ON ..
     - cmake --build .
     - ctest --output-on-failure
   artifacts:
@@ -65,8 +63,8 @@ docs-test:
     - etc-linux-docker
   image: etc-docker.artifactory-mid.etcconnect.com/etc/common-tech/doxygen:1.9.1
   script:
-    - pip install --upgrade etclibtool
-    - etclibtool docs -c tools/ci/etclibtool_config.json --warn-as-error . 1.9.1
+    - pip install --upgrade etcdevtool
+    - etcdevtool docs . 1.9.1
 
 deploy-docs:
   stage: build
@@ -80,11 +78,11 @@ deploy-docs:
     GH_REPO_REF: github.com/ETCLabs/sACNDocs.git
     GH_REPO_TOKEN: $SVC_ETCLABS_REPO_TOKEN
   script:
-    - pip install --upgrade etclibtool
+    - pip install --upgrade etcdevtool
     - chmod +x tools/ci/publish_docs.sh
     - tools/ci/publish_docs.sh
 
 include:
   - project: 'etc/common-tech/tools/gitlab-ci-util'
-    ref: v1.4.0
+    ref: v2.0.0
     file: '/ci-yml/deploy-versioned-build.yml'

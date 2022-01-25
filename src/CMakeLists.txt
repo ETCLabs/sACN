@@ -4,19 +4,6 @@ set(SACN_LIB_TARGET_NAME sACN)
 set(SACN_CONFIG_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/config)
 set(SACN_TARGETS_EXPORT_NAME ${PROJECT_NAME}Targets)
 
-################################# Dependencies ################################
-
-include(SacnAddDependency)
-
-if(SACN_BUILD_TESTS)
-  set(ETCPAL_BUILD_MOCK_LIB ON CACHE BOOL "Build the EtcPal mock library" FORCE)
-endif()
-sacn_add_dependency(EtcPal ETCPAL_DIR)
-
-if(TARGET EtcPalMock)
-  set_target_properties(EtcPalMock PROPERTIES FOLDER dependencies)
-endif()
-
 ################################# sACN Library ################################
 
 # Get the local source variables

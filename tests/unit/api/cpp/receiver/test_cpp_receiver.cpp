@@ -19,6 +19,7 @@
 
 #include "sacn/cpp/receiver.h"
 
+#include <cstring>
 #include <limits>
 #include "etcpal_mock/common.h"
 #include "sacn_mock/private/common.h"
@@ -34,7 +35,6 @@
 #else
 #define TestReceiver TestCppReceiverStatic
 #endif
-
 
 class TestReceiver : public ::testing::Test
 {
