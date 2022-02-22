@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,7 @@ void deinit_status_lists_buf(void);
 
 SacnSourceStatusLists* get_status_lists(sacn_thread_id_t thread_id);
 
-bool add_offline_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle, const char* name,
-                        bool terminated);
+bool add_offline_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle, const char* name, bool terminated);
 bool add_online_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle, const char* name);
 bool add_unknown_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle, const char* name);
 

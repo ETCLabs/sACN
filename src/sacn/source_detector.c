@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -143,8 +143,9 @@ void sacn_source_detector_destroy()
  * Source Detector if it was created.
  *
  * This is typically used when the application detects that the list of networking interfaces has changed. This changes
- * the list of system interfaces the source detector API will be limited to (the list passed into sacn_init(), if any, is
- * overridden for the source detector API, but not the other APIs). The source detector is then set to those interfaces.
+ * the list of system interfaces the source detector API will be limited to (the list passed into sacn_init(), if any,
+ * is overridden for the source detector API, but not the other APIs). The source detector is then set to those
+ * interfaces.
  *
  * After this call completes successfully, the detector will continue as if nothing had changed. New sources could be
  * discovered, or old sources could expire.

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,10 +43,7 @@ protected:
     ASSERT_EQ(sacn_init(nullptr, nullptr), kEtcPalErrOk);
   }
 
-  void TearDown() override
-  {
-    sacn_deinit();
-  }
+  void TearDown() override { sacn_deinit(); }
 
   EtcPalNetintInfo fake_netint_;
 };

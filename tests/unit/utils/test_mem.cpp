@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -731,7 +731,8 @@ TEST_F(TestMem, SourceLimitExceededIsReZeroedWithEachGet)
   // Modify some elements
   source_limit_exceeded->handle = 2;
   source_limit_exceeded->api_callback = reinterpret_cast<SacnSourceLimitExceededCallback>(kMagicPointerValue);
-  source_limit_exceeded->internal_callback = reinterpret_cast<SacnSourceLimitExceededInternalCallback>(kMagicPointerValue);
+  source_limit_exceeded->internal_callback =
+      reinterpret_cast<SacnSourceLimitExceededInternalCallback>(kMagicPointerValue);
   source_limit_exceeded->thread_id = (kTestNumThreads - 1u);
   source_limit_exceeded->context = reinterpret_cast<void*>(kMagicPointerValue);
 

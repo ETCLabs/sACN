@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,8 @@ etcpal_error_t sacn_receiver_init(void);
 void sacn_receiver_deinit(void);
 
 etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_receiver_t* handle,
-                                    const SacnNetintConfig* netint_config, const SacnReceiverInternalCallbacks* internal_callbacks);
+                                    const SacnNetintConfig* netint_config,
+                                    const SacnReceiverInternalCallbacks* internal_callbacks);
 etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle);
 etcpal_error_t change_sacn_receiver_universe(sacn_receiver_t handle, uint16_t new_universe_id);
 

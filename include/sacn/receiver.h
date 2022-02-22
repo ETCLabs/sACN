@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ typedef int sacn_receiver_t;
 typedef struct SacnRecvUniverseSubrange
 {
   int start_address; /**< The first address in the range (any value between 1 and 512 inclusive). */
-  int address_count;  /**< The number of addresses in the range. */
+  int address_count; /**< The number of addresses in the range. */
 } SacnRecvUniverseSubrange;
 
 /**
@@ -172,7 +172,7 @@ typedef struct SacnLostSource
  *
  * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
  * if the source forces the packet, or if the source sends a data packet without a sync universe.
- * 
+ *
  * @todo This version of the sACN library does not support sACN Sync. This paragraph will be valid in the future.
  *
  * @param[in] receiver_handle Handle to the receiver instance for which universe data was received.

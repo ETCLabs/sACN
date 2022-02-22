@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -198,8 +198,7 @@ TEST_F(TestSourceDetectorState, SourceUpdatedWorks)
   EXPECT_EQ(source_updated_fake.call_count, 1u);
 
   source_updated_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name,
-                                       const uint16_t* sourced_universes,
-                                       size_t num_sourced_universes, void* context) {
+                                       const uint16_t* sourced_universes, size_t num_sourced_universes, void* context) {
     EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cid.get()), 0);
     EXPECT_EQ(strcmp(name, kTestName.c_str()), 0);
 
@@ -229,8 +228,7 @@ TEST_F(TestSourceDetectorState, SourceUpdatedFiltersDroppedLists)
     universe_list.push_back(universe);
 
   source_updated_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid*, const char*,
-                                       const uint16_t* sourced_universes,
-                                       size_t num_sourced_universes, void*) {
+                                       const uint16_t* sourced_universes, size_t num_sourced_universes, void*) {
     for (size_t i = 0u; i < num_sourced_universes; ++i)
       EXPECT_EQ(sourced_universes[i], universe_list[i]);
 

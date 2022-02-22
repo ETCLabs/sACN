@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -717,8 +717,7 @@ void update_pap(MergerState* merger, SourceState* source, const uint8_t* address
   size_t old_pap_count = source->pap_count;
   source->pap_count = address_priorities_count;
 
-  
-  if ((address_priorities_count != old_pap_count) ||
+    if ((address_priorities_count != old_pap_count) ||
       (memcmp(address_priorities, source->source.address_priority, address_priorities_count) != 0))
   {
     SET_PAP_ACTIVE(source);

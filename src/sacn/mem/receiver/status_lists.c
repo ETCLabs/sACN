@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,8 +83,7 @@ SacnSourceStatusLists* get_status_lists(sacn_thread_id_t thread_id)
  * [in] terminated Whether the source was lost because its Stream_Terminated bit was set.
  * Returns true if the source was successfully added, false if memory could not be allocated.
  */
-bool add_offline_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle, const char* name,
-                        bool terminated)
+bool add_offline_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle, const char* name, bool terminated)
 {
   SACN_ASSERT(lists);
 
@@ -110,8 +109,7 @@ bool add_online_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle
 {
   SACN_ASSERT(lists);
 
-  CHECK_ROOM_FOR_ONE_MORE(lists, online, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE,
-                          false);
+  CHECK_ROOM_FOR_ONE_MORE(lists, online, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
   lists->online[lists->num_online].handle = handle;
   lists->online[lists->num_online].name = name;
@@ -132,8 +130,7 @@ bool add_unknown_source(SacnSourceStatusLists* lists, sacn_remote_source_t handl
 {
   SACN_ASSERT(lists);
 
-  CHECK_ROOM_FOR_ONE_MORE(lists, unknown, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE,
-                          false);
+  CHECK_ROOM_FOR_ONE_MORE(lists, unknown, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
   lists->unknown[lists->num_unknown].handle = handle;
   lists->unknown[lists->num_unknown].name = name;

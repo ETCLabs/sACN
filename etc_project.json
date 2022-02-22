@@ -3,7 +3,7 @@
     {
       "name": "EtcPal",
       "gitlabPath": "etc/common-tech/general/etcpal",
-      "version": "0.4.0.9"
+      "version": "0.4.0"
     },
     {
       "name": "googletest",
@@ -41,6 +41,16 @@
           "site": "https://en.cppreference.com/w"
         }
       ]
+    },
+    "release-lib": {
+      "projectName": "sACN",
+      "jira": {
+        "project": "SACN"
+      },
+      "legacyP4Mirror": {
+        "name": "GITHUB_sACN",
+        "labelPrefix": "sACN"
+      }
     }
   }
 }

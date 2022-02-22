@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -158,7 +158,6 @@ typedef unsigned int sacn_thread_id_t;
 #else
 #define SACN_DECLARE_SOURCE_DETECTOR_BUF(type, name, size) type* name
 #endif
-
 
 /******************************************************************************
  * Logging

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,8 +42,7 @@
 
 // Needs lock
 etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniverseConfig* config,
-                                        const SacnNetintConfig* netint_config,
-                                        SacnSourceUniverse** universe_state)
+                                        const SacnNetintConfig* netint_config, SacnSourceUniverse** universe_state)
 {
   etcpal_error_t result = kEtcPalErrOk;
 

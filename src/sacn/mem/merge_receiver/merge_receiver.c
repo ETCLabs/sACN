@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,7 +121,9 @@ etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeRece
 // Needs lock
 SacnMergeReceiver* get_merge_receiver(size_t index)
 {
-  return (index < sacn_pool_merge_receiver_mem.num_merge_receivers) ? &sacn_pool_merge_receiver_mem.merge_receivers[index] : NULL;
+  return (index < sacn_pool_merge_receiver_mem.num_merge_receivers)
+             ? &sacn_pool_merge_receiver_mem.merge_receivers[index]
+             : NULL;
 }
 
 // Needs lock
@@ -159,7 +161,8 @@ etcpal_error_t init_merge_receivers(void)
 
 #if SACN_DYNAMIC_MEM
   sacn_pool_merge_receiver_mem.merge_receivers = calloc(INITIAL_CAPACITY, sizeof(SacnMergeReceiver));
-  sacn_pool_merge_receiver_mem.merge_receivers_capacity = sacn_pool_merge_receiver_mem.merge_receivers ? INITIAL_CAPACITY : 0;
+  sacn_pool_merge_receiver_mem.merge_receivers_capacity =
+      sacn_pool_merge_receiver_mem.merge_receivers ? INITIAL_CAPACITY : 0;
   if (!sacn_pool_merge_receiver_mem.merge_receivers)
     res = kEtcPalErrNoMem;
 #endif

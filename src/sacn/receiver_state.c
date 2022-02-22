@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -522,7 +522,7 @@ void sacn_receive_thread(void* arg)
   SACN_ASSERT(context);
 
   // Create the poll context
-  etcpal_error_t poll_init_res = kEtcPalErrSys; 
+  etcpal_error_t poll_init_res = kEtcPalErrSys;
   if (sacn_lock())
   {
     poll_init_res = etcpal_poll_context_init(&context->poll_context);

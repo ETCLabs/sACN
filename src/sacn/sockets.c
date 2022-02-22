@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -781,8 +781,8 @@ SacnSocketsSysNetints* sacn_sockets_get_sys_netints(networking_type_t type)
 etcpal_error_t sacn_initialize_receiver_netints(SacnInternalNetintArray* receiver_netints,
                                                 const SacnNetintConfig* app_netint_config)
 {
-  return sacn_initialize_internal_netints(receiver_netints, app_netint_config,
-                                          receiver_sys_netints.sys_netints, receiver_sys_netints.num_sys_netints);
+  return sacn_initialize_internal_netints(receiver_netints, app_netint_config, receiver_sys_netints.sys_netints,
+                                          receiver_sys_netints.num_sys_netints);
 }
 
 etcpal_error_t sacn_initialize_source_detector_netints(SacnInternalNetintArray* source_detector_netints,
@@ -895,9 +895,8 @@ void clear_source_networking()
   CLEAR_BUF(&source_sys_netints, sys_netints);
 }
 
-etcpal_error_t validate_netint_config(const SacnNetintConfig* netint_config,
-                                      const SacnMcastInterface* sys_netints, size_t num_sys_netints,
-                                      size_t* num_valid_netints)
+etcpal_error_t validate_netint_config(const SacnNetintConfig* netint_config, const SacnMcastInterface* sys_netints,
+                                      size_t num_sys_netints, size_t* num_valid_netints)
 {
   *num_valid_netints = 0u;
 

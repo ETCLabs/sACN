@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,8 @@ bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnRemoteSource*
 
   // Make sure the length of the slot data as communicated by the slot count doesn't overflow the
   // data buffer. Slot count value on the wire includes the start code, so subtract 1.
-  universe_data->slot_range.start_address = 1;  // TODO: Re-evaluate where this is initialized after footprint implemented
+  // TODO: Re-evaluate where this is initialized after footprint implemented
+  universe_data->slot_range.start_address = 1;
   universe_data->slot_range.address_count = etcpal_unpack_u16b(&buf[85]) - 1;
   universe_data->values = &buf[88];
   if (universe_data->values + universe_data->slot_range.address_count > buf + buflen)

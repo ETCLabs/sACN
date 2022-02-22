@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -562,8 +562,7 @@ TEST_F(TestSockets, InitializeInternalNetintsWorks)
   internal_netint_array.num_netints = 0u;
 
   SacnNetintConfig app_netint_config = {app_netints.data(), app_netints.size()};
-  sacn_initialize_internal_netints(&internal_netint_array, &app_netint_config, sys_netints.data(),
-                                   sys_netints.size());
+  sacn_initialize_internal_netints(&internal_netint_array, &app_netint_config, sys_netints.data(), sys_netints.size());
 
   for (size_t i = 0u; i < app_netints.size(); ++i)
     EXPECT_EQ(app_netints[i].status, expected_statuses[i]);
@@ -632,7 +631,7 @@ TEST_F(TestSockets, InitAndResetHandleCustomSysNetints)
   sys_netints.push_back(SacnMcastInterface{{kEtcPalIpTypeV6, 8765}, kEtcPalErrNotImpl});
   sys_netints.push_back(SacnMcastInterface{{kEtcPalIpTypeV4, 4321}, kEtcPalErrNotImpl});
 
-  for (size_t num_sys_netints = sys_netints.size(); num_sys_netints >= 1u ; --num_sys_netints)
+  for (size_t num_sys_netints = sys_netints.size(); num_sys_netints >= 1u; --num_sys_netints)
   {
     SacnNetintConfig sys_netint_config = {sys_netints.data(), num_sys_netints};
     EXPECT_EQ(sacn_sockets_reset_receiver(&sys_netint_config), kEtcPalErrOk);

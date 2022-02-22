@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1644,7 +1644,7 @@ TEST_F(TestReceiverThread, SourceLimitExceededWorks)
   int expected_max = 10;
   TestSourceLimitExceeded(configured_max, expected_max);
 }
-#else  // SACN_DYNAMIC_MEM
+#else   // SACN_DYNAMIC_MEM
 TEST_F(TestReceiverThread, SourceLimitExceededWorksWithLowerSourceCountMax)
 {
   int configured_max = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE - 1;

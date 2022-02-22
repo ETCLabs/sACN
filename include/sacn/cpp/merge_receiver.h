@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -429,7 +429,7 @@ inline etcpal::Error MergeReceiver::ChangeUniverse(uint16_t new_universe_id)
  *
  * After this call completes, a new sampling period will occur, and then underlying updates will generate new calls to
  * HandleMergedData().
- * 
+ *
  * @param[in] new_footprint New footprint that this merge receiver should listen to.
  * @return #kEtcPalErrNotImpl: Not yet implemented.
  */
@@ -443,7 +443,7 @@ inline etcpal::Error MergeReceiver::ChangeFootprint(const SacnRecvUniverseSubran
  *
  * After this call completes, a new sampling period will occur, and then underlying updates will generate new calls to
  * HandleMergedData().
- * 
+ *
  * @param[in] new_universe_id New universe number that this merge receiver should listen to.
  * @param[in] new_footprint New footprint within the universe.
  * @return #kEtcPalErrNotImpl: Not yet implemented.

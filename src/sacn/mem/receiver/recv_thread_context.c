@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@
 
 #if SACN_DYNAMIC_MEM
 static SacnRecvThreadContext* sacn_pool_recv_thread_context;
-#else  // SACN_DYNAMIC_MEM
+#else   // SACN_DYNAMIC_MEM
 static SacnRecvThreadContext sacn_pool_recv_thread_context[SACN_RECEIVER_MAX_THREADS];
 #endif  // SACN_DYNAMIC_MEM
 

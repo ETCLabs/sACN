@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@
  *
  * There can only ever be one instance of the source detector, but that instance still needs to be created and can be
  * destroyed.
- * 
+ *
  * Usage:
  * @code
  * #include "sacn/source_detector.h"
@@ -58,15 +58,15 @@
  * etcpal_error_t init_result = sacn_init(&log_params, NULL);
  * // Or, to init without worrying about logs from the sACN library...
  * etcpal_error_t init_result = sacn_init(NULL, NULL);
- * 
+ *
  * SacnSourceDetectorConfig my_config = SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT;
  * my_config.callbacks.source_updated = my_source_updated;
  * my_config.callbacks.source_expired = my_source_expired;
  * my_config.callbacks.limit_exceeded = my_limit_exceeded;
- * 
+ *
  * SacnMcastInterface my_netints[NUM_MY_NETINTS];
  * // Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
- * 
+ *
  * SacnNetintConfig netint_config;
  * netint_config.netints = my_netints;
  * netint_config.num_netints = NUM_MY_NETINTS;
@@ -76,16 +76,16 @@
  * // Or, if you just want to use all network interfaces:
  * etcpal_error_t create_result = sacn_source_detector_create(&my_config, NULL);
  * // Check create_result here...
- * 
+ *
  * // Now the thread is running and your callbacks will handle application-side processing.
- * 
+ *
  * // What if your network interfaces change? Update my_netints and call this:
  * etcpal_error_t reset_result = sacn_source_detector_reset_networking(my_netints, NUM_MY_NETINTS);
  * // Check reset_result here...
- * 
+ *
  * // To destroy the source detector, call this:
  * sacn_source_detector_destroy();
- * 
+ *
  * // During application shutdown, everything can be cleaned up by calling sacn_deinit.
  * sacn_deinit();
  * @endcode

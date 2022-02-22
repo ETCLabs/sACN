@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ protected:
 
     etcpal_netint_get_interfaces_by_index_fake.custom_fake = [](unsigned int index, const EtcPalNetintInfo** netint_arr,
                                                                 size_t* netint_arr_size) {
-      for (auto &fake_netint : fake_netints_)
+      for (auto& fake_netint : fake_netints_)
       {
         if (fake_netint.index == index)
         {
@@ -140,7 +140,7 @@ protected:
   }
 
   void ResetNetworkingPerUniverse(Source& source, const std::deque<SacnMcastInterface>& sys_netints,
-                                  std::vector<Source::UniverseNetintList> &netint_lists)
+                                  std::vector<Source::UniverseNetintList>& netint_lists)
   {
     std::vector<SacnMcastInterface> vect(sys_netints.begin(), sys_netints.end());
     EXPECT_TRUE(source.ResetNetworking(vect, netint_lists).IsOk());

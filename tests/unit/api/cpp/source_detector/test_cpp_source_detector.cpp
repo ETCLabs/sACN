@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@
 #define TestSourceDetector TestCppSourceDetectorStatic
 #endif
 
-
 class TestSourceDetector : public ::testing::Test
 {
 protected:
@@ -61,5 +60,5 @@ protected:
 
 TEST_F(TestSourceDetector, TestFoo)
 {
-  //TODO: CLEAN UP TESTING
+  // TODO: CLEAN UP TESTING
 }

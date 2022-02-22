@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -243,7 +243,7 @@
  * per thread (one for IPv4 and another for IPv6). The purpose is to cause all multicast and
  * unicast traffic to go to the bound sockets and reduce duplication. This has been verified to
  * work on Linux and lwIP.
- * 
+ *
  * Set this to 0 in your sacn_config.h if the default causes packets to be lost on your platform.
  *
  * Don't change this option unless you know what you're doing.
@@ -419,10 +419,10 @@
 
 /**
  * @brief Whether to enable or disable the merge receiver without affecting the other sACN APIs.
- * 
+ *
  * Set this to 1 to enable the merge receiver, or 0 to disable it. The default is for the merge receiver to be enabled
  * if the DMX merger and receiver are both enabled.
- * 
+ *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_MERGE_RECEIVER_ENABLE
@@ -459,12 +459,12 @@
 
 /**
  * @brief The maximum number of sACN sources that can be monitored.
- * 
+ *
  * This number is intentionally set on the small side.  This module
  * is more likely to be needed by applications that use dynamic memory.
  *
  * If this is set to 0, the Source Detector API is disabled and no memory pools are allocated for it.
- * 
+ *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_SOURCE_DETECTOR_MAX_SOURCES
@@ -478,13 +478,12 @@
  * is more likely to be needed by applications that use dynamic memory.
  *
  * If this is set to 0, the Source Detector API is disabled and no memory pools are allocated for it.
- * 
+ *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
 #ifndef SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE
 #define SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE 5
 #endif
-
 
 /**
  * @}

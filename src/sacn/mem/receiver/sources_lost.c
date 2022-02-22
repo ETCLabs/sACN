@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
         return NULL;
       }
     }
-#else  // SACN_DYNAMIC_MEM
+#else   // SACN_DYNAMIC_MEM
     if (size > SACN_RECEIVER_MAX_UNIVERSES)
       return NULL;
 #endif  // SACN_DYNAMIC_MEM

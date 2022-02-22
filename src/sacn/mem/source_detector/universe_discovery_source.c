@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@
 #define ALLOC_UNIVERSE_DISCOVERY_SOURCE() malloc(sizeof(SacnUniverseDiscoverySource))
 #define FREE_UNIVERSE_DISCOVERY_SOURCE(ptr) free(ptr)
 
-#else   // SACN_DYNAMIC_MEM
+#else  // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
 #define ALLOC_UNIVERSE_DISCOVERY_SOURCE() etcpal_mempool_alloc(sacn_pool_srcdetect_sources)

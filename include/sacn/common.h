@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,7 +67,7 @@ typedef uint16_t sacn_remote_source_t;
 /**
  * This enum defines how the API module will use IPv4 and IPv6 networking.
  */
-typedef enum 
+typedef enum
 {
   /** Use IPv4 only. */
   kSacnIpV4Only,

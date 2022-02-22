@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2021 ETC Inc.
+ * Copyright 2022 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,6 @@ DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, create_sacn_receiver, const SacnReceiverC
                        const SacnNetintConfig*, const SacnReceiverInternalCallbacks*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, destroy_sacn_receiver, sacn_receiver_t);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, change_sacn_receiver_universe, sacn_receiver_t, uint16_t);
-
 
 void sacn_receiver_reset_all_fakes(void)
 {
