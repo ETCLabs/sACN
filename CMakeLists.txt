@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.12 CACHE STRING "Minimum macOS version targeted by sACN on macOS")
-project(sACN VERSION 2.0.0)
+project(sACN)
 
 set(SACN_ROOT ${CMAKE_CURRENT_LIST_DIR})
 set(SACN_INCLUDE ${CMAKE_CURRENT_LIST_DIR}/include)

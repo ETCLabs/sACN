@@ -29,7 +29,9 @@
           "src/sacn",
           "src/sacn/private/opts.h"
         ],
-        "processed": ["docs/pages"]
+        "processed": [
+          "docs/pages"
+        ]
       },
       "tags": [
         {
@@ -40,7 +42,17 @@
           "webPath": "https://upload.cppreference.com/mwiki/images/f/f8/cppreference-doxygen-web.tag.xml",
           "site": "https://en.cppreference.com/w"
         }
-      ]
+      ],
+      "multiVersion": {
+        "enabled": true,
+        "htmlRoot": "/sACNDocs",
+        "versions": [
+          {
+            "name": "2.0.0",
+            "ref": "v2.0.0"
+          }
+        ]
+      }
     },
     "release-lib": {
       "projectName": "sACN",
