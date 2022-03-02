@@ -5,22 +5,10 @@ endif()
 if(COMPILING_AS_OSS)
   get_cpm()
 
-  get_dependency_version(EtcPal)
-  CPMAddPackage(
-    NAME EtcPal
-    VERSION ${ETCPAL_VERSION}
-    GIT_REPOSITORY https://github.com/ETCLabs/EtcPal.git
-    GIT_TAG ${ETCPAL_GIT_TAG}
-  )
+  add_oss_dependency(EtcPal GIT_REPOSITORY https://github.com/ETCLabs/EtcPal.git)
 
   if(SACN_BUILD_TESTS)
-    get_dependency_version(googletest)
-    CPMAddPackage(
-      NAME googletest
-      VERSION ${GOOGLETEST_VERSION}
-      GIT_REPOSITORY https://github.com/google/googletest.git
-      GIT_TAG ${GOOGLETEST_GIT_TAG}
-    )
+    add_oss_dependency(googletest GIT_REPOSITORY https://github.com/google/googletest.git)
   endif()
 else()
   include(${CMAKE_TOOLS_MODULES}/DependencyManagement.cmake)

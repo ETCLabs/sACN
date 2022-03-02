@@ -3,7 +3,7 @@
     {
       "name": "EtcPal",
       "gitlabPath": "etc/common-tech/general/etcpal",
-      "version": "0.4.0"
+      "version": "0.4.1"
     },
     {
       "name": "googletest",

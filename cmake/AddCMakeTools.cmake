@@ -1,7 +1,7 @@
 # Add CMake Tools
 include(FetchContent)
 
-set(CMAKE_TOOLS_GIT_TAG e205a214805a8945268876ac2d350f1715a77c69)
+set(CMAKE_TOOLS_GIT_TAG d34e598c3e54f7ed89ab8cd6c281ffeb5a6e635a)
 if(DEFINED ENV{CI})
   set(CMAKE_TOOLS_GIT_REPO https://gitlab-ci-token:$ENV{CI_JOB_TOKEN}@gitlab.etcconnect.com/etc/common-tech/tools/cmake-tools.git)
 else()

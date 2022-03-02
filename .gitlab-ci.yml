@@ -55,6 +55,20 @@ linux-build:
     reports:
       junit: build/tests/unit/test-results/*.xml
 
+oss-build:
+  stage: build
+  tags:
+    - etc-linux-docker
+  image: etc-docker.artifactory-mid.etcconnect.com/etc/common-tech/gcc-cmake:latest
+  script:
+    # Remove the .git folder to simulate building from P4/zip archive
+    - rm -rf .git/
+    - mkdir build
+    - cd build
+    # Use default config, no options
+    - cmake ..
+    - cmake --build .
+
 docs-test:
   stage: build
   rules:
@@ -62,6 +76,8 @@ docs-test:
   tags:
     - etc-linux-docker
   image: etc-docker.artifactory-mid.etcconnect.com/etc/common-tech/doxygen:1.9.1
+  variables:
+    GIT_DEPTH: 0
   script:
     - pip install --upgrade etcdevtool
     - etcdevtool docs . 1.9.1
@@ -74,6 +90,7 @@ deploy-docs:
     - etc-linux-docker
   image: etc-docker.artifactory-mid.etcconnect.com/etc/common-tech/doxygen:1.9.1
   variables:
+    GIT_DEPTH: 0
     GH_REPO_NAME: sACNDocs
     GH_REPO_REF: github.com/ETCLabs/sACNDocs.git
     GH_REPO_TOKEN: $SVC_ETCLABS_REPO_TOKEN

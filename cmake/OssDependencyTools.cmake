@@ -59,6 +59,37 @@ function(determine_compile_environment)
   set(COMPILING_AS_OSS ${COMPILING_AS_OSS} PARENT_SCOPE)
 endfunction()
 
+# Add a dependency in an open-source configuration.
+#
+# Syntax:
+# add_oss_dependency(<name>
+#                    [CPMAddPackage/FetchContent args...]
+#                   )
+#
+# This is a wrapper around CPMAddPackage() that automatically reads the dependency's version and
+# git tag from the etc_project.json file. All other CPMAddPackage() arguments are provided by the
+# caller. Note that you will almost certainly need to at least pass a GIT_REPOSITORY argument.
+function(add_oss_dependency dep_name)
+  if(TARGET ${dep_name})
+    message(STATUS "${PROJECT_NAME}: Note: Skipping dependency '${dep_name}' because it is already a CMake target.")
+    return()
+  endif()
+
+  get_dependency_version(${dep_name})
+
+  string(TOUPPER ${dep_name} dep_name_upper)
+  CPMAddPackage(
+    NAME ${dep_name}
+    VERSION ${${dep_name_upper}_VERSION}
+    GIT_TAG ${${dep_name_upper}_GIT_TAG}
+    ${ARGN}
+  )
+
+  set(${dep_name}_SOURCE_DIR ${${dep_name}_SOURCE_DIR} PARENT_SCOPE)
+  set(${dep_name}_BINARY_DIR ${${dep_name}_BINARY_DIR} PARENT_SCOPE)
+  set(${dep_name}_ADDED ${${dep_name}_ADDED} PARENT_SCOPE)
+endfunction()
+
 # Get dependency version info for <dep_name> in the etc_project.json file.
 #
 # Sets <dep_name_upper>_GIT_TAG to the correct tag/reference for the dependency to pass to CPM.

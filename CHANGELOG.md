@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed a CMake bug that would cause sACN to fail to configure when EtcPal has already been added
+  manually using add_subdirectory()
+
 ## 2.0.0 - 2022-02-23
 
 ### Added
