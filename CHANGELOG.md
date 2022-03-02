@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2022-03-02
+
 ### Fixed
 
 - Fixed a CMake bug that would cause sACN to fail to configure when EtcPal has already been added
@@ -30,4 +32,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Previous existing sACN library - not available on GitHub.
 
-[Unreleased]: https://github.com/ETCLabs/sACN/compare/v2.0.0...main
+[Unreleased]: https://github.com/ETCLabs/sACN/compare/v2.0.1...main
+[2.0.1]: https://github.com/ETCLabs/sACN/compare/v2.0.0...v2.0.1
