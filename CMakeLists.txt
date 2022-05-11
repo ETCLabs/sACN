@@ -20,6 +20,7 @@ endif()
 option(SACN_BUILD_TESTS "Build the sACN unit tests" OFF)
 option(SACN_BUILD_EXAMPLES "Build the sACN example applications" OFF)
 option(SACN_BUILD_TEST_TOOLS "Build the sACN test tools (typically used in development only)" OFF)
+option(SACN_INSTALL_PDBS "Include PDBs in sACN install target" ON)
 
 ################################# Dependencies ################################
 
