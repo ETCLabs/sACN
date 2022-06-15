@@ -43,7 +43,7 @@ linux-build:
   stage: build
   tags:
     - etc-linux-docker
-  image: etc-docker.artifactory-mid.etcconnect.com/etc/common-tech/gcc-cmake:latest
+  image: etc-docker.artifactory.etcconnect.com/etc/common-tech/gcc-cmake:latest
   script:
     - mkdir build
     - cd build
@@ -59,7 +59,7 @@ oss-build:
   stage: build
   tags:
     - etc-linux-docker
-  image: etc-docker.artifactory-mid.etcconnect.com/etc/common-tech/gcc-cmake:latest
+  image: etc-docker.artifactory.etcconnect.com/etc/common-tech/gcc-cmake:latest
   script:
     # Remove the .git folder to simulate building from P4/zip archive
     - rm -rf .git/
@@ -75,7 +75,7 @@ docs-test:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   tags:
     - etc-linux-docker
-  image: etc-docker.artifactory-mid.etcconnect.com/etc/common-tech/doxygen:1.9.1
+  image: etc-docker.artifactory.etcconnect.com/etc/common-tech/doxygen:1.9.1
   variables:
     GIT_DEPTH: 0
   script:
@@ -88,7 +88,7 @@ deploy-docs:
     - if: '$CI_COMMIT_REF_NAME == "main"'
   tags:
     - etc-linux-docker
-  image: etc-docker.artifactory-mid.etcconnect.com/etc/common-tech/doxygen:1.9.1
+  image: etc-docker.artifactory.etcconnect.com/etc/common-tech/doxygen:1.9.1
   variables:
     GIT_DEPTH: 0
     GH_REPO_NAME: sACNDocs
