@@ -101,5 +101,5 @@ deploy-docs:
 
 include:
   - project: 'etc/common-tech/tools/gitlab-ci-util'
-    ref: v2.0.0
+    ref: v2.0.1
     file: '/ci-yml/deploy-versioned-build.yml'
