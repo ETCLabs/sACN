@@ -33,9 +33,15 @@
 extern "C" {
 #endif
 
-#define SACN_MAX_TERM_SETS SACN_RECEIVER_TOTAL_MAX_SOURCES
-#define SACN_MAX_TERM_SET_SOURCES (SACN_RECEIVER_TOTAL_MAX_SOURCES * 2)
-#define SACN_SOURCE_LOSS_MAX_RB_NODES (SACN_MAX_TERM_SET_SOURCES)
+// The maximums set here are based on the following design points:
+// - TOTAL_MAX_SOURCES counts the same remote source on multiple universes as multiple sources.
+// - Therefore, each source counted in this total only ends up in one universe/receiver.
+// - Each source also ends up in only one termination set. Therefore, MAX_TERM_SET_SOURCES = TOTAL_MAX_SOURCES.
+// - There can be up to a termination set for each source. Therefore, MAX_TERM_SETS = MAX_TERM_SET_SOURCES.
+// - RB tree nodes are only needed for the sources. Therefore, MAX_RB_NODES = MAX_TERM_SET_SOURCES.
+#define SACN_MAX_TERM_SET_SOURCES (SACN_RECEIVER_TOTAL_MAX_SOURCES)
+#define SACN_MAX_TERM_SETS SACN_MAX_TERM_SET_SOURCES
+#define SACN_SOURCE_LOSS_MAX_RB_NODES SACN_MAX_TERM_SET_SOURCES
 
 etcpal_error_t sacn_source_loss_init(void);
 void sacn_source_loss_deinit(void);
