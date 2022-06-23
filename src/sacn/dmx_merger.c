@@ -60,7 +60,7 @@ ETCPAL_MEMPOOL_DEFINE(sacn_pool_merge_source_states, SourceState,
                       (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_MERGERS));
 ETCPAL_MEMPOOL_DEFINE(sacn_pool_merge_merger_states, MergerState, SACN_DMX_MERGER_MAX_MERGERS);
 ETCPAL_MEMPOOL_DEFINE(sacn_pool_merge_rb_nodes, EtcPalRbNode,
-                      (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_MERGERS * 2) +
+                      (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER * SACN_DMX_MERGER_MAX_MERGERS) +
                           SACN_DMX_MERGER_MAX_MERGERS);
 #endif
 

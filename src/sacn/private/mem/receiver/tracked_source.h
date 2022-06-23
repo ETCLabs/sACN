@@ -39,6 +39,9 @@ etcpal_error_t remove_receiver_source(SacnReceiver* receiver, sacn_remote_source
 
 void tracked_source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 
+void tracked_source_node_dealloc(EtcPalRbNode* node);
+EtcPalRbNode* tracked_source_node_alloc(void);
+
 #ifdef __cplusplus
 }
 #endif

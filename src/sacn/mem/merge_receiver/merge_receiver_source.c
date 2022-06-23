@@ -35,7 +35,7 @@
 
 /**************************** Private constants ******************************/
 
-#define SACN_MERGE_RECEIVER_SOURCE_MAX_RB_NODES SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE
+#define SACN_MERGE_RECEIVER_SOURCE_MAX_RB_NODES SACN_RECEIVER_TOTAL_MAX_SOURCES
 
 /****************************** Private macros *******************************/
 
@@ -56,7 +56,7 @@
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM
-ETCPAL_MEMPOOL_DEFINE(sacn_pool_mergerecv_sources, SacnMergeReceiverSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_mergerecv_sources, SacnMergeReceiverSource, SACN_RECEIVER_TOTAL_MAX_SOURCES);
 ETCPAL_MEMPOOL_DEFINE(sacn_pool_mergerecv_source_rb_nodes, EtcPalRbNode, SACN_MERGE_RECEIVER_SOURCE_MAX_RB_NODES);
 #endif  // !SACN_DYNAMIC_MEM
 

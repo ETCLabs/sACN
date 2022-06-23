@@ -65,7 +65,6 @@ ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_tracked_source_rb_nodes, EtcPalRbNode, SACN
 /*********************** Private function prototypes *************************/
 
 // Tracked source tree node management
-static void tracked_source_node_dealloc(EtcPalRbNode* node);
 
 /*************************** Function definitions ****************************/
 
@@ -197,6 +196,15 @@ void tracked_source_node_dealloc(EtcPalRbNode* node)
   free(node);
 #else
   etcpal_mempool_free(sacn_pool_recv_tracked_source_rb_nodes, node);
+#endif
+}
+
+EtcPalRbNode* tracked_source_node_alloc(void)
+{
+#if SACN_DYNAMIC_MEM
+  return (EtcPalRbNode*)malloc(sizeof(EtcPalRbNode));
+#else
+  return etcpal_mempool_alloc(sacn_pool_recv_tracked_source_rb_nodes);
 #endif
 }
 

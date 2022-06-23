@@ -143,7 +143,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   receiver->sampling = false;
   receiver->notified_sampling_started = false;
   receiver->suppress_limit_exceeded_notification = false;
-  etcpal_rbtree_init(&receiver->sources, remote_source_compare, receiver_node_alloc, receiver_node_dealloc);
+  etcpal_rbtree_init(&receiver->sources, remote_source_compare, tracked_source_node_alloc, tracked_source_node_dealloc);
   receiver->term_sets = NULL;
 
   receiver->filter_preview_data = ((config->flags & SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA) != 0);
