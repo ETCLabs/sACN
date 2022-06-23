@@ -108,9 +108,9 @@ void mark_sources_online(const SacnRemoteSourceInternal* online_sources, size_t 
  *
  * [in] offline_sources Array of sources that have timed out or terminated.
  * [in] num_offline_sources Size of offline_sources array.
- * [in] sources_sending_dmx Array of all sources for which null start code data is currently
- *                          tracked on this universe.
- * [in] num_sending_dmx Size of sources_sending_dmx array.
+ * [in] unknown_sources Array of all sources for which null start code data hasn't been received in the last tick. These
+ * haven't timed out or terminated yet. Can be null if there aren't any sources in this category.
+ * [in] num_unknown_sources Size of unknown_sources array. If it's null, this must be 0.
  * [in,out] term_set_list List of termination sets in which to process the offline sources.
  * [in] expired_wait The current configured expired notification wait time for this universe.
  */
@@ -259,7 +259,7 @@ void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification
           }
           else
           {
-            // The first source we find to be still online cancels the processing of this
+            // The first source we find to be still unknown cancels the processing of this
             // termination set. Roll back the expired_sources array by the number of sources we've
             // added from this set, and do not remove this one yet.
             sources_lost->num_lost_sources -= num_expired_sources_this_ts;

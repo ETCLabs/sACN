@@ -113,8 +113,7 @@ TEST_F(TestSourceLoss, AllSourcesOfflineAtOnce)
                  [](const SacnRemoteSourceInternal& source) {
                    return SacnLostSourceInternal{source.handle, source.name, true};
                  });
-  mark_sources_offline(offline_sources.data(), offline_sources.size(), sources_.data(), sources_.size(),
-                       &term_set_list_, 1000);
+  mark_sources_offline(offline_sources.data(), offline_sources.size(), nullptr, 0u, &term_set_list_, 1000);
 
   // The expired notification wait time has not passed yet, so we should not get a notification
   // yet.
