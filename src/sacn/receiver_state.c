@@ -1130,7 +1130,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
                  receiver->keys.universe);
   }
 
-  mark_sources_online(status_lists->online, status_lists->num_online, receiver->term_sets);
+  mark_sources_online(receiver->keys.universe, status_lists->online, status_lists->num_online, receiver->term_sets);
   get_expired_sources(&receiver->term_sets, sources_lost);
 
   for (size_t i = 0; i < num_to_erase; ++i)

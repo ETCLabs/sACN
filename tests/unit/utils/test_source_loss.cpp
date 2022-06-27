@@ -195,7 +195,7 @@ TEST_F(TestSourceLoss, WorstCaseEachSourceOfflineIndividually)
     {
       mark_sources_offline(kTestDefaultUniverse, offline.data(), offline.size(), &sources_[i + 1],
                            sources_.size() - i - 1, &term_set_lists_[0], kTestExpiredWait);
-      mark_sources_online(&sources_[i + 1], sources_.size() - 1 - i, term_set_lists_[0]);
+      mark_sources_online(kTestDefaultUniverse, &sources_[i + 1], sources_.size() - 1 - i, term_set_lists_[0]);
     }
     else
     {
@@ -252,14 +252,14 @@ TEST_F(TestSourceLoss, EachSourceOfflineThenOnline)
     }
 
     if (i > 0)
-      mark_sources_online(sources_.data(), i, term_set_lists_[0]);
+      mark_sources_online(kTestDefaultUniverse, sources_.data(), i, term_set_lists_[0]);
 
     // Advance time by 50ms
     etcpal_getms_fake.return_val += 50;
   }
 
   // All sources have gone back online
-  mark_sources_online(sources_.data(), sources_.size(), term_set_lists_[0]);
+  mark_sources_online(kTestDefaultUniverse, sources_.data(), sources_.size(), term_set_lists_[0]);
   get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
 
@@ -285,7 +285,7 @@ TEST_F(TestSourceLoss, ClearListWorks)
     {
       mark_sources_offline(kTestDefaultUniverse, offline.data(), offline.size(), &sources_[i + 1],
                            sources_.size() - i - 1, &term_set_lists_[0], kTestExpiredWait);
-      mark_sources_online(&sources_[i + 1], sources_.size() - 1 - i, term_set_lists_[0]);
+      mark_sources_online(kTestDefaultUniverse, &sources_[i + 1], sources_.size() - 1 - i, term_set_lists_[0]);
     }
     else
     {
@@ -348,7 +348,7 @@ TEST_F(TestSourceLoss, RespectsMaxTermSetSourceLimit)
       EXPECT_EQ(mark_sources_offline(universe, &offline, 1, &sources_[1], sources_.size() - 1, &term_set_lists_[j],
                                      kTestExpiredWait),
                 kEtcPalErrOk);
-      mark_sources_online(&sources_[0], 1, term_set_lists_[j]);
+      mark_sources_online(universe, &sources_[0], 1, term_set_lists_[j]);
     }
   }
 
@@ -370,7 +370,7 @@ TEST_F(TestSourceLoss, EachExpiredSourceNotifiesOnlyOnce)
   // "unknown" the second time as well as the first, but ultimately they shouldn't be notified for twice, but only once.
   mark_sources_offline(kTestDefaultUniverse, &offline_sources[0], 1, &sources_[1], sources_.size() - 1,
                        &term_set_lists_[0], kTestExpiredWait);
-  mark_sources_online(&sources_[0], 1, term_set_lists_[0]);
+  mark_sources_online(kTestDefaultUniverse, &sources_[0], 1, term_set_lists_[0]);
   etcpal_getms_fake.return_val += 100u;
   mark_sources_offline(kTestDefaultUniverse, &offline_sources[0], 1, &sources_[1], sources_.size() - 1,
                        &term_set_lists_[0], kTestExpiredWait);

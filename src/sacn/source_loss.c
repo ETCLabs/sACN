@@ -92,11 +92,12 @@ void sacn_source_loss_deinit(void)
  * Remove a list of sources that have been determined to still be online from all applicable
  * termination sets.
  *
+ * [in] universe The universe the sources are part of.
  * [in] online_sources Array of online sources.
  * [in] num_online_sources Size of online_sources array.
  * [in,out] term_set_list List of termination sets in which to process the online sources.
  */
-void mark_sources_online(const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
+void mark_sources_online(uint16_t universe, const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
                          TerminationSet* term_set_list)
 {
   for (const SacnRemoteSourceInternal* online_src = online_sources; online_src < online_sources + num_online_sources;
@@ -105,7 +106,10 @@ void mark_sources_online(const SacnRemoteSourceInternal* online_sources, size_t 
     for (TerminationSet* ts = term_set_list; ts; ts = ts->next)
     {
       // Remove the source from the termination set if it exists, as it is confirmed online.
-      etcpal_rbtree_remove_with_cb(&ts->sources, &online_src->handle, source_remove_from_ts_callback);
+      TerminationSetSourceKey ts_src_key;
+      ts_src_key.handle = online_src->handle;
+      ts_src_key.universe = universe;
+      etcpal_rbtree_remove_with_cb(&ts->sources, &ts_src_key, source_remove_from_ts_callback);
     }
   }
 }

@@ -46,7 +46,7 @@ extern "C" {
 etcpal_error_t sacn_source_loss_init(void);
 void sacn_source_loss_deinit(void);
 
-void mark_sources_online(const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
+void mark_sources_online(uint16_t universe, const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
                          TerminationSet* term_set_list);
 etcpal_error_t mark_sources_offline(uint16_t universe, const SacnLostSourceInternal* offline_sources,
                                     size_t num_offline_sources, const SacnRemoteSourceInternal* unknown_sources,
