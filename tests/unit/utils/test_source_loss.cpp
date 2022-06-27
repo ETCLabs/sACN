@@ -102,7 +102,7 @@ protected:
 
   std::vector<std::string> test_names_;
   std::vector<SacnRemoteSourceInternal> sources_;  // The same source set is used in multiple universes
-  TerminationSet* term_set_lists_[SACN_RECEIVER_MAX_UNIVERSES]{{nullptr}};  // Separate list per universe
+  TerminationSet* term_set_lists_[SACN_RECEIVER_MAX_UNIVERSES]{nullptr};  // Separate list per universe
   SourcesLostNotification* expired_sources_{nullptr};
 };
 
