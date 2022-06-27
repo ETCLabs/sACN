@@ -97,6 +97,8 @@ protected:
     EXPECT_EQ(expired_sources, sources);
   }
 
+  static constexpr uint32_t kTestExpiredWait = 1000u;
+
   std::vector<std::string> test_names_;
   std::vector<SacnRemoteSourceInternal> sources_;  // The same source set is used in multiple universes
   TerminationSet* term_set_lists_[SACN_RECEIVER_MAX_UNIVERSES]{{nullptr}};  // Separate list per universe
@@ -113,7 +115,8 @@ TEST_F(TestSourceLoss, AllSourcesOfflineAtOnce)
                  [](const SacnRemoteSourceInternal& source) {
                    return SacnLostSourceInternal{source.handle, source.name, true};
                  });
-  mark_sources_offline(offline_sources.data(), offline_sources.size(), nullptr, 0u, &term_set_lists_[0], 1000);
+  mark_sources_offline(offline_sources.data(), offline_sources.size(), nullptr, 0u, &term_set_lists_[0],
+                       kTestExpiredWait);
 
   // The expired notification wait time has not passed yet, so we should not get a notification
   // yet.
@@ -144,7 +147,7 @@ TEST_F(TestSourceLoss, AllSourcesOfflineOneByOne)
     offline.handle = sources_[i].handle;
     offline.name = sources_[i].name;
     offline.terminated = false;
-    mark_sources_offline(&offline, 1, &sources_[i + 1], sources_.size() - i - 1, &term_set_lists_[0], 1000);
+    mark_sources_offline(&offline, 1, &sources_[i + 1], sources_.size() - i - 1, &term_set_lists_[0], kTestExpiredWait);
     get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
     EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
     // Advance time by 50ms
@@ -155,7 +158,7 @@ TEST_F(TestSourceLoss, AllSourcesOfflineOneByOne)
   offline.handle = sources_[sources_.size() - 1].handle;
   offline.name = sources_[sources_.size() - 1].name;
   offline.terminated = false;
-  mark_sources_offline(&offline, 1, nullptr, 0, &term_set_lists_[0], 1000);
+  mark_sources_offline(&offline, 1, nullptr, 0, &term_set_lists_[0], kTestExpiredWait);
 
   // The expired notification wait time has not passed yet, so we should not get a notification
   // yet.
@@ -189,12 +192,12 @@ TEST_F(TestSourceLoss, WorstCaseEachSourceOfflineIndividually)
     if (i < sources_.size() - 1)
     {
       mark_sources_offline(offline.data(), offline.size(), &sources_[i + 1], sources_.size() - i - 1,
-                           &term_set_lists_[0], 1000);
+                           &term_set_lists_[0], kTestExpiredWait);
       mark_sources_online(&sources_[i + 1], sources_.size() - 1 - i, term_set_lists_[0]);
     }
     else
     {
-      mark_sources_offline(offline.data(), offline.size(), nullptr, 0, &term_set_lists_[0], 1000);
+      mark_sources_offline(offline.data(), offline.size(), nullptr, 0, &term_set_lists_[0], kTestExpiredWait);
     }
     get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
     EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
@@ -203,7 +206,7 @@ TEST_F(TestSourceLoss, WorstCaseEachSourceOfflineIndividually)
   }
 
   // None of the timeouts have expired yet.
-  mark_sources_offline(offline.data(), offline.size(), nullptr, 0, &term_set_lists_[0], 1000);
+  mark_sources_offline(offline.data(), offline.size(), nullptr, 0, &term_set_lists_[0], kTestExpiredWait);
   get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
 
@@ -214,7 +217,7 @@ TEST_F(TestSourceLoss, WorstCaseEachSourceOfflineIndividually)
   lost_sources.reserve(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   for (size_t i = 0; i < sources_.size(); ++i)
   {
-    mark_sources_offline(&offline[i], offline.size() - i, nullptr, 0, &term_set_lists_[0], 1000);
+    mark_sources_offline(&offline[i], offline.size() - i, nullptr, 0, &term_set_lists_[0], kTestExpiredWait);
     expired_sources_ = get_sources_lost_buffer(0, SACN_RECEIVER_MAX_UNIVERSES);
     get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
     ASSERT_EQ(expired_sources_[0].num_lost_sources, 1u) << "Failed on iteration" << i;
@@ -234,9 +237,15 @@ TEST_F(TestSourceLoss, EachSourceOfflineThenOnline)
   {
     SacnLostSourceInternal offline{sources_[i].handle, sources_[i].name, false};
     if (i < sources_.size() - 1)
-      mark_sources_offline(&offline, 1, &sources_[i + 1], sources_.size() - i - 1, &term_set_lists_[0], 1000);
+    {
+      mark_sources_offline(&offline, 1, &sources_[i + 1], sources_.size() - i - 1, &term_set_lists_[0],
+                           kTestExpiredWait);
+    }
     else
-      mark_sources_offline(&offline, 1, nullptr, 0, &term_set_lists_[0], 1000);
+    {
+      mark_sources_offline(&offline, 1, nullptr, 0, &term_set_lists_[0], kTestExpiredWait);
+    }
+
     if (i > 0)
       mark_sources_online(sources_.data(), i, term_set_lists_[0]);
 
@@ -270,12 +279,12 @@ TEST_F(TestSourceLoss, ClearListWorks)
     if (i < sources_.size() - 1)
     {
       mark_sources_offline(offline.data(), offline.size(), &sources_[i + 1], sources_.size() - i - 1,
-                           &term_set_lists_[0], 1000);
+                           &term_set_lists_[0], kTestExpiredWait);
       mark_sources_online(&sources_[i + 1], sources_.size() - 1 - i, term_set_lists_[0]);
     }
     else
     {
-      mark_sources_offline(offline.data(), offline.size(), nullptr, 0, &term_set_lists_[0], 1000);
+      mark_sources_offline(offline.data(), offline.size(), nullptr, 0, &term_set_lists_[0], kTestExpiredWait);
     }
     get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
     EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
@@ -305,7 +314,7 @@ TEST_F(TestSourceLoss, RespectsMaxTermSetLimit)
         offline.name = source.name;
         offline.terminated = false;
 
-        EXPECT_EQ(mark_sources_offline(&offline, 1, nullptr, 0, &term_set_lists_[j], 1000), kEtcPalErrOk);
+        EXPECT_EQ(mark_sources_offline(&offline, 1, nullptr, 0, &term_set_lists_[j], kTestExpiredWait), kEtcPalErrOk);
       }
     }
   }
@@ -327,8 +336,9 @@ TEST_F(TestSourceLoss, RespectsMaxTermSetSourceLimit)
   {
     for (int j = 0; j < SACN_RECEIVER_MAX_UNIVERSES; ++j)
     {
-      EXPECT_EQ(mark_sources_offline(&offline, 1, &sources_[1], sources_.size() - 1, &term_set_lists_[j], 1000),
-                kEtcPalErrOk);
+      EXPECT_EQ(
+          mark_sources_offline(&offline, 1, &sources_[1], sources_.size() - 1, &term_set_lists_[j], kTestExpiredWait),
+          kEtcPalErrOk);
       mark_sources_online(&sources_[0], 1, term_set_lists_[j]);
     }
   }
