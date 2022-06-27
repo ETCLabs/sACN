@@ -48,9 +48,9 @@ void sacn_source_loss_deinit(void);
 
 void mark_sources_online(const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
                          TerminationSet* term_set_list);
-void mark_sources_offline(const SacnLostSourceInternal* offline_sources, size_t num_offline_sources,
-                          const SacnRemoteSourceInternal* unknown_sources, size_t num_unknown_sources,
-                          TerminationSet** term_set_list, uint32_t expired_wait);
+etcpal_error_t mark_sources_offline(const SacnLostSourceInternal* offline_sources, size_t num_offline_sources,
+                                    const SacnRemoteSourceInternal* unknown_sources, size_t num_unknown_sources,
+                                    TerminationSet** term_set_list, uint32_t expired_wait);
 void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification* sources_lost);
 
 void clear_term_set_list(TerminationSet* list);

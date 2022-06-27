@@ -289,3 +289,50 @@ TEST_F(TestSourceLoss, ClearListWorks)
   // Any cleanup failure should be caught by ASAN/leak checker.
   clear_term_set_list(term_set_lists_[0]);
 }
+
+TEST_F(TestSourceLoss, RespectsMaxTermSetLimit)
+{
+  static constexpr int kNumTestIterations = 5;
+
+  for (int i = 0; i < kNumTestIterations; ++i)
+  {
+    for (int j = 0; j < SACN_RECEIVER_MAX_UNIVERSES; ++j)
+    {
+      for (const auto& source : sources_)
+      {
+        SacnLostSourceInternal offline;
+        offline.handle = source.handle;
+        offline.name = source.name;
+        offline.terminated = false;
+
+        EXPECT_EQ(mark_sources_offline(&offline, 1, nullptr, 0, &term_set_lists_[j], 1000), kEtcPalErrOk);
+      }
+    }
+  }
+
+  for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
+    clear_term_set_list(term_set_lists_[i]);
+}
+
+TEST_F(TestSourceLoss, RespectsMaxTermSetSourceLimit)
+{
+  static constexpr int kNumTestIterations = 5;
+
+  SacnLostSourceInternal offline;
+  offline.handle = sources_[0].handle;
+  offline.name = sources_[0].name;
+  offline.terminated = false;
+
+  for (int i = 0; i < kNumTestIterations; ++i)
+  {
+    for (int j = 0; j < SACN_RECEIVER_MAX_UNIVERSES; ++j)
+    {
+      EXPECT_EQ(mark_sources_offline(&offline, 1, &sources_[1], sources_.size() - 1, &term_set_lists_[j], 1000),
+                kEtcPalErrOk);
+      mark_sources_online(&sources_[0], 1, term_set_lists_[j]);
+    }
+  }
+
+  for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
+    clear_term_set_list(term_set_lists_[i]);
+}

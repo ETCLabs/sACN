@@ -1293,8 +1293,10 @@ TEST_F(TestReceiverThread, SourceLossUsesExpiredWait)
   static constexpr uint32_t kTestExpiredWait = 1234u;
 
   mark_sources_offline_fake.custom_fake = [](const SacnLostSourceInternal*, size_t, const SacnRemoteSourceInternal*,
-                                             size_t, TerminationSet**,
-                                             uint32_t expired_wait) { EXPECT_EQ(expired_wait, kTestExpiredWait); };
+                                             size_t, TerminationSet**, uint32_t expired_wait) {
+    EXPECT_EQ(expired_wait, kTestExpiredWait);
+    return kEtcPalErrOk;
+  };
 
   EXPECT_EQ(mark_sources_offline_fake.call_count, 0u);
 
@@ -1349,10 +1351,13 @@ TEST_F(TestReceiverThread, SourceGoesUnknownCorrectly)
                               size_t num_unknown_sources, TerminationSet**, uint32_t) {
     EXPECT_EQ(num_unknown_sources, 1u);
     EXPECT_EQ(ETCPAL_UUID_CMP(&GetCid(unknown_sources[0]), &kTestCid), 0);
+    return kEtcPalErrOk;
   };
   auto source_is_not_unknown = [](const SacnLostSourceInternal*, size_t, const SacnRemoteSourceInternal*,
-                                  size_t num_unknown_sources, TerminationSet**,
-                                  uint32_t) { EXPECT_EQ(num_unknown_sources, 0u); };
+                                  size_t num_unknown_sources, TerminationSet**, uint32_t) {
+    EXPECT_EQ(num_unknown_sources, 0u);
+    return kEtcPalErrOk;
+  };
 
   // Online
   mark_sources_offline_fake.custom_fake = source_is_not_unknown;
@@ -1401,10 +1406,13 @@ TEST_F(TestReceiverThread, TimedOutSourceGoesOfflineCorrectly)
                               const SacnRemoteSourceInternal*, size_t, TerminationSet**, uint32_t) {
     EXPECT_EQ(num_offline_sources, 1u);
     EXPECT_EQ(ETCPAL_UUID_CMP(&GetCid(offline_sources[0]), &kTestCid), 0);
+    return kEtcPalErrOk;
   };
   auto source_is_not_offline = [](const SacnLostSourceInternal*, size_t num_offline_sources,
-                                  const SacnRemoteSourceInternal*, size_t, TerminationSet**,
-                                  uint32_t) { EXPECT_EQ(num_offline_sources, 0u); };
+                                  const SacnRemoteSourceInternal*, size_t, TerminationSet**, uint32_t) {
+    EXPECT_EQ(num_offline_sources, 0u);
+    return kEtcPalErrOk;
+  };
 
   // Online
   mark_sources_offline_fake.custom_fake = source_is_not_offline;
@@ -1437,10 +1445,13 @@ TEST_F(TestReceiverThread, TerminatedSourceGoesOfflineCorrectly)
                               const SacnRemoteSourceInternal*, size_t, TerminationSet**, uint32_t) {
     EXPECT_EQ(num_offline_sources, 1u);
     EXPECT_EQ(ETCPAL_UUID_CMP(&GetCid(offline_sources[0]), &kTestCid), 0);
+    return kEtcPalErrOk;
   };
   auto source_is_not_offline = [](const SacnLostSourceInternal*, size_t num_offline_sources,
-                                  const SacnRemoteSourceInternal*, size_t, TerminationSet**,
-                                  uint32_t) { EXPECT_EQ(num_offline_sources, 0u); };
+                                  const SacnRemoteSourceInternal*, size_t, TerminationSet**, uint32_t) {
+    EXPECT_EQ(num_offline_sources, 0u);
+    return kEtcPalErrOk;
+  };
 
   // Online
   mark_sources_offline_fake.custom_fake = source_is_not_offline;
@@ -1510,6 +1521,8 @@ TEST_F(TestReceiverThread, StatusListsTrackMultipleSources)
     EXPECT_EQ(num_unknown_sources, 2u);
     EXPECT_TRUE(
         list_includes_cids(GetCid(unknown_sources[0]), GetCid(unknown_sources[1]), unknown_cid_1, unknown_cid_2));
+
+    return kEtcPalErrOk;
   };
 
   mark_sources_online_fake.custom_fake = [](const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,

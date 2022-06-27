@@ -114,10 +114,12 @@ void mark_sources_online(const SacnRemoteSourceInternal* online_sources, size_t 
  * [in,out] term_set_list List of termination sets in which to process the offline sources.
  * [in] expired_wait The current configured expired notification wait time for this universe.
  */
-void mark_sources_offline(const SacnLostSourceInternal* offline_sources, size_t num_offline_sources,
-                          const SacnRemoteSourceInternal* unknown_sources, size_t num_unknown_sources,
-                          TerminationSet** term_set_list, uint32_t expired_wait)
+etcpal_error_t mark_sources_offline(const SacnLostSourceInternal* offline_sources, size_t num_offline_sources,
+                                    const SacnRemoteSourceInternal* unknown_sources, size_t num_unknown_sources,
+                                    TerminationSet** term_set_list, uint32_t expired_wait)
 {
+  etcpal_error_t res = kEtcPalErrOk;
+
   for (const SacnLostSourceInternal* offline_src = offline_sources; offline_src < offline_sources + num_offline_sources;
        ++offline_src)
   {
@@ -155,55 +157,76 @@ void mark_sources_offline(const SacnLostSourceInternal* offline_sources, size_t 
     if (!found_source)
     {
       TerminationSet* ts_new = ALLOC_TERM_SET();
-      if (ts_new)
+      if (!ts_new)
+        res = kEtcPalErrNoMem;
+
+      TerminationSetSource* ts_src_new = NULL;
+      if (res == kEtcPalErrOk)
       {
         etcpal_timer_start(&ts_new->wait_period, expired_wait);
         etcpal_rbtree_init(&ts_new->sources, term_set_source_compare, node_alloc, node_dealloc);
         ts_new->next = NULL;
 
-        TerminationSetSource* ts_src_new = ALLOC_TERM_SET_SOURCE();
-        if (ts_src_new)
+        ts_src_new = ALLOC_TERM_SET_SOURCE();
+        if (!ts_src_new)
         {
-          ts_src_new->handle = offline_src->handle;
-          ts_src_new->name = offline_src->name;
-          ts_src_new->offline = true;
-          ts_src_new->terminated = offline_src->terminated;
-          if (etcpal_rbtree_insert(&ts_new->sources, ts_src_new) == kEtcPalErrOk)
-          {
-            // Add all of the other sources tracked by our universe that have sent at least one DMX
-            // packet.
-            for (const SacnRemoteSourceInternal* unknown_src = unknown_sources;
-                 unknown_src < unknown_sources + num_unknown_sources; ++unknown_src)
-            {
-              ts_src_new = ALLOC_TERM_SET_SOURCE();
-              if (ts_src_new)
-              {
-                ts_src_new->handle = unknown_src->handle;
-                ts_src_new->name = unknown_src->name;
-                ts_src_new->offline = false;
-                ts_src_new->terminated = false;
-                if (etcpal_rbtree_insert(&ts_new->sources, ts_src_new) != kEtcPalErrOk)
-                  FREE_TERM_SET_SOURCE(ts_src_new);
-              }
-            }
-
-            // At this point ts_ptr points to the end of the termination set list, so append the
-            // new one
-            *ts_ptr = ts_new;
-          }
-          else
-          {
-            FREE_TERM_SET_SOURCE(ts_src_new);
-            FREE_TERM_SET(ts_new);
-          }
+          FREE_TERM_SET(ts_new);
+          res = kEtcPalErrNoMem;
         }
-        else
+      }
+
+      if (res == kEtcPalErrOk)
+      {
+        ts_src_new->handle = offline_src->handle;
+        ts_src_new->name = offline_src->name;
+        ts_src_new->offline = true;
+        ts_src_new->terminated = offline_src->terminated;
+
+        res = etcpal_rbtree_insert(&ts_new->sources, ts_src_new);
+        if (res != kEtcPalErrOk)
         {
+          FREE_TERM_SET_SOURCE(ts_src_new);
           FREE_TERM_SET(ts_new);
         }
       }
+
+      if (res == kEtcPalErrOk)
+      {
+        // Add all of the other sources tracked by our universe that have sent at least one DMX
+        // packet.
+        for (const SacnRemoteSourceInternal* unknown_src = unknown_sources;
+             unknown_src < unknown_sources + num_unknown_sources; ++unknown_src)
+        {
+          ts_src_new = ALLOC_TERM_SET_SOURCE();
+          if (ts_src_new)
+          {
+            ts_src_new->handle = unknown_src->handle;
+            ts_src_new->name = unknown_src->name;
+            ts_src_new->offline = false;
+            ts_src_new->terminated = false;
+
+            res = etcpal_rbtree_insert(&ts_new->sources, ts_src_new);
+            if (res != kEtcPalErrOk)
+            {
+              FREE_TERM_SET_SOURCE(ts_src_new);
+              break;
+            }
+          }
+          else
+          {
+            res = kEtcPalErrNoMem;
+            break;
+          }
+        }
+
+        // At this point ts_ptr points to the end of the termination set list, so append the
+        // new one
+        *ts_ptr = ts_new;
+      }
     }
   }
+
+  return res;
 }
 
 /*
