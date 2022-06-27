@@ -219,7 +219,7 @@
 #endif
 
 /**
- * @brief The total maximum number of sources that can be tracked.
+ * @brief The total maximum number of sources that can be tracked in all universes.
  *
  * If this is set to 0, the Receiver, Merge Receiver, and Source Detector APIs are disabled and no memory pools are
  * allocated for them.
@@ -228,6 +228,8 @@
  * #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, but can be made lower if an application wants to impose a
  * global hard source limit. The total number of sources that will be handled will be the lower of
  * #SACN_RECEIVER_TOTAL_MAX_SOURCES and (#SACN_RECEIVER_MAX_UNIVERSES * #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE).
+ *
+ * Note that this limit counts the same remote source on multiple universes as multiple sources, one per universe.
  */
 #ifndef SACN_RECEIVER_TOTAL_MAX_SOURCES
 #define SACN_RECEIVER_TOTAL_MAX_SOURCES (SACN_RECEIVER_MAX_UNIVERSES * SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE)
