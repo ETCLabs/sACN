@@ -346,3 +346,43 @@ TEST_F(TestSourceLoss, RespectsMaxTermSetSourceLimit)
   for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
     clear_term_set_list(term_set_lists_[i]);
 }
+
+TEST_F(TestSourceLoss, EachExpiredSourceNotifiesOnlyOnce)
+{
+  std::vector<SacnLostSourceInternal> offline_sources;
+  offline_sources.reserve(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
+  std::transform(sources_.begin(), sources_.end(), std::back_inserter(offline_sources),
+                 [](const SacnRemoteSourceInternal& source) {
+                   return SacnLostSourceInternal{source.handle, source.name, true};
+                 });
+
+  mark_sources_offline(&offline_sources[0], 1, &sources_[1], sources_.size() - 1, &term_set_lists_[0],
+                       kTestExpiredWait);
+  mark_sources_online(&sources_[0], 1, term_set_lists_[0]);
+  etcpal_getms_fake.return_val += 100u;
+  mark_sources_offline(&offline_sources[0], 1, &sources_[1], sources_.size() - 1, &term_set_lists_[0],
+                       kTestExpiredWait);
+  mark_sources_offline(offline_sources.data(), offline_sources.size(), nullptr, 0u, &term_set_lists_[0],
+                       kTestExpiredWait);
+
+  // Advance time past first expired wait period.
+  etcpal_getms_fake.return_val = kTestExpiredWait + 1u;
+
+  // The first notification should be all sources besides the first.
+  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+  ASSERT_EQ(expired_sources_[0].num_lost_sources, static_cast<size_t>(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE) - 1u);
+
+  std::vector<SacnRemoteSourceInternal> expected_to_expire_first(sources_.begin() + 1, sources_.end());
+  VerifySourcesMatch(expired_sources_[0].lost_sources, expired_sources_[0].num_lost_sources, expected_to_expire_first);
+
+  // Advance time past second expired wait period.
+  etcpal_getms_fake.return_val += 100u;
+
+  // The second notification should be the first source - none of the others should be notified for again.
+  expired_sources_ = get_sources_lost_buffer(0, SACN_RECEIVER_MAX_UNIVERSES);  // Re-zero notification struct
+  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+  ASSERT_EQ(expired_sources_[0].num_lost_sources, 1u);
+
+  std::vector<SacnRemoteSourceInternal> expected_to_expire_last(sources_.begin(), sources_.begin() + 1);
+  VerifySourcesMatch(expired_sources_[0].lost_sources, expired_sources_[0].num_lost_sources, expected_to_expire_last);
+}
