@@ -356,6 +356,9 @@ TEST_F(TestSourceLoss, EachExpiredSourceNotifiesOnlyOnce)
                    return SacnLostSourceInternal{source.handle, source.name, true};
                  });
 
+  // Create two termination sets - one which includes all sources besides the offline source that originated it, and
+  // another that includes the remaining source when it goes back offline once again. The same sources are fed in as
+  // "unknown" the second time as well as the first, but ultimately they shouldn't be notified for twice, but only once.
   mark_sources_offline(&offline_sources[0], 1, &sources_[1], sources_.size() - 1, &term_set_lists_[0],
                        kTestExpiredWait);
   mark_sources_online(&sources_[0], 1, term_set_lists_[0]);
@@ -369,20 +372,16 @@ TEST_F(TestSourceLoss, EachExpiredSourceNotifiesOnlyOnce)
   etcpal_getms_fake.return_val = kTestExpiredWait + 1u;
 
   // The first notification should be all sources besides the first.
-  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
-  ASSERT_EQ(expired_sources_[0].num_lost_sources, static_cast<size_t>(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE) - 1u);
-
   std::vector<SacnRemoteSourceInternal> expected_to_expire_first(sources_.begin() + 1, sources_.end());
+  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
   VerifySourcesMatch(expired_sources_[0].lost_sources, expired_sources_[0].num_lost_sources, expected_to_expire_first);
 
   // Advance time past second expired wait period.
   etcpal_getms_fake.return_val += 100u;
 
   // The second notification should be the first source - none of the others should be notified for again.
+  std::vector<SacnRemoteSourceInternal> expected_to_expire_last(sources_.begin(), sources_.begin() + 1);
   expired_sources_ = get_sources_lost_buffer(0, SACN_RECEIVER_MAX_UNIVERSES);  // Re-zero notification struct
   get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
-  ASSERT_EQ(expired_sources_[0].num_lost_sources, 1u);
-
-  std::vector<SacnRemoteSourceInternal> expected_to_expire_last(sources_.begin(), sources_.begin() + 1);
   VerifySourcesMatch(expired_sources_[0].lost_sources, expired_sources_[0].num_lost_sources, expected_to_expire_last);
 }
