@@ -335,6 +335,29 @@ protected:
 uint8_t TestReceiverThread::seq_num_ = 0u;
 uint8_t TestReceiverThread::test_data_[SACN_MTU] = {0};
 
+TEST_F(TestReceiverState, RespectsMaxReceiverLimit)
+{
+  for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
+    AddReceiver(static_cast<uint16_t>(i + 1));
+}
+
+TEST_F(TestReceiverState, RespectsMaxTrackedSourceLimit)
+{
+  for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
+  {
+    SacnReceiver* receiver = AddReceiver(static_cast<uint16_t>(i + 1));
+
+    SacnTrackedSource* source = nullptr;
+    for (int j = 0; (j < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE) &&
+                    (((i * SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE) + j) < SACN_RECEIVER_TOTAL_MAX_SOURCES);
+         ++j)
+    {
+      EtcPalUuid cid = etcpal::Uuid::V4().get();
+      EXPECT_EQ(add_sacn_tracked_source(receiver, &cid, "name", 0u, 0u, &source), kEtcPalErrOk);
+    }
+  }
+}
+
 TEST_F(TestReceiverState, ExpiredWaitInitializes)
 {
   EXPECT_EQ(get_expired_wait(), SACN_DEFAULT_EXPIRED_WAIT_MS);

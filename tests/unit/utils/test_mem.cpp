@@ -890,3 +890,49 @@ TEST_F(TestMem, InitCleansUpRecvThreadContext)
   EXPECT_EQ(context->new_socket_refs, 0u);
   EXPECT_FALSE(context->periodic_timer_started);
 }
+
+TEST_F(TestMem, RespectsMaxMergeReceiverLimit)
+{
+  SacnMergeReceiverConfig config = SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT;
+  SacnMergeReceiver* merge_receiver = NULL;
+  for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
+  {
+    config.universe_id = static_cast<uint16_t>(i + 1);
+    EXPECT_EQ(add_sacn_merge_receiver(static_cast<sacn_merge_receiver_t>(i), &config, &merge_receiver), kEtcPalErrOk);
+  }
+}
+
+TEST_F(TestMem, RespectsMaxMergeReceiverSourceLimit)
+{
+  SacnMergeReceiverConfig config = SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT;
+
+  SacnMergeReceiver* merge_receiver = NULL;
+  EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &config, &merge_receiver), kEtcPalErrOk);
+
+  for (int i = 0; i < SACN_RECEIVER_TOTAL_MAX_SOURCES; ++i)
+  {
+    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_remote_source_t>(i), false),
+              kEtcPalErrOk);
+  }
+}
+
+TEST_F(TestMem, RespectsMaxRemoteSourceLimit)
+{
+  for (int i = 0; i < (SACN_RECEIVER_TOTAL_MAX_SOURCES + SACN_SOURCE_DETECTOR_MAX_SOURCES); ++i)
+  {
+    EtcPalUuid cid = etcpal::Uuid::V4().get();
+
+    sacn_remote_source_t handle;
+    EXPECT_EQ(add_remote_source_handle(&cid, &handle), kEtcPalErrOk);
+  }
+}
+
+TEST_F(TestMem, RespectsMaxSourceDetectorSourceLimit)
+{
+  SacnUniverseDiscoverySource* state = nullptr;
+  for (int i = 0; i < SACN_SOURCE_DETECTOR_MAX_SOURCES; ++i)
+  {
+    EtcPalUuid cid = etcpal::Uuid::V4().get();
+    EXPECT_EQ(add_sacn_universe_discovery_source(&cid, "name", &state), kEtcPalErrOk);
+  }
+}
