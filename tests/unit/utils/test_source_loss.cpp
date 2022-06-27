@@ -123,8 +123,8 @@ TEST_F(TestSourceLoss, AllSourcesOfflineAtOnce)
   get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
 
-  // Advance time by 1.1 seconds
-  etcpal_getms_fake.return_val = 1100;
+  // Advance time past expired wait period
+  etcpal_getms_fake.return_val = kTestExpiredWait + 100u;
 
   // We should now get our notification containing all sources
   get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
@@ -165,8 +165,8 @@ TEST_F(TestSourceLoss, AllSourcesOfflineOneByOne)
   get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
 
-  // Advance time by 1.1 seconds
-  etcpal_getms_fake.return_val = 1100;
+  // Advance time past expired wait period
+  etcpal_getms_fake.return_val = kTestExpiredWait + 100u;
 
   // We should now get our one notification containing all sources
   get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
@@ -258,8 +258,8 @@ TEST_F(TestSourceLoss, EachSourceOfflineThenOnline)
   get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
 
-  // Advance time to 1.1s
-  etcpal_getms_fake.return_val = 1100;
+  // Advance time past expired wait period
+  etcpal_getms_fake.return_val = kTestExpiredWait + 100u;
 
   get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
