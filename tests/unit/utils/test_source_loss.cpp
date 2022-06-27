@@ -210,7 +210,7 @@ TEST_F(TestSourceLoss, WorstCaseEachSourceOfflineIndividually)
   get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
 
-  etcpal_getms_fake.return_val = 1001;
+  etcpal_getms_fake.return_val = kTestExpiredWait + 1u;
 
   // Now we should get one expired notification every 50 ms
   std::vector<SacnLostSource> lost_sources;
