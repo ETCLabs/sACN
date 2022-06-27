@@ -226,11 +226,18 @@ struct TerminationSet
   TerminationSet* next;
 };
 
+/* A key to uniquely identify a source in a termination set. */
+typedef struct TerminationSetSourceKey
+{
+  sacn_remote_source_t handle;
+  uint16_t universe;
+} TerminationSetSourceKey;
+
 /* A source in a termination set. Sources are removed from the termination set as they are
  * determined to be online. */
 typedef struct TerminationSetSource
 {
-  sacn_remote_source_t handle;  // Must remain the first element in the struct for red-black tree lookup.
+  TerminationSetSourceKey key;  // Must remain the first element in the struct for red-black tree lookup.
   const char* name;
   bool offline;
   bool terminated;

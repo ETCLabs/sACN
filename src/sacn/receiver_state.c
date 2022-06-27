@@ -1121,8 +1121,9 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
     src = etcpal_rbiter_next(&src_it);
   }
 
-  etcpal_error_t res = mark_sources_offline(status_lists->offline, status_lists->num_offline, status_lists->unknown,
-                                            status_lists->num_unknown, &receiver->term_sets, expired_wait);
+  etcpal_error_t res =
+      mark_sources_offline(receiver->keys.universe, status_lists->offline, status_lists->num_offline,
+                           status_lists->unknown, status_lists->num_unknown, &receiver->term_sets, expired_wait);
   if (res != kEtcPalErrOk)
   {
     SACN_LOG_ERR("Error `%s` occurred when marking sources offline for universe %u!", etcpal_strerror(res),

@@ -49,12 +49,16 @@ ETCPAL_MEMPOOL_DEFINE(sacn_pool_term_sets, TerminationSet, SACN_MAX_TERM_SETS);
 ETCPAL_MEMPOOL_DEFINE(sacn_pool_source_loss_rb_nodes, EtcPalRbNode, SACN_SOURCE_LOSS_MAX_RB_NODES);
 #endif
 
+static EtcPalRbTree term_set_sources;
+
 /*********************** Private function prototypes *************************/
 
 static int term_set_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static EtcPalRbNode* node_alloc(void);
 static void node_dealloc(EtcPalRbNode* node);
 static void source_remove_callback(const EtcPalRbTree* tree, EtcPalRbNode* node);
+static void source_remove_from_ts_callback(const EtcPalRbTree* tree, EtcPalRbNode* node);
+static etcpal_error_t insert_new_ts_src(const TerminationSetSource* ts_src_new, TerminationSet* ts_new);
 
 /*************************** Function definitions ****************************/
 
@@ -64,11 +68,15 @@ static void source_remove_callback(const EtcPalRbTree* tree, EtcPalRbNode* node)
 etcpal_error_t sacn_source_loss_init(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
+
 #if !SACN_DYNAMIC_MEM
   res |= etcpal_mempool_init(sacn_pool_term_set_sources);
   res |= etcpal_mempool_init(sacn_pool_term_sets);
   res |= etcpal_mempool_init(sacn_pool_source_loss_rb_nodes);
 #endif
+
+  etcpal_rbtree_init(&term_set_sources, term_set_source_compare, node_alloc, node_dealloc);
+
   return res;
 }
 
@@ -97,7 +105,7 @@ void mark_sources_online(const SacnRemoteSourceInternal* online_sources, size_t 
     for (TerminationSet* ts = term_set_list; ts; ts = ts->next)
     {
       // Remove the source from the termination set if it exists, as it is confirmed online.
-      etcpal_rbtree_remove_with_cb(&ts->sources, &online_src->handle, source_remove_callback);
+      etcpal_rbtree_remove_with_cb(&ts->sources, &online_src->handle, source_remove_from_ts_callback);
     }
   }
 }
@@ -106,6 +114,7 @@ void mark_sources_online(const SacnRemoteSourceInternal* online_sources, size_t 
  * Process a list of sources that have timed out or terminated, creating new termination sets or
  * modifying them as necessary.
  *
+ * [in] universe The universe the sources are part of.
  * [in] offline_sources Array of sources that have timed out or terminated.
  * [in] num_offline_sources Size of offline_sources array.
  * [in] unknown_sources Array of all sources for which null start code data hasn't been received in the last tick. These
@@ -114,47 +123,30 @@ void mark_sources_online(const SacnRemoteSourceInternal* online_sources, size_t 
  * [in,out] term_set_list List of termination sets in which to process the offline sources.
  * [in] expired_wait The current configured expired notification wait time for this universe.
  */
-etcpal_error_t mark_sources_offline(const SacnLostSourceInternal* offline_sources, size_t num_offline_sources,
-                                    const SacnRemoteSourceInternal* unknown_sources, size_t num_unknown_sources,
-                                    TerminationSet** term_set_list, uint32_t expired_wait)
+etcpal_error_t mark_sources_offline(uint16_t universe, const SacnLostSourceInternal* offline_sources,
+                                    size_t num_offline_sources, const SacnRemoteSourceInternal* unknown_sources,
+                                    size_t num_unknown_sources, TerminationSet** term_set_list, uint32_t expired_wait)
 {
   etcpal_error_t res = kEtcPalErrOk;
 
   for (const SacnLostSourceInternal* offline_src = offline_sources; offline_src < offline_sources + num_offline_sources;
        ++offline_src)
   {
-    bool found_source = false;
+    TerminationSetSourceKey ts_src_key;
+    ts_src_key.handle = offline_src->handle;
+    ts_src_key.universe = universe;
+    TerminationSetSource* ts_src = etcpal_rbtree_find(&term_set_sources, &ts_src_key);
 
-    TerminationSet** ts_ptr = term_set_list;
-    for (; *ts_ptr; ts_ptr = &(*ts_ptr)->next)
+    if (ts_src)
     {
-      // See if the source is in this termination set.
-      TerminationSet* ts = *ts_ptr;
-      TerminationSetSource* ts_src = etcpal_rbtree_find(&ts->sources, &offline_src->handle);
-      if (ts_src)
+      if (!ts_src->offline)
       {
-        if (!found_source)
-        {
-          found_source = true;
-          if (!ts_src->offline)
-          {
-            // Mark the source as offline if it wasn't before
-            ts_src->offline = true;
-            ts_src->terminated = offline_src->terminated;
-          }
-        }
-        else
-        {
-          // Remove the source from the later termination set, as it should only be marked offline
-          // in one.
-          etcpal_rbtree_remove(&ts->sources, ts_src);
-          FREE_TERM_SET_SOURCE(ts_src);
-        }
+        // Mark the source as offline if it wasn't before
+        ts_src->offline = true;
+        ts_src->terminated = offline_src->terminated;
       }
     }
-
-    // If we didn't find the source in any termination sets, we must create a new one.
-    if (!found_source)
+    else  // If we didn't find the source in any termination sets, we must create a new one.
     {
       TerminationSet* ts_new = ALLOC_TERM_SET();
       if (!ts_new)
@@ -177,12 +169,12 @@ etcpal_error_t mark_sources_offline(const SacnLostSourceInternal* offline_source
 
       if (res == kEtcPalErrOk)
       {
-        ts_src_new->handle = offline_src->handle;
+        ts_src_new->key = ts_src_key;
         ts_src_new->name = offline_src->name;
         ts_src_new->offline = true;
         ts_src_new->terminated = offline_src->terminated;
 
-        res = etcpal_rbtree_insert(&ts_new->sources, ts_src_new);
+        res = insert_new_ts_src(ts_src_new, ts_new);
         if (res != kEtcPalErrOk)
         {
           FREE_TERM_SET_SOURCE(ts_src_new);
@@ -193,34 +185,42 @@ etcpal_error_t mark_sources_offline(const SacnLostSourceInternal* offline_source
       if (res == kEtcPalErrOk)
       {
         // Add all of the other sources tracked by our universe that have sent at least one DMX
-        // packet.
+        // packet (exclude those that are already part of a termination set).
         for (const SacnRemoteSourceInternal* unknown_src = unknown_sources;
              unknown_src < unknown_sources + num_unknown_sources; ++unknown_src)
         {
-          ts_src_new = ALLOC_TERM_SET_SOURCE();
-          if (ts_src_new)
+          ts_src_key.handle = unknown_src->handle;
+          ts_src_key.universe = universe;
+          if (!etcpal_rbtree_find(&term_set_sources, &ts_src_key))
           {
-            ts_src_new->handle = unknown_src->handle;
-            ts_src_new->name = unknown_src->name;
-            ts_src_new->offline = false;
-            ts_src_new->terminated = false;
-
-            res = etcpal_rbtree_insert(&ts_new->sources, ts_src_new);
-            if (res != kEtcPalErrOk)
+            ts_src_new = ALLOC_TERM_SET_SOURCE();
+            if (ts_src_new)
             {
-              FREE_TERM_SET_SOURCE(ts_src_new);
+              ts_src_new->key = ts_src_key;
+              ts_src_new->name = unknown_src->name;
+              ts_src_new->offline = false;
+              ts_src_new->terminated = false;
+
+              res = insert_new_ts_src(ts_src_new, ts_new);
+              if (res != kEtcPalErrOk)
+              {
+                FREE_TERM_SET_SOURCE(ts_src_new);
+                break;
+              }
+            }
+            else
+            {
+              res = kEtcPalErrNoMem;
               break;
             }
           }
-          else
-          {
-            res = kEtcPalErrNoMem;
-            break;
-          }
         }
 
-        // At this point ts_ptr points to the end of the termination set list, so append the
-        // new one
+        // Append the new termination set to the end of the list.
+        TerminationSet** ts_ptr = term_set_list;
+        while (*ts_ptr)
+          ts_ptr = &(*ts_ptr)->next;
+
         *ts_ptr = ts_new;
       }
     }
@@ -268,15 +268,15 @@ void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification
         {
           if (ts_src->offline)
           {
-            if (add_lost_source(sources_lost, ts_src->handle, get_remote_source_cid(ts_src->handle), ts_src->name,
-                                ts_src->terminated))
+            if (add_lost_source(sources_lost, ts_src->key.handle, get_remote_source_cid(ts_src->key.handle),
+                                ts_src->name, ts_src->terminated))
             {
               ++num_expired_sources_this_ts;
             }
             else if (SACN_CAN_LOG(ETCPAL_LOG_ERR))
             {
               char cid_str[ETCPAL_UUID_BYTES];
-              etcpal_uuid_to_string(get_remote_source_cid(ts_src->handle), cid_str);
+              etcpal_uuid_to_string(get_remote_source_cid(ts_src->key.handle), cid_str);
               SACN_LOG_ERR("Couldn't allocate memory to notify that source %s was lost!", cid_str);
             }
           }
@@ -310,7 +310,7 @@ void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification
         last_ts->next = ts->next;
         ts = ts->next;
       }
-      etcpal_rbtree_clear_with_cb(&to_remove->sources, source_remove_callback);
+      etcpal_rbtree_clear_with_cb(&to_remove->sources, source_remove_from_ts_callback);
       FREE_TERM_SET(to_remove);
     }
     else
@@ -328,7 +328,7 @@ void clear_term_set_list(TerminationSet* list)
   {
     TerminationSet* to_remove = entry;
     entry = entry->next;
-    etcpal_rbtree_clear_with_cb(&to_remove->sources, source_remove_callback);
+    etcpal_rbtree_clear_with_cb(&to_remove->sources, source_remove_from_ts_callback);
     FREE_TERM_SET(to_remove);
   }
 }
@@ -337,9 +337,21 @@ int term_set_source_compare(const EtcPalRbTree* tree, const void* value_a, const
 {
   ETCPAL_UNUSED_ARG(tree);
 
-  sacn_remote_source_t* a = (sacn_remote_source_t*)value_a;
-  sacn_remote_source_t* b = (sacn_remote_source_t*)value_b;
-  return (*a > *b) - (*a < *b);
+  TerminationSetSourceKey* a = (TerminationSetSourceKey*)value_a;
+  TerminationSetSourceKey* b = (TerminationSetSourceKey*)value_b;
+
+  if (a->handle > b->handle)
+    return 1;
+
+  if (a->handle == b->handle)
+  {
+    if (a->universe > b->universe)
+      return 1;
+    if (a->universe == b->universe)
+      return 0;
+  }
+
+  return -1;
 }
 
 EtcPalRbNode* node_alloc(void)
@@ -360,11 +372,37 @@ void node_dealloc(EtcPalRbNode* node)
 #endif
 }
 
+// Only to be used when removing from the main term_set_sources rbtree.
 static void source_remove_callback(const EtcPalRbTree* tree, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(tree);
   FREE_TERM_SET_SOURCE(node->value);
   node_dealloc(node);
+}
+
+// This version is only meant to be used when removing from a termination set because it erases the source from the main
+// term_set_sources rbtree.
+static void source_remove_from_ts_callback(const EtcPalRbTree* tree, EtcPalRbNode* node)
+{
+  ETCPAL_UNUSED_ARG(tree);
+  etcpal_rbtree_remove_with_cb(&term_set_sources, node->value, source_remove_callback);
+  node_dealloc(node);
+}
+
+// Insert a new termination set source into the main term_set_sources rbtree as well as a termination set's rbtree.
+etcpal_error_t insert_new_ts_src(const TerminationSetSource* ts_src_new, TerminationSet* ts_new)
+{
+  etcpal_error_t res = etcpal_rbtree_insert(&term_set_sources, ts_src_new);
+
+  if (res == kEtcPalErrOk)
+  {
+    res = etcpal_rbtree_insert(&ts_new->sources, ts_src_new);
+
+    if (res != kEtcPalErrOk)
+      etcpal_rbtree_remove(&term_set_sources, ts_src_new);
+  }
+
+  return res;
 }
 
 #endif  // SACN_RECEIVER_ENABLED
