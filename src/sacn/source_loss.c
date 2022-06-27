@@ -58,7 +58,7 @@ static EtcPalRbNode* node_alloc(void);
 static void node_dealloc(EtcPalRbNode* node);
 static void source_remove_callback(const EtcPalRbTree* tree, EtcPalRbNode* node);
 static void source_remove_from_ts_callback(const EtcPalRbTree* tree, EtcPalRbNode* node);
-static etcpal_error_t insert_new_ts_src(const TerminationSetSource* ts_src_new, TerminationSet* ts_new);
+static etcpal_error_t insert_new_ts_src(TerminationSetSource* ts_src_new, TerminationSet* ts_new);
 
 /*************************** Function definitions ****************************/
 
@@ -390,7 +390,7 @@ static void source_remove_from_ts_callback(const EtcPalRbTree* tree, EtcPalRbNod
 }
 
 // Insert a new termination set source into the main term_set_sources rbtree as well as a termination set's rbtree.
-etcpal_error_t insert_new_ts_src(const TerminationSetSource* ts_src_new, TerminationSet* ts_new)
+etcpal_error_t insert_new_ts_src(TerminationSetSource* ts_src_new, TerminationSet* ts_new)
 {
   etcpal_error_t res = etcpal_rbtree_insert(&term_set_sources, ts_src_new);
 
