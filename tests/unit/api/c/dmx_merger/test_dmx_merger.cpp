@@ -1608,3 +1608,15 @@ TEST_F(TestDmxMerger, SourceIsValidWorks)
   EXPECT_EQ(SACN_DMX_MERGER_SOURCE_IS_VALID(owners_array, 1), false);
   EXPECT_EQ(SACN_DMX_MERGER_SOURCE_IS_VALID(owners_array, 2), true);
 }
+
+TEST_F(TestDmxMerger, RespectsMaxLimits)
+{
+  for (int i = 0; i < SACN_DMX_MERGER_MAX_MERGERS; ++i)
+  {
+    EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+
+    sacn_dmx_merger_source_t source_handle;
+    for (int j = 0; j < SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER; ++j)
+      EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_handle), kEtcPalErrOk);
+  }
+}

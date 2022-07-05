@@ -30,9 +30,9 @@ extern "C" {
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_loss_init);
 DECLARE_FAKE_VOID_FUNC(sacn_source_loss_deinit);
 
-DECLARE_FAKE_VOID_FUNC(mark_sources_online, const SacnRemoteSourceInternal*, size_t, TerminationSet*);
-DECLARE_FAKE_VOID_FUNC(mark_sources_offline, const SacnLostSourceInternal*, size_t, const SacnRemoteSourceInternal*,
-                       size_t, TerminationSet**, uint32_t);
+DECLARE_FAKE_VOID_FUNC(mark_sources_online, uint16_t, const SacnRemoteSourceInternal*, size_t, TerminationSet**);
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, mark_sources_offline, uint16_t, const SacnLostSourceInternal*, size_t,
+                        const SacnRemoteSourceInternal*, size_t, TerminationSet**, uint32_t);
 DECLARE_FAKE_VOID_FUNC(get_expired_sources, TerminationSet**, SourcesLostNotification*);
 
 DECLARE_FAKE_VOID_FUNC(clear_term_set_list, TerminationSet*);
