@@ -29,6 +29,7 @@
 #endif
 
 #define SACN_DATA_PACKET_MIN_SIZE 88
+#define SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE 8
 #define SACN_DMPVECT_SET_PROPERTY 0x02
 
 bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnRemoteSource* source_info, uint8_t* seq,
@@ -85,12 +86,12 @@ bool parse_sacn_universe_discovery_layer(const uint8_t* buf, size_t buflen, int*
                                          const uint8_t** universes, size_t* num_universes)
 {
   // Check the input parameters including buffer size
-  if (!buf || !page || !last_page || !universes || !num_universes || buflen < SACN_DATA_PACKET_MIN_SIZE)
+  if (!buf || !page || !last_page || !universes || !num_universes || buflen < SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE)
     return false;
 
   // Check PDU length
   int pdu_length = ACN_PDU_LENGTH(buf);
-  if (pdu_length < 8)
+  if (pdu_length < SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE)
     return false;
 
   // Check the vector
@@ -99,7 +100,7 @@ bool parse_sacn_universe_discovery_layer(const uint8_t* buf, size_t buflen, int*
 
   *page = buf[6];
   *last_page = buf[7];
-  *universes = &buf[8];
+  *universes = (buflen > SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE) ? &buf[8] : NULL;
   *num_universes = (pdu_length - 8) / 2;
 
   return true;

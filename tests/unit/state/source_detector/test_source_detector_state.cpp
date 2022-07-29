@@ -109,13 +109,13 @@ protected:
     if (num_universes > 512)
       num_universes = 512;
 
-    CreateUniverseDiscoveryBuffer(&complete_universe_list.data()[page_number * 512], num_universes, page_number,
-                                  (uint8_t)last_page, buf);
+    size_t buf_len = CreateUniverseDiscoveryBuffer(&complete_universe_list.data()[page_number * 512], num_universes,
+                                                   page_number, (uint8_t)last_page, buf);
 
     SacnRecvThreadContext context;
     context.source_detector = detector_;
 
-    handle_sacn_universe_discovery_packet(&context, buf, SACN_MTU, &cid.get(), &kTestSourceAddr, kTestName.c_str());
+    handle_sacn_universe_discovery_packet(&context, buf, buf_len, &cid.get(), &kTestSourceAddr, kTestName.c_str());
   }
 
   void ProcessUniverseDiscoveryPages(const etcpal::Uuid& cid, const std::vector<uint16_t>& complete_universe_list)
@@ -126,8 +126,8 @@ protected:
       ProcessUniverseDiscoveryPage(cid, complete_universe_list, page);
   }
 
-  void CreateUniverseDiscoveryBuffer(const uint16_t* universes, size_t num_universes, uint8_t page, uint8_t last,
-                                     uint8_t* buffer)
+  size_t CreateUniverseDiscoveryBuffer(const uint16_t* universes, size_t num_universes, uint8_t page, uint8_t last,
+                                       uint8_t* buffer)
   {
     uint8_t* pcur = buffer;
     ACN_PDU_SET_V_FLAG(*pcur);
@@ -150,6 +150,8 @@ protected:
       etcpal_pack_u16b(pcur, universes[i]);
       pcur += 2;
     }
+
+    return static_cast<size_t>(pcur - buffer);  // Bytes written
   }
 
   void ProcessSourceDetector()
