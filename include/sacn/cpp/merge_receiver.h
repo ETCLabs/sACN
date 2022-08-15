@@ -513,7 +513,7 @@ inline etcpal::Expected<MergeReceiver::Source> MergeReceiver::GetSource(sacn_rem
     MergeReceiver::Source res;
     res.handle = c_info.handle;
     res.cid = c_info.cid;
-    res.name = std::string(c_info.name, SACN_SOURCE_NAME_MAX_LEN);
+    res.name = c_info.name;
     res.addr = c_info.addr;
     return res;
   }
