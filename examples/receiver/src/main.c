@@ -74,7 +74,7 @@ typedef struct ListeningUniverse
 
 ListeningUniverse listeners[MAX_LISTENERS];
 
-etcpal_mutex_t mutex;
+etcpal_mutex_t state_lock;
 
 /**************************************************************************************************
  * Local Functions
@@ -267,7 +267,7 @@ static void console_print_help()
 /* Print a status update for each listening universe about the status of its sources. */
 static void console_print_universe_updates()
 {
-  if (etcpal_mutex_lock(&mutex))
+  if (etcpal_mutex_lock(&state_lock))
   {
     printf(BEGIN_BORDER_STRING);
     for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
@@ -298,7 +298,7 @@ static void console_print_universe_updates()
       }
     }
     printf(END_BORDER_STRING);
-    etcpal_mutex_unlock(&mutex);
+    etcpal_mutex_unlock(&state_lock);
   }
 }
 
@@ -396,7 +396,7 @@ static void handle_universe_data(sacn_receiver_t receiver_handle, const EtcPalSo
   ETCPAL_UNUSED_ARG(receiver_handle);
   ETCPAL_UNUSED_ARG(source_addr);
 
-  if (etcpal_mutex_lock(&mutex))
+  if (etcpal_mutex_lock(&state_lock))
   {
     ListeningUniverse* listener = (ListeningUniverse*)context;
     assert(listener);
@@ -433,7 +433,7 @@ static void handle_universe_data(sacn_receiver_t receiver_handle, const EtcPalSo
       memset(source->last_update + values_len, 0, NUM_SLOTS_DISPLAYED - values_len);
     }
 
-    etcpal_mutex_unlock(&mutex);
+    etcpal_mutex_unlock(&state_lock);
   }
 }
 
@@ -447,7 +447,7 @@ static void handle_sources_lost(sacn_receiver_t handle, uint16_t universe, const
 {
   ETCPAL_UNUSED_ARG(handle);
 
-  if (etcpal_mutex_lock(&mutex))
+  if (etcpal_mutex_lock(&state_lock))
   {
     ListeningUniverse* listener = (ListeningUniverse*)context;
     assert(listener);
@@ -466,7 +466,7 @@ static void handle_sources_lost(sacn_receiver_t handle, uint16_t universe, const
         --listener->num_sources;
       }
     }
-    etcpal_mutex_unlock(&mutex);
+    etcpal_mutex_unlock(&state_lock);
   }
 }
 
@@ -550,7 +550,7 @@ extern void install_keyboard_interrupt_handler(void (*handler)());
 
 int main(void)
 {
-  if (!etcpal_mutex_create(&mutex))
+  if (!etcpal_mutex_create(&state_lock))
   {
     printf("Couldn't create mutex!\n");
     return 1;
@@ -639,6 +639,6 @@ int main(void)
   }
 
   sacn_deinit();
-  etcpal_mutex_destroy(&mutex);
+  etcpal_mutex_destroy(&state_lock);
   return 0;
 }
