@@ -830,19 +830,21 @@ TEST_F(TestMem, AddSacnMergeReceiverSourceWorks)
   EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &kTestMergeReceiverConfig, &merge_receiver),
             kEtcPalErrOk);
 
+  EtcPalSockAddr source_addr;
+  SacnRemoteSource source_info;
   etcpal::Uuid last_cid;
   for (size_t i = 0u; i < kNumSources; ++i)
   {
     EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), i);
     last_cid = etcpal::Uuid::V4();
-    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_remote_source_t>(i), false),
-              kEtcPalErrOk);
+    source_info.handle = static_cast<sacn_remote_source_t>(i);
+    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false), kEtcPalErrOk);
   }
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), kNumSources);
 
-  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_remote_source_t>(kNumSources - 1u), false),
-            kEtcPalErrExists);
+  source_info.handle = static_cast<sacn_remote_source_t>(kNumSources - 1u);
+  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false), kEtcPalErrExists);
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), kNumSources);
 }
@@ -855,10 +857,12 @@ TEST_F(TestMem, RemoveSacnMergeReceiverSourceWorks)
   EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &kTestMergeReceiverConfig, &merge_receiver),
             kEtcPalErrOk);
 
+  EtcPalSockAddr source_addr;
+  SacnRemoteSource source_info;
   for (size_t i = 0u; i < kNumSources; ++i)
   {
-    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_remote_source_t>(i), false),
-              kEtcPalErrOk);
+    source_info.handle = static_cast<sacn_remote_source_t>(i);
+    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false), kEtcPalErrOk);
   }
 
   for (size_t i = 0u; i < kNumSources; ++i)
@@ -909,10 +913,12 @@ TEST_F(TestMem, RespectsMaxMergeReceiverSourceLimit)
   SacnMergeReceiver* merge_receiver = NULL;
   EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &config, &merge_receiver), kEtcPalErrOk);
 
+  EtcPalSockAddr source_addr;
+  SacnRemoteSource source_info;
   for (int i = 0; i < SACN_RECEIVER_TOTAL_MAX_SOURCES; ++i)
   {
-    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, static_cast<sacn_remote_source_t>(i), false),
-              kEtcPalErrOk);
+    source_info.handle = static_cast<sacn_remote_source_t>(i);
+    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false), kEtcPalErrOk);
   }
 }
 

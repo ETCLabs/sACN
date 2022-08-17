@@ -288,7 +288,7 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
       {
         EtcPalRbIter iter;
         etcpal_rbiter_init(&iter);
-        for (SacnMergeReceiverSource* src = etcpal_rbiter_first(&iter, &merge_receiver->sources);
+        for (SacnMergeReceiverInternalSource* src = etcpal_rbiter_first(&iter, &merge_receiver->sources);
              src && (result == kEtcPalErrOk); src = etcpal_rbiter_next(&iter))
         {
           result = remove_sacn_dmx_merger_source(merge_receiver->merger_handle, (sacn_dmx_merger_source_t)src->handle);
@@ -476,6 +476,62 @@ size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, 
   return sacn_receiver_get_network_interfaces((sacn_receiver_t)handle, netints, netints_size);
 }
 
+/**
+ * @brief Gets a copy of the information for the specified merge receiver source.
+ *
+ * @param[in] merge_receiver_handle Handle to the merge receiver receiving data from the source.
+ * @param[in] source_handle Handle to the source to obtain information for.
+ * @param[out] source_info The destination struct to copy the source information into.
+ * @return #kEtcPalErrOk: Source information obtained successfully.
+ * @return #kEtcPalErrNotFound: The specified merge receiver was either not found or did not have the specified source.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t merge_receiver_handle,
+                                              sacn_remote_source_t source_handle, SacnMergeReceiverSource* source_info)
+{
+  if (!sacn_initialized())
+    return kEtcPalErrNotInit;
+
+  if ((merge_receiver_handle == SACN_MERGE_RECEIVER_INVALID) || (source_handle == SACN_REMOTE_SOURCE_INVALID) ||
+      !source_info)
+  {
+    return kEtcPalErrInvalid;
+  }
+
+  if (sacn_lock())
+  {
+    SacnMergeReceiver* merge_receiver = NULL;
+    SacnMergeReceiverInternalSource* source = NULL;
+
+    etcpal_error_t res = lookup_merge_receiver(merge_receiver_handle, &merge_receiver, NULL);
+    if (res == kEtcPalErrOk)
+      res = lookup_merge_receiver_source(merge_receiver, source_handle, &source);
+
+    if (res == kEtcPalErrOk)
+    {
+      const EtcPalUuid* cid = get_remote_source_cid(source_handle);
+      if (cid)
+        memcpy(source_info->cid.data, cid->data, ETCPAL_UUID_BYTES);
+      else
+        res = kEtcPalErrNotFound;
+    }
+
+    if (res == kEtcPalErrOk)
+    {
+      source_info->handle = source->handle;
+      memcpy(source_info->name, source->name, SACN_SOURCE_NAME_MAX_LEN);
+      source_info->addr = source->addr;
+    }
+
+    sacn_unlock();
+    return res;
+  }
+
+  return kEtcPalErrSys;
+}
+
 /**************************************************************************************************
  * Receiver callback implementations
  *************************************************************************************************/
@@ -499,9 +555,11 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
       SacnMergeReceiver* merge_receiver = NULL;
       if (lookup_merge_receiver((sacn_merge_receiver_t)receiver_handle, &merge_receiver, NULL) == kEtcPalErrOk)
       {
-        SacnMergeReceiverSource* source = NULL;
+        SacnMergeReceiverInternalSource* source = NULL;
         if (lookup_merge_receiver_source(merge_receiver, source_handle, &source) == kEtcPalErrOk)
         {
+          update_merge_receiver_source_info(source, source_addr, source_info);
+
           // The source is pending until the first 0x00 packet is received. After the sampling period, this indicates
           // that 0xDD must have either already been notified or timed out.
           if (source->pending && (universe_data->start_code == SACN_STARTCODE_DMX))
@@ -515,7 +573,7 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
           add_sacn_dmx_merger_source_with_handle(merge_receiver->merger_handle, merger_source_handle);
 
           add_sacn_merge_receiver_source(
-              merge_receiver, source_handle,
+              merge_receiver, source_addr, source_info,
               (merge_receiver->use_pap && (universe_data->start_code == SACN_STARTCODE_PRIORITY)));
         }
 

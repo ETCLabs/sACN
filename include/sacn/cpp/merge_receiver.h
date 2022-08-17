@@ -188,6 +188,22 @@ public:
     NetintList(sacn_merge_receiver_t merge_receiver_handle);
   };
 
+  /**
+   * @ingroup sacn_merge_receiver_cpp
+   * @brief Information about a remote sACN source being tracked by a merge receiver.
+   */
+  struct Source
+  {
+    /** The handle of the source. */
+    sacn_remote_source_t handle;
+    /** The Component Identifier (CID) of the source. */
+    etcpal::Uuid cid;
+    /** The name of the source. */
+    std::string name;
+    /** The network address from which the most recent sACN packet originated. */
+    etcpal::SockAddr addr;
+  };
+
   MergeReceiver() = default;
   MergeReceiver(const MergeReceiver& other) = delete;
   MergeReceiver& operator=(const MergeReceiver& other) = delete;
@@ -204,6 +220,7 @@ public:
   etcpal::Error ChangeFootprint(const SacnRecvUniverseSubrange& new_footprint);
   etcpal::Error ChangeUniverseAndFootprint(uint16_t new_universe_id, const SacnRecvUniverseSubrange& new_footprint);
   std::vector<EtcPalMcastNetintId> GetNetworkInterfaces();
+  etcpal::Expected<Source> GetSource(sacn_remote_source_t source_handle);
 
   static etcpal::Error ResetNetworking();
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
@@ -475,6 +492,33 @@ inline std::vector<EtcPalMcastNetintId> MergeReceiver::GetNetworkInterfaces()
 
   netints.resize(num_netints);
   return netints;
+}
+
+/**
+ * @brief Gets a copy of the information for the specified merge receiver source.
+ *
+ * @param[in] source_handle Handle to the source to obtain information for.
+ * @return A copy of the source's information if found.
+ * @return #kEtcPalErrNotFound: The merge receiver has no knowledge of the specified source.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrNotInit: Module not initialized.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+inline etcpal::Expected<MergeReceiver::Source> MergeReceiver::GetSource(sacn_remote_source_t source_handle)
+{
+  SacnMergeReceiverSource c_info;
+  etcpal_error_t error = sacn_merge_receiver_get_source(handle_.value(), source_handle, &c_info);
+  if (error == kEtcPalErrOk)
+  {
+    MergeReceiver::Source res;
+    res.handle = c_info.handle;
+    res.cid = c_info.cid;
+    res.name = c_info.name;
+    res.addr = c_info.addr;
+    return res;
+  }
+
+  return error;
 }
 
 /**

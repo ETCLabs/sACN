@@ -313,11 +313,11 @@ void MyNotifyHandler::HandleNonDmxData(Handle receiver_handle, const etcpal::Soc
 ## Tracking Sources
 
 The data callbacks include data originating from one or more sources transmitting on the current
-universe. Each source has a _Component Identifier_ (CID), which is a UUID that is unique to that
-source. Each source also has a handle that should be used as a primary key, differentiating it
-from other sources. This source data is provided directly in the non-DMX callback, in the
-#SacnRemoteSource struct. However, in the merged data callback, only the source handles are
-passed in. To obtain the CID in this case, use the get source CID function.
+universe. Each source has a handle that serves as a primary key, differentiating it from other
+sources. The merge receiver provides information about each source, including the name, IP, and
+CID. This information is provided directly in the non-DMX callback. However, in the merged data
+callback, only the source handles are passed in. To obtain more details about a source, use the get
+source function.
 
 <!-- CODE_BLOCK_START -->
 ```c
@@ -327,16 +327,20 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
 
   for(unsigned int i = 0; i < merged_data->slot_range.address_count; ++i)
   {
-    EtcPalUuid cid;
-    etcpal_error_t result = sacn_get_remote_source_cid(merged_data->owners[i], &cid);
+    SacnMergeReceiverSource source_info;
+    etcpal_error_t result = sacn_merge_receiver_get_source(handle, merged_data->owners[i], &source_info);
 
     if(result == kEtcPalErrOk)
     {
       // You wouldn't normally print a message on each sACN update, but this is just for demonstration:
       char cid_str[ETCPAL_UUID_STRING_BYTES];
-      etcpal_uuid_to_string(&cid, cid_str);
+      etcpal_uuid_to_string(&source_info.cid, cid_str);
 
-      printf("Slot %u CID: %s\n", (merged_data->slot_range.start_address + i), cid_str);
+      char ip_str[ETCPAL_IP_STRING_BYTES];
+      etcpal_ip_to_string(&source_info.addr.ip, ip_str);
+
+      printf("Slot %u -\n\tCID: %s\n\tName: %s\n\tAddress: %s:%u\n", (merged_data->slot_range.start_address + i), cid_str,
+             source_info.name, ip_str, source_info.addr.port);
     }
   }
 }
@@ -345,14 +349,17 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
 ```cpp
 void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& merged_data)
 {
+  // How to get the merge receiver instance from the handle is application-defined. For example:
+  auto merge_receiver = my_app_state.GetMergeReceiver(handle);
+
   for(unsigned int i = 0; i < merged_data.slot_range.address_count; ++i)
   {
-    auto cid = sacn::GetRemoteSourceCid(merged_data.owners[i]);
-
-    if(cid)
+    auto source = merge_receiver.GetSource(merged_data.owners[i]);
+    if(source)
     {
       // You wouldn't normally print a message on each sACN update, but this is just for demonstration:
-      std::cout << "Slot " << (merged_data.slot_range.start_address + i) << " CID: " << cid->ToString() << "\n";
+      std::cout << "Slot " << (merged_data.slot_range.start_address + i) << " -\n\tCID: " << source->cid.ToString()
+                << "\n\tName: " << source->name << "\n\tAddress: " << source->addr.ToString() << "\n";
     }
   }
 }

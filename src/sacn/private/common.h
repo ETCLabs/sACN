@@ -674,11 +674,13 @@ typedef struct SacnRecvThreadContext
 /******************************************************************************
  * Types used by the sACN Merge Receiver module
  *****************************************************************************/
-typedef struct SacnMergeReceiverSource
+typedef struct SacnMergeReceiverInternalSource
 {
   sacn_remote_source_t handle;  // This must be the first struct member.
+  char name[SACN_SOURCE_NAME_MAX_LEN];
+  EtcPalSockAddr addr;
   bool pending;
-} SacnMergeReceiverSource;
+} SacnMergeReceiverInternalSource;
 
 typedef struct SacnMergeReceiver
 {

@@ -201,6 +201,19 @@ typedef struct SacnMergeReceiverNetintList
   size_t num_netints;
 } SacnMergeReceiverNetintList;
 
+/** Information about a remote sACN source being tracked by a merge receiver. */
+typedef struct SacnMergeReceiverSource
+{
+  /** The handle of the source. */
+  sacn_remote_source_t handle;
+  /** The Component Identifier (CID) of the source. */
+  EtcPalUuid cid;
+  /** The name of the source. */
+  char name[SACN_SOURCE_NAME_MAX_LEN];
+  /** The network address from which the most recent sACN packet originated. */
+  EtcPalSockAddr addr;
+} SacnMergeReceiverSource;
+
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
 
 etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle,
@@ -219,6 +232,8 @@ etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(
     size_t num_per_receiver_netint_lists);
 size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, EtcPalMcastNetintId* netints,
                                                   size_t netints_size);
+etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t merge_receiver_handle,
+                                              sacn_remote_source_t source_handle, SacnMergeReceiverSource* source_info);
 
 #ifdef __cplusplus
 }
