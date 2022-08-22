@@ -91,7 +91,7 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
   etcpal_error_t result = kEtcPalErrOk;
 
   SacnMergeReceiver* merge_receiver = NULL;
-  if (lookup_merge_receiver(handle, &merge_receiver, NULL) == kEtcPalErrOk)
+  if (lookup_merge_receiver(handle, &merge_receiver) == kEtcPalErrOk)
     result = kEtcPalErrExists;
 
   if (result == kEtcPalErrOk)
@@ -190,8 +190,8 @@ etcpal_error_t init_merge_receivers(void)
   etcpal_error_t res = kEtcPalErrOk;
 
 #if !SACN_DYNAMIC_MEM
-  res |= etcpal_mempool_init(sacn_pool_mergerecv_sources);
-  res |= etcpal_mempool_init(sacn_pool_mergerecv_source_rb_nodes);
+  res |= etcpal_mempool_init(sacn_pool_mergerecv_receivers);
+  res |= etcpal_mempool_init(sacn_pool_mergerecv_receiver_rb_nodes);
 #endif  // !SACN_DYNAMIC_MEM
 
   if (res == kEtcPalErrOk)

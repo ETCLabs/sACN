@@ -221,7 +221,7 @@ TEST_F(TestMergeReceiver, CreateWorks)
   EXPECT_EQ(create_sacn_dmx_merger_fake.call_count, 1u);
 
   SacnMergeReceiver* merge_receiver = NULL;
-  ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver, NULL), kEtcPalErrOk);
+  ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver), kEtcPalErrOk);
   EXPECT_EQ(merge_receiver->merge_receiver_handle, handle);
   EXPECT_EQ(merge_receiver->merger_handle, kTestHandle);
   EXPECT_TRUE(merge_receiver->use_pap);
@@ -265,7 +265,7 @@ TEST_F(TestMergeReceiver, ChangeUniverseWorks)
   EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
 
   SacnMergeReceiver* merge_receiver = nullptr;
-  ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver, nullptr), kEtcPalErrOk);
+  ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver), kEtcPalErrOk);
 
   EtcPalSockAddr source_addr;
   SacnRemoteSource source_info;
@@ -324,7 +324,7 @@ TEST_F(TestMergeReceiver, UniverseDataAddsPapSourceAfterSampling)
   RunSamplingEnded();
 
   SacnMergeReceiver* merge_receiver = nullptr;
-  lookup_merge_receiver(handle, &merge_receiver, nullptr);
+  lookup_merge_receiver(handle, &merge_receiver);
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 0u);
   EXPECT_EQ(add_sacn_dmx_merger_source_with_handle_fake.call_count, 0u);
@@ -370,7 +370,7 @@ TEST_F(TestMergeReceiver, UniverseDataAddsNoPapSourceAfterSampling)
   RunSamplingEnded();
 
   SacnMergeReceiver* merge_receiver = nullptr;
-  lookup_merge_receiver(handle, &merge_receiver, nullptr);
+  lookup_merge_receiver(handle, &merge_receiver);
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 0u);
   EXPECT_EQ(add_sacn_dmx_merger_source_with_handle_fake.call_count, 0u);
@@ -405,7 +405,7 @@ TEST_F(TestMergeReceiver, PendingSourceBlocksUniverseData)
   RunSamplingEnded();
 
   SacnMergeReceiver* merge_receiver = nullptr;
-  lookup_merge_receiver(handle, &merge_receiver, nullptr);
+  lookup_merge_receiver(handle, &merge_receiver);
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 0u);
   EXPECT_EQ(add_sacn_dmx_merger_source_with_handle_fake.call_count, 0u);
@@ -506,7 +506,7 @@ TEST_F(TestMergeReceiver, MultiplePendingSourcesBlockUniverseData)
   RunSamplingEnded();
 
   SacnMergeReceiver* merge_receiver = nullptr;
-  lookup_merge_receiver(handle, &merge_receiver, nullptr);
+  lookup_merge_receiver(handle, &merge_receiver);
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 0u);
   EXPECT_EQ(add_sacn_dmx_merger_source_with_handle_fake.call_count, 0u);
@@ -559,7 +559,7 @@ TEST_F(TestMergeReceiver, SamplingPeriodBlocksUniverseData)
   RunSamplingStarted();
 
   SacnMergeReceiver* merge_receiver = nullptr;
-  lookup_merge_receiver(handle, &merge_receiver, nullptr);
+  lookup_merge_receiver(handle, &merge_receiver);
 
   etcpal::Uuid cid1 = etcpal::Uuid::V4();
   etcpal::Uuid cid2 = etcpal::Uuid::V4();
@@ -634,7 +634,7 @@ TEST_F(TestMergeReceiver, UniverseDataHandlesSourcesLost)
   EXPECT_EQ(universe_data_fake.call_count, 7u);
 
   SacnMergeReceiver* merge_receiver = nullptr;
-  lookup_merge_receiver(handle, &merge_receiver, nullptr);
+  lookup_merge_receiver(handle, &merge_receiver);
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 7u);
 
   EXPECT_EQ(remove_sacn_dmx_merger_source_fake.call_count, 0u);
@@ -832,7 +832,7 @@ TEST_F(TestMergeReceiver, PapBlockedWhenUsePapDisabled)
   RunSamplingEnded();
 
   SacnMergeReceiver* merge_receiver = nullptr;
-  lookup_merge_receiver(handle, &merge_receiver, nullptr);
+  lookup_merge_receiver(handle, &merge_receiver);
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 0u);
   EXPECT_EQ(add_sacn_dmx_merger_source_with_handle_fake.call_count, 0u);
