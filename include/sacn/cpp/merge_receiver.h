@@ -116,6 +116,41 @@ public:
                                   const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data) = 0;
 
     /**
+     * @brief Notify that one or more sources have entered a source loss state.
+     * @param handle The merge receiver's handle.
+     * @param universe The universe this merge receiver is monitoring.
+     * @param lost_sources Vector of structs describing the source or sources that have been lost.
+     */
+    virtual void HandleSourcesLost(Handle handle, uint16_t universe, const std::vector<SacnLostSource>& lost_sources)
+    {
+      ETCPAL_UNUSED_ARG(handle);
+      ETCPAL_UNUSED_ARG(universe);
+      ETCPAL_UNUSED_ARG(lost_sources);
+    }
+
+    /**
+     * @brief Notify that a merge receiver's sampling period has begun.
+     * @param handle The merge receiver's handle.
+     * @param universe The universe the merge receiver is monitoring.
+     */
+    virtual void HandleSamplingPeriodStarted(Handle handle, uint16_t universe)
+    {
+      ETCPAL_UNUSED_ARG(handle);
+      ETCPAL_UNUSED_ARG(universe);
+    }
+
+    /**
+     * @brief Notify that a merge receiver's sampling period has ended.
+     * @param handle The merge receiver's handle.
+     * @param universe The universe the merge receiver is monitoring.
+     */
+    virtual void HandleSamplingPeriodEnded(Handle handle, uint16_t universe)
+    {
+      ETCPAL_UNUSED_ARG(handle);
+      ETCPAL_UNUSED_ARG(universe);
+    }
+
+    /**
      * @brief Notify that more than the configured maximum number of sources are currently sending on
      *        the universe being listened to.
      *
@@ -258,6 +293,38 @@ extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t receiver_hand
   {
     static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(MergeReceiver::Handle(receiver_handle),
                                                                           *source_addr, *source_info, *universe_data);
+  }
+}
+
+extern "C" inline void MergeReceiverCbSourcesLost(sacn_merge_receiver_t handle, uint16_t universe,
+                                                  const SacnLostSource* lost_sources, size_t num_lost_sources,
+                                                  void* context)
+{
+  if (context && lost_sources && (num_lost_sources > 0))
+  {
+    std::vector<SacnLostSource> lost_vec(lost_sources, lost_sources + num_lost_sources);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourcesLost(MergeReceiver::Handle(handle), universe,
+                                                                           lost_vec);
+  }
+}
+
+extern "C" inline void MergeReceiverCbSamplingPeriodStarted(sacn_merge_receiver_t handle, uint16_t universe,
+                                                            void* context)
+{
+  if (context)
+  {
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSamplingPeriodStarted(MergeReceiver::Handle(handle),
+                                                                                     universe);
+  }
+}
+
+extern "C" inline void MergeReceiverCbSamplingPeriodEnded(sacn_merge_receiver_t handle, uint16_t universe,
+                                                          void* context)
+{
+  if (context)
+  {
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSamplingPeriodEnded(MergeReceiver::Handle(handle),
+                                                                                   universe);
   }
 }
 
@@ -651,6 +718,9 @@ inline SacnMergeReceiverConfig MergeReceiver::TranslateConfig(const Settings& se
     {
       internal::MergeReceiverCbMergedData,
       internal::MergeReceiverCbNonDmx,
+      internal::MergeReceiverCbSourcesLost,
+      internal::MergeReceiverCbSamplingPeriodStarted,
+      internal::MergeReceiverCbSamplingPeriodEnded,
       internal::MergeReceiverCbSourceLimitExceeded,
       &notify_handler
     },

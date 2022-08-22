@@ -42,18 +42,22 @@
 FAKE_VOID_FUNC(universe_data, sacn_merge_receiver_t, const SacnRecvMergedData*, void*);
 FAKE_VOID_FUNC(universe_non_dmx, sacn_merge_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
                const SacnRecvUniverseData*, void*);
+FAKE_VOID_FUNC(sources_lost, sacn_merge_receiver_t, uint16_t, const SacnLostSource*, size_t, void*);
+FAKE_VOID_FUNC(sampling_started, sacn_merge_receiver_t, uint16_t, void*);
+FAKE_VOID_FUNC(sampling_ended, sacn_merge_receiver_t, uint16_t, void*);
 FAKE_VOID_FUNC(source_limit_exceeded, sacn_merge_receiver_t, uint16_t, void*);
 
 static constexpr uint16_t kTestUniverse = 123u;
 static constexpr uint8_t kTestPriority = 100u;
 static constexpr int kTestHandle = 4567u;
 static constexpr int kTestHandle2 = 1234u;
-static constexpr SacnMergeReceiverConfig kTestConfig = {kTestUniverse,
-                                                        {universe_data, universe_non_dmx, source_limit_exceeded, NULL},
-                                                        {1, DMX_ADDRESS_COUNT},
-                                                        SACN_RECEIVER_INFINITE_SOURCES,
-                                                        true,
-                                                        kSacnIpV4AndIpV6};
+static constexpr SacnMergeReceiverConfig kTestConfig = {
+    kTestUniverse,
+    {universe_data, universe_non_dmx, sources_lost, sampling_started, sampling_ended, source_limit_exceeded, NULL},
+    {1, DMX_ADDRESS_COUNT},
+    SACN_RECEIVER_INFINITE_SOURCES,
+    true,
+    kSacnIpV4AndIpV6};
 static const EtcPalSockAddr kTestSourceAddr = {SACN_PORT, etcpal::IpAddr::FromString("10.101.1.1").get()};
 static const SacnRemoteSource kTestRemoteSource = {0u, etcpal::Uuid::V4().get(), {'\0'}};
 static const std::string kTestSourceName = kTestRemoteSource.name;

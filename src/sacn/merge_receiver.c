@@ -661,8 +661,10 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
 {
   ETCPAL_UNUSED_ARG(universe);
 
-  MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
+  SacnMergeReceiverSourcesLostCallback sources_lost_callback = NULL;
+  void* context = NULL;
 
+  MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
   if (merged_data_notification)
   {
     if (sacn_lock())
@@ -670,6 +672,9 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
       SacnMergeReceiver* merge_receiver = NULL;
       if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL) == kEtcPalErrOk)
       {
+        sources_lost_callback = merge_receiver->callbacks.sources_lost;
+        context = merge_receiver->callbacks.callback_context;
+
         for (size_t i = 0; i < num_lost_sources; ++i)
         {
           remove_sacn_merge_receiver_source(merge_receiver, lost_sources[i].handle);
@@ -709,6 +714,9 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
       merged_data_notification->callback(merged_data_notification->handle, &merged_data,
                                          merged_data_notification->context);
     }
+
+    if (sources_lost_callback)
+      sources_lost_callback((sacn_merge_receiver_t)handle, universe, lost_sources, num_lost_sources, context);
   }
   else
   {
@@ -721,22 +729,33 @@ void merge_receiver_sampling_started(sacn_receiver_t handle, uint16_t universe, 
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(thread_id);
 
+  SacnMergeReceiverSamplingPeriodStartedCallback sampling_started_callback = NULL;
+  void* context = NULL;
+
   if (sacn_lock())
   {
     SacnMergeReceiver* merge_receiver = NULL;
     if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL) == kEtcPalErrOk)
     {
+      sampling_started_callback = merge_receiver->callbacks.sampling_period_started;
+      context = merge_receiver->callbacks.callback_context;
+
       merge_receiver->sampling = true;
     }
 
     sacn_unlock();
   }
+
+  if (sampling_started_callback)
+    sampling_started_callback((sacn_merge_receiver_t)handle, universe, context);
 }
 
 void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id)
 {
-  MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
+  SacnMergeReceiverSamplingPeriodEndedCallback sampling_ended_callback = NULL;
+  void* context = NULL;
 
+  MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
   if (merged_data_notification)
   {
     if (sacn_lock())
@@ -744,6 +763,9 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
       SacnMergeReceiver* merge_receiver = NULL;
       if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver, NULL) == kEtcPalErrOk)
       {
+        sampling_ended_callback = merge_receiver->callbacks.sampling_period_ended;
+        context = merge_receiver->callbacks.callback_context;
+
         merge_receiver->sampling = false;
 
         if ((etcpal_rbtree_size(&merge_receiver->sources) > 0) && (merge_receiver->num_pending_sources == 0))
@@ -776,6 +798,9 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
       merged_data_notification->callback(merged_data_notification->handle, &merged_data,
                                          merged_data_notification->context);
     }
+
+    if (sampling_ended_callback)
+      sampling_ended_callback((sacn_merge_receiver_t)handle, universe, context);
   }
   else
   {
