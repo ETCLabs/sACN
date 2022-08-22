@@ -35,6 +35,9 @@ config.universe_id = 1; // Listen on universe 1
 // Set the callback functions - defined elsewhere
 config.callbacks.universe_data = my_universe_data_callback;
 config.callbacks.universe_non_dmx = my_universe_non_dmx_callback;
+config.callbacks.sources_lost = my_sources_lost_callback;
+config.callbacks.sampling_period_started = my_sampling_started_callback;
+config.callbacks.sampling_period_ended = my_sampling_ended_callback;
 config.callbacks.source_limit_exceeded = my_source_limit_exceeded_callback; // optional, can be NULL
 
 SacnMcastInterface my_netints[NUM_MY_NETINTS];
@@ -65,7 +68,10 @@ class MyNotifyHandler : public sacn::MergeReceiver::NotifyHandler
   void HandleNonDmxData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
                         const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data) override;
 
-  // Optional callback - this doesn't have to be a part of MyNotifyHandler:
+  // Optional callbacks - these don't have to be a part of MyNotifyHandler:
+  void HandleSourcesLost(Handle handle, uint16_t universe, const std::vector<SacnLostSource>& lost_sources) override;
+  void HandleSamplingPeriodStarted(Handle handle, uint16_t universe) override;
+  void HandleSamplingPeriodEnded(Handle handle, uint16_t universe) override;
   void HandleSourceLimitExceeded(Handle handle, uint16_t universe) override;
 };
 

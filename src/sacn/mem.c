@@ -162,10 +162,6 @@ etcpal_error_t sacn_merge_receiver_mem_init(unsigned int number_of_threads)
 #if SACN_DYNAMIC_MEM
   if (res == kEtcPalErrOk)
     res = init_merged_data_buf(number_of_threads);
-  if (res == kEtcPalErrOk)
-    res = init_non_dmx_buf(number_of_threads);
-  if (res == kEtcPalErrOk)
-    res = init_merge_receiver_source_limit_exceeded_buf(number_of_threads);
 #endif
 
   // Clean up
@@ -178,8 +174,6 @@ etcpal_error_t sacn_merge_receiver_mem_init(unsigned int number_of_threads)
 void sacn_merge_receiver_mem_deinit(void)
 {
 #if SACN_DYNAMIC_MEM
-  deinit_merge_receiver_source_limit_exceeded_buf();
-  deinit_non_dmx_buf();
   deinit_merged_data_buf();
 #endif
   deinit_merge_receivers();

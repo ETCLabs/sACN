@@ -132,6 +132,43 @@ typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t receiver_h
                                                 const SacnRecvUniverseData* universe_data, void* context);
 
 /**
+ * @brief Notify that one or more sources have entered a source loss state.
+ *
+ * This could be due to timeout or explicit termination. Sources are grouped using an algorithm
+ * designed to prevent level jumps when multiple sources are lost simultaneously. See
+ * @ref source_loss_behavior for more information.
+ *
+ * @param[in] handle Handle to the merge receiver instance for which sources were lost.
+ * @param[in] universe The universe this merge receiver is monitoring.
+ * @param[in] lost_sources Array of structs describing the source or sources that have been lost.
+ * @param[in] num_lost_sources Size of the lost_sources array.
+ * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
+ */
+typedef void (*SacnMergeReceiverSourcesLostCallback)(sacn_merge_receiver_t handle, uint16_t universe,
+                                                     const SacnLostSource* lost_sources, size_t num_lost_sources,
+                                                     void* context);
+
+/**
+ * @brief Notify that a merge receiver's sampling period has begun.
+ *
+ * @param[in] handle Handle to the merge receiver instance for which the sampling period started.
+ * @param[in] universe The universe this merge receiver is monitoring.
+ * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
+ */
+typedef void (*SacnMergeReceiverSamplingPeriodStartedCallback)(sacn_merge_receiver_t handle, uint16_t universe,
+                                                               void* context);
+
+/**
+ * @brief Notify that a merge receiver's sampling period has ended.
+ *
+ * @param[in] handle Handle to the merge receiver instance for which the sampling period ended.
+ * @param[in] universe The universe this merge receiver is monitoring.
+ * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
+ */
+typedef void (*SacnMergeReceiverSamplingPeriodEndedCallback)(sacn_merge_receiver_t handle, uint16_t universe,
+                                                             void* context);
+
+/**
  * @brief Notify that more than the configured maximum number of sources are currently sending on
  *        the universe being listened to.
  *
@@ -147,9 +184,12 @@ typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(sacn_merge_receiver
 /** A set of callback functions that the library uses to notify the application about sACN events. */
 typedef struct SacnMergeReceiverCallbacks
 {
-  SacnMergeReceiverMergedDataCallback universe_data;                  /**< Required */
-  SacnMergeReceiverNonDmxCallback universe_non_dmx;                   /**< Required */
-  SacnMergeReceiverSourceLimitExceededCallback source_limit_exceeded; /**< Optional */
+  SacnMergeReceiverMergedDataCallback universe_data;                      /**< Required */
+  SacnMergeReceiverNonDmxCallback universe_non_dmx;                       /**< Required */
+  SacnMergeReceiverSourcesLostCallback sources_lost;                      /**< Optional */
+  SacnMergeReceiverSamplingPeriodStartedCallback sampling_period_started; /**< Optional */
+  SacnMergeReceiverSamplingPeriodEndedCallback sampling_period_ended;     /**< Optional */
+  SacnMergeReceiverSourceLimitExceededCallback source_limit_exceeded;     /**< Optional */
   void* callback_context; /**< (optional) Pointer to opaque data passed back with each callback. */
 } SacnMergeReceiverCallbacks;
 

@@ -42,18 +42,22 @@
 FAKE_VOID_FUNC(universe_data, sacn_merge_receiver_t, const SacnRecvMergedData*, void*);
 FAKE_VOID_FUNC(universe_non_dmx, sacn_merge_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
                const SacnRecvUniverseData*, void*);
+FAKE_VOID_FUNC(sources_lost, sacn_merge_receiver_t, uint16_t, const SacnLostSource*, size_t, void*);
+FAKE_VOID_FUNC(sampling_started, sacn_merge_receiver_t, uint16_t, void*);
+FAKE_VOID_FUNC(sampling_ended, sacn_merge_receiver_t, uint16_t, void*);
 FAKE_VOID_FUNC(source_limit_exceeded, sacn_merge_receiver_t, uint16_t, void*);
 
 static constexpr uint16_t kTestUniverse = 123u;
 static constexpr uint8_t kTestPriority = 100u;
 static constexpr int kTestHandle = 4567u;
 static constexpr int kTestHandle2 = 1234u;
-static constexpr SacnMergeReceiverConfig kTestConfig = {kTestUniverse,
-                                                        {universe_data, universe_non_dmx, source_limit_exceeded, NULL},
-                                                        {1, DMX_ADDRESS_COUNT},
-                                                        SACN_RECEIVER_INFINITE_SOURCES,
-                                                        true,
-                                                        kSacnIpV4AndIpV6};
+static constexpr SacnMergeReceiverConfig kTestConfig = {
+    kTestUniverse,
+    {universe_data, universe_non_dmx, sources_lost, sampling_started, sampling_ended, source_limit_exceeded, NULL},
+    {1, DMX_ADDRESS_COUNT},
+    SACN_RECEIVER_INFINITE_SOURCES,
+    true,
+    kSacnIpV4AndIpV6};
 static const EtcPalSockAddr kTestSourceAddr = {SACN_PORT, etcpal::IpAddr::FromString("10.101.1.1").get()};
 static const SacnRemoteSource kTestRemoteSource = {0u, etcpal::Uuid::V4().get(), {'\0'}};
 static const std::string kTestSourceName = kTestRemoteSource.name;
@@ -82,6 +86,9 @@ protected:
 
     RESET_FAKE(universe_data);
     RESET_FAKE(universe_non_dmx);
+    RESET_FAKE(sources_lost);
+    RESET_FAKE(sampling_started);
+    RESET_FAKE(sampling_ended);
     RESET_FAKE(source_limit_exceeded);
 
     SetSourceCountToExpect(std::nullopt);
@@ -711,6 +718,67 @@ TEST_F(TestMergeReceiver, UniverseNonDmxWorks)
   EXPECT_EQ(universe_non_dmx_fake.call_count, 3u);
   RunUniverseData(1u, kCid, 0x77, {0x56u, 0x78u});
   EXPECT_EQ(universe_non_dmx_fake.call_count, 4u);
+}
+
+TEST_F(TestMergeReceiver, SourcesLostWorks)
+{
+  static const etcpal::Uuid kCid1 = etcpal::Uuid::V4();
+  static const etcpal::Uuid kCid2 = etcpal::Uuid::V4();
+  static constexpr sacn_remote_source_t kHandle1 = 1u;
+  static constexpr sacn_remote_source_t kHandle2 = 2u;
+
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
+
+  sources_lost_fake.custom_fake = [](sacn_merge_receiver_t handle, uint16_t universe,
+                                     const SacnLostSource* lost_sources, size_t num_lost_sources, void*) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+
+    ASSERT_EQ(num_lost_sources, 2u);
+    EXPECT_EQ(lost_sources[0].handle, kHandle1);
+    EXPECT_EQ(lost_sources[1].handle, kHandle2);
+    EXPECT_EQ(ETCPAL_UUID_CMP(&lost_sources[0].cid, &kCid1.get()), 0);
+    EXPECT_EQ(ETCPAL_UUID_CMP(&lost_sources[1].cid, &kCid2.get()), 0);
+  };
+
+  RunUniverseData(1u, kCid1, SACN_STARTCODE_DMX, {0x01u, 0x02u});
+  RunUniverseData(2u, kCid2, SACN_STARTCODE_DMX, {0x03u, 0x04u});
+  EXPECT_EQ(sources_lost_fake.call_count, 0u);
+  RunSourcesLost({{kHandle1, kCid1}, {kHandle2, kCid2}});
+  EXPECT_EQ(sources_lost_fake.call_count, 1u);
+}
+
+TEST_F(TestMergeReceiver, SamplingStartedWorks)
+{
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
+
+  sampling_started_fake.custom_fake = [](sacn_merge_receiver_t handle, uint16_t universe, void*) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+  };
+
+  EXPECT_EQ(sampling_started_fake.call_count, 0u);
+  RunSamplingStarted();
+  EXPECT_EQ(sampling_started_fake.call_count, 1u);
+}
+
+TEST_F(TestMergeReceiver, SamplingEndedWorks)
+{
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
+
+  sampling_ended_fake.custom_fake = [](sacn_merge_receiver_t handle, uint16_t universe, void*) {
+    EXPECT_EQ(handle, kTestHandle);
+    EXPECT_EQ(universe, kTestUniverse);
+  };
+
+  RunSamplingStarted();
+
+  EXPECT_EQ(sampling_ended_fake.call_count, 0u);
+  RunSamplingEnded();
+  EXPECT_EQ(sampling_ended_fake.call_count, 1u);
 }
 
 TEST_F(TestMergeReceiver, SourceLimitExceededWorks)
