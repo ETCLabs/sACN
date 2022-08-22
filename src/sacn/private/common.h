@@ -711,26 +711,7 @@ typedef struct MergeReceiverMergedDataNotification
   uint8_t levels[DMX_ADDRESS_COUNT];
   sacn_remote_source_t owners[DMX_ADDRESS_COUNT];
   size_t num_active_sources;
-  void* context;
 } MergeReceiverMergedDataNotification;
-
-typedef struct MergeReceiverNonDmxNotification
-{
-  SacnMergeReceiverNonDmxCallback callback;
-  sacn_merge_receiver_t receiver_handle;
-  const EtcPalSockAddr* source_addr;
-  const SacnRemoteSource* source_info;
-  const SacnRecvUniverseData* universe_data;
-  void* context;
-} MergeReceiverNonDmxNotification;
-
-typedef struct MergeReceiverSourceLimitExceededNotification
-{
-  SacnMergeReceiverSourceLimitExceededCallback callback;
-  sacn_merge_receiver_t handle;
-  uint16_t universe;
-  void* context;
-} MergeReceiverSourceLimitExceededNotification;
 
 /******************************************************************************
  * Types used by the sACN Source module
