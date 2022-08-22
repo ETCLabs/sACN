@@ -684,7 +684,7 @@ typedef struct SacnMergeReceiverInternalSource
 
 typedef struct SacnMergeReceiver
 {
-  sacn_merge_receiver_t merge_receiver_handle;
+  sacn_merge_receiver_t merge_receiver_handle;  // This must be the first struct member.
   sacn_dmx_merger_t merger_handle;
   SacnMergeReceiverCallbacks callbacks;
   bool use_pap;
