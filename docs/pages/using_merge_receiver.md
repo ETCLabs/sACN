@@ -320,10 +320,10 @@ void MyNotifyHandler::HandleNonDmxData(Handle receiver_handle, const etcpal::Soc
 
 The data callbacks include data originating from one or more sources transmitting on the current
 universe. Each source has a handle that serves as a primary key, differentiating it from other
-sources. The merge receiver provides information about each source, including the name, IP, and
-CID. This information is provided directly in the non-DMX callback. However, in the merged data
-callback, only the source handles are passed in. To obtain more details about a source, use the get
-source function.
+sources. The merge receiver provides information about each source that's active on the current
+universe, including the name, IP, and CID. This information is provided directly in the non-DMX
+callback. However, in the merged data callback, only the source handles are passed in. To obtain
+more details about a source, use the get source function.
 
 <!-- CODE_BLOCK_START -->
 ```c
@@ -331,10 +331,10 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
 {
   // Check handle and/or context as necessary...
 
-  for(unsigned int i = 0; i < merged_data->slot_range.address_count; ++i)
+  for(size_t i = 0; i < merged_data->num_active_sources; ++i)
   {
     SacnMergeReceiverSource source_info;
-    etcpal_error_t result = sacn_merge_receiver_get_source(handle, merged_data->owners[i], &source_info);
+    etcpal_error_t result = sacn_merge_receiver_get_source(handle, merged_data->active_sources[i], &source_info);
 
     if(result == kEtcPalErrOk)
     {
@@ -358,9 +358,9 @@ void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& 
   // How to get the merge receiver instance from the handle is application-defined. For example:
   auto merge_receiver = my_app_state.GetMergeReceiver(handle);
 
-  for(unsigned int i = 0; i < merged_data.slot_range.address_count; ++i)
+  for(size_t i = 0u; i < merged_data.num_active_sources; ++i)
   {
-    auto source = merge_receiver.GetSource(merged_data.owners[i]);
+    auto source = merge_receiver.GetSource(merged_data.active_sources[i]);
     if(source)
     {
       // You wouldn't normally print a message on each sACN update, but this is just for demonstration:

@@ -546,9 +546,6 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
   SacnMergeReceiverNonDmxCallback non_dmx_callback = NULL;
   void* context = NULL;
 
-  if (!merged_data_notification)
-    SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
-
   if (sacn_lock())
   {
     SacnMergeReceiver* merge_receiver = NULL;
@@ -600,15 +597,21 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
       if (merged_data_notification && new_merge_occurred && !merge_receiver->sampling &&
           (merge_receiver->num_pending_sources == 0))
       {
-        merged_data_notification->callback = merge_receiver->callbacks.universe_data;
-        merged_data_notification->handle = (sacn_merge_receiver_t)receiver_handle;
-        merged_data_notification->universe = universe_data->universe_id;
-        merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-        merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-        memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
-        memcpy(merged_data_notification->owners, merge_receiver->owners,
-               DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
-        merged_data_notification->num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);
+        if (add_active_sources(merged_data_notification, merge_receiver))
+        {
+          merged_data_notification->callback = merge_receiver->callbacks.universe_data;
+          merged_data_notification->handle = (sacn_merge_receiver_t)receiver_handle;
+          merged_data_notification->universe = universe_data->universe_id;
+          merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
+          merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
+          memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
+          memcpy(merged_data_notification->owners, merge_receiver->owners,
+                 DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+        }
+        else
+        {
+          merged_data_notification = NULL;  // Use NULL to indicate we failed to fully allocate the notification
+        }
       }
 
       if ((universe_data->start_code != SACN_STARTCODE_DMX) && (universe_data->start_code != SACN_STARTCODE_PRIORITY))
@@ -620,6 +623,9 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
     sacn_unlock();
   }
 
+  if (!merged_data_notification)
+    SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
+
   if (merged_data_notification && merged_data_notification->callback)
   {
     SacnRecvMergedData merged_data;
@@ -627,6 +633,7 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
     merged_data.slot_range = merged_data_notification->slot_range;
     merged_data.levels = merged_data_notification->levels;
     merged_data.owners = merged_data_notification->owners;
+    merged_data.active_sources = merged_data_notification->active_sources;
     merged_data.num_active_sources = merged_data_notification->num_active_sources;
 
     merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
@@ -645,9 +652,6 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
   SacnMergeReceiverSourcesLostCallback sources_lost_callback = NULL;
   void* context = NULL;
 
-  if (!merged_data_notification)
-    SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
-
   if (sacn_lock())
   {
     SacnMergeReceiver* merge_receiver = NULL;
@@ -663,15 +667,21 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
 
       if (merged_data_notification && !merge_receiver->sampling && (merge_receiver->num_pending_sources == 0))
       {
-        merged_data_notification->callback = merge_receiver->callbacks.universe_data;
-        merged_data_notification->handle = (sacn_merge_receiver_t)handle;
-        merged_data_notification->universe = universe;
-        merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-        merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-        memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
-        memcpy(merged_data_notification->owners, merge_receiver->owners,
-               DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
-        merged_data_notification->num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);
+        if (add_active_sources(merged_data_notification, merge_receiver))
+        {
+          merged_data_notification->callback = merge_receiver->callbacks.universe_data;
+          merged_data_notification->handle = (sacn_merge_receiver_t)handle;
+          merged_data_notification->universe = universe;
+          merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
+          merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
+          memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
+          memcpy(merged_data_notification->owners, merge_receiver->owners,
+                 DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+        }
+        else
+        {
+          merged_data_notification = NULL;  // Use NULL to indicate we failed to fully allocate the notification
+        }
       }
 
       sources_lost_callback = merge_receiver->callbacks.sources_lost;
@@ -682,6 +692,9 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
     sacn_unlock();
   }
 
+  if (!merged_data_notification)
+    SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
+
   if (merged_data_notification && merged_data_notification->callback)
   {
     SacnRecvMergedData merged_data;
@@ -689,6 +702,7 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
     merged_data.slot_range = merged_data_notification->slot_range;
     merged_data.levels = merged_data_notification->levels;
     merged_data.owners = merged_data_notification->owners;
+    merged_data.active_sources = merged_data_notification->active_sources;
     merged_data.num_active_sources = merged_data_notification->num_active_sources;
 
     merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
@@ -730,9 +744,6 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
   SacnMergeReceiverSamplingPeriodEndedCallback sampling_ended_callback = NULL;
   void* context = NULL;
 
-  if (!merged_data_notification)
-    SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
-
   if (sacn_lock())
   {
     SacnMergeReceiver* merge_receiver = NULL;
@@ -743,15 +754,21 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
       if (merged_data_notification && (etcpal_rbtree_size(&merge_receiver->sources) > 0) &&
           (merge_receiver->num_pending_sources == 0))
       {
-        merged_data_notification->callback = merge_receiver->callbacks.universe_data;
-        merged_data_notification->handle = (sacn_merge_receiver_t)handle;
-        merged_data_notification->universe = universe;
-        merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-        merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-        memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
-        memcpy(merged_data_notification->owners, merge_receiver->owners,
-               DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
-        merged_data_notification->num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);
+        if (add_active_sources(merged_data_notification, merge_receiver))
+        {
+          merged_data_notification->callback = merge_receiver->callbacks.universe_data;
+          merged_data_notification->handle = (sacn_merge_receiver_t)handle;
+          merged_data_notification->universe = universe;
+          merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
+          merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
+          memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
+          memcpy(merged_data_notification->owners, merge_receiver->owners,
+                 DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+        }
+        else
+        {
+          merged_data_notification = NULL;  // Use NULL to indicate we failed to fully allocate the notification
+        }
       }
 
       sampling_ended_callback = merge_receiver->callbacks.sampling_period_ended;
@@ -762,6 +779,9 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
     sacn_unlock();
   }
 
+  if (!merged_data_notification)
+    SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
+
   if (merged_data_notification && merged_data_notification->callback)
   {
     SacnRecvMergedData merged_data;
@@ -769,6 +789,7 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
     merged_data.slot_range = merged_data_notification->slot_range;
     merged_data.levels = merged_data_notification->levels;
     merged_data.owners = merged_data_notification->owners;
+    merged_data.active_sources = merged_data_notification->active_sources;
     merged_data.num_active_sources = merged_data_notification->num_active_sources;
 
     merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
@@ -784,9 +805,6 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
   MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
   void* context = NULL;
 
-  if (!merged_data_notification)
-    SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
-
   if (sacn_lock())
   {
     SacnMergeReceiver* merge_receiver = NULL;
@@ -798,15 +816,21 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
 
       if (merged_data_notification && !merge_receiver->sampling && (merge_receiver->num_pending_sources == 0))
       {
-        merged_data_notification->callback = merge_receiver->callbacks.universe_data;
-        merged_data_notification->handle = (sacn_merge_receiver_t)handle;
-        merged_data_notification->universe = universe;
-        merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-        merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-        memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
-        memcpy(merged_data_notification->owners, merge_receiver->owners,
-               DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
-        merged_data_notification->num_active_sources = etcpal_rbtree_size(&merge_receiver->sources);
+        if (add_active_sources(merged_data_notification, merge_receiver))
+        {
+          merged_data_notification->callback = merge_receiver->callbacks.universe_data;
+          merged_data_notification->handle = (sacn_merge_receiver_t)handle;
+          merged_data_notification->universe = universe;
+          merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
+          merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
+          memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
+          memcpy(merged_data_notification->owners, merge_receiver->owners,
+                 DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+        }
+        else
+        {
+          merged_data_notification = NULL;  // Use NULL to indicate we failed to fully allocate the notification
+        }
       }
 
       context = merge_receiver->callbacks.callback_context;
@@ -815,6 +839,9 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
     sacn_unlock();
   }
 
+  if (!merged_data_notification)
+    SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
+
   if (merged_data_notification && merged_data_notification->callback)
   {
     SacnRecvMergedData merged_data;
@@ -822,6 +849,7 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
     merged_data.slot_range = merged_data_notification->slot_range;
     merged_data.levels = merged_data_notification->levels;
     merged_data.owners = merged_data_notification->owners;
+    merged_data.active_sources = merged_data_notification->active_sources;
     merged_data.num_active_sources = merged_data_notification->num_active_sources;
 
     merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);

@@ -710,6 +710,7 @@ typedef struct MergeReceiverMergedDataNotification
   SacnRecvUniverseSubrange slot_range;
   uint8_t levels[DMX_ADDRESS_COUNT];
   sacn_remote_source_t owners[DMX_ADDRESS_COUNT];
+  SACN_DECLARE_MERGE_RECEIVER_BUF(sacn_remote_source_t, active_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_active_sources;
 } MergeReceiverMergedDataNotification;
 
