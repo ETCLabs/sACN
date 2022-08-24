@@ -331,6 +331,7 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
 {
   // Check handle and/or context as necessary...
 
+  // There are two ways to iterate the sources. The first is to iterate each unique active source on the universe:
   for(size_t i = 0; i < merged_data->num_active_sources; ++i)
   {
     SacnMergeReceiverSource source_info;
@@ -349,6 +350,14 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
              source_info.name, ip_str, source_info.addr.port);
     }
   }
+
+  // The second way is to iterate the winner/owner of each slot:
+  for(unsigned int i = 0; i < merged_data->slot_range.address_count; ++i)
+  {
+    SacnMergeReceiverSource source_info;
+    etcpal_error_t result = sacn_merge_receiver_get_source(handle, merged_data->owners[i], &source_info);
+    // ...
+  }
 }
 ```
 <!-- CODE_BLOCK_MID -->
@@ -358,6 +367,7 @@ void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& 
   // How to get the merge receiver instance from the handle is application-defined. For example:
   auto merge_receiver = my_app_state.GetMergeReceiver(handle);
 
+  // There are two ways to iterate the sources. The first is to iterate each unique active source on the universe:
   for(size_t i = 0u; i < merged_data.num_active_sources; ++i)
   {
     auto source = merge_receiver.GetSource(merged_data.active_sources[i]);
@@ -367,6 +377,13 @@ void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& 
       std::cout << "Slot " << (merged_data.slot_range.start_address + i) << " -\n\tCID: " << source->cid.ToString()
                 << "\n\tName: " << source->name << "\n\tAddress: " << source->addr.ToString() << "\n";
     }
+  }
+
+  // The second way is to iterate the winner/owner of each slot:
+  for(unsigned int i = 0; i < merged_data.slot_range.address_count; ++i)
+  {
+    auto source = merge_receiver.GetSource(merged_data.owners[i]);
+    // ...
   }
 }
 ```
