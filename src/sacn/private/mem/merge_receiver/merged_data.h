@@ -35,6 +35,8 @@ void deinit_merged_data_buf(void);
 // This is processed from the context of receiving data, so there is only one per thread.
 MergeReceiverMergedDataNotification* get_merged_data(sacn_thread_id_t thread_id);
 
+bool add_active_sources(MergeReceiverMergedDataNotification* notification, SacnMergeReceiver* merge_receiver);
+
 #ifdef __cplusplus
 }
 #endif

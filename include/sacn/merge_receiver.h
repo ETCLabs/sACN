@@ -78,7 +78,12 @@ typedef struct SacnRecvMergedData
    */
   const sacn_remote_source_t* owners;
   /**
-   * The current number of sources considered to be active on the current universe.
+   * The handles of all sources considered to be active on the current universe. This buffer is owned by the library.
+   */
+  const sacn_remote_source_t* active_sources;
+  /**
+   * The current number of sources considered to be active on the current universe (and thus the size of
+   * active_sources).
    */
   size_t num_active_sources;
 } SacnRecvMergedData;
