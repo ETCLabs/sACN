@@ -136,6 +136,19 @@ etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeRece
 }
 
 // Needs lock
+SacnMergeReceiver* get_first_merge_receiver(EtcPalRbIter* iterator)
+{
+  etcpal_rbiter_init(iterator);
+  return (SacnMergeReceiver*)etcpal_rbiter_first(iterator, &merge_receivers);
+}
+
+// Needs lock
+SacnMergeReceiver* get_next_merge_receiver(EtcPalRbIter* iterator)
+{
+  return (SacnMergeReceiver*)etcpal_rbiter_next(iterator);
+}
+
+// Needs lock
 size_t get_num_merge_receivers()
 {
   return etcpal_rbtree_size(&merge_receivers);
