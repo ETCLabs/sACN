@@ -29,10 +29,6 @@
 
 #if SACN_MERGE_RECEIVER_ENABLED || DOXYGEN
 
-/*********************** Private function prototypes *************************/
-
-void clear_all_merge_receiver_state();
-
 /*************************** Function definitions ****************************/
 
 /**************************************************************************************************
@@ -881,33 +877,6 @@ void merge_receiver_source_limit_exceeded(sacn_receiver_t handle, uint16_t unive
 
   if (source_limit_callback)
     source_limit_callback((sacn_merge_receiver_t)handle, universe, context);
-}
-
-// TODO: This should actually turn into a per-receiver callback (perhaps sources_lost)
-void clear_all_merge_receiver_state()
-{
-  if (sacn_lock())
-  {
-    EtcPalRbIter receiver_iter;
-    etcpal_rbiter_init(&receiver_iter);
-    for (SacnMergeReceiver* merge_receiver = get_first_merge_receiver(&receiver_iter); merge_receiver;
-         merge_receiver = get_next_merge_receiver(&receiver_iter))
-    {
-      EtcPalRbIter source_iter;
-      etcpal_rbiter_init(&source_iter);
-      for (SacnMergeReceiverSource* merge_receiver_source = etcpal_rbiter_first(&source_iter, &merge_receiver->sources);
-           merge_receiver_source; merge_receiver_source = etcpal_rbiter_next(&source_iter))
-      {
-        remove_sacn_merge_receiver_source(merge_receiver, merge_receiver_source->handle);
-
-        // The receiver handle is interchangable with the DMX Merger source IDs, so use it here via cast.
-        remove_sacn_dmx_merger_source(merge_receiver->merger_handle,
-                                      (sacn_dmx_merger_source_t)merge_receiver_source->handle);
-      }
-    }
-
-    sacn_unlock();
-  }
 }
 
 #endif  // SACN_MERGE_RECEIVER_ENABLED || DOXYGEN
