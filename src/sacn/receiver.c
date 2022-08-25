@@ -368,8 +368,6 @@ etcpal_error_t sacn_receiver_reset_networking(const SacnNetintConfig* sys_netint
           if (res == kEtcPalErrOk)
             res = add_receiver_sockets(receiver);
           if (res == kEtcPalErrOk)
-            res = clear_term_sets_and_sources(receiver);
-          if (res == kEtcPalErrOk)
             begin_sampling_period(receiver);
         }
       }
@@ -475,8 +473,6 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfi
           res = sacn_initialize_receiver_netints(&receiver->netints, &receiver_netint_config);
           if (res == kEtcPalErrOk)
             res = add_receiver_sockets(receiver);
-          if (res == kEtcPalErrOk)
-            res = clear_term_sets_and_sources(receiver);
           if (res == kEtcPalErrOk)
             begin_sampling_period(receiver);
         }
