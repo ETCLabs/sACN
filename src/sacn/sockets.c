@@ -1039,7 +1039,7 @@ size_t apply_netint_config(const SacnNetintConfig* netint_config, const EtcPalNe
       etcpal_error_t test_result = test_netint(netint, sys_netints, net_type);
       if (test_result == kEtcPalErrOk)
         ++num_valid_sys_netints;
-      else if (app_netint && (app_netint->status == kEtcPalErrOk))
+      if (app_netint && ((app_netint->status == kEtcPalErrNotFound) || (app_netint->status == kEtcPalErrOk)))
         app_netint->status = test_result;
     }
   }
