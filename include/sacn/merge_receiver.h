@@ -139,9 +139,11 @@ typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t receiver_h
 /**
  * @brief Notify that one or more sources have entered a source loss state.
  *
- * This could be due to timeout or explicit termination. Sources are grouped using an algorithm
- * designed to prevent level jumps when multiple sources are lost simultaneously. See
- * @ref source_loss_behavior for more information.
+ * This could be due to timeout or explicit termination. When reset networking is called, the sources on the
+ * removed/lost interfaces will time out, and will eventually be included in this notification.
+ *
+ * Sources are grouped using an algorithm designed to prevent level jumps when multiple sources are lost simultaneously.
+ * See @ref source_loss_behavior for more information.
  *
  * @param[in] handle Handle to the merge receiver instance for which sources were lost.
  * @param[in] universe The universe this merge receiver is monitoring.
