@@ -160,31 +160,45 @@ static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t univ
 
   // Normally passing in NULL and 0 for netints and length would achieve the same result, this is just for
   // demonstration.
-  size_t num_sys_netints = etcpal_netint_get_num_interfaces();
-  const EtcPalNetintInfo* netint_list = etcpal_netint_get_interfaces();
-#define MAX_LISTENER_NETINTS 100
-  SacnMcastInterface netints[MAX_LISTENER_NETINTS];
+  EtcPalNetintInfo* netint_list = NULL;
+  size_t num_sys_netints = 0;
+  etcpal_error_t result = etcpal_netint_get_interfaces(NULL, &num_sys_netints);
 
-  for (size_t i = 0; (i < num_sys_netints) && (i < MAX_LISTENER_NETINTS); ++i)
+  if (result == kEtcPalErrBufSize)  // Expected result on success
   {
-    netints[i].iface.index = netint_list[i].index;
-    netints[i].iface.ip_type = netint_list[i].addr.type;
+    netint_list = calloc(num_sys_netints, sizeof(EtcPalNetintInfo));
+    result = etcpal_netint_get_interfaces(netint_list, &num_sys_netints);  // Count on no refreshes, so this should work
   }
 
-  SacnNetintConfig netint_config;
-  netint_config.netints = netints;
-  netint_config.num_netints = (num_sys_netints < MAX_LISTENER_NETINTS) ? num_sys_netints : MAX_LISTENER_NETINTS;
+  if (result == kEtcPalErrOk)
+  {
+#define MAX_LISTENER_NETINTS 100
+    SacnMcastInterface netints[MAX_LISTENER_NETINTS];
 
-  etcpal_error_t result = sacn_receiver_create(&config, &listener->receiver_handle, &netint_config);
+    for (size_t i = 0; (i < num_sys_netints) && (i < MAX_LISTENER_NETINTS); ++i)
+    {
+      netints[i].iface.index = netint_list[i].index;
+      netints[i].iface.ip_type = netint_list[i].addr.type;
+    }
+
+    SacnNetintConfig netint_config;
+    netint_config.netints = netints;
+    netint_config.num_netints = (num_sys_netints < MAX_LISTENER_NETINTS) ? num_sys_netints : MAX_LISTENER_NETINTS;
+
+    result = sacn_receiver_create(&config, &listener->receiver_handle, &netint_config);
+  }
+
   if (result == kEtcPalErrOk)
   {
     listener->universe = universe;
     listener->num_sources = 0;
   }
-  else
-  {
+
+  if (result != kEtcPalErrOk)
     printf("Creating sACN receiver failed with error: '%s'\n", etcpal_strerror(result));
-  }
+
+  if (netint_list)
+    free(netint_list);
 
   return result;
 }

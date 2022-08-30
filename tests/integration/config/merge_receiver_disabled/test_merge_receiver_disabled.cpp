@@ -37,16 +37,24 @@ protected:
   {
     etcpal_reset_all_fakes();
 
-    etcpal_netint_get_num_interfaces_fake.return_val = 1;
-    etcpal_netint_get_interfaces_fake.return_val = &fake_netint_;
+    etcpal_netint_get_interfaces_fake.custom_fake = [](EtcPalNetintInfo* netints, size_t* num_netints) {
+      if (netints)
+        netints[0] = fake_netint_;
+
+      *num_netints = 1u;
+
+      return kEtcPalErrOk;
+    };
 
     ASSERT_EQ(sacn_init(nullptr, nullptr), kEtcPalErrOk);
   }
 
   void TearDown() override { sacn_deinit(); }
 
-  EtcPalNetintInfo fake_netint_;
+  static EtcPalNetintInfo fake_netint_;
 };
+
+EtcPalNetintInfo TestMergeReceiverDisabled::fake_netint_;
 
 #if SACN_DYNAMIC_MEM
 TEST_F(TestMergeReceiverDisabled, MergeReceiverIsEnabledInDynamicMode)
