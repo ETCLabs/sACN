@@ -139,7 +139,7 @@ protected:
       }
 
       if (netints)
-        memcpy(netints, copy_src, copy_size);
+        memcpy(netints, copy_src, copy_size * sizeof(EtcPalNetintInfo));
 
       return result;
     };
@@ -149,37 +149,6 @@ protected:
 
       if (result == kEtcPalErrOk)
         result = copy_out_interfaces(fake_netints_.data(), fake_netints_.size(), netints, num_netints);
-
-      return result;
-    };
-
-    etcpal_netint_get_interfaces_for_index_fake.custom_fake = [](unsigned int index, EtcPalNetintInfo* netints,
-                                                                 size_t* num_netints) {
-      etcpal_error_t result = validate_get_interfaces_args(netints, num_netints);
-
-      const EtcPalNetintInfo* copy_src = NULL;
-      size_t copy_size = 0;
-      if (result == kEtcPalErrOk)
-      {
-        EtcPalNetintInfo* info = fake_netints_.data();
-        while ((info < (fake_netints_.data() + fake_netints_.size())) && (info->index != index))
-          ++info;
-
-        if (info >= (fake_netints_.data() + fake_netints_.size()))
-        {
-          result = kEtcPalErrNotFound;
-        }
-        else
-        {
-          copy_src = info;
-
-          while ((info < (fake_netints_.data() + fake_netints_.size())) && (info->index == index))
-            ++info, ++copy_size;
-        }
-      }
-
-      if (result == kEtcPalErrOk)
-        result = copy_out_interfaces(copy_src, copy_size, netints, num_netints);
 
       return result;
     };

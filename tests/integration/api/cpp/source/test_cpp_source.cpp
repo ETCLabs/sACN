@@ -88,7 +88,7 @@ protected:
       }
 
       if (netints)
-        memcpy(netints, copy_src, copy_size);
+        memcpy(netints, copy_src, copy_size * sizeof(EtcPalNetintInfo));
 
       return result;
     };
@@ -105,20 +105,6 @@ protected:
         return result;
 
       return copy_out_interfaces(fake_netints_.data(), fake_netints_.size(), netints, num_netints);
-    };
-
-    etcpal_netint_get_interfaces_for_index_fake.custom_fake = [](unsigned int index, EtcPalNetintInfo* netints,
-                                                                 size_t* num_netints) {
-      auto result = validate_get_interfaces_args(netints, num_netints);
-      if (result != kEtcPalErrOk)
-        return result;
-
-      for (auto& fake_netint : fake_netints_)
-      {
-        if (fake_netint.index == index)
-          return copy_out_interfaces(&fake_netint, 1u, netints, num_netints);
-      }
-      return kEtcPalErrNotFound;
     };
 
     ASSERT_EQ(Init().code(), kEtcPalErrOk);
