@@ -832,11 +832,7 @@ etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_ty
 
   res = etcpal_netint_get_interfaces(netint_list, &num_netints);
   if (res == kEtcPalErrBufSize)
-  {
-    // In this case SACN_MAX_NETINTS is too low and some application-specified interfaces may not be found.
-    num_netints = SACN_MAX_NETINTS;
-    res = kEtcPalErrOk;
-  }
+    res = kEtcPalErrNoMem;
   if (res == kEtcPalErrNotFound)
     res = kEtcPalErrNoNetints;
 #endif
