@@ -151,6 +151,8 @@ static ListeningUniverse* find_listener_on_universe(uint16_t universe)
 static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t universe,
                                       const SacnReceiverCallbacks* callbacks)
 {
+  etcpal_error_t result = kEtcPalErrOk;
+
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
   config.callbacks = *callbacks;
   config.callbacks.context = listener;
@@ -158,17 +160,16 @@ static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t univ
 
   printf("Creating a new sACN receiver on universe %u.\n", universe);
 
-  // Normally passing in NULL and 0 for netints and length would achieve the same result, this is just for
-  // demonstration.
-  EtcPalNetintInfo* netint_list = NULL;
-  size_t num_sys_netints = 0;
-  etcpal_error_t result = etcpal_netint_get_interfaces(NULL, &num_sys_netints);
-
-  if (result == kEtcPalErrBufSize)  // Expected result on success
+  // Even though reset_networking is never called in this example, a loop is used to demonstrate the case where it could
+  // be called at any time on another thread.
+  size_t num_sys_netints = 4;  // Start with estimate which eventually has the actual number written to it
+  EtcPalNetintInfo* netint_list = calloc(num_sys_netints, sizeof(EtcPalNetintInfo));
+  do
   {
-    netint_list = calloc(num_sys_netints, sizeof(EtcPalNetintInfo));
-    result = etcpal_netint_get_interfaces(netint_list, &num_sys_netints);  // Count on no refreshes, so this should work
-  }
+    result = etcpal_netint_get_interfaces(netint_list, &num_sys_netints);
+    if (result == kEtcPalErrBufSize)
+      netint_list = realloc(netint_list, num_sys_netints * sizeof(EtcPalNetintInfo));
+  } while (result == kEtcPalErrBufSize);
 
   if (result == kEtcPalErrOk)
   {
