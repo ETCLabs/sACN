@@ -81,7 +81,7 @@ etcpal_error_t init_merge_receiver_sources(void)
 
 // Needs lock
 etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, const EtcPalSockAddr* addr,
-                                              const SacnRemoteSource* remote_source, bool pending)
+                                              const SacnRemoteSource* remote_source, bool pending, bool sampling)
 {
   etcpal_error_t result = kEtcPalErrNoMem;
 
@@ -90,6 +90,7 @@ etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver,
   {
     src->handle = remote_source->handle;
     src->pending = pending;
+    src->sampling = sampling;
     update_merge_receiver_source_info(src, addr, remote_source);
 
     result = etcpal_rbtree_insert(&merge_receiver->sources, src);

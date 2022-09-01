@@ -680,17 +680,24 @@ typedef struct SacnMergeReceiverInternalSource
   char name[SACN_SOURCE_NAME_MAX_LEN];
   EtcPalSockAddr addr;
   bool pending;
+  bool sampling;
 } SacnMergeReceiverInternalSource;
 
 typedef struct SacnMergeReceiver
 {
   sacn_merge_receiver_t merge_receiver_handle;  // This must be the first struct member.
-  sacn_dmx_merger_t merger_handle;
   SacnMergeReceiverCallbacks callbacks;
   bool use_pap;
 
+  sacn_dmx_merger_t merger_handle;
   uint8_t levels[DMX_ADDRESS_COUNT];
   sacn_dmx_merger_source_t owners[DMX_ADDRESS_COUNT];
+
+#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+  sacn_dmx_merger_t sampling_merger_handle;
+  uint8_t sampling_levels[DMX_ADDRESS_COUNT];
+  sacn_dmx_merger_source_t sampling_owners[DMX_ADDRESS_COUNT];
+#endif
 
   EtcPalRbTree sources;
 

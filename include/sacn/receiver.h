@@ -102,7 +102,9 @@ typedef struct SacnRecvUniverseData
    */
   bool preview;
   /**
-   * True if this data was received during the sampling period, false otherwise.
+   * True if this data is part of a sampling period, false otherwise. This could be false even if the receiver is in a
+   * sampling period. This is because not all sources need to be included in the sampling period triggered by a
+   * networking reset. Use this to determine whether or not this data is safe to display.
    */
   bool is_sampling;
   /**

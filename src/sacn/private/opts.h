@@ -384,8 +384,11 @@
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
-#ifndef SACN_DMX_MERGER_MAX_MERGERS
+#ifdef SACN_DMX_MERGER_MAX_MERGERS
+#define SACN_DMX_MERGER_DEFAULT_MAX_MERGERS 0
+#else
 #define SACN_DMX_MERGER_MAX_MERGERS SACN_RECEIVER_MAX_UNIVERSES
+#define SACN_DMX_MERGER_DEFAULT_MAX_MERGERS 1
 #endif
 
 /**
@@ -443,6 +446,22 @@
 #if !SACN_DYNAMIC_MEM && SACN_MERGE_RECEIVER_ENABLE && \
     ((SACN_DMX_MERGER_MAX_MERGERS <= 0) || (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER <= 0))
 #error "Error: SACN_MERGE_RECEIVER_ENABLE was set to 1, but the sACN DMX Merger API is disabled!"
+#endif
+
+/**
+ * @brief Whether to enable a second DMX merger per merge receiver dedicated to sources in the sampling period.
+ *
+ * Set this to 1 to enable, 0 to disable. This would enable existing live sources to continue being displayed during a
+ * networking reset. Disabling this would save memory by limiting to one DMX merger, but it would also interrupt all
+ * live data during the sampling period caused by a networking reset.
+ */
+#ifndef SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+#define SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER 0
+#endif
+
+#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER && SACN_DMX_MERGER_DEFAULT_MAX_MERGERS
+#undef SACN_DMX_MERGER_MAX_MERGERS
+#define SACN_DMX_MERGER_MAX_MERGERS (SACN_RECEIVER_MAX_UNIVERSES * 2)
 #endif
 
 /**
