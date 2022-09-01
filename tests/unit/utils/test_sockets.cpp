@@ -117,34 +117,38 @@ protected:
       fake_netints_.push_back(fake_netint);
     }
 
-    etcpal_netint_get_num_interfaces_fake.return_val = fake_netints_.size();
-    etcpal_netint_get_interfaces_fake.return_val = fake_netints_.data();
+    static auto validate_get_interfaces_args = [](EtcPalNetintInfo* netints, size_t* num_netints) {
+      if (!num_netints)
+        return kEtcPalErrInvalid;
+      if ((!netints && (*num_netints > 0)) && (netints && (*num_netints == 0)))
+        return kEtcPalErrInvalid;
+      return kEtcPalErrOk;
+    };
 
-    etcpal_netint_get_interfaces_by_index_fake.custom_fake = [](unsigned int index, const EtcPalNetintInfo** netint_arr,
-                                                                size_t* netint_arr_size) {
-      etcpal_error_t result = (netint_arr && netint_arr_size) ? kEtcPalErrOk : kEtcPalErrInvalid;
+    static auto copy_out_interfaces = [](const EtcPalNetintInfo* copy_src, size_t copy_size, EtcPalNetintInfo* netints,
+                                         size_t* num_netints) {
+      etcpal_error_t result = kEtcPalErrOk;
+
+      size_t space_available = *num_netints;
+      *num_netints = copy_size;
+
+      if (copy_size > space_available)
+      {
+        result = kEtcPalErrBufSize;
+        copy_size = space_available;
+      }
+
+      if (netints)
+        memcpy(netints, copy_src, copy_size * sizeof(EtcPalNetintInfo));
+
+      return result;
+    };
+
+    etcpal_netint_get_interfaces_fake.custom_fake = [](EtcPalNetintInfo* netints, size_t* num_netints) {
+      etcpal_error_t result = validate_get_interfaces_args(netints, num_netints);
 
       if (result == kEtcPalErrOk)
-      {
-        EtcPalNetintInfo* info = fake_netints_.data();
-        while ((info < (fake_netints_.data() + fake_netints_.size())) && (info->index != index))
-          ++info;
-
-        if (info >= (fake_netints_.data() + fake_netints_.size()))
-        {
-          result = kEtcPalErrNotFound;
-        }
-        else
-        {
-          *netint_arr = info;
-
-          size_t size = 0u;
-          while ((info < (fake_netints_.data() + fake_netints_.size())) && (info->index == index))
-            ++info, ++size;
-
-          *netint_arr_size = size;
-        }
-      }
+        result = copy_out_interfaces(fake_netints_.data(), fake_netints_.size(), netints, num_netints);
 
       return result;
     };
