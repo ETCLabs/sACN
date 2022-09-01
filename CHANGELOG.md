@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2022-09-01
+
+### Fixed
+
+- Fixed numerous defects that were causing static receiver limits (e.g. universe and source counts)
+  to be reached sooner than expected.
+- Fixed a defect that was causing universe discovery packets with under 40 universes to be
+  incorrectly discarded by the source detector.
+
+### Added
+
+- Added a function to the merge receiver for retrieving information about a source on the universe.
+- Enabled the installation of PDB files in the lib folder during a CMake install.
+
 ## [2.0.1] - 2022-03-02
 
 ### Fixed
@@ -32,5 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Previous existing sACN library - not available on GitHub.
 
-[Unreleased]: https://github.com/ETCLabs/sACN/compare/v2.0.1...main
+[Unreleased]: https://github.com/ETCLabs/sACN/compare/v2.0.2...main
+[2.0.2]: https://github.com/ETCLabs/sACN/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/ETCLabs/sACN/compare/v2.0.0...v2.0.1
