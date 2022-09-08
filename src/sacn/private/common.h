@@ -667,6 +667,7 @@ typedef struct SacnRecvThreadContext
   EtcPalPollContext poll_context;
   bool poll_context_initialized;
   uint8_t recv_buf[SACN_MTU];
+  uint8_t control_buf[ETCPAL_MAX_CONTROL_SIZE_PKTINFO];  // Ancillary data
   EtcPalTimer periodic_timer;
   bool periodic_timer_started;
 } SacnRecvThreadContext;

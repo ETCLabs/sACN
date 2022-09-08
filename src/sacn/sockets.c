@@ -93,6 +93,8 @@ static void send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr)
 static EtcPalSockAddr get_bind_address(etcpal_iptype_t ip_type);
 #endif  // SACN_RECEIVER_ENABLED
 
+static bool get_ifindex(EtcPalMsgHdr* msg, unsigned int* ifindex);
+
 /*************************** Function definitions ****************************/
 
 etcpal_error_t sacn_sockets_init(const SacnNetintConfig* netint_config)
@@ -260,6 +262,28 @@ EtcPalSockAddr get_bind_address(etcpal_iptype_t ip_type)
 
 #endif  // SACN_RECEIVER_ENABLED
 
+bool get_ifindex(EtcPalMsgHdr* msg, unsigned int* ifindex)
+{
+  SACN_ASSERT(msg);
+  SACN_ASSERT(ifindex);
+
+  EtcPalCMsgHdr cmsg = {0};
+  EtcPalPktInfo pktinfo = {0};
+  bool pktinfo_found = false;
+  if (etcpal_cmsg_firsthdr(msg, &cmsg))
+  {
+    do
+    {
+      pktinfo_found = etcpal_cmsg_to_pktinfo(&cmsg, &pktinfo);
+    } while (!pktinfo_found && etcpal_cmsg_nxthdr(msg, &cmsg, &cmsg));
+  }
+
+  if (pktinfo_found)
+    *ifindex = pktinfo.ifindex;
+
+  return pktinfo_found;
+}
+
 /*
  * Internal function to create a new send socket for multicast, associated with an interface.
  * There is a one-to-one relationship between interfaces and multicast send sockets.
@@ -323,34 +347,43 @@ etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAd
   etcpal_socket_t new_sock;
   etcpal_error_t res =
       etcpal_socket(ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET, ETCPAL_SOCK_DGRAM, &new_sock);
-  if (res != kEtcPalErrOk)
-    return res;
-
-  if (set_sockopts)
+  if (res == kEtcPalErrOk)
   {
-    // Set some socket options. We don't check failure on these because they might not work on all
-    // platforms.
-    int intval = 1;
-    etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_REUSEADDR, &intval, sizeof intval);
-    etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_REUSEPORT, &intval, sizeof intval);
-    intval = SACN_RECEIVER_SOCKET_RCVBUF_SIZE;
-    etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_RCVBUF, &intval, sizeof intval);
-  }
-
-  if (bind_addr)
-  {
-    res = etcpal_bind(new_sock, bind_addr);
-    if (res != kEtcPalErrOk)
+    if (set_sockopts)
     {
-      etcpal_close(new_sock);
-      return res;
-    }
-  }
+      // Set some socket options. We don't check failure on these because they might not work on all
+      // platforms.
+      int intval = 1;
+      etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_REUSEADDR, &intval, sizeof intval);
+      etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_REUSEPORT, &intval, sizeof intval);
+      intval = SACN_RECEIVER_SOCKET_RCVBUF_SIZE;
+      etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_RCVBUF, &intval, sizeof intval);
 
-  socket->handle = new_sock;
-  socket->ip_type = ip_type;
-  socket->bound = (bind_addr != NULL);
-  socket->polling = false;
+      // The PKTINFO socket option, however, IS required to work, so check for any errors from that.
+      intval = 1;
+      if (ip_type == kEtcPalIpTypeV6)
+        res = etcpal_setsockopt(new_sock, ETCPAL_IPPROTO_IPV6, ETCPAL_IPV6_PKTINFO, &intval, sizeof intval);
+      else
+        res = etcpal_setsockopt(new_sock, ETCPAL_IPPROTO_IP, ETCPAL_IP_PKTINFO, &intval, sizeof intval);
+    }
+
+    if (res == kEtcPalErrOk)
+    {
+      if (bind_addr)
+        res = etcpal_bind(new_sock, bind_addr);
+    }
+
+    if (res == kEtcPalErrOk)
+    {
+      socket->handle = new_sock;
+      socket->ip_type = ip_type;
+      socket->bound = (bind_addr != NULL);
+      socket->polling = false;
+      return kEtcPalErrOk;
+    }
+
+    etcpal_close(new_sock);
+  }
 
   return res;
 }
@@ -722,14 +755,32 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
     }
     else if (event.events & ETCPAL_POLL_IN)
     {
-      int recv_res = etcpal_recvfrom(event.socket, recv_thread_context->recv_buf, SACN_MTU, 0, &read_result->from_addr);
+      EtcPalMsgHdr msg;
+      msg.buf = recv_thread_context->recv_buf;
+      msg.buflen = SACN_MTU;
+      msg.control = recv_thread_context->control_buf;
+      msg.controllen = ETCPAL_MAX_CONTROL_SIZE_PKTINFO;
+
+      int recv_res = etcpal_recvmsg(event.socket, &msg, 0);
       if (recv_res > 0)
       {
-        read_result->data_len = (size_t)recv_res;
-        read_result->data = recv_thread_context->recv_buf;
-        return kEtcPalErrOk;
+        if (msg.flags & ETCPAL_MSG_TRUNC)
+        {
+          recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than SACN_MTU.
+        }
+        else if ((msg.flags & ETCPAL_MSG_CTRUNC) || !get_ifindex(&msg, &read_result->ifindex))
+        {
+          recv_res = kEtcPalErrSys;
+        }
+        else
+        {
+          read_result->from_addr = msg.name;
+          read_result->data_len = (size_t)recv_res;
+          read_result->data = recv_thread_context->recv_buf;
+        }
       }
-      else if (recv_res < 0)
+
+      if (recv_res < 0)
       {
         etcpal_poll_remove_socket(&recv_thread_context->poll_context, event.socket);
         return (etcpal_error_t)recv_res;
