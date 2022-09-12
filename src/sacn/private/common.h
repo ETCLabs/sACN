@@ -447,6 +447,8 @@ struct SacnReceiver
   bool sampling;
   bool notified_sampling_started;
   EtcPalTimer sample_timer;
+  EtcPalRbTree sampling_period_netints;
+
   bool suppress_limit_exceeded_notification;
   EtcPalRbTree sources;       // The sources being tracked on this universe.
   TerminationSet* term_sets;  // Source loss tracking
@@ -525,6 +527,12 @@ typedef enum
   kPerformAllSocketCleanupNow,
   kQueueSocketCleanup
 } socket_cleanup_behavior_t;
+
+typedef struct SacnSamplingPeriodNetint
+{
+  EtcPalMcastNetintId id;  // This must be the first member of this struct.
+  bool in_future_sampling_period;
+} SacnSamplingPeriodNetint;
 
 /******************************************************************************
  * Notifications delivered by the sACN receive module
