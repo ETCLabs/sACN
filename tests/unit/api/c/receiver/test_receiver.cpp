@@ -59,8 +59,8 @@ protected:
     sacn_source_loss_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
 
-    sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* internal_netints,
-                                                           const SacnNetintConfig*) {
+    sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* internal_netints, bool,
+                                                           EtcPalRbTree*, const SacnNetintConfig*) {
 #if SACN_DYNAMIC_MEM
       internal_netints->netints = NULL;
       internal_netints->netints_capacity = 0;

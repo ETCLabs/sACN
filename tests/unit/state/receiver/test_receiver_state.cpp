@@ -110,8 +110,8 @@ protected:
     sacn_sockets_reset_all_fakes();
     sacn_source_loss_reset_all_fakes();
 
-    sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* receiver_netints,
-                                                           const SacnNetintConfig* app_netint_config) {
+    sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* receiver_netints, bool,
+                                                           EtcPalRbTree*, const SacnNetintConfig* app_netint_config) {
       EXPECT_NE(app_netint_config, nullptr);
 
       if (app_netint_config)

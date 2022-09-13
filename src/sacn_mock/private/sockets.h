@@ -34,6 +34,8 @@ DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_receiver, const SacnN
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_source_detector, const SacnNetintConfig*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_receiver_netints, SacnInternalNetintArray*, bool, EtcPalRbTree*,
                         const SacnNetintConfig*);
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_add_all_netints_to_sampling_period, SacnInternalNetintArray*,
+                        EtcPalRbTree*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_source_detector_netints, SacnInternalNetintArray*,
                         const SacnNetintConfig*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_source_netints, SacnInternalNetintArray*,

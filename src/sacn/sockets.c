@@ -826,6 +826,7 @@ SacnSocketsSysNetints* sacn_sockets_get_sys_netints(networking_type_t type)
   return sys_netints;
 }
 
+#if SACN_RECEIVER_ENABLED
 etcpal_error_t sacn_initialize_receiver_netints(SacnInternalNetintArray* receiver_netints, bool currently_sampling,
                                                 EtcPalRbTree* sampling_period_netints,
                                                 const SacnNetintConfig* app_netint_config)
@@ -859,6 +860,7 @@ etcpal_error_t sacn_add_all_netints_to_sampling_period(SacnInternalNetintArray* 
 
   return res;
 }
+#endif  // SACN_RECEIVER_ENABLED
 
 etcpal_error_t sacn_initialize_source_detector_netints(SacnInternalNetintArray* source_detector_netints,
                                                        const SacnNetintConfig* app_netint_config)
@@ -1208,24 +1210,23 @@ etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* interna
                                                 const SacnNetintConfig* app_netint_config, size_t num_valid_app_netints,
                                                 const SacnMcastInterface* sys_netints, size_t num_sys_netints)
 {
+  etcpal_error_t result = kEtcPalErrOk;
+
   const SacnMcastInterface* netints_to_use =
       (app_netint_config && app_netint_config->netints) ? app_netint_config->netints : sys_netints;
   size_t num_netints_to_use =
       (app_netint_config && app_netint_config->netints) ? app_netint_config->num_netints : num_sys_netints;
 
-  if (result == kEtcPalErrOk)
-  {
-    CLEAR_BUF(internal_netints, netints);
+  CLEAR_BUF(internal_netints, netints);
 
 #if SACN_DYNAMIC_MEM
-    internal_netints->netints = calloc(num_valid_app_netints, sizeof(EtcPalMcastNetintId));
+  internal_netints->netints = calloc(num_valid_app_netints, sizeof(EtcPalMcastNetintId));
 
-    if (!internal_netints->netints)
-      result = kEtcPalErrNoMem;
-    else
-      internal_netints->netints_capacity = num_valid_app_netints;
+  if (!internal_netints->netints)
+    result = kEtcPalErrNoMem;
+  else
+    internal_netints->netints_capacity = num_valid_app_netints;
 #endif
-  }
 
   if (result == kEtcPalErrOk)
   {

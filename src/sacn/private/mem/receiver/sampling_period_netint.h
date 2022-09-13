@@ -33,7 +33,7 @@ etcpal_error_t init_sampling_period_netints(void);
 
 etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id,
                                                bool in_future_sampling_period);
-etcpal_error_t clear_future_sampling_period_netints(EtcPalRbTree* tree);
+etcpal_error_t clear_future_sampling_period_netints(EtcPalRbTree* tree);  // TODO: Remove or repurpose
 etcpal_error_t remove_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id);
 int sampling_period_netint_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 
