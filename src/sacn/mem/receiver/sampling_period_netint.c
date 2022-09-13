@@ -79,7 +79,7 @@ etcpal_error_t init_sampling_period_netints(void)
   return res;
 }
 
-etcpal_error_t add_sacn_sampling_period_netint(SacnReceiver* receiver, const EtcPalMcastNetintId* id,
+etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id,
                                                bool in_future_sampling_period)
 {
   etcpal_error_t result = kEtcPalErrOk;
@@ -93,7 +93,7 @@ etcpal_error_t add_sacn_sampling_period_netint(SacnReceiver* receiver, const Etc
     netint->id = *id;
     netint->in_future_sampling_period = in_future_sampling_period;
 
-    result = etcpal_rbtree_insert(&receiver->sampling_period_netints, netint);
+    result = etcpal_rbtree_insert(tree, netint);
   }
 
   if (result != kEtcPalErrOk)
@@ -105,9 +105,36 @@ etcpal_error_t add_sacn_sampling_period_netint(SacnReceiver* receiver, const Etc
   return result;
 }
 
-etcpal_error_t remove_sampling_period_netint(SacnReceiver* receiver, const EtcPalMcastNetintId* id)
+etcpal_error_t clear_future_sampling_period_netints(EtcPalRbTree* tree)
 {
-  return etcpal_rbtree_remove_with_cb(&receiver->sampling_period_netints, id, sampling_period_netint_tree_dealloc);
+  etcpal_error_t res = kEtcPalErrOk;
+  SacnSamplingPeriodNetint* next_future_sp_netint = NULL;
+  do
+  {
+    next_future_sp_netint = NULL;
+
+    EtcPalRbIter iter;
+    etcpal_rbiter_init(&iter);
+    for (SacnSamplingPeriodNetint* sp_netint = etcpal_rbiter_first(&iter, tree); sp_netint;
+         sp_netint = etcpal_rbiter_next(&iter))
+    {
+      if (sp_netint->in_future_sampling_period)
+      {
+        next_future_sp_netint = sp_netint;
+        break;
+      }
+    }
+
+    if (next_future_sp_netint)
+      res = etcpal_rbtree_remove_with_cb(tree, next_future_sp_netint, sampling_period_netint_tree_dealloc);
+  } while (next_future_sp_netint && (res == kEtcPalErrOk));
+
+  return res;
+}
+
+etcpal_error_t remove_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id)
+{
+  return etcpal_rbtree_remove_with_cb(tree, id, sampling_period_netint_tree_dealloc);
 }
 
 int sampling_period_netint_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)

@@ -49,9 +49,9 @@ static etcpal_socket_t ipv6_unicast_send_socket;
 static etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_type_t net_type);
 static etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, networking_type_t net_type);
 static void clear_source_networking();
-static etcpal_error_t validate_netint_config(const SacnNetintConfig* netint_config,
-                                             const SacnMcastInterface* sys_netints, size_t num_sys_netints,
-                                             size_t* num_valid_netints);
+static etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_netints, bool currently_sampling,
+                                                     EtcPalRbTree* sampling_period_netints,
+                                                     const SacnNetintConfig* app_netint_config);
 static bool netints_valid(const SacnMcastInterface* netints, size_t num_netints);
 static size_t apply_netint_config(const SacnNetintConfig* netint_config, const EtcPalNetintInfo* netint_list,
                                   size_t num_netints, SacnSocketsSysNetints* sys_netints, networking_type_t net_type);
@@ -826,26 +826,69 @@ SacnSocketsSysNetints* sacn_sockets_get_sys_netints(networking_type_t type)
   return sys_netints;
 }
 
-etcpal_error_t sacn_initialize_receiver_netints(SacnInternalNetintArray* receiver_netints,
+etcpal_error_t sacn_initialize_receiver_netints(SacnInternalNetintArray* receiver_netints, bool currently_sampling,
+                                                EtcPalRbTree* sampling_period_netints,
                                                 const SacnNetintConfig* app_netint_config)
 {
-  return sacn_initialize_internal_netints(receiver_netints, app_netint_config, receiver_sys_netints.sys_netints,
-                                          receiver_sys_netints.num_sys_netints);
+  size_t num_valid_netints = 0;
+  etcpal_error_t res = sacn_validate_netint_config(app_netint_config, receiver_sys_netints.sys_netints,
+                                                   receiver_sys_netints.num_sys_netints, &num_valid_netints);
+
+  if (res == kEtcPalErrOk)
+  {
+    res = update_sampling_period_netints(receiver_netints, currently_sampling, sampling_period_netints,
+                                         app_netint_config);
+  }
+
+  if (res == kEtcPalErrOk)
+  {
+    res = sacn_initialize_internal_netints(receiver_netints, app_netint_config, num_valid_netints,
+                                           receiver_sys_netints.sys_netints, receiver_sys_netints.num_sys_netints);
+  }
+
+  return res;
+}
+
+etcpal_error_t sacn_add_all_netints_to_sampling_period(SacnInternalNetintArray* receiver_netints,
+                                                       EtcPalRbTree* sampling_period_netints)
+{
+  etcpal_error_t res = etcpal_rbtree_clear_with_cb(sampling_period_netints, sampling_period_netint_tree_dealloc);
+
+  for (size_t i = 0; (res == kEtcPalErrOk) && (i < receiver_netints->num_netints); ++i)
+    res = add_sacn_sampling_period_netint(sampling_period_netints, &receiver_netints->netints[i], false);
+
+  return res;
 }
 
 etcpal_error_t sacn_initialize_source_detector_netints(SacnInternalNetintArray* source_detector_netints,
                                                        const SacnNetintConfig* app_netint_config)
 {
-  return sacn_initialize_internal_netints(source_detector_netints, app_netint_config,
-                                          source_detector_sys_netints.sys_netints,
-                                          source_detector_sys_netints.num_sys_netints);
+  size_t num_valid_netints = 0;
+  etcpal_error_t res = sacn_validate_netint_config(app_netint_config, source_detector_sys_netints.sys_netints,
+                                                   source_detector_sys_netints.num_sys_netints, &num_valid_netints);
+  if (res == kEtcPalErrOk)
+  {
+    res = sacn_initialize_internal_netints(source_detector_netints, app_netint_config, num_valid_netints,
+                                           source_detector_sys_netints.sys_netints,
+                                           source_detector_sys_netints.num_sys_netints);
+  }
+
+  return res;
 }
 
 etcpal_error_t sacn_initialize_source_netints(SacnInternalNetintArray* source_netints,
                                               const SacnNetintConfig* app_netint_config)
 {
-  return sacn_initialize_internal_netints(source_netints, app_netint_config, source_sys_netints.sys_netints,
-                                          source_sys_netints.num_sys_netints);
+  size_t num_valid_netints = 0;
+  etcpal_error_t res = sacn_validate_netint_config(app_netint_config, source_sys_netints.sys_netints,
+                                                   source_sys_netints.num_sys_netints, &num_valid_netints);
+  if (res == kEtcPalErrOk)
+  {
+    res = sacn_initialize_internal_netints(source_netints, app_netint_config, num_valid_netints,
+                                           source_sys_netints.sys_netints, source_sys_netints.num_sys_netints);
+  }
+
+  return res;
 }
 
 etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_type_t net_type)
@@ -989,8 +1032,58 @@ void clear_source_networking()
   CLEAR_BUF(&source_sys_netints, sys_netints);
 }
 
-etcpal_error_t validate_netint_config(const SacnNetintConfig* netint_config, const SacnMcastInterface* sys_netints,
-                                      size_t num_sys_netints, size_t* num_valid_netints)
+etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_netints, bool currently_sampling,
+                                              EtcPalRbTree* sampling_period_netints,
+                                              const SacnNetintConfig* app_netint_config)
+{
+  etcpal_error_t res = kEtcPalErrOk;
+
+  const SacnMcastInterface* netints =
+      (app_netint_config && app_netint_config->netints) ? app_netint_config->netints : receiver_sys_netints.sys_netints;
+  size_t num_netints = (app_netint_config && app_netint_config->netints) ? app_netint_config->num_netints
+                                                                         : receiver_sys_netints.num_sys_netints;
+
+  // Add new sampling period netints
+  for (size_t i = 0; (res == kEtcPalErrOk) && (i < num_netints); ++i)
+  {
+    if (netints[i].status != kEtcPalErrOk)
+      continue;
+
+    bool existing_netint = false;
+    for (size_t j = 0; !existing_netint && (j < receiver_netints->num_netints); ++j)
+    {
+      existing_netint = (receiver_netints->netints[j].ip_type == netints[i].iface.ip_type) &&
+                        (receiver_netints->netints[j].index == netints[i].iface.index);
+    }
+
+    if (existing_netint)
+      continue;
+
+    res = add_sacn_sampling_period_netint(sampling_period_netints, &netints[i].iface, currently_sampling);
+  }
+
+  // If currently sampling, remove sampling period netints not present in new list
+  if (currently_sampling)
+  {
+    for (size_t i = 0; (res == kEtcPalErrOk) && (i < receiver_netints->num_netints); ++i)
+    {
+      bool found = false;
+      for (size_t j = 0; !found && (j < num_netints); ++j)
+      {
+        found = (receiver_netints->netints[i].ip_type == netints[j].iface.ip_type) &&
+                (receiver_netints->netints[i].index == netints[j].iface.index);
+      }
+
+      if (!found)
+        res = remove_sampling_period_netint(sampling_period_netints, &receiver_netints->netints[i]);
+    }
+  }
+
+  return res;
+}
+
+etcpal_error_t sacn_validate_netint_config(const SacnNetintConfig* netint_config, const SacnMcastInterface* sys_netints,
+                                           size_t num_sys_netints, size_t* num_valid_netints)
 {
   *num_valid_netints = 0u;
 
@@ -1112,12 +1205,9 @@ etcpal_error_t test_netint(const EtcPalNetintInfo* netint, SacnSocketsSysNetints
 }
 
 etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* internal_netints,
-                                                const SacnNetintConfig* app_netint_config,
+                                                const SacnNetintConfig* app_netint_config, size_t num_valid_app_netints,
                                                 const SacnMcastInterface* sys_netints, size_t num_sys_netints)
 {
-  size_t num_valid_netints = 0u;
-  etcpal_error_t result = validate_netint_config(app_netint_config, sys_netints, num_sys_netints, &num_valid_netints);
-
   const SacnMcastInterface* netints_to_use =
       (app_netint_config && app_netint_config->netints) ? app_netint_config->netints : sys_netints;
   size_t num_netints_to_use =
@@ -1128,12 +1218,12 @@ etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* interna
     CLEAR_BUF(internal_netints, netints);
 
 #if SACN_DYNAMIC_MEM
-    internal_netints->netints = calloc(num_valid_netints, sizeof(EtcPalMcastNetintId));
+    internal_netints->netints = calloc(num_valid_app_netints, sizeof(EtcPalMcastNetintId));
 
     if (!internal_netints->netints)
       result = kEtcPalErrNoMem;
     else
-      internal_netints->netints_capacity = num_valid_netints;
+      internal_netints->netints_capacity = num_valid_app_netints;
 #endif
   }
 
@@ -1148,7 +1238,7 @@ etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* interna
       }
     }
 
-    internal_netints->num_netints = num_valid_netints;
+    internal_netints->num_netints = num_valid_app_netints;
   }
   else
   {

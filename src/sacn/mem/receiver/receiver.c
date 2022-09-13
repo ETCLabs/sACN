@@ -131,7 +131,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   receiver->netints.num_netints = 0;
 
   etcpal_error_t initialize_receiver_netints_result =
-      sacn_initialize_receiver_netints(&receiver->netints, netint_config);
+      sacn_initialize_receiver_netints(&receiver->netints, false, &receiver->sampling_period_netints, netint_config);
   if (initialize_receiver_netints_result != kEtcPalErrOk)
   {
     FREE_RECEIVER(receiver);

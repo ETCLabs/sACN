@@ -566,7 +566,13 @@ TEST_F(TestSockets, InitializeInternalNetintsWorks)
   internal_netint_array.num_netints = 0u;
 
   SacnNetintConfig app_netint_config = {app_netints.data(), app_netints.size()};
-  sacn_initialize_internal_netints(&internal_netint_array, &app_netint_config, sys_netints.data(), sys_netints.size());
+  size_t num_valid_netints = 0u;
+  if (sacn_validate_netint_config(&app_netint_config, sys_netints.data(), sys_netints.size(), &num_valid_netints) ==
+      kEtcPalErrOk)
+  {
+    sacn_initialize_internal_netints(&internal_netint_array, &app_netint_config, num_valid_netints, sys_netints.data(),
+                                     sys_netints.size());
+  }
 
   for (size_t i = 0u; i < app_netints.size(); ++i)
     EXPECT_EQ(app_netints[i].status, expected_statuses[i]);
