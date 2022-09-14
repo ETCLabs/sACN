@@ -17,6 +17,19 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
+// These are defined before the includes to enable ETCPAL_MAX_CONTROL_SIZE_PKTINFO support on Mac & Linux.
+#if defined(__linux__) || defined(__APPLE__)
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif  // _GNU_SOURCE
+#endif  // defined(__linux__) || defined(__APPLE__)
+
+#if defined(__APPLE__)
+#ifndef __APPLE_USE_RFC_3542
+#define __APPLE_USE_RFC_3542
+#endif  // __APPLE_USE_RFC_3542
+#endif  // defined(__APPLE__)
+
 #include "sacn/private/sockets.h"
 
 #include "etcpal/common.h"
@@ -758,10 +771,12 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
     }
     else if (event.events & ETCPAL_POLL_IN)
     {
+      uint8_t control_buf[ETCPAL_MAX_CONTROL_SIZE_PKTINFO];  // Ancillary data
+
       EtcPalMsgHdr msg;
       msg.buf = recv_thread_context->recv_buf;
       msg.buflen = SACN_MTU;
-      msg.control = recv_thread_context->control_buf;
+      msg.control = control_buf;
       msg.controllen = ETCPAL_MAX_CONTROL_SIZE_PKTINFO;
 
       int recv_res = etcpal_recvmsg(event.socket, &msg, 0);
