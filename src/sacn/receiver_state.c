@@ -78,6 +78,7 @@ static void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* d
                                     const EtcPalMcastNetintId* netint);
 static void handle_sacn_extended_packet(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
                                         const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr);
+static void mark_source_terminated(SacnTrackedSource* src);
 static void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
                                     SourcePapLostNotification* source_pap_lost, bool* notify);
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -485,6 +486,26 @@ void read_network_and_process(SacnRecvThreadContext* context)
   }
 }
 
+/*
+ * Marks all sources as terminated that are not on a currently used network interface.
+ */
+void terminate_sources_on_removed_netints(SacnReceiver* receiver)
+{
+  EtcPalRbIter iter;
+  for (SacnTrackedSource* src = etcpal_rbiter_first(&iter, &receiver->sources); src; src = etcpal_rbiter_next(&iter))
+  {
+    bool found = false;
+    for (size_t i = 0; !found && (i < receiver->netints.num_netints); ++i)
+    {
+      found = (src->netint.index == receiver->netints.netints[i].index) &&
+              (src->netint.ip_type == receiver->netints.netints[i].ip_type);
+    }
+
+    if (!found)
+      mark_source_terminated(src);
+  }
+}
+
 /**************************************************************************************************
  * Helpers for receiver creation and destruction
  *************************************************************************************************/
@@ -672,10 +693,8 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 
       // Check to see if the 'stream terminated' bit is set in the options
       if (is_termination_packet)
-      {
-        src->terminated = true;
-        etcpal_timer_start(&src->packet_timer, 0);
-      }
+        mark_source_terminated(src);
+
       // This also handles the case where the source was already terminated in a previous packet
       // but not yet removed.
       if (src->terminated)
@@ -780,6 +799,12 @@ void handle_sacn_extended_packet(SacnRecvThreadContext* context, const uint8_t* 
 
     // TODO: sACN sync
   }
+}
+
+void mark_source_terminated(SacnTrackedSource* src)
+{
+  src->terminated = true;
+  etcpal_timer_start(&src->packet_timer, 0);
 }
 
 /*

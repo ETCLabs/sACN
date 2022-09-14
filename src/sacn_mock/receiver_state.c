@@ -37,6 +37,7 @@ DEFINE_FAKE_VOID_FUNC(remove_receiver_sockets, SacnReceiver*, socket_cleanup_beh
 DEFINE_FAKE_VOID_FUNC(remove_source_detector_sockets, SacnSourceDetector*, socket_cleanup_behavior_t);
 DEFINE_FAKE_VOID_FUNC(remove_all_receiver_sockets, socket_cleanup_behavior_t);
 DEFINE_FAKE_VOID_FUNC(read_network_and_process, SacnRecvThreadContext*);
+DEFINE_FAKE_VOID_FUNC(terminate_sources_on_removed_netints, SacnReceiver*);
 
 void sacn_receiver_state_reset_all_fakes(void)
 {
@@ -58,4 +59,5 @@ void sacn_receiver_state_reset_all_fakes(void)
   RESET_FAKE(remove_source_detector_sockets);
   RESET_FAKE(remove_all_receiver_sockets);
   RESET_FAKE(read_network_and_process);
+  RESET_FAKE(terminate_sources_on_removed_netints);
 }
