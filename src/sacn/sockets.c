@@ -62,9 +62,11 @@ static etcpal_socket_t ipv6_unicast_send_socket;
 static etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_type_t net_type);
 static etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, networking_type_t net_type);
 static void clear_source_networking();
+#if SACN_RECEIVER_ENABLED
 static etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_netints, bool currently_sampling,
                                                      EtcPalRbTree* sampling_period_netints,
                                                      const SacnNetintConfig* app_netint_config);
+#endif  // SACN_RECEIVER_ENABLED
 static bool netints_valid(const SacnMcastInterface* netints, size_t num_netints);
 static size_t apply_netint_config(const SacnNetintConfig* netint_config, const EtcPalNetintInfo* netint_list,
                                   size_t num_netints, SacnSocketsSysNetints* sys_netints, networking_type_t net_type);
@@ -1052,6 +1054,7 @@ void clear_source_networking()
   CLEAR_BUF(&source_sys_netints, sys_netints);
 }
 
+#if SACN_RECEIVER_ENABLED
 etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_netints, bool currently_sampling,
                                               EtcPalRbTree* sampling_period_netints,
                                               const SacnNetintConfig* app_netint_config)
@@ -1101,6 +1104,7 @@ etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_
 
   return res;
 }
+#endif  // SACN_RECEIVER_ENABLED
 
 etcpal_error_t sacn_validate_netint_config(const SacnNetintConfig* netint_config, const SacnMcastInterface* sys_netints,
                                            size_t num_sys_netints, size_t* num_valid_netints)
