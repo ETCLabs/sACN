@@ -530,8 +530,8 @@ typedef enum
 
 typedef struct SacnSamplingPeriodNetint
 {
-  EtcPalMcastNetintId id;  // This must be the first member of this struct.
-  bool in_future_sampling_period;
+  EtcPalMcastNetintId id;          // This must be the first member of this struct.
+  bool in_future_sampling_period;  // True if this is in the NEXT sampling period, false if in the current one.
 } SacnSamplingPeriodNetint;
 
 /******************************************************************************

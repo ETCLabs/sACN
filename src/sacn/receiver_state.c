@@ -99,6 +99,7 @@ static void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* r
 static bool check_source_timeouts(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
 static void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
 static void deliver_periodic_callbacks(const PeriodicCallbacks* periodic_callbacks);
+static void end_current_sampling_period(SacnReceiver* receiver);
 
 /*************************** Function definitions ****************************/
 
@@ -368,9 +369,12 @@ etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector)
 
 void begin_sampling_period(SacnReceiver* receiver)
 {
-  receiver->sampling = true;
-  receiver->notified_sampling_started = false;
-  etcpal_timer_start(&receiver->sample_timer, SACN_SAMPLE_TIME);
+  if (!receiver->sampling)
+  {
+    receiver->sampling = true;
+    receiver->notified_sampling_started = false;
+    etcpal_timer_start(&receiver->sample_timer, SACN_SAMPLE_TIME);
+  }
 }
 
 /*
@@ -1046,6 +1050,19 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
     for (SacnReceiver* receiver = recv_thread_context->receivers; receiver; receiver = receiver->next)
     {
       // Check the sample period
+      if (receiver->sampling && etcpal_timer_is_expired(&receiver->sample_timer))
+      {
+        end_current_sampling_period(receiver);
+        sampling_ended[num_sampling_ended].api_callback = receiver->api_callbacks.sampling_period_ended;
+        sampling_ended[num_sampling_ended].internal_callback = receiver->internal_callbacks.sampling_period_ended;
+        sampling_ended[num_sampling_ended].handle = receiver->keys.handle;
+        sampling_ended[num_sampling_ended].universe = receiver->keys.universe;
+        sampling_ended[num_sampling_ended].thread_id = receiver->thread_id;
+        sampling_ended[num_sampling_ended].context = receiver->api_callbacks.context;
+
+        ++num_sampling_ended;
+      }
+
       if (!receiver->notified_sampling_started)
       {
         receiver->notified_sampling_started = true;
@@ -1057,19 +1074,6 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
         sampling_started[num_sampling_started].context = receiver->api_callbacks.context;
 
         ++num_sampling_started;
-      }
-
-      if (receiver->sampling && etcpal_timer_is_expired(&receiver->sample_timer))
-      {
-        receiver->sampling = false;
-        sampling_ended[num_sampling_ended].api_callback = receiver->api_callbacks.sampling_period_ended;
-        sampling_ended[num_sampling_ended].internal_callback = receiver->internal_callbacks.sampling_period_ended;
-        sampling_ended[num_sampling_ended].handle = receiver->keys.handle;
-        sampling_ended[num_sampling_ended].universe = receiver->keys.universe;
-        sampling_ended[num_sampling_ended].thread_id = receiver->thread_id;
-        sampling_ended[num_sampling_ended].context = receiver->api_callbacks.context;
-
-        ++num_sampling_ended;
       }
 
       process_receiver_sources(recv_thread_context->thread_id, receiver, &sources_lost[num_sources_lost++]);
@@ -1235,8 +1239,8 @@ void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_
 
 void deliver_periodic_callbacks(const PeriodicCallbacks* periodic_callbacks)
 {
-  for (const SamplingStartedNotification* notif = periodic_callbacks->sampling_started_arr;
-       notif < periodic_callbacks->sampling_started_arr + periodic_callbacks->num_sampling_started; ++notif)
+  for (const SamplingEndedNotification* notif = periodic_callbacks->sampling_ended_arr;
+       notif < periodic_callbacks->sampling_ended_arr + periodic_callbacks->num_sampling_ended; ++notif)
   {
     if (notif->internal_callback)
       notif->internal_callback(notif->handle, notif->universe, notif->thread_id);
@@ -1244,8 +1248,8 @@ void deliver_periodic_callbacks(const PeriodicCallbacks* periodic_callbacks)
       notif->api_callback(notif->handle, notif->universe, notif->context);
   }
 
-  for (const SamplingEndedNotification* notif = periodic_callbacks->sampling_ended_arr;
-       notif < periodic_callbacks->sampling_ended_arr + periodic_callbacks->num_sampling_ended; ++notif)
+  for (const SamplingStartedNotification* notif = periodic_callbacks->sampling_started_arr;
+       notif < periodic_callbacks->sampling_started_arr + periodic_callbacks->num_sampling_started; ++notif)
   {
     if (notif->internal_callback)
       notif->internal_callback(notif->handle, notif->universe, notif->thread_id);
@@ -1264,6 +1268,27 @@ void deliver_periodic_callbacks(const PeriodicCallbacks* periodic_callbacks)
 
     if (notif->api_callback)
       notif->api_callback(notif->handle, notif->universe, notif->lost_sources, notif->num_lost_sources, notif->context);
+  }
+}
+
+void end_current_sampling_period(SacnReceiver* receiver)
+{
+  // First, end the current sampling period
+  remove_current_sampling_period_netints(&receiver->sampling_period_netints);
+  receiver->sampling = false;
+
+  // If there are any future sampling period netints, set them to current and start a new sampling period
+  if (etcpal_rbtree_size(&receiver->sampling_period_netints) > 0)
+  {
+    EtcPalRbIter iter;
+    for (SacnSamplingPeriodNetint* sp_netint = etcpal_rbiter_first(&iter, &receiver->sampling_period_netints);
+         sp_netint; sp_netint = etcpal_rbiter_next(&iter))
+    {
+      SACN_ASSERT(sp_netint->in_future_sampling_period);
+      sp_netint->in_future_sampling_period = false;
+    }
+
+    begin_sampling_period(receiver);
   }
 }
 

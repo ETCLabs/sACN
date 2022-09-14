@@ -105,31 +105,31 @@ etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree* tree, const EtcPalM
   return result;
 }
 
-etcpal_error_t clear_future_sampling_period_netints(EtcPalRbTree* tree)
+void remove_current_sampling_period_netints(EtcPalRbTree* tree)
 {
-  etcpal_error_t res = kEtcPalErrOk;
-  SacnSamplingPeriodNetint* next_future_sp_netint = NULL;
+  SacnSamplingPeriodNetint* next_current_sp_netint = NULL;
   do
   {
-    next_future_sp_netint = NULL;
+    next_current_sp_netint = NULL;
 
     EtcPalRbIter iter;
     etcpal_rbiter_init(&iter);
     for (SacnSamplingPeriodNetint* sp_netint = etcpal_rbiter_first(&iter, tree); sp_netint;
          sp_netint = etcpal_rbiter_next(&iter))
     {
-      if (sp_netint->in_future_sampling_period)
+      if (!sp_netint->in_future_sampling_period)
       {
-        next_future_sp_netint = sp_netint;
+        next_current_sp_netint = sp_netint;
         break;
       }
     }
 
-    if (next_future_sp_netint)
-      res = etcpal_rbtree_remove_with_cb(tree, next_future_sp_netint, sampling_period_netint_tree_dealloc);
-  } while (next_future_sp_netint && (res == kEtcPalErrOk));
-
-  return res;
+    if (next_current_sp_netint)
+    {
+      SACN_ASSERT(etcpal_rbtree_remove_with_cb(tree, next_current_sp_netint, sampling_period_netint_tree_dealloc) ==
+                  kEtcPalErrOk);
+    }
+  } while (next_current_sp_netint);
 }
 
 etcpal_error_t remove_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id)
