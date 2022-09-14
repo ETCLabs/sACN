@@ -111,7 +111,8 @@ protected:
     sacn_source_loss_reset_all_fakes();
 
     sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* receiver_netints, bool,
-                                                           EtcPalRbTree*, const SacnNetintConfig* app_netint_config) {
+                                                           EtcPalRbTree* sampling_period_netints,
+                                                           const SacnNetintConfig* app_netint_config) {
       EXPECT_NE(app_netint_config, nullptr);
 
       if (app_netint_config)
@@ -126,6 +127,9 @@ protected:
         {
           receiver_netints->netints[i] = app_netint_config->netints[i].iface;
           app_netint_config->netints[i].status = kEtcPalErrOk;
+
+          EXPECT_EQ(add_sacn_sampling_period_netint(sampling_period_netints, &receiver_netints->netints[i], false),
+                    kEtcPalErrOk);
         }
       }
 
@@ -244,6 +248,7 @@ protected:
       read_result->from_addr = kTestSockAddr;
       read_result->data = test_data_;
       read_result->data_len = SACN_MTU;
+      read_result->netint = kTestNetints[0].iface;
       return kEtcPalErrOk;
     };
   }

@@ -130,6 +130,9 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
 #endif
   receiver->netints.num_netints = 0;
 
+  etcpal_rbtree_init(&receiver->sampling_period_netints, sampling_period_netint_compare,
+                     sampling_period_netint_node_alloc, sampling_period_netint_node_dealloc);
+
   etcpal_error_t initialize_receiver_netints_result =
       sacn_initialize_receiver_netints(&receiver->netints, false, &receiver->sampling_period_netints, netint_config);
   if (initialize_receiver_netints_result != kEtcPalErrOk)
@@ -140,8 +143,6 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
 
   receiver->sampling = false;
   receiver->notified_sampling_started = false;
-  etcpal_rbtree_init(&receiver->sampling_period_netints, sampling_period_netint_compare,
-                     sampling_period_netint_node_alloc, sampling_period_netint_node_dealloc);
 
   receiver->suppress_limit_exceeded_notification = false;
   etcpal_rbtree_init(&receiver->sources, remote_source_compare, tracked_source_node_alloc, tracked_source_node_dealloc);
