@@ -281,7 +281,7 @@ bool get_netint_id(EtcPalMsgHdr* msg, EtcPalMcastNetintId* netint_id)
   SACN_ASSERT(netint_id);
 
   EtcPalCMsgHdr cmsg = {0};
-  EtcPalPktInfo pktinfo = {0};
+  EtcPalPktInfo pktinfo = {{0}};
   bool pktinfo_found = false;
   if (etcpal_cmsg_firsthdr(msg, &cmsg))
   {
