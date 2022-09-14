@@ -497,6 +497,8 @@ typedef struct SacnTrackedSource
 {
   sacn_remote_source_t handle;  // This must be the first member of this struct.
   char name[SACN_SOURCE_NAME_MAX_LEN];
+  EtcPalMcastNetintId netint;
+
   EtcPalTimer packet_timer;
   uint8_t seq;
   bool terminated;

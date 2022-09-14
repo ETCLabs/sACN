@@ -178,7 +178,8 @@ protected:
   SacnTrackedSource* AddTrackedSource(SacnReceiver* receiver)
   {
     SacnTrackedSource* source = nullptr;
-    EXPECT_EQ(add_sacn_tracked_source(receiver, &next_source_cid_, kTestName, 0u, 0u, &source), kEtcPalErrOk);
+    EXPECT_EQ(add_sacn_tracked_source(receiver, &next_source_cid_, kTestName, &kTestNetints[0].iface, 0u, 0u, &source),
+              kEtcPalErrOk);
 
     ++next_source_cid_.data[0];
 
@@ -353,7 +354,7 @@ TEST_F(TestReceiverState, RespectsMaxTrackedSourceLimit)
          ++j)
     {
       EtcPalUuid cid = etcpal::Uuid::V4().get();
-      EXPECT_EQ(add_sacn_tracked_source(receiver, &cid, "name", 0u, 0u, &source), kEtcPalErrOk);
+      EXPECT_EQ(add_sacn_tracked_source(receiver, &cid, "name", &kTestNetints[0].iface, 0u, 0u, &source), kEtcPalErrOk);
     }
   }
 }

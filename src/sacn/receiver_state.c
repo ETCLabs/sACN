@@ -72,9 +72,10 @@ static void sacn_receive_thread(void* arg);
 
 // Receiving incoming data
 static void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
-                            const EtcPalSockAddr* from_addr);
+                            const EtcPalSockAddr* from_addr, const EtcPalMcastNetintId* netint);
 static void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
-                                    const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr);
+                                    const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr,
+                                    const EtcPalMcastNetintId* netint);
 static void handle_sacn_extended_packet(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
                                         const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr);
 static void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
@@ -83,8 +84,8 @@ static void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSou
 static void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* notify);
 #endif
 static void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* source_info,
-                                    const SacnRecvUniverseData* universe_data, uint8_t seq,
-                                    SacnTrackedSource** new_source,
+                                    const EtcPalMcastNetintId* netint, const SacnRecvUniverseData* universe_data,
+                                    uint8_t seq, SacnTrackedSource** new_source,
                                     SourceLimitExceededNotification* source_limit_exceeded, bool* notify);
 static bool check_sequence(int8_t new_seq, int8_t old_seq);
 static void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const SacnRemoteSource* source_info,
@@ -455,7 +456,7 @@ void read_network_and_process(SacnRecvThreadContext* context)
   etcpal_error_t read_res = sacn_read(context, &read_result);
   if (read_res == kEtcPalErrOk)
   {
-    handle_incoming(context, read_result.data, read_result.data_len, &read_result.from_addr);
+    handle_incoming(context, read_result.data, read_result.data_len, &read_result.from_addr, &read_result.netint);
   }
   else if (read_res != kEtcPalErrTimedOut)
   {
@@ -568,9 +569,10 @@ void sacn_receive_thread(void* arg)
  * [in] data Incoming data buffer.
  * [in] datalen Size of data buffer.
  * [in] from_addr Network address from which the data was received.
+ * [in] netint ID of network interface on which the data was received.
  */
 void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
-                     const EtcPalSockAddr* from_addr)
+                     const EtcPalSockAddr* from_addr, const EtcPalMcastNetintId* netint)
 {
   AcnUdpPreamble preamble;
   if (!acn_parse_udp_preamble(data, datalen, &preamble))
@@ -581,7 +583,7 @@ void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t
   while (acn_parse_root_layer_pdu(preamble.rlp_block, preamble.rlp_block_len, &rlp, &lpdu))
   {
     if (rlp.vector == ACN_VECTOR_ROOT_E131_DATA)
-      handle_sacn_data_packet(context->thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr);
+      handle_sacn_data_packet(context->thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr, netint);
     else if (rlp.vector == ACN_VECTOR_ROOT_E131_EXTENDED)
       handle_sacn_extended_packet(context, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr);
   }
@@ -595,9 +597,11 @@ void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t
  * [in] datalen Size of buffer.
  * [in] sender_cid CID from which the data was received.
  * [in] from_addr Network address from which the data was received.
+ * [in] netint ID of network interface on which the data was received.
  */
 void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
-                             const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr)
+                             const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr,
+                             const EtcPalMcastNetintId* netint)
 {
   UniverseDataNotification* universe_data = get_universe_data(thread_id);
   SourceLimitExceededNotification* source_limit_exceeded = get_source_limit_exceeded(thread_id);
@@ -644,12 +648,28 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
       return;
     }
 
+    SacnSamplingPeriodNetint* sp_netint = etcpal_rbtree_find(&receiver->sampling_period_netints, netint);
+
+    // Drop all packets from netints scheduled for a future sampling period
+    if (sp_netint && sp_netint->in_future_sampling_period)
+    {
+      sacn_unlock();
+      return;
+    }
+
     bool notify = false;
     universe_data->source_info.handle = get_remote_source_handle(sender_cid);
     SacnTrackedSource* src =
         (SacnTrackedSource*)etcpal_rbtree_find(&receiver->sources, &universe_data->source_info.handle);
     if (src)
     {
+      // We only associate a source with one netint, so packets received on other netints should be dropped
+      if ((src->netint.ip_type != netint->ip_type) || (src->netint.index != netint->index))
+      {
+        sacn_unlock();
+        return;
+      }
+
       // Check to see if the 'stream terminated' bit is set in the options
       if (is_termination_packet)
       {
@@ -690,7 +710,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     }
     else if (!is_termination_packet)
     {
-      process_new_source_data(receiver, &universe_data->source_info, &universe_data->universe_data, seq, &src,
+      process_new_source_data(receiver, &universe_data->source_info, netint, &universe_data->universe_data, seq, &src,
                               source_limit_exceeded, &notify);
 
       if (src)
@@ -711,7 +731,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
         universe_data->internal_callback = receiver->internal_callbacks.universe_data;
         universe_data->receiver_handle = receiver->keys.handle;
         universe_data->universe_data.universe_id = receiver->keys.universe;
-        universe_data->universe_data.is_sampling = receiver->sampling;
+        universe_data->universe_data.is_sampling = (sp_netint != NULL);
         universe_data->thread_id = thread_id;
         universe_data->context = receiver->api_callbacks.context;
       }
@@ -884,6 +904,7 @@ void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* not
  * [in,out] receiver Receiver for which this source data was received - new source is added to its
  *                   tree.
  * [in] source_info Information about the sACN source that sent this data.
+ * [in] netint ID of network interface on which this data was received.
  * [in] universe_data Information about the initial universe data detected from this source.
  * [in] seq Sequence number of the sACN packet.
  * [out] source_limit_exceeded Notification data to deliver if a source limit exceeded
@@ -891,8 +912,9 @@ void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* not
  * [out] notify Whether or not to forward the data to the user in a notification.
  */
 void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* source_info,
-                             const SacnRecvUniverseData* universe_data, uint8_t seq, SacnTrackedSource** new_source,
-                             SourceLimitExceededNotification* source_limit_exceeded, bool* notify)
+                             const EtcPalMcastNetintId* netint, const SacnRecvUniverseData* universe_data, uint8_t seq,
+                             SacnTrackedSource** new_source, SourceLimitExceededNotification* source_limit_exceeded,
+                             bool* notify)
 {
 #if SACN_ETC_PRIORITY_EXTENSION
   if ((universe_data->start_code != SACN_STARTCODE_DMX) && (universe_data->start_code != SACN_STARTCODE_PRIORITY))
@@ -906,7 +928,7 @@ void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* sou
   *notify = true;
 
   // A new source has appeared!
-  if (add_sacn_tracked_source(receiver, &source_info->cid, source_info->name, seq, universe_data->start_code,
+  if (add_sacn_tracked_source(receiver, &source_info->cid, source_info->name, netint, seq, universe_data->start_code,
                               new_source) == kEtcPalErrOk)
   {
 #if SACN_ETC_PRIORITY_EXTENSION
