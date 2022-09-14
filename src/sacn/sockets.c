@@ -93,7 +93,7 @@ static void send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr)
 static EtcPalSockAddr get_bind_address(etcpal_iptype_t ip_type);
 #endif  // SACN_RECEIVER_ENABLED
 
-static bool get_ifindex(EtcPalMsgHdr* msg, unsigned int* ifindex);
+static bool get_netint_id(EtcPalMsgHdr* msg, EtcPalMcastNetintId* netint_id);
 
 /*************************** Function definitions ****************************/
 
@@ -262,10 +262,10 @@ EtcPalSockAddr get_bind_address(etcpal_iptype_t ip_type)
 
 #endif  // SACN_RECEIVER_ENABLED
 
-bool get_ifindex(EtcPalMsgHdr* msg, unsigned int* ifindex)
+bool get_netint_id(EtcPalMsgHdr* msg, EtcPalMcastNetintId* netint_id)
 {
   SACN_ASSERT(msg);
-  SACN_ASSERT(ifindex);
+  SACN_ASSERT(netint_id);
 
   EtcPalCMsgHdr cmsg = {0};
   EtcPalPktInfo pktinfo = {0};
@@ -279,7 +279,10 @@ bool get_ifindex(EtcPalMsgHdr* msg, unsigned int* ifindex)
   }
 
   if (pktinfo_found)
-    *ifindex = pktinfo.ifindex;
+  {
+    netint_id->index = pktinfo.ifindex;
+    netint_id->ip_type = pktinfo.addr.type;
+  }
 
   return pktinfo_found;
 }
@@ -768,7 +771,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
         {
           recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than SACN_MTU.
         }
-        else if ((msg.flags & ETCPAL_MSG_CTRUNC) || !get_ifindex(&msg, &read_result->ifindex))
+        else if ((msg.flags & ETCPAL_MSG_CTRUNC) || !get_netint_id(&msg, &read_result->netint))
         {
           recv_res = kEtcPalErrSys;
         }
