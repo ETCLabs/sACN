@@ -126,8 +126,9 @@ void remove_current_sampling_period_netints(EtcPalRbTree* tree)
 
     if (next_current_sp_netint)
     {
-      SACN_ASSERT(etcpal_rbtree_remove_with_cb(tree, next_current_sp_netint, sampling_period_netint_tree_dealloc) ==
-                  kEtcPalErrOk);
+      etcpal_error_t remove_res =
+          etcpal_rbtree_remove_with_cb(tree, next_current_sp_netint, sampling_period_netint_tree_dealloc);
+      SACN_ASSERT(remove_res == kEtcPalErrOk);
     }
   } while (next_current_sp_netint);
 }
