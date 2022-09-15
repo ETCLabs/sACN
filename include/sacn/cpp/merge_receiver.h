@@ -77,19 +77,23 @@ public:
      *
      * This callback will be called in multiple ways:
      * 1. When a new non-preview data packet or per-address priority packet is received from the sACN Receiver module,
-     * it is immediately and synchronously passed to the DMX Merger. If the sampling period has not ended, the merged
-     * result is not passed to this callback until the sampling period ends. Otherwise, it is immediately and
-     * synchronously passed to this callback.
+     * it is immediately and synchronously passed to the DMX Merger. If the sampling period has not ended for the
+     * source, the merged result is not passed to this callback until the sampling period ends. Otherwise, it is
+     * immediately and synchronously passed to this callback.
      * 2. When a sACN source is no longer sending non-preview data or per-address priority packets, the lost source
      * callback from the sACN Receiver module will be passed to the merger, after which the merged result is passed to
      * this callback pending the sampling period.
+     *
+     * After a networking reset, some of the sources on the universe may not be included in the resulting sampling
+     * period. Therefore, expect this to continue to be called during said sampling period.
      *
      * This callback should be processed quickly, since it will interfere with the receipt and processing of other sACN
      * packets on the universe.
      *
      * @param[in] handle The merge receiver's handle.
      * @param[in] merged_data The merged data (and relevant information about that data), starting from the first slot
-     * of the currently configured footprint.
+     * of the currently configured footprint. Only sources that are not currently part of a sampling period are part of
+     * the merged result.
      */
     virtual void HandleMergedData(Handle handle, const SacnRecvMergedData& merged_data) = 0;
 
