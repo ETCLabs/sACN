@@ -453,7 +453,8 @@
  *
  * Set this to 1 to enable, 0 to disable. This would enable existing live sources to continue being displayed during a
  * networking reset. Disabling this would save memory by limiting to one DMX merger, but it would also interrupt all
- * live data during the sampling period caused by a networking reset.
+ * live data during the sampling period caused by a networking reset, since all sources would always be included in
+ * every sampling period.
  */
 #ifndef SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
 #define SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER 0
