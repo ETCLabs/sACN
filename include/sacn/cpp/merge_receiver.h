@@ -77,11 +77,11 @@ public:
      *
      * This callback will be called in multiple ways:
      * 1. When a new non-preview data packet or per-address priority packet is received from the sACN Receiver module,
-     * it is immediately and synchronously passed to the DMX Merger. If the sampling period has not ended for the
+     * it is immediately and synchronously passed to a DMX Merger. If the sampling period has not ended for the
      * source, the merged result is not passed to this callback until the sampling period ends. Otherwise, it is
      * immediately and synchronously passed to this callback.
      * 2. When a sACN source is no longer sending non-preview data or per-address priority packets, the lost source
-     * callback from the sACN Receiver module will be passed to the merger, after which the merged result is passed to
+     * callback from the sACN Receiver module will be passed to a merger, after which the merged result is passed to
      * this callback pending the sampling period.
      *
      * After a networking reset, some of the sources on the universe may not be included in the resulting sampling

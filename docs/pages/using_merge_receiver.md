@@ -181,21 +181,23 @@ the source with the highest level. That is the Highest Takes Precedence (HTP) me
 
 ## Receiving sACN Data
 
-The merged data callback is called whenever there are new merge results, pending the sampling
-period. The sampling period occurs when a receiver starts listening on a new universe, new
-footprint, or new set of interfaces. Universe data is merged as it comes in during this period, but
-the notification of this data doesn't occur until after the sampling period ends. This removes
-flicker as various sources in the network are discovered.
+The merged data callback is called whenever there are new merge results. These results only include
+sources that are not in a sampling period. The sampling period occurs when a receiver starts
+listening on a new universe, new footprint, or new set of interfaces. While a source is part of a
+sampling period, its universe data is merged as it comes in, but won't be included in a merged data
+notification until after the sampling period ends. This removes flicker as various sources in the
+network are discovered. Some sources might not be part of a sampling period. In that case, their
+universe data will continue being included in merged data notifications during the period.
 
 This callback will be called in multiple ways:
 
 1. When a new non-preview data packet or per-address priority packet is received from the sACN 
-Receiver module, it is immediately and synchronously passed to the DMX Merger. If the sampling
-period has not ended, the merged result is not passed to this callback until the sampling period
-ends. Otherwise, it is immediately and synchronously passed to this callback.
+Receiver module, it is immediately and synchronously passed to a DMX Merger. If the sampling
+period has not ended for the source, the merged result is not passed to this callback until the
+sampling period ends. Otherwise, it is immediately and synchronously passed to this callback.
 
 2. When a sACN source is no longer sending non-preview data or per-address priority packets, the
-lost source callback from the sACN Receiver module will be passed to the merger, after which the
+lost source callback from the sACN Receiver module will be passed to a merger, after which the
 merged result is passed to this callback pending the sampling period.
 
 Please note that per-address priority is an ETC-specific sACN extension, and is disabled if the
