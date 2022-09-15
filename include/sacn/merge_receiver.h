@@ -164,6 +164,9 @@ typedef void (*SacnMergeReceiverSourcesLostCallback)(sacn_merge_receiver_t handl
 /**
  * @brief Notify that a merge receiver's sampling period has begun.
  *
+ * If this sampling period was due to a networking reset, some sources may not be included in it. The sources that
+ * are not part of the sampling period will continue to be included in merged data notifications.
+ *
  * @param[in] handle Handle to the merge receiver instance for which the sampling period started.
  * @param[in] universe The universe this merge receiver is monitoring.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
@@ -173,6 +176,10 @@ typedef void (*SacnMergeReceiverSamplingPeriodStartedCallback)(sacn_merge_receiv
 
 /**
  * @brief Notify that a merge receiver's sampling period has ended.
+ *
+ * All sources that were included in this sampling period will officially be included in future merged data
+ * notifications. If there was a networking reset during this sampling period, another sampling period may have been
+ * scheduled, in which case this will be immediately followed by a sampling period started notification.
  *
  * @param[in] handle Handle to the merge receiver instance for which the sampling period ended.
  * @param[in] universe The universe this merge receiver is monitoring.
