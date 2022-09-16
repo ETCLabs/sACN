@@ -936,10 +936,15 @@ TEST_F(TestMergeReceiver, DirectsDmxMergerOutputCorrectly)
   static constexpr uint8_t kLevel2 = 20u;
   static constexpr sacn_receiver_t kReceiver2Handle = kTestHandle2;
 
+#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
   static constexpr sacn_dmx_merger_t kReceiver1MergerHandle = 0;
   static constexpr sacn_dmx_merger_t kReceiver1SamplingMergerHandle = 1;
   static constexpr sacn_dmx_merger_t kReceiver2MergerHandle = 2;
   static constexpr sacn_dmx_merger_t kReceiver2SamplingMergerHandle = 3;
+#else
+  static constexpr sacn_dmx_merger_t kReceiver1MergerHandle = 0;
+  static constexpr sacn_dmx_merger_t kReceiver2MergerHandle = 1;
+#endif
 
   static std::map<sacn_dmx_merger_t, SacnDmxMergerConfig> merger_configs;
   static sacn_dmx_merger_t next_merger_handle = kReceiver1MergerHandle;
