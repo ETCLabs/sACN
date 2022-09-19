@@ -816,6 +816,7 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
            source = etcpal_rbiter_next(&iter))
       {
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+        // End of sampling period reached, so we'll copy the merge data from the sampling merger to the output merger
         if (source->sampling)
         {
           sacn_dmx_merger_source_t merger_source_handle = (sacn_dmx_merger_source_t)source->handle;
