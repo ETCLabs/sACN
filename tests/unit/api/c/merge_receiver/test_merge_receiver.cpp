@@ -618,7 +618,7 @@ TEST_F(TestMergeReceiver, SamplingPeriodBlocksUniverseData)
   RunSamplingEnded();
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 
-  RunUniverseData(1u, cid1, SACN_STARTCODE_DMX, {0x05u, 0x06u});  // sampling defaults to false
+  RunUniverseData(1u, cid1, SACN_STARTCODE_DMX, {0x05u, 0x06u});
   EXPECT_EQ(universe_data_fake.call_count, 2u);
   RunUniverseData(1u, cid1, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
   EXPECT_EQ(universe_data_fake.call_count, 3u);
@@ -630,6 +630,15 @@ TEST_F(TestMergeReceiver, SamplingPeriodBlocksUniverseData)
   EXPECT_EQ(universe_data_fake.call_count, 5u);
   RunPapLost(1u, cid1);
   EXPECT_EQ(universe_data_fake.call_count, 6u);
+
+#if !SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+  // If the sampling merger is disabled, then even the current sources should be interrupted during a sampling period.
+  RunSamplingStarted();
+  RunUniverseData(1u, cid1, SACN_STARTCODE_DMX, {0x05u, 0x06u});  // Sampling = false, still shouldn't make it
+  EXPECT_EQ(universe_data_fake.call_count, 6u);
+  RunSamplingEnded();
+  EXPECT_EQ(universe_data_fake.call_count, 7u);
+#endif  // !SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
 }
 
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
