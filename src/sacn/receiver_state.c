@@ -1084,6 +1084,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
   {
     size_t num_receivers = recv_thread_context->num_receivers;
 
+    // Get the notification structs (they are zeroed/reset when we get them here)
     sampling_started = get_sampling_started_buffer(recv_thread_context->thread_id, num_receivers);
     sampling_ended = get_sampling_ended_buffer(recv_thread_context->thread_id, num_receivers);
     sources_lost = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
