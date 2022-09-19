@@ -658,6 +658,7 @@ TEST_F(TestMergeReceiver, UniverseDataHandlesSamplingPeriodSources)
       EXPECT_EQ(merger, kSamplingMergerHandle);
     else  // handle_to_use == kNonSamplingSource
       EXPECT_EQ(merger, kPrimaryMergerHandle);
+
     return kEtcPalErrOk;
   };
   update_sacn_dmx_merger_levels_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
@@ -796,25 +797,51 @@ TEST_F(TestMergeReceiver, UniverseDataHandlesSourcesLost)
 
 TEST_F(TestMergeReceiver, UniverseDataHandlesPapLost)
 {
+  static constexpr sacn_dmx_merger_t kPrimaryMergerHandle = kInitialMergerHandle;
+#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+  static constexpr sacn_dmx_merger_t kSamplingMergerHandle = kInitialMergerHandle + 1;
+#endif
+
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
   EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
 
   RunSamplingStarted();
   RunSamplingEnded();
 
-  etcpal::Uuid cid = etcpal::Uuid::V4();
+  etcpal::Uuid cid1 = etcpal::Uuid::V4();
 
   EXPECT_EQ(universe_data_fake.call_count, 0u);
-  RunUniverseData(1u, cid, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
+  RunUniverseData(1u, cid1, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
   EXPECT_EQ(universe_data_fake.call_count, 0u);
   SetActiveSourcesToExpect({1u});
-  RunUniverseData(1u, cid, SACN_STARTCODE_DMX, {0x01u, 0x02u});
+  RunUniverseData(1u, cid1, SACN_STARTCODE_DMX, {0x01u, 0x02u});
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 
+  remove_sacn_dmx_merger_pap_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t) {
+    EXPECT_EQ(merger, kPrimaryMergerHandle);
+    return kEtcPalErrOk;
+  };
+
   EXPECT_EQ(remove_sacn_dmx_merger_pap_fake.call_count, 0u);
-  RunPapLost(1u, cid);
+  RunPapLost(1u, cid1);
   EXPECT_EQ(remove_sacn_dmx_merger_pap_fake.call_count, 1u);
   EXPECT_EQ(universe_data_fake.call_count, 2u);
+
+  // Now say a new interface is brought in and enters a sampling period - PAP lost should remove from the correct merger
+#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+  remove_sacn_dmx_merger_pap_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t) {
+    EXPECT_EQ(merger, kSamplingMergerHandle);
+    return kEtcPalErrOk;
+  };
+#endif
+
+  etcpal::Uuid cid2 = etcpal::Uuid::V4();
+
+  RunSamplingStarted();
+  RunSamplingUniverseData(2u, cid2, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
+  RunSamplingUniverseData(2u, cid2, SACN_STARTCODE_DMX, {0x01u, 0x02u});
+  RunPapLost(2u, cid2);
+  EXPECT_EQ(remove_sacn_dmx_merger_pap_fake.call_count, 2u);
 }
 
 TEST_F(TestMergeReceiver, UniverseNonDmxWorks)
