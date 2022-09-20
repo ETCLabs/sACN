@@ -1098,7 +1098,11 @@ etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_
       }
 
       if (!found)
+      {
         res = remove_sampling_period_netint(sampling_period_netints, &receiver_netints->netints[i]);
+        if (res == kEtcPalErrNotFound)
+          res = kEtcPalErrOk;  // Removed interfaces might not be in a sampling period currently.
+      }
     }
   }
 

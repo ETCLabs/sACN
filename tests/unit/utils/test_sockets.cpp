@@ -227,6 +227,90 @@ protected:
     }
   }
 
+  std::vector<SacnMcastInterface> GetFullAppNetintConfig()
+  {
+    std::vector<SacnMcastInterface> app_netint_config;
+    if (app_netint_config.empty())
+    {
+      for (const auto& sys_netint : fake_netints_)
+        app_netint_config.push_back({{sys_netint.addr.type, sys_netint.index}, kEtcPalErrOk});
+    }
+    return app_netint_config;
+  }
+
+  enum SamplingStatus
+  {
+    kCurrentlySampling,
+    kNotCurrentlySampling
+  };
+  void TestSamplingPeriodNetintUpdate(SacnInternalNetintArray* internal_netint_array, SamplingStatus sampling_status,
+                                      EtcPalRbTree* sampling_period_netints,
+                                      std::vector<SacnMcastInterface>& app_netint_config)
+  {
+    if (sampling_status == kNotCurrentlySampling)
+      etcpal_rbtree_clear_with_cb(sampling_period_netints, sampling_period_netint_tree_dealloc);
+
+    std::vector<SacnMcastInterface> new_netints = app_netint_config;
+    auto new_end = std::remove_if(new_netints.begin(), new_netints.end(), [&](const SacnMcastInterface& netint) {
+      bool found = false;
+      for (size_t i = 0; !found && (i < internal_netint_array->num_netints); ++i)
+        found = (netint.iface == internal_netint_array->netints[i]);
+      return found;
+    });
+    new_netints.erase(new_end, new_netints.end());
+
+    std::vector<EtcPalMcastNetintId> removed_sp_netints;
+    EtcPalRbIter iter;
+    etcpal_rbiter_init(&iter);
+    for (SacnSamplingPeriodNetint* sp_netint =
+             reinterpret_cast<SacnSamplingPeriodNetint*>(etcpal_rbiter_first(&iter, sampling_period_netints));
+         sp_netint; sp_netint = reinterpret_cast<SacnSamplingPeriodNetint*>(etcpal_rbiter_next(&iter)))
+    {
+      bool removed =
+          std::find_if(app_netint_config.begin(), app_netint_config.end(), [&](const SacnMcastInterface& app_netint) {
+            return (app_netint.iface == sp_netint->id);
+          }) == std::end(app_netint_config);
+
+      if (removed)
+        removed_sp_netints.push_back(sp_netint->id);
+    }
+
+    size_t original_sp_netints_size = etcpal_rbtree_size(sampling_period_netints);
+
+    SacnNetintConfig c_netint_config = {app_netint_config.data(), app_netint_config.size()};
+    EXPECT_EQ(sacn_initialize_receiver_netints(internal_netint_array, (sampling_status == kCurrentlySampling),
+                                               sampling_period_netints, &c_netint_config),
+              kEtcPalErrOk);
+
+    EXPECT_EQ(etcpal_rbtree_size(sampling_period_netints),
+              original_sp_netints_size + new_netints.size() - removed_sp_netints.size());
+
+    etcpal_rbiter_init(&iter);
+    for (SacnSamplingPeriodNetint* sp_netint =
+             reinterpret_cast<SacnSamplingPeriodNetint*>(etcpal_rbiter_first(&iter, sampling_period_netints));
+         sp_netint; sp_netint = reinterpret_cast<SacnSamplingPeriodNetint*>(etcpal_rbiter_next(&iter)))
+    {
+      bool found_in_app_config =
+          std::find_if(app_netint_config.begin(), app_netint_config.end(), [&](const SacnMcastInterface& app_netint) {
+            return (app_netint.iface == sp_netint->id);
+          }) != std::end(app_netint_config);
+      EXPECT_TRUE(found_in_app_config);
+
+      if (sampling_status == kCurrentlySampling)
+      {
+        bool is_new = std::find_if(new_netints.begin(), new_netints.end(), [&](const SacnMcastInterface& new_netint) {
+                        return (new_netint.iface == sp_netint->id);
+                      }) != std::end(new_netints);
+        if (is_new)
+          EXPECT_TRUE(sp_netint->in_future_sampling_period);
+      }
+      else
+      {
+        EXPECT_FALSE(sp_netint->in_future_sampling_period);
+      }
+    }
+  }
+
   static std::vector<EtcPalNetintInfo> fake_netints_;
   std::vector<EtcPalMcastNetintId> fake_netint_ids_;
   std::vector<unsigned int> fake_v4_netints_;
@@ -586,6 +670,43 @@ TEST_F(TestSockets, InitializeInternalNetintsWorks)
   }
 
   CLEAR_BUF(&internal_netint_array, netints);
+}
+
+TEST_F(TestSockets, SamplingPeriodNetintsUpdateCorrectly)
+{
+  SacnInternalNetintArray internal_netint_array;
+#if SACN_DYNAMIC_MEM
+  internal_netint_array.netints = nullptr;
+  internal_netint_array.netints_capacity = 0u;
+#endif
+  internal_netint_array.num_netints = 0u;
+
+  EtcPalRbTree sampling_period_netints;
+  etcpal_rbtree_init(&sampling_period_netints, sampling_period_netint_compare, sampling_period_netint_node_alloc,
+                     sampling_period_netint_node_dealloc);
+
+  std::vector<SacnMcastInterface> full_config = GetFullAppNetintConfig();
+  std::vector<SacnMcastInterface> config_1 = {full_config.begin(), full_config.end() - (full_config.size() / 2)};
+  std::vector<SacnMcastInterface> config_2 = full_config;
+  std::vector<SacnMcastInterface> config_3 = {full_config.begin() + (full_config.size() / 2), full_config.end()};
+
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_1);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_2);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_3);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_2);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_1);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_3);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_1);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_1);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_2);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_3);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_2);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_1);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_3);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_1);
+
+  CLEAR_BUF(&internal_netint_array, netints);
+  etcpal_rbtree_clear_with_cb(&sampling_period_netints, sampling_period_netint_tree_dealloc);
 }
 
 TEST_F(TestSockets, SendTransmitsMinimumLength)
