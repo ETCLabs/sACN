@@ -845,6 +845,16 @@ TEST_F(TestReceiverState, BeginSamplingPeriodWorks)
   EXPECT_EQ(receiver->sampling, true);
   EXPECT_EQ(receiver->notified_sampling_started, false);
   EXPECT_EQ(receiver->sample_timer.interval, static_cast<uint32_t>(SACN_SAMPLE_TIME));
+  EXPECT_EQ(etcpal_timer_remaining(&receiver->sample_timer), static_cast<uint32_t>(SACN_SAMPLE_TIME));
+
+  // Also test that the timer doesn't reset when a sampling period is already occurring
+  ++etcpal_getms_fake.return_val;
+  begin_sampling_period(receiver);
+
+  EXPECT_EQ(receiver->sampling, true);
+  EXPECT_EQ(receiver->notified_sampling_started, false);
+  EXPECT_EQ(receiver->sample_timer.interval, static_cast<uint32_t>(SACN_SAMPLE_TIME));
+  EXPECT_EQ(etcpal_timer_remaining(&receiver->sample_timer), static_cast<uint32_t>(SACN_SAMPLE_TIME) - 1u);
 }
 
 TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesIpv4AndIpv6)
