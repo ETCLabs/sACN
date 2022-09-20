@@ -1669,6 +1669,7 @@ TEST_F(TestReceiverThread, SamplingPeriodTransitionWorks)
   RunThreadCycle();
 
   EXPECT_EQ(sampling_period_ended_fake.call_count, 1u);
+  EXPECT_EQ(sampling_period_started_fake.call_count, 1u);
 
   for (const auto& netint : initial_netints)
     EXPECT_EQ(etcpal_rbtree_find(&test_receiver_->sampling_period_netints, &netint.iface), nullptr);
@@ -1685,6 +1686,16 @@ TEST_F(TestReceiverThread, SamplingPeriodTransitionWorks)
   {
     EXPECT_FALSE(sp_netint->in_future_sampling_period);
   }
+
+  EXPECT_TRUE(test_receiver_->sampling);
+
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
+
+  EXPECT_EQ(sampling_period_ended_fake.call_count, 2u);
+  EXPECT_EQ(sampling_period_started_fake.call_count, 1u);
+
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sampling_period_netints), 0u);
 }
 
 TEST_F(TestReceiverThread, SourcePapLostWorks)
