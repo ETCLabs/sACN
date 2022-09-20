@@ -1077,11 +1077,8 @@ TEST_F(TestMergeReceiver, DirectsDmxMergerOutputCorrectly)
   static constexpr sacn_receiver_t kReceiver2Handle = kTestHandle2;
 
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
-  static constexpr sacn_dmx_merger_t kReceiver1MergerHandle = kInitialMergerHandle;
-  // kReceiver1SamplingMergerHandle = 1
   static constexpr sacn_dmx_merger_t kReceiver2MergerHandle = kInitialMergerHandle + 2;
 #else
-  static constexpr sacn_dmx_merger_t kReceiver1MergerHandle = kInitialMergerHandle;
   static constexpr sacn_dmx_merger_t kReceiver2MergerHandle = kInitialMergerHandle + 1;
 #endif
 
