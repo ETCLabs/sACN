@@ -1651,6 +1651,42 @@ TEST_F(TestReceiverThread, SamplingPeriodEndedWorks)
   EXPECT_EQ(sampling_period_ended_fake.call_count, 1u);
 }
 
+TEST_F(TestReceiverThread, SamplingPeriodTransitionWorks)
+{
+  std::vector<SacnMcastInterface> initial_netints = {kTestNetints.begin(),
+                                                     kTestNetints.begin() + (kTestNetints.size() / 2)};
+  std::vector<SacnMcastInterface> future_netints = {kTestNetints.begin() + (kTestNetints.size() / 2),
+                                                    kTestNetints.end()};
+
+  etcpal_rbtree_clear_with_cb(&test_receiver_->sampling_period_netints, sampling_period_netint_tree_dealloc);
+  for (const auto& netint : initial_netints)
+    add_sacn_sampling_period_netint(&test_receiver_->sampling_period_netints, &netint.iface, false);
+  for (const auto& netint : future_netints)
+    add_sacn_sampling_period_netint(&test_receiver_->sampling_period_netints, &netint.iface, true);
+
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
+
+  EXPECT_EQ(sampling_period_ended_fake.call_count, 1u);
+
+  for (const auto& netint : initial_netints)
+    EXPECT_EQ(etcpal_rbtree_find(&test_receiver_->sampling_period_netints, &netint.iface), nullptr);
+  for (const auto& netint : future_netints)
+    EXPECT_NE(etcpal_rbtree_find(&test_receiver_->sampling_period_netints, &netint.iface), nullptr);
+
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sampling_period_netints), future_netints.size());
+
+  EtcPalRbIter iter;
+  etcpal_rbiter_init(&iter);
+  for (SacnSamplingPeriodNetint* sp_netint = reinterpret_cast<SacnSamplingPeriodNetint*>(
+           etcpal_rbiter_first(&iter, &test_receiver_->sampling_period_netints));
+       sp_netint; sp_netint = reinterpret_cast<SacnSamplingPeriodNetint*>(etcpal_rbiter_next(&iter)))
+  {
+    EXPECT_FALSE(sp_netint->in_future_sampling_period);
+  }
+}
+
 TEST_F(TestReceiverThread, SourcePapLostWorks)
 {
   source_pap_lost_fake.custom_fake = [](sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
