@@ -1674,12 +1674,23 @@ TEST_F(TestReceiverThread, SamplingPeriodTransitionWorks)
   for (const auto& netint : future_netints)
     add_sacn_sampling_period_netint(&test_receiver_->sampling_period_netints, &netint.iface, true);
 
+  // Make sure sampling started is called after sampling ended
+  sampling_period_ended_fake.custom_fake = [](sacn_receiver_t, uint16_t, void*) {
+    EXPECT_EQ(sampling_period_started_fake.call_count, 0u);
+  };
+  sampling_period_started_fake.custom_fake = [](sacn_receiver_t, uint16_t, void*) {
+    EXPECT_EQ(sampling_period_ended_fake.call_count, 1u);
+  };
+
   RunThreadCycle();
   etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
   RunThreadCycle();
 
   EXPECT_EQ(sampling_period_ended_fake.call_count, 1u);
   EXPECT_EQ(sampling_period_started_fake.call_count, 1u);
+
+  sampling_period_ended_fake.custom_fake = [](sacn_receiver_t, uint16_t, void*) {};
+  sampling_period_started_fake.custom_fake = [](sacn_receiver_t, uint16_t, void*) {};
 
   for (const auto& netint : initial_netints)
     EXPECT_EQ(etcpal_rbtree_find(&test_receiver_->sampling_period_netints, &netint.iface), nullptr);
