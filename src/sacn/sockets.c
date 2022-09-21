@@ -944,7 +944,7 @@ etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_ty
   }
 #else
   size_t num_netints = SACN_MAX_NETINTS;
-  EtcPalNetintInfo netint_list[SACN_MAX_NETINTS];
+  EtcPalNetintInfo netint_list[SACN_MAX_NETINTS] = {0};
 
   res = etcpal_netint_get_interfaces(netint_list, &num_netints);
   if (res == kEtcPalErrBufSize)
@@ -970,6 +970,12 @@ etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_ty
     sys_netints->sys_netints = calloc(num_netints, sizeof(SacnMcastInterface));
     if (!sys_netints->sys_netints)
       res = kEtcPalErrNoMem;
+  }
+#else
+  if (res == kEtcPalErrOk)
+  {
+    memset(multicast_send_sockets, 0, sizeof(multicast_send_sockets));
+    memset(sys_netints->sys_netints, 0, sizeof(sys_netints->sys_netints));
   }
 #endif
 

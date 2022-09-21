@@ -143,6 +143,8 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const c
 
     if (!src->universes)
       result = kEtcPalErrNoMem;
+#else
+    memset(src->universes, 0, sizeof(src->universes));
 #endif
   }
 

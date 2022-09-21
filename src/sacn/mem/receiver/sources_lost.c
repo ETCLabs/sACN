@@ -46,7 +46,7 @@ typedef struct SourcesLostNotificationBuf
 #if SACN_DYNAMIC_MEM
 static SourcesLostNotificationBuf* sacn_pool_sources_lost;
 #else
-static SourcesLostNotificationBuf sacn_pool_sources_lost[SACN_RECEIVER_MAX_THREADS];
+static SourcesLostNotificationBuf sacn_pool_sources_lost[SACN_RECEIVER_MAX_THREADS] = {0};
 #endif
 
 /*********************** Private function prototypes *************************/

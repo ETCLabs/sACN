@@ -97,6 +97,8 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 
     universe->netints.netints = NULL;
     universe->netints.netints_capacity = 0;
+#else
+    memset(universe->unicast_dests, 0, sizeof(universe->unicast_dests));
 #endif
     universe->netints.num_netints = 0;
   }
