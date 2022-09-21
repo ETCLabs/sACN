@@ -147,10 +147,9 @@ void zero_status_lists(SacnSourceStatusLists* lists)
   lists->num_unknown = 0;
 }
 
-#if SACN_DYNAMIC_MEM
-
 etcpal_error_t init_status_lists_buf(unsigned int num_threads)
 {
+#if SACN_DYNAMIC_MEM
   sacn_pool_status_lists = calloc(num_threads, sizeof(SacnSourceStatusLists));
   if (!sacn_pool_status_lists)
     return kEtcPalErrNoMem;
@@ -161,8 +160,13 @@ etcpal_error_t init_status_lists_buf(unsigned int num_threads)
     if (res != kEtcPalErrOk)
       return res;
   }
+#else
+  memset(sacn_pool_status_lists, 0, sizeof(sacn_pool_status_lists));
+#endif
   return kEtcPalErrOk;
 }
+
+#if SACN_DYNAMIC_MEM
 
 etcpal_error_t init_status_lists_entry(SacnSourceStatusLists* lists)
 {

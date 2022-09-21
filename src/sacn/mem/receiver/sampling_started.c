@@ -91,10 +91,9 @@ SamplingStartedNotification* get_sampling_started_buffer(sacn_thread_id_t thread
   return NULL;
 }
 
-#if SACN_DYNAMIC_MEM
-
 etcpal_error_t init_sampling_started_bufs(unsigned int num_threads)
 {
+#if SACN_DYNAMIC_MEM
   sacn_pool_sampling_started = calloc(num_threads, sizeof(SamplingStartedNotificationBuf));
   if (!sacn_pool_sampling_started)
     return kEtcPalErrNoMem;
@@ -105,8 +104,13 @@ etcpal_error_t init_sampling_started_bufs(unsigned int num_threads)
     if (res != kEtcPalErrOk)
       return res;
   }
+#else   // SACN_DYNAMIC_MEM
+  memset(sacn_pool_sampling_started, 0, sizeof(sacn_pool_sampling_started));
+#endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;
 }
+
+#if SACN_DYNAMIC_MEM
 
 etcpal_error_t init_sampling_started_buf(SamplingStartedNotificationBuf* sampling_started_buf)
 {

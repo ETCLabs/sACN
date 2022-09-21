@@ -83,10 +83,9 @@ SacnTrackedSource** get_to_erase_buffer(sacn_thread_id_t thread_id, size_t size)
   return NULL;
 }
 
-#if SACN_DYNAMIC_MEM
-
 etcpal_error_t init_to_erase_bufs(unsigned int num_threads)
 {
+#if SACN_DYNAMIC_MEM
   to_erase = calloc(num_threads, sizeof(ToEraseBuf));
   if (!to_erase)
     return kEtcPalErrNoMem;
@@ -97,8 +96,13 @@ etcpal_error_t init_to_erase_bufs(unsigned int num_threads)
     if (res != kEtcPalErrOk)
       return res;
   }
+#else   // SACN_DYNAMIC_MEM
+  memset(to_erase, 0, sizeof(to_erase));
+#endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;
 }
+
+#if SACN_DYNAMIC_MEM
 
 etcpal_error_t init_to_erase_buf(ToEraseBuf* to_erase_buf)
 {

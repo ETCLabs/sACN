@@ -100,10 +100,9 @@ bool add_active_sources(MergeReceiverMergedDataNotification* notification, SacnM
   return true;
 }
 
-#if SACN_DYNAMIC_MEM
-
 etcpal_error_t init_merged_data_buf(unsigned int num_threads)
 {
+#if SACN_DYNAMIC_MEM
   sacn_pool_merged_data = calloc(num_threads, sizeof(MergeReceiverMergedDataNotification));
   if (!sacn_pool_merged_data)
     return kEtcPalErrNoMem;
@@ -116,9 +115,13 @@ etcpal_error_t init_merged_data_buf(unsigned int num_threads)
 
     sacn_pool_merged_data[i].active_sources_capacity = INITIAL_CAPACITY;
   }
-
+#else   // SACN_DYNAMIC_MEM
+  memset(sacn_pool_merged_data, 0, sizeof(sacn_pool_merged_data));
+#endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;
 }
+
+#if SACN_DYNAMIC_MEM
 
 void deinit_merged_data_buf(void)
 {
