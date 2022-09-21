@@ -757,6 +757,9 @@ TEST_F(TestSockets, AddAllNetintsToSamplingPeriodWorks)
     sys_netints.erase(new_end, sys_netints.end());
     ++sys_netints_index;
   }
+
+  CLEAR_BUF(&internal_netint_array, netints);
+  etcpal_rbtree_clear_with_cb(&sampling_period_netints, sampling_period_netint_tree_dealloc);
 }
 
 TEST_F(TestSockets, SendTransmitsMinimumLength)
