@@ -302,7 +302,9 @@ protected:
                         return (new_netint.iface == sp_netint->id);
                       }) != std::end(new_netints);
         if (is_new)
+        {
           EXPECT_TRUE(sp_netint->in_future_sampling_period);
+        }
       }
       else
       {
