@@ -1195,6 +1195,43 @@ TEST_F(TestReceiverThread, UniverseDataFiltersFutureSamplingPeriodNetints)
   }
 }
 
+TEST_F(TestReceiverThread, UniverseDataFiltersSubsequentSourceNetints)
+{
+  static constexpr size_t kNumTestIterations = 3;
+  static constexpr size_t kNumSources = 3;
+  static constexpr size_t kNumDataCallsPerSource = 3;
+
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
+  std::vector<EtcPalUuid> cids;
+  for (size_t i = 0; i < kNumSources; ++i)
+    cids.push_back(etcpal::Uuid::V4().get());
+
+  for (size_t i = 0; i < kNumTestIterations; ++i)
+  {
+    for (size_t j = 0; j < kNumSources; ++j)
+    {
+      // The netints come in a different order for each source - only the first one for a source should notify.
+      std::vector<SacnMcastInterface> ordered_netints;
+      for (size_t k = 0; k < kTestNetints.size(); ++k)
+        ordered_netints.push_back(kTestNetints[(j + k) % kTestNetints.size()]);
+
+      for (size_t k = 0; k < kNumDataCallsPerSource; ++k)
+      {
+        for (const auto& netint : ordered_netints)
+        {
+          InitTestData(SACN_STARTCODE_DMX, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, cids[j], seq_num_,
+                       netint.iface);
+          RunThreadCycle();
+          EXPECT_EQ(universe_data_fake.call_count,
+                    (i * kNumSources * kNumDataCallsPerSource) + (j * kNumDataCallsPerSource) + k + 1)
+              << "(i:" << i << " j:" << j << " k:" << k << ")";
+        }
+      }
+    }
+  }
+}
+
 TEST_F(TestReceiverThread, UniverseDataIndicatesPreview)
 {
   universe_data_fake.custom_fake = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
