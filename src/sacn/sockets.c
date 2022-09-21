@@ -944,7 +944,8 @@ etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_ty
   }
 #else
   size_t num_netints = SACN_MAX_NETINTS;
-  EtcPalNetintInfo netint_list[SACN_MAX_NETINTS] = {0};
+  EtcPalNetintInfo netint_list[SACN_MAX_NETINTS];
+  memset(netint_list, 0, SACN_MAX_NETINTS);
 
   res = etcpal_netint_get_interfaces(netint_list, &num_netints);
   if (res == kEtcPalErrBufSize)
