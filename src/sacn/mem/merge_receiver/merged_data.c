@@ -39,7 +39,7 @@
 #if SACN_DYNAMIC_MEM
 static MergeReceiverMergedDataNotification* sacn_pool_merged_data;
 #else
-static MergeReceiverMergedDataNotification sacn_pool_merged_data[SACN_RECEIVER_MAX_THREADS] = {0};
+static MergeReceiverMergedDataNotification sacn_pool_merged_data[SACN_RECEIVER_MAX_THREADS] = {{NULL}};
 #endif
 
 /*************************** Function definitions ****************************/
