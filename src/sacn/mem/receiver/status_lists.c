@@ -39,7 +39,7 @@
 #if SACN_DYNAMIC_MEM
 static SacnSourceStatusLists* sacn_pool_status_lists;
 #else
-static SacnSourceStatusLists sacn_pool_status_lists[SACN_RECEIVER_MAX_THREADS] = {{0}};
+static SacnSourceStatusLists sacn_pool_status_lists[SACN_RECEIVER_MAX_THREADS];
 #endif
 
 /*********************** Private function prototypes *************************/
