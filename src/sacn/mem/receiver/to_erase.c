@@ -97,6 +97,7 @@ etcpal_error_t init_to_erase_bufs(unsigned int num_threads)
       return res;
   }
 #else   // SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(num_threads);
   memset(to_erase, 0, sizeof(to_erase));
 #endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;

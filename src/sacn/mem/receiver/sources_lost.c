@@ -164,6 +164,7 @@ etcpal_error_t init_sources_lost_bufs(unsigned int num_threads)
       return res;
   }
 #else   // SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(num_threads);
   memset(sacn_pool_sources_lost, 0, sizeof(sacn_pool_sources_lost));
 #endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;

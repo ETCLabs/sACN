@@ -161,6 +161,7 @@ etcpal_error_t init_status_lists_buf(unsigned int num_threads)
       return res;
   }
 #else
+  ETCPAL_UNUSED_ARG(num_threads);
   memset(sacn_pool_status_lists, 0, sizeof(sacn_pool_status_lists));
 #endif
   return kEtcPalErrOk;

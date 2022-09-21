@@ -70,6 +70,7 @@ etcpal_error_t init_universe_data_buf(unsigned int num_threads)
   if (!sacn_pool_universe_data)
     return kEtcPalErrNoMem;
 #else   // SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(num_threads);
   memset(sacn_pool_universe_data, 0, sizeof(sacn_pool_universe_data));
 #endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;

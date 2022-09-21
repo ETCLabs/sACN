@@ -71,6 +71,7 @@ etcpal_error_t init_source_pap_lost_buf(unsigned int num_threads)
   if (!sacn_pool_source_pap_lost)
     return kEtcPalErrNoMem;
 #else   // SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(num_threads);
   memset(sacn_pool_source_pap_lost, 0, sizeof(sacn_pool_source_pap_lost));
 #endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;

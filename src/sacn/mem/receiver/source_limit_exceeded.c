@@ -70,6 +70,7 @@ etcpal_error_t init_source_limit_exceeded_buf(unsigned int num_threads)
   if (!source_limit_exceeded)
     return kEtcPalErrNoMem;
 #else   // SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(num_threads);
   memset(source_limit_exceeded, 0, sizeof(source_limit_exceeded));
 #endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;
