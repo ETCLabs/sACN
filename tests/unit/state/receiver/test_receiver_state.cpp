@@ -234,7 +234,8 @@ protected:
   }
 
   void InitTestData(uint8_t start_code, uint16_t universe, const uint8_t* data = nullptr, size_t data_len = 0u,
-                    uint8_t flags = 0u, const EtcPalUuid& source_cid = kTestCid, uint8_t sequence_number = seq_num_)
+                    uint8_t flags = 0u, const EtcPalUuid& source_cid = kTestCid, uint8_t sequence_number = seq_num_,
+                    const EtcPalMcastNetintId& netint = kTestNetints[0].iface)
   {
     init_sacn_data_send_buf(test_data_, start_code, &source_cid, kTestName, kTestPriority, universe, 0u, kTestPreview);
 
@@ -243,12 +244,13 @@ protected:
 
     test_data_[SACN_OPTS_OFFSET] |= flags;
     test_data_[SACN_SEQ_OFFSET] = sequence_number;
+    test_data_netint_ = netint;
 
     sacn_read_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadResult* read_result) {
       read_result->from_addr = kTestSockAddr;
       read_result->data = test_data_;
       read_result->data_len = SACN_MTU;
-      read_result->netint = kTestNetints[0].iface;
+      read_result->netint = test_data_netint_;
       return kEtcPalErrOk;
     };
   }
@@ -336,10 +338,12 @@ protected:
   SacnReceiver* test_receiver_;
   static uint8_t seq_num_;
   static uint8_t test_data_[SACN_MTU];
+  static EtcPalMcastNetintId test_data_netint_;
 };
 
 uint8_t TestReceiverThread::seq_num_ = 0u;
 uint8_t TestReceiverThread::test_data_[SACN_MTU] = {0};
+EtcPalMcastNetintId TestReceiverThread::test_data_netint_ = kTestNetints[0].iface;
 
 TEST_F(TestReceiverState, RespectsMaxReceiverLimit)
 {
@@ -1157,6 +1161,38 @@ TEST_F(TestReceiverThread, UniverseDataFiltersPreview)
 
   RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 1u);
+}
+
+TEST_F(TestReceiverThread, UniverseDataFiltersFutureSamplingPeriodNetints)
+{
+  std::vector<SacnMcastInterface> current_netints = {kTestNetints.begin(),
+                                                     kTestNetints.begin() + (kTestNetints.size() / 2)};
+  std::vector<SacnMcastInterface> future_netints = {kTestNetints.begin() + (kTestNetints.size() / 2),
+                                                    kTestNetints.end()};
+
+  etcpal_rbtree_clear_with_cb(&test_receiver_->sampling_period_netints, sampling_period_netint_tree_dealloc);
+  for (const auto& netint : current_netints)
+    add_sacn_sampling_period_netint(&test_receiver_->sampling_period_netints, &netint.iface, false);
+  for (const auto& netint : future_netints)
+    add_sacn_sampling_period_netint(&test_receiver_->sampling_period_netints, &netint.iface, true);
+
+  size_t prev_call_count = universe_data_fake.call_count;
+  for (const auto& netint : current_netints)
+  {
+    InitTestData(SACN_STARTCODE_DMX, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u,
+                 etcpal::Uuid::V4().get(), seq_num_, netint.iface);
+    RunThreadCycle();
+    EXPECT_EQ(universe_data_fake.call_count, prev_call_count + 1);
+    prev_call_count = universe_data_fake.call_count;
+  }
+
+  for (const auto& netint : future_netints)
+  {
+    InitTestData(SACN_STARTCODE_DMX, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u,
+                 etcpal::Uuid::V4().get(), seq_num_, netint.iface);
+    RunThreadCycle();
+    EXPECT_EQ(universe_data_fake.call_count, prev_call_count);
+  }
 }
 
 TEST_F(TestReceiverThread, UniverseDataIndicatesPreview)
