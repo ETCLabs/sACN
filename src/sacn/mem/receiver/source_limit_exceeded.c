@@ -39,7 +39,7 @@
 #if SACN_DYNAMIC_MEM
 static SourceLimitExceededNotification* source_limit_exceeded;
 #else
-static SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_THREADS] = {0};
+static SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_THREADS] = {{0}};
 #endif
 
 /*************************** Function definitions ****************************/

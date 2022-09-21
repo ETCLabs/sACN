@@ -46,7 +46,7 @@ typedef struct SamplingEndedNotificationBuf
 #if SACN_DYNAMIC_MEM
 static SamplingEndedNotificationBuf* sacn_pool_sampling_ended;
 #else
-static SamplingEndedNotificationBuf sacn_pool_sampling_ended[SACN_RECEIVER_MAX_THREADS] = {0};
+static SamplingEndedNotificationBuf sacn_pool_sampling_ended[SACN_RECEIVER_MAX_THREADS] = {{0}};
 #endif
 
 /*********************** Private function prototypes *************************/

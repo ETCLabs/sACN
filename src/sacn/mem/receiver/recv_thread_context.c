@@ -39,7 +39,7 @@
 #if SACN_DYNAMIC_MEM
 static SacnRecvThreadContext* sacn_pool_recv_thread_context;
 #else   // SACN_DYNAMIC_MEM
-static SacnRecvThreadContext sacn_pool_recv_thread_context[SACN_RECEIVER_MAX_THREADS] = {0};
+static SacnRecvThreadContext sacn_pool_recv_thread_context[SACN_RECEIVER_MAX_THREADS] = {{0}};
 #endif  // SACN_DYNAMIC_MEM
 
 /*********************** Private function prototypes *************************/

@@ -46,7 +46,7 @@ typedef struct ToEraseBuf
 #if SACN_DYNAMIC_MEM
 static ToEraseBuf* to_erase;
 #else
-static ToEraseBuf to_erase[SACN_RECEIVER_MAX_THREADS] = {0};
+static ToEraseBuf to_erase[SACN_RECEIVER_MAX_THREADS] = {{0}};
 #endif
 
 /*********************** Private function prototypes *************************/

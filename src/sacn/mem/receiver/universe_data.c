@@ -39,7 +39,7 @@
 #if SACN_DYNAMIC_MEM
 static UniverseDataNotification* sacn_pool_universe_data;
 #else
-static UniverseDataNotification sacn_pool_universe_data[SACN_RECEIVER_MAX_THREADS] = {0};
+static UniverseDataNotification sacn_pool_universe_data[SACN_RECEIVER_MAX_THREADS] = {{0}};
 #endif
 
 /*************************** Function definitions ****************************/

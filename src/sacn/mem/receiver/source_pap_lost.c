@@ -39,7 +39,7 @@
 #if SACN_DYNAMIC_MEM
 static SourcePapLostNotification* sacn_pool_source_pap_lost;
 #else
-static SourcePapLostNotification sacn_pool_source_pap_lost[SACN_RECEIVER_MAX_THREADS] = {0};
+static SourcePapLostNotification sacn_pool_source_pap_lost[SACN_RECEIVER_MAX_THREADS] = {{0}};
 #endif
 
 /*************************** Function definitions ****************************/
