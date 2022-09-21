@@ -981,6 +981,38 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsWorks)
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u * SACN_RECEIVER_MAX_UNIVERSES);
 }
 
+TEST_F(TestReceiverState, TerminateSourcesOnRemovedNetintsWorks)
+{
+  SacnReceiver* receiver = AddReceiver();
+  ASSERT_EQ(receiver->netints.num_netints, kTestNetints.size());
+
+  std::vector<SacnTrackedSource*> sources;
+  for (const auto& netint : kTestNetints)
+  {
+    EtcPalUuid cid = etcpal::Uuid::V4().get();
+    SacnTrackedSource* source = nullptr;
+    EXPECT_EQ(add_sacn_tracked_source(receiver, &cid, "name", &netint.iface, 0u, 0u, &source), kEtcPalErrOk);
+    sources.push_back(source);
+  }
+
+  while (receiver->netints.num_netints > 0)
+  {
+    terminate_sources_on_removed_netints(receiver);
+
+    for (size_t i = 0; i < receiver->netints.num_netints; ++i)
+    {
+      EXPECT_FALSE(sources[i]->terminated);
+    }
+
+    for (size_t i = receiver->netints.num_netints; i < sources.size(); ++i)
+    {
+      EXPECT_TRUE(sources[i]->terminated);
+    }
+
+    --receiver->netints.num_netints;
+  }
+}
+
 TEST_F(TestReceiverThread, AddsPendingSockets)
 {
   sacn_add_pending_sockets_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context) {
