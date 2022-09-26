@@ -49,13 +49,11 @@ C functionality supports C99 with the exception of the following features:
 
 * Clang format is enabled – currently this follows the style guidelines established for our libraries,
  and it may be updated from time to time. See .clang-format for more details.
-* Non-conformance to .clang-format will result in pipeline failures.  The code is not automatically re-formatted.
 
 ### Continuous Integration
 
 * A GitLab CI pipeline is being used to run builds and tests that enforce all supported quality gates for all merge
 requests, and for generating new library builds from main. See .gitlab-ci.yml for details.
-* All merge requests are also required to be approved by two other developers before being integrated.
 
 ### Automated Dynamic Analysis
 
