@@ -17,8 +17,8 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#ifndef SACN_PRIVATE_TRACKED_SOURCE_MEM_H_
-#define SACN_PRIVATE_TRACKED_SOURCE_MEM_H_
+#ifndef SACN_PRIVATE_SAMPLING_PERIOD_NETINT_MEM_H_
+#define SACN_PRIVATE_SAMPLING_PERIOD_NETINT_MEM_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -29,21 +29,21 @@
 extern "C" {
 #endif
 
-etcpal_error_t init_tracked_sources(void);
+etcpal_error_t init_sampling_period_netints(void);
 
-etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid* sender_cid, const char* name,
-                                       const EtcPalMcastNetintId* netint, uint8_t seq_num, uint8_t first_start_code,
-                                       SacnTrackedSource** tracked_source_state);
-etcpal_error_t clear_receiver_sources(SacnReceiver* receiver);
-etcpal_error_t remove_receiver_source(SacnReceiver* receiver, sacn_remote_source_t handle);
+etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id,
+                                               bool in_future_sampling_period);
+void remove_current_sampling_period_netints(EtcPalRbTree* tree);
+etcpal_error_t remove_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id);
+int sampling_period_netint_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 
-void tracked_source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+void sampling_period_netint_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 
-void tracked_source_node_dealloc(EtcPalRbNode* node);
-EtcPalRbNode* tracked_source_node_alloc(void);
+void sampling_period_netint_node_dealloc(EtcPalRbNode* node);
+EtcPalRbNode* sampling_period_netint_node_alloc(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SACN_PRIVATE_TRACKED_SOURCE_MEM_H_ */
+#endif /* SACN_PRIVATE_SAMPLING_PERIOD_NETINT_MEM_H_ */

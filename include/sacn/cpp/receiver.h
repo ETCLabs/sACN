@@ -112,6 +112,10 @@ public:
 
     /**
      * @brief Notify that a receiver's sampling period has begun.
+     *
+     * If this sampling period was due to a networking reset, some sources may not be included in it. See the universe
+     * data callback to determine if a source is included or not.
+     *
      * @param handle The receiver's handle.
      * @param universe The universe the receiver is monitoring.
      */
@@ -123,6 +127,11 @@ public:
 
     /**
      * @brief Notify that a receiver's sampling period has ended.
+     *
+     * All sources that were included in this sampling period can officially be used in the merge result for the
+     * universe. If there was a networking reset during this sampling period, another sampling period may have been
+     * scheduled, in which case this will be immediately followed by a sampling period started notification.
+     *
      * @param handle The receiver's handle.
      * @param universe The universe the receiver is monitoring.
      */

@@ -36,6 +36,7 @@ typedef struct SacnReadResult
   uint8_t* data;
   size_t data_len;
   EtcPalSockAddr from_addr;
+  EtcPalMcastNetintId netint;
 } SacnReadResult;
 
 typedef struct SacnSocketsSysNetints
@@ -62,14 +63,22 @@ etcpal_error_t sacn_sockets_reset_source(const SacnNetintConfig* netint_config);
 etcpal_error_t sacn_sockets_reset_receiver(const SacnNetintConfig* netint_config);
 etcpal_error_t sacn_sockets_reset_source_detector(const SacnNetintConfig* netint_config);
 
-etcpal_error_t sacn_initialize_receiver_netints(SacnInternalNetintArray* receiver_netints,
+#if SACN_RECEIVER_ENABLED
+etcpal_error_t sacn_initialize_receiver_netints(SacnInternalNetintArray* receiver_netints, bool currently_sampling,
+                                                EtcPalRbTree* sampling_period_netints,
                                                 const SacnNetintConfig* app_netint_config);
+etcpal_error_t sacn_add_all_netints_to_sampling_period(SacnInternalNetintArray* receiver_netints,
+                                                       EtcPalRbTree* sampling_period_netints);
+#endif  // SACN_RECEIVER_ENABLED
 etcpal_error_t sacn_initialize_source_detector_netints(SacnInternalNetintArray* source_detector_netints,
                                                        const SacnNetintConfig* app_netint_config);
 etcpal_error_t sacn_initialize_source_netints(SacnInternalNetintArray* source_netints,
                                               const SacnNetintConfig* app_netint_config);
+
+etcpal_error_t sacn_validate_netint_config(const SacnNetintConfig* netint_config, const SacnMcastInterface* sys_netints,
+                                           size_t num_sys_netints, size_t* num_valid_netints);
 etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* internal_netints,
-                                                const SacnNetintConfig* app_netint_config,
+                                                const SacnNetintConfig* app_netint_config, size_t num_valid_app_netints,
                                                 const SacnMcastInterface* sys_netints, size_t num_sys_netints);
 
 void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAddr* ip);

@@ -25,9 +25,7 @@
 #include "sacn/private/common.h"
 #include "sacn/private/opts.h"
 #include "sacn/private/sockets.h"
-#include "sacn/private/mem/common.h"
-#include "sacn/private/mem/receiver/remote_source.h"
-#include "sacn/private/mem/receiver/tracked_source.h"
+#include "sacn/private/mem.h"
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>
@@ -132,8 +130,11 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
 #endif
   receiver->netints.num_netints = 0;
 
+  etcpal_rbtree_init(&receiver->sampling_period_netints, sampling_period_netint_compare,
+                     sampling_period_netint_node_alloc, sampling_period_netint_node_dealloc);
+
   etcpal_error_t initialize_receiver_netints_result =
-      sacn_initialize_receiver_netints(&receiver->netints, netint_config);
+      sacn_initialize_receiver_netints(&receiver->netints, false, &receiver->sampling_period_netints, netint_config);
   if (initialize_receiver_netints_result != kEtcPalErrOk)
   {
     FREE_RECEIVER(receiver);
@@ -142,6 +143,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
 
   receiver->sampling = false;
   receiver->notified_sampling_started = false;
+
   receiver->suppress_limit_exceeded_notification = false;
   etcpal_rbtree_init(&receiver->sources, remote_source_compare, tracked_source_node_alloc, tracked_source_node_dealloc);
   receiver->term_sets = NULL;
@@ -217,6 +219,7 @@ etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_uni
 
 void remove_sacn_receiver(SacnReceiver* receiver)
 {
+  etcpal_rbtree_clear_with_cb(&receiver->sampling_period_netints, sampling_period_netint_tree_dealloc);
   etcpal_rbtree_clear_with_cb(&receiver->sources, tracked_source_tree_dealloc);
   remove_receiver_from_maps(receiver);
   FREE_RECEIVER(receiver);
@@ -293,6 +296,7 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
   ETCPAL_UNUSED_ARG(self);
 
   SacnReceiver* receiver = (SacnReceiver*)node->value;
+  etcpal_rbtree_clear_with_cb(&receiver->sampling_period_netints, sampling_period_netint_tree_dealloc);
   etcpal_rbtree_clear_with_cb(&receiver->sources, tracked_source_tree_dealloc);
   CLEAR_BUF(&receiver->netints, netints);
   FREE_RECEIVER(receiver);

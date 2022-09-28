@@ -40,6 +40,7 @@
 #include "sacn/private/mem/receiver/recv_thread_context.h"
 #include "sacn/private/mem/receiver/remote_source.h"
 #include "sacn/private/mem/receiver/sampling_ended.h"
+#include "sacn/private/mem/receiver/sampling_period_netint.h"
 #include "sacn/private/mem/receiver/sampling_started.h"
 #include "sacn/private/mem/receiver/source_limit_exceeded.h"
 #include "sacn/private/mem/receiver/source_pap_lost.h"

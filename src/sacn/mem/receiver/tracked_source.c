@@ -81,7 +81,7 @@ etcpal_error_t init_tracked_sources(void)
 }
 
 etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid* sender_cid, const char* name,
-                                       uint8_t seq_num, uint8_t first_start_code,
+                                       const EtcPalMcastNetintId* netint, uint8_t seq_num, uint8_t first_start_code,
                                        SacnTrackedSource** tracked_source_state)
 {
 #if !SACN_ETC_PRIORITY_EXTENSION
@@ -117,6 +117,8 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid*
   {
     src->handle = handle;
     ETCPAL_MSVC_NO_DEP_WRN strcpy(src->name, name);
+    src->netint = *netint;
+
     etcpal_timer_start(&src->packet_timer, SACN_SOURCE_LOSS_TIMEOUT);
     src->seq = seq_num;
     src->terminated = false;

@@ -84,14 +84,17 @@ bool add_active_sources(MergeReceiverMergedDataNotification* notification, SacnM
 
   EtcPalRbIter iter;
   etcpal_rbiter_init(&iter);
-  for (SacnMergeReceiverSource* source = etcpal_rbiter_first(&iter, &merge_receiver->sources); source;
+  for (SacnMergeReceiverInternalSource* source = etcpal_rbiter_first(&iter, &merge_receiver->sources); source;
        source = etcpal_rbiter_next(&iter))
   {
-    CHECK_ROOM_FOR_ONE_MORE(notification, active_sources, sacn_remote_source_t, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE,
-                            false);
+    if (!source->sampling)
+    {
+      CHECK_ROOM_FOR_ONE_MORE(notification, active_sources, sacn_remote_source_t,
+                              SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
-    notification->active_sources[notification->num_active_sources] = source->handle;
-    ++notification->num_active_sources;
+      notification->active_sources[notification->num_active_sources] = source->handle;
+      ++notification->num_active_sources;
+    }
   }
 
   return true;

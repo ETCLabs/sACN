@@ -447,6 +447,8 @@ struct SacnReceiver
   bool sampling;
   bool notified_sampling_started;
   EtcPalTimer sample_timer;
+  EtcPalRbTree sampling_period_netints;
+
   bool suppress_limit_exceeded_notification;
   EtcPalRbTree sources;       // The sources being tracked on this universe.
   TerminationSet* term_sets;  // Source loss tracking
@@ -495,6 +497,8 @@ typedef struct SacnTrackedSource
 {
   sacn_remote_source_t handle;  // This must be the first member of this struct.
   char name[SACN_SOURCE_NAME_MAX_LEN];
+  EtcPalMcastNetintId netint;
+
   EtcPalTimer packet_timer;
   uint8_t seq;
   bool terminated;
@@ -525,6 +529,12 @@ typedef enum
   kPerformAllSocketCleanupNow,
   kQueueSocketCleanup
 } socket_cleanup_behavior_t;
+
+typedef struct SacnSamplingPeriodNetint
+{
+  EtcPalMcastNetintId id;          // This must be the first member of this struct.
+  bool in_future_sampling_period;  // True if this is in the NEXT sampling period, false if in the current one.
+} SacnSamplingPeriodNetint;
 
 /******************************************************************************
  * Notifications delivered by the sACN receive module
@@ -680,17 +690,24 @@ typedef struct SacnMergeReceiverInternalSource
   char name[SACN_SOURCE_NAME_MAX_LEN];
   EtcPalSockAddr addr;
   bool pending;
+  bool sampling;
 } SacnMergeReceiverInternalSource;
 
 typedef struct SacnMergeReceiver
 {
   sacn_merge_receiver_t merge_receiver_handle;  // This must be the first struct member.
-  sacn_dmx_merger_t merger_handle;
   SacnMergeReceiverCallbacks callbacks;
   bool use_pap;
 
+  sacn_dmx_merger_t merger_handle;
   uint8_t levels[DMX_ADDRESS_COUNT];
   sacn_dmx_merger_source_t owners[DMX_ADDRESS_COUNT];
+
+#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+  sacn_dmx_merger_t sampling_merger_handle;
+  uint8_t sampling_levels[DMX_ADDRESS_COUNT];
+  sacn_dmx_merger_source_t sampling_owners[DMX_ADDRESS_COUNT];
+#endif
 
   EtcPalRbTree sources;
 

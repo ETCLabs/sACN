@@ -32,7 +32,7 @@ extern "C" {
 etcpal_error_t init_merge_receiver_sources(void);
 
 etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, const EtcPalSockAddr* addr,
-                                              const SacnRemoteSource* remote_source, bool pending);
+                                              const SacnRemoteSource* remote_source, bool pending, bool sampling);
 etcpal_error_t lookup_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_remote_source_t source_handle,
                                             SacnMergeReceiverInternalSource** source);
 void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_remote_source_t source_handle);

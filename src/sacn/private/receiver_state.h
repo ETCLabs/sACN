@@ -47,6 +47,7 @@ void remove_receiver_sockets(SacnReceiver* receiver, socket_cleanup_behavior_t c
 void remove_source_detector_sockets(SacnSourceDetector* detector, socket_cleanup_behavior_t cleanup_behavior);
 void remove_all_receiver_sockets(socket_cleanup_behavior_t cleanup_behavior);
 void read_network_and_process(SacnRecvThreadContext* context);
+void terminate_sources_on_removed_netints(SacnReceiver* receiver);
 
 #ifdef __cplusplus
 }

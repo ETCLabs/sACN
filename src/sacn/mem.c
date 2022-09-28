@@ -74,6 +74,8 @@ etcpal_error_t sacn_receiver_mem_init(unsigned int number_of_threads)
   if (res == kEtcPalErrOk)
     res = init_tracked_sources();
   if (res == kEtcPalErrOk)
+    res = init_sampling_period_netints();
+  if (res == kEtcPalErrOk)
     res = init_receivers();
 
   // Clean up

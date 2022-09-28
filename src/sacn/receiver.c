@@ -364,11 +364,16 @@ etcpal_error_t sacn_receiver_reset_networking(const SacnNetintConfig* sys_netint
         for (SacnReceiver* receiver = get_first_receiver(&iter); (res == kEtcPalErrOk) && receiver;
              receiver = get_next_receiver(&iter))
         {
-          res = sacn_initialize_receiver_netints(&receiver->netints, NULL);
+          res = sacn_initialize_receiver_netints(&receiver->netints, receiver->sampling,
+                                                 &receiver->sampling_period_netints, NULL);
           if (res == kEtcPalErrOk)
             res = add_receiver_sockets(receiver);
+
           if (res == kEtcPalErrOk)
+          {
+            terminate_sources_on_removed_netints(receiver);
             begin_sampling_period(receiver);
+          }
         }
       }
 
@@ -470,11 +475,16 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfi
           receiver_netint_config.netints = per_receiver_netint_lists[i].netints;
           receiver_netint_config.num_netints = per_receiver_netint_lists[i].num_netints;
 
-          res = sacn_initialize_receiver_netints(&receiver->netints, &receiver_netint_config);
+          res = sacn_initialize_receiver_netints(&receiver->netints, receiver->sampling,
+                                                 &receiver->sampling_period_netints, &receiver_netint_config);
           if (res == kEtcPalErrOk)
             res = add_receiver_sockets(receiver);
+
           if (res == kEtcPalErrOk)
+          {
+            terminate_sources_on_removed_netints(receiver);
             begin_sampling_period(receiver);
+          }
         }
       }
 
@@ -640,6 +650,8 @@ etcpal_error_t change_sacn_receiver_universe(sacn_receiver_t handle, uint16_t ne
   }
 
   // Begin the sampling period.
+  if (res == kEtcPalErrOk)
+    res = sacn_add_all_netints_to_sampling_period(&receiver->netints, &receiver->sampling_period_netints);
   if (res == kEtcPalErrOk)
     begin_sampling_period(receiver);
 
