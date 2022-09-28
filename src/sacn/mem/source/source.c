@@ -103,6 +103,9 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
 
     if (!source->universes || !source->netints)
       result = kEtcPalErrNoMem;
+#else
+    memset(source->universes, 0, sizeof(source->universes));
+    memset(source->netints, 0, sizeof(source->netints));
 #endif
   }
 
@@ -173,6 +176,8 @@ etcpal_error_t init_sources(void)
   sacn_pool_source_mem.sources_capacity = sacn_pool_source_mem.sources ? INITIAL_CAPACITY : 0;
   if (!sacn_pool_source_mem.sources)
     res = kEtcPalErrNoMem;
+#else   // SACN_DYNAMIC_MEM
+  memset(sacn_pool_source_mem.sources, 0, sizeof(sacn_pool_source_mem.sources));
 #endif  // SACN_DYNAMIC_MEM
   sacn_pool_source_mem.num_sources = 0;
 

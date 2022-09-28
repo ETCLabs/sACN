@@ -91,10 +91,9 @@ SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id,
   return NULL;
 }
 
-#if SACN_DYNAMIC_MEM
-
 etcpal_error_t init_sampling_ended_bufs(unsigned int num_threads)
 {
+#if SACN_DYNAMIC_MEM
   sacn_pool_sampling_ended = calloc(num_threads, sizeof(SamplingEndedNotificationBuf));
   if (!sacn_pool_sampling_ended)
     return kEtcPalErrNoMem;
@@ -105,8 +104,14 @@ etcpal_error_t init_sampling_ended_bufs(unsigned int num_threads)
     if (res != kEtcPalErrOk)
       return res;
   }
+#else   // SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(num_threads);
+  memset(sacn_pool_sampling_ended, 0, sizeof(sacn_pool_sampling_ended));
+#endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;
 }
+
+#if SACN_DYNAMIC_MEM
 
 etcpal_error_t init_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_ended_buf)
 {

@@ -64,15 +64,20 @@ SourcePapLostNotification* get_source_pap_lost(sacn_thread_id_t thread_id)
   return NULL;
 }
 
-#if SACN_DYNAMIC_MEM
-
 etcpal_error_t init_source_pap_lost_buf(unsigned int num_threads)
 {
+#if SACN_DYNAMIC_MEM
   sacn_pool_source_pap_lost = calloc(num_threads, sizeof(SourcePapLostNotification));
   if (!sacn_pool_source_pap_lost)
     return kEtcPalErrNoMem;
+#else   // SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(num_threads);
+  memset(sacn_pool_source_pap_lost, 0, sizeof(sacn_pool_source_pap_lost));
+#endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;
 }
+
+#if SACN_DYNAMIC_MEM
 
 void deinit_source_pap_lost_buf(void)
 {

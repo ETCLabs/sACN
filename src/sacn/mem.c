@@ -52,8 +52,8 @@ etcpal_error_t sacn_receiver_mem_init(unsigned int number_of_threads)
 
   if (res == kEtcPalErrOk)
     res = init_recv_thread_context_buf(number_of_threads);
-#if SACN_DYNAMIC_MEM
-  res = init_status_lists_buf(number_of_threads);
+  if (res == kEtcPalErrOk)
+    res = init_status_lists_buf(number_of_threads);
   if (res == kEtcPalErrOk)
     res = init_to_erase_bufs(number_of_threads);
   if (res == kEtcPalErrOk)
@@ -68,7 +68,6 @@ etcpal_error_t sacn_receiver_mem_init(unsigned int number_of_threads)
     res = init_sampling_ended_bufs(number_of_threads);
   if (res == kEtcPalErrOk)
     res = init_source_limit_exceeded_buf(number_of_threads);
-#endif  // SACN_DYNAMIC_MEM
   if (res == kEtcPalErrOk)
     res = init_remote_sources();
   if (res == kEtcPalErrOk)
@@ -161,10 +160,8 @@ etcpal_error_t sacn_merge_receiver_mem_init(unsigned int number_of_threads)
     res = init_merge_receiver_sources();
   if (res == kEtcPalErrOk)
     res = init_merge_receivers();
-#if SACN_DYNAMIC_MEM
   if (res == kEtcPalErrOk)
     res = init_merged_data_buf(number_of_threads);
-#endif
 
   // Clean up
   if (res != kEtcPalErrOk)

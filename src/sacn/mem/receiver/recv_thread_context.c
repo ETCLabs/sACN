@@ -304,10 +304,11 @@ etcpal_error_t init_recv_thread_context_buf(unsigned int num_threads)
   sacn_pool_recv_thread_context = calloc(num_threads, sizeof(SacnRecvThreadContext));
   if (!sacn_pool_recv_thread_context)
     return kEtcPalErrNoMem;
-#else
+#else   // SACN_DYNAMIC_MEM
+  memset(sacn_pool_recv_thread_context, 0, sizeof(sacn_pool_recv_thread_context));
   if (num_threads > SACN_RECEIVER_MAX_THREADS)
     return kEtcPalErrNoMem;
-#endif
+#endif  // SACN_DYNAMIC_MEM
 
   for (unsigned int i = 0; i < num_threads; ++i)
   {

@@ -461,7 +461,7 @@ etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(
       result = kEtcPalErrNoMem;
   }
 #else
-  SacnReceiverNetintList receiver_netint_lists[SACN_RECEIVER_MAX_UNIVERSES];
+  SacnReceiverNetintList receiver_netint_lists[SACN_RECEIVER_MAX_UNIVERSES] = {0};
 #endif
 
   if (result == kEtcPalErrOk)

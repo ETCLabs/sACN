@@ -150,10 +150,9 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
   }
 }
 
-#if SACN_DYNAMIC_MEM
-
 etcpal_error_t init_sources_lost_bufs(unsigned int num_threads)
 {
+#if SACN_DYNAMIC_MEM
   sacn_pool_sources_lost = calloc(num_threads, sizeof(SourcesLostNotificationBuf));
   if (!sacn_pool_sources_lost)
     return kEtcPalErrNoMem;
@@ -164,8 +163,14 @@ etcpal_error_t init_sources_lost_bufs(unsigned int num_threads)
     if (res != kEtcPalErrOk)
       return res;
   }
+#else   // SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(num_threads);
+  memset(sacn_pool_sources_lost, 0, sizeof(sacn_pool_sources_lost));
+#endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;
 }
+
+#if SACN_DYNAMIC_MEM
 
 etcpal_error_t init_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_buf)
 {

@@ -80,7 +80,7 @@ void handle_sacn_universe_discovery_packet(SacnRecvThreadContext* context, const
 #if SACN_DYNAMIC_MEM
       uint16_t* universes = page.num_universes ? calloc(page.num_universes, sizeof(uint16_t)) : NULL;
 #else
-      uint16_t universes[SACN_MAX_UNIVERSES_PER_PAGE];
+      uint16_t universes[SACN_MAX_UNIVERSES_PER_PAGE] = {0};
 #endif
       page.universes = universes;
 
