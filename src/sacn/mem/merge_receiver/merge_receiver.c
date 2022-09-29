@@ -146,7 +146,8 @@ void remove_sacn_merge_receiver(sacn_merge_receiver_t handle)
 {
   SacnMergeReceiver* merge_receiver = etcpal_rbtree_find(&merge_receivers, &handle);
   SACN_ASSERT(merge_receiver);
-  etcpal_rbtree_remove_with_cb(&merge_receivers, merge_receiver, merge_receiver_tree_dealloc);
+  if (merge_receiver)
+    etcpal_rbtree_remove_with_cb(&merge_receivers, merge_receiver, merge_receiver_tree_dealloc);
 }
 
 int merge_receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
