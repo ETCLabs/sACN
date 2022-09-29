@@ -283,6 +283,17 @@ TEST_F(TestMergeReceiver, CreateWorks)
 
   EXPECT_EQ(destroy_sacn_receiver_fake.call_count, 1u);
   EXPECT_EQ(destroy_sacn_dmx_merger_fake.call_count, 0u);
+
+  create_sacn_receiver_fake.custom_fake = [](const SacnReceiverConfig*, sacn_receiver_t*, const SacnNetintConfig*,
+                                             const SacnReceiverInternalCallbacks*) { return kEtcPalErrSys; };
+
+  ++config.universe_id;
+  EXPECT_EQ(sacn_merge_receiver_create(&config, &handle, nullptr), kEtcPalErrSys);
+
+  EXPECT_EQ(get_num_merge_receivers(), 1u);
+
+  EXPECT_EQ(destroy_sacn_receiver_fake.call_count, 1u);
+  EXPECT_EQ(destroy_sacn_dmx_merger_fake.call_count, 0u);
 }
 
 TEST_F(TestMergeReceiver, DestroyWorks)
