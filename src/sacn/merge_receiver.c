@@ -165,15 +165,17 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
       if (result != kEtcPalErrOk)
       {
         if (receiver_handle != SACN_RECEIVER_INVALID)
+        {
+          remove_sacn_merge_receiver((sacn_merge_receiver_t)receiver_handle);
           destroy_sacn_receiver(receiver_handle);
+        }
+
         if (merger_handle != SACN_DMX_MERGER_INVALID)
           destroy_sacn_dmx_merger(merger_handle);
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
         if (sampling_merger_handle != SACN_DMX_MERGER_INVALID)
           destroy_sacn_dmx_merger(sampling_merger_handle);
 #endif
-
-        remove_sacn_merge_receiver((sacn_merge_receiver_t)receiver_handle);
       }
 
       sacn_unlock();
