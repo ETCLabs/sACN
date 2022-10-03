@@ -345,7 +345,7 @@ etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, Et
 
 bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, const int line)
 {
-  SACN_LOG_CRIT("Assertion \"%s\" failed (file:%s function:%s line:%d)", exp ? exp : "", file ? file : "",
+  SACN_LOG_CRIT("ASSERTION \"%s\" FAILED (FILE: \"%s\" FUNCTION: \"%s\" LINE: %d)", exp ? exp : "", file ? file : "",
                 func ? func : "", line);
   SACN_ASSERT(false);
   return false;
