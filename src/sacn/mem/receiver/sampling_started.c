@@ -115,7 +115,8 @@ etcpal_error_t init_sampling_started_bufs(unsigned int num_threads)
 
 etcpal_error_t init_sampling_started_buf(SamplingStartedNotificationBuf* sampling_started_buf)
 {
-  SACN_ASSERT(sampling_started_buf);
+  if (!SACN_ASSERT_VERIFY(sampling_started_buf))
+    return kEtcPalErrSys;
 
   sampling_started_buf->buf = calloc(INITIAL_CAPACITY, sizeof(SamplingStartedNotification));
   if (!sampling_started_buf->buf)
@@ -138,9 +139,7 @@ void deinit_sampling_started_bufs(void)
 
 void deinit_sampling_started_buf(SamplingStartedNotificationBuf* sampling_started_buf)
 {
-  SACN_ASSERT(sampling_started_buf);
-
-  if (sampling_started_buf->buf)
+  if (SACN_ASSERT_VERIFY(sampling_started_buf) && sampling_started_buf->buf)
     free(sampling_started_buf->buf);
 }
 

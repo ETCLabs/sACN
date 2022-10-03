@@ -107,7 +107,8 @@ etcpal_error_t init_to_erase_bufs(unsigned int num_threads)
 
 etcpal_error_t init_to_erase_buf(ToEraseBuf* to_erase_buf)
 {
-  SACN_ASSERT(to_erase_buf);
+  if (!SACN_ASSERT_VERIFY(to_erase_buf))
+    return kEtcPalErrSys;
 
   to_erase_buf->buf = calloc(INITIAL_CAPACITY, sizeof(SacnTrackedSource*));
   if (!to_erase_buf->buf)
@@ -130,9 +131,7 @@ void deinit_to_erase_bufs(void)
 
 void deinit_to_erase_buf(ToEraseBuf* to_erase_buf)
 {
-  SACN_ASSERT(to_erase_buf);
-
-  if (to_erase_buf->buf)
+  if (SACN_ASSERT_VERIFY(to_erase_buf) && to_erase_buf->buf)
     free(to_erase_buf->buf);
 }
 

@@ -116,10 +116,13 @@ etcpal_error_t lookup_merge_receiver_source(SacnMergeReceiver* merge_receiver, s
 void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_remote_source_t source_handle)
 {
   SacnMergeReceiverInternalSource* source = etcpal_rbtree_find(&merge_receiver->sources, &source_handle);
-  if (source->pending)
-    --merge_receiver->num_pending_sources;
+  if (SACN_ASSERT_VERIFY(source))
+  {
+    if (source->pending)
+      --merge_receiver->num_pending_sources;
 
-  etcpal_rbtree_remove_with_cb(&merge_receiver->sources, source, merge_receiver_sources_tree_dealloc);
+    etcpal_rbtree_remove_with_cb(&merge_receiver->sources, source, merge_receiver_sources_tree_dealloc);
+  }
 }
 
 // Needs lock

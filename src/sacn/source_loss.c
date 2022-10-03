@@ -279,16 +279,19 @@ void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification
       {
         if (ts_src->offline)
         {
-          if (add_lost_source(sources_lost, ts_src->key.handle, get_remote_source_cid(ts_src->key.handle), ts_src->name,
-                              ts_src->terminated))
+          const EtcPalUuid* ts_src_cid = get_remote_source_cid(ts_src->key.handle);
+          if (SACN_ASSERT_VERIFY(ts_src_cid))
           {
-            ++num_expired_sources_this_ts;
-          }
-          else if (SACN_CAN_LOG(ETCPAL_LOG_ERR))
-          {
-            char cid_str[ETCPAL_UUID_BYTES];
-            etcpal_uuid_to_string(get_remote_source_cid(ts_src->key.handle), cid_str);
-            SACN_LOG_ERR("Couldn't allocate memory to notify that source %s was lost!", cid_str);
+            if (add_lost_source(sources_lost, ts_src->key.handle, ts_src_cid, ts_src->name, ts_src->terminated))
+            {
+              ++num_expired_sources_this_ts;
+            }
+            else if (SACN_CAN_LOG(ETCPAL_LOG_ERR))
+            {
+              char cid_str[ETCPAL_UUID_BYTES];
+              etcpal_uuid_to_string(ts_src_cid, cid_str);
+              SACN_LOG_ERR("Couldn't allocate memory to notify that source %s was lost!", cid_str);
+            }
           }
         }
         else

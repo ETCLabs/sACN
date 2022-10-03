@@ -124,7 +124,10 @@ etcpal_error_t add_remote_source_handle(const EtcPalUuid* cid, sacn_remote_sourc
   {
     SacnRemoteSourceCid* existing_cid =
         (SacnRemoteSourceCid*)etcpal_rbtree_find(&remote_source_cids, &existing_handle->handle);
-    ++existing_cid->refcount;
+    if (SACN_ASSERT_VERIFY(existing_cid))
+      ++existing_cid->refcount;
+    else
+      result = kEtcPalErrSys;
 
     *handle = existing_handle->handle;
   }

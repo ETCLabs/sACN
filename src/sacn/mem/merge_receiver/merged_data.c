@@ -79,8 +79,8 @@ MergeReceiverMergedDataNotification* get_merged_data(sacn_thread_id_t thread_id)
  */
 bool add_active_sources(MergeReceiverMergedDataNotification* notification, SacnMergeReceiver* merge_receiver)
 {
-  SACN_ASSERT(notification);
-  SACN_ASSERT(merge_receiver);
+  if (!SACN_ASSERT_VERIFY(notification) || !SACN_ASSERT_VERIFY(merge_receiver))
+    return false;
 
   EtcPalRbIter iter;
   etcpal_rbiter_init(&iter);

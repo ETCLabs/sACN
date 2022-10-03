@@ -215,25 +215,27 @@ int process_sources(process_sources_behavior_t behavior)
   for (size_t i = 0; i < initial_num_sources; ++i)
   {
     SacnSource* source = get_source(initial_num_sources - 1 - i);
-
-    // If this is the kind of source we want to process (manual vs. thread-based)
-    bool process_manual = (behavior == kProcessManualSources);
-    if (source->process_manually == process_manual)
+    if (SACN_ASSERT_VERIFY(source))
     {
-      // If the Source API is shutting down, cause this source to terminate (if thread-based)
-      if (!process_manual && shutting_down)
-        set_source_terminating(source);
+      // If this is the kind of source we want to process (manual vs. thread-based)
+      bool process_manual = (behavior == kProcessManualSources);
+      if (source->process_manually == process_manual)
+      {
+        // If the Source API is shutting down, cause this source to terminate (if thread-based)
+        if (!process_manual && shutting_down)
+          set_source_terminating(source);
 
-      // Count the sources of the kind being processed by this function
-      ++num_sources_tracked;
+        // Count the sources of the kind being processed by this function
+        ++num_sources_tracked;
 
-      // Universe processing
-      process_universe_discovery(source);
-      process_universes(source);
+        // Universe processing
+        process_universe_discovery(source);
+        process_universes(source);
 
-      // Clean up this source if needed
-      if (source->terminating && (source->num_universes == 0))
-        remove_sacn_source(initial_num_sources - 1 - i);
+        // Clean up this source if needed
+        if (source->terminating && (source->num_universes == 0))
+          remove_sacn_source(initial_num_sources - 1 - i);
+      }
     }
   }
 

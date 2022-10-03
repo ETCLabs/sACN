@@ -122,9 +122,8 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
 bool add_lost_source(SourcesLostNotification* notification, sacn_remote_source_t handle, const EtcPalUuid* cid,
                      const char* name, bool terminated)
 {
-  SACN_ASSERT(notification);
-  SACN_ASSERT(cid);
-  SACN_ASSERT(name);
+  if (!SACN_ASSERT_VERIFY(notification) || !SACN_ASSERT_VERIFY(cid) || !SACN_ASSERT_VERIFY(name))
+    return false;
 
   CHECK_ROOM_FOR_ONE_MORE(notification, lost_sources, SacnLostSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
@@ -174,7 +173,8 @@ etcpal_error_t init_sources_lost_bufs(unsigned int num_threads)
 
 etcpal_error_t init_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_buf)
 {
-  SACN_ASSERT(sources_lost_buf);
+  if (!SACN_ASSERT_VERIFY(sources_lost_buf))
+    return kEtcPalErrSys;
 
   sources_lost_buf->buf = calloc(INITIAL_CAPACITY, sizeof(SourcesLostNotification));
   if (!sources_lost_buf->buf)
@@ -186,7 +186,8 @@ etcpal_error_t init_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_bu
 
 etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t size)
 {
-  SACN_ASSERT(sources_lost_arr);
+  if (!SACN_ASSERT_VERIFY(sources_lost_arr))
+    return kEtcPalErrSys;
 
   for (SourcesLostNotification* notification = sources_lost_arr; notification < sources_lost_arr + size; ++notification)
   {
@@ -211,9 +212,7 @@ void deinit_sources_lost_bufs(void)
 
 void deinit_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_buf)
 {
-  SACN_ASSERT(sources_lost_buf);
-
-  if (sources_lost_buf->buf)
+  if (SACN_ASSERT_VERIFY(sources_lost_buf) && sources_lost_buf->buf)
   {
     for (size_t i = 0; i < sources_lost_buf->buf_capacity; ++i)
     {
@@ -225,8 +224,10 @@ void deinit_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_buf)
 
 void deinit_sources_lost_entry(SourcesLostNotification* notification)
 {
-  SACN_ASSERT(notification);
-  CLEAR_BUF(notification, lost_sources);
+  if (SACN_ASSERT_VERIFY(notification))
+  {
+    CLEAR_BUF(notification, lost_sources);
+  }
 }
 
 #endif  // SACN_DYNAMIC_MEM

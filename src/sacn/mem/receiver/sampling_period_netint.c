@@ -128,7 +128,7 @@ void remove_current_sampling_period_netints(EtcPalRbTree* tree)
     {
       etcpal_error_t remove_res =
           etcpal_rbtree_remove_with_cb(tree, next_current_sp_netint, sampling_period_netint_tree_dealloc);
-      SACN_ASSERT(remove_res == kEtcPalErrOk);
+      SACN_ASSERT_VERIFY(remove_res == kEtcPalErrOk);
       (void)remove_res;  // Fix for warning C4189
     }
   } while (next_current_sp_netint);

@@ -210,7 +210,8 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver)
     }
   }
 
-  SACN_ASSERT(assigned_thread);
+  if (!SACN_ASSERT_VERIFY(assigned_thread))
+    return kEtcPalErrSys;
 
   etcpal_error_t res = add_receiver_sockets(receiver);
 
@@ -240,12 +241,14 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver)
  */
 etcpal_error_t assign_source_detector_to_thread(SacnSourceDetector* detector)
 {
-  SACN_ASSERT(sacn_mem_get_num_threads() > 0);
+  if (!SACN_ASSERT_VERIFY(sacn_mem_get_num_threads() > 0))
+    return kEtcPalErrSys;
 
   SacnRecvThreadContext* assigned_thread = get_recv_thread_context(0);
-  detector->thread_id = 0;
+  if (!SACN_ASSERT_VERIFY(assigned_thread))
+    return kEtcPalErrSys;
 
-  SACN_ASSERT(assigned_thread);
+  detector->thread_id = 0;
 
   etcpal_error_t res = add_source_detector_sockets(detector);
 
@@ -545,7 +548,8 @@ etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
 void sacn_receive_thread(void* arg)
 {
   SacnRecvThreadContext* context = (SacnRecvThreadContext*)arg;
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context))
+    return;
 
   // Create the poll context
   etcpal_error_t poll_init_res = kEtcPalErrSys;
@@ -869,15 +873,19 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
       {
         // Source stopped sending PAP but is still sending DMX.
         // In this case, also notify the source_pap_lost callback.
-        source_pap_lost->api_callback = receiver->api_callbacks.source_pap_lost;
-        source_pap_lost->internal_callback = receiver->internal_callbacks.source_pap_lost;
-        source_pap_lost->source.handle = src->handle;
-        source_pap_lost->source.cid = *(get_remote_source_cid(src->handle));
-        ETCPAL_MSVC_NO_DEP_WRN strcpy(source_pap_lost->source.name, src->name);
-        source_pap_lost->handle = receiver->keys.handle;
-        source_pap_lost->universe = receiver->keys.universe;
-        source_pap_lost->thread_id = receiver->thread_id;
-        source_pap_lost->context = receiver->api_callbacks.context;
+        const EtcPalUuid* cid = get_remote_source_cid(src->handle);
+        if (SACN_ASSERT_VERIFY(cid))
+        {
+          source_pap_lost->api_callback = receiver->api_callbacks.source_pap_lost;
+          source_pap_lost->internal_callback = receiver->internal_callbacks.source_pap_lost;
+          source_pap_lost->source.handle = src->handle;
+          source_pap_lost->source.cid = *cid;
+          ETCPAL_MSVC_NO_DEP_WRN strcpy(source_pap_lost->source.name, src->name);
+          source_pap_lost->handle = receiver->keys.handle;
+          source_pap_lost->universe = receiver->keys.universe;
+          source_pap_lost->thread_id = receiver->thread_id;
+          source_pap_lost->context = receiver->api_callbacks.context;
+        }
 
         src->recv_state = kRecvStateHaveDmxOnly;
       }
@@ -1332,7 +1340,7 @@ void end_current_sampling_period(SacnReceiver* receiver)
     for (SacnSamplingPeriodNetint* sp_netint = etcpal_rbiter_first(&iter, &receiver->sampling_period_netints);
          sp_netint; sp_netint = etcpal_rbiter_next(&iter))
     {
-      SACN_ASSERT(sp_netint->in_future_sampling_period);
+      SACN_ASSERT_VERIFY(sp_netint->in_future_sampling_period);
       sp_netint->in_future_sampling_period = false;
     }
 

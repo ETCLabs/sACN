@@ -44,7 +44,8 @@ static SacnSourceDetector source_detector;
 etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, const SacnNetintConfig* netint_config,
                                         SacnSourceDetector** detector_state)
 {
-  SACN_ASSERT(config);
+  if (!SACN_ASSERT_VERIFY(config))
+    return kEtcPalErrSys;
 
   etcpal_error_t res = kEtcPalErrOk;
 

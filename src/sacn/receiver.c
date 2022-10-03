@@ -471,12 +471,19 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfi
           SacnReceiver* receiver = NULL;
           lookup_receiver(per_receiver_netint_lists[i].handle, &receiver);
 
-          SacnNetintConfig receiver_netint_config;
-          receiver_netint_config.netints = per_receiver_netint_lists[i].netints;
-          receiver_netint_config.num_netints = per_receiver_netint_lists[i].num_netints;
+          if (!SACN_ASSERT_VERIFY(receiver))
+            res = kEtcPalErrSys;
 
-          res = sacn_initialize_receiver_netints(&receiver->netints, receiver->sampling,
-                                                 &receiver->sampling_period_netints, &receiver_netint_config);
+          if (res == kEtcPalErrOk)
+          {
+            SacnNetintConfig receiver_netint_config;
+            receiver_netint_config.netints = per_receiver_netint_lists[i].netints;
+            receiver_netint_config.num_netints = per_receiver_netint_lists[i].num_netints;
+
+            res = sacn_initialize_receiver_netints(&receiver->netints, receiver->sampling,
+                                                   &receiver->sampling_period_netints, &receiver_netint_config);
+          }
+
           if (res == kEtcPalErrOk)
             res = add_receiver_sockets(receiver);
 

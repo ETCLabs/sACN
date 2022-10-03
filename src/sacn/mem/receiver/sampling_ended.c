@@ -115,7 +115,8 @@ etcpal_error_t init_sampling_ended_bufs(unsigned int num_threads)
 
 etcpal_error_t init_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_ended_buf)
 {
-  SACN_ASSERT(sampling_ended_buf);
+  if (!SACN_ASSERT_VERIFY(sampling_ended_buf))
+    return kEtcPalErrSys;
 
   sampling_ended_buf->buf = calloc(INITIAL_CAPACITY, sizeof(SamplingEndedNotification));
   if (!sampling_ended_buf->buf)
@@ -138,9 +139,7 @@ void deinit_sampling_ended_bufs(void)
 
 void deinit_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_ended_buf)
 {
-  SACN_ASSERT(sampling_ended_buf);
-
-  if (sampling_ended_buf->buf)
+  if (SACN_ASSERT_VERIFY(sampling_ended_buf) && sampling_ended_buf->buf)
     free(sampling_ended_buf->buf);
 }
 

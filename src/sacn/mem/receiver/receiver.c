@@ -103,7 +103,8 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
                                  const SacnNetintConfig* netint_config,
                                  const SacnReceiverInternalCallbacks* internal_callbacks, SacnReceiver** receiver_state)
 {
-  SACN_ASSERT(config);
+  if (!SACN_ASSERT_VERIFY(config))
+    return kEtcPalErrSys;
 
   // First check to see if we are already listening on this universe.
   SacnReceiver* tmp = NULL;

@@ -81,7 +81,8 @@ SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id)
  */
 bool add_dead_socket(SacnRecvThreadContext* context, const ReceiveSocket* socket)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context))
+    return false;
 
   CHECK_ROOM_FOR_ONE_MORE(context, dead_sockets, ReceiveSocket, SACN_RECEIVER_MAX_UNIVERSES * 2, false);
 
@@ -92,7 +93,8 @@ bool add_dead_socket(SacnRecvThreadContext* context, const ReceiveSocket* socket
 // Return index in context->socket_refs or -1 if not enough room.
 int add_socket_ref(SacnRecvThreadContext* context, const ReceiveSocket* socket)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context))
+    return -1;
 
   CHECK_ROOM_FOR_ONE_MORE(context, socket_refs, SocketRef, SACN_RECEIVER_MAX_SOCKET_REFS, -1);
 
@@ -121,7 +123,8 @@ int add_socket_ref(SacnRecvThreadContext* context, const ReceiveSocket* socket)
  */
 bool add_subscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context))
+    return false;
 
   CHECK_ROOM_FOR_ONE_MORE(context, subscribes, SocketGroupReq, (SACN_MAX_NETINTS * SACN_MAX_SUBSCRIPTIONS), false);
 
@@ -142,7 +145,8 @@ bool add_subscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const E
  */
 bool add_unsubscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context))
+    return false;
 
   CHECK_ROOM_FOR_ONE_MORE(context, unsubscribes, SocketGroupReq, (SACN_MAX_NETINTS * SACN_MAX_SUBSCRIPTIONS), false);
 
@@ -213,7 +217,8 @@ void mark_socket_ref_bound(SacnRecvThreadContext* context, int index)
 
 bool remove_socket_ref(SacnRecvThreadContext* context, int index)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context))
+    return false;
 
   SocketRef* ref = &context->socket_refs[index];
   if (--ref->refcount == 0)
@@ -321,7 +326,8 @@ etcpal_error_t init_recv_thread_context_buf(unsigned int num_threads)
 
 etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context))
+    return kEtcPalErrSys;
 
 #if SACN_DYNAMIC_MEM
   context->dead_sockets = calloc(INITIAL_CAPACITY, sizeof(ReceiveSocket));
@@ -383,18 +389,19 @@ void deinit_recv_thread_context_buf(void)
 
 void deinit_recv_thread_context_entry(SacnRecvThreadContext* context)
 {
-  SACN_ASSERT(context);
-  CLEAR_BUF(context, dead_sockets);
-  CLEAR_BUF(context, socket_refs);
-  CLEAR_BUF(context, subscribes);
-  CLEAR_BUF(context, unsubscribes);
+  if (SACN_ASSERT_VERIFY(context))
+  {
+    CLEAR_BUF(context, dead_sockets);
+    CLEAR_BUF(context, socket_refs);
+    CLEAR_BUF(context, subscribes);
+    CLEAR_BUF(context, unsubscribes);
+  }
 }
 
 bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_socket_t sock, const EtcPalGroupReq* group)
 {
-  SACN_ASSERT(reqs);
-  SACN_ASSERT(num_reqs);
-  SACN_ASSERT(group);
+  if (!SACN_ASSERT_VERIFY(reqs) || !SACN_ASSERT_VERIFY(num_reqs) || !SACN_ASSERT_VERIFY(group))
+    return false;
 
   size_t index = 0;
   SocketGroupReq* req = NULL;
