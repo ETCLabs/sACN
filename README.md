@@ -14,7 +14,7 @@ documentation, please see the [documentation](https://etclabs.github.io/sACNDocs
 
 ## Supported Platforms
 
-sACN is uses EtcPal for platform abstraction.  See [EtcPal's README](https://github.com/ETCLabs/EtcPal#readme) for more information on supported platforms.
+sACN uses EtcPal for platform abstraction.  See [EtcPal's README](https://github.com/ETCLabs/EtcPal#readme) for more information on supported platforms.
 
 ## Supported Languages
 
