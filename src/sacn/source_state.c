@@ -912,7 +912,7 @@ void reset_universe(SacnSourceUniverse* universe)
 void cancel_termination_if_not_removing(SacnSourceUniverse* universe)
 {
   if (!SACN_ASSERT_VERIFY(universe))
-    return 0;
+    return;
 
   if (universe->termination_state == kTerminatingWithoutRemoving)
   {

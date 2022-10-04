@@ -189,7 +189,7 @@ size_t replace_universe_discovery_universes(SacnUniverseDiscoverySource* source,
                                             size_t dynamic_universe_limit)
 {
   if (!SACN_ASSERT_VERIFY(source))
-    return kEtcPalErrSys;
+    return 0;
 
 #if SACN_DYNAMIC_MEM
   if ((dynamic_universe_limit != SACN_SOURCE_DETECTOR_INFINITE) &&

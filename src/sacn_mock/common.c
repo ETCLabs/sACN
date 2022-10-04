@@ -22,16 +22,19 @@
 #include "sacn_mock/private/source_loss.h"
 #include "sacn_mock/private/sockets.h"
 
+DEFINE_FAKE_VALUE_FUNC(bool, sacn_assert_verify_fail, const char*, const char*, const char*, const int);
 DEFINE_FAKE_VALUE_FUNC(bool, sacn_initialized);
 DEFINE_FAKE_VALUE_FUNC(bool, sacn_lock);
 DEFINE_FAKE_VOID_FUNC(sacn_unlock);
 
 void sacn_common_reset_all_fakes(void)
 {
+  RESET_FAKE(sacn_assert_verify_fail);
   RESET_FAKE(sacn_initialized);
   RESET_FAKE(sacn_lock);
   RESET_FAKE(sacn_unlock);
 
+  sacn_assert_verify_fail_fake.return_val = false;
   sacn_initialized_fake.return_val = true;
   sacn_lock_fake.return_val = true;
 }

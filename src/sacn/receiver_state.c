@@ -163,7 +163,7 @@ sacn_receiver_t get_next_receiver_handle()
 size_t get_receiver_netints(const SacnReceiver* receiver, EtcPalMcastNetintId* netints, size_t netints_size)
 {
   if (!SACN_ASSERT_VERIFY(receiver))
-    return kEtcPalErrSys;
+    return 0;
 
   for (size_t i = 0; netints && (i < netints_size) && (i < receiver->netints.num_netints); ++i)
     netints[i] = receiver->netints.netints[i];
