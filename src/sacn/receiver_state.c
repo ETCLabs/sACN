@@ -162,6 +162,9 @@ sacn_receiver_t get_next_receiver_handle()
 
 size_t get_receiver_netints(const SacnReceiver* receiver, EtcPalMcastNetintId* netints, size_t netints_size)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return kEtcPalErrSys;
+
   for (size_t i = 0; netints && (i < netints_size) && (i < receiver->netints.num_netints); ++i)
     netints[i] = receiver->netints.netints[i];
 
@@ -180,6 +183,9 @@ uint32_t get_expired_wait()
 
 etcpal_error_t clear_term_sets_and_sources(SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return kEtcPalErrSys;
+
   clear_term_set_list(receiver->term_sets);
   receiver->term_sets = NULL;
   return clear_receiver_sources(receiver);
@@ -194,6 +200,9 @@ etcpal_error_t clear_term_sets_and_sources(SacnReceiver* receiver)
  */
 etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return kEtcPalErrSys;
+
   SacnRecvThreadContext* assigned_thread = NULL;
 
   // Assign this receiver to the thread with the lowest number of receivers currently
@@ -241,7 +250,7 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver)
  */
 etcpal_error_t assign_source_detector_to_thread(SacnSourceDetector* detector)
 {
-  if (!SACN_ASSERT_VERIFY(sacn_mem_get_num_threads() > 0))
+  if (!SACN_ASSERT_VERIFY(detector) || !SACN_ASSERT_VERIFY(sacn_mem_get_num_threads() > 0))
     return kEtcPalErrSys;
 
   SacnRecvThreadContext* assigned_thread = get_recv_thread_context(0);
@@ -274,6 +283,9 @@ etcpal_error_t assign_source_detector_to_thread(SacnSourceDetector* detector)
  */
 void remove_receiver_from_thread(SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return;
+
   SacnRecvThreadContext* context = get_recv_thread_context(receiver->thread_id);
   if (context)
   {
@@ -291,6 +303,9 @@ void remove_receiver_from_thread(SacnReceiver* receiver)
  */
 void remove_source_detector_from_thread(SacnSourceDetector* detector)
 {
+  if (!SACN_ASSERT_VERIFY(detector))
+    return;
+
   SacnRecvThreadContext* context = get_recv_thread_context(detector->thread_id);
   if (context)
   {
@@ -308,6 +323,9 @@ void remove_source_detector_from_thread(SacnSourceDetector* detector)
  */
 etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return kEtcPalErrSys;
+
   etcpal_error_t ipv4_res = kEtcPalErrNoNetints;
   etcpal_error_t ipv6_res = kEtcPalErrNoNetints;
 
@@ -341,6 +359,9 @@ etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
 
 etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector)
 {
+  if (!SACN_ASSERT_VERIFY(detector))
+    return kEtcPalErrSys;
+
   etcpal_error_t ipv4_res = kEtcPalErrNoNetints;
   etcpal_error_t ipv6_res = kEtcPalErrNoNetints;
 
@@ -374,6 +395,9 @@ etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector)
 
 void begin_sampling_period(SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return;
+
   if (!receiver->sampling)
   {
     receiver->sampling = true;
@@ -390,6 +414,9 @@ void begin_sampling_period(SacnReceiver* receiver)
  */
 void remove_receiver_sockets(SacnReceiver* receiver, socket_cleanup_behavior_t cleanup_behavior)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return;
+
   if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
   {
     sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, receiver->keys.universe,
@@ -411,6 +438,9 @@ void remove_receiver_sockets(SacnReceiver* receiver, socket_cleanup_behavior_t c
  */
 void remove_source_detector_sockets(SacnSourceDetector* detector, socket_cleanup_behavior_t cleanup_behavior)
 {
+  if (!SACN_ASSERT_VERIFY(detector))
+    return;
+
   if (detector->ipv4_socket != ETCPAL_SOCKET_INVALID)
   {
     sacn_remove_receiver_socket(detector->thread_id, &detector->ipv4_socket, SACN_DISCOVERY_UNIVERSE,
@@ -443,6 +473,9 @@ void remove_all_receiver_sockets(socket_cleanup_behavior_t cleanup_behavior)
  */
 void read_network_and_process(SacnRecvThreadContext* context)
 {
+  if (!SACN_ASSERT_VERIFY(context))
+    return;
+
   if (sacn_lock())
   {
     // Unsubscribe before subscribing to avoid surpassing the subscription limit for a socket.
@@ -494,6 +527,9 @@ void read_network_and_process(SacnRecvThreadContext* context)
  */
 void terminate_sources_on_removed_netints(SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return;
+
   EtcPalRbIter iter;
   for (SacnTrackedSource* src = etcpal_rbiter_first(&iter, &receiver->sources); src; src = etcpal_rbiter_next(&iter))
   {
@@ -530,6 +566,9 @@ bool receiver_handle_in_use(int handle_val, void* cookie)
  */
 etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
 {
+  if (!SACN_ASSERT_VERIFY(recv_thread_context))
+    return kEtcPalErrSys;
+
   recv_thread_context->running = true;
   recv_thread_context->periodic_timer_started = false;
   etcpal_error_t create_res = etcpal_thread_create(&recv_thread_context->thread_handle, &kReceiverThreadParams,
@@ -547,9 +586,10 @@ etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
  */
 void sacn_receive_thread(void* arg)
 {
-  SacnRecvThreadContext* context = (SacnRecvThreadContext*)arg;
-  if (!SACN_ASSERT_VERIFY(context))
+  if (!SACN_ASSERT_VERIFY(arg))
     return;
+
+  SacnRecvThreadContext* context = (SacnRecvThreadContext*)arg;
 
   // Create the poll context
   etcpal_error_t poll_init_res = kEtcPalErrSys;
@@ -599,6 +639,12 @@ void sacn_receive_thread(void* arg)
 void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
                      const EtcPalSockAddr* from_addr, const EtcPalMcastNetintId* netint)
 {
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(data) || !SACN_ASSERT_VERIFY(from_addr) ||
+      !SACN_ASSERT_VERIFY(netint))
+  {
+    return;
+  }
+
   AcnUdpPreamble preamble;
   if (!acn_parse_udp_preamble(data, datalen, &preamble))
     return;
@@ -628,6 +674,12 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
                              const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr,
                              const EtcPalMcastNetintId* netint)
 {
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) || !SACN_ASSERT_VERIFY(data) ||
+      !SACN_ASSERT_VERIFY(sender_cid) || !SACN_ASSERT_VERIFY(from_addr) || !SACN_ASSERT_VERIFY(netint))
+  {
+    return;
+  }
+
   UniverseDataNotification* universe_data = get_universe_data(thread_id);
   SourceLimitExceededNotification* source_limit_exceeded = get_source_limit_exceeded(thread_id);
   SourcePapLostNotification* source_pap_lost = get_source_pap_lost(thread_id);
@@ -780,6 +832,12 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 void handle_sacn_extended_packet(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
                                  const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr)
 {
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(data) || !SACN_ASSERT_VERIFY(sender_cid) ||
+      !SACN_ASSERT_VERIFY(from_addr))
+  {
+    return;
+  }
+
   uint32_t vector;
   if (parse_framing_layer_vector(data, datalen, &vector))
   {
@@ -807,6 +865,9 @@ void handle_sacn_extended_packet(SacnRecvThreadContext* context, const uint8_t* 
 
 void mark_source_terminated(SacnTrackedSource* src)
 {
+  if (!SACN_ASSERT_VERIFY(src))
+    return;
+
   src->terminated = true;
   etcpal_timer_start(&src->packet_timer, 0);
 }
@@ -823,6 +884,12 @@ void mark_source_terminated(SacnTrackedSource* src)
 void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
                              SourcePapLostNotification* source_pap_lost, bool* notify)
 {
+  if (!SACN_ASSERT_VERIFY(receiver) || !SACN_ASSERT_VERIFY(src) || !SACN_ASSERT_VERIFY(source_pap_lost) ||
+      !SACN_ASSERT_VERIFY(notify))
+  {
+    return;
+  }
+
 #if !SACN_ETC_PRIORITY_EXTENSION
   ETCPAL_UNUSED_ARG(receiver);
   ETCPAL_UNUSED_ARG(source_pap_lost);
@@ -908,6 +975,9 @@ void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* not
 {
   ETCPAL_UNUSED_ARG(receiver);
 
+  if (!SACN_ASSERT_VERIFY(src) || !SACN_ASSERT_VERIFY(notify))
+    return;
+
   *notify = true;
 
   switch (src->recv_state)
@@ -949,6 +1019,13 @@ void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* sou
                              SacnTrackedSource** new_source, SourceLimitExceededNotification* source_limit_exceeded,
                              bool* notify)
 {
+  if (!SACN_ASSERT_VERIFY(receiver) || !SACN_ASSERT_VERIFY(source_info) || !SACN_ASSERT_VERIFY(netint) ||
+      !SACN_ASSERT_VERIFY(universe_data) || !SACN_ASSERT_VERIFY(new_source) ||
+      !SACN_ASSERT_VERIFY(source_limit_exceeded) || !SACN_ASSERT_VERIFY(notify))
+  {
+    return;
+  }
+
 #if SACN_ETC_PRIORITY_EXTENSION
   if ((universe_data->start_code != SACN_STARTCODE_DMX) && (universe_data->start_code != SACN_STARTCODE_PRIORITY))
     return;
@@ -1010,6 +1087,13 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const SacnRemote
                                uint16_t universe_id, SourceLimitExceededNotification* source_limit_exceeded,
                                SourcePapLostNotification* source_pap_lost, UniverseDataNotification* universe_data)
 {
+  if (!SACN_ASSERT_VERIFY(from_addr) || !SACN_ASSERT_VERIFY(source_info) ||
+      !SACN_ASSERT_VERIFY(source_limit_exceeded) || !SACN_ASSERT_VERIFY(source_pap_lost) ||
+      !SACN_ASSERT_VERIFY(universe_data))
+  {
+    return;
+  }
+
 #if !SACN_LOGGING_ENABLED
   ETCPAL_UNUSED_ARG(source_info);
   ETCPAL_UNUSED_ARG(universe_id);
@@ -1081,6 +1165,9 @@ void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const SacnRemote
  */
 void process_receivers(SacnRecvThreadContext* recv_thread_context)
 {
+  if (!SACN_ASSERT_VERIFY(recv_thread_context))
+    return;
+
   SamplingStartedNotification* sampling_started = NULL;
   size_t num_sampling_started = 0;
   SamplingEndedNotification* sampling_ended = NULL;
@@ -1151,6 +1238,12 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
 
 void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver, SourcesLostNotification* sources_lost)
 {
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) || !SACN_ASSERT_VERIFY(receiver) ||
+      !SACN_ASSERT_VERIFY(sources_lost))
+  {
+    return;
+  }
+
   SacnSourceStatusLists* status_lists = get_status_lists(thread_id);
   SacnTrackedSource** to_erase = get_to_erase_buffer(thread_id, etcpal_rbtree_size(&receiver->sources));
 
@@ -1221,6 +1314,9 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
  */
 bool check_source_timeouts(SacnTrackedSource* src, SacnSourceStatusLists* status_lists)
 {
+  if (!SACN_ASSERT_VERIFY(src) || !SACN_ASSERT_VERIFY(status_lists))
+    return false;
+
   bool res = true;
 
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -1254,6 +1350,9 @@ bool check_source_timeouts(SacnTrackedSource* src, SacnSourceStatusLists* status
 
 void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_lists)
 {
+  if (!SACN_ASSERT_VERIFY(src) || !SACN_ASSERT_VERIFY(status_lists))
+    return;
+
   if (etcpal_timer_is_expired(&src->packet_timer))
   {
     if (!add_offline_source(status_lists, src->handle, src->name, src->terminated) && SACN_CAN_LOG(ETCPAL_LOG_ERR))
@@ -1295,6 +1394,9 @@ void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_
 
 void deliver_periodic_callbacks(const PeriodicCallbacks* periodic_callbacks)
 {
+  if (!SACN_ASSERT_VERIFY(periodic_callbacks))
+    return;
+
   for (const SamplingEndedNotification* notif = periodic_callbacks->sampling_ended_arr;
        notif < periodic_callbacks->sampling_ended_arr + periodic_callbacks->num_sampling_ended; ++notif)
   {
@@ -1329,6 +1431,9 @@ void deliver_periodic_callbacks(const PeriodicCallbacks* periodic_callbacks)
 
 void end_current_sampling_period(SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return;
+
   // First, end the current sampling period
   remove_current_sampling_period_netints(&receiver->sampling_period_netints);
   receiver->sampling = false;

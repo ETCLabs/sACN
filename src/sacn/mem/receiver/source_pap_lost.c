@@ -52,6 +52,9 @@ static SourcePapLostNotification sacn_pool_source_pap_lost[SACN_RECEIVER_MAX_THR
  */
 SourcePapLostNotification* get_source_pap_lost(sacn_thread_id_t thread_id)
 {
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+    return NULL;
+
   if (thread_id < sacn_mem_get_num_threads())
   {
     SourcePapLostNotification* to_return = &sacn_pool_source_pap_lost[thread_id];
@@ -66,6 +69,9 @@ SourcePapLostNotification* get_source_pap_lost(sacn_thread_id_t thread_id)
 
 etcpal_error_t init_source_pap_lost_buf(unsigned int num_threads)
 {
+  if (!SACN_ASSERT_VERIFY(num_threads > 0))
+    return kEtcPalErrSys;
+
 #if SACN_DYNAMIC_MEM
   sacn_pool_source_pap_lost = calloc(num_threads, sizeof(SourcePapLostNotification));
   if (!sacn_pool_source_pap_lost)

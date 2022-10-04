@@ -75,6 +75,9 @@ static void deinit_sources_lost_entry(SourcesLostNotification* notification);
  */
 SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, size_t size)
 {
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+    return NULL;
+
   if (thread_id < sacn_mem_get_num_threads())
   {
     SourcesLostNotificationBuf* notifications = &sacn_pool_sources_lost[thread_id];
@@ -122,8 +125,11 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
 bool add_lost_source(SourcesLostNotification* notification, sacn_remote_source_t handle, const EtcPalUuid* cid,
                      const char* name, bool terminated)
 {
-  if (!SACN_ASSERT_VERIFY(notification) || !SACN_ASSERT_VERIFY(cid) || !SACN_ASSERT_VERIFY(name))
+  if (!SACN_ASSERT_VERIFY(notification) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) ||
+      !SACN_ASSERT_VERIFY(cid) || !SACN_ASSERT_VERIFY(name))
+  {
     return false;
+  }
 
   CHECK_ROOM_FOR_ONE_MORE(notification, lost_sources, SacnLostSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
@@ -138,6 +144,9 @@ bool add_lost_source(SourcesLostNotification* notification, sacn_remote_source_t
 
 void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t size)
 {
+  if (!SACN_ASSERT_VERIFY(sources_lost_arr))
+    return;
+
   for (SourcesLostNotification* notification = sources_lost_arr; notification < sources_lost_arr + size; ++notification)
   {
     notification->api_callback = NULL;
@@ -151,6 +160,9 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
 
 etcpal_error_t init_sources_lost_bufs(unsigned int num_threads)
 {
+  if (!SACN_ASSERT_VERIFY(num_threads > 0))
+    return kEtcPalErrSys;
+
 #if SACN_DYNAMIC_MEM
   sacn_pool_sources_lost = calloc(num_threads, sizeof(SourcesLostNotificationBuf));
   if (!sacn_pool_sources_lost)
@@ -212,7 +224,10 @@ void deinit_sources_lost_bufs(void)
 
 void deinit_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_buf)
 {
-  if (SACN_ASSERT_VERIFY(sources_lost_buf) && sources_lost_buf->buf)
+  if (!SACN_ASSERT_VERIFY(sources_lost_buf))
+    return;
+
+  if (sources_lost_buf->buf)
   {
     for (size_t i = 0; i < sources_lost_buf->buf_capacity; ++i)
     {
@@ -224,10 +239,10 @@ void deinit_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_buf)
 
 void deinit_sources_lost_entry(SourcesLostNotification* notification)
 {
-  if (SACN_ASSERT_VERIFY(notification))
-  {
-    CLEAR_BUF(notification, lost_sources);
-  }
+  if (!SACN_ASSERT_VERIFY(notification))
+    return;
+
+  CLEAR_BUF(notification, lost_sources);
 }
 
 #endif  // SACN_DYNAMIC_MEM

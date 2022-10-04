@@ -72,6 +72,9 @@ static void deinit_sampling_started_buf(SamplingStartedNotificationBuf* sampling
  */
 SamplingStartedNotification* get_sampling_started_buffer(sacn_thread_id_t thread_id, size_t size)
 {
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) || !SACN_ASSERT_VERIFY(size > 0))
+    return NULL;
+
   if (thread_id < sacn_mem_get_num_threads())
   {
     SamplingStartedNotificationBuf* notifications = &sacn_pool_sampling_started[thread_id];
@@ -93,6 +96,9 @@ SamplingStartedNotification* get_sampling_started_buffer(sacn_thread_id_t thread
 
 etcpal_error_t init_sampling_started_bufs(unsigned int num_threads)
 {
+  if (!SACN_ASSERT_VERIFY(num_threads > 0))
+    return kEtcPalErrSys;
+
 #if SACN_DYNAMIC_MEM
   sacn_pool_sampling_started = calloc(num_threads, sizeof(SamplingStartedNotificationBuf));
   if (!sacn_pool_sampling_started)
@@ -139,7 +145,10 @@ void deinit_sampling_started_bufs(void)
 
 void deinit_sampling_started_buf(SamplingStartedNotificationBuf* sampling_started_buf)
 {
-  if (SACN_ASSERT_VERIFY(sampling_started_buf) && sampling_started_buf->buf)
+  if (!SACN_ASSERT_VERIFY(sampling_started_buf))
+    return;
+
+  if (sampling_started_buf->buf)
     free(sampling_started_buf->buf);
 }
 

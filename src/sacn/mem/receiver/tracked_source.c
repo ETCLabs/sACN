@@ -84,6 +84,12 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid*
                                        const EtcPalMcastNetintId* netint, uint8_t seq_num, uint8_t first_start_code,
                                        SacnTrackedSource** tracked_source_state)
 {
+  if (!SACN_ASSERT_VERIFY(receiver) || !SACN_ASSERT_VERIFY(sender_cid) || !SACN_ASSERT_VERIFY(name) ||
+      !SACN_ASSERT_VERIFY(netint) || !SACN_ASSERT_VERIFY(tracked_source_state))
+  {
+    return kEtcPalErrSys;
+  }
+
 #if !SACN_ETC_PRIORITY_EXTENSION
   ETCPAL_UNUSED_ARG(first_start_code);
 #endif
@@ -171,12 +177,18 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid*
 
 etcpal_error_t clear_receiver_sources(SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return kEtcPalErrSys;
+
   receiver->suppress_limit_exceeded_notification = false;
   return etcpal_rbtree_clear_with_cb(&receiver->sources, tracked_source_tree_dealloc);
 }
 
 etcpal_error_t remove_receiver_source(SacnReceiver* receiver, sacn_remote_source_t handle)
 {
+  if (!SACN_ASSERT_VERIFY(receiver) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID))
+    return kEtcPalErrSys;
+
   return etcpal_rbtree_remove_with_cb(&receiver->sources, &handle, tracked_source_tree_dealloc);
 }
 
@@ -184,6 +196,9 @@ etcpal_error_t remove_receiver_source(SacnReceiver* receiver, sacn_remote_source
 void tracked_source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
+
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
 
   sacn_remote_source_t* handle = (sacn_remote_source_t*)node->value;
   remove_remote_source_handle(*handle);
@@ -194,6 +209,9 @@ void tracked_source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
 
 void tracked_source_node_dealloc(EtcPalRbNode* node)
 {
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
 #if SACN_DYNAMIC_MEM
   free(node);
 #else

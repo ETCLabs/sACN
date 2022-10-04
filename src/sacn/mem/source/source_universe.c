@@ -44,6 +44,9 @@
 etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniverseConfig* config,
                                         const SacnNetintConfig* netint_config, SacnSourceUniverse** universe_state)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(config) || !SACN_ASSERT_VERIFY(universe_state))
+    return kEtcPalErrSys;
+
   etcpal_error_t result = kEtcPalErrOk;
 
 #if SACN_DYNAMIC_MEM
@@ -134,6 +137,12 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t universe, SacnSource** source_state,
                                           SacnSourceUniverse** universe_state)
 {
+  if (!SACN_ASSERT_VERIFY(source != SACN_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(source_state) ||
+      !SACN_ASSERT_VERIFY(universe_state))
+  {
+    return kEtcPalErrSys;
+  }
+
   etcpal_error_t result = lookup_source(source, source_state);
 
   if (result == kEtcPalErrOk)
@@ -145,6 +154,9 @@ etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t univers
 // Needs lock
 etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSourceUniverse** universe_state)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe_state))
+    return kEtcPalErrSys;
+
   bool found = false;
   size_t index = get_source_universe_index(source, universe, &found);
   *universe_state = found ? &source->universes[index] : NULL;
@@ -154,6 +166,9 @@ etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSource
 // Needs lock
 void remove_sacn_source_universe(SacnSource* source, size_t index)
 {
+  if (!SACN_ASSERT_VERIFY(source))
+    return;
+
   CLEAR_BUF(&source->universes[index], unicast_dests);
   CLEAR_BUF(&source->universes[index].netints, netints);
   REMOVE_AT_INDEX(source, SacnSourceUniverse, universes, index);
@@ -162,6 +177,9 @@ void remove_sacn_source_universe(SacnSource* source, size_t index)
 // Needs lock
 size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(found))
+    return 0;
+
   *found = false;
   size_t index = 0;
 

@@ -568,6 +568,13 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
                                   const SacnRemoteSource* source_info, const SacnRecvUniverseData* universe_data,
                                   sacn_thread_id_t thread_id)
 {
+  if (!SACN_ASSERT_VERIFY(receiver_handle != SACN_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(source_addr) ||
+      !SACN_ASSERT_VERIFY(source_info) || !SACN_ASSERT_VERIFY(universe_data) ||
+      !SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  {
+    return;
+  }
+
   sacn_remote_source_t source_handle = source_info->handle;
 
   // Reuse source_handle for the DMX merger's source IDs, so it can be used in the merged_data callback.
@@ -683,6 +690,12 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
 void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
                                  size_t num_lost_sources, sacn_thread_id_t thread_id)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(lost_sources) ||
+      !SACN_ASSERT_VERIFY(num_lost_sources > 0) || !SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  {
+    return;
+  }
+
   ETCPAL_UNUSED_ARG(universe);
 
   MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
@@ -766,6 +779,9 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
 
 void merge_receiver_sampling_started(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
+    return;
+
   ETCPAL_UNUSED_ARG(universe);
   ETCPAL_UNUSED_ARG(thread_id);
 
@@ -802,6 +818,9 @@ void merge_receiver_sampling_started(sacn_receiver_t handle, uint16_t universe, 
 
 void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+    return;
+
   MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
   SacnMergeReceiverSamplingPeriodEndedCallback sampling_ended_callback = NULL;
   void* context = NULL;
@@ -898,6 +917,12 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
 void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
                              sacn_thread_id_t thread_id)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(source) ||
+      !SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  {
+    return;
+  }
+
   MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
   void* context = NULL;
 
@@ -968,6 +993,9 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
 void merge_receiver_source_limit_exceeded(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id)
 {
   ETCPAL_UNUSED_ARG(thread_id);
+
+  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
+    return;
 
   SacnMergeReceiverSourceLimitExceededCallback source_limit_callback = NULL;
   void* context = NULL;

@@ -103,6 +103,9 @@ void sacn_source_loss_deinit(void)
 void mark_sources_online(uint16_t universe, const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
                          TerminationSet** term_set_list)
 {
+  if (!SACN_ASSERT_VERIFY(online_sources) || !SACN_ASSERT_VERIFY(term_set_list))
+    return;
+
   for (const SacnRemoteSourceInternal* online_src = online_sources; online_src < online_sources + num_online_sources;
        ++online_src)
   {
@@ -149,6 +152,12 @@ etcpal_error_t mark_sources_offline(uint16_t universe, const SacnLostSourceInter
                                     size_t num_offline_sources, const SacnRemoteSourceInternal* unknown_sources,
                                     size_t num_unknown_sources, TerminationSet** term_set_list, uint32_t expired_wait)
 {
+  if (!SACN_ASSERT_VERIFY(offline_sources) || !SACN_ASSERT_VERIFY(unknown_sources) ||
+      !SACN_ASSERT_VERIFY(term_set_list))
+  {
+    return kEtcPalErrSys;
+  }
+
   etcpal_error_t res = kEtcPalErrOk;
 
   for (const SacnLostSourceInternal* offline_src = offline_sources; offline_src < offline_sources + num_offline_sources;
@@ -258,6 +267,9 @@ etcpal_error_t mark_sources_offline(uint16_t universe, const SacnLostSourceInter
  */
 void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification* sources_lost)
 {
+  if (!SACN_ASSERT_VERIFY(term_set_list) || !SACN_ASSERT_VERIFY(sources_lost))
+    return;
+
   TerminationSet* ts = *term_set_list;
   TerminationSet* last_ts = NULL;
   while (ts)
@@ -338,6 +350,9 @@ int term_set_source_compare(const EtcPalRbTree* tree, const void* value_a, const
 {
   ETCPAL_UNUSED_ARG(tree);
 
+  if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
+    return 0;
+
   TerminationSetSourceKey* a = (TerminationSetSourceKey*)value_a;
   TerminationSetSourceKey* b = (TerminationSetSourceKey*)value_b;
 
@@ -366,6 +381,9 @@ EtcPalRbNode* node_alloc(void)
 
 void node_dealloc(EtcPalRbNode* node)
 {
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
 #if SACN_DYNAMIC_MEM
   free(node);
 #else
@@ -377,6 +395,10 @@ void node_dealloc(EtcPalRbNode* node)
 static void source_remove_callback(const EtcPalRbTree* tree, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(tree);
+
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
   FREE_TERM_SET_SOURCE(node->value);
   node_dealloc(node);
 }
@@ -386,6 +408,10 @@ static void source_remove_callback(const EtcPalRbTree* tree, EtcPalRbNode* node)
 static void source_remove_from_ts_callback(const EtcPalRbTree* tree, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(tree);
+
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
   etcpal_rbtree_remove_with_cb(&term_set_sources, node->value, source_remove_callback);
   node_dealloc(node);
 }
@@ -393,6 +419,9 @@ static void source_remove_from_ts_callback(const EtcPalRbTree* tree, EtcPalRbNod
 // Insert a new termination set source into the main term_set_sources rbtree as well as a termination set's rbtree.
 etcpal_error_t insert_new_ts_src(TerminationSetSource* ts_src_new, TerminationSet* ts_new)
 {
+  if (!SACN_ASSERT_VERIFY(ts_src_new) || !SACN_ASSERT_VERIFY(ts_new))
+    return kEtcPalErrSys;
+
   etcpal_error_t res = etcpal_rbtree_insert(&term_set_sources, ts_src_new);
 
   if (res == kEtcPalErrOk)
@@ -408,6 +437,9 @@ etcpal_error_t insert_new_ts_src(TerminationSetSource* ts_src_new, TerminationSe
 
 TerminationSetSource* find_existing_ts_src(uint16_t universe, sacn_remote_source_t handle)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID))
+    return NULL;
+
   TerminationSetSourceKey ts_src_key;
   ts_src_key.handle = handle;
   ts_src_key.universe = universe;
@@ -416,6 +448,9 @@ TerminationSetSource* find_existing_ts_src(uint16_t universe, sacn_remote_source
 
 void remove_term_set_from_list(TerminationSet** term_set_list, TerminationSet* to_remove, TerminationSet* last_ts)
 {
+  if (!SACN_ASSERT_VERIFY(term_set_list) || !SACN_ASSERT_VERIFY(to_remove))
+    return;
+
   if (last_ts == NULL)  // Replace the head of the list
     *term_set_list = to_remove->next;
   else  // Remove from the list

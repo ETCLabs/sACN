@@ -585,6 +585,9 @@ etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_recei
                                     const SacnNetintConfig* netint_config,
                                     const SacnReceiverInternalCallbacks* internal_callbacks)
 {
+  if (!SACN_ASSERT_VERIFY(config) || !SACN_ASSERT_VERIFY(handle))
+    return kEtcPalErrSys;
+
   SacnReceiver* receiver = NULL;
   etcpal_error_t res =
       add_sacn_receiver(get_next_receiver_handle(), config, netint_config, internal_callbacks, &receiver);
@@ -614,6 +617,9 @@ etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_recei
 // Needs lock
 etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
+    return kEtcPalErrSys;
+
   SacnReceiver* receiver = NULL;
   etcpal_error_t res = lookup_receiver(handle, &receiver);
 
@@ -629,6 +635,9 @@ etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle)
 // Needs lock
 etcpal_error_t change_sacn_receiver_universe(sacn_receiver_t handle, uint16_t new_universe_id)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
+    return kEtcPalErrSys;
+
   etcpal_error_t res = kEtcPalErrOk;
 
   // First check to see if there is already a receiver listening on this universe.

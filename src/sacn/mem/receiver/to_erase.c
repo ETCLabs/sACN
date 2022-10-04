@@ -71,6 +71,9 @@ static void deinit_to_erase_buf(ToEraseBuf* to_erase_buf);
  */
 SacnTrackedSource** get_to_erase_buffer(sacn_thread_id_t thread_id, size_t size)
 {
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) || !SACN_ASSERT_VERIFY(size > 0))
+    return NULL;
+
   if (thread_id < sacn_mem_get_num_threads())
   {
     ToEraseBuf* to_return = &to_erase[thread_id];
@@ -85,6 +88,9 @@ SacnTrackedSource** get_to_erase_buffer(sacn_thread_id_t thread_id, size_t size)
 
 etcpal_error_t init_to_erase_bufs(unsigned int num_threads)
 {
+  if (!SACN_ASSERT_VERIFY(num_threads > 0))
+    return kEtcPalErrSys;
+
 #if SACN_DYNAMIC_MEM
   to_erase = calloc(num_threads, sizeof(ToEraseBuf));
   if (!to_erase)
@@ -131,7 +137,10 @@ void deinit_to_erase_bufs(void)
 
 void deinit_to_erase_buf(ToEraseBuf* to_erase_buf)
 {
-  if (SACN_ASSERT_VERIFY(to_erase_buf) && to_erase_buf->buf)
+  if (!SACN_ASSERT_VERIFY(to_erase_buf))
+    return;
+
+  if (to_erase_buf->buf)
     free(to_erase_buf->buf);
 }
 

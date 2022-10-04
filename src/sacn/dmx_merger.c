@@ -576,6 +576,9 @@ int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value
 {
   ETCPAL_UNUSED_ARG(self);
 
+  if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
+    return 0;
+
   const MergerState* a = (const MergerState*)value_a;
   const MergerState* b = (const MergerState*)value_b;
 
@@ -585,6 +588,9 @@ int merger_state_lookup_compare_func(const EtcPalRbTree* self, const void* value
 int source_state_lookup_compare_func(const EtcPalRbTree* self, const void* value_a, const void* value_b)
 {
   ETCPAL_UNUSED_ARG(self);
+
+  if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
+    return 0;
 
   const SourceState* a = (const SourceState*)value_a;
   const SourceState* b = (const SourceState*)value_b;
@@ -599,6 +605,9 @@ EtcPalRbNode* dmx_merger_rb_node_alloc_func(void)
 
 void dmx_merger_rb_node_dealloc_func(EtcPalRbNode* node)
 {
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
   FREE_DMX_MERGER_RB_NODE(node);
 }
 
@@ -611,6 +620,9 @@ bool merger_handle_in_use(int handle_val, void* cookie)
 
 bool source_handle_in_use(int handle_val, void* cookie)
 {
+  if (!SACN_ASSERT_VERIFY(cookie))
+    return false;
+
   MergerState* merger_state = (MergerState*)cookie;
 
   return (handle_val == SACN_DMX_MERGER_SOURCE_INVALID) ||
@@ -622,6 +634,12 @@ bool source_handle_in_use(int handle_val, void* cookie)
 etcpal_error_t add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t id_to_use,
                           sacn_dmx_merger_source_t* id_result)
 {
+  if (!SACN_ASSERT_VERIFY(merger != SACN_DMX_MERGER_INVALID) ||
+      !SACN_ASSERT_VERIFY(id_to_use != SACN_DMX_MERGER_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(id_result))
+  {
+    return kEtcPalErrSys;
+  }
+
   MergerState* merger_state = NULL;
   SourceState* source_state = NULL;
 
@@ -693,6 +711,12 @@ etcpal_error_t add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t id_
  */
 void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_levels, uint16_t new_levels_count)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(new_levels) ||
+      !SACN_ASSERT_VERIFY(new_levels_count < DMX_ADDRESS_COUNT))
+  {
+    return;
+  }
+
   size_t old_levels_count = source->source.valid_level_count;
   source->source.valid_level_count = new_levels_count;
 
@@ -714,10 +738,16 @@ void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_
 void update_pap(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
                 uint16_t address_priorities_count)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(address_priorities) ||
+      !SACN_ASSERT_VERIFY(address_priorities_count < DMX_ADDRESS_COUNT))
+  {
+    return;
+  }
+
   size_t old_pap_count = source->pap_count;
   source->pap_count = address_priorities_count;
 
-    if ((address_priorities_count != old_pap_count) ||
+  if ((address_priorities_count != old_pap_count) ||
       (memcmp(address_priorities, source->source.address_priority, address_priorities_count) != 0))
   {
     SET_PAP_ACTIVE(source);
@@ -740,6 +770,9 @@ void update_pap(MergerState* merger, SourceState* source, const uint8_t* address
  */
 void update_universe_priority(MergerState* merger, SourceState* source, uint8_t priority)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source))
+    return;
+
   // There's no need to do anything if the universe priority hasn't changed.
   if ((priority != source->source.universe_priority) || source->universe_priority_uninitialized)
   {
@@ -787,6 +820,13 @@ void update_universe_priority(MergerState* merger, SourceState* source, uint8_t 
 void update_levels_single_source(MergerState* merger, SourceState* source, const uint8_t* new_levels,
                                  size_t old_levels_count, size_t new_levels_count)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(new_levels) ||
+      !SACN_ASSERT_VERIFY(old_levels_count < DMX_ADDRESS_COUNT) ||
+      !SACN_ASSERT_VERIFY(new_levels_count < DMX_ADDRESS_COUNT))
+  {
+    return;
+  }
+
   memcpy(source->source.levels, new_levels, new_levels_count);
 
   for (size_t i = 0; i < new_levels_count; ++i)
@@ -812,6 +852,13 @@ void update_levels_single_source(MergerState* merger, SourceState* source, const
 void update_levels_multi_source(MergerState* merger, SourceState* source, const uint8_t* new_levels,
                                 size_t old_levels_count, size_t new_levels_count)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(new_levels) ||
+      !SACN_ASSERT_VERIFY(old_levels_count < DMX_ADDRESS_COUNT) ||
+      !SACN_ASSERT_VERIFY(new_levels_count < DMX_ADDRESS_COUNT))
+  {
+    return;
+  }
+
   memcpy(source->source.levels, new_levels, new_levels_count);
   for (size_t i = 0; i < new_levels_count; ++i)
     merge_new_level(merger, source, i);
@@ -835,6 +882,12 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
 void update_pap_single_source(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
                               size_t old_pap_count, size_t new_pap_count)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(address_priorities) ||
+      !SACN_ASSERT_VERIFY(old_pap_count < DMX_ADDRESS_COUNT) || !SACN_ASSERT_VERIFY(new_pap_count < DMX_ADDRESS_COUNT))
+  {
+    return;
+  }
+
   memcpy(source->source.address_priority, address_priorities, new_pap_count);
   memcpy(merger->config.per_address_priorities, address_priorities, new_pap_count);
 
@@ -875,6 +928,12 @@ void update_pap_single_source(MergerState* merger, SourceState* source, const ui
 void update_pap_multi_source(MergerState* merger, SourceState* source, const uint8_t* address_priorities,
                              size_t old_pap_count, size_t new_pap_count)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(address_priorities) ||
+      !SACN_ASSERT_VERIFY(old_pap_count < DMX_ADDRESS_COUNT) || !SACN_ASSERT_VERIFY(new_pap_count < DMX_ADDRESS_COUNT))
+  {
+    return;
+  }
+
   memcpy(source->source.address_priority, address_priorities, new_pap_count);
   for (size_t i = 0; i < new_pap_count; ++i)
     merge_new_priority(merger, source, i);
@@ -897,6 +956,9 @@ void update_pap_multi_source(MergerState* merger, SourceState* source, const uin
  */
 void update_universe_priority_single_source(MergerState* merger, SourceState* source, uint8_t pap)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source))
+    return;
+
   memset(source->source.address_priority, pap, DMX_ADDRESS_COUNT);
   memset(merger->config.per_address_priorities, pap, DMX_ADDRESS_COUNT);
 
@@ -914,6 +976,9 @@ void update_universe_priority_single_source(MergerState* merger, SourceState* so
  */
 void update_universe_priority_multi_source(MergerState* merger, SourceState* source, uint8_t pap)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source))
+    return;
+
   // At this point the universe priority has been confirmed to have changed, so update & merge everything.
   memset(source->source.address_priority, pap, DMX_ADDRESS_COUNT);
   for (size_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
@@ -927,6 +992,9 @@ void update_universe_priority_multi_source(MergerState* merger, SourceState* sou
  */
 void merge_new_level(MergerState* merger, const SourceState* source, size_t slot)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(slot < DMX_ADDRESS_COUNT))
+    return;
+
   // Perform HTP merge when source priority is non-zero and equal to current winning priority.
   if ((source->source.address_priority[slot] > 0) &&
       (source->source.address_priority[slot] == merger->config.per_address_priorities[slot]))
@@ -954,6 +1022,9 @@ void merge_new_level(MergerState* merger, const SourceState* source, size_t slot
  */
 void merge_new_priority(MergerState* merger, const SourceState* source, size_t slot)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(slot < DMX_ADDRESS_COUNT))
+    return;
+
   // Take ownership if source priority is greater than current priority.
   if (source->source.address_priority[slot] > merger->config.per_address_priorities[slot])
   {
@@ -988,6 +1059,9 @@ void merge_new_priority(MergerState* merger, const SourceState* source, size_t s
  */
 void recalculate_winning_level(MergerState* merger, const SourceState* source, size_t slot)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(slot < DMX_ADDRESS_COUNT))
+    return;
+
   // Start with this source as the owner.
   merger->config.levels[slot] = source->source.levels[slot];
 
@@ -1019,6 +1093,9 @@ void recalculate_winning_level(MergerState* merger, const SourceState* source, s
  */
 void recalculate_winning_priority(MergerState* merger, const SourceState* source, size_t slot)
 {
+  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(slot < DMX_ADDRESS_COUNT))
+    return;
+
   // Start with this source as the owner.
   merger->config.per_address_priorities[slot] = source->source.address_priority[slot];
 
@@ -1055,6 +1132,9 @@ void recalculate_winning_priority(MergerState* merger, const SourceState* source
  */
 void recalculate_pap_active(MergerState* merger)
 {
+  if (!SACN_ASSERT_VERIFY(merger))
+    return;
+
   bool pap_active = false;
 
   EtcPalRbIter iter;
@@ -1076,6 +1156,9 @@ void recalculate_pap_active(MergerState* merger)
  */
 void recalculate_universe_priority(MergerState* merger)
 {
+  if (!SACN_ASSERT_VERIFY(merger))
+    return;
+
   uint8_t max_universe_priority = 0;
 
   EtcPalRbIter iter;
@@ -1094,6 +1177,9 @@ void free_source_state_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
 
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
   FREE_SOURCE_STATE(node->value);
   FREE_DMX_MERGER_RB_NODE(node);
 }
@@ -1101,6 +1187,9 @@ void free_source_state_lookup_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 void free_mergers_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
+
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
 
   MergerState* merger_state = (MergerState*)node->value;
 
@@ -1114,6 +1203,9 @@ void free_mergers_node(const EtcPalRbTree* self, EtcPalRbNode* node)
 
 SourceState* construct_source_state(sacn_dmx_merger_source_t handle)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_DMX_MERGER_SOURCE_INVALID))
+    return NULL;
+
   SourceState* source_state = ALLOC_SOURCE_STATE();
 
   if (source_state)
@@ -1134,6 +1226,9 @@ SourceState* construct_source_state(sacn_dmx_merger_source_t handle)
 
 MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMergerConfig* config)
 {
+  if (!SACN_ASSERT_VERIFY(config) || !SACN_ASSERT_VERIFY(handle != SACN_DMX_MERGER_INVALID))
+    return NULL;
+
   MergerState* merger_state = ALLOC_MERGER_STATE();
 
   if (merger_state)
@@ -1225,6 +1320,9 @@ size_t get_number_of_mergers()
 // Needs lock
 etcpal_error_t create_sacn_dmx_merger(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle)
 {
+  if (!SACN_ASSERT_VERIFY(config) || !SACN_ASSERT_VERIFY(handle))
+    return kEtcPalErrSys;
+
   MergerState* merger_state = NULL;
   etcpal_error_t result = kEtcPalErrOk;
 
@@ -1262,6 +1360,9 @@ etcpal_error_t create_sacn_dmx_merger(const SacnDmxMergerConfig* config, sacn_dm
 // Needs lock
 etcpal_error_t destroy_sacn_dmx_merger(sacn_dmx_merger_t handle)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_DMX_MERGER_INVALID))
+    return kEtcPalErrSys;
+
   MergerState* merger_state = NULL;
 
   // Try to find the merger's state.
@@ -1292,6 +1393,12 @@ etcpal_error_t destroy_sacn_dmx_merger(sacn_dmx_merger_t handle)
 // Needs lock
 etcpal_error_t remove_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)
 {
+  if (!SACN_ASSERT_VERIFY(merger != SACN_DMX_MERGER_INVALID) ||
+      !SACN_ASSERT_VERIFY(source != SACN_DMX_MERGER_SOURCE_INVALID))
+  {
+    return kEtcPalErrSys;
+  }
+
   MergerState* merger_state = NULL;
   SourceState* source_being_removed = NULL;
 
@@ -1338,12 +1445,21 @@ etcpal_error_t remove_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_dmx_
 // Needs lock
 etcpal_error_t add_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t* handle)
 {
+  if (!SACN_ASSERT_VERIFY(merger != SACN_DMX_MERGER_INVALID) || !SACN_ASSERT_VERIFY(handle))
+    return kEtcPalErrSys;
+
   return add_source(merger, SACN_DMX_MERGER_SOURCE_INVALID, handle);
 }
 
 // Needs lock
 etcpal_error_t add_sacn_dmx_merger_source_with_handle(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t handle_to_use)
 {
+  if (!SACN_ASSERT_VERIFY(merger != SACN_DMX_MERGER_INVALID) ||
+      !SACN_ASSERT_VERIFY(handle_to_use != SACN_DMX_MERGER_SOURCE_INVALID))
+  {
+    return kEtcPalErrSys;
+  }
+
   sacn_dmx_merger_source_t tmp = SACN_DMX_MERGER_SOURCE_INVALID;
   return add_source(merger, handle_to_use, &tmp);
 }
@@ -1352,6 +1468,12 @@ etcpal_error_t add_sacn_dmx_merger_source_with_handle(sacn_dmx_merger_t merger, 
 etcpal_error_t update_sacn_dmx_merger_levels(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
                                              const uint8_t* new_levels, size_t new_levels_count)
 {
+  if (!SACN_ASSERT_VERIFY(merger != SACN_DMX_MERGER_INVALID) ||
+      !SACN_ASSERT_VERIFY(source != SACN_DMX_MERGER_SOURCE_INVALID))
+  {
+    return kEtcPalErrSys;
+  }
+
   MergerState* merger_state = NULL;
   SourceState* source_state = NULL;
 
@@ -1369,6 +1491,12 @@ etcpal_error_t update_sacn_dmx_merger_levels(sacn_dmx_merger_t merger, sacn_dmx_
 etcpal_error_t update_sacn_dmx_merger_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t* pap,
                                           size_t pap_count)
 {
+  if (!SACN_ASSERT_VERIFY(merger != SACN_DMX_MERGER_INVALID) ||
+      !SACN_ASSERT_VERIFY(source != SACN_DMX_MERGER_SOURCE_INVALID))
+  {
+    return kEtcPalErrSys;
+  }
+
   MergerState* merger_state = NULL;
   SourceState* source_state = NULL;
 
@@ -1386,6 +1514,12 @@ etcpal_error_t update_sacn_dmx_merger_pap(sacn_dmx_merger_t merger, sacn_dmx_mer
 etcpal_error_t update_sacn_dmx_merger_universe_priority(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
                                                         uint8_t universe_priority)
 {
+  if (!SACN_ASSERT_VERIFY(merger != SACN_DMX_MERGER_INVALID) ||
+      !SACN_ASSERT_VERIFY(source != SACN_DMX_MERGER_SOURCE_INVALID))
+  {
+    return kEtcPalErrSys;
+  }
+
   MergerState* merger_state = NULL;
   SourceState* source_state = NULL;
 
@@ -1402,6 +1536,12 @@ etcpal_error_t update_sacn_dmx_merger_universe_priority(sacn_dmx_merger_t merger
 // Needs lock
 etcpal_error_t remove_sacn_dmx_merger_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)
 {
+  if (!SACN_ASSERT_VERIFY(merger != SACN_DMX_MERGER_INVALID) ||
+      !SACN_ASSERT_VERIFY(source != SACN_DMX_MERGER_SOURCE_INVALID))
+  {
+    return kEtcPalErrSys;
+  }
+
   MergerState* merger_state = NULL;
   SourceState* source_state = NULL;
 

@@ -47,6 +47,9 @@ void sacn_source_detector_state_deinit(void)
 size_t get_source_detector_netints(const SacnSourceDetector* detector, EtcPalMcastNetintId* netints,
                                    size_t netints_size)
 {
+  if (!SACN_ASSERT_VERIFY(detector))
+    return 0;
+
   for (size_t i = 0; netints && (i < netints_size) && (i < detector->netints.num_netints); ++i)
     netints[i] = detector->netints.netints[i];
 
@@ -58,6 +61,12 @@ void handle_sacn_universe_discovery_packet(SacnRecvThreadContext* context, const
                                            const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr,
                                            const char* source_name)
 {
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(data) || !SACN_ASSERT_VERIFY(datalen > 0) ||
+      !SACN_ASSERT_VERIFY(sender_cid) || !SACN_ASSERT_VERIFY(from_addr) || !SACN_ASSERT_VERIFY(source_name))
+  {
+    return;
+  }
+
   SacnSourceDetector* source_detector = NULL;
 
   if (sacn_lock())
@@ -104,6 +113,9 @@ void handle_sacn_universe_discovery_packet(SacnRecvThreadContext* context, const
 // Takes lock
 void process_source_detector(SacnRecvThreadContext* recv_thread_context)
 {
+  if (!SACN_ASSERT_VERIFY(recv_thread_context))
+    return;
+
   SourceDetectorSourceExpiredNotification source_expired = SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT;
 
   if (sacn_lock())
@@ -146,6 +158,9 @@ void process_source_detector(SacnRecvThreadContext* recv_thread_context)
 // Takes lock
 void process_universe_discovery_page(SacnSourceDetector* source_detector, const SacnUniverseDiscoveryPage* page)
 {
+  if (!SACN_ASSERT_VERIFY(source_detector) || !SACN_ASSERT_VERIFY(page))
+    return;
+
   SourceDetectorSourceUpdatedNotification source_updated = SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT;
   SourceDetectorLimitExceededNotification limit_exceeded = SRC_DETECTOR_LIMIT_EXCEEDED_DEFAULT_INIT;
 

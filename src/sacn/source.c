@@ -1223,6 +1223,9 @@ size_t get_per_universe_netint_lists_index(sacn_source_t source, uint16_t univer
                                            const SacnSourceUniverseNetintList* per_universe_netint_lists,
                                            size_t num_per_universe_netint_lists, bool* found)
 {
+  if (!SACN_ASSERT_VERIFY(source != SACN_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(per_universe_netint_lists))
+    return 0;
+
   for (size_t i = 0; i < num_per_universe_netint_lists; ++i)
   {
     if ((source == per_universe_netint_lists[i].handle) && (universe == per_universe_netint_lists[i].universe))

@@ -116,6 +116,9 @@ void deinit_remote_sources(void)
 
 etcpal_error_t add_remote_source_handle(const EtcPalUuid* cid, sacn_remote_source_t* handle)
 {
+  if (!SACN_ASSERT_VERIFY(cid) || !SACN_ASSERT_VERIFY(handle))
+    return kEtcPalErrSys;
+
   etcpal_error_t result = kEtcPalErrOk;
 
   SacnRemoteSourceHandle* existing_handle = (SacnRemoteSourceHandle*)etcpal_rbtree_find(&remote_source_handles, cid);
@@ -175,6 +178,9 @@ etcpal_error_t add_remote_source_handle(const EtcPalUuid* cid, sacn_remote_sourc
 
 sacn_remote_source_t get_remote_source_handle(const EtcPalUuid* source_cid)
 {
+  if (!SACN_ASSERT_VERIFY(source_cid))
+    return SACN_REMOTE_SOURCE_INVALID;
+
   sacn_remote_source_t result = SACN_REMOTE_SOURCE_INVALID;
 
   SacnRemoteSourceHandle* tree_result = (SacnRemoteSourceHandle*)etcpal_rbtree_find(&remote_source_handles, source_cid);
@@ -187,6 +193,9 @@ sacn_remote_source_t get_remote_source_handle(const EtcPalUuid* source_cid)
 
 const EtcPalUuid* get_remote_source_cid(sacn_remote_source_t handle)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID))
+    return NULL;
+
   const EtcPalUuid* result = NULL;
 
   SacnRemoteSourceCid* tree_result = (SacnRemoteSourceCid*)etcpal_rbtree_find(&remote_source_cids, &handle);
@@ -199,6 +208,9 @@ const EtcPalUuid* get_remote_source_cid(sacn_remote_source_t handle)
 
 etcpal_error_t remove_remote_source_handle(sacn_remote_source_t handle)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID))
+    return kEtcPalErrSys;
+
   etcpal_error_t handle_result = kEtcPalErrOk;
   etcpal_error_t cid_result = kEtcPalErrOk;
 
@@ -232,6 +244,9 @@ int remote_source_compare(const EtcPalRbTree* tree, const void* value_a, const v
 {
   ETCPAL_UNUSED_ARG(tree);
 
+  if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
+    return 0;
+
   sacn_remote_source_t* a = (sacn_remote_source_t*)value_a;
   sacn_remote_source_t* b = (sacn_remote_source_t*)value_b;
   return (*a > *b) - (*a < *b);
@@ -240,6 +255,9 @@ int remote_source_compare(const EtcPalRbTree* tree, const void* value_a, const v
 int uuid_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
 {
   ETCPAL_UNUSED_ARG(tree);
+
+  if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
+    return 0;
 
   const EtcPalUuid* a = (const EtcPalUuid*)value_a;
   const EtcPalUuid* b = (const EtcPalUuid*)value_b;
@@ -256,6 +274,10 @@ bool remote_source_handle_in_use(int handle_val, void* cookie)
 void remote_source_handle_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
+
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
   FREE_REMOTE_SOURCE_HANDLE(node->value);
   remote_source_node_dealloc(node);
 }
@@ -264,6 +286,10 @@ void remote_source_handle_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* n
 void remote_source_cid_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
+
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
   FREE_REMOTE_SOURCE_CID(node->value);
   remote_source_node_dealloc(node);
 }
@@ -279,6 +305,9 @@ EtcPalRbNode* remote_source_node_alloc(void)
 
 void remote_source_node_dealloc(EtcPalRbNode* node)
 {
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
 #if SACN_DYNAMIC_MEM
   free(node);
 #else

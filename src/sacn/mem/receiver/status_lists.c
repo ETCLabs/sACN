@@ -64,6 +64,9 @@ static void deinit_status_lists_entry(SacnSourceStatusLists* lists);
  */
 SacnSourceStatusLists* get_status_lists(sacn_thread_id_t thread_id)
 {
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+    return NULL;
+
   if (thread_id < sacn_mem_get_num_threads())
   {
     SacnSourceStatusLists* to_return = &sacn_pool_status_lists[thread_id];
@@ -85,8 +88,11 @@ SacnSourceStatusLists* get_status_lists(sacn_thread_id_t thread_id)
  */
 bool add_offline_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle, const char* name, bool terminated)
 {
-  if (!SACN_ASSERT_VERIFY(lists))
+  if (!SACN_ASSERT_VERIFY(lists) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) ||
+      !SACN_ASSERT_VERIFY(name))
+  {
     return false;
+  }
 
   CHECK_ROOM_FOR_ONE_MORE(lists, offline, SacnLostSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
@@ -108,8 +114,11 @@ bool add_offline_source(SacnSourceStatusLists* lists, sacn_remote_source_t handl
  */
 bool add_online_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle, const char* name)
 {
-  if (!SACN_ASSERT_VERIFY(lists))
+  if (!SACN_ASSERT_VERIFY(lists) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) ||
+      !SACN_ASSERT_VERIFY(name))
+  {
     return false;
+  }
 
   CHECK_ROOM_FOR_ONE_MORE(lists, online, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
@@ -130,8 +139,11 @@ bool add_online_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle
  */
 bool add_unknown_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle, const char* name)
 {
-  if (!SACN_ASSERT_VERIFY(lists))
+  if (!SACN_ASSERT_VERIFY(lists) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) ||
+      !SACN_ASSERT_VERIFY(name))
+  {
     return false;
+  }
 
   CHECK_ROOM_FOR_ONE_MORE(lists, unknown, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
@@ -143,16 +155,19 @@ bool add_unknown_source(SacnSourceStatusLists* lists, sacn_remote_source_t handl
 
 void zero_status_lists(SacnSourceStatusLists* lists)
 {
-  if (SACN_ASSERT_VERIFY(lists))
-  {
-    lists->num_online = 0;
-    lists->num_offline = 0;
-    lists->num_unknown = 0;
-  }
+  if (!SACN_ASSERT_VERIFY(lists))
+    return;
+
+  lists->num_online = 0;
+  lists->num_offline = 0;
+  lists->num_unknown = 0;
 }
 
 etcpal_error_t init_status_lists_buf(unsigned int num_threads)
 {
+  if (!SACN_ASSERT_VERIFY(num_threads > 0))
+    return kEtcPalErrSys;
+
 #if SACN_DYNAMIC_MEM
   sacn_pool_status_lists = calloc(num_threads, sizeof(SacnSourceStatusLists));
   if (!sacn_pool_status_lists)
@@ -220,12 +235,12 @@ void deinit_status_lists_buf(void)
 
 void deinit_status_lists_entry(SacnSourceStatusLists* lists)
 {
-  if (SACN_ASSERT_VERIFY(lists))
-  {
-    CLEAR_BUF(lists, offline);
-    CLEAR_BUF(lists, online);
-    CLEAR_BUF(lists, unknown);
-  }
+  if (!SACN_ASSERT_VERIFY(lists))
+    return;
+
+  CLEAR_BUF(lists, offline);
+  CLEAR_BUF(lists, online);
+  CLEAR_BUF(lists, unknown);
 }
 
 #endif  // SACN_DYNAMIC_MEM
