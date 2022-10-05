@@ -34,7 +34,7 @@ C functionality supports C99 with the exception of the following features:
 * At least 2 developers must approve all code changes made before they can be merged into the integration branch.
 * API and major functionality reviews typically include application developers as well.
 
-### Automated testing
+### Automated Testing
 
 * This consists primarily of unit tests covering the individual API modules.
 * Some integration tests have also been made.
