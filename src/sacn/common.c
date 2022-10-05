@@ -343,6 +343,20 @@ etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, Et
 
 #endif  // SACN_RECEIVER_ENABLED
 
+bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, const int line)
+{
+#if !SACN_LOGGING_ENABLED
+  ETCPAL_UNUSED_ARG(exp);
+  ETCPAL_UNUSED_ARG(file);
+  ETCPAL_UNUSED_ARG(func);
+  ETCPAL_UNUSED_ARG(line);
+#endif
+  SACN_LOG_CRIT("ASSERTION \"%s\" FAILED (FILE: \"%s\" FUNCTION: \"%s\" LINE: %d)", exp ? exp : "", file ? file : "",
+                func ? func : "", line);
+  SACN_ASSERT(false);
+  return false;
+}
+
 bool sacn_lock(void)
 {
   return etcpal_mutex_lock(&sacn_mutex);

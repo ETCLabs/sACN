@@ -413,19 +413,9 @@ TEST_F(TestPdu, ParseSacnDataPacketHandlesInvalid)
   EXPECT_TRUE(parse_sacn_data_packet(&valid_data[SACN_FRAMING_OFFSET], kValidBufferLength, &source_info_out, &seq_out,
                                      &terminated_out, &universe_data_out));
 
-  // Start with null pointers and short buffer length
-  EXPECT_FALSE(parse_sacn_data_packet(nullptr, kValidBufferLength, &source_info_out, &seq_out, &terminated_out,
-                                      &universe_data_out));
+  // Start with short buffer length
   EXPECT_FALSE(parse_sacn_data_packet(&valid_data[SACN_FRAMING_OFFSET], kBufLenTooShort, &source_info_out, &seq_out,
                                       &terminated_out, &universe_data_out));
-  EXPECT_FALSE(parse_sacn_data_packet(&valid_data[SACN_FRAMING_OFFSET], kValidBufferLength, nullptr, &seq_out,
-                                      &terminated_out, &universe_data_out));
-  EXPECT_FALSE(parse_sacn_data_packet(&valid_data[SACN_FRAMING_OFFSET], kValidBufferLength, &source_info_out, nullptr,
-                                      &terminated_out, &universe_data_out));
-  EXPECT_FALSE(parse_sacn_data_packet(&valid_data[SACN_FRAMING_OFFSET], kValidBufferLength, &source_info_out, &seq_out,
-                                      nullptr, &universe_data_out));
-  EXPECT_FALSE(parse_sacn_data_packet(&valid_data[SACN_FRAMING_OFFSET], kValidBufferLength, &source_info_out, &seq_out,
-                                      &terminated_out, nullptr));
 
   // Now test buffer defects
   uint8_t vector_not_data[SACN_MTU];

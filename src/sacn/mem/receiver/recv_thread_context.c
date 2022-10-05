@@ -63,6 +63,9 @@ bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_sock
  */
 SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id)
 {
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+    return NULL;
+
   if (thread_id < sacn_mem_get_num_threads())
   {
     SacnRecvThreadContext* to_return = &sacn_pool_recv_thread_context[thread_id];
@@ -81,7 +84,8 @@ SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id)
  */
 bool add_dead_socket(SacnRecvThreadContext* context, const ReceiveSocket* socket)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(socket))
+    return false;
 
   CHECK_ROOM_FOR_ONE_MORE(context, dead_sockets, ReceiveSocket, SACN_RECEIVER_MAX_UNIVERSES * 2, false);
 
@@ -92,7 +96,8 @@ bool add_dead_socket(SacnRecvThreadContext* context, const ReceiveSocket* socket
 // Return index in context->socket_refs or -1 if not enough room.
 int add_socket_ref(SacnRecvThreadContext* context, const ReceiveSocket* socket)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(socket))
+    return -1;
 
   CHECK_ROOM_FOR_ONE_MORE(context, socket_refs, SocketRef, SACN_RECEIVER_MAX_SOCKET_REFS, -1);
 
@@ -121,7 +126,8 @@ int add_socket_ref(SacnRecvThreadContext* context, const ReceiveSocket* socket)
  */
 bool add_subscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(sock != ETCPAL_SOCKET_INVALID) || !SACN_ASSERT_VERIFY(group))
+    return false;
 
   CHECK_ROOM_FOR_ONE_MORE(context, subscribes, SocketGroupReq, (SACN_MAX_NETINTS * SACN_MAX_SUBSCRIPTIONS), false);
 
@@ -142,7 +148,8 @@ bool add_subscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const E
  */
 bool add_unsubscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(sock != ETCPAL_SOCKET_INVALID) || !SACN_ASSERT_VERIFY(group))
+    return false;
 
   CHECK_ROOM_FOR_ONE_MORE(context, unsubscribes, SocketGroupReq, (SACN_MAX_NETINTS * SACN_MAX_SUBSCRIPTIONS), false);
 
@@ -156,6 +163,9 @@ bool add_unsubscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const
 // Return index in context->socket_refs or -1 if not found.
 int find_socket_ref_with_room(SacnRecvThreadContext* context, etcpal_iptype_t ip_type)
 {
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(ip_type != kEtcPalIpTypeInvalid))
+    return -1;
+
   int index = 0;
   for (SocketRef* entry = context->socket_refs; entry < (context->socket_refs + context->num_socket_refs); ++entry)
   {
@@ -171,6 +181,9 @@ int find_socket_ref_with_room(SacnRecvThreadContext* context, etcpal_iptype_t ip
 // Return index in context->socket_refs or -1 if not found.
 int find_socket_ref_by_type(SacnRecvThreadContext* context, etcpal_iptype_t ip_type)
 {
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(ip_type != kEtcPalIpTypeInvalid))
+    return -1;
+
   int index = 0;
   for (SocketRef* entry = context->socket_refs; entry < (context->socket_refs + context->num_socket_refs); ++entry)
   {
@@ -186,6 +199,9 @@ int find_socket_ref_by_type(SacnRecvThreadContext* context, etcpal_iptype_t ip_t
 // Return index in context->socket_refs or -1 if not found.
 int find_socket_ref_by_handle(SacnRecvThreadContext* context, etcpal_socket_t handle)
 {
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(handle != ETCPAL_SOCKET_INVALID))
+    return -1;
+
   int index = 0;
   for (SocketRef* entry = context->socket_refs; entry < (context->socket_refs + context->num_socket_refs); ++entry)
   {
@@ -200,6 +216,9 @@ int find_socket_ref_by_handle(SacnRecvThreadContext* context, etcpal_socket_t ha
 
 void mark_socket_ref_bound(SacnRecvThreadContext* context, int index)
 {
+  if (!SACN_ASSERT_VERIFY(context))
+    return;
+
   SocketRef* ref = &context->socket_refs[index];
   ref->socket.bound = true;
 
@@ -213,7 +232,8 @@ void mark_socket_ref_bound(SacnRecvThreadContext* context, int index)
 
 bool remove_socket_ref(SacnRecvThreadContext* context, int index)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context))
+    return false;
 
   SocketRef* ref = &context->socket_refs[index];
   if (--ref->refcount == 0)
@@ -247,16 +267,25 @@ bool remove_socket_ref(SacnRecvThreadContext* context, int index)
 
 bool remove_subscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group)
 {
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(sock != ETCPAL_SOCKET_INVALID) || !SACN_ASSERT_VERIFY(group))
+    return false;
+
   return remove_socket_group_req(context->subscribes, &context->num_subscribes, sock, group);
 }
 
 bool remove_unsubscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group)
 {
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(sock != ETCPAL_SOCKET_INVALID) || !SACN_ASSERT_VERIFY(group))
+    return false;
+
   return remove_socket_group_req(context->unsubscribes, &context->num_unsubscribes, sock, group);
 }
 
 void add_receiver_to_list(SacnRecvThreadContext* context, SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(receiver))
+    return;
+
   SacnReceiver* list_entry = context->receivers;
   while (list_entry && list_entry->next)
     list_entry = list_entry->next;
@@ -271,6 +300,9 @@ void add_receiver_to_list(SacnRecvThreadContext* context, SacnReceiver* receiver
 
 void remove_receiver_from_list(SacnRecvThreadContext* context, SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(receiver))
+    return;
+
   SacnReceiver* last = NULL;
   SacnReceiver* entry = context->receivers;
   while (entry)
@@ -300,6 +332,9 @@ void remove_receiver_from_list(SacnRecvThreadContext* context, SacnReceiver* rec
 
 etcpal_error_t init_recv_thread_context_buf(unsigned int num_threads)
 {
+  if (!SACN_ASSERT_VERIFY(num_threads > 0))
+    return kEtcPalErrSys;
+
 #if SACN_DYNAMIC_MEM
   sacn_pool_recv_thread_context = calloc(num_threads, sizeof(SacnRecvThreadContext));
   if (!sacn_pool_recv_thread_context)
@@ -321,7 +356,8 @@ etcpal_error_t init_recv_thread_context_buf(unsigned int num_threads)
 
 etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context))
+    return kEtcPalErrSys;
 
 #if SACN_DYNAMIC_MEM
   context->dead_sockets = calloc(INITIAL_CAPACITY, sizeof(ReceiveSocket));
@@ -383,7 +419,9 @@ void deinit_recv_thread_context_buf(void)
 
 void deinit_recv_thread_context_entry(SacnRecvThreadContext* context)
 {
-  SACN_ASSERT(context);
+  if (!SACN_ASSERT_VERIFY(context))
+    return;
+
   CLEAR_BUF(context, dead_sockets);
   CLEAR_BUF(context, socket_refs);
   CLEAR_BUF(context, subscribes);
@@ -392,9 +430,8 @@ void deinit_recv_thread_context_entry(SacnRecvThreadContext* context)
 
 bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_socket_t sock, const EtcPalGroupReq* group)
 {
-  SACN_ASSERT(reqs);
-  SACN_ASSERT(num_reqs);
-  SACN_ASSERT(group);
+  if (!SACN_ASSERT_VERIFY(reqs) || !SACN_ASSERT_VERIFY(num_reqs) || !SACN_ASSERT_VERIFY(group))
+    return false;
 
   size_t index = 0;
   SocketGroupReq* req = NULL;

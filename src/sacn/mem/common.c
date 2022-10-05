@@ -42,5 +42,8 @@ unsigned int sacn_mem_get_num_threads(void)
 
 void sacn_mem_set_num_threads(unsigned int number_of_threads)
 {
+  if (!SACN_ASSERT_VERIFY(number_of_threads > 0))
+    return;
+
   num_threads = number_of_threads;
 }

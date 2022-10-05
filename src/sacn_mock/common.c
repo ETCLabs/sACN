@@ -22,6 +22,8 @@
 #include "sacn_mock/private/source_loss.h"
 #include "sacn_mock/private/sockets.h"
 
+#include "stdio.h"
+
 DEFINE_FAKE_VALUE_FUNC(bool, sacn_initialized);
 DEFINE_FAKE_VALUE_FUNC(bool, sacn_lock);
 DEFINE_FAKE_VOID_FUNC(sacn_unlock);

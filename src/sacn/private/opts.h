@@ -95,11 +95,27 @@
 #define SACN_LOG_MSG_PREFIX "sACN: "
 #endif
 
+/* Assertion failure handler */
+bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, const int line);
+
 /**
- * @brief The debug assert used by the sACN library.
+ * @brief The assertion handler used by the sACN library.
  *
- * By default, just uses the C library assert. If redefining this, it must be redefined as a macro
- * taking a single argument (the assertion expression).
+ * By default, evaluates to true on success, or false on failure (additionally asserting and logging). If redefining
+ * this, it must be redefined as a macro taking a single argument (the assertion expression).
+ */
+#ifndef SACN_ASSERT_VERIFY
+#define SACN_ASSERT_VERIFY(exp) ((exp) ? true : sacn_assert_verify_fail(#exp, __FILE__, __func__, __LINE__))
+#endif
+
+/**
+ * @brief The lower-level debug assert used by the sACN library.
+ *
+ * This is the assertion that gets called by #SACN_ASSERT_VERIFY on failure. Redefine this to retain the logging done by
+ * the default #SACN_ASSERT_VERIFY macro.
+ *
+ * By default, just uses the C library assert. If redefining this, it must be redefined as a macro taking a single
+ * argument (the assertion expression).
  */
 #ifndef SACN_ASSERT
 #include <assert.h>

@@ -132,6 +132,7 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
  *
  * @param[in] handle Handle to the receiver to destroy.
  * @return #kEtcPalErrOk: Receiver destroyed successfully.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
@@ -142,6 +143,8 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 
   if (!sacn_initialized())
     res = kEtcPalErrNotInit;
+  else if (handle == SACN_RECEIVER_INVALID)
+    res = kEtcPalErrInvalid;
 
   if (res == kEtcPalErrOk)
   {
@@ -471,12 +474,19 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfi
           SacnReceiver* receiver = NULL;
           lookup_receiver(per_receiver_netint_lists[i].handle, &receiver);
 
-          SacnNetintConfig receiver_netint_config;
-          receiver_netint_config.netints = per_receiver_netint_lists[i].netints;
-          receiver_netint_config.num_netints = per_receiver_netint_lists[i].num_netints;
+          if (!SACN_ASSERT_VERIFY(receiver))
+            res = kEtcPalErrSys;
 
-          res = sacn_initialize_receiver_netints(&receiver->netints, receiver->sampling,
-                                                 &receiver->sampling_period_netints, &receiver_netint_config);
+          if (res == kEtcPalErrOk)
+          {
+            SacnNetintConfig receiver_netint_config;
+            receiver_netint_config.netints = per_receiver_netint_lists[i].netints;
+            receiver_netint_config.num_netints = per_receiver_netint_lists[i].num_netints;
+
+            res = sacn_initialize_receiver_netints(&receiver->netints, receiver->sampling,
+                                                   &receiver->sampling_period_netints, &receiver_netint_config);
+          }
+
           if (res == kEtcPalErrOk)
             res = add_receiver_sockets(receiver);
 
@@ -578,6 +588,9 @@ etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_recei
                                     const SacnNetintConfig* netint_config,
                                     const SacnReceiverInternalCallbacks* internal_callbacks)
 {
+  if (!SACN_ASSERT_VERIFY(config) || !SACN_ASSERT_VERIFY(handle))
+    return kEtcPalErrSys;
+
   SacnReceiver* receiver = NULL;
   etcpal_error_t res =
       add_sacn_receiver(get_next_receiver_handle(), config, netint_config, internal_callbacks, &receiver);
@@ -607,6 +620,9 @@ etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_recei
 // Needs lock
 etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
+    return kEtcPalErrSys;
+
   SacnReceiver* receiver = NULL;
   etcpal_error_t res = lookup_receiver(handle, &receiver);
 
@@ -622,6 +638,9 @@ etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle)
 // Needs lock
 etcpal_error_t change_sacn_receiver_universe(sacn_receiver_t handle, uint16_t new_universe_id)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
+    return kEtcPalErrSys;
+
   etcpal_error_t res = kEtcPalErrOk;
 
   // First check to see if there is already a receiver listening on this universe.

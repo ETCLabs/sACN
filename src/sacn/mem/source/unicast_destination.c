@@ -40,6 +40,9 @@
 etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
                                      SacnUnicastDestination** dest_state)
 {
+  if (!SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(dest_state))
+    return kEtcPalErrSys;
+
   CHECK_ROOM_FOR_ONE_MORE(universe, unicast_dests, SacnUnicastDestination, SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE,
                           kEtcPalErrNoMem);
 
@@ -57,6 +60,9 @@ etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalI
 etcpal_error_t lookup_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
                                    SacnUnicastDestination** unicast_dest)
 {
+  if (!SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(unicast_dest))
+    return kEtcPalErrSys;
+
   bool found = false;
   size_t index = get_unicast_dest_index(universe, addr, &found);
   *unicast_dest = found ? &universe->unicast_dests[index] : NULL;
@@ -66,12 +72,18 @@ etcpal_error_t lookup_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpA
 // Needs lock
 void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index)
 {
+  if (!SACN_ASSERT_VERIFY(universe))
+    return;
+
   REMOVE_AT_INDEX(universe, SacnUnicastDestination, unicast_dests, index);
 }
 
 // Needs lock
 size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found)
 {
+  if (!SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(found))
+    return 0;
+
   *found = false;
   size_t index = 0;
 

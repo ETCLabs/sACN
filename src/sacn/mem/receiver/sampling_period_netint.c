@@ -82,6 +82,9 @@ etcpal_error_t init_sampling_period_netints(void)
 etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id,
                                                bool in_future_sampling_period)
 {
+  if (!SACN_ASSERT_VERIFY(tree) || !SACN_ASSERT_VERIFY(id))
+    return kEtcPalErrSys;
+
   etcpal_error_t result = kEtcPalErrOk;
 
   SacnSamplingPeriodNetint* netint = ALLOC_SAMPLING_PERIOD_NETINT();
@@ -107,6 +110,9 @@ etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree* tree, const EtcPalM
 
 void remove_current_sampling_period_netints(EtcPalRbTree* tree)
 {
+  if (!SACN_ASSERT_VERIFY(tree))
+    return;
+
   SacnSamplingPeriodNetint* next_current_sp_netint = NULL;
   do
   {
@@ -128,7 +134,7 @@ void remove_current_sampling_period_netints(EtcPalRbTree* tree)
     {
       etcpal_error_t remove_res =
           etcpal_rbtree_remove_with_cb(tree, next_current_sp_netint, sampling_period_netint_tree_dealloc);
-      SACN_ASSERT(remove_res == kEtcPalErrOk);
+      SACN_ASSERT_VERIFY(remove_res == kEtcPalErrOk);
       (void)remove_res;  // Fix for warning C4189
     }
   } while (next_current_sp_netint);
@@ -136,12 +142,18 @@ void remove_current_sampling_period_netints(EtcPalRbTree* tree)
 
 etcpal_error_t remove_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id)
 {
+  if (!SACN_ASSERT_VERIFY(tree) || !SACN_ASSERT_VERIFY(id))
+    return kEtcPalErrSys;
+
   return etcpal_rbtree_remove_with_cb(tree, id, sampling_period_netint_tree_dealloc);
 }
 
 int sampling_period_netint_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
 {
   ETCPAL_UNUSED_ARG(tree);
+
+  if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
+    return 0;
 
   EtcPalMcastNetintId* a = (EtcPalMcastNetintId*)value_a;
   EtcPalMcastNetintId* b = (EtcPalMcastNetintId*)value_b;
@@ -158,12 +170,18 @@ void sampling_period_netint_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode*
 {
   ETCPAL_UNUSED_ARG(self);
 
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
   FREE_SAMPLING_PERIOD_NETINT(node->value);
   sampling_period_netint_node_dealloc(node);
 }
 
 void sampling_period_netint_node_dealloc(EtcPalRbNode* node)
 {
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
 #if SACN_DYNAMIC_MEM
   free(node);
 #else

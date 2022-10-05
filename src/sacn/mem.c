@@ -42,6 +42,9 @@
 #if SACN_RECEIVER_ENABLED
 etcpal_error_t sacn_receiver_mem_init(unsigned int number_of_threads)
 {
+  if (!SACN_ASSERT_VERIFY(number_of_threads > 0))
+    return kEtcPalErrSys;
+
 #if !SACN_DYNAMIC_MEM
   if (number_of_threads > SACN_RECEIVER_MAX_THREADS)
     return kEtcPalErrNoMem;
@@ -150,6 +153,9 @@ void sacn_source_detector_mem_deinit(void)
 #if SACN_MERGE_RECEIVER_ENABLED
 etcpal_error_t sacn_merge_receiver_mem_init(unsigned int number_of_threads)
 {
+  if (!SACN_ASSERT_VERIFY(number_of_threads > 0))
+    return kEtcPalErrSys;
+
 #if !SACN_DYNAMIC_MEM
   ETCPAL_UNUSED_ARG(number_of_threads);
 #endif

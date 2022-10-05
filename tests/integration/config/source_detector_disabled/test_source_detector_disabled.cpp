@@ -23,6 +23,7 @@
 #include "etcpal/cpp/error.h"
 #include "etcpal_mock/common.h"
 #include "etcpal_mock/netint.h"
+#include "etcpal_mock/socket.h"
 #include "sacn/common.h"
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
@@ -45,6 +46,13 @@ protected:
 
       return kEtcPalErrOk;
     };
+
+    etcpal_socket_fake.custom_fake = [](unsigned int, unsigned int, etcpal_socket_t* id) {
+      *id = static_cast<etcpal_socket_t>(0);
+      return kEtcPalErrOk;
+    };
+
+    fake_netint_.addr.type = kEtcPalIpTypeV4;
 
     ASSERT_EQ(sacn_init(nullptr, nullptr), kEtcPalErrOk);
   }

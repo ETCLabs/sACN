@@ -215,25 +215,27 @@ int process_sources(process_sources_behavior_t behavior)
   for (size_t i = 0; i < initial_num_sources; ++i)
   {
     SacnSource* source = get_source(initial_num_sources - 1 - i);
-
-    // If this is the kind of source we want to process (manual vs. thread-based)
-    bool process_manual = (behavior == kProcessManualSources);
-    if (source->process_manually == process_manual)
+    if (SACN_ASSERT_VERIFY(source))
     {
-      // If the Source API is shutting down, cause this source to terminate (if thread-based)
-      if (!process_manual && shutting_down)
-        set_source_terminating(source);
+      // If this is the kind of source we want to process (manual vs. thread-based)
+      bool process_manual = (behavior == kProcessManualSources);
+      if (source->process_manually == process_manual)
+      {
+        // If the Source API is shutting down, cause this source to terminate (if thread-based)
+        if (!process_manual && shutting_down)
+          set_source_terminating(source);
 
-      // Count the sources of the kind being processed by this function
-      ++num_sources_tracked;
+        // Count the sources of the kind being processed by this function
+        ++num_sources_tracked;
 
-      // Universe processing
-      process_universe_discovery(source);
-      process_universes(source);
+        // Universe processing
+        process_universe_discovery(source);
+        process_universes(source);
 
-      // Clean up this source if needed
-      if (source->terminating && (source->num_universes == 0))
-        remove_sacn_source(initial_num_sources - 1 - i);
+        // Clean up this source if needed
+        if (source->terminating && (source->num_universes == 0))
+          remove_sacn_source(initial_num_sources - 1 - i);
+      }
     }
   }
 
@@ -243,6 +245,9 @@ int process_sources(process_sources_behavior_t behavior)
 // Needs lock
 void process_universe_discovery(SacnSource* source)
 {
+  if (!SACN_ASSERT_VERIFY(source))
+    return;
+
   // Send another universe discovery packet if it's time
   if (!source->terminating && etcpal_timer_is_expired(&source->universe_discovery_timer))
   {
@@ -254,6 +259,9 @@ void process_universe_discovery(SacnSource* source)
 // Needs lock
 void process_universes(SacnSource* source)
 {
+  if (!SACN_ASSERT_VERIFY(source))
+    return;
+
   size_t initial_num_universes = source->num_universes;  // Actual may change, so keep initial for iteration.
   for (size_t i = 0; i < initial_num_universes; ++i)
   {
@@ -274,6 +282,9 @@ void process_universes(SacnSource* source)
 // Needs lock
 void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, bool* terminating)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(terminating))
+    return;
+
   *terminating = false;
 
   size_t initial_num_unicast_dests = universe->num_unicast_dests;  // Actual may change, so keep initial for iteration.
@@ -298,6 +309,9 @@ void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, boo
 // Needs lock
 void process_universe_termination(SacnSource* source, size_t index, bool unicast_terminating)
 {
+  if (!SACN_ASSERT_VERIFY(source))
+    return;
+
   SacnSourceUniverse* universe = &source->universes[index];
 
   if ((universe->num_terminations_sent < 3) && universe->has_level_data)
@@ -310,6 +324,9 @@ void process_universe_termination(SacnSource* source, size_t index, bool unicast
 // Needs lock
 void transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
+    return;
+
   // If 0x00 data is ready to send
   if (universe->has_level_data && ((universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
                                    etcpal_timer_is_expired(&universe->level_keep_alive_timer)))
@@ -345,6 +362,9 @@ void transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
 // Needs lock
 void increment_sequence_number(SacnSourceUniverse* universe)
 {
+  if (!SACN_ASSERT_VERIFY(universe))
+    return;
+
   ++universe->seq_num;
   universe->level_send_buf[SACN_SEQ_OFFSET] = universe->seq_num;
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -355,6 +375,9 @@ void increment_sequence_number(SacnSourceUniverse* universe)
 // Needs lock
 void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
+    return;
+
   // Repurpose level_send_buf for the termination packet
   bool old_terminated_opt = TERMINATED_OPT_SET(universe->level_send_buf);
   SET_TERMINATED_OPT(universe->level_send_buf, true);
@@ -373,6 +396,9 @@ void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* un
 // Needs lock
 void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe, SacnUnicastDestination* dest)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(dest))
+    return;
+
   // Repurpose level_send_buf for the termination packet
   bool old_terminated_opt = TERMINATED_OPT_SET(universe->level_send_buf);
   SET_TERMINATED_OPT(universe->level_send_buf, true);
@@ -391,6 +417,9 @@ void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
 // Needs lock
 void send_universe_discovery(SacnSource* source)
 {
+  if (!SACN_ASSERT_VERIFY(source))
+    return;
+
   // If there are network interfaces to send on
   if (source->num_netints > 0)
   {
@@ -418,6 +447,9 @@ void send_universe_discovery(SacnSource* source)
 // Needs lock
 void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf))
+    return;
+
   if (!universe->send_unicast_only)
   {
     for (size_t i = 0; i < universe->netints.num_netints; ++i)
@@ -428,6 +460,9 @@ void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
 // Needs lock
 void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf))
+    return;
+
   for (size_t i = 0; i < universe->num_unicast_dests; ++i)
   {
     if (universe->unicast_dests[i].termination_state != kTerminatingAndRemoving)
@@ -438,6 +473,9 @@ void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
 // Needs lock
 int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uint8_t page_number)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe_index))
+    return 0;
+
   // Initialize packing pointer and universe counter
   uint8_t* pcur = &source->universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE];
   int num_universes_packed = 0;
@@ -483,6 +521,12 @@ int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uin
 void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_levels,
                    size_t new_levels_size, force_sync_behavior_t force_sync)
 {
+  if (!SACN_ASSERT_VERIFY(source_state) || !SACN_ASSERT_VERIFY(universe_state) || !SACN_ASSERT_VERIFY(new_levels) ||
+      !SACN_ASSERT_VERIFY(new_levels_size > 0))
+  {
+    return;
+  }
+
   bool was_part_of_discovery = IS_PART_OF_UNIVERSE_DISCOVERY(universe_state);
 
   cancel_termination_if_not_removing(universe_state);
@@ -505,6 +549,12 @@ void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state,
 void update_pap(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_priorities,
                 size_t new_priorities_size, force_sync_behavior_t force_sync)
 {
+  if (!SACN_ASSERT_VERIFY(source_state) || !SACN_ASSERT_VERIFY(universe_state) || !SACN_ASSERT_VERIFY(new_priorities) ||
+      !SACN_ASSERT_VERIFY(new_priorities_size > 0))
+  {
+    return;
+  }
+
   update_send_buf_data(universe_state->pap_send_buf, new_priorities, (uint16_t)new_priorities_size, force_sync);
   universe_state->has_pap_data = true;
   reset_transmission_suppression(source_state, universe_state, kResetPap);
@@ -513,6 +563,9 @@ void update_pap(SacnSource* source_state, SacnSourceUniverse* universe_state, co
 // Needs lock
 void zero_levels_where_pap_is_zero(SacnSourceUniverse* universe_state)
 {
+  if (!SACN_ASSERT_VERIFY(universe_state))
+    return;
+
   uint16_t level_count = etcpal_unpack_u16b(&universe_state->level_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET]) - 1;
   uint16_t pap_count = etcpal_unpack_u16b(&universe_state->pap_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET]) - 1;
   for (uint16_t i = 0; i < level_count; ++i)
@@ -528,21 +581,24 @@ void update_levels_and_or_pap(SacnSource* source, SacnSourceUniverse* universe, 
                               size_t new_levels_size, const uint8_t* new_priorities, size_t new_priorities_size,
                               force_sync_behavior_t force_sync)
 {
-  if (source && universe)
-  {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
+    return;
+
 #if SACN_ETC_PRIORITY_EXTENSION
-    // Make sure PAP is updated before levels.
-    if (new_priorities)
-      update_pap(source, universe, new_priorities, new_priorities_size, force_sync);
+  // Make sure PAP is updated before levels.
+  if (new_priorities)
+    update_pap(source, universe, new_priorities, new_priorities_size, force_sync);
 #endif
-    if (new_levels)
-      update_levels(source, universe, new_levels, new_levels_size, force_sync);
-  }
+  if (new_levels)
+    update_levels(source, universe, new_levels, new_levels_size, force_sync);
 }
 
 // Needs lock
 void set_source_terminating(SacnSource* source)
 {
+  if (!SACN_ASSERT_VERIFY(source))
+    return;
+
   // If the source isn't already terminating
   if (source && !source->terminating)
   {
@@ -558,48 +614,48 @@ void set_source_terminating(SacnSource* source)
 // Needs lock
 void set_universe_terminating(SacnSourceUniverse* universe, set_terminating_behavior_t behavior)
 {
-  if (universe)
+  if (!SACN_ASSERT_VERIFY(universe))
+    return;
+
+  // Initialize the universe's termination state
+  if (universe->termination_state == kNotTerminating)
+    universe->num_terminations_sent = 0;
+
+  switch (behavior)
   {
-    // Initialize the universe's termination state
-    if (universe->termination_state == kNotTerminating)
-      universe->num_terminations_sent = 0;
-
-    switch (behavior)
-    {
-      case kTerminateAndRemove:
-        universe->termination_state = kTerminatingAndRemoving;
-        break;
-      case kTerminateWithoutRemoving:
-        if (universe->termination_state != kTerminatingAndRemoving)  // Continue removal if already in progress.
-          universe->termination_state = kTerminatingWithoutRemoving;
-        break;
-    }
-
-    // Set terminating for each unicast destination of this universe
-    for (size_t i = 0; i < universe->num_unicast_dests; ++i)
-      set_unicast_dest_terminating(&universe->unicast_dests[i], behavior);
+    case kTerminateAndRemove:
+      universe->termination_state = kTerminatingAndRemoving;
+      break;
+    case kTerminateWithoutRemoving:
+      if (universe->termination_state != kTerminatingAndRemoving)  // Continue removal if already in progress.
+        universe->termination_state = kTerminatingWithoutRemoving;
+      break;
   }
+
+  // Set terminating for each unicast destination of this universe
+  for (size_t i = 0; i < universe->num_unicast_dests; ++i)
+    set_unicast_dest_terminating(&universe->unicast_dests[i], behavior);
 }
 
 // Needs lock
 void set_unicast_dest_terminating(SacnUnicastDestination* dest, set_terminating_behavior_t behavior)
 {
-  if (dest)
-  {
-    // Initialize the unicast destination's termination state
-    if (dest->termination_state == kNotTerminating)
-      dest->num_terminations_sent = 0;
+  if (!SACN_ASSERT_VERIFY(dest))
+    return;
 
-    switch (behavior)
-    {
-      case kTerminateAndRemove:
-        dest->termination_state = kTerminatingAndRemoving;
-        break;
-      case kTerminateWithoutRemoving:
-        if (dest->termination_state != kTerminatingAndRemoving)  // Continue removal if already in progress.
-          dest->termination_state = kTerminatingWithoutRemoving;
-        break;
-    }
+  // Initialize the unicast destination's termination state
+  if (dest->termination_state == kNotTerminating)
+    dest->num_terminations_sent = 0;
+
+  switch (behavior)
+  {
+    case kTerminateAndRemove:
+      dest->termination_state = kTerminatingAndRemoving;
+      break;
+    case kTerminateWithoutRemoving:
+      if (dest->termination_state != kTerminatingAndRemoving)  // Continue removal if already in progress.
+        dest->termination_state = kTerminatingWithoutRemoving;
+      break;
   }
 }
 
@@ -607,6 +663,9 @@ void set_unicast_dest_terminating(SacnUnicastDestination* dest, set_terminating_
 void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse* universe,
                                     reset_transmission_suppression_behavior_t behavior)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
+    return;
+
   if ((behavior == kResetLevel) || (behavior == kResetLevelAndPap))
   {
     universe->level_packets_sent_before_suppression = 0;
@@ -627,6 +686,9 @@ void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse
 // Needs lock
 void set_source_name(SacnSource* source, const char* new_name)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(new_name))
+    return;
+
   // Update the name in the source state and universe discovery buffer
   strncpy(source->name, new_name, SACN_SOURCE_NAME_MAX_LEN);
   strncpy((char*)(&source->universe_discovery_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
@@ -648,6 +710,9 @@ void set_source_name(SacnSource* source, const char* new_name)
 // Needs lock
 size_t get_source_universes(const SacnSource* source, uint16_t* universes, size_t universes_size)
 {
+  if (!SACN_ASSERT_VERIFY(source))
+    return 0;
+
   size_t num_non_removed_universes = 0;
   for (size_t read = 0; (read < source->num_universes); ++read)
   {
@@ -667,6 +732,9 @@ size_t get_source_universes(const SacnSource* source, uint16_t* universes, size_
 size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr* destinations,
                                 size_t destinations_size)
 {
+  if (!SACN_ASSERT_VERIFY(universe))
+    return 0;
+
   size_t num_non_removed_dests = 0;
   for (size_t read = 0; (read < universe->num_unicast_dests); ++read)
   {
@@ -686,6 +754,9 @@ size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr
 size_t get_source_universe_netints(const SacnSourceUniverse* universe, EtcPalMcastNetintId* netints,
                                    size_t netints_size)
 {
+  if (!SACN_ASSERT_VERIFY(universe))
+    return 0;
+
   for (size_t i = 0; netints && (i < netints_size) && (i < universe->netints.num_netints); ++i)
     netints[i] = universe->netints.netints[i];
 
@@ -695,12 +766,18 @@ size_t get_source_universe_netints(const SacnSourceUniverse* universe, EtcPalMca
 // Needs lock
 void disable_pap_data(SacnSourceUniverse* universe)
 {
+  if (!SACN_ASSERT_VERIFY(universe))
+    return;
+
   universe->has_pap_data = false;
 }
 
 // Needs lock
 void clear_source_netints(SacnSource* source)
 {
+  if (!SACN_ASSERT_VERIFY(source))
+    return;
+
   source->num_netints = 0;  // Clear source netints, will be reconstructed when netints are re-added.
 }
 
@@ -708,6 +785,9 @@ void clear_source_netints(SacnSource* source)
 etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUniverse* universe,
                                                 const SacnNetintConfig* netint_config)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
+    return kEtcPalErrSys;
+
   etcpal_error_t result = sacn_initialize_source_netints(&universe->netints, netint_config);
 
   for (size_t k = 0; (result == kEtcPalErrOk) && (k < universe->netints.num_netints); ++k)
@@ -722,6 +802,9 @@ etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUn
 // Needs lock
 void finish_source_universe_termination(SacnSource* source, size_t index)
 {
+  if (!SACN_ASSERT_VERIFY(source))
+    return;
+
   SacnSourceUniverse* universe = &source->universes[index];
 
   // Handle unicast destinations first
@@ -750,6 +833,9 @@ void finish_source_universe_termination(SacnSource* source, size_t index)
 // Needs lock
 void finish_unicast_dest_termination(SacnSourceUniverse* universe, size_t index)
 {
+  if (!SACN_ASSERT_VERIFY(universe))
+    return;
+
   SacnUnicastDestination* dest = &universe->unicast_dests[index];
 
   if (dest->termination_state == kTerminatingAndRemoving)
@@ -761,6 +847,9 @@ void finish_unicast_dest_termination(SacnSourceUniverse* universe, size_t index)
 // Needs lock
 void set_universe_priority(const SacnSource* source, SacnSourceUniverse* universe, uint8_t priority)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
+    return;
+
   universe->priority = priority;
   universe->level_send_buf[SACN_PRI_OFFSET] = priority;
   universe->pap_send_buf[SACN_PRI_OFFSET] = priority;
@@ -770,6 +859,9 @@ void set_universe_priority(const SacnSource* source, SacnSourceUniverse* univers
 // Needs lock
 void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bool preview)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
+    return;
+
   universe->send_preview = preview;
   SET_PREVIEW_OPT(universe->level_send_buf, preview);
   SET_PREVIEW_OPT(universe->pap_send_buf, preview);
@@ -778,6 +870,9 @@ void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bo
 
 void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(id))
+    return;
+
   size_t netint_index = 0;
   SacnSourceNetint* netint_state = lookup_source_netint_and_index(source, id, &netint_index);
 
@@ -794,6 +889,9 @@ void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* i
 // Needs lock
 void reset_unicast_dest(SacnUnicastDestination* dest)
 {
+  if (!SACN_ASSERT_VERIFY(dest))
+    return;
+
   dest->termination_state = kNotTerminating;
   dest->num_terminations_sent = 0;
 }
@@ -801,6 +899,9 @@ void reset_unicast_dest(SacnUnicastDestination* dest)
 // Needs lock
 void reset_universe(SacnSourceUniverse* universe)
 {
+  if (!SACN_ASSERT_VERIFY(universe))
+    return;
+
   universe->termination_state = kNotTerminating;
   universe->num_terminations_sent = 0;
   universe->has_level_data = false;
@@ -810,6 +911,9 @@ void reset_universe(SacnSourceUniverse* universe)
 // Needs lock
 void cancel_termination_if_not_removing(SacnSourceUniverse* universe)
 {
+  if (!SACN_ASSERT_VERIFY(universe))
+    return;
+
   if (universe->termination_state == kTerminatingWithoutRemoving)
   {
     universe->termination_state = kNotTerminating;

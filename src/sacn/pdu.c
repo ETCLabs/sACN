@@ -35,8 +35,14 @@
 bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnRemoteSource* source_info, uint8_t* seq,
                             bool* terminated, SacnRecvUniverseData* universe_data)
 {
-  // Check the input parameters including buffer size
-  if (!buf || !source_info || !seq || !terminated || !universe_data || buflen < SACN_DATA_PACKET_MIN_SIZE)
+  if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(source_info) || !SACN_ASSERT_VERIFY(seq) ||
+      !SACN_ASSERT_VERIFY(terminated) || !SACN_ASSERT_VERIFY(universe_data))
+  {
+    return false;
+  }
+
+  // Check the buffer size
+  if (buflen < SACN_DATA_PACKET_MIN_SIZE)
     return false;
 
   // Check the framing layer vector
@@ -74,8 +80,11 @@ bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnRemoteSource*
 
 bool parse_framing_layer_vector(const uint8_t* buf, size_t buflen, uint32_t* vector)
 {
-  // Check the input parameters including buffer size
-  if (!buf || !vector || (buflen < 6))
+  if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(vector))
+    return false;
+
+  // Check the buffer size
+  if (buflen < 6)
     return false;
 
   *vector = etcpal_unpack_u32b(&buf[2]);
@@ -85,8 +94,14 @@ bool parse_framing_layer_vector(const uint8_t* buf, size_t buflen, uint32_t* vec
 bool parse_sacn_universe_discovery_layer(const uint8_t* buf, size_t buflen, int* page, int* last_page,
                                          const uint8_t** universes, size_t* num_universes)
 {
-  // Check the input parameters including buffer size
-  if (!buf || !page || !last_page || !universes || !num_universes || buflen < SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE)
+  if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(page) || !SACN_ASSERT_VERIFY(last_page) ||
+      !SACN_ASSERT_VERIFY(universes) || !SACN_ASSERT_VERIFY(num_universes))
+  {
+    return false;
+  }
+
+  // Check the buffer size
+  if (buflen < SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE)
     return false;
 
   // Check PDU length
@@ -108,7 +123,7 @@ bool parse_sacn_universe_discovery_layer(const uint8_t* buf, size_t buflen, int*
 
 bool parse_sacn_universe_list(const uint8_t* buf, size_t num_universes, uint16_t* universe_list)
 {
-  if (!buf || !universe_list)
+  if ((num_universes > 0) && (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(universe_list)))
     return false;
 
   for (size_t i = 0; i < num_universes; ++i)
@@ -119,6 +134,9 @@ bool parse_sacn_universe_list(const uint8_t* buf, size_t num_universes, uint16_t
 
 int pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const EtcPalUuid* source_cid)
 {
+  if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(source_cid))
+    return 0;
+
   uint8_t* pcur = buf;
 
   // UDP preamble
@@ -145,6 +163,9 @@ int pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t vec
                                  uint8_t priority, uint16_t sync_address, uint8_t seq_num, bool preview,
                                  bool terminated, bool force_sync, uint16_t universe_id)
 {
+  if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(source_name))
+    return 0;
+
   ETCPAL_UNUSED_ARG(sync_address);  // TODO sacn_sync
   ETCPAL_UNUSED_ARG(force_sync);    // TODO sacn_sync
 
@@ -186,6 +207,9 @@ int pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t vec
 
 int pack_sacn_dmp_layer_header(uint8_t* buf, uint8_t start_code, uint16_t slot_count)
 {
+  if (!SACN_ASSERT_VERIFY(buf))
+    return 0;
+
   uint8_t* pcur = buf;
 
   // DMP layer flags and length
@@ -215,6 +239,9 @@ int pack_sacn_dmp_layer_header(uint8_t* buf, uint8_t start_code, uint16_t slot_c
 
 int pack_sacn_sync_framing_layer(uint8_t* buf, uint8_t seq_num, uint16_t sync_address)
 {
+  if (!SACN_ASSERT_VERIFY(buf))
+    return 0;
+
   uint8_t* pcur = buf;
 
   // Framing layer flags and length
@@ -240,6 +267,9 @@ int pack_sacn_sync_framing_layer(uint8_t* buf, uint8_t seq_num, uint16_t sync_ad
 
 int pack_sacn_universe_discovery_framing_layer(uint8_t* buf, uint16_t universe_count, const char* source_name)
 {
+  if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(source_name))
+    return 0;
+
   uint8_t* pcur = buf;
 
   // Framing layer flags and length
@@ -264,6 +294,9 @@ int pack_sacn_universe_discovery_framing_layer(uint8_t* buf, uint16_t universe_c
 
 int pack_sacn_universe_discovery_layer_header(uint8_t* buf, uint16_t universe_count, uint8_t page, uint8_t last_page)
 {
+  if (!SACN_ASSERT_VERIFY(buf))
+    return 0;
+
   uint8_t* pcur = buf;
 
   // Universe discovery layer flags and length
@@ -291,6 +324,9 @@ void init_sacn_data_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPal
                              bool send_preview)
 
 {
+  if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(source_cid) || !SACN_ASSERT_VERIFY(source_name))
+    return;
+
   memset(send_buf, 0, SACN_DATA_PACKET_MTU);
   int written = 0;
   written += pack_sacn_root_layer(send_buf, SACN_DATA_HEADER_SIZE, false, source_cid);
@@ -303,6 +339,9 @@ void update_send_buf_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t n
                           force_sync_behavior_t force_sync)
 {
   ETCPAL_UNUSED_ARG(force_sync);  // TODO sacn_sync
+
+  if (!SACN_ASSERT_VERIFY(send_buf))
+    return;
 
   // Set force sync flag
   SET_FORCE_SYNC_OPT(send_buf, (force_sync == kEnableForceSync));

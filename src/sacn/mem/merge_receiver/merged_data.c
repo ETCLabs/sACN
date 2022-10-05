@@ -52,6 +52,9 @@ static MergeReceiverMergedDataNotification sacn_pool_merged_data[SACN_RECEIVER_M
  */
 MergeReceiverMergedDataNotification* get_merged_data(sacn_thread_id_t thread_id)
 {
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+    return NULL;
+
   if (thread_id < sacn_mem_get_num_threads())
   {
     MergeReceiverMergedDataNotification* to_return = &sacn_pool_merged_data[thread_id];
@@ -79,8 +82,8 @@ MergeReceiverMergedDataNotification* get_merged_data(sacn_thread_id_t thread_id)
  */
 bool add_active_sources(MergeReceiverMergedDataNotification* notification, SacnMergeReceiver* merge_receiver)
 {
-  SACN_ASSERT(notification);
-  SACN_ASSERT(merge_receiver);
+  if (!SACN_ASSERT_VERIFY(notification) || !SACN_ASSERT_VERIFY(merge_receiver))
+    return false;
 
   EtcPalRbIter iter;
   etcpal_rbiter_init(&iter);
@@ -102,6 +105,9 @@ bool add_active_sources(MergeReceiverMergedDataNotification* notification, SacnM
 
 etcpal_error_t init_merged_data_buf(unsigned int num_threads)
 {
+  if (!SACN_ASSERT_VERIFY(num_threads > 0))
+    return kEtcPalErrSys;
+
 #if SACN_DYNAMIC_MEM
   sacn_pool_merged_data = calloc(num_threads, sizeof(MergeReceiverMergedDataNotification));
   if (!sacn_pool_merged_data)

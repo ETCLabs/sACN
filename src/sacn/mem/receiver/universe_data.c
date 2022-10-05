@@ -52,6 +52,9 @@ static UniverseDataNotification sacn_pool_universe_data[SACN_RECEIVER_MAX_THREAD
  */
 UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id)
 {
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+    return NULL;
+
   if (thread_id < sacn_mem_get_num_threads())
   {
     UniverseDataNotification* to_return = &sacn_pool_universe_data[thread_id];
@@ -65,6 +68,9 @@ UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id)
 
 etcpal_error_t init_universe_data_buf(unsigned int num_threads)
 {
+  if (!SACN_ASSERT_VERIFY(num_threads > 0))
+    return kEtcPalErrSys;
+
 #if SACN_DYNAMIC_MEM
   sacn_pool_universe_data = calloc(num_threads, sizeof(UniverseDataNotification));
   if (!sacn_pool_universe_data)
