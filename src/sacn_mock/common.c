@@ -28,14 +28,6 @@ DEFINE_FAKE_VALUE_FUNC(bool, sacn_initialized);
 DEFINE_FAKE_VALUE_FUNC(bool, sacn_lock);
 DEFINE_FAKE_VOID_FUNC(sacn_unlock);
 
-bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, const int line)
-{
-  printf("ASSERTION \"%s\" FAILED (FILE: \"%s\" FUNCTION: \"%s\" LINE: %d)\n", exp ? exp : "", file ? file : "",
-         func ? func : "", line);
-  SACN_ASSERT(false);
-  return false;
-}
-
 void sacn_common_reset_all_fakes(void)
 {
   RESET_FAKE(sacn_initialized);

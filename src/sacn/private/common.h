@@ -190,14 +190,6 @@ typedef unsigned int sacn_thread_id_t;
 #endif
 
 /******************************************************************************
- * Assertion Handling
- *****************************************************************************/
-
-bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, const int line);
-
-#define SACN_ASSERT_VERIFY(exp) ((exp) ? true : sacn_assert_verify_fail(#exp, __FILE__, __func__, __LINE__))
-
-/******************************************************************************
  * Common types
  *****************************************************************************/
 
