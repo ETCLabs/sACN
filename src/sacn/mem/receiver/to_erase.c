@@ -71,19 +71,18 @@ static void deinit_to_erase_buf(ToEraseBuf* to_erase_buf);
  */
 SacnTrackedSource** get_to_erase_buffer(sacn_thread_id_t thread_id, size_t size)
 {
-  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) || !SACN_ASSERT_VERIFY(size > 0))
-    return NULL;
-
-  if (thread_id < sacn_mem_get_num_threads())
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) ||
+      !SACN_ASSERT_VERIFY(thread_id < sacn_mem_get_num_threads()))
   {
-    ToEraseBuf* to_return = &to_erase[thread_id];
-
-    CHECK_CAPACITY(to_return, size, buf, SacnTrackedSource*, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, NULL);
-
-    memset(to_return->buf, 0, size * sizeof(SacnTrackedSource*));
-    return to_return->buf;
+    return NULL;
   }
-  return NULL;
+
+  ToEraseBuf* to_return = &to_erase[thread_id];
+
+  CHECK_CAPACITY(to_return, size, buf, SacnTrackedSource*, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, NULL);
+
+  memset(to_return->buf, 0, size * sizeof(SacnTrackedSource*));
+  return to_return->buf;
 }
 
 etcpal_error_t init_to_erase_bufs(unsigned int num_threads)

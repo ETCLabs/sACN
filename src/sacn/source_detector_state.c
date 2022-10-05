@@ -167,8 +167,9 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
   if (sacn_lock())
   {
     SacnUniverseDiscoverySource* source = NULL;
+    sacn_remote_source_t source_handle = get_remote_source_handle(page->sender_cid);
     etcpal_error_t source_result =
-        lookup_universe_discovery_source(get_remote_source_handle(page->sender_cid), &source);
+        (source_handle == SACN_REMOTE_SOURCE_INVALID) ? kEtcPalErrNotFound : lookup_universe_discovery_source(source_handle, &source);
 
     if (source_result == kEtcPalErrNotFound)
     {

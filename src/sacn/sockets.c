@@ -380,11 +380,8 @@ etcpal_error_t create_unicast_send_socket(etcpal_iptype_t ip_type, etcpal_socket
 etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAddr* bind_addr, bool set_sockopts,
                                      ReceiveSocket* socket)
 {
-  if (!SACN_ASSERT_VERIFY(ip_type != kEtcPalIpTypeInvalid) || !SACN_ASSERT_VERIFY(bind_addr) ||
-      !SACN_ASSERT_VERIFY(socket))
-  {
+  if (!SACN_ASSERT_VERIFY(ip_type != kEtcPalIpTypeInvalid) || !SACN_ASSERT_VERIFY(socket))
     return kEtcPalErrSys;
-  }
 
   etcpal_socket_t new_sock;
   etcpal_error_t res =

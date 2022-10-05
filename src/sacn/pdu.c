@@ -123,7 +123,7 @@ bool parse_sacn_universe_discovery_layer(const uint8_t* buf, size_t buflen, int*
 
 bool parse_sacn_universe_list(const uint8_t* buf, size_t num_universes, uint16_t* universe_list)
 {
-  if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(universe_list))
+  if ((num_universes > 0) && (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(universe_list)))
     return false;
 
   for (size_t i = 0; i < num_universes; ++i)

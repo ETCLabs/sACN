@@ -46,6 +46,8 @@ protected:
       return kEtcPalErrOk;
     };
 
+    fake_netint_.addr.type = kEtcPalIpTypeV4;
+
     ASSERT_EQ(sacn_init(nullptr, nullptr), kEtcPalErrOk);
   }
 

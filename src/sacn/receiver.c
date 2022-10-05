@@ -132,6 +132,7 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
  *
  * @param[in] handle Handle to the receiver to destroy.
  * @return #kEtcPalErrOk: Receiver destroyed successfully.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid receiver.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
@@ -142,6 +143,8 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 
   if (!sacn_initialized())
     res = kEtcPalErrNotInit;
+  else if (handle == SACN_RECEIVER_INVALID)
+    res = kEtcPalErrInvalid;
 
   if (res == kEtcPalErrOk)
   {

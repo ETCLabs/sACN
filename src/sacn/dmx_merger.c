@@ -634,11 +634,8 @@ bool source_handle_in_use(int handle_val, void* cookie)
 etcpal_error_t add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t id_to_use,
                           sacn_dmx_merger_source_t* id_result)
 {
-  if (!SACN_ASSERT_VERIFY(merger != SACN_DMX_MERGER_INVALID) ||
-      !SACN_ASSERT_VERIFY(id_to_use != SACN_DMX_MERGER_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(id_result))
-  {
+  if (!SACN_ASSERT_VERIFY(merger != SACN_DMX_MERGER_INVALID) || !SACN_ASSERT_VERIFY(id_result))
     return kEtcPalErrSys;
-  }
 
   MergerState* merger_state = NULL;
   SourceState* source_state = NULL;
@@ -712,7 +709,7 @@ etcpal_error_t add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t id_
 void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_levels, uint16_t new_levels_count)
 {
   if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(new_levels) ||
-      !SACN_ASSERT_VERIFY(new_levels_count < DMX_ADDRESS_COUNT))
+      !SACN_ASSERT_VERIFY(new_levels_count <= DMX_ADDRESS_COUNT))
   {
     return;
   }
@@ -739,7 +736,7 @@ void update_pap(MergerState* merger, SourceState* source, const uint8_t* address
                 uint16_t address_priorities_count)
 {
   if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(address_priorities) ||
-      !SACN_ASSERT_VERIFY(address_priorities_count < DMX_ADDRESS_COUNT))
+      !SACN_ASSERT_VERIFY(address_priorities_count <= DMX_ADDRESS_COUNT))
   {
     return;
   }
@@ -821,8 +818,8 @@ void update_levels_single_source(MergerState* merger, SourceState* source, const
                                  size_t old_levels_count, size_t new_levels_count)
 {
   if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(new_levels) ||
-      !SACN_ASSERT_VERIFY(old_levels_count < DMX_ADDRESS_COUNT) ||
-      !SACN_ASSERT_VERIFY(new_levels_count < DMX_ADDRESS_COUNT))
+      !SACN_ASSERT_VERIFY(old_levels_count <= DMX_ADDRESS_COUNT) ||
+      !SACN_ASSERT_VERIFY(new_levels_count <= DMX_ADDRESS_COUNT))
   {
     return;
   }
@@ -853,8 +850,8 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
                                 size_t old_levels_count, size_t new_levels_count)
 {
   if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(new_levels) ||
-      !SACN_ASSERT_VERIFY(old_levels_count < DMX_ADDRESS_COUNT) ||
-      !SACN_ASSERT_VERIFY(new_levels_count < DMX_ADDRESS_COUNT))
+      !SACN_ASSERT_VERIFY(old_levels_count <= DMX_ADDRESS_COUNT) ||
+      !SACN_ASSERT_VERIFY(new_levels_count <= DMX_ADDRESS_COUNT))
   {
     return;
   }
@@ -883,7 +880,8 @@ void update_pap_single_source(MergerState* merger, SourceState* source, const ui
                               size_t old_pap_count, size_t new_pap_count)
 {
   if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(address_priorities) ||
-      !SACN_ASSERT_VERIFY(old_pap_count < DMX_ADDRESS_COUNT) || !SACN_ASSERT_VERIFY(new_pap_count < DMX_ADDRESS_COUNT))
+      !SACN_ASSERT_VERIFY(old_pap_count <= DMX_ADDRESS_COUNT) ||
+      !SACN_ASSERT_VERIFY(new_pap_count <= DMX_ADDRESS_COUNT))
   {
     return;
   }
@@ -929,7 +927,8 @@ void update_pap_multi_source(MergerState* merger, SourceState* source, const uin
                              size_t old_pap_count, size_t new_pap_count)
 {
   if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(address_priorities) ||
-      !SACN_ASSERT_VERIFY(old_pap_count < DMX_ADDRESS_COUNT) || !SACN_ASSERT_VERIFY(new_pap_count < DMX_ADDRESS_COUNT))
+      !SACN_ASSERT_VERIFY(old_pap_count <= DMX_ADDRESS_COUNT) ||
+      !SACN_ASSERT_VERIFY(new_pap_count <= DMX_ADDRESS_COUNT))
   {
     return;
   }

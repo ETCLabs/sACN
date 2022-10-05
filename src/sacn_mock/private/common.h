@@ -27,7 +27,6 @@
 extern "C" {
 #endif
 
-DECLARE_FAKE_VALUE_FUNC(bool, sacn_assert_verify_fail, const char*, const char*, const char*, const int);
 DECLARE_FAKE_VALUE_FUNC(bool, sacn_initialized);
 DECLARE_FAKE_VALUE_FUNC(bool, sacn_lock);
 DECLARE_FAKE_VOID_FUNC(sacn_unlock);

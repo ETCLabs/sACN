@@ -152,16 +152,13 @@ etcpal_error_t mark_sources_offline(uint16_t universe, const SacnLostSourceInter
                                     size_t num_offline_sources, const SacnRemoteSourceInternal* unknown_sources,
                                     size_t num_unknown_sources, TerminationSet** term_set_list, uint32_t expired_wait)
 {
-  if (!SACN_ASSERT_VERIFY(offline_sources) || !SACN_ASSERT_VERIFY(unknown_sources) ||
-      !SACN_ASSERT_VERIFY(term_set_list))
-  {
+  if (!SACN_ASSERT_VERIFY(term_set_list))
     return kEtcPalErrSys;
-  }
 
   etcpal_error_t res = kEtcPalErrOk;
 
-  for (const SacnLostSourceInternal* offline_src = offline_sources; offline_src < offline_sources + num_offline_sources;
-       ++offline_src)
+  for (const SacnLostSourceInternal* offline_src = offline_sources;
+       offline_src && (offline_src < (offline_sources + num_offline_sources)); ++offline_src)
   {
     TerminationSetSource* ts_src = find_existing_ts_src(universe, offline_src->handle);
 
@@ -216,7 +213,7 @@ etcpal_error_t mark_sources_offline(uint16_t universe, const SacnLostSourceInter
         // Add all of the other sources tracked by our universe that have sent at least one DMX
         // packet (exclude those that are already part of a termination set).
         for (const SacnRemoteSourceInternal* unknown_src = unknown_sources;
-             unknown_src < unknown_sources + num_unknown_sources; ++unknown_src)
+             unknown_src && (unknown_src < (unknown_sources + num_unknown_sources)); ++unknown_src)
         {
           if (!find_existing_ts_src(universe, unknown_src->handle))
           {

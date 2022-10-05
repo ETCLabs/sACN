@@ -194,6 +194,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
  *
  * @param[in] handle Handle to the merge receiver to destroy.
  * @return #kEtcPalErrOk: Merge receiver destroyed successfully.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid merge receiver.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
@@ -204,6 +205,8 @@ etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
 
   if (!sacn_initialized())
     result = kEtcPalErrNotInit;
+  else if (handle == SACN_MERGE_RECEIVER_INVALID)
+    result = kEtcPalErrInvalid;
 
   if (result == kEtcPalErrOk)
   {

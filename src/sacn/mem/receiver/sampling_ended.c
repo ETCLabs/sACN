@@ -72,26 +72,24 @@ static void deinit_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_end
  */
 SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id, size_t size)
 {
-  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) || !SACN_ASSERT_VERIFY(size > 0))
-    return NULL;
-
-  if (thread_id < sacn_mem_get_num_threads())
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) ||
+      !SACN_ASSERT_VERIFY(thread_id < sacn_mem_get_num_threads()))
   {
-    SamplingEndedNotificationBuf* notifications = &sacn_pool_sampling_ended[thread_id];
-
-    CHECK_CAPACITY(notifications, size, buf, SamplingEndedNotification, SACN_RECEIVER_MAX_UNIVERSES, NULL);
-
-    memset(notifications->buf, 0, size * sizeof(SamplingEndedNotification));
-    for (size_t i = 0; i < size; ++i)
-    {
-      notifications->buf[i].handle = SACN_RECEIVER_INVALID;
-      notifications->buf[i].thread_id = SACN_THREAD_ID_INVALID;
-    }
-
-    return notifications->buf;
+    return NULL;
   }
 
-  return NULL;
+  SamplingEndedNotificationBuf* notifications = &sacn_pool_sampling_ended[thread_id];
+
+  CHECK_CAPACITY(notifications, size, buf, SamplingEndedNotification, SACN_RECEIVER_MAX_UNIVERSES, NULL);
+
+  memset(notifications->buf, 0, size * sizeof(SamplingEndedNotification));
+  for (size_t i = 0; i < size; ++i)
+  {
+    notifications->buf[i].handle = SACN_RECEIVER_INVALID;
+    notifications->buf[i].thread_id = SACN_THREAD_ID_INVALID;
+  }
+
+  return notifications->buf;
 }
 
 etcpal_error_t init_sampling_ended_bufs(unsigned int num_threads)
