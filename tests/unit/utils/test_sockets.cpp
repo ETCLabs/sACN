@@ -277,7 +277,10 @@ protected:
 
     size_t original_sp_netints_size = etcpal_rbtree_size(sampling_period_netints);
 
-    SacnNetintConfig c_netint_config = {app_netint_config.data(), app_netint_config.size()};
+    SacnNetintConfig c_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    c_netint_config.netints = app_netint_config.data();
+    c_netint_config.num_netints = app_netint_config.size();
+
     EXPECT_EQ(sacn_initialize_receiver_netints(internal_netint_array, (sampling_status == kCurrentlySampling),
                                                sampling_period_netints, &c_netint_config),
               kEtcPalErrOk);
@@ -651,7 +654,10 @@ TEST_F(TestSockets, InitializeInternalNetintsWorks)
 #endif
   internal_netint_array.num_netints = 0u;
 
-  SacnNetintConfig app_netint_config = {app_netints.data(), app_netints.size()};
+  SacnNetintConfig app_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  app_netint_config.netints = app_netints.data();
+  app_netint_config.num_netints = app_netints.size();
+
   size_t num_valid_netints = 0u;
   ASSERT_EQ(sacn_validate_netint_config(&app_netint_config, sys_netints.data(), sys_netints.size(), &num_valid_netints),
             kEtcPalErrOk);
@@ -724,7 +730,8 @@ TEST_F(TestSockets, AddAllNetintsToSamplingPeriodWorks)
 #endif
   internal_netint_array.num_netints = 0u;
 
-  SacnNetintConfig app_netint_config = {nullptr, 0u};
+  SacnNetintConfig app_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+
   size_t num_valid_netints = 0u;
   ASSERT_EQ(sacn_validate_netint_config(&app_netint_config, sys_netints.data(), sys_netints.size(), &num_valid_netints),
             kEtcPalErrOk);
@@ -817,7 +824,10 @@ TEST_F(TestSockets, InitAndResetHandleCustomSysNetints)
 
   for (size_t num_sys_netints = sys_netints.size(); num_sys_netints >= 1u; --num_sys_netints)
   {
-    SacnNetintConfig sys_netint_config = {sys_netints.data(), num_sys_netints};
+    SacnNetintConfig sys_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    sys_netint_config.netints = sys_netints.data();
+    sys_netint_config.num_netints = num_sys_netints;
+
     EXPECT_EQ(sacn_sockets_reset_receiver(&sys_netint_config), kEtcPalErrOk);
 
     size_t num_valid_netints = (num_sys_netints > fake_netints_.size()) ? fake_netints_.size() : num_sys_netints;

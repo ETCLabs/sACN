@@ -47,7 +47,6 @@ typedef struct SacnSocketsSysNetints
   SacnMcastInterface sys_netints[SACN_MAX_NETINTS];
 #endif
   size_t num_sys_netints;
-  bool no_sys_netints;
 } SacnSocketsSysNetints;
 
 typedef enum

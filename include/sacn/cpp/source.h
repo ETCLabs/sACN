@@ -342,9 +342,11 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
 }
 
 /**
- * @brief Add a universe to an sACN source, which will use all network interfaces.
+ * @brief Add a universe to an sACN source.
  *
- * Adds a universe to a source. All network interfaces will be used.
+ * This is an overload of AddUniverse that defaults to using all system interfaces for multicast traffic, but can also
+ * be used to disable multicast traffic on all interfaces.
+ *
  * After this call completes, the applicaton must call one of the Update functions to mark it ready for processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
@@ -354,6 +356,7 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] settings Configuration parameters for the universe to be added.
+ * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this universe.
  * @return #kEtcPalErrOk: Universe successfully added.
  * @return #kEtcPalErrNoNetints: None of the system network interfaces were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -363,16 +366,23 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
  * @return #kEtcPalErrNoMem: No room to allocate additional universe.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings)
+inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings,
+                                         McastMode mcast_mode = kEnabledOnAllInterfaces)
 {
   TranslatedUniverseConfig config(settings);
-  return sacn_source_add_universe(handle_.value(), &config.get(), nullptr);
+
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  if (mcast_mode == kDisabledOnAllInterfaces)
+    netint_config.no_netints = true;
+
+  return sacn_source_add_universe(handle_.value(), &config.get(), &netint_config);
 }
 
 /**
- * @brief Add a universe to an sACN source, which will use the network interfaces passed in.
+ * @brief Add a universe to an sACN source.
  *
- * Adds a universe to a source. Only the network interfaces passed in will be used.
+ * Only the network interfaces passed in will be used.
+ *
  * After this call completes, the applicaton must call one of the Update functions to mark it ready for processing.
  *
  * If the source is not marked as unicast_only, the source will add the universe to its sACN Universe
@@ -400,7 +410,10 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings, std::
   if (netints.empty())
     return sacn_source_add_universe(handle_.value(), &config.get(), nullptr);
 
-  SacnNetintConfig netint_config = {netints.data(), netints.size()};
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints = netints.data();
+  netint_config.num_netints = netints.size();
+
   return sacn_source_add_universe(handle_.value(), &config.get(), &netint_config);
 }
 
@@ -747,8 +760,8 @@ inline int Source::ProcessManual()
 /**
  * @brief Resets the underlying network sockets for all universes of all sources.
  *
- * This is the overload of
- * ResetNetworking that uses all network interfaces.
+ * This is an overload of ResetNetworking that defaults to using all system interfaces for multicast traffic, but can
+ * also be used to disable multicast traffic on all interfaces.
  *
  * This is typically used when the application detects that the list of networking interfaces has changed. The source
  * API will no longer be limited to specific interfaces (the list passed into sacn::Init(), if any, is overridden for
@@ -763,15 +776,19 @@ inline int Source::ProcessManual()
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
+ * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this universe.
  * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking()
+inline etcpal::Error Source::ResetNetworking(McastMode mcast_mode = kEnabledOnAllInterfaces)
 {
-  std::vector<SacnMcastInterface> netints;
-  return ResetNetworking(netints);
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  if (mcast_mode == kDisabledOnAllInterfaces)
+    netint_config.no_netints = true;
+
+  return sacn_source_reset_networking(&netint_config);
 }
 
 /**
@@ -803,7 +820,10 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sy
   if (sys_netints.empty())
     return sacn_source_reset_networking(nullptr);
 
-  SacnNetintConfig netint_config = {sys_netints.data(), sys_netints.size()};
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints = sys_netints.data();
+  netint_config.num_netints = sys_netints.size();
+
   return sacn_source_reset_networking(&netint_config);
 }
 
@@ -856,7 +876,10 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sy
         return c_list;
       });
 
-  SacnNetintConfig sys_netint_config = {sys_netints.data(), sys_netints.size()};
+  SacnNetintConfig sys_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  sys_netint_config.netints = sys_netints.data();
+  sys_netint_config.num_netints = sys_netints.size();
+
   return sacn_source_reset_networking_per_universe(&sys_netint_config, netint_lists_c.data(), netint_lists_c.size());
 }
 

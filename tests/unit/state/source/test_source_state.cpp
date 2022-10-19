@@ -173,7 +173,11 @@ protected:
                        std::vector<SacnMcastInterface>& netints = kTestNetints)
   {
     SacnSourceUniverse* tmp = nullptr;
-    SacnNetintConfig netint_config = {netints.data(), netints.size()};
+
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    netint_config.netints = netints.data();
+    netint_config.num_netints = netints.size();
+
     EXPECT_EQ(add_sacn_source_universe(GetSource(source), &config, &netint_config, &tmp), kEtcPalErrOk);
 
     for (size_t i = 0; i < netints.size(); ++i)
@@ -185,7 +189,11 @@ protected:
   uint16_t AddUniverse(sacn_source_t source, const SacnSourceUniverseConfig& config, SacnMcastInterface& netint)
   {
     SacnSourceUniverse* tmp = nullptr;
-    SacnNetintConfig netint_config = {&netint, 1u};
+
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    netint_config.netints = &netint;
+    netint_config.num_netints = 1u;
+
     EXPECT_EQ(add_sacn_source_universe(GetSource(source), &config, &netint_config, &tmp), kEtcPalErrOk);
     EXPECT_EQ(add_sacn_source_netint(GetSource(source), &netint.iface), kEtcPalErrOk);
 
@@ -1271,7 +1279,11 @@ TEST_F(TestSourceState, UniverseRemovalUpdatesSourceNetints)
   for (size_t num_netints = kTestNetints.size(); num_netints >= 1u; --num_netints)
   {
     SacnSourceUniverse* tmp = nullptr;
-    SacnNetintConfig netint_config = {&kTestNetints[kTestNetints.size() - num_netints], num_netints};
+
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    netint_config.netints = &kTestNetints[kTestNetints.size() - num_netints];
+    netint_config.num_netints = num_netints;
+
     EXPECT_EQ(add_sacn_source_universe(GetSource(source), &universe_config, &netint_config, &tmp), kEtcPalErrOk);
 
     for (size_t i = kTestNetints.size() - num_netints; i < kTestNetints.size(); ++i)
@@ -2159,7 +2171,11 @@ TEST_F(TestSourceState, ResetSourceUniverseNetworkingWorks)
   sacn_source_t source = AddSource(kTestSourceConfig);
 
   SacnSourceUniverse* universe_state = nullptr;
-  SacnNetintConfig netint_config = {kTestNetints.data(), kTestNetints.size()};
+
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints = kTestNetints.data();
+  netint_config.num_netints = kTestNetints.size();
+
   EXPECT_EQ(add_sacn_source_universe(GetSource(source), &kTestUniverseConfig, &netint_config, &universe_state),
             kEtcPalErrOk);
   InitTestData(source, kTestUniverseConfig.universe, kTestBuffer, kTestBuffer2);

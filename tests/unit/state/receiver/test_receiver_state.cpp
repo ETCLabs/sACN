@@ -164,7 +164,11 @@ protected:
   SacnReceiver* AddReceiver(const SacnReceiverConfig& config)
   {
     SacnReceiver* receiver = nullptr;
-    SacnNetintConfig netint_config = {kTestNetints.data(), kTestNetints.size()};
+
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    netint_config.netints = kTestNetints.data();
+    netint_config.num_netints = kTestNetints.size();
+
     EXPECT_EQ(add_sacn_receiver(next_receiver_handle_++, &config, &netint_config, NULL, &receiver), kEtcPalErrOk);
 
     return receiver;
@@ -173,7 +177,11 @@ protected:
   SacnSourceDetector* AddSourceDetector(const SacnSourceDetectorConfig& config = kTestSourceDetectorConfig)
   {
     SacnSourceDetector* detector = nullptr;
-    SacnNetintConfig netint_config = {kTestNetints.data(), kTestNetints.size()};
+
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    netint_config.netints = kTestNetints.data();
+    netint_config.num_netints = kTestNetints.size();
+
     EXPECT_EQ(add_sacn_source_detector(&config, &netint_config, &detector), kEtcPalErrOk);
 
     return detector;
@@ -267,7 +275,10 @@ protected:
     remove_receiver_from_thread(test_receiver_);
     remove_sacn_receiver(test_receiver_);
 
-    SacnNetintConfig netint_config = {kTestNetints.data(), kTestNetints.size()};
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    netint_config.netints = kTestNetints.data();
+    netint_config.num_netints = kTestNetints.size();
+
     EXPECT_EQ(add_sacn_receiver(handle, &config, &netint_config, NULL, &test_receiver_), kEtcPalErrOk);
     begin_sampling_period(test_receiver_);
     EXPECT_EQ(assign_receiver_to_thread(test_receiver_), kEtcPalErrOk);
