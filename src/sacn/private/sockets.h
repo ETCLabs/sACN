@@ -47,6 +47,7 @@ typedef struct SacnSocketsSysNetints
   SacnMcastInterface sys_netints[SACN_MAX_NETINTS];
 #endif
   size_t num_sys_netints;
+  bool no_sys_netints;
 } SacnSocketsSysNetints;
 
 typedef enum
@@ -75,11 +76,11 @@ etcpal_error_t sacn_initialize_source_detector_netints(SacnInternalNetintArray* 
 etcpal_error_t sacn_initialize_source_netints(SacnInternalNetintArray* source_netints,
                                               const SacnNetintConfig* app_netint_config);
 
-etcpal_error_t sacn_validate_netint_config(const SacnNetintConfig* netint_config, const SacnMcastInterface* sys_netints,
-                                           size_t num_sys_netints, size_t* num_valid_netints);
+etcpal_error_t sacn_validate_netint_config(const SacnNetintConfig* netint_config,
+                                           const SacnSocketsSysNetints* sys_netints, size_t* num_valid_netints);
 etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* internal_netints,
                                                 const SacnNetintConfig* app_netint_config, size_t num_valid_app_netints,
-                                                const SacnMcastInterface* sys_netints, size_t num_sys_netints);
+                                                const SacnSocketsSysNetints* sys_netints);
 
 void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAddr* ip);
 etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,

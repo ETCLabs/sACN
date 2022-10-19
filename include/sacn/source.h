@@ -161,6 +161,8 @@ typedef struct SacnSourceUniverseNetintList
   SacnMcastInterface* netints;
   /** The size of netints, or 0 if netints is NULL. */
   size_t num_netints;
+  /** If this is true, no network interfaces will be used. */
+  bool no_netints;
 } SacnSourceUniverseNetintList;
 
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle);

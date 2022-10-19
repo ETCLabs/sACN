@@ -43,9 +43,11 @@ config.callbacks.source_limit_exceeded = my_source_limit_exceeded_callback; // o
 SacnMcastInterface my_netints[NUM_MY_NETINTS];
 // Assuming my_netints and NUM_MY_NETINTS are initialized by the application...
 
-SacnNetintConfig netint_config;
+SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
 netint_config.netints = my_netints;
 netint_config.num_netints = NUM_MY_NETINTS;
+// Or if no network interfaces should be used initially:
+netint_config.no_netints = true;
 
 sacn_merge_receiver_t my_merge_receiver_handle;
 

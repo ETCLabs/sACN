@@ -105,7 +105,14 @@ typedef struct SacnNetintConfig
   SacnMcastInterface* netints;
   /** Size of netints array. */
   size_t num_netints;
+  /** If this is true, no network interfaces will be used. */
+  bool no_netints;
 } SacnNetintConfig;
+
+#define SACN_NETINT_CONFIG_DEFAULT_INIT \
+  {                                     \
+    NULL, 0, false                      \
+  }
 
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConfig* sys_netint_config);
 void sacn_deinit(void);
