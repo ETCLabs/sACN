@@ -327,7 +327,7 @@ typedef struct SacnReceiverNetintList
   SacnMcastInterface* netints;
   /** The size of netints, or 0 if netints is NULL. */
   size_t num_netints;
-  /** If this is true, no network interfaces will be used. */
+  /** If this is true, this receiver will not use any network interfaces for multicast traffic. */
   bool no_netints;
 } SacnReceiverNetintList;
 

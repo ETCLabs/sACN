@@ -335,7 +335,7 @@ TEST_F(TestReceiver, ResetNetworkingTerminatesSourcesOnLostNetints)
   EXPECT_EQ(terminate_sources_on_removed_netints_fake.call_count, 0u);
   sacn_receiver_reset_networking(&sys_netint_config);
   EXPECT_EQ(terminate_sources_on_removed_netints_fake.call_count, 1u);
-  SacnReceiverNetintList receiver_netint_list = {handle, nullptr, 0u};
+  SacnReceiverNetintList receiver_netint_list = {handle, nullptr, 0u, false};
   sacn_receiver_reset_networking_per_receiver(&sys_netint_config, &receiver_netint_list, 1u);
   EXPECT_EQ(terminate_sources_on_removed_netints_fake.call_count, 2u);
 }
