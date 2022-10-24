@@ -236,7 +236,8 @@ public:
 
     /** Create an empty, invalid data structure by default. */
     NetintList() = default;
-    NetintList(sacn_merge_receiver_t merge_receiver_handle);
+    NetintList(sacn_merge_receiver_t merge_receiver_handle, McastMode mcast_mode);
+    NetintList(sacn_merge_receiver_t merge_receiver_handle, const std::vector<SacnMcastInterface>& network_interfaces);
   };
 
   /**
@@ -382,8 +383,21 @@ inline bool MergeReceiver::Settings::IsValid() const
  *
  * Optional members can be modified directly in the struct.
  */
-inline MergeReceiver::NetintList::NetintList(sacn_merge_receiver_t merge_receiver_handle)
-    : handle(merge_receiver_handle)
+inline MergeReceiver::NetintList::NetintList(sacn_merge_receiver_t merge_receiver_handle,
+                                             McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
+    : handle(merge_receiver_handle), no_netints(mcast_mode == McastMode::kDisabledOnAllInterfaces)
+{
+}
+
+/**
+ * @brief Create a Netint List instance by passing the required members explicitly.
+ *
+ * This constructor enables the use of list initialization when setting up one or more NetintLists (such as
+ * initializing the vector<NetintList> that gets passed into MergeReceiver::ResetNetworking).
+ */
+inline MergeReceiver::NetintList::NetintList(sacn_merge_receiver_t merge_receiver_handle,
+                                             const std::vector<SacnMcastInterface>& network_interfaces)
+    : handle(merge_receiver_handle), netints(network_interfaces)
 {
 }
 
@@ -412,10 +426,12 @@ inline MergeReceiver::NetintList::NetintList(sacn_merge_receiver_t merge_receive
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHandler& notify_handler,
-                                            McastMode mcast_mode = kEnabledOnAllInterfaces)
+                                            McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
+  SacnMergeReceiverConfig config = TranslateConfig(settings, notify_handler);
+
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  if (mcast_mode == kDisabledOnAllInterfaces)
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
   sacn_merge_receiver_t c_handle = SACN_MERGE_RECEIVER_INVALID;
@@ -642,10 +658,10 @@ inline etcpal::Expected<MergeReceiver::Source> MergeReceiver::GetSource(sacn_rem
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error MergeReceiver::ResetNetworking(McastMode mcast_mode = kEnabledOnAllInterfaces)
+inline etcpal::Error MergeReceiver::ResetNetworking(McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  if (mcast_mode == kDisabledOnAllInterfaces)
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
   return sacn_merge_receiver_reset_networking(&netint_config);

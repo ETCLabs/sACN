@@ -330,8 +330,6 @@ TEST_F(TestReceiver, ResetNetworkingTerminatesSourcesOnLostNetints)
   sacn_receiver_create(&config, &handle, nullptr);
 
   SacnNetintConfig sys_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints = nullptr;
-  netint_config.num_netints = 0u;
   EXPECT_EQ(terminate_sources_on_removed_netints_fake.call_count, 0u);
   sacn_receiver_reset_networking(&sys_netint_config);
   EXPECT_EQ(terminate_sources_on_removed_netints_fake.call_count, 1u);

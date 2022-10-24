@@ -76,10 +76,11 @@ constexpr RemoteSourceHandle kInvalidRemoteSourceHandle = SACN_REMOTE_SOURCE_INV
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init().
  */
-inline etcpal::Error Init(const EtcPalLogParams* log_params = nullptr, McastMode mcast_mode = kEnabledOnAllInterfaces)
+inline etcpal::Error Init(const EtcPalLogParams* log_params = nullptr,
+                          McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  if (mcast_mode == kDisabledOnAllInterfaces)
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
   return sacn_init(log_params, &netint_config);
@@ -146,10 +147,10 @@ inline etcpal::Error Init(std::vector<SacnMcastInterface>& sys_netints)
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init().
  */
-inline etcpal::Error Init(const etcpal::Logger& logger, McastMode mcast_mode = kEnabledOnAllInterfaces)
+inline etcpal::Error Init(const etcpal::Logger& logger, McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  if (mcast_mode == kDisabledOnAllInterfaces)
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
   return sacn_init(&logger.log_params(), &netint_config);

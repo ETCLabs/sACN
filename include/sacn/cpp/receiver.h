@@ -219,7 +219,8 @@ public:
 
     /** Create an empty, invalid data structure by default. */
     NetintList() = default;
-    NetintList(sacn_receiver_t receiver_handle);
+    NetintList(acn_receiver_t receiver_handle, McastMode mcast_mode);
+    NetintList(acn_receiver_t receiver_handle, const std::vector<SacnMcastInterface>& network_interfaces);
   };
 
   Receiver() = default;
@@ -346,7 +347,21 @@ inline bool Receiver::Settings::IsValid() const
  *
  * Optional members can be modified directly in the struct.
  */
-inline Receiver::NetintList::NetintList(sacn_receiver_t receiver_handle) : handle(receiver_handle)
+inline Receiver::NetintList::NetintList(sacn_receiver_t receiver_handle,
+                                        McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
+    : handle(receiver_handle), no_netints(mcast_mode == McastMode::kDisabledOnAllInterfaces)
+{
+}
+
+/**
+ * @brief Create a Netint List instance by passing the required members explicitly.
+ *
+ * This constructor enables the use of list initialization when setting up one or more NetintLists (such as
+ * initializing the vector<NetintList> that gets passed into MergeReceiver::ResetNetworking).
+ */
+inline Receiver::NetintList::NetintList(sacn_receiver_t receiver_handle,
+                                        const std::vector<SacnMcastInterface>& network_interfaces)
+    : handle(receiver_handle), netints(network_interfaces)
 {
 }
 
@@ -375,12 +390,12 @@ inline Receiver::NetintList::NetintList(sacn_receiver_t receiver_handle) : handl
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& notify_handler,
-                                       McastMode mcast_mode = kEnabledOnAllInterfaces)
+                                       McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
   SacnReceiverConfig config = TranslateConfig(settings, notify_handler);
 
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  if (mcast_mode == kDisabledOnAllInterfaces)
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
   sacn_receiver_t c_handle = SACN_RECEIVER_INVALID;
@@ -616,10 +631,10 @@ inline uint32_t Receiver::GetExpiredWait()
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Receiver::ResetNetworking(McastMode mcast_mode = kEnabledOnAllInterfaces)
+inline etcpal::Error Receiver::ResetNetworking(McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  if (mcast_mode == kDisabledOnAllInterfaces)
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
   return sacn_receiver_reset_networking(&netint_config);

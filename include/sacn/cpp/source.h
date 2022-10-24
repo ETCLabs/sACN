@@ -159,7 +159,7 @@ public:
 
     /** Create an empty, invalid data structure by default. */
     UniverseNetintList() = default;
-    UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id);
+    UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id, McastMode mcast_mode);
     UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id,
                        const std::vector<SacnMcastInterface>& network_interfaces);
   };
@@ -175,7 +175,7 @@ public:
 
   etcpal::Error ChangeName(const std::string& new_name);
 
-  etcpal::Error AddUniverse(const UniverseSettings& settings);
+  etcpal::Error AddUniverse(const UniverseSettings& settings, McastMode mcast_mode);
   etcpal::Error AddUniverse(const UniverseSettings& settings, std::vector<SacnMcastInterface>& netints);
   void RemoveUniverse(uint16_t universe);
   std::vector<uint16_t> GetUniverses();
@@ -204,7 +204,7 @@ public:
 
   static int ProcessManual();
 
-  static etcpal::Error ResetNetworking();
+  static etcpal::Error ResetNetworking(McastMode mcast_mode);
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& sys_netints,
                                        std::vector<UniverseNetintList>& netint_lists);
@@ -266,8 +266,9 @@ inline bool Source::UniverseSettings::IsValid() const
  *
  * Optional members can be modified directly in the struct.
  */
-inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id)
-    : handle(source_handle), universe(universe_id)
+inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id,
+                                                      McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
+    : handle(source_handle), universe(universe_id), no_netints(mcast_mode == McastMode::kDisabledOnAllInterfaces)
 {
 }
 
@@ -370,12 +371,12 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings,
-                                         McastMode mcast_mode = kEnabledOnAllInterfaces)
+                                         McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
   TranslatedUniverseConfig config(settings);
 
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  if (mcast_mode == kDisabledOnAllInterfaces)
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
   return sacn_source_add_universe(handle_.value(), &config.get(), &netint_config);
@@ -785,10 +786,10 @@ inline int Source::ProcessManual()
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking(McastMode mcast_mode = kEnabledOnAllInterfaces)
+inline etcpal::Error Source::ResetNetworking(McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  if (mcast_mode == kDisabledOnAllInterfaces)
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
   return sacn_source_reset_networking(&netint_config);
