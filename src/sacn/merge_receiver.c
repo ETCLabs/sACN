@@ -477,6 +477,7 @@ etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(
       receiver_netint_lists[i].handle = (sacn_receiver_t)per_receiver_netint_lists[i].handle;
       receiver_netint_lists[i].netints = per_receiver_netint_lists[i].netints;
       receiver_netint_lists[i].num_netints = per_receiver_netint_lists[i].num_netints;
+      receiver_netint_lists[i].no_netints = per_receiver_netint_lists[i].no_netints;
     }
 
     // Now use the public receiver API function directly, which takes the lock.
