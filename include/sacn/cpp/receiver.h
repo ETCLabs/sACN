@@ -219,8 +219,8 @@ public:
 
     /** Create an empty, invalid data structure by default. */
     NetintList() = default;
-    NetintList(acn_receiver_t receiver_handle, McastMode mcast_mode);
-    NetintList(acn_receiver_t receiver_handle, const std::vector<SacnMcastInterface>& network_interfaces);
+    NetintList(sacn_receiver_t receiver_handle, McastMode mcast_mode);
+    NetintList(sacn_receiver_t receiver_handle, const std::vector<SacnMcastInterface>& network_interfaces);
   };
 
   Receiver() = default;
