@@ -280,6 +280,7 @@ protected:
     SacnNetintConfig c_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
     c_netint_config.netints = app_netint_config.data();
     c_netint_config.num_netints = app_netint_config.size();
+    c_netint_config.no_netints = app_netint_config.empty();
 
     EXPECT_EQ(sacn_initialize_receiver_netints(internal_netint_array, (sampling_status == kCurrentlySampling),
                                                sampling_period_netints, &c_netint_config),
@@ -677,6 +678,22 @@ TEST_F(TestSockets, InitializeInternalNetintsWorks)
   }
 
   CLEAR_BUF(&internal_netint_array, netints);
+
+  // Test "no interfaces" as well
+  app_netint_config.netints = nullptr;
+  app_netint_config.num_netints = 0u;
+  app_netint_config.no_netints = true;
+
+  ASSERT_EQ(sacn_validate_netint_config(&app_netint_config, sys_netints.data(), sys_netints.size(), &num_valid_netints),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_initialize_internal_netints(&internal_netint_array, &app_netint_config, num_valid_netints,
+                                             sys_netints.data(), sys_netints.size()),
+            kEtcPalErrOk);
+
+  EXPECT_EQ(num_valid_netints, 0u);
+  EXPECT_EQ(internal_netint_array.num_netints, 0u);
+
+  CLEAR_BUF(&internal_netint_array, netints);
 }
 
 TEST_F(TestSockets, SamplingPeriodNetintsUpdateCorrectly)
@@ -696,7 +713,9 @@ TEST_F(TestSockets, SamplingPeriodNetintsUpdateCorrectly)
   std::vector<SacnMcastInterface> config_1 = {full_config.begin(), full_config.end() - (full_config.size() / 2)};
   std::vector<SacnMcastInterface> config_2 = full_config;
   std::vector<SacnMcastInterface> config_3 = {full_config.begin() + (full_config.size() / 2), full_config.end()};
+  std::vector<SacnMcastInterface> empty_config = {};  // TestSamplingPeriodNetintUpdate treats empty as "no interfaces"
 
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, empty_config);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_1);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_2);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_3);
@@ -704,6 +723,8 @@ TEST_F(TestSockets, SamplingPeriodNetintsUpdateCorrectly)
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_1);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_3);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_1);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, empty_config);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, empty_config);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_1);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_2);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_3);
@@ -711,6 +732,7 @@ TEST_F(TestSockets, SamplingPeriodNetintsUpdateCorrectly)
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_1);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_3);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_1);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, empty_config);
 
   CLEAR_BUF(&internal_netint_array, netints);
   etcpal_rbtree_clear_with_cb(&sampling_period_netints, sampling_period_netint_tree_dealloc);
