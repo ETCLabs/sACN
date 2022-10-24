@@ -113,25 +113,25 @@ static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, k
                                                        {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
 
 static const std::vector<SacnSourceUniverseNetintList> kTestNetintLists = {
-    {kTestHandle, kTestUniverse, kTestNetints.data(), kTestNetints.size()},
-    {kTestHandle, kTestUniverse2, kTestNetints.data(), kTestNetints.size()},
-    {kTestHandle2, kTestUniverse, kTestNetints.data(), kTestNetints.size()},
-    {kTestHandle2, kTestUniverse2, kTestNetints.data(), kTestNetints.size()}};
+    {kTestHandle, kTestUniverse, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle, kTestUniverse2, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle2, kTestUniverse, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle2, kTestUniverse2, kTestNetints.data(), kTestNetints.size(), false}};
 static constexpr size_t kTestNetintListsNumSources = 2u;
 static constexpr size_t kTestNetintListsNumUniverses = 2u;
 
 static const std::vector<SacnSourceUniverseNetintList> kTestInvalidNetintLists1 = {
-    {kTestHandle, kTestUniverse, kTestNetints.data(), kTestNetints.size()},
-    {kTestHandle, kTestUniverse2, kTestNetints.data(), kTestNetints.size()}};
+    {kTestHandle, kTestUniverse, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle, kTestUniverse2, kTestNetints.data(), kTestNetints.size(), false}};
 static const std::vector<SacnSourceUniverseNetintList> kTestInvalidNetintLists2 = {
-    {kTestHandle, kTestUniverse, kTestNetints.data(), kTestNetints.size()},
-    {kTestHandle2, kTestUniverse2, kTestNetints.data(), kTestNetints.size()}};
+    {kTestHandle, kTestUniverse, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle2, kTestUniverse2, kTestNetints.data(), kTestNetints.size(), false}};
 static const std::vector<SacnSourceUniverseNetintList> kTestInvalidNetintLists3 = {
-    {kTestHandle, kTestUniverse, kTestNetints.data(), kTestNetints.size()},
-    {kTestHandle, kTestUniverse2, kTestNetints.data(), kTestNetints.size()},
-    {kTestHandle2, kTestUniverse, kTestNetints.data(), kTestNetints.size()},
-    {kTestHandle2, kTestUniverse2, kTestNetints.data(), kTestNetints.size()},
-    {kTestHandle2, kTestUniverse3, kTestNetints.data(), kTestNetints.size()}};
+    {kTestHandle, kTestUniverse, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle, kTestUniverse2, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle2, kTestUniverse, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle2, kTestUniverse2, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle2, kTestUniverse3, kTestNetints.data(), kTestNetints.size(), false}};
 
 class TestSource : public ::testing::Test
 {
@@ -227,6 +227,7 @@ protected:
       SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
       netint_config.netints = netint_lists[i].netints;
       netint_config.num_netints = netint_lists[i].num_netints;
+      netint_config.no_netints = netint_lists[i].no_netints;
 
       EXPECT_EQ(sacn_source_add_universe(netint_lists[i].handle, &universe_config, &netint_config), kEtcPalErrOk);
     }

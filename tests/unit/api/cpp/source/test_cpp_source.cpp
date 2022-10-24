@@ -58,10 +58,11 @@ static std::vector<SacnMcastInterface> kTestNetints = {
     {{kEtcPalIpTypeV4, 15u}, kEtcPalErrOk}};
 static std::vector<SacnMcastInterface> kTestNetintsEmpty = {};
 
-static std::vector<sacn::Source::UniverseNetintList> kTestNetintLists = {{kTestHandle, kTestUniverse, kTestNetints},
-                                                                         {kTestHandle, kTestUniverse2, kTestNetints},
-                                                                         {kTestHandle2, kTestUniverse, kTestNetints},
-                                                                         {kTestHandle2, kTestUniverse2, kTestNetints}};
+static std::vector<sacn::Source::UniverseNetintList> kTestNetintLists = {
+    {kTestHandle, kTestUniverse, kTestNetints, false},
+    {kTestHandle, kTestUniverse2, kTestNetints, false},
+    {kTestHandle2, kTestUniverse, kTestNetints, false},
+    {kTestHandle2, kTestUniverse2, kTestNetints, false}};
 
 static const std::vector<uint16_t> kTestUniverses = {1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u, 11u, 12u, 13u, 14u, 15u};
 
@@ -641,6 +642,7 @@ TEST_F(TestSource, ResetNetworkingPerUniverseWorks)
           EXPECT_EQ(netint_lists[i].universe, kTestNetintLists[i].universe);
           EXPECT_EQ(netint_lists[i].netints, kTestNetintLists[i].netints.data());
           EXPECT_EQ(netint_lists[i].num_netints, kTestNetintLists[i].netints.size());
+          EXPECT_EQ(netint_lists[i].no_netints, kTestNetintLists[i].no_netints);
         }
 
         return kEtcPalErrOk;

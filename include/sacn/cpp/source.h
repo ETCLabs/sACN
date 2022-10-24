@@ -146,13 +146,16 @@ public:
   struct UniverseNetintList
   {
     /** The source's handle. */
-    sacn_source_t handle;
+    sacn_source_t handle{SACN_SOURCE_INVALID};
     /** The ID of the universe. */
-    uint16_t universe;
+    uint16_t universe{0};
 
     /** If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If
         empty, all available interfaces are tried. */
     std::vector<SacnMcastInterface> netints;
+
+    /** If this is true, this universe will not use any network interfaces for multicast traffic. */
+    bool no_netints{false};
 
     /** Create an empty, invalid data structure by default. */
     UniverseNetintList() = default;
@@ -861,20 +864,20 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sy
 {
   std::vector<SacnSourceUniverseNetintList> netint_lists_c;
   netint_lists_c.reserve(per_universe_netint_lists.size());
-  std::transform(
-      per_universe_netint_lists.begin(), per_universe_netint_lists.end(), std::back_inserter(netint_lists_c),
-      [](UniverseNetintList& list) {
-        // clang-format off
+  std::transform(per_universe_netint_lists.begin(), per_universe_netint_lists.end(), std::back_inserter(netint_lists_c),
+                 [](UniverseNetintList& list) {
+                   // clang-format off
         SacnSourceUniverseNetintList c_list = {
           list.handle,
           list.universe,
           list.netints.data(),
-          list.netints.size()
+          list.netints.size(),
+          list.no_netints
         };
-        // clang-format on
+                   // clang-format on
 
-        return c_list;
-      });
+                   return c_list;
+                 });
 
   SacnNetintConfig sys_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   sys_netint_config.netints = sys_netints.data();
