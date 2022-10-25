@@ -10,3 +10,4 @@ project, the following lwIP configuration options are required:
   + `SO_REUSE=1`: Allows sACN multicast reception to work properly.
   + `SO_REUSE_RXTOALL=1`: Allows sACN multicast reception to work properly.
   + `LWIP_IGMP=1`: Allows sACN to play nicely with multicast network infrastructure.
+  + `LWIP_NETBUF_RECVINFO=1`: Allows sACN multicast reception to work properly.

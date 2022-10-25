@@ -70,6 +70,8 @@ constexpr RemoteSourceHandle kInvalidRemoteSourceHandle = SACN_REMOTE_SOURCE_INV
  * This is an overload of Init that defaults to using all system interfaces for multicast traffic, but can also be used
  * to disable multicast traffic on all interfaces.
  *
+ * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
+ *
  * @param log_params (optional) Log parameters for the sACN library to use to log messages. If
  *                   not provided, no logging will be performed.
  * @param mcast_mode This controls whether or not multicast traffic is allowed on the system's network interfaces.
