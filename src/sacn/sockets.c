@@ -1245,7 +1245,7 @@ size_t apply_netint_config(const SacnNetintConfig* netint_config, const EtcPalNe
 
     // Find application-specified interface if needed
     SacnMcastInterface* app_netint = NULL;
-    if (!use_all_netints && !netint_config->no_netints)
+    if (!use_all_netints && SACN_ASSERT_VERIFY(netint_config) && !netint_config->no_netints)
     {
       for (size_t j = 0; !app_netint && (j < netint_config->num_netints); ++j)
       {
@@ -1263,8 +1263,19 @@ size_t apply_netint_config(const SacnNetintConfig* netint_config, const EtcPalNe
       etcpal_error_t test_result = test_netint(netint, sys_netints, net_type);
       if (test_result == kEtcPalErrOk)
         ++num_valid_sys_netints;
-      if (app_netint && ((app_netint->status == kEtcPalErrNotFound) || (app_netint->status == kEtcPalErrOk)))
-        app_netint->status = test_result;
+
+      if (app_netint && SACN_ASSERT_VERIFY(netint_config) &&
+          ((app_netint->status == kEtcPalErrNotFound) || (app_netint->status == kEtcPalErrOk)))
+      {
+        for (size_t j = 0; j < netint_config->num_netints; ++j)  // There could be duplicates - write status to all.
+        {
+          if ((netint_config->netints[j].iface.index == app_netint->iface.index) &&
+              (netint_config->netints[j].iface.ip_type == app_netint->iface.ip_type))
+          {
+            netint_config->netints[j].status = test_result;
+          }
+        }
+      }
     }
   }
 
@@ -1321,20 +1332,46 @@ etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* interna
     else
       internal_netints->netints_capacity = num_valid_app_netints;
   }
-#endif
+#else   // SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(num_valid_app_netints);
+#endif  // SACN_DYNAMIC_MEM
 
   if (result == kEtcPalErrOk)
   {
-    for (size_t read_index = 0u, write_index = 0u; read_index < num_netints_to_use; ++read_index)
+    size_t num_internal_netints = 0u;
+    for (size_t read_index = 0u; read_index < num_netints_to_use; ++read_index)
     {
+#if !SACN_DYNAMIC_MEM
+      if (num_internal_netints >= SACN_MAX_NETINTS)
+      {
+        result = kEtcPalErrNoMem;
+        break;
+      }
+#endif  // !SACN_DYNAMIC_MEM
+
       if (netints_to_use[read_index].status == kEtcPalErrOk)
       {
-        memcpy(&internal_netints->netints[write_index], &netints_to_use[read_index].iface, sizeof(EtcPalMcastNetintId));
-        ++write_index;
+        bool already_added = false;
+        for (size_t i = 0u; i < num_internal_netints; ++i)
+        {
+          if ((internal_netints->netints[i].index == netints_to_use[read_index].iface.index) &&
+              (internal_netints->netints[i].ip_type == netints_to_use[read_index].iface.ip_type))
+          {
+            already_added = true;
+            break;
+          }
+        }
+
+        if (!already_added)
+        {
+          memcpy(&internal_netints->netints[num_internal_netints], &netints_to_use[read_index].iface,
+                 sizeof(EtcPalMcastNetintId));
+          ++num_internal_netints;
+        }
       }
     }
 
-    internal_netints->num_netints = num_valid_app_netints;
+    internal_netints->num_netints = num_internal_netints;
   }
   else
   {
