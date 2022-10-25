@@ -876,6 +876,14 @@ TEST_F(TestSockets, InitAndResetHandleCustomSysNetints)
     }
   }
 
+  // Test the "no interfaces" case
+  SacnNetintConfig sys_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  sys_netint_config.no_netints = true;
+
+  EXPECT_EQ(sacn_sockets_reset_receiver(&sys_netint_config), kEtcPalErrOk);
+
+  EXPECT_EQ(internal_sys_netints->num_sys_netints, 0u);
+
   // Now return to the nullptr (all sys netints) case
   EXPECT_EQ(sacn_sockets_reset_receiver(nullptr), kEtcPalErrOk);
   ASSERT_EQ(internal_sys_netints->num_sys_netints, fake_netints_.size());
