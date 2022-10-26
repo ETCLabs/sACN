@@ -56,8 +56,6 @@ static etcpal_mutex_t sacn_mutex;
  *
  * Do all necessary initialization before other sACN API functions can be called.
  *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
- *
  * @param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
  *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
  * @param[in, out] sys_netint_config Optional. If non-NULL, this is the list of system interfaces the library will be

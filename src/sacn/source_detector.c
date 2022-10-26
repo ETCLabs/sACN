@@ -72,8 +72,6 @@ void sacn_source_detector_config_init(SacnSourceDetectorConfig* config)
  * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
- *
  * @param[in] config Configuration parameters for the sACN source detector.
  * @param[in, out] netint_config Optional. If non-NULL, this is the list of interfaces the application wants to use, and
  * the status codes are filled in.  If NULL, all available interfaces are tried.
@@ -156,8 +154,6 @@ void sacn_source_detector_destroy()
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
- *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
  *
  * @param[in, out] sys_netint_config Optional. If non-NULL, this is the list of system interfaces the source detector
  * API will be limited to, and the status codes are filled in.  If NULL, the source detector API is allowed to use all

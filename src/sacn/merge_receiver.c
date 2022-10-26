@@ -72,8 +72,6 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
  * network interfaces listed in the passed in.  This will only return #kEtcPalErrNoNetints
  * if none of the interfaces work.
  *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
- *
  * @param[in] config Configuration parameters for the sACN Merge Receiver to be created.
  * @param[out] handle Filled in on success with a handle to the sACN Merge Receiver.
  * @param[in, out] netint_config Optional. If non-NULL, this is the list of interfaces the application wants to use
@@ -399,8 +397,6 @@ etcpal_error_t sacn_merge_receiver_change_universe_and_footprint(sacn_merge_rece
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in. This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
- *
  * @param[in, out] sys_netint_config Optional. If non-NULL, this is the list of system interfaces the receiver API will
  * be limited to, and the status codes are filled in.  If NULL, the receiver API is allowed to use all available system
  * interfaces.
@@ -431,8 +427,6 @@ etcpal_error_t sacn_merge_receiver_reset_networking(const SacnNetintConfig* sys_
  * Note that the networking reset is considered successful if it is able to successfully use any of the network
  * interfaces passed in for each merge receiver. This will only return #kEtcPalErrNoNetints if none of the interfaces
  * work for a merge receiver.
- *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
  *
  * @param[in, out] sys_netint_config Optional. If non-NULL, this is the list of system interfaces the receiver API will
  * be limited to, and the status codes are filled in.  If NULL, the receiver API is allowed to use all available system

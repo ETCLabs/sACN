@@ -271,8 +271,6 @@ extern "C" inline void SourceDetectorCbMemoryLimitExceeded(void* context)
  * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
- *
  * @param[in] notify_handler The callback handler for the sACN Source Detector to be created.
  * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this source detector.
  * @return #kEtcPalErrOk: Detector created successfully.
@@ -303,8 +301,6 @@ inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler,
  * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
- *
  * @param[in] notify_handler The callback handler for the sACN Source Detector to be created.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
@@ -328,8 +324,6 @@ inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler, std:
  *
  * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
- *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
  *
  * @param[in] settings Configuration parameters for the sACN Source Detector to be created.
  * @param[in] notify_handler The callback handler for the sACN Source Detector to be created.
@@ -358,8 +352,6 @@ inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHan
  *
  * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
- *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
  *
  * @param[in] settings Configuration parameters for the sACN Source Detector to be created.
  * @param[in] notify_handler The callback handler for the sACN Source Detector to be created.
@@ -448,8 +440,6 @@ inline etcpal::Error SourceDetector::ResetNetworking(McastMode mcast_mode = Mcas
  *
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
- *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
  *
  * @param sys_netints If !empty, this is the list of system interfaces the source detector API will be limited to, and
  * the status codes are filled in.  If empty, the source detector API is allowed to use all available system interfaces.

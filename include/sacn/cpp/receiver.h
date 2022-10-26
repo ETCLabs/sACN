@@ -377,8 +377,6 @@ inline Receiver::NetintList::NetintList(sacn_receiver_t receiver_handle,
  * Note that a receiver is considered as successfully created if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
- *
  * @param[in] settings Configuration parameters for the sACN receiver and this class instance.
  * @param[in] notify_handler The notification interface to call back to the application.
  * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this receiver.
@@ -420,8 +418,6 @@ inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& 
  *
  * Note that a receiver is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
- *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
  *
  * @param[in] settings Configuration parameters for the sACN receiver and this class instance.
  * @param[in] notify_handler The notification interface to call back to the application.
@@ -660,8 +656,6 @@ inline etcpal::Error Receiver::ResetNetworking(McastMode mcast_mode = McastMode:
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces passed in. This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
- *
  * @param sys_netints If !empty, this is the list of system interfaces the receiver API will be limited to, and the
  * status codes are filled in.  If empty, the receiver API is allowed to use all available system interfaces.
  * @return #kEtcPalErrOk: Networking reset successfully.
@@ -697,8 +691,6 @@ inline etcpal::Error Receiver::ResetNetworking(std::vector<SacnMcastInterface>& 
  * Note that the networking reset is considered successful if it is able to successfully use any of the network
  * interfaces passed in for each receiver. This will only return #kEtcPalErrNoNetints if none of the interfaces work for
  * a receiver.
- *
- * On lwIP, currently only IPv4 interfaces are supported for multicast reception.
  *
  * @param sys_netints If !empty, this is the list of system interfaces the receiver API will be limited to, and the
  * status codes are filled in.  If empty, the receiver API is allowed to use all available system interfaces.
