@@ -1023,7 +1023,7 @@ etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_ty
   if (res == kEtcPalErrOk)
   {
     size_t num_valid_sys_netints = apply_netint_config(netint_config, netint_list, num_netints, sys_netints, net_type);
-    if (num_valid_sys_netints == 0)
+    if ((num_valid_sys_netints == 0) && !netint_config->no_netints)
     {
       SACN_LOG_CRIT("None of the network interfaces were usable for the sACN API.");
       res = kEtcPalErrNoNetints;
@@ -1115,6 +1115,9 @@ etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_
   size_t num_netints = (app_netint_config && app_netint_config->netints) ? app_netint_config->num_netints
                                                                          : receiver_sys_netints.num_sys_netints;
 
+  if (app_netint_config && app_netint_config->no_netints)
+    num_netints = 0;  // This will cause all current SP netints to be removed & none added
+
   // Add new sampling period netints
   for (size_t i = 0; (res == kEtcPalErrOk) && (i < num_netints); ++i)
   {
@@ -1174,7 +1177,7 @@ etcpal_error_t sacn_validate_netint_config(const SacnNetintConfig* netint_config
     for (SacnMcastInterface* netint = netint_config->netints;
          netint < (netint_config->netints + netint_config->num_netints); ++netint)
     {
-      if (netints_valid(netint, 1))
+      if (!netint_config->no_netints && netints_valid(netint, 1))
       {
         int sys_netint_index = netint_id_index_in_array(&netint->iface, sys_netints, num_sys_netints);
 
@@ -1192,7 +1195,7 @@ etcpal_error_t sacn_validate_netint_config(const SacnNetintConfig* netint_config
         ++(*num_valid_netints);
     }
   }
-  else
+  else if (!netint_config || !netint_config->no_netints)
   {
     for (const SacnMcastInterface* netint = sys_netints; netint < (sys_netints + num_sys_netints); ++netint)
     {
@@ -1201,7 +1204,8 @@ etcpal_error_t sacn_validate_netint_config(const SacnNetintConfig* netint_config
     }
   }
 
-  return (*num_valid_netints > 0) ? kEtcPalErrOk : kEtcPalErrNoNetints;
+  return ((*num_valid_netints > 0) || (netint_config && netint_config->no_netints)) ? kEtcPalErrOk
+                                                                                    : kEtcPalErrNoNetints;
 }
 
 bool netints_valid(const SacnMcastInterface* netints, size_t num_netints)
@@ -1226,12 +1230,12 @@ size_t apply_netint_config(const SacnNetintConfig* netint_config, const EtcPalNe
   if (!SACN_ASSERT_VERIFY(netint_list) || !SACN_ASSERT_VERIFY(sys_netints))
     return 0;
 
-  bool use_all_netints = (!netint_config || netint_config->num_netints == 0);
+  bool use_all_netints = (!netint_config || ((netint_config->num_netints == 0) && !netint_config->no_netints));
 
   if (netint_config)
   {
     for (size_t i = 0; i < netint_config->num_netints; ++i)
-      netint_config->netints[i].status = kEtcPalErrNotFound;
+      netint_config->netints[i].status = netint_config->no_netints ? kEtcPalErrInvalid : kEtcPalErrNotFound;
   }
 
   size_t num_valid_sys_netints = 0;
@@ -1241,7 +1245,7 @@ size_t apply_netint_config(const SacnNetintConfig* netint_config, const EtcPalNe
 
     // Find application-specified interface if needed
     SacnMcastInterface* app_netint = NULL;
-    if (!use_all_netints)
+    if (!use_all_netints && !netint_config->no_netints)
     {
       for (size_t j = 0; !app_netint && (j < netint_config->num_netints); ++j)
       {
@@ -1298,15 +1302,25 @@ etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* interna
   size_t num_netints_to_use =
       (app_netint_config && app_netint_config->netints) ? app_netint_config->num_netints : num_sys_netints;
 
+  if (app_netint_config && app_netint_config->no_netints)
+    num_netints_to_use = 0;
+
   CLEAR_BUF(internal_netints, netints);
 
 #if SACN_DYNAMIC_MEM
-  internal_netints->netints = calloc(num_valid_app_netints, sizeof(EtcPalMcastNetintId));
-
-  if (!internal_netints->netints)
-    result = kEtcPalErrNoMem;
+  if (app_netint_config && app_netint_config->no_netints)
+  {
+    internal_netints->netints_capacity = 0;
+  }
   else
-    internal_netints->netints_capacity = num_valid_app_netints;
+  {
+    internal_netints->netints = calloc(num_valid_app_netints, sizeof(EtcPalMcastNetintId));
+
+    if (!internal_netints->netints)
+      result = kEtcPalErrNoMem;
+    else
+      internal_netints->netints_capacity = num_valid_app_netints;
+  }
 #endif
 
   if (result == kEtcPalErrOk)

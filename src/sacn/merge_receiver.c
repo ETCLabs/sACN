@@ -74,8 +74,9 @@ void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config)
  *
  * @param[in] config Configuration parameters for the sACN Merge Receiver to be created.
  * @param[out] handle Filled in on success with a handle to the sACN Merge Receiver.
- * @param[in, out] netint_config Optional. If non-NULL, this is the list of interfaces the application wants to use, and
- * the status codes are filled in.  If NULL, all available interfaces are tried.
+ * @param[in, out] netint_config Optional. If non-NULL, this is the list of interfaces the application wants to use
+ * (with the added option of not allowing any interfaces to be used), and the status codes are filled in.  If NULL, all
+ * available interfaces are tried.
  * @return #kEtcPalErrOk: Merge Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -476,6 +477,7 @@ etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(
       receiver_netint_lists[i].handle = (sacn_receiver_t)per_receiver_netint_lists[i].handle;
       receiver_netint_lists[i].netints = per_receiver_netint_lists[i].netints;
       receiver_netint_lists[i].num_netints = per_receiver_netint_lists[i].num_netints;
+      receiver_netint_lists[i].no_netints = per_receiver_netint_lists[i].no_netints;
     }
 
     // Now use the public receiver API function directly, which takes the lock.

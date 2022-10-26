@@ -225,15 +225,19 @@ public:
   struct NetintList
   {
     /** The merge receiver's handle. */
-    sacn_merge_receiver_t handle;
+    sacn_merge_receiver_t handle{SACN_MERGE_RECEIVER_INVALID};
 
     /** If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If
         empty, all available interfaces are tried. */
     std::vector<SacnMcastInterface> netints;
 
+    /** If this is true, this merge receiver will not use any network interfaces for multicast traffic. */
+    bool no_netints{false};
+
     /** Create an empty, invalid data structure by default. */
     NetintList() = default;
-    NetintList(sacn_merge_receiver_t merge_receiver_handle);
+    NetintList(sacn_merge_receiver_t merge_receiver_handle, McastMode mcast_mode);
+    NetintList(sacn_merge_receiver_t merge_receiver_handle, const std::vector<SacnMcastInterface>& network_interfaces);
   };
 
   /**
@@ -258,7 +262,7 @@ public:
   MergeReceiver(MergeReceiver&& other) = default;            /**< Move a merge receiver instance. */
   MergeReceiver& operator=(MergeReceiver&& other) = default; /**< Move a merge receiver instance. */
 
-  etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler);
+  etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler, McastMode mcast_mode);
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
                         std::vector<SacnMcastInterface>& netints);
   void Shutdown();
@@ -270,7 +274,7 @@ public:
   std::vector<EtcPalMcastNetintId> GetNetworkInterfaces();
   etcpal::Expected<Source> GetSource(sacn_remote_source_t source_handle);
 
-  static etcpal::Error ResetNetworking();
+  static etcpal::Error ResetNetworking(McastMode mcast_mode);
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& sys_netints,
                                        std::vector<NetintList>& netint_lists);
@@ -379,15 +383,29 @@ inline bool MergeReceiver::Settings::IsValid() const
  *
  * Optional members can be modified directly in the struct.
  */
-inline MergeReceiver::NetintList::NetintList(sacn_merge_receiver_t merge_receiver_handle)
-    : handle(merge_receiver_handle)
+inline MergeReceiver::NetintList::NetintList(sacn_merge_receiver_t merge_receiver_handle,
+                                             McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
+    : handle(merge_receiver_handle), no_netints(mcast_mode == McastMode::kDisabledOnAllInterfaces)
+{
+}
+
+/**
+ * @brief Create a Netint List instance by passing the required members explicitly.
+ *
+ * This constructor enables the use of list initialization when setting up one or more NetintLists (such as
+ * initializing the vector<NetintList> that gets passed into MergeReceiver::ResetNetworking).
+ */
+inline MergeReceiver::NetintList::NetintList(sacn_merge_receiver_t merge_receiver_handle,
+                                             const std::vector<SacnMcastInterface>& network_interfaces)
+    : handle(merge_receiver_handle), netints(network_interfaces)
 {
 }
 
 /**
  * @brief Start listening for sACN data on a universe.
  *
- * This is the overload of Startup that uses all network interfaces.
+ * This is an overload of Startup that defaults to using all system interfaces for multicast traffic, but can also be
+ * used to disable multicast traffic on all interfaces.
  *
  * An sACN merge receiver can listen on one universe at a time, and each universe can only be listened to
  * by one merge receiver at at time.
@@ -397,6 +415,7 @@ inline MergeReceiver::NetintList::NetintList(sacn_merge_receiver_t merge_receive
  *
  * @param[in] settings Configuration parameters for the sACN merge receiver and this class instance.
  * @param[in] notify_handler The notification interface to call back to the application.
+ * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this merge receiver.
  * @return #kEtcPalErrOk: Merge Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -406,10 +425,21 @@ inline MergeReceiver::NetintList::NetintList(sacn_merge_receiver_t merge_receive
  * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHandler& notify_handler)
+inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHandler& notify_handler,
+                                            McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
-  std::vector<SacnMcastInterface> netints;
-  return Startup(settings, notify_handler, netints);
+  SacnMergeReceiverConfig config = TranslateConfig(settings, notify_handler);
+
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
+    netint_config.no_netints = true;
+
+  sacn_merge_receiver_t c_handle = SACN_MERGE_RECEIVER_INVALID;
+  etcpal::Error result = sacn_merge_receiver_create(&config, &c_handle, &netint_config);
+
+  handle_.SetValue(c_handle);
+
+  return result;
 }
 
 /**
@@ -448,7 +478,10 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
   }
   else
   {
-    SacnNetintConfig netint_config = {netints.data(), netints.size()};
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    netint_config.netints = netints.data();
+    netint_config.num_netints = netints.size();
+
     result = sacn_merge_receiver_create(&config, &c_handle, &netint_config);
   }
 
@@ -604,7 +637,8 @@ inline etcpal::Expected<MergeReceiver::Source> MergeReceiver::GetSource(sacn_rem
 /**
  * @brief Resets the underlying network sockets and packet receipt state for all sACN merge receivers.
  *
- * This is the overload of ResetNetworking that uses all network interfaces.
+ * This is an overload of ResetNetworking that defaults to using all system interfaces for multicast traffic, but can
+ * also be used to disable multicast traffic on all interfaces.
  *
  * This is typically used when the application detects that the list of networking interfaces has changed. The receiver
  * (and by extension, merge receiver) API will no longer be limited to specific interfaces (the list passed into
@@ -618,15 +652,19 @@ inline etcpal::Expected<MergeReceiver::Source> MergeReceiver::GetSource(sacn_rem
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces. This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
+ * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this merge receiver.
  * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error MergeReceiver::ResetNetworking()
+inline etcpal::Error MergeReceiver::ResetNetworking(McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
-  std::vector<SacnMcastInterface> netints;
-  return ResetNetworking(netints);
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
+    netint_config.no_netints = true;
+
+  return sacn_merge_receiver_reset_networking(&netint_config);
 }
 
 /**
@@ -657,7 +695,10 @@ inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterfa
   if (sys_netints.empty())
     return sacn_merge_receiver_reset_networking(nullptr);
 
-  SacnNetintConfig netint_config = {sys_netints.data(), sys_netints.size()};
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints = sys_netints.data();
+  netint_config.num_netints = sys_netints.size();
+
   return sacn_merge_receiver_reset_networking(&netint_config);
 }
 
@@ -695,20 +736,25 @@ inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterfa
 {
   std::vector<SacnMergeReceiverNetintList> netint_lists_c;
   netint_lists_c.reserve(per_receiver_netint_lists.size());
-  std::transform(per_receiver_netint_lists.begin(), per_receiver_netint_lists.end(), std::back_inserter(netint_lists_c),
-                 [](NetintList& list) {
-                   // clang-format off
+  std::transform(
+      per_receiver_netint_lists.begin(), per_receiver_netint_lists.end(), std::back_inserter(netint_lists_c),
+      [](NetintList& list) {
+        // clang-format off
                    SacnMergeReceiverNetintList c_list = {
                      list.handle,
                      list.netints.data(),
-                     list.netints.size()
+                     list.netints.size(),
+                     list.no_netints
                    };
-                   // clang-format on
+        // clang-format on
 
-                   return c_list;
-                 });
+        return c_list;
+      });
 
-  SacnNetintConfig netint_config = {sys_netints.data(), sys_netints.size()};
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints = sys_netints.data();
+  netint_config.num_netints = sys_netints.size();
+
   return sacn_merge_receiver_reset_networking_per_receiver(&netint_config, netint_lists_c.data(),
                                                            netint_lists_c.size());
 }

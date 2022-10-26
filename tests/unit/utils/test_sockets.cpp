@@ -277,7 +277,11 @@ protected:
 
     size_t original_sp_netints_size = etcpal_rbtree_size(sampling_period_netints);
 
-    SacnNetintConfig c_netint_config = {app_netint_config.data(), app_netint_config.size()};
+    SacnNetintConfig c_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    c_netint_config.netints = app_netint_config.data();
+    c_netint_config.num_netints = app_netint_config.size();
+    c_netint_config.no_netints = app_netint_config.empty();
+
     EXPECT_EQ(sacn_initialize_receiver_netints(internal_netint_array, (sampling_status == kCurrentlySampling),
                                                sampling_period_netints, &c_netint_config),
               kEtcPalErrOk);
@@ -651,7 +655,10 @@ TEST_F(TestSockets, InitializeInternalNetintsWorks)
 #endif
   internal_netint_array.num_netints = 0u;
 
-  SacnNetintConfig app_netint_config = {app_netints.data(), app_netints.size()};
+  SacnNetintConfig app_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  app_netint_config.netints = app_netints.data();
+  app_netint_config.num_netints = app_netints.size();
+
   size_t num_valid_netints = 0u;
   ASSERT_EQ(sacn_validate_netint_config(&app_netint_config, sys_netints.data(), sys_netints.size(), &num_valid_netints),
             kEtcPalErrOk);
@@ -669,6 +676,22 @@ TEST_F(TestSockets, InitializeInternalNetintsWorks)
     EXPECT_EQ(internal_netint_array.netints[i].index, expected_internal_netints[i].index);
     EXPECT_EQ(internal_netint_array.netints[i].ip_type, expected_internal_netints[i].ip_type);
   }
+
+  CLEAR_BUF(&internal_netint_array, netints);
+
+  // Test "no interfaces" as well
+  app_netint_config.netints = nullptr;
+  app_netint_config.num_netints = 0u;
+  app_netint_config.no_netints = true;
+
+  ASSERT_EQ(sacn_validate_netint_config(&app_netint_config, sys_netints.data(), sys_netints.size(), &num_valid_netints),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_initialize_internal_netints(&internal_netint_array, &app_netint_config, num_valid_netints,
+                                             sys_netints.data(), sys_netints.size()),
+            kEtcPalErrOk);
+
+  EXPECT_EQ(num_valid_netints, 0u);
+  EXPECT_EQ(internal_netint_array.num_netints, 0u);
 
   CLEAR_BUF(&internal_netint_array, netints);
 }
@@ -690,7 +713,9 @@ TEST_F(TestSockets, SamplingPeriodNetintsUpdateCorrectly)
   std::vector<SacnMcastInterface> config_1 = {full_config.begin(), full_config.end() - (full_config.size() / 2)};
   std::vector<SacnMcastInterface> config_2 = full_config;
   std::vector<SacnMcastInterface> config_3 = {full_config.begin() + (full_config.size() / 2), full_config.end()};
+  std::vector<SacnMcastInterface> empty_config = {};  // TestSamplingPeriodNetintUpdate treats empty as "no interfaces"
 
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, empty_config);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_1);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_2);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_3);
@@ -698,6 +723,8 @@ TEST_F(TestSockets, SamplingPeriodNetintsUpdateCorrectly)
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_1);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_3);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, config_1);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kNotCurrentlySampling, &sampling_period_netints, empty_config);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, empty_config);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_1);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_2);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_3);
@@ -705,6 +732,7 @@ TEST_F(TestSockets, SamplingPeriodNetintsUpdateCorrectly)
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_1);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_3);
   TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, config_1);
+  TestSamplingPeriodNetintUpdate(&internal_netint_array, kCurrentlySampling, &sampling_period_netints, empty_config);
 
   CLEAR_BUF(&internal_netint_array, netints);
   etcpal_rbtree_clear_with_cb(&sampling_period_netints, sampling_period_netint_tree_dealloc);
@@ -724,7 +752,8 @@ TEST_F(TestSockets, AddAllNetintsToSamplingPeriodWorks)
 #endif
   internal_netint_array.num_netints = 0u;
 
-  SacnNetintConfig app_netint_config = {nullptr, 0u};
+  SacnNetintConfig app_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+
   size_t num_valid_netints = 0u;
   ASSERT_EQ(sacn_validate_netint_config(&app_netint_config, sys_netints.data(), sys_netints.size(), &num_valid_netints),
             kEtcPalErrOk);
@@ -817,7 +846,10 @@ TEST_F(TestSockets, InitAndResetHandleCustomSysNetints)
 
   for (size_t num_sys_netints = sys_netints.size(); num_sys_netints >= 1u; --num_sys_netints)
   {
-    SacnNetintConfig sys_netint_config = {sys_netints.data(), num_sys_netints};
+    SacnNetintConfig sys_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    sys_netint_config.netints = sys_netints.data();
+    sys_netint_config.num_netints = num_sys_netints;
+
     EXPECT_EQ(sacn_sockets_reset_receiver(&sys_netint_config), kEtcPalErrOk);
 
     size_t num_valid_netints = (num_sys_netints > fake_netints_.size()) ? fake_netints_.size() : num_sys_netints;
@@ -843,6 +875,14 @@ TEST_F(TestSockets, InitAndResetHandleCustomSysNetints)
           << "Test failed on iteration " << i << " when testing " << num_sys_netints << " netints.";
     }
   }
+
+  // Test the "no interfaces" case
+  SacnNetintConfig sys_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  sys_netint_config.no_netints = true;
+
+  EXPECT_EQ(sacn_sockets_reset_receiver(&sys_netint_config), kEtcPalErrOk);
+
+  EXPECT_EQ(internal_sys_netints->num_sys_netints, 0u);
 
   // Now return to the nullptr (all sys netints) case
   EXPECT_EQ(sacn_sockets_reset_receiver(nullptr), kEtcPalErrOk);

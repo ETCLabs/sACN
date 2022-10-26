@@ -100,12 +100,20 @@ typedef struct SacnMcastInterface
  */
 typedef struct SacnNetintConfig
 {
-  /** An array of network interface IDs to which to restrict sACN traffic. The statuses are filled in for each
-      interface. */
+  /** An array of network interface IDs to which to restrict multicast traffic. The statuses are filled in for each
+      interface. If this is null, and no_netints is false, all system interfaces will be used. */
   SacnMcastInterface* netints;
   /** Size of netints array. */
   size_t num_netints;
+  /** If this is true, no network interfaces will be used for multicast. If any are specified in netints, they will be
+      ignored and their statuses will be set to invalid. */
+  bool no_netints;
 } SacnNetintConfig;
+
+#define SACN_NETINT_CONFIG_DEFAULT_INIT \
+  {                                     \
+    NULL, 0, false                      \
+  }
 
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConfig* sys_netint_config);
 void sacn_deinit(void);

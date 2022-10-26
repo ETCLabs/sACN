@@ -224,7 +224,12 @@ TEST_F(TestSource, AddUniverseWorksWithoutNetints)
     EXPECT_EQ(config->unicast_destinations, nullptr);
     EXPECT_EQ(config->num_unicast_destinations, 0u);
     EXPECT_EQ(config->sync_universe, 0u);
-    EXPECT_EQ(netint_config, nullptr);
+    if (netint_config)
+    {
+      EXPECT_EQ(netint_config->netints, nullptr);
+      EXPECT_EQ(netint_config->num_netints, 0u);
+      EXPECT_FALSE(netint_config->no_netints);
+    }
     return kEtcPalErrOk;
   };
 
@@ -596,7 +601,12 @@ TEST_F(TestSource, ProcessManualWorks)
 TEST_F(TestSource, ResetNetworkingWorksWithoutNetints)
 {
   sacn_source_reset_networking_fake.custom_fake = [](const SacnNetintConfig* netint_config) {
-    EXPECT_EQ(netint_config, nullptr);
+    if (netint_config)
+    {
+      EXPECT_EQ(netint_config->netints, nullptr);
+      EXPECT_EQ(netint_config->num_netints, 0u);
+      EXPECT_FALSE(netint_config->no_netints);
+    }
     return kEtcPalErrOk;
   };
 
@@ -641,6 +651,7 @@ TEST_F(TestSource, ResetNetworkingPerUniverseWorks)
           EXPECT_EQ(netint_lists[i].universe, kTestNetintLists[i].universe);
           EXPECT_EQ(netint_lists[i].netints, kTestNetintLists[i].netints.data());
           EXPECT_EQ(netint_lists[i].num_netints, kTestNetintLists[i].netints.size());
+          EXPECT_EQ(netint_lists[i].no_netints, kTestNetintLists[i].no_netints);
         }
 
         return kEtcPalErrOk;

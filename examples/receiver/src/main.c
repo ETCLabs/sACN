@@ -182,7 +182,7 @@ static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t univ
       netints[i].iface.ip_type = netint_list[i].addr.type;
     }
 
-    SacnNetintConfig netint_config;
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
     netint_config.netints = netints;
     netint_config.num_netints = (num_sys_netints < MAX_LISTENER_NETINTS) ? num_sys_netints : MAX_LISTENER_NETINTS;
 

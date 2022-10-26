@@ -259,6 +259,8 @@ typedef struct SacnMergeReceiverNetintList
   SacnMcastInterface* netints;
   /** The size of netints, or 0 if netints is NULL. */
   size_t num_netints;
+  /** If this is true, this merge receiver will not use any network interfaces for multicast traffic. */
+  bool no_netints;
 } SacnMergeReceiverNetintList;
 
 /** Information about a remote sACN source being tracked by a merge receiver. */

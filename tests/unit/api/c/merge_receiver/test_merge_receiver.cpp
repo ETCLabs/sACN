@@ -345,6 +345,7 @@ TEST_F(TestMergeReceiver, ResetNetworkingPerReceiverWorks)
     netint_lists[i].handle = (sacn_merge_receiver_t)i;
     netint_lists[i].netints = nullptr;
     netint_lists[i].num_netints = 0u;
+    netint_lists[i].no_netints = false;
   }
 
   sacn_receiver_reset_networking_per_receiver_fake.custom_fake =
@@ -354,6 +355,7 @@ TEST_F(TestMergeReceiver, ResetNetworkingPerReceiverWorks)
           EXPECT_EQ(netint_lists[i].handle, (sacn_receiver_t)i);
           EXPECT_EQ(netint_lists[i].netints, nullptr);
           EXPECT_EQ(netint_lists[i].num_netints, 0u);
+          EXPECT_EQ(netint_lists[i].no_netints, false);
           EXPECT_EQ(num_netint_lists, kNumNetintLists);
         }
 
