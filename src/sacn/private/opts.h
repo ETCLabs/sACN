@@ -446,22 +446,22 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
-#ifndef SACN_MERGE_RECEIVER_ENABLE
-#define SACN_MERGE_RECEIVER_ENABLE                                                      \
+#ifndef SACN_MERGE_RECEIVER_ENABLE_IN_STATIC_MEMORY_MODE
+#define SACN_MERGE_RECEIVER_ENABLE_IN_STATIC_MEMORY_MODE                                \
   ((SACN_RECEIVER_MAX_UNIVERSES > 0) && (SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE > 0) && \
    (SACN_RECEIVER_TOTAL_MAX_SOURCES > 0) && (SACN_DMX_MERGER_MAX_MERGERS > 0) &&        \
    (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER > 0))
 #endif
 
-#if !SACN_DYNAMIC_MEM && SACN_MERGE_RECEIVER_ENABLE &&                                      \
+#if !SACN_DYNAMIC_MEM && SACN_MERGE_RECEIVER_ENABLE_IN_STATIC_MEMORY_MODE &&                \
     ((SACN_RECEIVER_MAX_UNIVERSES <= 0) || (SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE <= 0) || \
      (SACN_RECEIVER_TOTAL_MAX_SOURCES <= 0))
-#error "Error: SACN_MERGE_RECEIVER_ENABLE was set to 1, but the sACN Receiver API is disabled!"
+#error "Error: SACN_MERGE_RECEIVER_ENABLE_IN_STATIC_MEMORY_MODE was set to 1, but the sACN Receiver API is disabled!"
 #endif
 
-#if !SACN_DYNAMIC_MEM && SACN_MERGE_RECEIVER_ENABLE && \
+#if !SACN_DYNAMIC_MEM && SACN_MERGE_RECEIVER_ENABLE_IN_STATIC_MEMORY_MODE && \
     ((SACN_DMX_MERGER_MAX_MERGERS <= 0) || (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER <= 0))
-#error "Error: SACN_MERGE_RECEIVER_ENABLE was set to 1, but the sACN DMX Merger API is disabled!"
+#error "Error: SACN_MERGE_RECEIVER_ENABLE_IN_STATIC_MEMORY_MODE was set to 1, but the sACN DMX Merger API is disabled!"
 #endif
 
 /**
