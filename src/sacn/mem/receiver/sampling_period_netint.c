@@ -105,6 +105,9 @@ etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree* tree, const EtcPalM
       FREE_SAMPLING_PERIOD_NETINT(netint);
   }
 
+  if (result == kEtcPalErrExists)
+    result = kEtcPalErrOk;  // Application may feed in duplicates - this function should treat this as ok.
+
   return result;
 }
 
