@@ -126,7 +126,7 @@ public:
 
     /** The initial set of unicast destinations for this universe. This can be changed further by using
         Source::AddUnicastDestination() and Source::RemoveUnicastDestination(). */
-    const std::vector<etcpal::IpAddr> unicast_destinations;
+    std::vector<etcpal::IpAddr> unicast_destinations;
 
     /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0.
         TODO: At this time, synchronization is not supported by this library. */
