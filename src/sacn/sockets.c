@@ -374,7 +374,18 @@ etcpal_error_t create_unicast_send_socket(etcpal_iptype_t ip_type, etcpal_socket
   if (!SACN_ASSERT_VERIFY(ip_type != kEtcPalIpTypeInvalid) || !SACN_ASSERT_VERIFY(socket))
     return kEtcPalErrSys;
 
-  return etcpal_socket(ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET, ETCPAL_SOCK_DGRAM, socket);
+  etcpal_error_t res =
+      etcpal_socket(ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET, ETCPAL_SOCK_DGRAM, socket);
+
+  if (res == kEtcPalErrOk)
+  {
+    res = etcpal_setblocking(*socket, false);
+
+    if (res != kEtcPalErrOk)
+      etcpal_close(*socket);
+  }
+
+  return res;
 }
 
 etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAddr* bind_addr, bool set_sockopts,
