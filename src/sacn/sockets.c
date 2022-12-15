@@ -103,8 +103,9 @@ etcpal_error_t sacn_sockets_init(const SacnNetintConfig* netint_config)
   etcpal_error_t res = (netint_config && !netints_valid(netint_config->netints, netint_config->num_netints))
                            ? kEtcPalErrInvalid
                            : kEtcPalErrOk;
-  if (res == kEtcPalErrOk)
-    res = sockets_init(netint_config, kSource);
+	// Temporarily comment this out since zephyr does not support multicast_ttl
+  //if (res == kEtcPalErrOk)
+    //res = sockets_init(netint_config, kSource);
   if (res == kEtcPalErrOk)
     res = sockets_init(netint_config, kReceiver);
   if (res == kEtcPalErrOk)
@@ -290,6 +291,7 @@ etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id
     res = etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_IF, &netint_id->index,
                             sizeof netint_id->index);
   }
+
 
   if (res == kEtcPalErrOk)
   {
@@ -1142,12 +1144,21 @@ etcpal_error_t test_sacn_source_netint(unsigned int index, etcpal_iptype_t ip_ty
   // create_multicast_send_socket() also tests setting the relevant send socket options and the
   // MULTICAST_IF on the relevant interface.
   etcpal_socket_t test_socket;
-  etcpal_error_t test_res = create_multicast_send_socket(&netint_id, &test_socket);
+	
+	// The Zephyr OS network stack only supports global TTL on an interface, not strictly on multicast packets.
+  // We prevent this on zephyr for now.
+#ifdef __ZEPHYR__
+	etcpal_error_t test_res = kEtcPalErrOk;
+#else
+	etcpal_error_t test_res = create_multicast_send_socket(&netint_id, &test_socket);
 
-  if (test_res == kEtcPalErrOk)
-    etcpal_close(test_socket);
+	if (test_res == kEtcPalErrOk)
+		etcpal_close(test_socket);
 
-  add_sacn_source_sys_netint(&netint_id, test_res);
+	add_sacn_source_sys_netint(&netint_id, test_res);
+
+#endif // __ZEPHYR__
+	
 
   if (test_res != kEtcPalErrOk)
   {
