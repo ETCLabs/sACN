@@ -48,6 +48,13 @@
  */
 namespace sacn
 {
+/** Determines whether multicast traffic is allowed through all interfaces or none. */
+enum class McastMode
+{
+  kEnabledOnAllInterfaces,
+  kDisabledOnAllInterfaces
+};
+
 /** A source discovered on an sACN network that has a CID - used by Receiver and Merge Receiver. */
 using RemoteSourceHandle = sacn_remote_source_t;
 /** An invalid RemoteSourceHandle value. */
@@ -60,16 +67,23 @@ constexpr RemoteSourceHandle kInvalidRemoteSourceHandle = SACN_REMOTE_SOURCE_INV
  * Wraps sacn_init(). Does all initialization required before the sACN API modules can be
  * used.
  *
- * This is an overload of Init that allows all system network interfaces to be used by the library.
+ * This is an overload of Init that defaults to using all system interfaces for multicast traffic, but can also be used
+ * to disable multicast traffic on all interfaces.
  *
  * @param log_params (optional) Log parameters for the sACN library to use to log messages. If
  *                   not provided, no logging will be performed.
+ * @param mcast_mode This controls whether or not multicast traffic is allowed on the system's network interfaces.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init().
  */
-inline etcpal::Error Init(const EtcPalLogParams* log_params = nullptr)
+inline etcpal::Error Init(const EtcPalLogParams* log_params = nullptr,
+                          McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
-  return sacn_init(log_params, nullptr);
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
+    netint_config.no_netints = true;
+
+  return sacn_init(log_params, &netint_config);
 }
 
 /**
@@ -88,7 +102,10 @@ inline etcpal::Error Init(const EtcPalLogParams* log_params = nullptr)
  */
 inline etcpal::Error Init(const EtcPalLogParams* log_params, std::vector<SacnMcastInterface>& sys_netints)
 {
-  SacnNetintConfig netint_config = {sys_netints.data(), sys_netints.size()};
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints = sys_netints.data();
+  netint_config.num_netints = sys_netints.size();
+
   return sacn_init(log_params, &netint_config);
 }
 
@@ -108,7 +125,10 @@ inline etcpal::Error Init(const EtcPalLogParams* log_params, std::vector<SacnMca
  */
 inline etcpal::Error Init(std::vector<SacnMcastInterface>& sys_netints)
 {
-  SacnNetintConfig netint_config = {sys_netints.data(), sys_netints.size()};
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints = sys_netints.data();
+  netint_config.num_netints = sys_netints.size();
+
   return sacn_init(nullptr, &netint_config);
 }
 
@@ -119,15 +139,21 @@ inline etcpal::Error Init(std::vector<SacnMcastInterface>& sys_netints)
  * Wraps sacn_init(). Does all initialization required before the sACN API modules can be
  * used.
  *
- * This is an overload of Init that allows all system network interfaces to be used by the library.
+ * This is an overload of Init that defaults to using all system interfaces for multicast traffic, but can also be used
+ * to disable multicast traffic on all interfaces.
  *
  * @param logger Logger instance for the sACN library to use to log messages.
+ * @param mcast_mode This controls whether or not multicast traffic is allowed on the system's network interfaces.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init().
  */
-inline etcpal::Error Init(const etcpal::Logger& logger)
+inline etcpal::Error Init(const etcpal::Logger& logger, McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
-  return sacn_init(&logger.log_params(), nullptr);
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
+    netint_config.no_netints = true;
+
+  return sacn_init(&logger.log_params(), &netint_config);
 }
 
 /**
@@ -145,7 +171,10 @@ inline etcpal::Error Init(const etcpal::Logger& logger)
  */
 inline etcpal::Error Init(const etcpal::Logger& logger, std::vector<SacnMcastInterface>& sys_netints)
 {
-  SacnNetintConfig netint_config = {sys_netints.data(), sys_netints.size()};
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints = sys_netints.data();
+  netint_config.num_netints = sys_netints.size();
+
   return sacn_init(&logger.log_params(), &netint_config);
 }
 

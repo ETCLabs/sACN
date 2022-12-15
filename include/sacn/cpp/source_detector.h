@@ -206,13 +206,13 @@ public:
 
   SourceDetector() = delete;
 
-  static etcpal::Error Startup(NotifyHandler& notify_handler);
+  static etcpal::Error Startup(NotifyHandler& notify_handler, McastMode mcast_mode);
   static etcpal::Error Startup(NotifyHandler& notify_handler, std::vector<SacnMcastInterface>& netints);
-  static etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler);
+  static etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler, McastMode mcast_mode);
   static etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
                                std::vector<SacnMcastInterface>& netints);
   static void Shutdown();
-  static etcpal::Error ResetNetworking();
+  static etcpal::Error ResetNetworking(McastMode mcast_mode);
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
   static std::vector<EtcPalMcastNetintId> GetNetworkInterfaces();
 
@@ -265,12 +265,14 @@ extern "C" inline void SourceDetectorCbMemoryLimitExceeded(void* context)
 /**
  * @brief Start the sACN Source Detector with default settings.
  *
- * This is an override of Startup that has default settings for the configuration and will use all network interfaces.
+ * This is an overload of Startup that has default settings for the configuration and defaults to using all system
+ * interfaces for multicast traffic, but can also be used to disable multicast traffic on all interfaces.
  *
  * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] notify_handler The callback handler for the sACN Source Detector to be created.
+ * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this source detector.
  * @return #kEtcPalErrOk: Detector created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -278,10 +280,16 @@ extern "C" inline void SourceDetectorCbMemoryLimitExceeded(void* context)
  * @return #kEtcPalErrNoMem: No room to allocate memory for the detector.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler)
+inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler,
+                                             McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
-  std::vector<SacnMcastInterface> netints;
-  return Startup(Settings(), notify_handler, netints);
+  SacnSourceDetectorConfig config = TranslateConfig(Settings(), notify_handler);
+
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
+    netint_config.no_netints = true;
+
+  return sacn_source_detector_create(&config, &netint_config);
 }
 
 /**
@@ -311,13 +319,15 @@ inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler, std:
 /**
  * @brief Start the sACN Source Detector.
  *
- * This is an override of Startup that uses all network interfaces.
+ * This is an overload of Startup that defaults to using all system interfaces for multicast traffic, but can also be
+ * used to disable multicast traffic on all interfaces.
  *
  * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] settings Configuration parameters for the sACN Source Detector to be created.
  * @param[in] notify_handler The callback handler for the sACN Source Detector to be created.
+ * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this source detector.
  * @return #kEtcPalErrOk: Detector created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -325,10 +335,16 @@ inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler, std:
  * @return #kEtcPalErrNoMem: No room to allocate memory for the detector.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHandler& notify_handler)
+inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHandler& notify_handler,
+                                             McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
-  std::vector<SacnMcastInterface> netints;
-  return Startup(settings, notify_handler, netints);
+  SacnSourceDetectorConfig config = TranslateConfig(settings, notify_handler);
+
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
+    netint_config.no_netints = true;
+
+  return sacn_source_detector_create(&config, &netint_config);
 }
 
 /**
@@ -356,7 +372,10 @@ inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHan
   if (netints.empty())
     return sacn_source_detector_create(&config, NULL);
 
-  SacnNetintConfig netint_config = {netints.data(), netints.size()};
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints = netints.data();
+  netint_config.num_netints = netints.size();
+
   return sacn_source_detector_create(&config, &netint_config);
 }
 
@@ -376,7 +395,8 @@ inline void SourceDetector::Shutdown()
 /**
  * @brief Resets the underlying network sockets and packet receipt state for the sACN Source Detector.
  *
- * This is an override of ResetNetworking that uses all network interfaces.
+ * This is an overload of ResetNetworking that defaults to using all system interfaces for multicast traffic, but can
+ * also be used to disable multicast traffic on all interfaces.
  *
  * This is typically used when the application detects that the list of networking interfaces has changed. The source
  * detector API will no longer be limited to specific interfaces (the list passed into sacn::Init(), if any, is
@@ -389,6 +409,7 @@ inline void SourceDetector::Shutdown()
  * Note that the networking reset is considered successful if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
+ * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this source detector.
  * @return #kEtcPalErrOk: Network changed successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -396,10 +417,13 @@ inline void SourceDetector::Shutdown()
  * @return #kEtcPalErrNotFound: The detector has not yet been created.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error SourceDetector::ResetNetworking()
+inline etcpal::Error SourceDetector::ResetNetworking(McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
-  std::vector<SacnMcastInterface> netints;
-  return ResetNetworking(netints);
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
+    netint_config.no_netints = true;
+
+  return sacn_source_detector_reset_networking(&netint_config);
 }
 
 /**
@@ -434,7 +458,10 @@ inline etcpal::Error SourceDetector::ResetNetworking(std::vector<SacnMcastInterf
   }
   else
   {
-    SacnNetintConfig netint_config = {sys_netints.data(), sys_netints.size()};
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    netint_config.netints = sys_netints.data();
+    netint_config.num_netints = sys_netints.size();
+
     return sacn_source_detector_reset_networking(&netint_config);
   }
 }

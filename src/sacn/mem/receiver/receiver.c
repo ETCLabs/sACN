@@ -25,9 +25,7 @@
 #include "sacn/private/common.h"
 #include "sacn/private/opts.h"
 #include "sacn/private/sockets.h"
-#include "sacn/private/mem/common.h"
-#include "sacn/private/mem/receiver/remote_source.h"
-#include "sacn/private/mem/receiver/tracked_source.h"
+#include "sacn/private/mem.h"
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>
@@ -105,7 +103,8 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
                                  const SacnNetintConfig* netint_config,
                                  const SacnReceiverInternalCallbacks* internal_callbacks, SacnReceiver** receiver_state)
 {
-  SACN_ASSERT(config);
+  if (!SACN_ASSERT_VERIFY(config) || !SACN_ASSERT_VERIFY(receiver_state))
+    return kEtcPalErrSys;
 
   // First check to see if we are already listening on this universe.
   SacnReceiver* tmp = NULL;
@@ -132,8 +131,11 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
 #endif
   receiver->netints.num_netints = 0;
 
+  etcpal_rbtree_init(&receiver->sampling_period_netints, sampling_period_netint_compare,
+                     sampling_period_netint_node_alloc, sampling_period_netint_node_dealloc);
+
   etcpal_error_t initialize_receiver_netints_result =
-      sacn_initialize_receiver_netints(&receiver->netints, netint_config);
+      sacn_initialize_receiver_netints(&receiver->netints, false, &receiver->sampling_period_netints, netint_config);
   if (initialize_receiver_netints_result != kEtcPalErrOk)
   {
     FREE_RECEIVER(receiver);
@@ -142,6 +144,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
 
   receiver->sampling = false;
   receiver->notified_sampling_started = false;
+
   receiver->suppress_limit_exceeded_notification = false;
   etcpal_rbtree_init(&receiver->sources, remote_source_compare, tracked_source_node_alloc, tracked_source_node_dealloc);
   receiver->term_sets = NULL;
@@ -178,12 +181,18 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
 
 etcpal_error_t lookup_receiver(sacn_receiver_t handle, SacnReceiver** receiver_state)
 {
+  if (!SACN_ASSERT_VERIFY(receiver_state))
+    return kEtcPalErrSys;
+
   *receiver_state = (SacnReceiver*)etcpal_rbtree_find(&receivers, &handle);
   return (*receiver_state) ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
 
 etcpal_error_t lookup_receiver_by_universe(uint16_t universe, SacnReceiver** receiver_state)
 {
+  if (!SACN_ASSERT_VERIFY(receiver_state))
+    return kEtcPalErrSys;
+
   SacnReceiverKeys lookup_keys;
   lookup_keys.universe = universe;
   *receiver_state = (SacnReceiver*)etcpal_rbtree_find(&receivers_by_universe, &lookup_keys);
@@ -193,17 +202,26 @@ etcpal_error_t lookup_receiver_by_universe(uint16_t universe, SacnReceiver** rec
 
 SacnReceiver* get_first_receiver(EtcPalRbIter* iterator)
 {
+  if (!SACN_ASSERT_VERIFY(iterator))
+    return NULL;
+
   etcpal_rbiter_init(iterator);
   return (SacnReceiver*)etcpal_rbiter_first(iterator, &receivers);
 }
 
 SacnReceiver* get_next_receiver(EtcPalRbIter* iterator)
 {
+  if (!SACN_ASSERT_VERIFY(iterator))
+    return NULL;
+
   return (SacnReceiver*)etcpal_rbiter_next(iterator);
 }
 
 etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_universe)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return kEtcPalErrSys;
+
   etcpal_error_t res = etcpal_rbtree_remove(&receivers_by_universe, receiver);
 
   if (res == kEtcPalErrOk)
@@ -217,6 +235,10 @@ etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_uni
 
 void remove_sacn_receiver(SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return;
+
+  etcpal_rbtree_clear_with_cb(&receiver->sampling_period_netints, sampling_period_netint_tree_dealloc);
   etcpal_rbtree_clear_with_cb(&receiver->sources, tracked_source_tree_dealloc);
   remove_receiver_from_maps(receiver);
   FREE_RECEIVER(receiver);
@@ -230,6 +252,9 @@ void remove_sacn_receiver(SacnReceiver* receiver)
  */
 etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return kEtcPalErrSys;
+
   etcpal_error_t res = etcpal_rbtree_insert(&receivers, receiver);
   if (res == kEtcPalErrOk)
   {
@@ -247,6 +272,9 @@ etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver)
  */
 void remove_receiver_from_maps(SacnReceiver* receiver)
 {
+  if (!SACN_ASSERT_VERIFY(receiver))
+    return;
+
   etcpal_rbtree_remove(&receivers_by_universe, receiver);
   etcpal_rbtree_remove(&receivers, receiver);
 }
@@ -254,6 +282,9 @@ void remove_receiver_from_maps(SacnReceiver* receiver)
 int receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
 {
   ETCPAL_UNUSED_ARG(tree);
+
+  if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
+    return 0;
 
   const SacnReceiver* a = (const SacnReceiver*)value_a;
   const SacnReceiver* b = (const SacnReceiver*)value_b;
@@ -263,6 +294,9 @@ int receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* 
 int receiver_compare_by_universe(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
 {
   ETCPAL_UNUSED_ARG(tree);
+
+  if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
+    return 0;
 
   const SacnReceiver* a = (const SacnReceiver*)value_a;
   const SacnReceiver* b = (const SacnReceiver*)value_b;
@@ -280,6 +314,9 @@ EtcPalRbNode* receiver_node_alloc(void)
 
 void receiver_node_dealloc(EtcPalRbNode* node)
 {
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
 #if SACN_DYNAMIC_MEM
   free(node);
 #else
@@ -292,7 +329,11 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
 
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
   SacnReceiver* receiver = (SacnReceiver*)node->value;
+  etcpal_rbtree_clear_with_cb(&receiver->sampling_period_netints, sampling_period_netint_tree_dealloc);
   etcpal_rbtree_clear_with_cb(&receiver->sources, tracked_source_tree_dealloc);
   CLEAR_BUF(&receiver->netints, netints);
   FREE_RECEIVER(receiver);

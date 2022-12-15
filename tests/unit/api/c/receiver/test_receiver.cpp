@@ -59,8 +59,8 @@ protected:
     sacn_source_loss_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
 
-    sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* internal_netints,
-                                                           const SacnNetintConfig*) {
+    sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* internal_netints, bool,
+                                                           EtcPalRbTree*, const SacnNetintConfig*) {
 #if SACN_DYNAMIC_MEM
       internal_netints->netints = NULL;
       internal_netints->netints_capacity = 0;
@@ -314,4 +314,26 @@ TEST_F(TestReceiver, ChangeUniverseErrSysWorks)
   etcpal_error_t change_universe_no_err_sys_result =
       sacn_receiver_change_universe(sacn_receiver_t(), CHANGE_UNIVERSE_VALID_UNIVERSE_1);
   EXPECT_NE(change_universe_no_err_sys_result, kEtcPalErrSys);
+}
+
+TEST_F(TestReceiver, ResetNetworkingTerminatesSourcesOnLostNetints)
+{
+  SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
+  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
+                                      const SacnRecvUniverseData*, void*) {};
+  config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sampling_period_ended = [](sacn_receiver_t, uint16_t, void*) {};
+
+  config.universe_id = CHANGE_UNIVERSE_RECEIVER_EXISTS_UNIVERSE;
+
+  sacn_receiver_t handle;
+  sacn_receiver_create(&config, &handle, nullptr);
+
+  SacnNetintConfig sys_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  EXPECT_EQ(terminate_sources_on_removed_netints_fake.call_count, 0u);
+  sacn_receiver_reset_networking(&sys_netint_config);
+  EXPECT_EQ(terminate_sources_on_removed_netints_fake.call_count, 1u);
+  SacnReceiverNetintList receiver_netint_list = {handle, nullptr, 0u, false};
+  sacn_receiver_reset_networking_per_receiver(&sys_netint_config, &receiver_netint_list, 1u);
+  EXPECT_EQ(terminate_sources_on_removed_netints_fake.call_count, 2u);
 }

@@ -88,6 +88,12 @@ void merge_receiver_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnMergeReceiverConfig* config,
                                        SacnMergeReceiver** state)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_MERGE_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(config) ||
+      !SACN_ASSERT_VERIFY(state))
+  {
+    return kEtcPalErrSys;
+  }
+
   etcpal_error_t result = kEtcPalErrOk;
 
   SacnMergeReceiver* merge_receiver = NULL;
@@ -131,6 +137,9 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
 // Needs lock
 etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeReceiver** state)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_MERGE_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(state))
+    return kEtcPalErrSys;
+
   (*state) = etcpal_rbtree_find(&merge_receivers, &handle);
   return (*state) ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
@@ -144,10 +153,12 @@ size_t get_num_merge_receivers()
 // Needs lock
 void remove_sacn_merge_receiver(sacn_merge_receiver_t handle)
 {
-  SacnMergeReceiver* merge_receiver = etcpal_rbtree_find(&merge_receivers, &handle);
-  clear_sacn_merge_receiver_sources(merge_receiver);
+  if (!SACN_ASSERT_VERIFY(handle != SACN_MERGE_RECEIVER_INVALID))
+    return;
 
-  etcpal_rbtree_remove_with_cb(&merge_receivers, merge_receiver, merge_receiver_tree_dealloc);
+  SacnMergeReceiver* merge_receiver = etcpal_rbtree_find(&merge_receivers, &handle);
+  if (SACN_ASSERT_VERIFY(merge_receiver))
+    etcpal_rbtree_remove_with_cb(&merge_receivers, merge_receiver, merge_receiver_tree_dealloc);
 }
 
 int merge_receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)

@@ -39,9 +39,9 @@
  * @name sACN version numbers
  * @{
  */
-#define SACN_VERSION_MAJOR 2 /**< The major version. */
+#define SACN_VERSION_MAJOR 3 /**< The major version. */
 #define SACN_VERSION_MINOR 0 /**< The minor version. */
-#define SACN_VERSION_PATCH 2 /**< The patch version. */
+#define SACN_VERSION_PATCH 0 /**< The patch version. */
 #define SACN_VERSION_BUILD 3 /**< The build number. */
 /**
  * @}
@@ -51,8 +51,8 @@
  * @name sACN version strings
  * @{
  */
-#define SACN_VERSION_STRING      "2.0.2.3" /**< The 4-digit version string. */
-#define SACN_VERSION_DATESTR     "17.Aug.2022" /**< The date this version was released (dd.Mm.yyyy). */
+#define SACN_VERSION_STRING      "3.0.0.3" /**< The 4-digit version string. */
+#define SACN_VERSION_DATESTR     "30.Nov.2022" /**< The date this version was released (dd.Mm.yyyy). */
 #define SACN_VERSION_COPYRIGHT   "Copyright 2022 ETC Inc." /**< The version's copyright string. */
 #define SACN_VERSION_PRODUCTNAME "sACN" /**< The version's product name. */
 /**

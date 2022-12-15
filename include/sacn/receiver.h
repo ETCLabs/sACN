@@ -102,7 +102,10 @@ typedef struct SacnRecvUniverseData
    */
   bool preview;
   /**
-   * True if this data was received during the sampling period, false otherwise.
+   * True if this data is part of a sampling period, false otherwise. This could be false even if the receiver is in a
+   * sampling period. This is because not all sources need to be included in the sampling period triggered by a
+   * networking reset. Use this to determine whether or not this data can be safely treated as part of the current merge
+   * result for the universe.
    */
   bool is_sampling;
   /**
@@ -189,9 +192,11 @@ typedef void (*SacnUniverseDataCallback)(sacn_receiver_t receiver_handle, const 
 /**
  * @brief Notify that one or more sources have entered a source loss state.
  *
- * This could be due to timeout or explicit termination. Sources are grouped using an algorithm
- * designed to prevent level jumps when multiple sources are lost simultaneously. See
- * @ref source_loss_behavior for more information.
+ * This could be due to timeout or explicit termination. When reset networking is called, the sources on the
+ * removed/lost interfaces will time out, and will eventually be included in this notification.
+ *
+ * Sources are grouped using an algorithm designed to prevent level jumps when multiple sources are lost simultaneously.
+ * See @ref source_loss_behavior for more information.
  *
  * @param[in] handle Handle to the receiver instance for which sources were lost.
  * @param[in] universe The universe this receiver is monitoring.
@@ -205,6 +210,9 @@ typedef void (*SacnSourcesLostCallback)(sacn_receiver_t handle, uint16_t univers
 /**
  * @brief Notify that a receiver's sampling period has begun.
  *
+ * If this sampling period was due to a networking reset, some sources may not be included in it. See the universe
+ * data callback to determine if a source is included or not.
+ *
  * @param[in] handle Handle to the receiver instance for which the sampling period started.
  * @param[in] universe The universe this receiver is monitoring.
  * @param[in] context Context pointer that was given at the creation of the receiver instance.
@@ -213,6 +221,10 @@ typedef void (*SacnSamplingPeriodStartedCallback)(sacn_receiver_t handle, uint16
 
 /**
  * @brief Notify that a receiver's sampling period has ended.
+ *
+ * All sources that were included in this sampling period can officially be used in the merge result for the
+ * universe. If there was a networking reset during this sampling period, another sampling period may have been
+ * scheduled, in which case this will be immediately followed by a sampling period started notification.
  *
  * @param[in] handle Handle to the receiver instance for which the sampling period ended.
  * @param[in] universe The universe this receiver is monitoring.
@@ -315,6 +327,8 @@ typedef struct SacnReceiverNetintList
   SacnMcastInterface* netints;
   /** The size of netints, or 0 if netints is NULL. */
   size_t num_netints;
+  /** If this is true, this receiver will not use any network interfaces for multicast traffic. */
+  bool no_netints;
 } SacnReceiverNetintList;
 
 void sacn_receiver_config_init(SacnReceiverConfig* config);

@@ -43,6 +43,9 @@ static size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetin
 // Needs lock
 etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetintId* id)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(id))
+    return kEtcPalErrSys;
+
   SacnSourceNetint* netint = lookup_source_netint(source, id);
 
   if (netint)
@@ -64,6 +67,9 @@ etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetin
 // Needs lock
 SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNetintId* id)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(id))
+    return NULL;
+
   bool found = false;
   size_t index = get_source_netint_index(source, id, &found);
   return found ? &source->netints[index] : NULL;
@@ -72,6 +78,9 @@ SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNeti
 // Needs lock
 SacnSourceNetint* lookup_source_netint_and_index(SacnSource* source, const EtcPalMcastNetintId* id, size_t* index)
 {
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(id) || !SACN_ASSERT_VERIFY(index))
+    return NULL;
+
   bool found = false;
   *index = get_source_netint_index(source, id, &found);
   return found ? &source->netints[*index] : NULL;
@@ -80,11 +89,17 @@ SacnSourceNetint* lookup_source_netint_and_index(SacnSource* source, const EtcPa
 // Needs lock
 void remove_sacn_source_netint(SacnSource* source, size_t index)
 {
+  if (!SACN_ASSERT_VERIFY(source))
+    return;
+
   REMOVE_AT_INDEX(source, SacnSourceNetint, netints, index);
 }
 
 size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found)
 {
+  if (!SACN_ASSERT_VERIFY(found))
+    return 0;
+
   *found = false;
   size_t index = 0;
 

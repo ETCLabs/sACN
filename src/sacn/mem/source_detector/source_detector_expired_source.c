@@ -45,6 +45,12 @@
 etcpal_error_t add_sacn_source_detector_expired_source(SourceDetectorSourceExpiredNotification* source_expired,
                                                        sacn_remote_source_t handle, const char* name)
 {
+  if (!SACN_ASSERT_VERIFY(source_expired) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) ||
+      !SACN_ASSERT_VERIFY(name))
+  {
+    return kEtcPalErrSys;
+  }
+
   if (!source_expired || (handle == SACN_REMOTE_SOURCE_INVALID) || !name)
     return kEtcPalErrInvalid;
 

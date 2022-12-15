@@ -52,6 +52,9 @@ static SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_T
  */
 SourceLimitExceededNotification* get_source_limit_exceeded(sacn_thread_id_t thread_id)
 {
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+    return NULL;
+
   if (thread_id < sacn_mem_get_num_threads())
   {
     SourceLimitExceededNotification* to_return = &source_limit_exceeded[thread_id];
@@ -63,15 +66,23 @@ SourceLimitExceededNotification* get_source_limit_exceeded(sacn_thread_id_t thre
   return NULL;
 }
 
-#if SACN_DYNAMIC_MEM
-
 etcpal_error_t init_source_limit_exceeded_buf(unsigned int num_threads)
 {
+  if (!SACN_ASSERT_VERIFY(num_threads > 0))
+    return kEtcPalErrSys;
+
+#if SACN_DYNAMIC_MEM
   source_limit_exceeded = calloc(num_threads, sizeof(SourceLimitExceededNotification));
   if (!source_limit_exceeded)
     return kEtcPalErrNoMem;
+#else   // SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(num_threads);
+  memset(source_limit_exceeded, 0, sizeof(source_limit_exceeded));
+#endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;
 }
+
+#if SACN_DYNAMIC_MEM
 
 void deinit_source_limit_exceeded_buf(void)
 {

@@ -72,29 +72,32 @@ static void deinit_sampling_started_buf(SamplingStartedNotificationBuf* sampling
  */
 SamplingStartedNotification* get_sampling_started_buffer(sacn_thread_id_t thread_id, size_t size)
 {
-  if (thread_id < sacn_mem_get_num_threads())
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) ||
+      !SACN_ASSERT_VERIFY(thread_id < sacn_mem_get_num_threads()))
   {
-    SamplingStartedNotificationBuf* notifications = &sacn_pool_sampling_started[thread_id];
-
-    CHECK_CAPACITY(notifications, size, buf, SamplingStartedNotification, SACN_RECEIVER_MAX_UNIVERSES, NULL);
-
-    memset(notifications->buf, 0, size * sizeof(SamplingStartedNotification));
-    for (size_t i = 0; i < size; ++i)
-    {
-      notifications->buf[i].handle = SACN_RECEIVER_INVALID;
-      notifications->buf[i].thread_id = SACN_THREAD_ID_INVALID;
-    }
-
-    return notifications->buf;
+    return NULL;
   }
 
-  return NULL;
-}
+  SamplingStartedNotificationBuf* notifications = &sacn_pool_sampling_started[thread_id];
 
-#if SACN_DYNAMIC_MEM
+  CHECK_CAPACITY(notifications, size, buf, SamplingStartedNotification, SACN_RECEIVER_MAX_UNIVERSES, NULL);
+
+  memset(notifications->buf, 0, size * sizeof(SamplingStartedNotification));
+  for (size_t i = 0; i < size; ++i)
+  {
+    notifications->buf[i].handle = SACN_RECEIVER_INVALID;
+    notifications->buf[i].thread_id = SACN_THREAD_ID_INVALID;
+  }
+
+  return notifications->buf;
+}
 
 etcpal_error_t init_sampling_started_bufs(unsigned int num_threads)
 {
+  if (!SACN_ASSERT_VERIFY(num_threads > 0))
+    return kEtcPalErrSys;
+
+#if SACN_DYNAMIC_MEM
   sacn_pool_sampling_started = calloc(num_threads, sizeof(SamplingStartedNotificationBuf));
   if (!sacn_pool_sampling_started)
     return kEtcPalErrNoMem;
@@ -105,12 +108,19 @@ etcpal_error_t init_sampling_started_bufs(unsigned int num_threads)
     if (res != kEtcPalErrOk)
       return res;
   }
+#else   // SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(num_threads);
+  memset(sacn_pool_sampling_started, 0, sizeof(sacn_pool_sampling_started));
+#endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;
 }
 
+#if SACN_DYNAMIC_MEM
+
 etcpal_error_t init_sampling_started_buf(SamplingStartedNotificationBuf* sampling_started_buf)
 {
-  SACN_ASSERT(sampling_started_buf);
+  if (!SACN_ASSERT_VERIFY(sampling_started_buf))
+    return kEtcPalErrSys;
 
   sampling_started_buf->buf = calloc(INITIAL_CAPACITY, sizeof(SamplingStartedNotification));
   if (!sampling_started_buf->buf)
@@ -133,7 +143,8 @@ void deinit_sampling_started_bufs(void)
 
 void deinit_sampling_started_buf(SamplingStartedNotificationBuf* sampling_started_buf)
 {
-  SACN_ASSERT(sampling_started_buf);
+  if (!SACN_ASSERT_VERIFY(sampling_started_buf))
+    return;
 
   if (sampling_started_buf->buf)
     free(sampling_started_buf->buf);

@@ -55,6 +55,12 @@ static size_t get_source_index(sacn_source_t handle, bool* found);
 // Needs lock
 etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(config) ||
+      !SACN_ASSERT_VERIFY(source_state))
+  {
+    return kEtcPalErrSys;
+  }
+
   etcpal_error_t result = kEtcPalErrOk;
   SacnSource* source = NULL;
   if (lookup_source(handle, &source) == kEtcPalErrOk)
@@ -103,6 +109,9 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
 
     if (!source->universes || !source->netints)
       result = kEtcPalErrNoMem;
+#else
+    memset(source->universes, 0, sizeof(source->universes));
+    memset(source->netints, 0, sizeof(source->netints));
 #endif
   }
 
@@ -124,6 +133,9 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
 // Needs lock
 etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(source_state))
+    return kEtcPalErrSys;
+
   bool found = false;
   size_t index = get_source_index(handle, &found);
   *source_state = found ? &sacn_pool_source_mem.sources[index] : NULL;
@@ -151,6 +163,9 @@ void remove_sacn_source(size_t index)
 
 size_t get_source_index(sacn_source_t handle, bool* found)
 {
+  if (!SACN_ASSERT_VERIFY(found))
+    return 0;
+
   *found = false;
   size_t index = 0;
 
@@ -173,6 +188,8 @@ etcpal_error_t init_sources(void)
   sacn_pool_source_mem.sources_capacity = sacn_pool_source_mem.sources ? INITIAL_CAPACITY : 0;
   if (!sacn_pool_source_mem.sources)
     res = kEtcPalErrNoMem;
+#else   // SACN_DYNAMIC_MEM
+  memset(sacn_pool_source_mem.sources, 0, sizeof(sacn_pool_source_mem.sources));
 #endif  // SACN_DYNAMIC_MEM
   sacn_pool_source_mem.num_sources = 0;
 

@@ -17,3 +17,5 @@ set(TEST_MERGE_RECEIVER_SOURCES
 
 sacn_add_dynamic_test(test_merge_receiver ${TEST_MERGE_RECEIVER_SOURCES})
 sacn_add_static_test(test_merge_receiver ${TEST_MERGE_RECEIVER_SOURCES})
+sacn_add_test(unit_test_merge_receiver_sampling_merger_disabled_dynamic ${SACN_TEST}/configs/merge_receiver_sampling_merger_disabled_dynamic ${TEST_MERGE_RECEIVER_SOURCES})
+sacn_add_test(unit_test_merge_receiver_sampling_merger_disabled_static ${SACN_TEST}/configs/merge_receiver_sampling_merger_disabled_static ${TEST_MERGE_RECEIVER_SOURCES})

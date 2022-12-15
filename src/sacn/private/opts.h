@@ -95,11 +95,27 @@
 #define SACN_LOG_MSG_PREFIX "sACN: "
 #endif
 
+/* Assertion failure handler */
+bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, const int line);
+
 /**
- * @brief The debug assert used by the sACN library.
+ * @brief The assertion handler used by the sACN library.
  *
- * By default, just uses the C library assert. If redefining this, it must be redefined as a macro
- * taking a single argument (the assertion expression).
+ * By default, evaluates to true on success, or false on failure (additionally asserting and logging). If redefining
+ * this, it must be redefined as a macro taking a single argument (the assertion expression).
+ */
+#ifndef SACN_ASSERT_VERIFY
+#define SACN_ASSERT_VERIFY(exp) ((exp) ? true : sacn_assert_verify_fail(#exp, __FILE__, __func__, __LINE__))
+#endif
+
+/**
+ * @brief The lower-level debug assert used by the sACN library.
+ *
+ * This is the assertion that gets called by #SACN_ASSERT_VERIFY on failure. Redefine this to retain the logging done by
+ * the default #SACN_ASSERT_VERIFY macro.
+ *
+ * By default, just uses the C library assert. If redefining this, it must be redefined as a macro taking a single
+ * argument (the assertion expression).
  */
 #ifndef SACN_ASSERT
 #include <assert.h>
@@ -384,8 +400,11 @@
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
-#ifndef SACN_DMX_MERGER_MAX_MERGERS
+#ifdef SACN_DMX_MERGER_MAX_MERGERS
+#define SACN_DMX_MERGER_DEFAULT_MAX_MERGERS 0
+#else
 #define SACN_DMX_MERGER_MAX_MERGERS SACN_RECEIVER_MAX_UNIVERSES
+#define SACN_DMX_MERGER_DEFAULT_MAX_MERGERS 1
 #endif
 
 /**
@@ -427,22 +446,39 @@
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
-#ifndef SACN_MERGE_RECEIVER_ENABLE
-#define SACN_MERGE_RECEIVER_ENABLE                                                      \
+#ifndef SACN_MERGE_RECEIVER_ENABLE_IN_STATIC_MEMORY_MODE
+#define SACN_MERGE_RECEIVER_ENABLE_IN_STATIC_MEMORY_MODE                                \
   ((SACN_RECEIVER_MAX_UNIVERSES > 0) && (SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE > 0) && \
    (SACN_RECEIVER_TOTAL_MAX_SOURCES > 0) && (SACN_DMX_MERGER_MAX_MERGERS > 0) &&        \
    (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER > 0))
 #endif
 
-#if !SACN_DYNAMIC_MEM && SACN_MERGE_RECEIVER_ENABLE &&                                      \
+#if !SACN_DYNAMIC_MEM && SACN_MERGE_RECEIVER_ENABLE_IN_STATIC_MEMORY_MODE &&                \
     ((SACN_RECEIVER_MAX_UNIVERSES <= 0) || (SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE <= 0) || \
      (SACN_RECEIVER_TOTAL_MAX_SOURCES <= 0))
-#error "Error: SACN_MERGE_RECEIVER_ENABLE was set to 1, but the sACN Receiver API is disabled!"
+#error "Error: SACN_MERGE_RECEIVER_ENABLE_IN_STATIC_MEMORY_MODE was set to 1, but the sACN Receiver API is disabled!"
 #endif
 
-#if !SACN_DYNAMIC_MEM && SACN_MERGE_RECEIVER_ENABLE && \
+#if !SACN_DYNAMIC_MEM && SACN_MERGE_RECEIVER_ENABLE_IN_STATIC_MEMORY_MODE && \
     ((SACN_DMX_MERGER_MAX_MERGERS <= 0) || (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER <= 0))
-#error "Error: SACN_MERGE_RECEIVER_ENABLE was set to 1, but the sACN DMX Merger API is disabled!"
+#error "Error: SACN_MERGE_RECEIVER_ENABLE_IN_STATIC_MEMORY_MODE was set to 1, but the sACN DMX Merger API is disabled!"
+#endif
+
+/**
+ * @brief Whether to enable a second DMX merger per merge receiver dedicated to sources in the sampling period.
+ *
+ * Set this to 1 to enable, 0 to disable. This would enable existing live sources to continue being displayed during a
+ * networking reset. Disabling this would save memory by limiting to one DMX merger, but it would also interrupt all
+ * live data during the sampling period caused by a networking reset, since all sources would always be included in
+ * every sampling period.
+ */
+#ifndef SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+#define SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER 1
+#endif
+
+#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER && SACN_DMX_MERGER_DEFAULT_MAX_MERGERS
+#undef SACN_DMX_MERGER_MAX_MERGERS
+#define SACN_DMX_MERGER_MAX_MERGERS (SACN_RECEIVER_MAX_UNIVERSES * 2)
 #endif
 
 /**

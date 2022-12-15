@@ -59,8 +59,8 @@ static etcpal_mutex_t sacn_mutex;
  * @param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
  *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
  * @param[in, out] sys_netint_config Optional. If non-NULL, this is the list of system interfaces the library will be
- * limited to, and the status codes are filled in.  If NULL, the library is allowed to use all available system
- * interfaces.
+ * limited to (with the added option of not allowing any interfaces to be used), and the status codes are filled in.  If
+ * NULL, the library is allowed to use all available system interfaces.
  * @return #kEtcPalErrOk: Initialization successful.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
@@ -342,6 +342,20 @@ etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, Et
 }
 
 #endif  // SACN_RECEIVER_ENABLED
+
+bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, const int line)
+{
+#if !SACN_LOGGING_ENABLED
+  ETCPAL_UNUSED_ARG(exp);
+  ETCPAL_UNUSED_ARG(file);
+  ETCPAL_UNUSED_ARG(func);
+  ETCPAL_UNUSED_ARG(line);
+#endif
+  SACN_LOG_CRIT("ASSERTION \"%s\" FAILED (FILE: \"%s\" FUNCTION: \"%s\" LINE: %d)", exp ? exp : "", file ? file : "",
+                func ? func : "", line);
+  SACN_ASSERT(false);
+  return false;
+}
 
 bool sacn_lock(void)
 {

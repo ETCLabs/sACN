@@ -52,6 +52,9 @@ static UniverseDataNotification sacn_pool_universe_data[SACN_RECEIVER_MAX_THREAD
  */
 UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id)
 {
+  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+    return NULL;
+
   if (thread_id < sacn_mem_get_num_threads())
   {
     UniverseDataNotification* to_return = &sacn_pool_universe_data[thread_id];
@@ -63,16 +66,23 @@ UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id)
   return NULL;
 }
 
-#if SACN_DYNAMIC_MEM
-
 etcpal_error_t init_universe_data_buf(unsigned int num_threads)
 {
+  if (!SACN_ASSERT_VERIFY(num_threads > 0))
+    return kEtcPalErrSys;
+
+#if SACN_DYNAMIC_MEM
   sacn_pool_universe_data = calloc(num_threads, sizeof(UniverseDataNotification));
   if (!sacn_pool_universe_data)
     return kEtcPalErrNoMem;
+#else   // SACN_DYNAMIC_MEM
+  ETCPAL_UNUSED_ARG(num_threads);
+  memset(sacn_pool_universe_data, 0, sizeof(sacn_pool_universe_data));
+#endif  // SACN_DYNAMIC_MEM
   return kEtcPalErrOk;
 }
 
+#if SACN_DYNAMIC_MEM
 void deinit_universe_data_buf(void)
 {
   if (sacn_pool_universe_data)
@@ -81,7 +91,6 @@ void deinit_universe_data_buf(void)
     sacn_pool_universe_data = NULL;
   }
 }
-
 #endif  // SACN_DYNAMIC_MEM
 
 #endif  // SACN_RECEIVER_ENABLED

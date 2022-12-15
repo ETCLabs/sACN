@@ -110,7 +110,8 @@ protected:
     sacn_sockets_reset_all_fakes();
     sacn_source_loss_reset_all_fakes();
 
-    sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* receiver_netints,
+    sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* receiver_netints, bool,
+                                                           EtcPalRbTree* sampling_period_netints,
                                                            const SacnNetintConfig* app_netint_config) {
       EXPECT_NE(app_netint_config, nullptr);
 
@@ -126,6 +127,9 @@ protected:
         {
           receiver_netints->netints[i] = app_netint_config->netints[i].iface;
           app_netint_config->netints[i].status = kEtcPalErrOk;
+
+          EXPECT_EQ(add_sacn_sampling_period_netint(sampling_period_netints, &receiver_netints->netints[i], false),
+                    kEtcPalErrOk);
         }
       }
 
@@ -160,7 +164,11 @@ protected:
   SacnReceiver* AddReceiver(const SacnReceiverConfig& config)
   {
     SacnReceiver* receiver = nullptr;
-    SacnNetintConfig netint_config = {kTestNetints.data(), kTestNetints.size()};
+
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    netint_config.netints = kTestNetints.data();
+    netint_config.num_netints = kTestNetints.size();
+
     EXPECT_EQ(add_sacn_receiver(next_receiver_handle_++, &config, &netint_config, NULL, &receiver), kEtcPalErrOk);
 
     return receiver;
@@ -169,7 +177,11 @@ protected:
   SacnSourceDetector* AddSourceDetector(const SacnSourceDetectorConfig& config = kTestSourceDetectorConfig)
   {
     SacnSourceDetector* detector = nullptr;
-    SacnNetintConfig netint_config = {kTestNetints.data(), kTestNetints.size()};
+
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    netint_config.netints = kTestNetints.data();
+    netint_config.num_netints = kTestNetints.size();
+
     EXPECT_EQ(add_sacn_source_detector(&config, &netint_config, &detector), kEtcPalErrOk);
 
     return detector;
@@ -178,7 +190,8 @@ protected:
   SacnTrackedSource* AddTrackedSource(SacnReceiver* receiver)
   {
     SacnTrackedSource* source = nullptr;
-    EXPECT_EQ(add_sacn_tracked_source(receiver, &next_source_cid_, kTestName, 0u, 0u, &source), kEtcPalErrOk);
+    EXPECT_EQ(add_sacn_tracked_source(receiver, &next_source_cid_, kTestName, &kTestNetints[0].iface, 0u, 0u, &source),
+              kEtcPalErrOk);
 
     ++next_source_cid_.data[0];
 
@@ -229,7 +242,8 @@ protected:
   }
 
   void InitTestData(uint8_t start_code, uint16_t universe, const uint8_t* data = nullptr, size_t data_len = 0u,
-                    uint8_t flags = 0u, const EtcPalUuid& source_cid = kTestCid, uint8_t sequence_number = seq_num_)
+                    uint8_t flags = 0u, const EtcPalUuid& source_cid = kTestCid, uint8_t sequence_number = seq_num_,
+                    const EtcPalMcastNetintId& netint = kTestNetints[0].iface)
   {
     init_sacn_data_send_buf(test_data_, start_code, &source_cid, kTestName, kTestPriority, universe, 0u, kTestPreview);
 
@@ -238,11 +252,13 @@ protected:
 
     test_data_[SACN_OPTS_OFFSET] |= flags;
     test_data_[SACN_SEQ_OFFSET] = sequence_number;
+    test_data_netint_ = netint;
 
     sacn_read_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadResult* read_result) {
       read_result->from_addr = kTestSockAddr;
       read_result->data = test_data_;
       read_result->data_len = SACN_MTU;
+      read_result->netint = test_data_netint_;
       return kEtcPalErrOk;
     };
   }
@@ -259,7 +275,10 @@ protected:
     remove_receiver_from_thread(test_receiver_);
     remove_sacn_receiver(test_receiver_);
 
-    SacnNetintConfig netint_config = {kTestNetints.data(), kTestNetints.size()};
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    netint_config.netints = kTestNetints.data();
+    netint_config.num_netints = kTestNetints.size();
+
     EXPECT_EQ(add_sacn_receiver(handle, &config, &netint_config, NULL, &test_receiver_), kEtcPalErrOk);
     begin_sampling_period(test_receiver_);
     EXPECT_EQ(assign_receiver_to_thread(test_receiver_), kEtcPalErrOk);
@@ -330,10 +349,12 @@ protected:
   SacnReceiver* test_receiver_;
   static uint8_t seq_num_;
   static uint8_t test_data_[SACN_MTU];
+  static EtcPalMcastNetintId test_data_netint_;
 };
 
 uint8_t TestReceiverThread::seq_num_ = 0u;
 uint8_t TestReceiverThread::test_data_[SACN_MTU] = {0};
+EtcPalMcastNetintId TestReceiverThread::test_data_netint_ = kTestNetints[0].iface;
 
 TEST_F(TestReceiverState, RespectsMaxReceiverLimit)
 {
@@ -353,7 +374,7 @@ TEST_F(TestReceiverState, RespectsMaxTrackedSourceLimit)
          ++j)
     {
       EtcPalUuid cid = etcpal::Uuid::V4().get();
-      EXPECT_EQ(add_sacn_tracked_source(receiver, &cid, "name", 0u, 0u, &source), kEtcPalErrOk);
+      EXPECT_EQ(add_sacn_tracked_source(receiver, &cid, "name", &kTestNetints[0].iface, 0u, 0u, &source), kEtcPalErrOk);
     }
   }
 }
@@ -839,6 +860,16 @@ TEST_F(TestReceiverState, BeginSamplingPeriodWorks)
   EXPECT_EQ(receiver->sampling, true);
   EXPECT_EQ(receiver->notified_sampling_started, false);
   EXPECT_EQ(receiver->sample_timer.interval, static_cast<uint32_t>(SACN_SAMPLE_TIME));
+  EXPECT_EQ(etcpal_timer_remaining(&receiver->sample_timer), static_cast<uint32_t>(SACN_SAMPLE_TIME));
+
+  // Also test that the timer doesn't reset when a sampling period is already occurring
+  ++etcpal_getms_fake.return_val;
+  begin_sampling_period(receiver);
+
+  EXPECT_EQ(receiver->sampling, true);
+  EXPECT_EQ(receiver->notified_sampling_started, false);
+  EXPECT_EQ(receiver->sample_timer.interval, static_cast<uint32_t>(SACN_SAMPLE_TIME));
+  EXPECT_EQ(etcpal_timer_remaining(&receiver->sample_timer), static_cast<uint32_t>(SACN_SAMPLE_TIME) - 1u);
 }
 
 TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesIpv4AndIpv6)
@@ -963,6 +994,38 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsWorks)
   remove_all_receiver_sockets(kPerformAllSocketCleanupNow);
 
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 2u * SACN_RECEIVER_MAX_UNIVERSES);
+}
+
+TEST_F(TestReceiverState, TerminateSourcesOnRemovedNetintsWorks)
+{
+  SacnReceiver* receiver = AddReceiver();
+  ASSERT_EQ(receiver->netints.num_netints, kTestNetints.size());
+
+  std::vector<SacnTrackedSource*> sources;
+  for (const auto& netint : kTestNetints)
+  {
+    EtcPalUuid cid = etcpal::Uuid::V4().get();
+    SacnTrackedSource* source = nullptr;
+    EXPECT_EQ(add_sacn_tracked_source(receiver, &cid, "name", &netint.iface, 0u, 0u, &source), kEtcPalErrOk);
+    sources.push_back(source);
+  }
+
+  while (receiver->netints.num_netints > 0)
+  {
+    terminate_sources_on_removed_netints(receiver);
+
+    for (size_t i = 0; i < receiver->netints.num_netints; ++i)
+    {
+      EXPECT_FALSE(sources[i]->terminated);
+    }
+
+    for (size_t i = receiver->netints.num_netints; i < sources.size(); ++i)
+    {
+      EXPECT_TRUE(sources[i]->terminated);
+    }
+
+    --receiver->netints.num_netints;
+  }
 }
 
 TEST_F(TestReceiverThread, AddsPendingSockets)
@@ -1109,6 +1172,75 @@ TEST_F(TestReceiverThread, UniverseDataFiltersPreview)
 
   RunThreadCycle();
   EXPECT_EQ(universe_data_fake.call_count, 1u);
+}
+
+TEST_F(TestReceiverThread, UniverseDataFiltersFutureSamplingPeriodNetints)
+{
+  std::vector<SacnMcastInterface> current_netints = {kTestNetints.begin(),
+                                                     kTestNetints.begin() + (kTestNetints.size() / 2)};
+  std::vector<SacnMcastInterface> future_netints = {kTestNetints.begin() + (kTestNetints.size() / 2),
+                                                    kTestNetints.end()};
+
+  etcpal_rbtree_clear_with_cb(&test_receiver_->sampling_period_netints, sampling_period_netint_tree_dealloc);
+  for (const auto& netint : current_netints)
+    add_sacn_sampling_period_netint(&test_receiver_->sampling_period_netints, &netint.iface, false);
+  for (const auto& netint : future_netints)
+    add_sacn_sampling_period_netint(&test_receiver_->sampling_period_netints, &netint.iface, true);
+
+  size_t prev_call_count = universe_data_fake.call_count;
+  for (const auto& netint : current_netints)
+  {
+    InitTestData(SACN_STARTCODE_DMX, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u,
+                 etcpal::Uuid::V4().get(), seq_num_, netint.iface);
+    RunThreadCycle();
+    EXPECT_EQ(universe_data_fake.call_count, prev_call_count + 1);
+    prev_call_count = universe_data_fake.call_count;
+  }
+
+  for (const auto& netint : future_netints)
+  {
+    InitTestData(SACN_STARTCODE_DMX, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u,
+                 etcpal::Uuid::V4().get(), seq_num_, netint.iface);
+    RunThreadCycle();
+    EXPECT_EQ(universe_data_fake.call_count, prev_call_count);
+  }
+}
+
+TEST_F(TestReceiverThread, UniverseDataFiltersSubsequentSourceNetints)
+{
+  static constexpr size_t kNumTestIterations = 3;
+  static constexpr size_t kNumSources = 3;
+  static constexpr size_t kNumDataCallsPerSource = 3;
+
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
+  std::vector<EtcPalUuid> cids;
+  for (size_t i = 0; i < kNumSources; ++i)
+    cids.push_back(etcpal::Uuid::V4().get());
+
+  for (size_t i = 0; i < kNumTestIterations; ++i)
+  {
+    for (size_t j = 0; j < kNumSources; ++j)
+    {
+      // The netints come in a different order for each source - only the first one for a source should notify.
+      std::vector<SacnMcastInterface> ordered_netints;
+      for (size_t k = 0; k < kTestNetints.size(); ++k)
+        ordered_netints.push_back(kTestNetints[(j + k) % kTestNetints.size()]);
+
+      for (size_t k = 0; k < kNumDataCallsPerSource; ++k)
+      {
+        for (const auto& netint : ordered_netints)
+        {
+          InitTestData(SACN_STARTCODE_DMX, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, cids[j], seq_num_,
+                       netint.iface);
+          RunThreadCycle();
+          EXPECT_EQ(universe_data_fake.call_count,
+                    (i * kNumSources * kNumDataCallsPerSource) + (j * kNumDataCallsPerSource) + k + 1)
+              << "(i:" << i << " j:" << j << " k:" << k << ")";
+        }
+      }
+    }
+  }
 }
 
 TEST_F(TestReceiverThread, UniverseDataIndicatesPreview)
@@ -1643,6 +1775,64 @@ TEST_F(TestReceiverThread, SamplingPeriodEndedWorks)
   RunThreadCycle();
 
   EXPECT_EQ(sampling_period_ended_fake.call_count, 1u);
+}
+
+TEST_F(TestReceiverThread, SamplingPeriodTransitionWorks)
+{
+  std::vector<SacnMcastInterface> initial_netints = {kTestNetints.begin(),
+                                                     kTestNetints.begin() + (kTestNetints.size() / 2)};
+  std::vector<SacnMcastInterface> future_netints = {kTestNetints.begin() + (kTestNetints.size() / 2),
+                                                    kTestNetints.end()};
+
+  etcpal_rbtree_clear_with_cb(&test_receiver_->sampling_period_netints, sampling_period_netint_tree_dealloc);
+  for (const auto& netint : initial_netints)
+    add_sacn_sampling_period_netint(&test_receiver_->sampling_period_netints, &netint.iface, false);
+  for (const auto& netint : future_netints)
+    add_sacn_sampling_period_netint(&test_receiver_->sampling_period_netints, &netint.iface, true);
+
+  // Make sure sampling started is called after sampling ended
+  sampling_period_ended_fake.custom_fake = [](sacn_receiver_t, uint16_t, void*) {
+    EXPECT_EQ(sampling_period_started_fake.call_count, 0u);
+  };
+  sampling_period_started_fake.custom_fake = [](sacn_receiver_t, uint16_t, void*) {
+    EXPECT_EQ(sampling_period_ended_fake.call_count, 1u);
+  };
+
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
+
+  EXPECT_EQ(sampling_period_ended_fake.call_count, 1u);
+  EXPECT_EQ(sampling_period_started_fake.call_count, 1u);
+
+  sampling_period_ended_fake.custom_fake = [](sacn_receiver_t, uint16_t, void*) {};
+  sampling_period_started_fake.custom_fake = [](sacn_receiver_t, uint16_t, void*) {};
+
+  for (const auto& netint : initial_netints)
+    EXPECT_EQ(etcpal_rbtree_find(&test_receiver_->sampling_period_netints, &netint.iface), nullptr);
+  for (const auto& netint : future_netints)
+    EXPECT_NE(etcpal_rbtree_find(&test_receiver_->sampling_period_netints, &netint.iface), nullptr);
+
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sampling_period_netints), future_netints.size());
+
+  EtcPalRbIter iter;
+  etcpal_rbiter_init(&iter);
+  for (SacnSamplingPeriodNetint* sp_netint = reinterpret_cast<SacnSamplingPeriodNetint*>(
+           etcpal_rbiter_first(&iter, &test_receiver_->sampling_period_netints));
+       sp_netint; sp_netint = reinterpret_cast<SacnSamplingPeriodNetint*>(etcpal_rbiter_next(&iter)))
+  {
+    EXPECT_FALSE(sp_netint->in_future_sampling_period);
+  }
+
+  EXPECT_TRUE(test_receiver_->sampling);
+
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
+
+  EXPECT_EQ(sampling_period_ended_fake.call_count, 2u);
+  EXPECT_EQ(sampling_period_started_fake.call_count, 1u);
+
+  EXPECT_EQ(etcpal_rbtree_size(&test_receiver_->sampling_period_netints), 0u);
 }
 
 TEST_F(TestReceiverThread, SourcePapLostWorks)

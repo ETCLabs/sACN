@@ -151,6 +151,8 @@ static ListeningUniverse* find_listener_on_universe(uint16_t universe)
 static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t universe,
                                       const SacnReceiverCallbacks* callbacks)
 {
+  etcpal_error_t result = kEtcPalErrOk;
+
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
   config.callbacks = *callbacks;
   config.callbacks.context = listener;
@@ -158,33 +160,46 @@ static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t univ
 
   printf("Creating a new sACN receiver on universe %u.\n", universe);
 
-  // Normally passing in NULL and 0 for netints and length would achieve the same result, this is just for
-  // demonstration.
-  size_t num_sys_netints = etcpal_netint_get_num_interfaces();
-  const EtcPalNetintInfo* netint_list = etcpal_netint_get_interfaces();
-#define MAX_LISTENER_NETINTS 100
-  SacnMcastInterface netints[MAX_LISTENER_NETINTS];
-
-  for (size_t i = 0; (i < num_sys_netints) && (i < MAX_LISTENER_NETINTS); ++i)
+  // Even though reset_networking is never called in this example, a loop is used to demonstrate the case where it could
+  // be called at any time on another thread.
+  size_t num_sys_netints = 4;  // Start with estimate which eventually has the actual number written to it
+  EtcPalNetintInfo* netint_list = calloc(num_sys_netints, sizeof(EtcPalNetintInfo));
+  do
   {
-    netints[i].iface.index = netint_list[i].index;
-    netints[i].iface.ip_type = netint_list[i].addr.type;
+    result = etcpal_netint_get_interfaces(netint_list, &num_sys_netints);
+    if (result == kEtcPalErrBufSize)
+      netint_list = realloc(netint_list, num_sys_netints * sizeof(EtcPalNetintInfo));
+  } while (result == kEtcPalErrBufSize);
+
+  if (result == kEtcPalErrOk)
+  {
+#define MAX_LISTENER_NETINTS 100
+    SacnMcastInterface netints[MAX_LISTENER_NETINTS];
+
+    for (size_t i = 0; (i < num_sys_netints) && (i < MAX_LISTENER_NETINTS); ++i)
+    {
+      netints[i].iface.index = netint_list[i].index;
+      netints[i].iface.ip_type = netint_list[i].addr.type;
+    }
+
+    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+    netint_config.netints = netints;
+    netint_config.num_netints = (num_sys_netints < MAX_LISTENER_NETINTS) ? num_sys_netints : MAX_LISTENER_NETINTS;
+
+    result = sacn_receiver_create(&config, &listener->receiver_handle, &netint_config);
   }
 
-  SacnNetintConfig netint_config;
-  netint_config.netints = netints;
-  netint_config.num_netints = (num_sys_netints < MAX_LISTENER_NETINTS) ? num_sys_netints : MAX_LISTENER_NETINTS;
-
-  etcpal_error_t result = sacn_receiver_create(&config, &listener->receiver_handle, &netint_config);
   if (result == kEtcPalErrOk)
   {
     listener->universe = universe;
     listener->num_sources = 0;
   }
-  else
-  {
+
+  if (result != kEtcPalErrOk)
     printf("Creating sACN receiver failed with error: '%s'\n", etcpal_strerror(result));
-  }
+
+  if (netint_list)
+    free(netint_list);
 
   return result;
 }

@@ -34,6 +34,8 @@ DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_dmx_merger_update_pap, sacn_dmx_merg
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_dmx_merger_update_universe_priority, sacn_dmx_merger_t,
                        sacn_dmx_merger_source_t, uint8_t);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_dmx_merger_remove_pap, sacn_dmx_merger_t, sacn_dmx_merger_source_t);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, lookup_state, sacn_dmx_merger_t, sacn_dmx_merger_source_t, MergerState**,
+                       SourceState**);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, create_sacn_dmx_merger, const SacnDmxMergerConfig*, sacn_dmx_merger_t*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, destroy_sacn_dmx_merger, sacn_dmx_merger_t);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, remove_sacn_dmx_merger_source, sacn_dmx_merger_t, sacn_dmx_merger_source_t);
@@ -61,6 +63,7 @@ void sacn_dmx_merger_reset_all_fakes(void)
   RESET_FAKE(sacn_dmx_merger_update_pap);
   RESET_FAKE(sacn_dmx_merger_update_universe_priority);
   RESET_FAKE(sacn_dmx_merger_remove_pap);
+  RESET_FAKE(lookup_state);
   RESET_FAKE(create_sacn_dmx_merger);
   RESET_FAKE(destroy_sacn_dmx_merger);
   RESET_FAKE(remove_sacn_dmx_merger_source);

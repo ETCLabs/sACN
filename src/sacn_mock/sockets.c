@@ -24,8 +24,10 @@ DEFINE_FAKE_VOID_FUNC(sacn_sockets_deinit);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_source, const SacnNetintConfig*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_receiver, const SacnNetintConfig*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_source_detector, const SacnNetintConfig*);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_receiver_netints, SacnInternalNetintArray*,
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_receiver_netints, SacnInternalNetintArray*, bool, EtcPalRbTree*,
                        const SacnNetintConfig*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_add_all_netints_to_sampling_period, SacnInternalNetintArray*,
+                       EtcPalRbTree*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_source_detector_netints, SacnInternalNetintArray*,
                        const SacnNetintConfig*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_initialize_source_netints, SacnInternalNetintArray*,
@@ -51,6 +53,7 @@ void sacn_sockets_reset_all_fakes(void)
   RESET_FAKE(sacn_sockets_reset_receiver);
   RESET_FAKE(sacn_sockets_reset_source_detector);
   RESET_FAKE(sacn_initialize_receiver_netints);
+  RESET_FAKE(sacn_add_all_netints_to_sampling_period);
   RESET_FAKE(sacn_initialize_source_detector_netints);
   RESET_FAKE(sacn_initialize_source_netints);
   RESET_FAKE(sacn_get_mcast_addr);

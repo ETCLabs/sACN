@@ -489,14 +489,15 @@ TEST_F(TestMem, AddLostSourceWorks)
     SourcesLostNotification* sources_lost = get_sources_lost_buffer(thread, 1);
     ASSERT_NE(sources_lost, nullptr);
 
+    size_t i = 0;
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (size_t i = 0; i < 20; ++i)
+    for (; i < 20; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
-      ASSERT_TRUE(
-          add_lost_source(sources_lost, SACN_REMOTE_SOURCE_INVALID, &cid_to_add.get(), test_name.c_str(), true));
+      ASSERT_TRUE(add_lost_source(sources_lost, static_cast<sacn_remote_source_t>(i), &cid_to_add.get(),
+                                  test_name.c_str(), true));
       EXPECT_EQ(sources_lost->num_lost_sources, i + 1);
       EXPECT_EQ(sources_lost->lost_sources[i].cid, cid_to_add);
       EXPECT_STREQ(sources_lost->lost_sources[i].name, test_name.c_str());
@@ -504,12 +505,12 @@ TEST_F(TestMem, AddLostSourceWorks)
     }
 #else
     // Test up to the maximum capacity
-    for (size_t i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
+    for (; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
       auto cid_to_add = etcpal::Uuid::V4();
       std::string test_name = "test name " + std::to_string(i);
-      ASSERT_TRUE(
-          add_lost_source(sources_lost, SACN_REMOTE_SOURCE_INVALID, &cid_to_add.get(), test_name.c_str(), true));
+      ASSERT_TRUE(add_lost_source(sources_lost, static_cast<sacn_remote_source_t>(i), &cid_to_add.get(),
+                                  test_name.c_str(), true));
       EXPECT_EQ(sources_lost->num_lost_sources, i + 1);
       EXPECT_EQ(sources_lost->lost_sources[i].cid, cid_to_add);
       EXPECT_STREQ(sources_lost->lost_sources[i].name, test_name.c_str());
@@ -517,7 +518,8 @@ TEST_F(TestMem, AddLostSourceWorks)
     }
     // And make sure we can't add another
     auto cid_to_add = etcpal::Uuid::V4();
-    EXPECT_FALSE(add_lost_source(sources_lost, SACN_REMOTE_SOURCE_INVALID, &cid_to_add.get(), "test name", true));
+    EXPECT_FALSE(
+        add_lost_source(sources_lost, static_cast<sacn_remote_source_t>(i), &cid_to_add.get(), "test name", true));
 #endif
   });
 }
@@ -838,13 +840,13 @@ TEST_F(TestMem, AddSacnMergeReceiverSourceWorks)
     EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), i);
     last_cid = etcpal::Uuid::V4();
     source_info.handle = static_cast<sacn_remote_source_t>(i);
-    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false), kEtcPalErrOk);
+    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false, false), kEtcPalErrOk);
   }
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), kNumSources);
 
   source_info.handle = static_cast<sacn_remote_source_t>(kNumSources - 1u);
-  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false), kEtcPalErrExists);
+  EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false, false), kEtcPalErrExists);
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), kNumSources);
 }
@@ -862,7 +864,7 @@ TEST_F(TestMem, RemoveSacnMergeReceiverSourceWorks)
   for (size_t i = 0u; i < kNumSources; ++i)
   {
     source_info.handle = static_cast<sacn_remote_source_t>(i);
-    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false), kEtcPalErrOk);
+    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false, false), kEtcPalErrOk);
   }
 
   for (size_t i = 0u; i < kNumSources; ++i)
@@ -918,7 +920,7 @@ TEST_F(TestMem, RespectsMaxMergeReceiverSourceLimit)
   for (int i = 0; i < SACN_RECEIVER_TOTAL_MAX_SOURCES; ++i)
   {
     source_info.handle = static_cast<sacn_remote_source_t>(i);
-    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false), kEtcPalErrOk);
+    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false, false), kEtcPalErrOk);
   }
 }
 

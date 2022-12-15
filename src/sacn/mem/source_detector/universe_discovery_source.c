@@ -106,6 +106,9 @@ void deinit_universe_discovery_sources(void)
 etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const char* name,
                                                   SacnUniverseDiscoverySource** source_state)
 {
+  if (!SACN_ASSERT_VERIFY(cid) || !SACN_ASSERT_VERIFY(name))
+    return kEtcPalErrSys;
+
   etcpal_error_t result = kEtcPalErrOk;
   SacnUniverseDiscoverySource* src = NULL;
 
@@ -143,6 +146,8 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const c
 
     if (!src->universes)
       result = kEtcPalErrNoMem;
+#else
+    memset(src->universes, 0, sizeof(src->universes));
 #endif
   }
 
@@ -183,6 +188,9 @@ size_t replace_universe_discovery_universes(SacnUniverseDiscoverySource* source,
                                             const uint16_t* replacement_universes, size_t num_replacement_universes,
                                             size_t dynamic_universe_limit)
 {
+  if (!SACN_ASSERT_VERIFY(source))
+    return 0;
+
 #if SACN_DYNAMIC_MEM
   if ((dynamic_universe_limit != SACN_SOURCE_DETECTOR_INFINITE) &&
       ((replace_start_index + num_replacement_universes) > dynamic_universe_limit))
@@ -209,18 +217,27 @@ size_t replace_universe_discovery_universes(SacnUniverseDiscoverySource* source,
 
 etcpal_error_t lookup_universe_discovery_source(sacn_remote_source_t handle, SacnUniverseDiscoverySource** source_state)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(source_state))
+    return kEtcPalErrSys;
+
   *source_state = (SacnUniverseDiscoverySource*)etcpal_rbtree_find(&universe_discovery_sources, &handle);
   return (*source_state) ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
 
 SacnUniverseDiscoverySource* get_first_universe_discovery_source(EtcPalRbIter* iterator)
 {
+  if (!SACN_ASSERT_VERIFY(iterator))
+    return NULL;
+
   etcpal_rbiter_init(iterator);
   return (SacnUniverseDiscoverySource*)etcpal_rbiter_first(iterator, &universe_discovery_sources);
 }
 
 SacnUniverseDiscoverySource* get_next_universe_discovery_source(EtcPalRbIter* iterator)
 {
+  if (!SACN_ASSERT_VERIFY(iterator))
+    return NULL;
+
   return (SacnUniverseDiscoverySource*)etcpal_rbiter_next(iterator);
 }
 
@@ -231,12 +248,18 @@ size_t get_num_universe_discovery_sources()
 
 etcpal_error_t remove_sacn_universe_discovery_source(sacn_remote_source_t handle)
 {
+  if (!SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID))
+    return kEtcPalErrSys;
+
   return etcpal_rbtree_remove_with_cb(&universe_discovery_sources, &handle, universe_discovery_sources_tree_dealloc);
 }
 
 void universe_discovery_sources_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
 {
   ETCPAL_UNUSED_ARG(self);
+
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
 
   SacnUniverseDiscoverySource* source = (SacnUniverseDiscoverySource*)node->value;
   remove_remote_source_handle(source->handle);
@@ -256,6 +279,9 @@ EtcPalRbNode* universe_discovery_source_node_alloc(void)
 
 void universe_discovery_source_node_dealloc(EtcPalRbNode* node)
 {
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
 #if SACN_DYNAMIC_MEM
   free(node);
 #else
