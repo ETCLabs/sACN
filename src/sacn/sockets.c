@@ -412,6 +412,8 @@ etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAd
       etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_RCVBUF, &intval, sizeof intval);
 
       // The PKTINFO socket option, however, IS required to work, so check for any errors from that.
+
+	    // PKTINFO is not supported on Zephyr so we'll have to wait for a workaround
       intval = 1;
       if (ip_type == kEtcPalIpTypeV6)
         res = etcpal_setsockopt(new_sock, ETCPAL_IPPROTO_IPV6, ETCPAL_IPV6_PKTINFO, &intval, sizeof intval);
@@ -839,7 +841,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
         {
           recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than SACN_MTU.
         }
-        else if ((msg.flags & ETCPAL_MSG_CTRUNC) || !get_netint_id(&msg, &read_result->netint))
+        else if ((msg.flags & ETCPAL_MSG_CTRUNC)) // Zephyr does not really support this || !get_netint_id(&msg, &read_result->netint))
         {
           recv_res = kEtcPalErrSys;
         }
