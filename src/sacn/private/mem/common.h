@@ -31,13 +31,13 @@ extern "C" {
 
 #if SACN_DYNAMIC_MEM
 #define CLEAR_BUF(ptr, buf_name) \
-  do                             \
+  if (SACN_ASSERT_VERIFY(ptr))   \
   {                              \
     if ((ptr)->buf_name)         \
       free((ptr)->buf_name);     \
     (ptr)->buf_name = NULL;      \
     (ptr)->num_##buf_name = 0;   \
-  } while (0)
+  }
 
 #define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static, failure_return_value)        \
   do                                                                                                            \

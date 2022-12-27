@@ -38,6 +38,39 @@
 
 #if SACN_SOURCE_ENABLED
 
+/**************************** Private constants ******************************/
+
+#define SACN_SOURCE_UNIVERSE_MAX_UNIVERSES (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE * SACN_SOURCE_MAX_SOURCES)
+
+/****************************** Private macros *******************************/
+
+#if SACN_DYNAMIC_MEM
+
+/* Macros for dynamic allocation. */
+#define ALLOC_UNIVERSE() malloc(sizeof(SacnSourceUniverse))
+#define FREE_UNIVERSE(ptr)               \
+  if (SACN_ASSERT_VERIFY(ptr))           \
+  {                                      \
+    CLEAR_BUF((ptr), unicast_dests);     \
+    CLEAR_BUF(&(ptr)->netints, netints); \
+    free(ptr);                           \
+  }
+
+#else  // SACN_DYNAMIC_MEM
+
+/* Macros for static allocation, which is done using etcpal_mempool. */
+#define ALLOC_UNIVERSE() etcpal_mempool_alloc(sacn_pool_source_universes)
+#define FREE_UNIVERSE(ptr) etcpal_mempool_free(sacn_pool_source_universes, ptr)
+
+#endif  // SACN_DYNAMIC_MEM
+
+/**************************** Private variables ******************************/
+
+#if !SACN_DYNAMIC_MEM
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_source_universes, SacnSourceUniverse, SACN_SOURCE_UNIVERSE_MAX_UNIVERSES);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_source_universe_rb_nodes, EtcPalRbNode, SACN_SOURCE_UNIVERSE_MAX_UNIVERSES);
+#endif  // !SACN_DYNAMIC_MEM
+
 /*************************** Function definitions ****************************/
 
 // Needs lock
@@ -52,20 +85,28 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 #if SACN_DYNAMIC_MEM
   // Make sure to check against universe_count_max.
   if ((source->universe_count_max != SACN_SOURCE_INFINITE_UNIVERSES) &&
-      (source->num_universes >= source->universe_count_max))
+      (etcpal_rbtree_size(&source->universe_tree) >= source->universe_count_max))
   {
     result = kEtcPalErrNoMem;  // No room to allocate additional universe.
   }
 #endif
 
+  if (result == kEtcPalErrOk)
+  {
+    if (etcpal_rbtree_find(&source->universe_tree, &config->universe))
+      result = kEtcPalErrExists;
+  }
+
   SacnSourceUniverse* universe = NULL;
   if (result == kEtcPalErrOk)
   {
-    CHECK_ROOM_FOR_ONE_MORE(source, universes, SacnSourceUniverse, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE,
-                            kEtcPalErrNoMem);
+    universe = ALLOC_UNIVERSE();
+    if (!universe)
+      result = kEtcPalErrNoMem;
+  }
 
-    universe = &source->universes[source->num_universes];
-
+  if (result == kEtcPalErrOk)
+  {
     universe->universe_id = config->universe;
 
     universe->termination_state = kNotTerminating;
@@ -119,16 +160,16 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     result = sacn_initialize_source_netints(&universe->netints, netint_config);
 
   if (result == kEtcPalErrOk)
+    result = etcpal_rbtree_insert(&source->universe_tree, universe);
+
+  if (result == kEtcPalErrOk)
   {
-    ++source->num_universes;
+    *universe_state = universe;
   }
   else if (universe)
   {
-    CLEAR_BUF(&universe->netints, netints);
-    CLEAR_BUF(universe, unicast_dests);
+    FREE_UNIVERSE(universe);
   }
-
-  *universe_state = universe;
 
   return result;
 }
@@ -152,46 +193,86 @@ etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t univers
 }
 
 // Needs lock
+size_t get_num_source_universes(SacnSource* source)
+{
+  if (!SACN_ASSERT_VERIFY(source))
+    return 0;
+
+  return etcpal_rbtree_size(&source->universe_tree);
+}
+
+// Needs lock
 etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSourceUniverse** universe_state)
 {
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe_state))
     return kEtcPalErrSys;
 
-  bool found = false;
-  size_t index = get_source_universe_index(source, universe, &found);
-  *universe_state = found ? &source->universes[index] : NULL;
-  return found ? kEtcPalErrOk : kEtcPalErrNotFound;
+  *universe_state = etcpal_rbtree_find(&source->universe_tree, &universe);
+  return *universe_state ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
 
 // Needs lock
-void remove_sacn_source_universe(SacnSource* source, size_t index)
+void remove_sacn_source_universe_from_tree(SacnSource* source, SacnSourceUniverse* universe)
 {
   if (!SACN_ASSERT_VERIFY(source))
     return;
 
-  CLEAR_BUF(&source->universes[index], unicast_dests);
-  CLEAR_BUF(&source->universes[index].netints, netints);
-  REMOVE_AT_INDEX(source, SacnSourceUniverse, universes, index);
+  if (etcpal_rbtree_remove(&source->universe_tree, universe) == kEtcPalErrOk)
+  {
+    FREE_UNIVERSE(universe);
+  }
 }
 
-// Needs lock
-size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found)
+int source_universe_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(found))
+  ETCPAL_UNUSED_ARG(tree);
+
+  if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
     return 0;
 
-  *found = false;
-  size_t index = 0;
+  const uint16_t* a = (const uint16_t*)value_a;
+  const uint16_t* b = (const uint16_t*)value_b;
+  return (*a > *b) - (*a < *b);
+}
 
-  while (!(*found) && (index < source->num_universes))
-  {
-    if (source->universes[index].universe_id == universe)
-      *found = true;
-    else
-      ++index;
-  }
+EtcPalRbNode* source_universe_node_alloc(void)
+{
+#if SACN_DYNAMIC_MEM
+  return (EtcPalRbNode*)malloc(sizeof(EtcPalRbNode));
+#else
+  return etcpal_mempool_alloc(sacn_pool_source_universe_rb_nodes);
+#endif
+}
 
-  return index;
+void source_universe_node_dealloc(EtcPalRbNode* node)
+{
+  if (!SACN_ASSERT_VERIFY(node))
+    return;
+
+#if SACN_DYNAMIC_MEM
+  free(node);
+#else
+  etcpal_mempool_free(sacn_pool_source_universe_rb_nodes, node);
+#endif
+}
+
+void source_universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
+{
+  ETCPAL_UNUSED_ARG(self);
+  FREE_UNIVERSE((SacnSourceUniverse*)node->value);
+  source_universe_node_dealloc(node);
+}
+
+etcpal_error_t init_source_universes(void)
+{
+  etcpal_error_t res = kEtcPalErrOk;
+
+#if !SACN_DYNAMIC_MEM
+  res |= etcpal_mempool_init(sacn_pool_source_universes);
+  res |= etcpal_mempool_init(sacn_pool_source_universe_rb_nodes);
+#endif
+
+  return res;
 }
 
 #endif  // SACN_SOURCE_ENABLED

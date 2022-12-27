@@ -27,6 +27,7 @@
 #include "sacn/private/sockets.h"
 #include "sacn/private/pdu.h"
 #include "sacn/private/mem/common.h"
+#include "sacn/private/mem/source/source_universe.h"
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>
@@ -99,18 +100,17 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->keep_alive_interval = config->keep_alive_interval;
     source->universe_count_max = config->universe_count_max;
 
-    source->num_universes = 0;
+    etcpal_rbtree_init(&source->universe_tree, source_universe_compare, source_universe_node_alloc,
+                       source_universe_node_dealloc);
+
     source->num_netints = 0;
 #if SACN_DYNAMIC_MEM
-    source->universes = calloc(INITIAL_CAPACITY, sizeof(SacnSourceUniverse));
-    source->universes_capacity = source->universes ? INITIAL_CAPACITY : 0;
     source->netints = calloc(INITIAL_CAPACITY, sizeof(SacnSourceNetint));
     source->netints_capacity = source->netints ? INITIAL_CAPACITY : 0;
 
-    if (!source->universes || !source->netints)
+    if (!source->netints)
       result = kEtcPalErrNoMem;
 #else
-    memset(source->universes, 0, sizeof(source->universes));
     memset(source->netints, 0, sizeof(source->netints));
 #endif
   }
@@ -121,7 +121,6 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
   }
   else if (source)
   {
-    CLEAR_BUF(source, universes);
     CLEAR_BUF(source, netints);
   }
 
@@ -155,7 +154,7 @@ size_t get_num_sources()
 // Needs lock
 void remove_sacn_source(size_t index)
 {
-  CLEAR_BUF(&sacn_pool_source_mem.sources[index], universes);
+  etcpal_rbtree_clear_with_cb(&sacn_pool_source_mem.sources[index].universe_tree, source_universe_tree_dealloc);
   CLEAR_BUF(&sacn_pool_source_mem.sources[index], netints);
 
   REMOVE_AT_INDEX((&sacn_pool_source_mem), SacnSource, sources, index);
@@ -208,13 +207,7 @@ void deinit_sources(void)
     {
       for (size_t i = 0; i < sacn_pool_source_mem.num_sources; ++i)
       {
-        for (size_t j = 0; j < sacn_pool_source_mem.sources[i].num_universes; ++j)
-        {
-          CLEAR_BUF(&sacn_pool_source_mem.sources[i].universes[j].netints, netints);
-          CLEAR_BUF(&sacn_pool_source_mem.sources[i].universes[j], unicast_dests);
-        }
-
-        CLEAR_BUF(&sacn_pool_source_mem.sources[i], universes);
+        etcpal_rbtree_clear_with_cb(&sacn_pool_source_mem.sources[i].universe_tree, source_universe_tree_dealloc);
         CLEAR_BUF(&sacn_pool_source_mem.sources[i], netints);
       }
 

@@ -71,7 +71,7 @@ void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse
 void set_universe_terminating(SacnSourceUniverse* universe, set_terminating_behavior_t behavior);
 void set_source_terminating(SacnSource* source);
 void set_source_name(SacnSource* source, const char* new_name);
-size_t get_source_universes(const SacnSource* source, uint16_t* universes, size_t universes_size);
+size_t get_source_universes(SacnSource* source, uint16_t* universes, size_t universes_size);
 size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr* destinations,
                                 size_t destinations_size);
 size_t get_source_universe_netints(const SacnSourceUniverse* universe, EtcPalMcastNetintId* netints,
@@ -80,7 +80,7 @@ void disable_pap_data(SacnSourceUniverse* universe);
 void clear_source_netints(SacnSource* source);
 etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUniverse* universe,
                                                 const SacnNetintConfig* netint_config);
-void finish_source_universe_termination(SacnSource* source, size_t index);
+void finish_source_universe_termination(SacnSource* source, SacnSourceUniverse* universe);
 void finish_unicast_dest_termination(SacnSourceUniverse* universe, size_t index);
 
 #ifdef __cplusplus

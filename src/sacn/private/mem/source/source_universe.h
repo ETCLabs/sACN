@@ -29,14 +29,21 @@
 extern "C" {
 #endif
 
+etcpal_error_t init_source_universes(void);
+
 etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniverseConfig* config,
                                         const SacnNetintConfig* netint_config, SacnSourceUniverse** universe_state);
 etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t universe, SacnSource** source_state,
                                           SacnSourceUniverse** universe_state);
+size_t get_num_source_universes(SacnSource* source);
 etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSourceUniverse** universe_state);
-void remove_sacn_source_universe(SacnSource* source, size_t index);
+void remove_sacn_source_universe_from_tree(SacnSource* source, SacnSourceUniverse* universe);
 
-size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* found);
+int source_universe_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+EtcPalRbNode* source_universe_node_alloc(void);
+void source_universe_node_dealloc(EtcPalRbNode* node);
+
+void source_universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 
 #ifdef __cplusplus
 }

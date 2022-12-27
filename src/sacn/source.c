@@ -300,15 +300,11 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       // Handle the existing universe if there is one.
       if (result == kEtcPalErrOk)
       {
-        bool found = false;
-        size_t index = get_source_universe_index(source, config->universe, &found);
-
-        if (found)
+        SacnSourceUniverse* existing_universe = NULL;
+        if (lookup_universe(source, config->universe, &existing_universe) == kEtcPalErrOk)
         {
-          SacnSourceUniverse* existing_universe = &source->universes[index];
-
           if (existing_universe->termination_state == kTerminatingAndRemoving)
-            finish_source_universe_termination(source, index);  // Remove the old state before adding the new.
+            finish_source_universe_termination(source, existing_universe);  // Remove old state before adding the new.
           else
             result = kEtcPalErrExists;
         }
@@ -1037,8 +1033,15 @@ etcpal_error_t sacn_source_reset_networking(const SacnNetintConfig* sys_netint_c
         {
           clear_source_netints(source);
 
-          for (size_t j = 0; (result == kEtcPalErrOk) && (j < source->num_universes); ++j)
-            result = reset_source_universe_networking(source, &source->universes[j], NULL);
+          EtcPalRbIter iter;
+          etcpal_rbiter_init(&iter);
+          for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universe_tree); universe;
+               universe = etcpal_rbiter_next(&iter))
+          {
+            result = reset_source_universe_networking(source, universe, NULL);
+            if (result != kEtcPalErrOk)
+              break;
+          }
         }
         else
         {
@@ -1108,22 +1111,28 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*
       size_t total_num_universes = 0;
       for (size_t i = 0; (result == kEtcPalErrOk) && (i < get_num_sources()); ++i)
       {
-        const SacnSource* source = get_source(i);
+        SacnSource* source = get_source(i);
         if (SACN_ASSERT_VERIFY(source))
         {
-          for (size_t j = 0; (result == kEtcPalErrOk) && (j < source->num_universes); ++j)
+          EtcPalRbIter iter;
+          etcpal_rbiter_init(&iter);
+          for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universe_tree); universe;
+               universe = etcpal_rbiter_next(&iter))
           {
             // Universes being removed should not be factored into this.
-            if (source->universes[j].termination_state != kTerminatingAndRemoving)
+            if (universe->termination_state != kTerminatingAndRemoving)
             {
               ++total_num_universes;
 
               bool found = false;
-              get_per_universe_netint_lists_index(source->handle, source->universes[j].universe_id,
-                                                  per_universe_netint_lists, num_per_universe_netint_lists, &found);
+              get_per_universe_netint_lists_index(source->handle, universe->universe_id, per_universe_netint_lists,
+                                                  num_per_universe_netint_lists, &found);
 
               if (!found)
+              {
                 result = kEtcPalErrInvalid;
+                break;
+              }
             }
           }
         }
@@ -1146,26 +1155,32 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*
         {
           clear_source_netints(source);
 
-          for (size_t j = 0; (result == kEtcPalErrOk) && (j < source->num_universes); ++j)
+          EtcPalRbIter iter;
+          etcpal_rbiter_init(&iter);
+          for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universe_tree); universe;
+               universe = etcpal_rbiter_next(&iter))
           {
-            if (source->universes[j].termination_state == kTerminatingAndRemoving)
+            if (universe->termination_state == kTerminatingAndRemoving)
             {
               // Keep the universe netints as they are, but add them to source netints again since it was cleared.
-              for (size_t k = 0; (result == kEtcPalErrOk) && (k < source->universes[j].netints.num_netints); ++k)
-                result = add_sacn_source_netint(source, &source->universes[j].netints.netints[k]);
+              for (size_t k = 0; (result == kEtcPalErrOk) && (k < universe->netints.num_netints); ++k)
+                result = add_sacn_source_netint(source, &universe->netints.netints[k]);
             }
             else
             {
               // Replace the universe netints, then add the new ones to the source netints.
               size_t list_index =
-                  get_per_universe_netint_lists_index(source->handle, source->universes[j].universe_id,
-                                                      per_universe_netint_lists, num_per_universe_netint_lists, NULL);
+                  get_per_universe_netint_lists_index(source->handle, universe->universe_id, per_universe_netint_lists,
+                                                      num_per_universe_netint_lists, NULL);
 
               SacnNetintConfig universe_netint_config;
               universe_netint_config.netints = per_universe_netint_lists[list_index].netints;
               universe_netint_config.num_netints = per_universe_netint_lists[list_index].num_netints;
               universe_netint_config.no_netints = per_universe_netint_lists[list_index].no_netints;
-              result = reset_source_universe_networking(source, &source->universes[j], &universe_netint_config);
+              result = reset_source_universe_networking(source, universe, &universe_netint_config);
+
+              if (result != kEtcPalErrOk)
+                break;
             }
           }
         }
