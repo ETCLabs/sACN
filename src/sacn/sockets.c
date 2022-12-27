@@ -986,8 +986,10 @@ etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_ty
       res = etcpal_netint_get_interfaces(netint_list, &num_netints);
       if (res == kEtcPalErrBufSize)
       {
-        netint_list = realloc(netint_list, num_netints * sizeof(EtcPalNetintInfo));
-        if (!netint_list)
+        EtcPalNetintInfo* new_netint_list = realloc(netint_list, num_netints * sizeof(EtcPalNetintInfo));
+        if (new_netint_list)
+          netint_list = new_netint_list;
+        else
           res = kEtcPalErrNoMem;
       }
     } while (res == kEtcPalErrBufSize);
