@@ -276,6 +276,9 @@ void process_universes(SacnSource* source)
     else
       process_universe_termination(source, universe, unicast_terminating);
   }
+
+  // Do this OUTSIDE of universe tree iteration
+  remove_universes_marked_for_removal(source);
 }
 
 // Needs lock
@@ -839,7 +842,12 @@ void finish_source_universe_termination(SacnSource* source, SacnSourceUniverse* 
     for (size_t i = 0; i < universe->netints.num_netints; ++i)
       remove_from_source_netints(source, &universe->netints.netints[i]);
 
-    remove_sacn_source_universe(source, universe);
+    etcpal_error_t res = mark_source_universe_for_removal(source, universe);
+    if (res != kEtcPalErrOk)
+    {
+      SACN_LOG_ERR("Failed to remove source universe state! Marking universe for removal failed with error '%s'.",
+                   etcpal_strerror(res));
+    }
   }
   else
   {

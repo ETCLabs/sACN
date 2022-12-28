@@ -100,8 +100,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->keep_alive_interval = config->keep_alive_interval;
     source->universe_count_max = config->universe_count_max;
 
-    etcpal_rbtree_init(&source->universes, source_universe_compare, source_universe_node_alloc,
-                       source_universe_node_dealloc);
+    init_source_universe_state(source);
 
     source->num_netints = 0;
 #if SACN_DYNAMIC_MEM
@@ -154,7 +153,7 @@ size_t get_num_sources()
 // Needs lock
 void remove_sacn_source(size_t index)
 {
-  etcpal_rbtree_clear_with_cb(&sacn_pool_source_mem.sources[index].universes, source_universe_tree_dealloc);
+  clear_source_universes(&sacn_pool_source_mem.sources[index]);
   CLEAR_BUF(&sacn_pool_source_mem.sources[index], netints);
 
   REMOVE_AT_INDEX((&sacn_pool_source_mem), SacnSource, sources, index);
@@ -207,7 +206,7 @@ void deinit_sources(void)
     {
       for (size_t i = 0; i < sacn_pool_source_mem.num_sources; ++i)
       {
-        etcpal_rbtree_clear_with_cb(&sacn_pool_source_mem.sources[i].universes, source_universe_tree_dealloc);
+        clear_source_universes(&sacn_pool_source_mem.sources[i]);
         CLEAR_BUF(&sacn_pool_source_mem.sources[i], netints);
       }
 

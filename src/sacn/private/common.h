@@ -798,6 +798,7 @@ typedef struct SacnSource
   bool terminating;  // If in the process of terminating all universes and removing this source.
 
   EtcPalRbTree universes;
+  EtcPalRbTree universes_to_remove;
   size_t num_active_universes;  // Number of universes to include in universe discovery packets.
   EtcPalTimer universe_discovery_timer;
   bool process_manually;

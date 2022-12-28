@@ -37,16 +37,14 @@ etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t univers
                                           SacnSourceUniverse** universe_state);
 size_t get_num_source_universes(SacnSource* source);
 etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSourceUniverse** universe_state);
-void remove_sacn_source_universe(SacnSource* source, SacnSourceUniverse* universe);
+etcpal_error_t mark_source_universe_for_removal(SacnSource* source, SacnSourceUniverse* universe);
+void remove_universes_marked_for_removal(SacnSource* source);
 
 SacnSourceUniverse* get_first_source_universe(SacnSource* source, EtcPalRbIter* iterator);
 SacnSourceUniverse* get_next_source_universe(EtcPalRbIter* iterator);
 
-int source_universe_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
-EtcPalRbNode* source_universe_node_alloc(void);
-void source_universe_node_dealloc(EtcPalRbNode* node);
-
-void source_universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+void init_source_universe_state(SacnSource* source);
+void clear_source_universes(SacnSource* source);
 
 #ifdef __cplusplus
 }

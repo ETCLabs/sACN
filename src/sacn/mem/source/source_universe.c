@@ -41,6 +41,7 @@
 /**************************** Private constants ******************************/
 
 #define SACN_SOURCE_UNIVERSE_MAX_UNIVERSES (SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE * SACN_SOURCE_MAX_SOURCES)
+#define SACN_SOURCE_UNIVERSE_MAX_RB_NODES (SACN_SOURCE_UNIVERSE_MAX_UNIVERSES * 2)  // Two universe trees
 
 /****************************** Private macros *******************************/
 
@@ -68,8 +69,15 @@
 
 #if !SACN_DYNAMIC_MEM
 ETCPAL_MEMPOOL_DEFINE(sacn_pool_source_universes, SacnSourceUniverse, SACN_SOURCE_UNIVERSE_MAX_UNIVERSES);
-ETCPAL_MEMPOOL_DEFINE(sacn_pool_source_universe_rb_nodes, EtcPalRbNode, SACN_SOURCE_UNIVERSE_MAX_UNIVERSES);
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_source_universe_rb_nodes, EtcPalRbNode, SACN_SOURCE_UNIVERSE_MAX_RB_NODES);
 #endif  // !SACN_DYNAMIC_MEM
+
+/********************** Private function declarations ************************/
+
+static void source_universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+static int source_universe_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+static EtcPalRbNode* source_universe_node_alloc(void);
+static void source_universe_node_dealloc(EtcPalRbNode* node);
 
 /*************************** Function definitions ****************************/
 
@@ -212,14 +220,46 @@ etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSource
 }
 
 // Needs lock
-void remove_sacn_source_universe(SacnSource* source, SacnSourceUniverse* universe)
+etcpal_error_t mark_source_universe_for_removal(SacnSource* source, SacnSourceUniverse* universe)
+{
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) ||
+      !SACN_ASSERT_VERIFY(etcpal_rbtree_find(&source->universes, universe) != NULL) ||
+      !SACN_ASSERT_VERIFY(etcpal_rbtree_find(&source->universes_to_remove, universe) == NULL))
+  {
+    return kEtcPalErrSys;
+  }
+
+  etcpal_error_t res = etcpal_rbtree_insert(&source->universes_to_remove, universe);
+  SACN_ASSERT_VERIFY(res != kEtcPalErrExists);
+  SACN_ASSERT_VERIFY(res != kEtcPalErrInvalid);
+
+  return res;
+}
+
+// Needs lock - DO NOT call while iterating source universes!
+void remove_universes_marked_for_removal(SacnSource* source)
 {
   if (!SACN_ASSERT_VERIFY(source))
     return;
 
-  if (etcpal_rbtree_remove(&source->universes, universe) == kEtcPalErrOk)
+  bool any_removed = false;
+
+  EtcPalRbIter iter;
+  etcpal_rbiter_init(&iter);
+  for (SacnSourceUniverse* to_remove = etcpal_rbiter_first(&iter, &source->universes_to_remove); to_remove;
+       to_remove = etcpal_rbiter_next(&iter))
   {
-    FREE_UNIVERSE(universe);
+    // Just remove the node, don't free the universe state itself yet
+    SACN_ASSERT_VERIFY(etcpal_rbtree_remove(&source->universes, to_remove) == kEtcPalErrOk);
+    any_removed = true;
+  }
+
+  // The main universe tree is up-to-date - now just clear the "to remove" tree (this time using
+  // source_universe_tree_dealloc to free the universe state)
+  if (any_removed)
+  {
+    SACN_ASSERT_VERIFY(etcpal_rbtree_clear_with_cb(&source->universes_to_remove, source_universe_tree_dealloc) ==
+                       kEtcPalErrOk);
   }
 }
 
@@ -240,6 +280,47 @@ SacnSourceUniverse* get_next_source_universe(EtcPalRbIter* iterator)
     return NULL;
 
   return (SacnSourceUniverse*)etcpal_rbiter_next(iterator);
+}
+
+// Needs lock
+void init_source_universe_state(SacnSource* source)
+{
+  if (!SACN_ASSERT_VERIFY(source))
+    return;
+
+  etcpal_rbtree_init(&source->universes, source_universe_compare, source_universe_node_alloc,
+                     source_universe_node_dealloc);
+  etcpal_rbtree_init(&source->universes_to_remove, source_universe_compare, source_universe_node_alloc,
+                     source_universe_node_dealloc);
+}
+
+void clear_source_universes(SacnSource* source)
+{
+  if (!SACN_ASSERT_VERIFY(source))
+    return;
+
+  etcpal_rbtree_clear(&source->universes_to_remove);
+  etcpal_rbtree_clear_with_cb(&source->universes, source_universe_tree_dealloc);
+}
+
+etcpal_error_t init_source_universes(void)
+{
+  etcpal_error_t res = kEtcPalErrOk;
+
+#if !SACN_DYNAMIC_MEM
+  res |= etcpal_mempool_init(sacn_pool_source_universes);
+  res |= etcpal_mempool_init(sacn_pool_source_universe_rb_nodes);
+#endif
+
+  return res;
+}
+
+// Needs lock
+void source_universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
+{
+  ETCPAL_UNUSED_ARG(self);
+  FREE_UNIVERSE((SacnSourceUniverse*)node->value);
+  source_universe_node_dealloc(node);
 }
 
 int source_universe_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
@@ -273,25 +354,6 @@ void source_universe_node_dealloc(EtcPalRbNode* node)
 #else
   etcpal_mempool_free(sacn_pool_source_universe_rb_nodes, node);
 #endif
-}
-
-void source_universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
-{
-  ETCPAL_UNUSED_ARG(self);
-  FREE_UNIVERSE((SacnSourceUniverse*)node->value);
-  source_universe_node_dealloc(node);
-}
-
-etcpal_error_t init_source_universes(void)
-{
-  etcpal_error_t res = kEtcPalErrOk;
-
-#if !SACN_DYNAMIC_MEM
-  res |= etcpal_mempool_init(sacn_pool_source_universes);
-  res |= etcpal_mempool_init(sacn_pool_source_universe_rb_nodes);
-#endif
-
-  return res;
 }
 
 #endif  // SACN_SOURCE_ENABLED
