@@ -37,7 +37,7 @@ extern "C" {
       free((ptr)->buf_name);     \
     (ptr)->buf_name = NULL;      \
     (ptr)->num_##buf_name = 0;   \
-  } while (0);
+  } while (0)
 
 #define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static, failure_return_value)        \
   do                                                                                                            \
