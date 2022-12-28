@@ -1037,11 +1037,11 @@ TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
         EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, j + 1u)->level_send_buf), 0x00u);
       }
 
-      EXPECT_EQ(GetSource(source)->num_universes, 10u);
+      EXPECT_EQ(get_num_source_universes(GetSource(source)), 10u);
     }
     else
     {
-      EXPECT_EQ(GetSource(source)->num_universes, 0u);
+      EXPECT_EQ(get_num_source_universes(GetSource(source)), 0u);
     }
   }
 
@@ -1099,7 +1099,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
       }
     }
 
-    EXPECT_EQ(GetSource(source)->num_universes, 10u);
+    EXPECT_EQ(get_num_source_universes(GetSource(source)), 10u);
   }
 
   EXPECT_EQ(num_universe_data_sends, kTestNetints.size() * 30u);
@@ -1122,11 +1122,11 @@ TEST_F(TestSourceState, UniversesWithoutDataTerminateAndRemove)
     set_universe_terminating(GetUniverse(source, universe_config.universe), kTerminateAndRemove);
   }
 
-  EXPECT_EQ(GetSource(source)->num_universes, 10u);
+  EXPECT_EQ(get_num_source_universes(GetSource(source)), 10u);
 
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
-  EXPECT_EQ(GetSource(source)->num_universes, 0u);
+  EXPECT_EQ(get_num_source_universes(GetSource(source)), 0u);
   EXPECT_EQ(num_universe_data_sends, 0u);
 }
 
@@ -1147,11 +1147,11 @@ TEST_F(TestSourceState, UniversesWithoutDataTerminateWithoutRemoving)
     set_universe_terminating(GetUniverse(source, universe_config.universe), kTerminateWithoutRemoving);
   }
 
-  EXPECT_EQ(GetSource(source)->num_universes, 10u);
+  EXPECT_EQ(get_num_source_universes(GetSource(source)), 10u);
 
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
-  EXPECT_EQ(GetSource(source)->num_universes, 10u);
+  EXPECT_EQ(get_num_source_universes(GetSource(source)), 10u);
   EXPECT_EQ(num_universe_data_sends, 0u);
 }
 

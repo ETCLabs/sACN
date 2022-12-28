@@ -718,7 +718,7 @@ TEST_F(TestSource, SourceGetUniversesWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
-  get_source_universes_fake.custom_fake = [](const SacnSource* source, uint16_t* universes, size_t universes_size) {
+  get_source_universes_fake.custom_fake = [](SacnSource* source, uint16_t* universes, size_t universes_size) {
     EXPECT_EQ(source->handle, kTestHandle);
     EXPECT_EQ(universes, nullptr);
     EXPECT_EQ(universes_size, 0u);
