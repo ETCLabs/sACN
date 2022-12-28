@@ -304,9 +304,15 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
         if (lookup_universe(source, config->universe, &existing_universe) == kEtcPalErrOk)
         {
           if (existing_universe->termination_state == kTerminatingAndRemoving)
-            finish_source_universe_termination(source, existing_universe);  // Remove old state before adding the new.
+          {
+            // Remove old state before adding the new.
+            finish_source_universe_termination(source, existing_universe);
+            remove_universes_marked_for_removal(source);  // Frees existing_universe
+          }
           else
+          {
             result = kEtcPalErrExists;
+          }
         }
       }
 

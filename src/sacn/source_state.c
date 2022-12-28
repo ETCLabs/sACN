@@ -426,7 +426,8 @@ void send_universe_discovery(SacnSource* source)
     // Pack the next page & loop while there's a page to send
     EtcPalRbIter iter;
     uint8_t page_number = 0;
-    while (pack_universe_discovery_page(source, &iter, page_number) > 0)
+    int num_packed = pack_universe_discovery_page(source, &iter, page_number);
+    while (num_packed > 0)
     {
       // Send multicast on IPv4 and/or IPv6
       for (size_t i = 0; i < source->num_netints; ++i)
@@ -438,6 +439,11 @@ void send_universe_discovery(SacnSource* source)
       // Increment sequence number & page number
       ++source->universe_discovery_send_buf[SACN_SEQ_OFFSET];
       ++page_number;
+
+      if (num_packed < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE)
+        num_packed = 0;  // No more remaining to send
+      else
+        num_packed = pack_universe_discovery_page(source, &iter, page_number);  // Pack next page
     }
   }
 }

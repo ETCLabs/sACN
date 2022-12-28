@@ -1002,7 +1002,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
       current_netint_index = (current_netint_index + 1) % kTestNetints.size();
 
       if (current_netint_index == 0)
-        --current_universe;
+        ++current_universe;
 
       ++num_universe_data_sends;
     }
@@ -1024,7 +1024,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
     for (uint16_t j = 0; j < 10u; ++j)
       old_seq_num[j] = GetUniverse(source, j + 1u)->seq_num;
 
-    current_universe = 10;
+    current_universe = 1;
     current_netint_index = 0;
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
@@ -1063,7 +1063,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
       current_netint_index = (current_netint_index + 1) % kTestNetints.size();
 
       if (current_netint_index == 0)
-        --current_universe;
+        ++current_universe;
 
       ++num_universe_data_sends;
     }
@@ -1085,7 +1085,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
     for (uint16_t j = 0; j < 10u; ++j)
       old_seq_num[j] = GetUniverse(source, j + 1u)->seq_num;
 
-    current_universe = 10;
+    current_universe = 1;
     current_netint_index = 0;
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 

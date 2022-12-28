@@ -93,10 +93,13 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 #if SACN_DYNAMIC_MEM
   // Make sure to check against universe_count_max.
   if ((source->universe_count_max != SACN_SOURCE_INFINITE_UNIVERSES) &&
-      (etcpal_rbtree_size(&source->universes) >= source->universe_count_max))
+      (get_num_source_universes(source) >= source->universe_count_max))
   {
     result = kEtcPalErrNoMem;  // No room to allocate additional universe.
   }
+#else
+  if (get_num_source_universes(source) >= SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE)
+    result = kEtcPalErrNoMem;  // This would exceed the number of universes allowed for this source.
 #endif
 
   if (result == kEtcPalErrOk)
@@ -115,6 +118,8 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 
   if (result == kEtcPalErrOk)
   {
+    memset(universe, 0, sizeof(SacnSourceUniverse));
+
     universe->universe_id = config->universe;
 
     universe->termination_state = kNotTerminating;
