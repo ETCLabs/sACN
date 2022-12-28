@@ -1034,9 +1034,8 @@ etcpal_error_t sacn_source_reset_networking(const SacnNetintConfig* sys_netint_c
           clear_source_netints(source);
 
           EtcPalRbIter iter;
-          etcpal_rbiter_init(&iter);
-          for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universes); universe;
-               universe = etcpal_rbiter_next(&iter))
+          for (SacnSourceUniverse* universe = get_first_source_universe(source, &iter); universe;
+               universe = get_next_source_universe(&iter))
           {
             result = reset_source_universe_networking(source, universe, NULL);
             if (result != kEtcPalErrOk)
@@ -1115,9 +1114,8 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*
         if (SACN_ASSERT_VERIFY(source))
         {
           EtcPalRbIter iter;
-          etcpal_rbiter_init(&iter);
-          for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universes); universe;
-               universe = etcpal_rbiter_next(&iter))
+          for (SacnSourceUniverse* universe = get_first_source_universe(source, &iter); universe;
+               universe = get_next_source_universe(&iter))
           {
             // Universes being removed should not be factored into this.
             if (universe->termination_state != kTerminatingAndRemoving)
@@ -1156,9 +1154,8 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*
           clear_source_netints(source);
 
           EtcPalRbIter iter;
-          etcpal_rbiter_init(&iter);
-          for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universes); universe;
-               universe = etcpal_rbiter_next(&iter))
+          for (SacnSourceUniverse* universe = get_first_source_universe(source, &iter); universe;
+               universe = get_next_source_universe(&iter))
           {
             if (universe->termination_state == kTerminatingAndRemoving)
             {

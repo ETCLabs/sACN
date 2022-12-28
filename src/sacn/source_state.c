@@ -263,9 +263,8 @@ void process_universes(SacnSource* source)
     return;
 
   EtcPalRbIter iter;
-  etcpal_rbiter_init(&iter);
-  for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universes); universe;
-       universe = etcpal_rbiter_next(&iter))
+  for (SacnSourceUniverse* universe = get_first_source_universe(source, &iter); universe;
+       universe = get_next_source_universe(&iter))
   {
     // Unicast destination-specific processing
     bool unicast_terminating;
@@ -421,13 +420,9 @@ void send_universe_discovery(SacnSource* source)
   // If there are network interfaces to send on
   if (source->num_netints > 0)
   {
-    // Initialize universe iterator and page number
+    // Pack the next page & loop while there's a page to send
     EtcPalRbIter iter;
     uint8_t page_number = 0;
-
-    etcpal_rbiter_init(&iter);
-
-    // Pack the next page & loop while there's a page to send
     while (pack_universe_discovery_page(source, &iter, page_number) > 0)
     {
       // Send multicast on IPv4 and/or IPv6
@@ -494,9 +489,9 @@ int pack_universe_discovery_page(SacnSource* source, EtcPalRbIter* universe_iter
     if (!done)
     {
       if ((page_number == 0) && !universe)
-        universe = etcpal_rbiter_first(universe_iter, &source->universes);
+        universe = get_first_source_universe(source, universe_iter);
       else
-        universe = etcpal_rbiter_next(universe_iter);
+        universe = get_next_source_universe(universe_iter);
 
       if (!universe)
         done = true;
@@ -624,9 +619,8 @@ void set_source_terminating(SacnSource* source)
 
     // Set terminating for the removal of each universe of this source
     EtcPalRbIter iter;
-    etcpal_rbiter_init(&iter);
-    for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universes); universe;
-         universe = etcpal_rbiter_next(&iter))
+    for (SacnSourceUniverse* universe = get_first_source_universe(source, &iter); universe;
+         universe = get_next_source_universe(&iter))
     {
       set_universe_terminating(universe, kTerminateAndRemove);
     }
@@ -717,9 +711,8 @@ void set_source_name(SacnSource* source, const char* new_name)
 
   // For each universe:
   EtcPalRbIter iter;
-  etcpal_rbiter_init(&iter);
-  for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universes); universe;
-       universe = etcpal_rbiter_next(&iter))
+  for (SacnSourceUniverse* universe = get_first_source_universe(source, &iter); universe;
+       universe = get_next_source_universe(&iter))
   {
     // Update the source name in this universe's send buffers
     strncpy((char*)(&universe->level_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
@@ -739,9 +732,8 @@ size_t get_source_universes(SacnSource* source, uint16_t* universes, size_t univ
   size_t num_non_removed_universes = 0;
 
   EtcPalRbIter iter;
-  etcpal_rbiter_init(&iter);
-  for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universes); universe;
-       universe = etcpal_rbiter_next(&iter))
+  for (SacnSourceUniverse* universe = get_first_source_universe(source, &iter); universe;
+       universe = get_next_source_universe(&iter))
   {
     if (universe->termination_state != kTerminatingAndRemoving)
     {

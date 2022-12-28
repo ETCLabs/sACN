@@ -223,6 +223,25 @@ void remove_sacn_source_universe(SacnSource* source, SacnSourceUniverse* univers
   }
 }
 
+// Needs lock
+SacnSourceUniverse* get_first_source_universe(SacnSource* source, EtcPalRbIter* iterator)
+{
+  if (!SACN_ASSERT_VERIFY(iterator))
+    return NULL;
+
+  etcpal_rbiter_init(iterator);
+  return (SacnSourceUniverse*)etcpal_rbiter_first(iterator, &source->universes);
+}
+
+// Needs lock
+SacnSourceUniverse* get_next_source_universe(EtcPalRbIter* iterator)
+{
+  if (!SACN_ASSERT_VERIFY(iterator))
+    return NULL;
+
+  return (SacnSourceUniverse*)etcpal_rbiter_next(iterator);
+}
+
 int source_universe_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
 {
   ETCPAL_UNUSED_ARG(tree);
