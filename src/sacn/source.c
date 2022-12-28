@@ -301,7 +301,8 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       if (result == kEtcPalErrOk)
       {
         SacnSourceUniverse* existing_universe = NULL;
-        if (lookup_universe(source, config->universe, &existing_universe) == kEtcPalErrOk)
+        if ((lookup_universe(source, config->universe, &existing_universe) == kEtcPalErrOk) &&
+            SACN_ASSERT_VERIFY(existing_universe))
         {
           if (existing_universe->termination_state == kTerminatingAndRemoving)
           {
@@ -1181,10 +1182,10 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*
               universe_netint_config.num_netints = per_universe_netint_lists[list_index].num_netints;
               universe_netint_config.no_netints = per_universe_netint_lists[list_index].no_netints;
               result = reset_source_universe_networking(source, universe, &universe_netint_config);
-
-              if (result != kEtcPalErrOk)
-                break;
             }
+
+            if (result != kEtcPalErrOk)
+              break;
           }
         }
         else
