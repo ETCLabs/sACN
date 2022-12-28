@@ -212,7 +212,7 @@ etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSource
 }
 
 // Needs lock
-void remove_sacn_source_universe_from_tree(SacnSource* source, SacnSourceUniverse* universe)
+void remove_sacn_source_universe(SacnSource* source, SacnSourceUniverse* universe)
 {
   if (!SACN_ASSERT_VERIFY(source))
     return;

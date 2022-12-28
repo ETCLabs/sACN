@@ -847,7 +847,7 @@ void finish_source_universe_termination(SacnSource* source, SacnSourceUniverse* 
     for (size_t i = 0; i < universe->netints.num_netints; ++i)
       remove_from_source_netints(source, &universe->netints.netints[i]);
 
-    remove_sacn_source_universe_from_tree(source, universe);
+    remove_sacn_source_universe(source, universe);
   }
   else
   {
