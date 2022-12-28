@@ -264,7 +264,7 @@ void process_universes(SacnSource* source)
 
   EtcPalRbIter iter;
   etcpal_rbiter_init(&iter);
-  for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universe_tree); universe;
+  for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universes); universe;
        universe = etcpal_rbiter_next(&iter))
   {
     // Unicast destination-specific processing
@@ -494,7 +494,7 @@ int pack_universe_discovery_page(SacnSource* source, EtcPalRbIter* universe_iter
     if (!done)
     {
       if ((page_number == 0) && !universe)
-        universe = etcpal_rbiter_first(universe_iter, &source->universe_tree);
+        universe = etcpal_rbiter_first(universe_iter, &source->universes);
       else
         universe = etcpal_rbiter_next(universe_iter);
 
@@ -625,7 +625,7 @@ void set_source_terminating(SacnSource* source)
     // Set terminating for the removal of each universe of this source
     EtcPalRbIter iter;
     etcpal_rbiter_init(&iter);
-    for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universe_tree); universe;
+    for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universes); universe;
          universe = etcpal_rbiter_next(&iter))
     {
       set_universe_terminating(universe, kTerminateAndRemove);
@@ -718,7 +718,7 @@ void set_source_name(SacnSource* source, const char* new_name)
   // For each universe:
   EtcPalRbIter iter;
   etcpal_rbiter_init(&iter);
-  for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universe_tree); universe;
+  for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universes); universe;
        universe = etcpal_rbiter_next(&iter))
   {
     // Update the source name in this universe's send buffers
@@ -740,7 +740,7 @@ size_t get_source_universes(SacnSource* source, uint16_t* universes, size_t univ
 
   EtcPalRbIter iter;
   etcpal_rbiter_init(&iter);
-  for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universe_tree); universe;
+  for (SacnSourceUniverse* universe = etcpal_rbiter_first(&iter, &source->universes); universe;
        universe = etcpal_rbiter_next(&iter))
   {
     if (universe->termination_state != kTerminatingAndRemoving)

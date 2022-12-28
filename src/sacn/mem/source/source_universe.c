@@ -85,7 +85,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 #if SACN_DYNAMIC_MEM
   // Make sure to check against universe_count_max.
   if ((source->universe_count_max != SACN_SOURCE_INFINITE_UNIVERSES) &&
-      (etcpal_rbtree_size(&source->universe_tree) >= source->universe_count_max))
+      (etcpal_rbtree_size(&source->universes) >= source->universe_count_max))
   {
     result = kEtcPalErrNoMem;  // No room to allocate additional universe.
   }
@@ -93,7 +93,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 
   if (result == kEtcPalErrOk)
   {
-    if (etcpal_rbtree_find(&source->universe_tree, &config->universe))
+    if (etcpal_rbtree_find(&source->universes, &config->universe))
       result = kEtcPalErrExists;
   }
 
@@ -160,7 +160,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     result = sacn_initialize_source_netints(&universe->netints, netint_config);
 
   if (result == kEtcPalErrOk)
-    result = etcpal_rbtree_insert(&source->universe_tree, universe);
+    result = etcpal_rbtree_insert(&source->universes, universe);
 
   if (result == kEtcPalErrOk)
   {
@@ -198,7 +198,7 @@ size_t get_num_source_universes(SacnSource* source)
   if (!SACN_ASSERT_VERIFY(source))
     return 0;
 
-  return etcpal_rbtree_size(&source->universe_tree);
+  return etcpal_rbtree_size(&source->universes);
 }
 
 // Needs lock
@@ -207,7 +207,7 @@ etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSource
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe_state))
     return kEtcPalErrSys;
 
-  *universe_state = etcpal_rbtree_find(&source->universe_tree, &universe);
+  *universe_state = etcpal_rbtree_find(&source->universes, &universe);
   return *universe_state ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
 
@@ -217,7 +217,7 @@ void remove_sacn_source_universe_from_tree(SacnSource* source, SacnSourceUnivers
   if (!SACN_ASSERT_VERIFY(source))
     return;
 
-  if (etcpal_rbtree_remove(&source->universe_tree, universe) == kEtcPalErrOk)
+  if (etcpal_rbtree_remove(&source->universes, universe) == kEtcPalErrOk)
   {
     FREE_UNIVERSE(universe);
   }
