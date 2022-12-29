@@ -19,8 +19,11 @@
 
 #include "sacn/private/source_state.h"
 
+#include <cstdlib>
+#include <iterator>
 #include <limits>
 #include <optional>
+#include <time.h>
 #include "etcpal/cpp/inet.h"
 #include "etcpal/cpp/uuid.h"
 #include "etcpal_mock/common.h"
@@ -110,6 +113,8 @@ class TestSourceState : public ::testing::Test
 protected:
   void SetUp() override
   {
+    srand((unsigned int)time(nullptr));
+
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
@@ -564,6 +569,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
 
       for (int i = 0; i < expected_num_universes; ++i)
       {
+        // Verify the universes remain in order even though each adjacent range was "shuffled" when added.
         int expected_universe = i + 1 + (page * max_universes_per_page);
         int actual_universe = etcpal_unpack_u16b(&send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (i * 2)]);
         EXPECT_EQ(actual_universe, expected_universe);
@@ -575,13 +581,32 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
 
   sacn_source_t source_handle = AddSource(kTestSourceConfig);
 
+  static constexpr int kNumUniversesPerIteration = SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE / 4;
   SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
   for (int i = 0; i < 10; ++i)
   {
     current_test_iteration = (i + 1);
 
-    for (int j = 0; j < (SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE / 4); ++j)
-      AddUniverseForUniverseDiscovery(source_handle, universe_config);
+    // For each universe range (1-128, 129-256, etc.), "shuffle" the range before adding (to test that universe lists
+    // remain sorted).
+    std::set<uint16_t> ordered_universes;
+    for (int j = 0; j < kNumUniversesPerIteration; ++j)
+      ordered_universes.insert(static_cast<uint16_t>((i * kNumUniversesPerIteration) + j + 1));
+
+    std::vector<uint16_t> randomized_universes;
+    while (!ordered_universes.empty())
+    {
+      auto random_universe_iter = std::next(ordered_universes.begin(), rand() % ordered_universes.size());
+      randomized_universes.push_back(*random_universe_iter);
+      ordered_universes.erase(random_universe_iter);
+    }
+
+    for (uint16_t universe : randomized_universes)
+    {
+      universe_config.universe = universe;
+      AddUniverse(source_handle, universe_config, kTestNetints);
+      InitTestData(source_handle, universe_config.universe, kTestBuffer);
+    }
 
     etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
