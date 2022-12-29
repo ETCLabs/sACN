@@ -72,7 +72,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     if (insert_index < source->num_universes)
     {
       memmove(&source->universes[insert_index + 1], &source->universes[insert_index],
-              source->num_universes - insert_index);
+              (source->num_universes - insert_index) * sizeof(SacnSourceUniverse));
     }
 
     universe = &source->universes[insert_index];
