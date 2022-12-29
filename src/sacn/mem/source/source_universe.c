@@ -64,7 +64,18 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     CHECK_ROOM_FOR_ONE_MORE(source, universes, SacnSourceUniverse, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE,
                             kEtcPalErrNoMem);
 
-    universe = &source->universes[source->num_universes];
+    // Keep the universes array sorted so that universe discovery packets will remain sorted
+    size_t insert_index = 0;
+    while ((insert_index < source->num_universes) && (source->universes[insert_index].universe_id < config->universe))
+      ++insert_index;
+
+    if (insert_index < source->num_universes)
+    {
+      memmove(&source->universes[insert_index + 1], &source->universes[insert_index],
+              source->num_universes - insert_index);
+    }
+
+    universe = &source->universes[insert_index];
 
     universe->universe_id = config->universe;
 
