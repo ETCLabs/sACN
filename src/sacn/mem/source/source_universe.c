@@ -76,6 +76,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     }
 
     universe = &source->universes[insert_index];
+    memset(universe, 0, sizeof(SacnSourceUniverse));
 
     universe->universe_id = config->universe;
 
