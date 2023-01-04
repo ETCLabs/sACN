@@ -844,7 +844,7 @@ TEST_F(TestSockets, SendTransmitsMinimumLength)
 
   sacn_send_multicast(kTestUniverseId, kSacnIpV4AndIpV6, send_buf, &fake_netint_ids_[0]);
 
-  Source tmp_src;
+  SacnSource tmp_src;
   SacnUnicastDestination tmp_dest;
   tmp_src.ip_supported = kSacnIpV4AndIpV6;
   tmp_dest.dest_addr = kTestAddr;
