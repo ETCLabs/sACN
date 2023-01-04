@@ -404,7 +404,7 @@ void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
   SET_TERMINATED_OPT(universe->level_send_buf, true);
 
   // Send the termination packet on unicast only
-  sacn_send_unicast(source->ip_supported, universe->level_send_buf, &dest->dest_addr);
+  sacn_send_unicast(source, dest, universe->level_send_buf);
   increment_sequence_number(universe);
 
   // Increment the termination counter
@@ -466,7 +466,7 @@ void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
   for (size_t i = 0; i < universe->num_unicast_dests; ++i)
   {
     if (universe->unicast_dests[i].termination_state != kTerminatingAndRemoving)
-      sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr);
+      sacn_send_unicast(source, &universe->unicast_dests[i], send_buf);
   }
 }
 

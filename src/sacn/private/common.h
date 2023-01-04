@@ -753,6 +753,7 @@ typedef struct SacnUnicastDestination
   EtcPalIpAddr dest_addr;  // This must be the first struct member.
   termination_state_t termination_state;
   int num_terminations_sent;
+  etcpal_error_t last_send_error;
 } SacnUnicastDestination;
 
 typedef struct SacnSourceUniverse

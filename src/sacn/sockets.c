@@ -103,7 +103,7 @@ static etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const 
 static etcpal_error_t unsubscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
 static void send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
                            const EtcPalMcastNetintId* netint);
-static void send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr);
+static void send_unicast(SacnUnicastDestination* dest, const uint8_t* send_buf);
 #if SACN_RECEIVER_ENABLED
 static EtcPalSockAddr get_bind_address(etcpal_iptype_t ip_type);
 #endif  // SACN_RECEIVER_ENABLED
@@ -250,30 +250,39 @@ void send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t
     etcpal_sendto(sock, send_buf, send_buf_length, 0, &dest);
 }
 
-void send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr)
+void send_unicast(SacnUnicastDestination* dest, const uint8_t* send_buf)
 {
-  if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(dest_addr))
+  if (!SACN_ASSERT_VERIFY(dest) || !SACN_ASSERT_VERIFY(send_buf))
     return;
 
   // Determine the socket to use
   etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
-  if (dest_addr->type == kEtcPalIpTypeV4)
+  if (dest->dest_addr.type == kEtcPalIpTypeV4)
     sock = ipv4_unicast_send_socket;
-  else if (dest_addr->type == kEtcPalIpTypeV6)
+  else if (dest->dest_addr.type == kEtcPalIpTypeV6)
     sock = ipv6_unicast_send_socket;
 
   if (sock != ETCPAL_SOCKET_INVALID)
   {
     // Convert destination to SockAddr
     EtcPalSockAddr sockaddr_dest;
-    sockaddr_dest.ip = *dest_addr;
+    sockaddr_dest.ip = dest->dest_addr;
     sockaddr_dest.port = SACN_PORT;
 
     // Try to send the data (ignore errors)
     const size_t send_buf_length =
         (size_t)ACN_UDP_PREAMBLE_SIZE + (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
 
-    etcpal_sendto(sock, send_buf, send_buf_length, 0, &sockaddr_dest);
+    int res = etcpal_sendto(sock, send_buf, send_buf_length, 0, &sockaddr_dest);
+    if ((res < 0) && ((etcpal_error_t)res != dest->last_send_error))
+    {
+      char addr_str[ETCPAL_IP_STRING_BYTES];
+      etcpal_ip_to_string(&dest->dest_addr, addr_str);
+      SACN_LOG_ERR("Unicast send to %s failed at least once with error '%s'.", addr_str,
+                   etcpal_strerror((etcpal_error_t)res));
+
+      dest->last_send_error = (etcpal_error_t)res;
+    }
   }
 }
 
@@ -862,18 +871,31 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
 void sacn_send_multicast(uint16_t universe_id, sacn_ip_support_t ip_supported, const uint8_t* send_buf,
                          const EtcPalMcastNetintId* netint)
 {
+  if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(netint))
+    return;
+
   if ((ip_supported == kSacnIpV4Only) || (ip_supported == kSacnIpV4AndIpV6))
     send_multicast(universe_id, kEtcPalIpTypeV4, send_buf, netint);
   if ((ip_supported == kSacnIpV6Only) || (ip_supported == kSacnIpV4AndIpV6))
     send_multicast(universe_id, kEtcPalIpTypeV6, send_buf, netint);
 }
 
-void sacn_send_unicast(sacn_ip_support_t ip_supported, const uint8_t* send_buf, const EtcPalIpAddr* dest_addr)
+void sacn_send_unicast(const SacnSource* source, SacnUnicastDestination* dest, const uint8_t* send_buf)
 {
-  if (((ip_supported == kSacnIpV4Only) || (ip_supported == kSacnIpV4AndIpV6)) && (dest_addr->type == kEtcPalIpTypeV4))
-    send_unicast(send_buf, dest_addr);
-  if (((ip_supported == kSacnIpV6Only) || (ip_supported == kSacnIpV4AndIpV6)) && (dest_addr->type == kEtcPalIpTypeV6))
-    send_unicast(send_buf, dest_addr);
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(dest) || !SACN_ASSERT_VERIFY(send_buf))
+    return;
+
+  if (((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6)) &&
+      (dest->dest_addr.type == kEtcPalIpTypeV4))
+  {
+    send_unicast(dest, send_buf);
+  }
+
+  if (((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6)) &&
+      (dest->dest_addr.type == kEtcPalIpTypeV6))
+  {
+    send_unicast(dest, send_buf);
+  }
 }
 
 SacnSocketsSysNetints* sacn_sockets_get_sys_netints(networking_type_t type)
