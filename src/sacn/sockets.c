@@ -46,6 +46,14 @@
 
 #include <stdio.h>
 
+/****************************** Private macros *******************************/
+
+#ifdef _MSC_VER
+#define SACN_SPRINTF __pragma(warning(suppress : 4996)) sprintf
+#else
+#define SACN_SPRINTF sprintf
+#endif
+
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
@@ -398,7 +406,7 @@ etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id
 #if SACN_FULL_OS_AVAILABLE_HINT
     char sock_desc[100] = {'\0'};
     const char* ip_type_desc = (netint_id->ip_type == kEtcPalIpTypeV4) ? "IPv4" : "IPv6";
-    sprintf(sock_desc, "%s multicast socket for network interface index %u", ip_type_desc, netint_id->index);
+    SACN_SPRINTF(sock_desc, "%s multicast socket for network interface index %u", ip_type_desc, netint_id->index);
     configure_sndbuf_size(new_sock, sock_desc);
 #endif
 
@@ -445,6 +453,10 @@ etcpal_error_t create_unicast_send_socket(etcpal_iptype_t ip_type, etcpal_socket
 #if SACN_FULL_OS_AVAILABLE_HINT
 void configure_sndbuf_size(etcpal_socket_t new_sock, const char* sock_desc)
 {
+#if !SACN_LOGGING_ENABLED
+  ETCPAL_UNUSED_ARG(sock_desc);
+#endif
+
   int set_so_sndbuf_val = SACN_SOURCE_SOCKET_SNDBUF_SIZE;
   etcpal_error_t set_so_sndbuf_res =
       etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_SNDBUF, &set_so_sndbuf_val, sizeof set_so_sndbuf_val);
