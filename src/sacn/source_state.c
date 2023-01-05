@@ -464,7 +464,7 @@ void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
 
   for (size_t i = 0; i < universe->num_unicast_dests; ++i)
   {
-    if (universe->unicast_dests[i].termination_state != kTerminatingAndRemoving)
+    if (universe->unicast_dests[i].termination_state == kNotTerminating)
     {
       if (sacn_send_unicast(source, &universe->unicast_dests[i], send_buf) == kEtcPalErrOk)
         increment_sequence_number(universe, &universe->unicast_dests[i].seq_num);
