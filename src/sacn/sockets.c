@@ -268,7 +268,7 @@ etcpal_error_t send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, con
 
   if ((res != kEtcPalErrOk) && (res != *last_send_error))
   {
-    char addr_str[ETCPAL_IP_STRING_BYTES];
+    char addr_str[ETCPAL_IP_STRING_BYTES] = {'\0'};
     etcpal_ip_to_string(&dest.ip, addr_str);
     SACN_LOG_ERR("Multicast send to %s failed at least once with error '%s'.", addr_str, etcpal_strerror(res));
 
@@ -278,8 +278,7 @@ etcpal_error_t send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, con
   return res;
 }
 
-static etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr,
-                                   etcpal_error_t* last_send_error)
+etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr, etcpal_error_t* last_send_error)
 
 {
   if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(dest_addr) || !SACN_ASSERT_VERIFY(last_send_error))
@@ -318,7 +317,7 @@ static etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* 
 
   if ((res != kEtcPalErrOk) && (res != *last_send_error))
   {
-    char addr_str[ETCPAL_IP_STRING_BYTES];
+    char addr_str[ETCPAL_IP_STRING_BYTES] = {'\0'};
     etcpal_ip_to_string(dest_addr, addr_str);
     SACN_LOG_ERR("Unicast send to %s failed at least once with error '%s'.", addr_str, etcpal_strerror(res));
 
@@ -978,7 +977,7 @@ etcpal_error_t sacn_send_multicast(uint16_t universe_id, sacn_ip_support_t ip_su
   }
 
   if (!SACN_ASSERT_VERIFY(multicast_sent))
-    return multicast_sent;
+    return kEtcPalErrSys;
 
   return res;
 }
