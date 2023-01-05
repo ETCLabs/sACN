@@ -277,6 +277,7 @@ protected:
         current_netint_index = (current_netint_index + 1) % kTestNetints.size();
       }
     };
+
     sacn_send_unicast_fake.custom_fake = [](const SacnSource* source, SacnUnicastDestination* dest,
                                             const uint8_t* send_buf) {
       if (IS_UNIVERSE_DATA(send_buf))
@@ -303,6 +304,8 @@ protected:
 
         current_remote_addr_index = (current_remote_addr_index + 1) % kTestRemoteAddrs.size();
       }
+
+      return kEtcPalErrOk;
     };
 
     SacnSourceConfig source_config = kTestSourceConfig;
@@ -319,13 +322,13 @@ protected:
     {
       EXPECT_EQ(GetUniverse(source, universe)->level_packets_sent_before_suppression, i);
       EXPECT_EQ(GetUniverse(source, universe)->pap_packets_sent_before_suppression, i);
-      EXPECT_EQ(GetUniverse(source, universe)->seq_num, (uint8_t)(i * 2));
+      EXPECT_EQ(GetUniverse(source, universe)->multicast_seq_num, (uint8_t)(i * 2));
       VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
     }
 
     EXPECT_EQ(GetUniverse(source, universe)->level_packets_sent_before_suppression, 4);
     EXPECT_EQ(GetUniverse(source, universe)->pap_packets_sent_before_suppression, 4);
-    EXPECT_EQ(GetUniverse(source, universe)->seq_num, 0x08u);
+    EXPECT_EQ(GetUniverse(source, universe)->multicast_seq_num, 0x08u);
 
     EXPECT_EQ(num_level_multicast_sends, kTestNetints.size() * 4u);
     EXPECT_EQ(num_pap_multicast_sends, kTestNetints.size() * 4u);
@@ -347,7 +350,7 @@ protected:
 
       EXPECT_EQ(GetUniverse(source, universe)->level_packets_sent_before_suppression, 4);
       EXPECT_EQ(GetUniverse(source, universe)->pap_packets_sent_before_suppression, 4);
-      EXPECT_EQ(GetUniverse(source, universe)->seq_num, 0x08u + (0x02u * (uint8_t)i));
+      EXPECT_EQ(GetUniverse(source, universe)->multicast_seq_num, 0x08u + (0x02u * (uint8_t)i));
 
       EXPECT_EQ(num_level_multicast_sends, kTestNetints.size() * i);
       EXPECT_EQ(num_pap_multicast_sends, kTestNetints.size() * i);
@@ -843,6 +846,8 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateAndRemove)
     EXPECT_EQ(etcpal_ip_cmp(&dest->dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
 
     --current_remote_addr_index;
+
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source = AddSource(kTestSourceConfig);
@@ -858,7 +863,7 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateAndRemove)
 
   for (int i = 0; i < 3; ++i)
   {
-    uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->seq_num;
+    uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->multicast_seq_num;
 
     current_remote_addr_index = ((int)kTestRemoteAddrs.size() - 1);
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
@@ -868,7 +873,7 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateAndRemove)
 
     EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests,
               (i < 2) ? kTestRemoteAddrs.size() : 0u);
-    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->seq_num - old_seq_num,
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->multicast_seq_num - old_seq_num,
               (uint8_t)(kTestRemoteAddrs.size() + 1u));  // One sequence number for each unicast termination packet +
                                                          // one more for non-unicast, non-termination data.
     EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, kTestUniverseConfig.universe)->level_send_buf), 0x00u);
@@ -899,6 +904,8 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateWithoutRemoving)
 
     if ((iteration == 2) && (current_remote_addr_index < 0))
       terminations_all_sent = true;
+
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source = AddSource(kTestSourceConfig);
@@ -915,7 +922,7 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateWithoutRemoving)
   terminations_all_sent = false;
   for (iteration = 0; iteration < 2; ++iteration)
   {
-    uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->seq_num;
+    uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->multicast_seq_num;
 
     current_remote_addr_index = ((int)kTestRemoteAddrs.size() - 1);
     VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
@@ -929,7 +936,7 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateWithoutRemoving)
     }
 
     EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests, kTestRemoteAddrs.size());
-    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->seq_num - old_seq_num,
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->multicast_seq_num - old_seq_num,
               (uint8_t)(kTestRemoteAddrs.size() + 1u));  // One sequence number for each unicast termination packet +
                                                          // one more for non-unicast, non-termination data.
     EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, kTestUniverseConfig.universe)->level_send_buf), 0x00u);
@@ -964,14 +971,15 @@ TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateAndRemove)
                                  kTerminateAndRemove);
   }
 
-  uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->seq_num;
+  uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->multicast_seq_num;
 
   EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests, kTestRemoteAddrs.size());
 
   VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
 
   EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests, 0u);
-  EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->seq_num - old_seq_num, (uint8_t)0u);  // No data to send.
+  EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->multicast_seq_num - old_seq_num,
+            (uint8_t)0u);  // No data to send.
 
   EXPECT_EQ(sacn_send_unicast_fake.call_count, 0u);
 }
@@ -988,7 +996,7 @@ TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateWithoutRemoving)
                                  kTerminateWithoutRemoving);
   }
 
-  uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->seq_num;
+  uint8_t old_seq_num = GetUniverse(source, kTestUniverseConfig.universe)->multicast_seq_num;
 
   EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests, kTestRemoteAddrs.size());
 
@@ -1008,7 +1016,8 @@ TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateWithoutRemoving)
     EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->unicast_dests[j].termination_state, kNotTerminating);
   }
 
-  EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->seq_num - old_seq_num, (uint8_t)0u);  // No data to send.
+  EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->multicast_seq_num - old_seq_num,
+            (uint8_t)0u);  // No data to send.
 
   EXPECT_EQ(sacn_send_unicast_fake.call_count, 0u);
 }
@@ -1048,7 +1057,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
   {
     uint8_t old_seq_num[10];
     for (uint16_t j = 0; j < 10u; ++j)
-      old_seq_num[j] = GetUniverse(source, j + 1u)->seq_num;
+      old_seq_num[j] = GetUniverse(source, j + 1u)->multicast_seq_num;
 
     current_universe = 10;
     current_netint_index = 0;
@@ -1059,7 +1068,8 @@ TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
       for (uint16_t j = 0u; j < 10u; ++j)
       {
         EXPECT_EQ(GetUniverse(source, j + 1u)->num_terminations_sent, i + 1);
-        EXPECT_EQ(GetUniverse(source, j + 1u)->seq_num - old_seq_num[j], (uint8_t)(kTestRemoteAddrs.size() + 1u));
+        EXPECT_EQ(GetUniverse(source, j + 1u)->multicast_seq_num - old_seq_num[j],
+                  (uint8_t)(kTestRemoteAddrs.size() + 1u));
         EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, j + 1u)->level_send_buf), 0x00u);
       }
 
@@ -1109,7 +1119,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
   {
     uint8_t old_seq_num[10];
     for (uint16_t j = 0; j < 10u; ++j)
-      old_seq_num[j] = GetUniverse(source, j + 1u)->seq_num;
+      old_seq_num[j] = GetUniverse(source, j + 1u)->multicast_seq_num;
 
     current_universe = 10;
     current_netint_index = 0;
@@ -1120,7 +1130,8 @@ TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
       for (uint16_t j = 0u; j < 10u; ++j)
       {
         EXPECT_EQ(GetUniverse(source, j + 1u)->num_terminations_sent, i + 1);
-        EXPECT_EQ(GetUniverse(source, j + 1u)->seq_num - old_seq_num[j], (uint8_t)(kTestRemoteAddrs.size() + 1u));
+        EXPECT_EQ(GetUniverse(source, j + 1u)->multicast_seq_num - old_seq_num[j],
+                  (uint8_t)(kTestRemoteAddrs.size() + 1u));
         EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, j + 1u)->level_send_buf), 0x00u);
       }
     }
@@ -1198,6 +1209,7 @@ TEST_F(TestSourceState, InterruptTerminatingWithoutRemovingWorks)
 
   sacn_send_unicast_fake.custom_fake = [](const SacnSource*, SacnUnicastDestination*, const uint8_t* send_buf) {
     EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
+    return kEtcPalErrOk;
   };
 
   EXPECT_EQ(sacn_send_multicast_fake.call_count, 0u);
@@ -1216,6 +1228,7 @@ TEST_F(TestSourceState, InterruptTerminatingWithoutRemovingWorks)
 
   sacn_send_unicast_fake.custom_fake = [](const SacnSource*, SacnUnicastDestination*, const uint8_t* send_buf) {
     EXPECT_EQ(TERMINATED_OPT_SET(send_buf), 0x00u);
+    return kEtcPalErrOk;
   };
 
   InitTestData(source, kTestUniverseConfig.universe, kTestBuffer2);
@@ -1391,6 +1404,8 @@ TEST_F(TestSourceState, TerminatingUnicastDestsOnlySendTerminations)
     {
       EXPECT_EQ(TERMINATED_OPT_SET(send_buf), 0x00u);
     }
+
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source = AddSource(kTestSourceConfig);
@@ -1413,6 +1428,7 @@ TEST_F(TestSourceState, PapNotTransmittedIfNotAdded)
   sacn_send_unicast_fake.custom_fake = [](const SacnSource*, SacnUnicastDestination*, const uint8_t* send_buf) {
     uint8_t start_code = send_buf[SACN_DATA_HEADER_SIZE - 1];
     EXPECT_EQ(start_code, SACN_STARTCODE_DMX);
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source = AddSource(kTestSourceConfig);
@@ -1690,16 +1706,16 @@ TEST_F(TestSourceState, IncrementSequenceNumberWorks)
 
   for (int i = 0; i < 255; ++i)
   {
-    uint8_t old_seq_num = universe_state->seq_num;
-    increment_sequence_number(universe_state);
-    EXPECT_EQ(universe_state->seq_num, old_seq_num + 1u);
-    EXPECT_EQ(universe_state->level_send_buf[SACN_SEQ_OFFSET], universe_state->seq_num);
-    EXPECT_EQ(universe_state->pap_send_buf[SACN_SEQ_OFFSET], universe_state->seq_num);
+    uint8_t old_seq_num = universe_state->multicast_seq_num;
+    increment_sequence_number(universe_state, &universe_state->multicast_seq_num);
+    EXPECT_EQ(universe_state->multicast_seq_num, old_seq_num + 1u);
+    EXPECT_EQ(universe_state->level_send_buf[SACN_SEQ_OFFSET], universe_state->multicast_seq_num);
+    EXPECT_EQ(universe_state->pap_send_buf[SACN_SEQ_OFFSET], universe_state->multicast_seq_num);
   }
 
-  EXPECT_EQ(universe_state->seq_num, 255u);
-  increment_sequence_number(universe_state);
-  EXPECT_EQ(universe_state->seq_num, 0u);
+  EXPECT_EQ(universe_state->multicast_seq_num, 255u);
+  increment_sequence_number(universe_state, &universe_state->multicast_seq_num);
+  EXPECT_EQ(universe_state->multicast_seq_num, 0u);
   EXPECT_EQ(universe_state->level_send_buf[SACN_SEQ_OFFSET], 0u);
   EXPECT_EQ(universe_state->pap_send_buf[SACN_SEQ_OFFSET], 0u);
 }
@@ -1712,6 +1728,7 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
     EXPECT_EQ(memcmp(send_buf, kTestBuffer.data(), kTestBuffer.size()), 0);
     EXPECT_EQ(etcpal_ip_cmp(&dest->dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
     ++current_remote_addr_index;
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source = AddSource(kTestSourceConfig);
@@ -1735,6 +1752,7 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
     EXPECT_EQ(memcmp(send_buf, kTestBuffer.data(), kTestBuffer.size()), 0);
     EXPECT_EQ(etcpal_ip_cmp(&dest->dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
     current_remote_addr_index += 2;
+    return kEtcPalErrOk;
   };
 
   current_remote_addr_index = 0;

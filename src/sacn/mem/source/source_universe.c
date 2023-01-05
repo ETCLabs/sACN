@@ -86,7 +86,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     universe->priority = config->priority;
     universe->sync_universe = config->sync_universe;
     universe->send_preview = config->send_preview;
-    universe->seq_num = 0;
+    universe->multicast_seq_num = 0;
 
     universe->level_packets_sent_before_suppression = 0;
     init_sacn_data_send_buf(universe->level_send_buf, SACN_STARTCODE_DMX, &source->cid, source->name, config->priority,

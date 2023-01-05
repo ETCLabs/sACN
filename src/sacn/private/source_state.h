@@ -60,7 +60,7 @@ sacn_source_t get_next_source_handle();
 void update_levels_and_or_pap(SacnSource* source, SacnSourceUniverse* universe, const uint8_t* new_values,
                               size_t new_values_size, const uint8_t* new_priorities, size_t new_priorities_size,
                               force_sync_behavior_t force_sync);
-void increment_sequence_number(SacnSourceUniverse* universe);
+void increment_sequence_number(SacnSourceUniverse* universe, uint8_t* seq_num);
 void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
 void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
 void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bool preview);

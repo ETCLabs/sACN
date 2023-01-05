@@ -848,7 +848,7 @@ TEST_F(TestSockets, SendTransmitsMinimumLength)
   auto tmp_dest = std::make_unique<SacnUnicastDestination>();
   tmp_src->ip_supported = kSacnIpV4AndIpV6;
   tmp_dest->dest_addr = kTestAddr;
-  sacn_send_unicast(tmp_src.get(), tmp_dest.get(), send_buf);
+  EXPECT_EQ(sacn_send_unicast(tmp_src.get(), tmp_dest.get(), send_buf), kEtcPalErrOk);
 
   EXPECT_EQ(etcpal_sendto_fake.call_count, 3u);
 }

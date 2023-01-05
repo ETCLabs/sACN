@@ -754,6 +754,7 @@ typedef struct SacnUnicastDestination
   termination_state_t termination_state;
   int num_terminations_sent;
   etcpal_error_t last_send_error;
+  uint8_t seq_num;
 } SacnUnicastDestination;
 
 typedef struct SacnSourceUniverse
@@ -766,7 +767,7 @@ typedef struct SacnSourceUniverse
   uint8_t priority;
   uint16_t sync_universe;
   bool send_preview;
-  uint8_t seq_num;
+  uint8_t multicast_seq_num;
 
   // Start code 0x00 state
   int level_packets_sent_before_suppression;

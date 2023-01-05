@@ -334,7 +334,6 @@ void transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
     // Send 0x00 data & reset the keep-alive timer
     send_universe_multicast(source, universe, universe->level_send_buf);
     send_universe_unicast(source, universe, universe->level_send_buf);
-    increment_sequence_number(universe);
 
     if (universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
       ++universe->level_packets_sent_before_suppression;
@@ -349,7 +348,6 @@ void transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
     // Send 0xDD data & reset the keep-alive timer
     send_universe_multicast(source, universe, universe->pap_send_buf);
     send_universe_unicast(source, universe, universe->pap_send_buf);
-    increment_sequence_number(universe);
 
     if (universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
       ++universe->pap_packets_sent_before_suppression;
@@ -360,15 +358,15 @@ void transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
 }
 
 // Needs lock
-void increment_sequence_number(SacnSourceUniverse* universe)
+void increment_sequence_number(SacnSourceUniverse* universe, uint8_t* seq_num)
 {
-  if (!SACN_ASSERT_VERIFY(universe))
+  if (!SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(seq_num))
     return;
 
-  ++universe->seq_num;
-  universe->level_send_buf[SACN_SEQ_OFFSET] = universe->seq_num;
+  ++(*seq_num);
+  universe->level_send_buf[SACN_SEQ_OFFSET] = *seq_num;
 #if SACN_ETC_PRIORITY_EXTENSION
-  universe->pap_send_buf[SACN_SEQ_OFFSET] = universe->seq_num;
+  universe->pap_send_buf[SACN_SEQ_OFFSET] = *seq_num;
 #endif
 }
 
@@ -384,7 +382,6 @@ void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* un
 
   // Send the termination packet on multicast only
   send_universe_multicast(source, universe, universe->level_send_buf);
-  increment_sequence_number(universe);
 
   // Increment the termination counter
   ++universe->num_terminations_sent;
@@ -404,8 +401,8 @@ void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
   SET_TERMINATED_OPT(universe->level_send_buf, true);
 
   // Send the termination packet on unicast only
-  sacn_send_unicast(source, dest, universe->level_send_buf);
-  increment_sequence_number(universe);
+  if (sacn_send_unicast(source, dest, universe->level_send_buf) == kEtcPalErrOk)
+    increment_sequence_number(universe, &dest->seq_num);
 
   // Increment the termination counter
   ++dest->num_terminations_sent;
@@ -455,6 +452,8 @@ void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
     for (size_t i = 0; i < universe->netints.num_netints; ++i)
       sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]);
   }
+
+  increment_sequence_number(universe, &universe->multicast_seq_num);
 }
 
 // Needs lock
@@ -466,7 +465,10 @@ void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
   for (size_t i = 0; i < universe->num_unicast_dests; ++i)
   {
     if (universe->unicast_dests[i].termination_state != kTerminatingAndRemoving)
-      sacn_send_unicast(source, &universe->unicast_dests[i], send_buf);
+    {
+      if (sacn_send_unicast(source, &universe->unicast_dests[i], send_buf) == kEtcPalErrOk)
+        increment_sequence_number(universe, &universe->unicast_dests[i].seq_num);
+    }
   }
 }
 
