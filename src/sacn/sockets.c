@@ -44,6 +44,8 @@
 #include "etcpal/mempool.h"
 #endif
 
+#include <stdio.h>
+
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
@@ -83,6 +85,7 @@ static int netint_id_index_in_array(const EtcPalMcastNetintId* id, const SacnMca
 
 static etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id, etcpal_socket_t* socket);
 static etcpal_error_t create_unicast_send_socket(etcpal_iptype_t ip_type, etcpal_socket_t* socket);
+static void configure_sndbuf_size(etcpal_socket_t new_sock, const char* sock_desc);
 static etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAddr* bind_addr, bool set_sockopts,
                                             ReceiveSocket* socket);
 static void poll_add_socket(SacnRecvThreadContext* recv_thread_context, ReceiveSocket* socket);
@@ -375,8 +378,8 @@ etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id
 
   if (res == kEtcPalErrOk)
   {
-    const int value = SACN_SOURCE_MULTICAST_TTL;
-    res = etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_TTL, &value, sizeof value);
+    const int ttl = SACN_SOURCE_MULTICAST_TTL;
+    res = etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_TTL, &ttl, sizeof ttl);
   }
 
   if (res == kEtcPalErrOk)
@@ -388,8 +391,15 @@ etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id
   if (res == kEtcPalErrOk)
   {
 #if SACN_LOOPBACK
-    int intval = 1;
-    etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_LOOP, &intval, sizeof intval);
+    int loopback = 1;
+    etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_LOOP, &loopback, sizeof loopback);
+#endif
+
+#if SACN_FULL_OS_AVAILABLE_HINT
+    char sock_desc[100] = {'\0'};
+    const char* ip_type_desc = (netint_id->ip_type == kEtcPalIpTypeV4) ? "IPv4" : "IPv6";
+    sprintf(sock_desc, "%s multicast socket for network interface index %u", ip_type_desc, netint_id->index);
+    configure_sndbuf_size(new_sock, sock_desc);
 #endif
 
     *socket = new_sock;
@@ -419,6 +429,10 @@ etcpal_error_t create_unicast_send_socket(etcpal_iptype_t ip_type, etcpal_socket
 
   if (res == kEtcPalErrOk)
   {
+#if SACN_FULL_OS_AVAILABLE_HINT
+    configure_sndbuf_size(*socket, (ip_type == kEtcPalIpTypeV4) ? "IPv4 unicast socket" : "IPv6 unicast socket");
+#endif
+
     res = etcpal_setblocking(*socket, false);
 
     if (res != kEtcPalErrOk)
@@ -427,6 +441,38 @@ etcpal_error_t create_unicast_send_socket(etcpal_iptype_t ip_type, etcpal_socket
 
   return res;
 }
+
+#if SACN_FULL_OS_AVAILABLE_HINT
+void configure_sndbuf_size(etcpal_socket_t new_sock, const char* sock_desc)
+{
+  int set_so_sndbuf_val = SACN_SOURCE_SOCKET_SNDBUF_SIZE;
+  etcpal_error_t set_so_sndbuf_res =
+      etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_SNDBUF, &set_so_sndbuf_val, sizeof set_so_sndbuf_val);
+
+  if (set_so_sndbuf_res != kEtcPalErrOk)
+  {
+    SACN_LOG_ERR("Error setting send buffer size to %d on %s: '%s'", set_so_sndbuf_val, sock_desc,
+                 etcpal_strerror(set_so_sndbuf_res));
+  }
+
+  int get_so_sndbuf_val = 0;
+  size_t get_so_sndbuf_size = sizeof(get_so_sndbuf_val);
+  etcpal_error_t get_so_sndbuf_res =
+      etcpal_getsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_SNDBUF, &set_so_sndbuf_val, &get_so_sndbuf_size);
+
+  if (get_so_sndbuf_res != kEtcPalErrOk)
+  {
+    SACN_LOG_WARNING("Couldn't verify send buffer size of %s: '%s'", sock_desc, etcpal_strerror(get_so_sndbuf_res));
+  }
+
+  if (get_so_sndbuf_val != set_so_sndbuf_val)
+  {
+    SACN_LOG_WARNING(
+        "Couldn't set the desired send buffer size on %s: The desired size was %d, but it ended up being %d.",
+        sock_desc, set_so_sndbuf_val, get_so_sndbuf_val);
+  }
+}
+#endif
 
 etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAddr* bind_addr, bool set_sockopts,
                                      ReceiveSocket* socket)
