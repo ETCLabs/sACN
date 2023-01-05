@@ -844,11 +844,11 @@ TEST_F(TestSockets, SendTransmitsMinimumLength)
 
   sacn_send_multicast(kTestUniverseId, kSacnIpV4AndIpV6, send_buf, &fake_netint_ids_[0]);
 
-  SacnSource tmp_src;
-  SacnUnicastDestination tmp_dest;
-  tmp_src.ip_supported = kSacnIpV4AndIpV6;
-  tmp_dest.dest_addr = kTestAddr;
-  sacn_send_unicast(&tmp_src, &tmp_dest, send_buf);
+  auto tmp_src = std::make_unique<SacnSource>();
+  auto tmp_dest = std::make_unique<SacnUnicastDestination>();
+  tmp_src->ip_supported = kSacnIpV4AndIpV6;
+  tmp_dest->dest_addr = kTestAddr;
+  sacn_send_unicast(tmp_src.get(), tmp_dest.get(), send_buf);
 
   EXPECT_EQ(etcpal_sendto_fake.call_count, 3u);
 }
