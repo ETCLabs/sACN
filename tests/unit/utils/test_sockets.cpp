@@ -842,13 +842,10 @@ TEST_F(TestSockets, SendTransmitsMinimumLength)
 
   EXPECT_EQ(etcpal_sendto_fake.call_count, 0u);
 
-  sacn_send_multicast(kTestUniverseId, kSacnIpV4AndIpV6, send_buf, &fake_netint_ids_[0]);
-
-  auto tmp_src = std::make_unique<SacnSource>();
-  auto tmp_dest = std::make_unique<SacnUnicastDestination>();
-  tmp_src->ip_supported = kSacnIpV4AndIpV6;
-  tmp_dest->dest_addr = kTestAddr;
-  EXPECT_EQ(sacn_send_unicast(tmp_src.get(), tmp_dest.get(), send_buf), kEtcPalErrOk);
+  etcpal_error_t tmp_err = kEtcPalErrOk;
+  EXPECT_EQ(sacn_send_multicast(kTestUniverseId, kSacnIpV4AndIpV6, send_buf, &fake_netint_ids_[0], &tmp_err),
+            kEtcPalErrOk);
+  EXPECT_EQ(sacn_send_unicast(kSacnIpV4AndIpV6, send_buf, &kTestAddr, &tmp_err), kEtcPalErrOk);
 
   EXPECT_EQ(etcpal_sendto_fake.call_count, 3u);
 }

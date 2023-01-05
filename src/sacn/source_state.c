@@ -401,8 +401,11 @@ void send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
   SET_TERMINATED_OPT(universe->level_send_buf, true);
 
   // Send the termination packet on unicast only
-  if (sacn_send_unicast(source, dest, universe->level_send_buf) == kEtcPalErrOk)
+  if (sacn_send_unicast(source->ip_supported, universe->level_send_buf, &dest->dest_addr, &dest->last_send_error) ==
+      kEtcPalErrOk)
+  {
     increment_sequence_number(universe, &dest->seq_num);
+  }
 
   // Increment the termination counter
   ++dest->num_terminations_sent;
@@ -428,15 +431,26 @@ void send_universe_discovery(SacnSource* source)
     while (pack_universe_discovery_page(source, &universe_index, page_number) > 0)
     {
       // Send multicast on IPv4 and/or IPv6
+      bool at_least_one_send_worked = false;
       for (size_t i = 0; i < source->num_netints; ++i)
       {
-        sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, source->ip_supported, source->universe_discovery_send_buf,
-                            &source->netints[i].id);
+        if (sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, source->ip_supported, source->universe_discovery_send_buf,
+                                &source->netints[i].id, &source->last_disc_send_error) == kEtcPalErrOk)
+        {
+          at_least_one_send_worked = true;
+        }
       }
 
-      // Increment sequence number & page number
-      ++source->universe_discovery_send_buf[SACN_SEQ_OFFSET];
-      ++page_number;
+      if (at_least_one_send_worked)
+      {
+        // Increment sequence number & page number
+        ++source->universe_discovery_send_buf[SACN_SEQ_OFFSET];
+        ++page_number;
+      }
+      else
+      {
+        break;
+      }
     }
   }
 }
@@ -447,13 +461,21 @@ void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf))
     return;
 
+  bool at_least_one_send_worked = false;
   if (!universe->send_unicast_only)
   {
     for (size_t i = 0; i < universe->netints.num_netints; ++i)
-      sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]);
+    {
+      if (sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i],
+                              &universe->last_multicast_send_error) == kEtcPalErrOk)
+      {
+        at_least_one_send_worked = true;
+      }
+    }
   }
 
-  increment_sequence_number(universe, &universe->multicast_seq_num);
+  if (at_least_one_send_worked)
+    increment_sequence_number(universe, &universe->multicast_seq_num);
 }
 
 // Needs lock
@@ -466,8 +488,11 @@ void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
   {
     if (universe->unicast_dests[i].termination_state == kNotTerminating)
     {
-      if (sacn_send_unicast(source, &universe->unicast_dests[i], send_buf) == kEtcPalErrOk)
+      if (sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr,
+                            &universe->unicast_dests[i].last_send_error) == kEtcPalErrOk)
+      {
         increment_sequence_number(universe, &universe->unicast_dests[i].seq_num);
+      }
     }
   }
 }

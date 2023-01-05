@@ -97,9 +97,10 @@ void sacn_unsubscribe_sockets(SacnRecvThreadContext* recv_thread_context);
 etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadResult* read_result);
 
 // Source sending functions
-void sacn_send_multicast(uint16_t universe_id, sacn_ip_support_t ip_supported, const uint8_t* send_buf,
-                         const EtcPalMcastNetintId* netint);
-etcpal_error_t sacn_send_unicast(const SacnSource* source, SacnUnicastDestination* dest, const uint8_t* send_buf);
+etcpal_error_t sacn_send_multicast(uint16_t universe_id, sacn_ip_support_t ip_supported, const uint8_t* send_buf,
+                                   const EtcPalMcastNetintId* netint, etcpal_error_t* last_send_error);
+etcpal_error_t sacn_send_unicast(sacn_ip_support_t ip_supported, const uint8_t* send_buf, const EtcPalIpAddr* dest_addr,
+                                 etcpal_error_t* last_send_error);
 
 // Sys netints getter, exposed here for unit testing
 SacnSocketsSysNetints* sacn_sockets_get_sys_netints(networking_type_t type);

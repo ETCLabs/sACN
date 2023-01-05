@@ -102,6 +102,8 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 
     universe->send_unicast_only = config->send_unicast_only;
 
+    universe->last_multicast_send_error = kEtcPalErrOk;
+
     universe->num_unicast_dests = 0;
 #if SACN_DYNAMIC_MEM
     universe->unicast_dests = calloc(INITIAL_CAPACITY, sizeof(SacnUnicastDestination));

@@ -249,7 +249,8 @@ protected:
     etcpal_getms_fake.return_val = 0u;
 
     sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
-                                              const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {
+                                              const uint8_t* send_buf, const EtcPalMcastNetintId* netint,
+                                              etcpal_error_t*) {
       if (IS_UNIVERSE_DATA(send_buf))
       {
         EXPECT_EQ(universe_id, kTestUniverseConfig.universe);
@@ -276,13 +277,15 @@ protected:
 
         current_netint_index = (current_netint_index + 1) % kTestNetints.size();
       }
+
+      return kEtcPalErrOk;
     };
 
-    sacn_send_unicast_fake.custom_fake = [](const SacnSource* source, SacnUnicastDestination* dest,
-                                            const uint8_t* send_buf) {
+    sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
+                                            const EtcPalIpAddr* dest_addr, etcpal_error_t*) {
       if (IS_UNIVERSE_DATA(send_buf))
       {
-        EXPECT_EQ(source->ip_supported, kTestSourceConfig.ip_supported);
+        EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
 
         if (memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer.data(), kTestBuffer.size()) == 0)
         {
@@ -300,7 +303,7 @@ protected:
           ++num_invalid_sends;
         }
 
-        EXPECT_EQ(etcpal_ip_cmp(&kTestRemoteAddrs[current_remote_addr_index], &dest->dest_addr), 0);
+        EXPECT_EQ(etcpal_ip_cmp(&kTestRemoteAddrs[current_remote_addr_index], dest_addr), 0);
 
         current_remote_addr_index = (current_remote_addr_index + 1) % kTestRemoteAddrs.size();
       }
@@ -470,9 +473,11 @@ TEST_F(TestSourceState, UniverseDiscoveryTimingIsCorrect)
   etcpal_getms_fake.return_val = 0u;
 
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
       ++num_universe_discovery_sends;
+
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source_handle = AddSource(kTestSourceConfig);
@@ -498,9 +503,11 @@ TEST_F(TestSourceState, SourceTerminatingStopsUniverseDiscovery)
   etcpal_getms_fake.return_val = 0u;
 
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
       ++num_universe_discovery_sends;
+
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source_handle = AddSource(kTestSourceConfig);
@@ -528,9 +535,11 @@ TEST_F(TestSourceState, UniverseDiscoverySendsForEachPage)
   etcpal_getms_fake.return_val = 0u;
 
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
       ++num_universe_discovery_sends;
+
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source_handle = AddSource(kTestSourceConfig);
@@ -555,7 +564,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
   ASSERT_EQ(SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE % 4, 0);
 
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
     {
       int page = send_buf[SACN_UNIVERSE_DISCOVERY_PAGE_OFFSET];
@@ -579,6 +588,8 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
         EXPECT_EQ(actual_universe, expected_universe);
       }
     }
+
+    return kEtcPalErrOk;
   };
 
   etcpal_getms_fake.return_val = 0u;
@@ -620,12 +631,14 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
 TEST_F(TestSourceState, UniverseDiscoverySendsCorrectPageNumbers)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
     {
       EXPECT_EQ(send_buf[SACN_UNIVERSE_DISCOVERY_PAGE_OFFSET], num_universe_discovery_sends / kTestNetints.size());
       ++num_universe_discovery_sends;
     }
+
+    return kEtcPalErrOk;
   };
 
   etcpal_getms_fake.return_val = 0u;
@@ -653,11 +666,13 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
     current_test_iteration = i;
 
     sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                              const EtcPalMcastNetintId*) {
+                                              const EtcPalMcastNetintId*, etcpal_error_t*) {
       if (IS_UNIVERSE_DISCOVERY(send_buf))
       {
         EXPECT_EQ(send_buf[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET], current_test_iteration);
       }
+
+      return kEtcPalErrOk;
     };
 
     for (int j = 0; j < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE; ++j)
@@ -671,12 +686,14 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
 TEST_F(TestSourceState, UniverseDiscoverySendsCorrectSequenceNumber)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
     {
       EXPECT_EQ(send_buf[SACN_SEQ_OFFSET], num_universe_discovery_sends / kTestNetints.size());
       ++num_universe_discovery_sends;
     }
+
+    return kEtcPalErrOk;
   };
 
   etcpal_getms_fake.return_val = 0u;
@@ -697,13 +714,15 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectSequenceNumber)
 TEST_F(TestSourceState, UniverseDiscoveryUsesCorrectNetints)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId* netint) {
+                                            const EtcPalMcastNetintId* netint, etcpal_error_t*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
     {
       EXPECT_EQ(netint->ip_type, kTestNetints[num_universe_discovery_sends].iface.ip_type);
       EXPECT_EQ(netint->index, kTestNetints[num_universe_discovery_sends].iface.index);
       ++num_universe_discovery_sends;
     }
+
+    return kEtcPalErrOk;
   };
 
   etcpal_getms_fake.return_val = 0u;
@@ -723,7 +742,7 @@ TEST_F(TestSourceState, UniverseDiscoveryUsesCorrectNetints)
 TEST_F(TestSourceState, UniverseDiscoveryExcludesUniversesWithoutData)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
     {
       int num_universes = (ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE])) + ACN_UDP_PREAMBLE_SIZE -
@@ -736,6 +755,8 @@ TEST_F(TestSourceState, UniverseDiscoveryExcludesUniversesWithoutData)
         EXPECT_EQ(universe % 2, 0);
       }
     }
+
+    return kEtcPalErrOk;
   };
 
   etcpal_getms_fake.return_val = 0u;
@@ -760,7 +781,7 @@ TEST_F(TestSourceState, UniverseDiscoveryExcludesUniversesWithoutData)
 TEST_F(TestSourceState, UniverseDiscoveryExcludesUnicastOnlyUniverses)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
     {
       int num_universes = (ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE])) + ACN_UDP_PREAMBLE_SIZE -
@@ -773,6 +794,8 @@ TEST_F(TestSourceState, UniverseDiscoveryExcludesUnicastOnlyUniverses)
         EXPECT_EQ(universe % 2, 1);
       }
     }
+
+    return kEtcPalErrOk;
   };
 
   etcpal_getms_fake.return_val = 0u;
@@ -793,7 +816,7 @@ TEST_F(TestSourceState, UniverseDiscoveryExcludesUnicastOnlyUniverses)
 TEST_F(TestSourceState, RemovingUniversesUpdatesUniverseDiscovery)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
     {
       int expected_num_universes = (10 - current_test_iteration);
@@ -812,6 +835,8 @@ TEST_F(TestSourceState, RemovingUniversesUpdatesUniverseDiscovery)
 
       ++num_universe_discovery_sends;
     }
+
+    return kEtcPalErrOk;
   };
 
   etcpal_getms_fake.return_val = 0u;
@@ -839,11 +864,11 @@ TEST_F(TestSourceState, RemovingUniversesUpdatesUniverseDiscovery)
 
 TEST_F(TestSourceState, UnicastDestsWithDataTerminateAndRemove)
 {
-  sacn_send_unicast_fake.custom_fake = [](const SacnSource* source, SacnUnicastDestination* dest,
-                                          const uint8_t* send_buf) {
-    EXPECT_EQ(source->ip_supported, kTestSourceConfig.ip_supported);
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
+                                          const EtcPalIpAddr* dest_addr, etcpal_error_t*) {
+    EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
     EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
-    EXPECT_EQ(etcpal_ip_cmp(&dest->dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
+    EXPECT_EQ(etcpal_ip_cmp(dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
 
     --current_remote_addr_index;
 
@@ -885,9 +910,9 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateWithoutRemoving)
 {
   static int iteration = 0;
   static bool terminations_all_sent = false;
-  sacn_send_unicast_fake.custom_fake = [](const SacnSource* source, SacnUnicastDestination* dest,
-                                          const uint8_t* send_buf) {
-    EXPECT_EQ(source->ip_supported, kTestSourceConfig.ip_supported);
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
+                                          const EtcPalIpAddr* dest_addr, etcpal_error_t*) {
+    EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
 
     if (terminations_all_sent)
     {
@@ -897,7 +922,7 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateWithoutRemoving)
     {
       EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
 
-      EXPECT_EQ(etcpal_ip_cmp(&dest->dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
+      EXPECT_EQ(etcpal_ip_cmp(dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
       --current_remote_addr_index;
     }
 
@@ -1015,7 +1040,8 @@ TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateWithoutRemoving)
 TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
-                                            const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {
+                                            const uint8_t* send_buf, const EtcPalMcastNetintId* netint,
+                                            etcpal_error_t*) {
     if (IS_UNIVERSE_DATA(send_buf))
     {
       EXPECT_EQ(universe_id, current_universe);
@@ -1031,6 +1057,8 @@ TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
 
       ++num_universe_data_sends;
     }
+
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source = AddSource(kTestSourceConfig);
@@ -1081,7 +1109,8 @@ TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
 TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
-                                            const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {
+                                            const uint8_t* send_buf, const EtcPalMcastNetintId* netint,
+                                            etcpal_error_t*) {
     if (IS_UNIVERSE_DATA(send_buf))
     {
       EXPECT_EQ(universe_id, current_universe);
@@ -1097,6 +1126,8 @@ TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
 
       ++num_universe_data_sends;
     }
+
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source = AddSource(kTestSourceConfig);
@@ -1143,9 +1174,11 @@ TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
 TEST_F(TestSourceState, UniversesWithoutDataTerminateAndRemove)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     if (IS_UNIVERSE_DATA(send_buf))
       ++num_universe_data_sends;
+
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source = AddSource(kTestSourceConfig);
@@ -1168,9 +1201,11 @@ TEST_F(TestSourceState, UniversesWithoutDataTerminateAndRemove)
 TEST_F(TestSourceState, UniversesWithoutDataTerminateWithoutRemoving)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     if (IS_UNIVERSE_DATA(send_buf))
       ++num_universe_data_sends;
+
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source = AddSource(kTestSourceConfig);
@@ -1201,11 +1236,13 @@ TEST_F(TestSourceState, InterruptTerminatingWithoutRemovingWorks)
 
   // Allow one termination before interrupting
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
+    return kEtcPalErrOk;
   };
 
-  sacn_send_unicast_fake.custom_fake = [](const SacnSource*, SacnUnicastDestination*, const uint8_t* send_buf) {
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t* send_buf, const EtcPalIpAddr*,
+                                          etcpal_error_t*) {
     EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
     return kEtcPalErrOk;
   };
@@ -1220,11 +1257,13 @@ TEST_F(TestSourceState, InterruptTerminatingWithoutRemovingWorks)
 
   // Now interrupt
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     EXPECT_EQ(TERMINATED_OPT_SET(send_buf), 0x00u);
+    return kEtcPalErrOk;
   };
 
-  sacn_send_unicast_fake.custom_fake = [](const SacnSource*, SacnUnicastDestination*, const uint8_t* send_buf) {
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t* send_buf, const EtcPalIpAddr*,
+                                          etcpal_error_t*) {
     EXPECT_EQ(TERMINATED_OPT_SET(send_buf), 0x00u);
     return kEtcPalErrOk;
   };
@@ -1366,9 +1405,11 @@ TEST_F(TestSourceState, SendUnicastOnlyWorks)
   etcpal_getms_fake.return_val = 0;
 
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
-                                            const EtcPalMcastNetintId*) {
+                                            const EtcPalMcastNetintId*, etcpal_error_t*) {
     if (IS_UNIVERSE_DATA(send_buf))
       ++num_universe_data_sends;
+
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source = AddSource(kTestSourceConfig);
@@ -1390,8 +1431,9 @@ TEST_F(TestSourceState, SendUnicastOnlyWorks)
 
 TEST_F(TestSourceState, TerminatingUnicastDestsOnlySendTerminations)
 {
-  sacn_send_unicast_fake.custom_fake = [](const SacnSource*, SacnUnicastDestination* dest, const uint8_t* send_buf) {
-    if (etcpal_ip_cmp(&dest->dest_addr, &kTestRemoteAddrs[0]) == 0)
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t* send_buf, const EtcPalIpAddr* dest_addr,
+                                          etcpal_error_t*) {
+    if (etcpal_ip_cmp(dest_addr, &kTestRemoteAddrs[0]) == 0)
     {
       EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
 
@@ -1423,7 +1465,8 @@ TEST_F(TestSourceState, TerminatingUnicastDestsOnlySendTerminations)
 
 TEST_F(TestSourceState, PapNotTransmittedIfNotAdded)
 {
-  sacn_send_unicast_fake.custom_fake = [](const SacnSource*, SacnUnicastDestination*, const uint8_t* send_buf) {
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t* send_buf, const EtcPalIpAddr*,
+                                          etcpal_error_t*) {
     uint8_t start_code = send_buf[SACN_DATA_HEADER_SIZE - 1];
     EXPECT_EQ(start_code, SACN_STARTCODE_DMX);
     return kEtcPalErrOk;
@@ -1720,11 +1763,11 @@ TEST_F(TestSourceState, IncrementSequenceNumberWorks)
 
 TEST_F(TestSourceState, SendUniverseUnicastWorks)
 {
-  sacn_send_unicast_fake.custom_fake = [](const SacnSource* source, SacnUnicastDestination* dest,
-                                          const uint8_t* send_buf) {
-    EXPECT_EQ(source->ip_supported, kTestSourceConfig.ip_supported);
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
+                                          const EtcPalIpAddr* dest_addr, etcpal_error_t*) {
+    EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
     EXPECT_EQ(memcmp(send_buf, kTestBuffer.data(), kTestBuffer.size()), 0);
-    EXPECT_EQ(etcpal_ip_cmp(&dest->dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
+    EXPECT_EQ(etcpal_ip_cmp(dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
     ++current_remote_addr_index;
     return kEtcPalErrOk;
   };
@@ -1744,11 +1787,11 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
     ++num_terminating;
   }
 
-  sacn_send_unicast_fake.custom_fake = [](const SacnSource* source, SacnUnicastDestination* dest,
-                                          const uint8_t* send_buf) {
-    EXPECT_EQ(source->ip_supported, kTestSourceConfig.ip_supported);
+  sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
+                                          const EtcPalIpAddr* dest_addr, etcpal_error_t*) {
+    EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
     EXPECT_EQ(memcmp(send_buf, kTestBuffer.data(), kTestBuffer.size()), 0);
-    EXPECT_EQ(etcpal_ip_cmp(&dest->dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
+    EXPECT_EQ(etcpal_ip_cmp(dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
     current_remote_addr_index += 2;
     return kEtcPalErrOk;
   };
@@ -1761,13 +1804,16 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
 TEST_F(TestSourceState, SendUniverseMulticastWorks)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
-                                            const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {
+                                            const uint8_t* send_buf, const EtcPalMcastNetintId* netint,
+                                            etcpal_error_t*) {
     EXPECT_EQ(universe_id, kTestUniverseConfig.universe);
     EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
     EXPECT_EQ(memcmp(send_buf, kTestBuffer.data(), kTestBuffer.size()), 0);
     EXPECT_EQ(netint->index, kTestNetints[current_netint_index].iface.index);
     EXPECT_EQ(netint->ip_type, kTestNetints[current_netint_index].iface.ip_type);
     ++current_netint_index;
+
+    return kEtcPalErrOk;
   };
 
   sacn_source_t source = AddSource(kTestSourceConfig);
