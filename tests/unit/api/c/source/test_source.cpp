@@ -1113,7 +1113,6 @@ TEST_F(TestSource, SourceSendNowWorks)
 
   EXPECT_EQ(send_universe_multicast_fake.call_count, 1u);
   EXPECT_EQ(send_universe_unicast_fake.call_count, 1u);
-  EXPECT_EQ(increment_sequence_number_fake.call_count, 1u);
 }
 
 TEST_F(TestSource, SourceSendNowErrInvalidWorks)

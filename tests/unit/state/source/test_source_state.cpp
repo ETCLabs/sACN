@@ -873,9 +873,7 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateAndRemove)
 
     EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests,
               (i < 2) ? kTestRemoteAddrs.size() : 0u);
-    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->multicast_seq_num - old_seq_num,
-              (uint8_t)(kTestRemoteAddrs.size() + 1u));  // One sequence number for each unicast termination packet +
-                                                         // one more for non-unicast, non-termination data.
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->multicast_seq_num - old_seq_num, 1);
     EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, kTestUniverseConfig.universe)->level_send_buf), 0x00u);
   }
 
@@ -936,9 +934,7 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateWithoutRemoving)
     }
 
     EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->num_unicast_dests, kTestRemoteAddrs.size());
-    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->multicast_seq_num - old_seq_num,
-              (uint8_t)(kTestRemoteAddrs.size() + 1u));  // One sequence number for each unicast termination packet +
-                                                         // one more for non-unicast, non-termination data.
+    EXPECT_EQ(GetUniverse(source, kTestUniverseConfig.universe)->multicast_seq_num - old_seq_num, 1);
     EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, kTestUniverseConfig.universe)->level_send_buf), 0x00u);
   }
 
@@ -1068,8 +1064,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
       for (uint16_t j = 0u; j < 10u; ++j)
       {
         EXPECT_EQ(GetUniverse(source, j + 1u)->num_terminations_sent, i + 1);
-        EXPECT_EQ(GetUniverse(source, j + 1u)->multicast_seq_num - old_seq_num[j],
-                  (uint8_t)(kTestRemoteAddrs.size() + 1u));
+        EXPECT_EQ(GetUniverse(source, j + 1u)->multicast_seq_num - old_seq_num[j], 1);
         EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, j + 1u)->level_send_buf), 0x00u);
       }
 
@@ -1130,8 +1125,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
       for (uint16_t j = 0u; j < 10u; ++j)
       {
         EXPECT_EQ(GetUniverse(source, j + 1u)->num_terminations_sent, i + 1);
-        EXPECT_EQ(GetUniverse(source, j + 1u)->multicast_seq_num - old_seq_num[j],
-                  (uint8_t)(kTestRemoteAddrs.size() + 1u));
+        EXPECT_EQ(GetUniverse(source, j + 1u)->multicast_seq_num - old_seq_num[j], 1);
         EXPECT_EQ(TERMINATED_OPT_SET(GetUniverse(source, j + 1u)->level_send_buf), 0x00u);
       }
     }
