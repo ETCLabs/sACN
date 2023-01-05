@@ -897,21 +897,25 @@ etcpal_error_t sacn_send_unicast(const SacnSource* source, SacnUnicastDestinatio
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(dest) || !SACN_ASSERT_VERIFY(send_buf))
     return kEtcPalErrSys;
 
+  etcpal_error_t res = kEtcPalErrOk;
+  bool unicast_sent = false;
   if (((source->ip_supported == kSacnIpV4Only) || (source->ip_supported == kSacnIpV4AndIpV6)) &&
       (dest->dest_addr.type == kEtcPalIpTypeV4))
   {
-    return send_unicast(dest, send_buf);
+    res = send_unicast(dest, send_buf);
+    unicast_sent = true;
   }
-
-  if (((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6)) &&
-      (dest->dest_addr.type == kEtcPalIpTypeV6))
+  else if (((source->ip_supported == kSacnIpV6Only) || (source->ip_supported == kSacnIpV4AndIpV6)) &&
+           (dest->dest_addr.type == kEtcPalIpTypeV6))
   {
-    return send_unicast(dest, send_buf);
+    res = send_unicast(dest, send_buf);
+    unicast_sent = true;
   }
 
-  // Should not get here
-  SACN_ASSERT_VERIFY(false);
-  return kEtcPalErrSys;
+  if (!SACN_ASSERT_VERIFY(unicast_sent))
+    return kEtcPalErrSys;
+
+  return res;
 }
 
 SacnSocketsSysNetints* sacn_sockets_get_sys_netints(networking_type_t type)
