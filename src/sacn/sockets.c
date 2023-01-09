@@ -141,6 +141,8 @@ static etcpal_error_t init_sys_netint_list(SysNetintList* netint_list);
 static void deinit_sys_netint_list(SysNetintList* netint_list);
 static etcpal_error_t populate_sys_netint_list(SysNetintList* netint_list);
 
+static etcpal_error_t get_netint_ip_string(etcpal_iptype_t ip_type, unsigned int index, char* dest);
+
 /*************************** Function definitions ****************************/
 
 etcpal_error_t sacn_sockets_init(const SacnNetintConfig* netint_config)
@@ -301,9 +303,13 @@ etcpal_error_t send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, con
 
   if ((res != kEtcPalErrOk) && (res != *last_send_error))
   {
-    char addr_str[ETCPAL_IP_STRING_BYTES] = {'\0'};
-    etcpal_ip_to_string(&dest.ip, addr_str);
-    SACN_LOG_ERR("Multicast send to %s failed at least once with error '%s'.", addr_str, etcpal_strerror(res));
+    char dest_addr[ETCPAL_IP_STRING_BYTES] = {'\0'};
+    char netint_addr[ETCPAL_IP_STRING_BYTES] = {'\0'};
+    etcpal_ip_to_string(&dest.ip, dest_addr);
+    get_netint_ip_string(netint->ip_type, netint->index, netint_addr);
+
+    SACN_LOG_ERR("Multicast send to %s on network interface %s failed at least once with error '%s'.", dest_addr,
+                 netint_addr, etcpal_strerror(res));
 
     *last_send_error = res;
   }
@@ -436,9 +442,12 @@ etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id
 #endif
 
 #if SACN_FULL_OS_AVAILABLE_HINT
+    char netint_addr[ETCPAL_IP_STRING_BYTES] = {'\0'};
+    get_netint_ip_string(netint_id->ip_type, netint_id->index, netint_addr);
+
     char sock_desc[100] = {'\0'};
     const char* ip_type_desc = (netint_id->ip_type == kEtcPalIpTypeV4) ? "IPv4" : "IPv6";
-    SACN_SPRINTF(sock_desc, "%s multicast socket for network interface index %u", ip_type_desc, netint_id->index);
+    SACN_SPRINTF(sock_desc, "%s multicast socket for network interface %s", ip_type_desc, netint_addr);
     configure_sndbuf_size(new_sock, sock_desc);
 #endif
 
@@ -833,10 +842,13 @@ etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalG
   {
     if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))
     {
-      char addr_str[ETCPAL_IP_STRING_BYTES];
-      etcpal_ip_to_string(&group->group, addr_str);
-      SACN_LOG_WARNING("Error subscribing to multicast address %s on network interface index %u: '%s'", addr_str,
-                       group->ifindex, etcpal_strerror(res));
+      char mcast_addr[ETCPAL_IP_STRING_BYTES] = {'\0'};
+      char netint_addr[ETCPAL_IP_STRING_BYTES] = {'\0'};
+      etcpal_ip_to_string(&group->group, mcast_addr);
+      get_netint_ip_string(group->group.type, group->ifindex, netint_addr);
+
+      SACN_LOG_WARNING("Error subscribing to multicast address %s on network interface %s: '%s'", mcast_addr,
+                       netint_addr, etcpal_strerror(res));
     }
   }
   return res;
@@ -862,10 +874,13 @@ etcpal_error_t unsubscribe_on_single_interface(etcpal_socket_t sock, const EtcPa
   {
     if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))
     {
-      char addr_str[ETCPAL_IP_STRING_BYTES];
-      etcpal_ip_to_string(&group->group, addr_str);
-      SACN_LOG_WARNING("Error unsubscribing from multicast address %s on network interface index %u: '%s'", addr_str,
-                       group->ifindex, etcpal_strerror(res));
+      char mcast_addr[ETCPAL_IP_STRING_BYTES] = {'\0'};
+      char netint_addr[ETCPAL_IP_STRING_BYTES] = {'\0'};
+      etcpal_ip_to_string(&group->group, mcast_addr);
+      get_netint_ip_string(group->group.type, group->ifindex, netint_addr);
+
+      SACN_LOG_WARNING("Error unsubscribing from multicast address %s on network interface %s: '%s'", mcast_addr,
+                       netint_addr, etcpal_strerror(res));
     }
   }
   return res;
@@ -1135,7 +1150,7 @@ etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_ty
 
   SACN_ASSERT_VERIFY(sys_netints->num_sys_netints == 0);
 
-  // Start by initializing netint_list & num_netints (the list of interfaces on the system)
+  // Start by initializing netint_list (the list of interfaces on the system)
   SysNetintList netint_list;
   etcpal_error_t res = init_sys_netint_list(&netint_list);
 
@@ -1749,6 +1764,35 @@ etcpal_error_t populate_sys_netint_list(SysNetintList* netint_list)
       res = kEtcPalErrNoNetints;
     }
   } while (res == kEtcPalErrBufSize);
+
+  return res;
+}
+
+etcpal_error_t get_netint_ip_string(etcpal_iptype_t ip_type, unsigned int index, char* dest)
+{
+  if (!SACN_ASSERT_VERIFY(dest))
+    return kEtcPalErrSys;
+
+  SysNetintList netint_list;
+  etcpal_error_t res = init_sys_netint_list(&netint_list);
+
+  if (res == kEtcPalErrOk)
+    res = populate_sys_netint_list(&netint_list);
+
+  if (res == kEtcPalErrOk)
+  {
+    res = kEtcPalErrNotFound;
+    for (size_t i = 0; i < netint_list.num_netints; ++i)
+    {
+      if ((netint_list.netints[i].addr.type == ip_type) && (netint_list.netints[i].index == index))
+      {
+        res = etcpal_ip_to_string(&netint_list.netints[i].addr, dest);
+        break;
+      }
+    }
+  }
+
+  deinit_sys_netint_list(&netint_list);
 
   return res;
 }
