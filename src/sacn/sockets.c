@@ -1034,13 +1034,8 @@ etcpal_error_t sacn_send_unicast(sacn_ip_support_t ip_supported, const uint8_t* 
 
   etcpal_error_t res = kEtcPalErrOk;
   bool unicast_sent = false;
-  if (((ip_supported == kSacnIpV4Only) || (ip_supported == kSacnIpV4AndIpV6)) && (dest_addr->type == kEtcPalIpTypeV4))
-  {
-    res = send_unicast(send_buf, dest_addr, last_send_error);
-    unicast_sent = true;
-  }
-  else if (((ip_supported == kSacnIpV6Only) || (ip_supported == kSacnIpV4AndIpV6)) &&
-           (dest_addr->type == kEtcPalIpTypeV6))
+  if ((ip_supported == kSacnIpV4AndIpV6) || ((ip_supported == kSacnIpV4Only) && (dest_addr->type == kEtcPalIpTypeV4)) ||
+      ((ip_supported == kSacnIpV6Only) && (dest_addr->type == kEtcPalIpTypeV6)))
   {
     res = send_unicast(send_buf, dest_addr, last_send_error);
     unicast_sent = true;
