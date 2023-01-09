@@ -786,7 +786,6 @@ typedef struct SacnSourceUniverse
   SACN_DECLARE_BUF(SacnUnicastDestination, unicast_dests, SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE);
   size_t num_unicast_dests;
   bool send_unicast_only;
-  etcpal_error_t last_multicast_send_error;
 
   SacnInternalNetintArray netints;
 } SacnSourceUniverse;
@@ -804,7 +803,6 @@ typedef struct SacnSource
   size_t num_universes;
   size_t num_active_universes;  // Number of universes to include in universe discovery packets.
   EtcPalTimer universe_discovery_timer;
-  etcpal_error_t last_disc_send_error;
   bool process_manually;
   sacn_ip_support_t ip_supported;
   int keep_alive_interval;

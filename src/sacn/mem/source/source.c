@@ -94,7 +94,6 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->terminating = false;
     source->num_active_universes = 0;
     etcpal_timer_start(&source->universe_discovery_timer, SACN_UNIVERSE_DISCOVERY_INTERVAL);
-    source->last_disc_send_error = kEtcPalErrOk;
     source->process_manually = config->manually_process_source;
     source->ip_supported = config->ip_supported;
     source->keep_alive_interval = config->keep_alive_interval;

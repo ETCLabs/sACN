@@ -51,7 +51,7 @@ DECLARE_FAKE_VOID_FUNC(sacn_subscribe_sockets, SacnRecvThreadContext*);
 DECLARE_FAKE_VOID_FUNC(sacn_unsubscribe_sockets, SacnRecvThreadContext*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_read, SacnRecvThreadContext*, SacnReadResult*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_send_multicast, uint16_t, sacn_ip_support_t, const uint8_t*,
-                        const EtcPalMcastNetintId*, etcpal_error_t*);
+                        const EtcPalMcastNetintId*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_send_unicast, sacn_ip_support_t, const uint8_t*, const EtcPalIpAddr*,
                         etcpal_error_t*);
 

@@ -435,7 +435,7 @@ void send_universe_discovery(SacnSource* source)
       for (size_t i = 0; i < source->num_netints; ++i)
       {
         if (sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, source->ip_supported, source->universe_discovery_send_buf,
-                                &source->netints[i].id, &source->last_disc_send_error) == kEtcPalErrOk)
+                                &source->netints[i].id) == kEtcPalErrOk)
         {
           at_least_one_send_worked = true;
         }
@@ -466,8 +466,8 @@ void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
   {
     for (size_t i = 0; i < universe->netints.num_netints; ++i)
     {
-      if (sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i],
-                              &universe->last_multicast_send_error) == kEtcPalErrOk)
+      if (sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]) ==
+          kEtcPalErrOk)
       {
         at_least_one_send_worked = true;
       }

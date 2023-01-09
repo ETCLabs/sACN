@@ -98,7 +98,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
 
 // Source sending functions
 etcpal_error_t sacn_send_multicast(uint16_t universe_id, sacn_ip_support_t ip_supported, const uint8_t* send_buf,
-                                   const EtcPalMcastNetintId* netint, etcpal_error_t* last_send_error);
+                                   const EtcPalMcastNetintId* netint);
 etcpal_error_t sacn_send_unicast(sacn_ip_support_t ip_supported, const uint8_t* send_buf, const EtcPalIpAddr* dest_addr,
                                  etcpal_error_t* last_send_error);
 
