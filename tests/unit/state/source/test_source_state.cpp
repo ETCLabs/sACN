@@ -1774,7 +1774,8 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
   AddTestUnicastDests(source, universe);
 
   current_remote_addr_index = 0;
-  send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer.data());
+  bool all_sends_succeeded = true;
+  send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer.data(), &all_sends_succeeded);
   EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size());
 
   unsigned int num_terminating = 0u;
@@ -1794,7 +1795,7 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
   };
 
   current_remote_addr_index = 0;
-  send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer.data());
+  send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer.data(), &all_sends_succeeded);
   EXPECT_EQ(sacn_send_unicast_fake.call_count, (2u * kTestRemoteAddrs.size()) - num_terminating);
 }
 
@@ -1821,9 +1822,12 @@ TEST_F(TestSourceState, SendUniverseMulticastWorks)
   uint16_t unicast_only_universe = AddUniverse(source, universe_config);
 
   current_remote_addr_index = 0;
-  send_universe_multicast(GetSource(source), GetUniverse(source, unicast_only_universe), kTestBuffer.data());
+  bool all_sends_succeeded = true;
+  send_universe_multicast(GetSource(source), GetUniverse(source, unicast_only_universe), kTestBuffer.data(),
+                          &all_sends_succeeded);
   EXPECT_EQ(sacn_send_multicast_fake.call_count, 0u);
-  send_universe_multicast(GetSource(source), GetUniverse(source, multicast_universe), kTestBuffer.data());
+  send_universe_multicast(GetSource(source), GetUniverse(source, multicast_universe), kTestBuffer.data(),
+                          &all_sends_succeeded);
   EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size());
 }
 

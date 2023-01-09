@@ -99,6 +99,10 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->keep_alive_interval = config->keep_alive_interval;
     source->universe_count_max = config->universe_count_max;
 
+    etcpal_timer_start(&source->stats_log_timer, SACN_STATS_LOG_INTERVAL);
+    source->total_tick_count = 0;
+    source->failed_tick_count = 0;
+
     source->num_universes = 0;
     source->num_netints = 0;
 #if SACN_DYNAMIC_MEM

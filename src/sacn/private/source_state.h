@@ -61,8 +61,10 @@ void update_levels_and_or_pap(SacnSource* source, SacnSourceUniverse* universe, 
                               size_t new_values_size, const uint8_t* new_priorities, size_t new_priorities_size,
                               force_sync_behavior_t force_sync);
 void increment_sequence_number(SacnSourceUniverse* universe, uint8_t* seq_num);
-void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
-void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
+void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf,
+                           bool* all_sends_succeeded);
+void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf,
+                             bool* all_sends_succeeded);
 void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bool preview);
 void set_universe_priority(const SacnSource* source, SacnSourceUniverse* universe, uint8_t priority);
 void set_unicast_dest_terminating(SacnUnicastDestination* dest, set_terminating_behavior_t behavior);

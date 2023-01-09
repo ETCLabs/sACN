@@ -58,6 +58,8 @@ extern "C" {
 #define SACN_DISCOVERY_UNIVERSE 64214
 #define SACN_UNIVERSE_DISCOVERY_INTERVAL 10000
 
+#define SACN_STATS_LOG_INTERVAL 10000
+
 /* The source-loss timeout, defined in E1.31 as network data loss */
 #define SACN_SOURCE_LOSS_TIMEOUT 2500
 /* How long to wait for a 0xdd packet once a new source is discovered */
@@ -807,6 +809,10 @@ typedef struct SacnSource
   sacn_ip_support_t ip_supported;
   int keep_alive_interval;
   size_t universe_count_max;
+
+  EtcPalTimer stats_log_timer;  // Maintains a repeating interval, at the end of which statistics are logged
+  int total_tick_count;         // The total number of ticks this interval
+  int failed_tick_count;        // The number of ticks this interval that failed at least one send
 
   // This is the set of unique netints used by all universes of this source, to be used when transmitting universe
   // discovery packets.

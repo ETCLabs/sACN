@@ -28,8 +28,8 @@ DEFINE_FAKE_VALUE_FUNC(sacn_source_t, get_next_source_handle);
 DEFINE_FAKE_VOID_FUNC(update_levels_and_or_pap, SacnSource*, SacnSourceUniverse*, const uint8_t*, size_t,
                       const uint8_t*, size_t, force_sync_behavior_t);
 DEFINE_FAKE_VOID_FUNC(increment_sequence_number, SacnSourceUniverse*, uint8_t*);
-DEFINE_FAKE_VOID_FUNC(send_universe_unicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*);
-DEFINE_FAKE_VOID_FUNC(send_universe_multicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*);
+DEFINE_FAKE_VOID_FUNC(send_universe_unicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*, bool*);
+DEFINE_FAKE_VOID_FUNC(send_universe_multicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*, bool*);
 DEFINE_FAKE_VOID_FUNC(set_preview_flag, const SacnSource*, SacnSourceUniverse*, bool);
 DEFINE_FAKE_VOID_FUNC(set_universe_priority, const SacnSource*, SacnSourceUniverse*, uint8_t);
 DEFINE_FAKE_VOID_FUNC(set_unicast_dest_terminating, SacnUnicastDestination*, set_terminating_behavior_t);

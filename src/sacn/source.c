@@ -745,8 +745,9 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
         update_send_buf_data(send_buf, buffer, (uint16_t)buflen, kDisableForceSync);
 
         // Send on the network
-        send_universe_multicast(source_state, universe_state, send_buf);
-        send_universe_unicast(source_state, universe_state, send_buf);
+        bool all_sends_succeeded = true;
+        send_universe_multicast(source_state, universe_state, send_buf, &all_sends_succeeded);
+        send_universe_unicast(source_state, universe_state, send_buf, &all_sends_succeeded);
       }
 
       sacn_unlock();
