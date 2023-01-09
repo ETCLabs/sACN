@@ -283,6 +283,8 @@ void process_universes(SacnSource* source, bool* all_sends_succeeded)
       transmit_levels_and_pap_when_needed(source, universe, all_sends_succeeded);
     else
       process_universe_termination(source, initial_num_universes - 1 - i, unicast_terminating, all_sends_succeeded);
+
+    increment_sequence_number(universe);
   }
 }
 
@@ -396,15 +398,15 @@ void transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
 }
 
 // Needs lock
-void increment_sequence_number(SacnSourceUniverse* universe, uint8_t* seq_num)
+void increment_sequence_number(SacnSourceUniverse* universe)
 {
-  if (!SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(seq_num))
+  if (!SACN_ASSERT_VERIFY(universe))
     return;
 
-  ++(*seq_num);
-  universe->level_send_buf[SACN_SEQ_OFFSET] = *seq_num;
+  ++universe->seq_num;
+  universe->level_send_buf[SACN_SEQ_OFFSET] = universe->seq_num;
 #if SACN_ETC_PRIORITY_EXTENSION
-  universe->pap_send_buf[SACN_SEQ_OFFSET] = *seq_num;
+  universe->pap_send_buf[SACN_SEQ_OFFSET] = universe->seq_num;
 #endif
 }
 
@@ -440,12 +442,8 @@ bool send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
 
   // Send the termination packet on unicast only
   bool res = true;
-  if (sacn_send_unicast(source->ip_supported, universe->level_send_buf, &dest->dest_addr, &dest->last_send_error) ==
+  if (sacn_send_unicast(source->ip_supported, universe->level_send_buf, &dest->dest_addr, &dest->last_send_error) !=
       kEtcPalErrOk)
-  {
-    increment_sequence_number(universe, &dest->seq_num);
-  }
-  else
   {
     res = false;
   }
@@ -514,25 +512,17 @@ void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
     return;
   }
 
-  bool at_least_one_send_worked = false;
   if (!universe->send_unicast_only)
   {
     for (size_t i = 0; i < universe->netints.num_netints; ++i)
     {
-      if (sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]) ==
+      if (sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]) !=
           kEtcPalErrOk)
-      {
-        at_least_one_send_worked = true;
-      }
-      else
       {
         *all_sends_succeeded = false;
       }
     }
   }
-
-  if (at_least_one_send_worked)
-    increment_sequence_number(universe, &universe->multicast_seq_num);
 }
 
 // Needs lock
@@ -550,11 +540,7 @@ void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
     if (universe->unicast_dests[i].termination_state == kNotTerminating)
     {
       if (sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr,
-                            &universe->unicast_dests[i].last_send_error) == kEtcPalErrOk)
-      {
-        increment_sequence_number(universe, &universe->unicast_dests[i].seq_num);
-      }
-      else
+                            &universe->unicast_dests[i].last_send_error) != kEtcPalErrOk)
       {
         *all_sends_succeeded = false;
       }

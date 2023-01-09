@@ -1103,7 +1103,7 @@ TEST_F(TestSource, SourceSendNowWorks)
     EXPECT_EQ(send_buf[SACN_DATA_HEADER_SIZE - 1], kTestStartCode);
     EXPECT_EQ(memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer.data(), kTestBuffer.size()), 0);
   };
-  increment_sequence_number_fake.custom_fake = [](SacnSourceUniverse* universe, uint8_t*) {
+  increment_sequence_number_fake.custom_fake = [](SacnSourceUniverse* universe) {
     EXPECT_EQ(universe->universe_id, kTestUniverse);
   };
 

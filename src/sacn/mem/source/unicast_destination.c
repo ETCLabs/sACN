@@ -51,7 +51,6 @@ etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalI
   dest->termination_state = kNotTerminating;
   dest->num_terminations_sent = 0;
   dest->last_send_error = kEtcPalErrOk;
-  dest->seq_num = 0;
 
   *dest_state = dest;
 
