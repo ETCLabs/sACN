@@ -523,7 +523,7 @@ void configure_sndbuf_size(etcpal_socket_t new_sock, const char* sock_desc)
   else if (get_so_sndbuf_val > set_so_sndbuf_val)
   {
     SACN_LOG_NOTICE("The buffer size for %s was configured to %d, but it ended up being %d.", sock_desc,
-                    set_so_sndbuf_val, get_so_sndbuf_val)
+                    set_so_sndbuf_val, get_so_sndbuf_val);
   }
 }
 #endif
