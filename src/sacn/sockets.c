@@ -59,8 +59,7 @@
 typedef struct MulticastSendSocket
 {
   etcpal_socket_t socket;
-  etcpal_error_t last_ipv4_send_error;
-  etcpal_error_t last_ipv6_send_error;
+  etcpal_error_t last_send_error;
 } MulticastSendSocket;
 
 typedef struct SysNetintList
@@ -279,8 +278,7 @@ etcpal_error_t send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, con
   if ((sys_netint_index >= 0) && (sys_netint_index < (int)source_sys_netints.num_sys_netints))
   {
     sock = multicast_send_sockets[sys_netint_index].socket;
-    last_send_error = (ip_type == kEtcPalIpTypeV4) ? &multicast_send_sockets[sys_netint_index].last_ipv4_send_error
-                                                   : &multicast_send_sockets[sys_netint_index].last_ipv6_send_error;
+    last_send_error = &multicast_send_sockets[sys_netint_index].last_send_error;
   }
 
   if (!SACN_ASSERT_VERIFY(last_send_error))
@@ -303,13 +301,11 @@ etcpal_error_t send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, con
 
   if ((res != kEtcPalErrOk) && (res != *last_send_error))
   {
-    char dest_addr[ETCPAL_IP_STRING_BYTES] = {'\0'};
     char netint_addr[ETCPAL_IP_STRING_BYTES] = {'\0'};
-    etcpal_ip_to_string(&dest.ip, dest_addr);
     get_netint_ip_string(netint->ip_type, netint->index, netint_addr);
 
-    SACN_LOG_ERR("Multicast send to %s on network interface %s failed at least once with error '%s'.", dest_addr,
-                 netint_addr, etcpal_strerror(res));
+    SACN_LOG_ERR("Multicast send on network interface %s failed at least once with error '%s'.", netint_addr,
+                 etcpal_strerror(res));
 
     *last_send_error = res;
   }
@@ -1691,8 +1687,7 @@ void add_sacn_source_sys_netint(const EtcPalMcastNetintId* netint_id, etcpal_err
 
   if (add_sacn_sys_netint(netint_id, status, source_sys_netints.sys_netints, &source_sys_netints.num_sys_netints))
   {
-    multicast_send_sockets[source_sys_netints.num_sys_netints - 1].last_ipv4_send_error = kEtcPalErrOk;
-    multicast_send_sockets[source_sys_netints.num_sys_netints - 1].last_ipv6_send_error = kEtcPalErrOk;
+    multicast_send_sockets[source_sys_netints.num_sys_netints - 1].last_send_error = kEtcPalErrOk;
 
     if (status == kEtcPalErrOk)
       create_multicast_send_socket(netint_id, &multicast_send_sockets[source_sys_netints.num_sys_netints - 1].socket);
