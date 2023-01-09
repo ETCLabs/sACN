@@ -514,11 +514,16 @@ void configure_sndbuf_size(etcpal_socket_t new_sock, const char* sock_desc)
     SACN_LOG_WARNING("Couldn't verify send buffer size of %s: '%s'", sock_desc, etcpal_strerror(get_so_sndbuf_res));
   }
 
-  if (get_so_sndbuf_val != set_so_sndbuf_val)
+  if (get_so_sndbuf_val < set_so_sndbuf_val)
   {
     SACN_LOG_WARNING(
         "Couldn't set the desired send buffer size on %s: The desired size was %d, but it ended up being %d.",
         sock_desc, set_so_sndbuf_val, get_so_sndbuf_val);
+  }
+  else if (get_so_sndbuf_val > set_so_sndbuf_val)
+  {
+    SACN_LOG_NOTICE("The buffer size for %s was configured to %d, but it ended up being %d.", sock_desc,
+                    set_so_sndbuf_val, get_so_sndbuf_val)
   }
 }
 #endif
