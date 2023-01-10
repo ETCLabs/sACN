@@ -293,7 +293,7 @@ bool process_universes(SacnSource* source)
 // Needs lock
 void process_stats_log(SacnSource* source, bool all_sends_succeeded)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(source->total_tick_count > 0))
+  if (!SACN_ASSERT_VERIFY(source))
     return;
 
   ++source->total_tick_count;
@@ -302,11 +302,20 @@ void process_stats_log(SacnSource* source, bool all_sends_succeeded)
 
   if (etcpal_timer_is_expired(&source->stats_log_timer))
   {
-    char cid_str[ETCPAL_UUID_STRING_BYTES];
-    etcpal_uuid_to_string(&source->cid, cid_str);
-    SACN_LOG_INFO("Statistics for source %s: %d out of %d ticks (%f%%) had at least one send error.", cid_str,
-                  source->failed_tick_count, source->total_tick_count,
-                  (double)source->failed_tick_count / (double)source->total_tick_count);
+#if SACN_LOGGING_ENABLED
+    if ((source->failed_tick_count > 0) && SACN_ASSERT_VERIFY(source->total_tick_count >= source->failed_tick_count) &&
+        SACN_CAN_LOG(ETCPAL_LOG_INFO))
+    {
+      char cid_str[ETCPAL_UUID_STRING_BYTES];
+      etcpal_uuid_to_string(&source->cid, cid_str);
+
+      double failed_tick_ratio = (double)source->failed_tick_count / (double)source->total_tick_count;
+
+      SACN_LOG_INFO("In the last %d seconds, source %s had %d out of %d ticks (%f%%) fail at least one send.",
+                    SACN_STATS_LOG_INTERVAL / 1000, cid_str, source->failed_tick_count, source->total_tick_count,
+                    failed_tick_ratio * 100.0);
+    }
+#endif  // SACN_LOGGING_ENABLED
 
     etcpal_timer_reset(&source->stats_log_timer);
     source->total_tick_count = 0;
