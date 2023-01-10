@@ -1021,7 +1021,10 @@ etcpal_error_t sacn_send_multicast(uint16_t universe_id, sacn_ip_support_t ip_su
 
   if ((ip_supported == kSacnIpV6Only) || (ip_supported == kSacnIpV4AndIpV6))
   {
-    res = send_multicast(universe_id, kEtcPalIpTypeV6, send_buf, netint);
+    etcpal_error_t v6_res = send_multicast(universe_id, kEtcPalIpTypeV6, send_buf, netint);
+    if (res == kEtcPalErrOk)
+      res = v6_res;
+
     multicast_sent = true;
   }
 
