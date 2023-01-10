@@ -281,23 +281,24 @@ etcpal_error_t send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, con
     last_send_error = &multicast_send_sockets[sys_netint_index].last_send_error;
   }
 
-  if (!SACN_ASSERT_VERIFY(last_send_error))
-    return kEtcPalErrSys;
-
-  etcpal_error_t res = kEtcPalErrOk;
   if (sock == ETCPAL_SOCKET_INVALID)
-    res = kEtcPalErrNotInit;
+  {
+    return kEtcPalErrNotInit;
+  }
+  else
+  {
+    if (!SACN_ASSERT_VERIFY(last_send_error))
+      return kEtcPalErrSys;
+  }
 
   // Try to send the data (ignore errors)
   const size_t send_buf_length =
       (size_t)ACN_UDP_PREAMBLE_SIZE + (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
 
-  if (res == kEtcPalErrOk)
-  {
-    int sendto_res = etcpal_sendto(sock, send_buf, send_buf_length, 0, &dest);
-    if (sendto_res < 0)
-      res = (etcpal_error_t)sendto_res;
-  }
+  etcpal_error_t res = kEtcPalErrOk;
+  int sendto_res = etcpal_sendto(sock, send_buf, send_buf_length, 0, &dest);
+  if (sendto_res < 0)
+    res = (etcpal_error_t)sendto_res;
 
   if ((res != kEtcPalErrOk) && (res != *last_send_error))
   {
@@ -319,36 +320,29 @@ etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_ad
   if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(dest_addr) || !SACN_ASSERT_VERIFY(last_send_error))
     return kEtcPalErrSys;
 
-  etcpal_error_t res = kEtcPalErrOk;
-
   // Determine the socket to use
   etcpal_socket_t sock = ETCPAL_SOCKET_INVALID;
-  if (res == kEtcPalErrOk)
-  {
-    if (dest_addr->type == kEtcPalIpTypeV4)
-      sock = ipv4_unicast_send_socket;
-    else if (dest_addr->type == kEtcPalIpTypeV6)
-      sock = ipv6_unicast_send_socket;
+  if (dest_addr->type == kEtcPalIpTypeV4)
+    sock = ipv4_unicast_send_socket;
+  else if (dest_addr->type == kEtcPalIpTypeV6)
+    sock = ipv6_unicast_send_socket;
 
-    if (sock == ETCPAL_SOCKET_INVALID)
-      res = kEtcPalErrNotInit;
-  }
+  if (sock == ETCPAL_SOCKET_INVALID)
+    return kEtcPalErrNotInit;
 
-  if (res == kEtcPalErrOk)
-  {
-    // Convert destination to SockAddr
-    EtcPalSockAddr sockaddr_dest;
-    sockaddr_dest.ip = *dest_addr;
-    sockaddr_dest.port = SACN_PORT;
+  // Convert destination to SockAddr
+  EtcPalSockAddr sockaddr_dest;
+  sockaddr_dest.ip = *dest_addr;
+  sockaddr_dest.port = SACN_PORT;
 
-    // Try to send the data (ignore errors)
-    const size_t send_buf_length =
-        (size_t)ACN_UDP_PREAMBLE_SIZE + (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
+  // Try to send the data (ignore errors)
+  const size_t send_buf_length =
+      (size_t)ACN_UDP_PREAMBLE_SIZE + (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
 
-    int sendto_res = etcpal_sendto(sock, send_buf, send_buf_length, 0, &sockaddr_dest);
-    if (sendto_res < 0)
-      res = (etcpal_error_t)sendto_res;
-  }
+  etcpal_error_t res = kEtcPalErrOk;
+  int sendto_res = etcpal_sendto(sock, send_buf, send_buf_length, 0, &sockaddr_dest);
+  if (sendto_res < 0)
+    res = (etcpal_error_t)sendto_res;
 
   if ((res != kEtcPalErrOk) && (res != *last_send_error))
   {
