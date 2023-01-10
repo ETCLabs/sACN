@@ -768,13 +768,14 @@ typedef struct SacnSourceUniverse
   uint8_t priority;
   uint16_t sync_universe;
   bool send_preview;
-  uint8_t seq_num;
+  uint8_t next_seq_num;
 
   // Start code 0x00 state
   int level_packets_sent_before_suppression;
   EtcPalTimer level_keep_alive_timer;
   uint8_t level_send_buf[SACN_DATA_PACKET_MTU];
   bool has_level_data;
+  bool levels_sent_this_tick;
 
 #if SACN_ETC_PRIORITY_EXTENSION
   // Start code 0xDD state
@@ -782,7 +783,10 @@ typedef struct SacnSourceUniverse
   EtcPalTimer pap_keep_alive_timer;
   uint8_t pap_send_buf[SACN_DATA_PACKET_MTU];
   bool has_pap_data;
+  bool pap_sent_this_tick;
 #endif
+
+  bool other_sent_this_tick;
 
   SACN_DECLARE_BUF(SacnUnicastDestination, unicast_dests, SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE);
   size_t num_unicast_dests;

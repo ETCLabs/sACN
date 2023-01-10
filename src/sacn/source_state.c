@@ -84,6 +84,8 @@ static void reset_unicast_dest(SacnUnicastDestination* dest);
 static void reset_universe(SacnSourceUniverse* universe);
 static void cancel_termination_if_not_removing(SacnSourceUniverse* universe);
 
+static void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* universe);
+
 /*************************** Function definitions ****************************/
 
 etcpal_error_t sacn_source_state_init(void)
@@ -279,10 +281,14 @@ bool process_universes(SacnSource* source)
 
     // Either transmit start codes 0x00 & 0xDD, or terminate and clean up universe
     if (universe->termination_state == kNotTerminating)
+    {
       all_sends_succeeded = all_sends_succeeded && transmit_levels_and_pap_when_needed(source, universe);
+    }
     else
+    {
       all_sends_succeeded = all_sends_succeeded &&
                             process_universe_termination(source, initial_num_universes - 1 - i, unicast_terminating);
+    }
 
     increment_sequence_number(universe);
   }
@@ -399,6 +405,10 @@ bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
   if (universe->has_pap_data && ((universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
                                  etcpal_timer_is_expired(&universe->pap_keep_alive_timer)))
   {
+    // PAP will always be sent after levels, so if levels were sent, PAP's seq_num should be one greater.
+    if (universe->levels_sent_this_tick)
+      pack_sequence_number(universe->pap_send_buf, universe->next_seq_num + 1);
+
     // Send 0xDD data & reset the keep-alive timer
     all_sends_succeeded = all_sends_succeeded && send_universe_multicast(source, universe, universe->pap_send_buf);
     all_sends_succeeded = all_sends_succeeded && send_universe_unicast(source, universe, universe->pap_send_buf);
@@ -414,15 +424,43 @@ bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
 }
 
 // Needs lock
+void pack_sequence_number(uint8_t* buf, uint8_t seq_num)
+{
+  if (!SACN_ASSERT_VERIFY(buf))
+    return;
+
+  buf[SACN_SEQ_OFFSET] = seq_num;
+}
+
+// Needs lock
 void increment_sequence_number(SacnSourceUniverse* universe)
 {
   if (!SACN_ASSERT_VERIFY(universe))
     return;
 
-  ++universe->seq_num;
-  universe->level_send_buf[SACN_SEQ_OFFSET] = universe->seq_num;
+  // Either one or both of levels & PAP were sent, or a different start code was sent via send_now.
+  if (universe->levels_sent_this_tick)
+  {
+    ++universe->next_seq_num;
+    universe->levels_sent_this_tick = false;
+  }
 #if SACN_ETC_PRIORITY_EXTENSION
-  universe->pap_send_buf[SACN_SEQ_OFFSET] = universe->seq_num;
+  if (universe->pap_sent_this_tick)
+  {
+    ++universe->next_seq_num;
+    universe->pap_sent_this_tick = false;
+  }
+#endif
+  if (universe->other_sent_this_tick)
+  {
+    ++universe->next_seq_num;
+    universe->other_sent_this_tick = false;
+  }
+
+  // Pack defaults for the next tick (PAP's seq_num will be incremented if sent in the same tick as levels)
+  pack_sequence_number(universe->level_send_buf, universe->next_seq_num);
+#if SACN_ETC_PRIORITY_EXTENSION
+  pack_sequence_number(universe->pap_send_buf, universe->next_seq_num);
 #endif
 }
 
@@ -460,13 +498,16 @@ bool send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
 
   // Send the termination packet on unicast only
   bool res = true;
-  if (sacn_send_unicast(source->ip_supported, universe->level_send_buf, &dest->dest_addr, &dest->last_send_error) !=
+  if (sacn_send_unicast(source->ip_supported, universe->level_send_buf, &dest->dest_addr, &dest->last_send_error) ==
       kEtcPalErrOk)
+  {
+    handle_data_packet_sent(universe->level_send_buf, universe);
+  }
+  else
   {
     res = false;
   }
 
-  // Increment the termination counter
   ++dest->num_terminations_sent;
 
   // Revert terminated flag
@@ -530,18 +571,26 @@ bool send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf))
     return false;
 
+  bool at_least_one_sent = false;
   bool all_sends_succeeded = true;
   if (!universe->send_unicast_only)
   {
     for (size_t i = 0; i < universe->netints.num_netints; ++i)
     {
-      if (sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]) !=
+      if (sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]) ==
           kEtcPalErrOk)
+      {
+        at_least_one_sent = true;
+      }
+      else
       {
         all_sends_succeeded = false;
       }
     }
   }
+
+  if (at_least_one_sent)
+    handle_data_packet_sent(send_buf, universe);
 
   return all_sends_succeeded;
 }
@@ -552,18 +601,26 @@ bool send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf))
     return false;
 
+  bool at_least_one_sent = false;
   bool all_sends_succeeded = true;
   for (size_t i = 0; i < universe->num_unicast_dests; ++i)
   {
     if (universe->unicast_dests[i].termination_state == kNotTerminating)
     {
       if (sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr,
-                            &universe->unicast_dests[i].last_send_error) != kEtcPalErrOk)
+                            &universe->unicast_dests[i].last_send_error) == kEtcPalErrOk)
+      {
+        at_least_one_sent = true;
+      }
+      else
       {
         all_sends_succeeded = false;
       }
     }
   }
+
+  if (at_least_one_sent)
+    handle_data_packet_sent(send_buf, universe);
 
   return all_sends_succeeded;
 }
@@ -1027,6 +1084,39 @@ void cancel_termination_if_not_removing(SacnSourceUniverse* universe)
         dest->num_terminations_sent = 0;
       }
     }
+  }
+}
+
+// Needs lock
+void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* universe)
+{
+  if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(universe))
+    return;
+
+  // The assertions below enforce assumptions made by the sequence number logic - specifically that only levels & PAP
+  // can be sent in combination, and also that PAP is sent last each tick.
+  if (send_buf[SACN_START_CODE_OFFSET] == SACN_STARTCODE_DMX)
+  {
+    SACN_ASSERT_VERIFY(!universe->other_sent_this_tick);
+#if SACN_ETC_PRIORITY_EXTENSION
+    SACN_ASSERT_VERIFY(!universe->pap_sent_this_tick);
+#endif
+    universe->levels_sent_this_tick = true;
+  }
+#if SACN_ETC_PRIORITY_EXTENSION
+  else if (send_buf[SACN_START_CODE_OFFSET] == SACN_STARTCODE_PRIORITY)
+  {
+    SACN_ASSERT_VERIFY(!universe->other_sent_this_tick);
+    universe->pap_sent_this_tick = true;
+  }
+#endif
+  else
+  {
+    SACN_ASSERT_VERIFY(!universe->levels_sent_this_tick);
+#if SACN_ETC_PRIORITY_EXTENSION
+    SACN_ASSERT_VERIFY(!universe->pap_sent_this_tick);
+#endif
+    universe->other_sent_this_tick = true;
   }
 }
 
