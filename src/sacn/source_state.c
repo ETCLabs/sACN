@@ -61,20 +61,16 @@ static void stop_tick_thread();
 static void source_thread_function(void* arg);
 
 static int process_sources(process_sources_behavior_t behavior);
-static void process_universe_discovery(SacnSource* source, bool* all_sends_succeeded);
-static void process_universes(SacnSource* source, bool* all_sends_succeeded);
+static bool process_universe_discovery(SacnSource* source);
+static bool process_universes(SacnSource* source);
 static void process_stats_log(SacnSource* source, bool all_sends_succeeded);
-static void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, bool* terminating,
-                                  bool* all_sends_succeeded);
-static void process_universe_termination(SacnSource* source, size_t index, bool unicast_terminating,
-                                         bool* all_sends_succeeded);
-static void transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe,
-                                                bool* all_sends_succeeded);
-static void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe,
-                                       bool* all_sends_succeeded);
+static bool process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, bool* terminating);
+static bool process_universe_termination(SacnSource* source, size_t index, bool unicast_terminating);
+static bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe);
+static bool send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe);
 static bool send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe,
                                      SacnUnicastDestination* dest);
-static void send_universe_discovery(SacnSource* source, bool* all_sends_succeeded);
+static bool send_universe_discovery(SacnSource* source);
 static int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uint8_t page_number);
 static void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_levels,
                           size_t new_levels_size, force_sync_behavior_t force_sync);
@@ -234,9 +230,7 @@ int process_sources(process_sources_behavior_t behavior)
         ++num_sources_tracked;
 
         // Universe processing
-        bool all_sends_succeeded = true;
-        process_universe_discovery(source, &all_sends_succeeded);
-        process_universes(source, &all_sends_succeeded);
+        bool all_sends_succeeded = process_universe_discovery(source) && process_universes(source);
         process_stats_log(source, all_sends_succeeded);
 
         // Clean up this source if needed
@@ -250,24 +244,29 @@ int process_sources(process_sources_behavior_t behavior)
 }
 
 // Needs lock
-void process_universe_discovery(SacnSource* source, bool* all_sends_succeeded)
+bool process_universe_discovery(SacnSource* source)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(all_sends_succeeded))
-    return;
+  if (!SACN_ASSERT_VERIFY(source))
+    return false;
 
   // Send another universe discovery packet if it's time
+  bool all_sends_succeeded = true;
   if (!source->terminating && etcpal_timer_is_expired(&source->universe_discovery_timer))
   {
-    send_universe_discovery(source, all_sends_succeeded);
+    all_sends_succeeded = send_universe_discovery(source);
     etcpal_timer_reset(&source->universe_discovery_timer);
   }
+
+  return all_sends_succeeded;
 }
 
 // Needs lock
-void process_universes(SacnSource* source, bool* all_sends_succeeded)
+bool process_universes(SacnSource* source)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(all_sends_succeeded))
-    return;
+  if (!SACN_ASSERT_VERIFY(source))
+    return false;
+
+  bool all_sends_succeeded = true;
 
   size_t initial_num_universes = source->num_universes;  // Actual may change, so keep initial for iteration.
   for (size_t i = 0; i < initial_num_universes; ++i)
@@ -276,16 +275,19 @@ void process_universes(SacnSource* source, bool* all_sends_succeeded)
 
     // Unicast destination-specific processing
     bool unicast_terminating;
-    process_unicast_dests(source, universe, &unicast_terminating, all_sends_succeeded);
+    all_sends_succeeded = process_unicast_dests(source, universe, &unicast_terminating);
 
     // Either transmit start codes 0x00 & 0xDD, or terminate and clean up universe
     if (universe->termination_state == kNotTerminating)
-      transmit_levels_and_pap_when_needed(source, universe, all_sends_succeeded);
+      all_sends_succeeded = all_sends_succeeded && transmit_levels_and_pap_when_needed(source, universe);
     else
-      process_universe_termination(source, initial_num_universes - 1 - i, unicast_terminating, all_sends_succeeded);
+      all_sends_succeeded = all_sends_succeeded &&
+                            process_universe_termination(source, initial_num_universes - 1 - i, unicast_terminating);
 
     increment_sequence_number(universe);
   }
+
+  return all_sends_succeeded;
 }
 
 // Needs lock
@@ -313,14 +315,12 @@ void process_stats_log(SacnSource* source, bool all_sends_succeeded)
 }
 
 // Needs lock
-void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, bool* terminating,
-                           bool* all_sends_succeeded)
+bool process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, bool* terminating)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(terminating) ||
-      !SACN_ASSERT_VERIFY(all_sends_succeeded))
-  {
-    return;
-  }
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(terminating))
+    return false;
+
+  bool all_sends_succeeded = true;
 
   *terminating = false;
 
@@ -333,10 +333,7 @@ void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, boo
     if (dest->termination_state != kNotTerminating)
     {
       if ((dest->num_terminations_sent < 3) && universe->has_level_data)
-      {
-        if (!send_termination_unicast(source, universe, dest))
-          *all_sends_succeeded = false;
-      }
+        all_sends_succeeded = all_sends_succeeded && send_termination_unicast(source, universe, dest);
 
       if ((dest->num_terminations_sent >= 3) || !universe->has_level_data)
         finish_unicast_dest_termination(universe, initial_num_unicast_dests - 1 - i);
@@ -344,36 +341,44 @@ void process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, boo
         *terminating = true;
     }
   }
+
+  return all_sends_succeeded;
 }
 
 // Needs lock
-void process_universe_termination(SacnSource* source, size_t index, bool unicast_terminating, bool* all_sends_succeeded)
+bool process_universe_termination(SacnSource* source, size_t index, bool unicast_terminating)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(all_sends_succeeded))
-    return;
+  if (!SACN_ASSERT_VERIFY(source))
+    return false;
+
+  bool all_sends_succeeded = true;
 
   SacnSourceUniverse* universe = &source->universes[index];
 
   if ((universe->num_terminations_sent < 3) && universe->has_level_data)
-    send_termination_multicast(source, universe, all_sends_succeeded);
+    all_sends_succeeded = send_termination_multicast(source, universe);
 
   if (((universe->num_terminations_sent >= 3) && !unicast_terminating) || !universe->has_level_data)
     finish_source_universe_termination(source, index);
+
+  return all_sends_succeeded;
 }
 
 // Needs lock
-void transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe, bool* all_sends_succeeded)
+bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(all_sends_succeeded))
-    return;
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
+    return false;
+
+  bool all_sends_succeeded = true;
 
   // If 0x00 data is ready to send
   if (universe->has_level_data && ((universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
                                    etcpal_timer_is_expired(&universe->level_keep_alive_timer)))
   {
     // Send 0x00 data & reset the keep-alive timer
-    send_universe_multicast(source, universe, universe->level_send_buf, all_sends_succeeded);
-    send_universe_unicast(source, universe, universe->level_send_buf, all_sends_succeeded);
+    all_sends_succeeded = send_universe_multicast(source, universe, universe->level_send_buf);
+    all_sends_succeeded = all_sends_succeeded && send_universe_unicast(source, universe, universe->level_send_buf);
 
     if (universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
       ++universe->level_packets_sent_before_suppression;
@@ -386,8 +391,8 @@ void transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
                                  etcpal_timer_is_expired(&universe->pap_keep_alive_timer)))
   {
     // Send 0xDD data & reset the keep-alive timer
-    send_universe_multicast(source, universe, universe->pap_send_buf, all_sends_succeeded);
-    send_universe_unicast(source, universe, universe->pap_send_buf, all_sends_succeeded);
+    all_sends_succeeded = all_sends_succeeded && send_universe_multicast(source, universe, universe->pap_send_buf);
+    all_sends_succeeded = all_sends_succeeded && send_universe_unicast(source, universe, universe->pap_send_buf);
 
     if (universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
       ++universe->pap_packets_sent_before_suppression;
@@ -395,6 +400,8 @@ void transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
     etcpal_timer_reset(&universe->pap_keep_alive_timer);
   }
 #endif
+
+  return all_sends_succeeded;
 }
 
 // Needs lock
@@ -411,23 +418,25 @@ void increment_sequence_number(SacnSourceUniverse* universe)
 }
 
 // Needs lock
-void send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe, bool* all_sends_succeeded)
+bool send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(all_sends_succeeded))
-    return;
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
+    return false;
 
   // Repurpose level_send_buf for the termination packet
   bool old_terminated_opt = TERMINATED_OPT_SET(universe->level_send_buf);
   SET_TERMINATED_OPT(universe->level_send_buf, true);
 
   // Send the termination packet on multicast only
-  send_universe_multicast(source, universe, universe->level_send_buf, all_sends_succeeded);
+  bool all_sends_succeeded = send_universe_multicast(source, universe, universe->level_send_buf);
 
   // Increment the termination counter
   ++universe->num_terminations_sent;
 
   // Revert terminated flag
   SET_TERMINATED_OPT(universe->level_send_buf, old_terminated_opt);
+
+  return all_sends_succeeded;
 }
 
 // Needs lock
@@ -458,10 +467,12 @@ bool send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
 }
 
 // Needs lock
-void send_universe_discovery(SacnSource* source, bool* all_sends_succeeded)
+bool send_universe_discovery(SacnSource* source)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(all_sends_succeeded))
-    return;
+  if (!SACN_ASSERT_VERIFY(source))
+    return false;
+
+  bool all_sends_succeeded = true;
 
   // If there are network interfaces to send on
   if (source->num_netints > 0)
@@ -484,7 +495,7 @@ void send_universe_discovery(SacnSource* source, bool* all_sends_succeeded)
         }
         else
         {
-          *all_sends_succeeded = false;
+          all_sends_succeeded = false;
         }
       }
 
@@ -500,18 +511,17 @@ void send_universe_discovery(SacnSource* source, bool* all_sends_succeeded)
       }
     }
   }
+
+  return all_sends_succeeded;
 }
 
 // Needs lock
-void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf,
-                             bool* all_sends_succeeded)
+bool send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf) ||
-      !SACN_ASSERT_VERIFY(all_sends_succeeded))
-  {
-    return;
-  }
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf))
+    return false;
 
+  bool all_sends_succeeded = true;
   if (!universe->send_unicast_only)
   {
     for (size_t i = 0; i < universe->netints.num_netints; ++i)
@@ -519,22 +529,21 @@ void send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
       if (sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]) !=
           kEtcPalErrOk)
       {
-        *all_sends_succeeded = false;
+        all_sends_succeeded = false;
       }
     }
   }
+
+  return all_sends_succeeded;
 }
 
 // Needs lock
-void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf,
-                           bool* all_sends_succeeded)
+bool send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf) ||
-      !SACN_ASSERT_VERIFY(all_sends_succeeded))
-  {
-    return;
-  }
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf))
+    return false;
 
+  bool all_sends_succeeded = true;
   for (size_t i = 0; i < universe->num_unicast_dests; ++i)
   {
     if (universe->unicast_dests[i].termination_state == kNotTerminating)
@@ -542,10 +551,12 @@ void send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
       if (sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr,
                             &universe->unicast_dests[i].last_send_error) != kEtcPalErrOk)
       {
-        *all_sends_succeeded = false;
+        all_sends_succeeded = false;
       }
     }
   }
+
+  return all_sends_succeeded;
 }
 
 // Needs lock
