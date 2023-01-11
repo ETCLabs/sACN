@@ -553,15 +553,9 @@ bool send_universe_discovery(SacnSource* source)
       }
 
       if (at_least_one_send_worked)
-      {
-        // Increment sequence number & page number
-        ++source->universe_discovery_send_buf[SACN_SEQ_OFFSET];
         ++page_number;
-      }
       else
-      {
         break;
-      }
     }
   }
 
