@@ -282,14 +282,9 @@ etcpal_error_t send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, con
   }
 
   if (sock == ETCPAL_SOCKET_INVALID)
-  {
     return kEtcPalErrNotInit;
-  }
-  else
-  {
-    if (!SACN_ASSERT_VERIFY(last_send_error))
-      return kEtcPalErrSys;
-  }
+  else if (!SACN_ASSERT_VERIFY(last_send_error))
+    return kEtcPalErrSys;
 
   // Try to send the data (ignore errors)
   const size_t send_buf_length =
