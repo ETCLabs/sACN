@@ -690,14 +690,17 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
   }
 }
 
-TEST_F(TestSourceState, UniverseDiscoverySendsCorrectSequenceNumber)
+TEST_F(TestSourceState, UniverseDiscoveryZeroesReservedBytes)
 {
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                             const EtcPalMcastNetintId*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
     {
-      EXPECT_EQ(send_buf[SACN_SEQ_OFFSET], num_universe_discovery_sends / kTestNetints.size());
-      ++num_universe_discovery_sends;
+      // Bytes 108-111 are reserved and should be zero
+      for (size_t i = 108u; i <= 111u; ++i)
+      {
+        EXPECT_EQ(send_buf[i], 0u);
+      }
     }
 
     return kEtcPalErrOk;
