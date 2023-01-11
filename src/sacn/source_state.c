@@ -457,7 +457,7 @@ void increment_sequence_number(SacnSourceUniverse* universe)
     universe->other_sent_this_tick = false;
   }
 
-  // Pack defaults for the next tick (PAP's seq_num will be incremented if sent in the same tick as levels)
+  // Pack defaults for the next tick (PAP's seq_num will end up being one higher if sent in the same tick as levels)
   pack_sequence_number(universe->level_send_buf, universe->next_seq_num);
 #if SACN_ETC_PRIORITY_EXTENSION
   pack_sequence_number(universe->pap_send_buf, universe->next_seq_num);
