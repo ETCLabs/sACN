@@ -1761,10 +1761,13 @@ TEST_F(TestSourceState, IncrementSequenceNumberWorks)
 
 TEST_F(TestSourceState, SendUniverseUnicastWorks)
 {
+  static std::vector<uint8_t> test_send_buf = kTestBuffer;
+  test_send_buf.resize(SACN_DATA_PACKET_MTU);
+
   sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
                                           const EtcPalIpAddr* dest_addr, etcpal_error_t*) {
     EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
-    EXPECT_EQ(memcmp(send_buf, kTestBuffer.data(), kTestBuffer.size()), 0);
+    EXPECT_EQ(memcmp(send_buf, test_send_buf.data(), test_send_buf.size()), 0);
     EXPECT_EQ(etcpal_ip_cmp(dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
     ++current_remote_addr_index;
     return kEtcPalErrOk;
@@ -1775,7 +1778,7 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
   AddTestUnicastDests(source, universe);
 
   current_remote_addr_index = 0;
-  EXPECT_TRUE(send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer.data()));
+  EXPECT_TRUE(send_universe_unicast(GetSource(source), GetUniverse(source, universe), test_send_buf.data()));
   EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size());
 
   unsigned int num_terminating = 0u;
@@ -1788,24 +1791,27 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
   sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
                                           const EtcPalIpAddr* dest_addr, etcpal_error_t*) {
     EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
-    EXPECT_EQ(memcmp(send_buf, kTestBuffer.data(), kTestBuffer.size()), 0);
+    EXPECT_EQ(memcmp(send_buf, test_send_buf.data(), test_send_buf.size()), 0);
     EXPECT_EQ(etcpal_ip_cmp(dest_addr, &kTestRemoteAddrs[current_remote_addr_index]), 0);
     current_remote_addr_index += 2;
     return kEtcPalErrOk;
   };
 
   current_remote_addr_index = 0;
-  EXPECT_TRUE(send_universe_unicast(GetSource(source), GetUniverse(source, universe), kTestBuffer.data()));
+  EXPECT_TRUE(send_universe_unicast(GetSource(source), GetUniverse(source, universe), test_send_buf.data()));
   EXPECT_EQ(sacn_send_unicast_fake.call_count, (2u * kTestRemoteAddrs.size()) - num_terminating);
 }
 
 TEST_F(TestSourceState, SendUniverseMulticastWorks)
 {
+  static std::vector<uint8_t> test_send_buf = kTestBuffer;
+  test_send_buf.resize(SACN_DATA_PACKET_MTU);
+
   sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
                                             const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {
     EXPECT_EQ(universe_id, kTestUniverseConfig.universe);
     EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
-    EXPECT_EQ(memcmp(send_buf, kTestBuffer.data(), kTestBuffer.size()), 0);
+    EXPECT_EQ(memcmp(send_buf, test_send_buf.data(), test_send_buf.size()), 0);
     EXPECT_EQ(netint->index, kTestNetints[current_netint_index].iface.index);
     EXPECT_EQ(netint->ip_type, kTestNetints[current_netint_index].iface.ip_type);
     ++current_netint_index;
@@ -1823,9 +1829,10 @@ TEST_F(TestSourceState, SendUniverseMulticastWorks)
 
   current_remote_addr_index = 0;
   EXPECT_TRUE(
-      send_universe_multicast(GetSource(source), GetUniverse(source, unicast_only_universe), kTestBuffer.data()));
+      send_universe_multicast(GetSource(source), GetUniverse(source, unicast_only_universe), test_send_buf.data()));
   EXPECT_EQ(sacn_send_multicast_fake.call_count, 0u);
-  EXPECT_TRUE(send_universe_multicast(GetSource(source), GetUniverse(source, multicast_universe), kTestBuffer.data()));
+  EXPECT_TRUE(
+      send_universe_multicast(GetSource(source), GetUniverse(source, multicast_universe), test_send_buf.data()));
   EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size());
 }
 
