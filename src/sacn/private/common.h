@@ -58,6 +58,8 @@ extern "C" {
 #define SACN_DISCOVERY_UNIVERSE 64214
 #define SACN_UNIVERSE_DISCOVERY_INTERVAL 10000
 
+#define SACN_STATS_LOG_INTERVAL 10000
+
 /* The source-loss timeout, defined in E1.31 as network data loss */
 #define SACN_SOURCE_LOSS_TIMEOUT 2500
 /* How long to wait for a 0xdd packet once a new source is discovered */
@@ -753,6 +755,7 @@ typedef struct SacnUnicastDestination
   EtcPalIpAddr dest_addr;  // This must be the first struct member.
   termination_state_t termination_state;
   int num_terminations_sent;
+  etcpal_error_t last_send_error;
 } SacnUnicastDestination;
 
 typedef struct SacnSourceUniverse
@@ -765,13 +768,14 @@ typedef struct SacnSourceUniverse
   uint8_t priority;
   uint16_t sync_universe;
   bool send_preview;
-  uint8_t seq_num;
+  uint8_t next_seq_num;
 
   // Start code 0x00 state
   int level_packets_sent_before_suppression;
   EtcPalTimer level_keep_alive_timer;
   uint8_t level_send_buf[SACN_DATA_PACKET_MTU];
   bool has_level_data;
+  bool levels_sent_this_tick;
 
 #if SACN_ETC_PRIORITY_EXTENSION
   // Start code 0xDD state
@@ -779,7 +783,10 @@ typedef struct SacnSourceUniverse
   EtcPalTimer pap_keep_alive_timer;
   uint8_t pap_send_buf[SACN_DATA_PACKET_MTU];
   bool has_pap_data;
+  bool pap_sent_this_tick;
 #endif
+
+  bool other_sent_this_tick;
 
   SACN_DECLARE_BUF(SacnUnicastDestination, unicast_dests, SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE);
   size_t num_unicast_dests;
@@ -805,6 +812,10 @@ typedef struct SacnSource
   sacn_ip_support_t ip_supported;
   int keep_alive_interval;
   size_t universe_count_max;
+
+  EtcPalTimer stats_log_timer;  // Maintains a repeating interval, at the end of which statistics are logged
+  int total_tick_count;         // The total number of ticks this interval
+  int failed_tick_count;        // The number of ticks this interval that failed at least one send
 
   // This is the set of unique netints used by all universes of this source, to be used when transmitting universe
   // discovery packets.

@@ -86,19 +86,23 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     universe->priority = config->priority;
     universe->sync_universe = config->sync_universe;
     universe->send_preview = config->send_preview;
-    universe->seq_num = 0;
+    universe->next_seq_num = 0;
 
     universe->level_packets_sent_before_suppression = 0;
     init_sacn_data_send_buf(universe->level_send_buf, SACN_STARTCODE_DMX, &source->cid, source->name, config->priority,
                             config->universe, config->sync_universe, config->send_preview);
     universe->has_level_data = false;
+    universe->levels_sent_this_tick = false;
 
 #if SACN_ETC_PRIORITY_EXTENSION
     universe->pap_packets_sent_before_suppression = 0;
     init_sacn_data_send_buf(universe->pap_send_buf, SACN_STARTCODE_PRIORITY, &source->cid, source->name,
                             config->priority, config->universe, config->sync_universe, config->send_preview);
     universe->has_pap_data = false;
+    universe->pap_sent_this_tick = false;
 #endif
+
+    universe->other_sent_this_tick = false;
 
     universe->send_unicast_only = config->send_unicast_only;
 

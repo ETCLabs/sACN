@@ -349,6 +349,20 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 /** @endcond */
 
 /**
+ * @brief The size of the send buffer to use for sockets that send sACN over multicast and unicast.
+ *
+ * This buffer size will only be used on Windows, Mac, and Linux. This isn't used for embedded platforms since their
+ * support for SO_SNDBUF is sparse and more limited.
+ *
+ * Increasing this can improve the performance of sACN sources when sending a large number of universes. The default
+ * chosen for this (115000) was determined to be sufficient to prevent the send buffer from getting full when running 1
+ * source to 100 universes at 1 unicast destination.
+ */
+#ifndef SACN_SOURCE_SOCKET_SNDBUF_SIZE
+#define SACN_SOURCE_SOCKET_SNDBUF_SIZE 115000
+#endif
+
+/**
  * @brief The maximum number of sources that can be created.
  *
  * If this is set to 0, the Source API is disabled and no memory pools are allocated for it.

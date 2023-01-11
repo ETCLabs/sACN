@@ -1095,6 +1095,7 @@ TEST_F(TestSource, SourceSendNowWorks)
     EXPECT_EQ(universe->universe_id, kTestUniverse);
     EXPECT_EQ(send_buf[SACN_DATA_HEADER_SIZE - 1], kTestStartCode);
     EXPECT_EQ(memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer.data(), kTestBuffer.size()), 0);
+    return true;
   };
   send_universe_unicast_fake.custom_fake = [](const SacnSource* source, SacnSourceUniverse* universe,
                                               const uint8_t* send_buf) {
@@ -1102,6 +1103,7 @@ TEST_F(TestSource, SourceSendNowWorks)
     EXPECT_EQ(universe->universe_id, kTestUniverse);
     EXPECT_EQ(send_buf[SACN_DATA_HEADER_SIZE - 1], kTestStartCode);
     EXPECT_EQ(memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer.data(), kTestBuffer.size()), 0);
+    return true;
   };
   increment_sequence_number_fake.custom_fake = [](SacnSourceUniverse* universe) {
     EXPECT_EQ(universe->universe_id, kTestUniverse);
@@ -1113,7 +1115,6 @@ TEST_F(TestSource, SourceSendNowWorks)
 
   EXPECT_EQ(send_universe_multicast_fake.call_count, 1u);
   EXPECT_EQ(send_universe_unicast_fake.call_count, 1u);
-  EXPECT_EQ(increment_sequence_number_fake.call_count, 1u);
 }
 
 TEST_F(TestSource, SourceSendNowErrInvalidWorks)
