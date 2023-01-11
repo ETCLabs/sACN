@@ -460,6 +460,8 @@ void increment_sequence_number(SacnSourceUniverse* universe)
     universe->other_sent_this_tick = false;
   }
 
+  universe->anything_sent_this_tick = false;
+
   // Pack defaults for the next tick (PAP's seq_num will end up being one higher if sent in the same tick as levels)
   pack_sequence_number(universe->level_send_buf, universe->next_seq_num);
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -574,14 +576,16 @@ bool send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
   {
     for (size_t i = 0; i < universe->netints.num_netints; ++i)
     {
-      if (sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]) ==
-          kEtcPalErrOk)
+      etcpal_error_t send_res =
+          sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]);
+      if (send_res == kEtcPalErrOk)
       {
         at_least_one_sent = true;
       }
       else
       {
         all_sends_succeeded = false;
+        universe->last_send_error = send_res;
       }
     }
   }
@@ -604,14 +608,16 @@ bool send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
   {
     if (universe->unicast_dests[i].termination_state == kNotTerminating)
     {
-      if (sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr,
-                            &universe->unicast_dests[i].last_send_error) == kEtcPalErrOk)
+      etcpal_error_t send_res = sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr,
+                                                  &universe->unicast_dests[i].last_send_error);
+      if (send_res == kEtcPalErrOk)
       {
         at_least_one_sent = true;
       }
       else
       {
         all_sends_succeeded = false;
+        universe->last_send_error = send_res;
       }
     }
   }
@@ -1115,6 +1121,8 @@ void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* univer
 #endif
     universe->other_sent_this_tick = true;
   }
+
+  universe->anything_sent_this_tick = true;
 }
 
 #endif  // SACN_SOURCE_ENABLED
