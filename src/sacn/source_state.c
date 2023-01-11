@@ -406,6 +406,9 @@ bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
                                  etcpal_timer_is_expired(&universe->pap_keep_alive_timer)))
   {
     // PAP will always be sent after levels, so if levels were sent, PAP's seq_num should be one greater.
+    // This is the only place where we can determine whether or not we need to do this prior to sending PAP. If we do,
+    // the increment_sequence_number function will know to increment next_seq_num by 2 based on the send flags.
+    // Likewise, if we don't, then it'll increment by 1.
     if (universe->levels_sent_this_tick)
       pack_sequence_number(universe->pap_send_buf, universe->next_seq_num + 1);
 
