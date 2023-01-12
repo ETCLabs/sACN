@@ -126,8 +126,7 @@ static void cleanup_receive_socket(SacnRecvThreadContext* context, const Receive
 #endif  // SACN_RECEIVER_ENABLED
 static etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
 static etcpal_error_t unsubscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
-static etcpal_error_t send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
-                                     const EtcPalMcastNetintId* netint);
+static etcpal_error_t send_multicast(uint16_t universe_id, const uint8_t* send_buf, const EtcPalMcastNetintId* netint);
 static etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr,
                                    etcpal_error_t* last_send_error);
 #if SACN_RECEIVER_ENABLED
@@ -256,18 +255,17 @@ void cleanup_receive_socket(SacnRecvThreadContext* context, const ReceiveSocket*
 
 #endif  // SACN_RECEIVER_ENABLED
 
-etcpal_error_t send_multicast(uint16_t universe_id, etcpal_iptype_t ip_type, const uint8_t* send_buf,
-                              const EtcPalMcastNetintId* netint)
+etcpal_error_t send_multicast(uint16_t universe_id, const uint8_t* send_buf, const EtcPalMcastNetintId* netint)
 {
-  if (!SACN_ASSERT_VERIFY(ip_type != kEtcPalIpTypeInvalid) || !SACN_ASSERT_VERIFY(send_buf) ||
-      !SACN_ASSERT_VERIFY(netint))
+  if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(netint) ||
+      !SACN_ASSERT_VERIFY(netint->ip_type != kEtcPalIpTypeInvalid))
   {
     return kEtcPalErrSys;
   }
 
   // Determine the multicast destination
   EtcPalSockAddr dest;
-  sacn_get_mcast_addr(ip_type, universe_id, &dest.ip);
+  sacn_get_mcast_addr(netint->ip_type, universe_id, &dest.ip);
   dest.port = SACN_PORT;
 
   // Determine the socket to use
@@ -995,30 +993,21 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
 etcpal_error_t sacn_send_multicast(uint16_t universe_id, sacn_ip_support_t ip_supported, const uint8_t* send_buf,
                                    const EtcPalMcastNetintId* netint)
 {
-  if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(netint))
-    return kEtcPalErrSys;
-
-  etcpal_error_t res = kEtcPalErrOk;
-  bool multicast_sent = false;
-  if ((ip_supported == kSacnIpV4Only) || (ip_supported == kSacnIpV4AndIpV6))
+  if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(netint) ||
+      !SACN_ASSERT_VERIFY(netint->ip_type != kEtcPalIpTypeInvalid))
   {
-    res = send_multicast(universe_id, kEtcPalIpTypeV4, send_buf, netint);
-    multicast_sent = true;
+    return kEtcPalErrSys;
   }
 
-  if ((ip_supported == kSacnIpV6Only) || (ip_supported == kSacnIpV4AndIpV6))
+  if ((ip_supported == kSacnIpV4AndIpV6) || ((ip_supported == kSacnIpV4Only) && (netint->ip_type == kEtcPalIpTypeV4)) ||
+      ((ip_supported == kSacnIpV6Only) && (netint->ip_type == kEtcPalIpTypeV6)))
   {
-    etcpal_error_t v6_res = send_multicast(universe_id, kEtcPalIpTypeV6, send_buf, netint);
-    if (res == kEtcPalErrOk)
-      res = v6_res;
-
-    multicast_sent = true;
+    return send_multicast(universe_id, send_buf, netint);
   }
 
-  if (!SACN_ASSERT_VERIFY(multicast_sent))
-    return kEtcPalErrSys;
-
-  return res;
+  // Getting here means we've been asked to send on an interface we're not currently configured to use. Just return Ok
+  // for now, no error needed here.
+  return kEtcPalErrOk;
 }
 
 etcpal_error_t sacn_send_unicast(sacn_ip_support_t ip_supported, const uint8_t* send_buf, const EtcPalIpAddr* dest_addr,
