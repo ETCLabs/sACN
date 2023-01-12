@@ -103,6 +103,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 #endif
 
     universe->other_sent_this_tick = false;
+    universe->anything_sent_this_tick = false;
 
     universe->send_unicast_only = config->send_unicast_only;
 
@@ -113,6 +114,8 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 
     if (!universe->unicast_dests)
       result = kEtcPalErrNoMem;
+
+    universe->last_send_error = kEtcPalErrOk;
 
     universe->netints.netints = NULL;
     universe->netints.netints_capacity = 0;

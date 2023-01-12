@@ -787,10 +787,13 @@ typedef struct SacnSourceUniverse
 #endif
 
   bool other_sent_this_tick;
+  bool anything_sent_this_tick;
 
   SACN_DECLARE_BUF(SacnUnicastDestination, unicast_dests, SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE);
   size_t num_unicast_dests;
   bool send_unicast_only;
+
+  etcpal_error_t last_send_error;
 
   SacnInternalNetintArray netints;
 } SacnSourceUniverse;

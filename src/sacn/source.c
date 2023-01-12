@@ -703,6 +703,7 @@ etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
  *                              source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @return The last error returned by etcpal_sendto() if all sends failed.
  */
 etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uint8_t start_code, const uint8_t* buffer,
                                     size_t buflen)
@@ -748,6 +749,10 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
         // Send on the network
         send_universe_multicast(source_state, universe_state, send_buf);
         send_universe_unicast(source_state, universe_state, send_buf);
+
+        if (!universe_state->anything_sent_this_tick)
+          result = universe_state->last_send_error;
+
         increment_sequence_number(universe_state);
       }
 
