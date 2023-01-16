@@ -492,7 +492,7 @@ void configure_sndbuf_size(etcpal_socket_t new_sock, const char* sock_desc)
   int get_so_sndbuf_val = 0;
   size_t get_so_sndbuf_size = sizeof(get_so_sndbuf_val);
   etcpal_error_t get_so_sndbuf_res =
-      etcpal_getsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_SNDBUF, &set_so_sndbuf_val, &get_so_sndbuf_size);
+      etcpal_getsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_SNDBUF, &get_so_sndbuf_val, &get_so_sndbuf_size);
 
   if (get_so_sndbuf_res != kEtcPalErrOk)
   {
