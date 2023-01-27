@@ -5,8 +5,8 @@
 #
 # This script will generate Doxygen documentation and push the documentation to
 # the main branch of a repository specified by GH_REPO_REF.
-# Before this script is used there should already be a main branch in the
-# repository.
+# Before this script is used, the repository should already exist and include a
+# main branch.
 # 
 ################################################################################
 
