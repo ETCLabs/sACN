@@ -49,8 +49,8 @@ void NetworkSelect::getNICs(void)
         network_interface->ui_index = char_index++;
         network_interface->os_index = netint->index;
         network_interface->addr = netint->addr;
-        strcpy(network_interface->addr_string, addr_string);
-        strcpy(network_interface->name, netint->friendly_name);
+        ETCPAL_MSVC_NO_DEP_WRN strcpy(network_interface->addr_string, addr_string);
+        ETCPAL_MSVC_NO_DEP_WRN strcpy(network_interface->name, netint->friendly_name);
         all_network_interfaces_.push_back(std::move(network_interface));
       }
     }
