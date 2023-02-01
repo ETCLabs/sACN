@@ -71,7 +71,7 @@ static bool send_termination_multicast(const SacnSource* source, SacnSourceUnive
 static bool send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe,
                                      SacnUnicastDestination* dest);
 static bool send_universe_discovery(SacnSource* source);
-static int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uint8_t page_number);
+static int pack_universe_discovery_page(SacnSource* source, size_t* total_universes_processed, uint8_t page_number);
 static void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_levels,
                           size_t new_levels_size, force_sync_behavior_t force_sync);
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -532,12 +532,12 @@ bool send_universe_discovery(SacnSource* source)
   // If there are network interfaces to send on
   if (source->num_netints > 0)
   {
-    // Initialize universe index and page number
-    size_t universe_index = 0;
+    // Initialize universe & page counters
+    size_t total_universes_processed = 0;
     uint8_t page_number = 0;
 
     // Pack the next page & loop while there's a page to send
-    while (pack_universe_discovery_page(source, &universe_index, page_number) > 0)
+    while (pack_universe_discovery_page(source, &total_universes_processed, page_number) > 0)
     {
       // Send multicast on IPv4 and/or IPv6
       bool at_least_one_send_worked = false;
@@ -629,20 +629,22 @@ bool send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
 }
 
 // Needs lock
-int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uint8_t page_number)
+int pack_universe_discovery_page(SacnSource* source, size_t* total_universes_processed, uint8_t page_number)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe_index))
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(total_universes_processed))
     return 0;
 
   // Initialize packing pointer and universe counter
   uint8_t* pcur = &source->universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE];
   int num_universes_packed = 0;
 
-  // Iterate up to 512 universes (sorted)
-  while ((*universe_index < source->num_universes) &&
+  // Iterate up to 512 universes
+  while ((*total_universes_processed < source->num_universes) &&
          (num_universes_packed < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE))
   {
-    const SacnSourceUniverse* universe = &source->universes[*universe_index];
+    // Iterate universes array in reverse to pack universes lowest to highest
+    size_t index = (source->num_universes - 1) - (*total_universes_processed);
+    const SacnSourceUniverse* universe = &source->universes[index];
 
     // If this universe has level data at a bare minimum & is not unicast-only
     if (IS_PART_OF_UNIVERSE_DISCOVERY(universe))
@@ -655,7 +657,7 @@ int pack_universe_discovery_page(SacnSource* source, size_t* universe_index, uin
       ++num_universes_packed;
     }
 
-    ++(*universe_index);
+    ++(*total_universes_processed);
   }
 
   // Update universe count, page, and last page PDU fields
