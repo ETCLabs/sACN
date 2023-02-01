@@ -13,3 +13,4 @@ endif()
 
 target_link_libraries(sacn_cpp_source_example PRIVATE sACN)
 set_target_properties(sacn_cpp_source_example PROPERTIES FOLDER examples)
+set_target_properties(sacn_cpp_source_example PROPERTIES CXX_STANDARD 14 FOLDER src)
