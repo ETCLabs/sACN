@@ -362,7 +362,7 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 }
 
 /**
- * @brief Obtain a list of a source's universes.
+ * @brief Obtain a list of a source's universes (sorted lowest to highest).
  *
  * @param[in] handle Handle to the source for which to obtain the list of universes.
  * @param[out] universes A pointer to an application-owned array where the universe list will be written.

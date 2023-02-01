@@ -873,8 +873,9 @@ size_t get_source_universes(const SacnSource* source, uint16_t* universes, size_
   if (!SACN_ASSERT_VERIFY(source))
     return 0;
 
+  // Universes array is sorted highest to lowest - iterate in reverse to output lowest to highest.
   size_t num_non_removed_universes = 0;
-  for (size_t read = 0; (read < source->num_universes); ++read)
+  for (int read = (int)source->num_universes - 1; read >= 0; --read)
   {
     if (source->universes[read].termination_state != kTerminatingAndRemoving)
     {
