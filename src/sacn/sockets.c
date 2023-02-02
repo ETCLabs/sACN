@@ -462,11 +462,6 @@ etcpal_error_t create_unicast_send_socket(etcpal_iptype_t ip_type, etcpal_socket
 #if SACN_FULL_OS_AVAILABLE_HINT
     configure_sndbuf_size(*socket, (ip_type == kEtcPalIpTypeV4) ? "IPv4 unicast socket" : "IPv6 unicast socket");
 #endif
-
-    res = etcpal_setblocking(*socket, false);
-
-    if (res != kEtcPalErrOk)
-      etcpal_close(*socket);
   }
 
   return res;
