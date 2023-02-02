@@ -68,25 +68,80 @@ extern void install_keyboard_interrupt_handler(void (*handler)());
 #define UNIVERSE_INVALID 0
 #define UNIVERSE_MIN 1
 #define UNIVERSE_MAX 63999
+
+/* ============================= UniverseInfo ==============================*/
+
+void UniverseInfo::SetEffectStateConstant(const uint8_t level)
+{
+  effect_ = kEffectConstant;
+  for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
+  {
+    levels_[i] = level;
+  }
+}  // SetEffectStateConstant
+
+void UniverseInfo::SetEffectStateRamping()
+{
+  effect_ = kEffectRamp;
+  for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
+  {
+    levels_[i] = LEVEL_MIN;
+  }
+}  // SetEffectStateRamping
+
+void UniverseInfo::SetPriorityStateUniverse(const uint8_t universe_priority)
+{
+  priority_type_ = kUniversePriority;
+  universe_priority_ = universe_priority;
+} // SetPriorityStateUniverse
+
+void UniverseInfo::SetPriorityStatePerAddress(const uint8_t per_address_priority)
+{
+  priority_type_ = kPerAddressPriority;
+  for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
+  {
+    per_address_priorities_[i] = per_address_priority;
+  }
+} // SetPriorityStatePerAddress
+
+void UniverseInfo::IncrementLevels()
+{
+  uint8_t new_level = 0;
+  uint8_t existing_level = levels_[0];
+  if (existing_level < LEVEL_MAX)
+  {
+    new_level = existing_level + 1;
+  }
+  else
+  {
+    new_level = 0;
+  }
+  for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
+  {
+    levels_[i] = new_level;
+  }
+} // IncrementLevels
+
+/* =========================== SACNSourceExample ============================*/
+
 SACNSourceExample::SACNSourceExample()
 {
-  new_universe_ = UNIVERSE_INVALID;
   if (etcpal_rwlock_create(&universe_infos_lock_))
   {
     // Handle Ctrl+C gracefully and shut down in compatible consoles
     install_keyboard_interrupt_handler(handle_keyboard_interrupt);
     if (etcpal_init(ETCPAL_FEATURE_NETINTS) == kEtcPalErrOk)
     {
-      network_select_.getNICs();
-      network_select_.selectNICs();
-      if (initSACNLibrary() == kEtcPalErrOk)
+      network_select_.InitializeNics();
+      network_select_.SelectNics();
+      if (InitSACNLibrary() == kEtcPalErrOk)
       {
-        if (initSACNSource() == kEtcPalErrOk)
+        if (InitSACNSource() == kEtcPalErrOk)
         {
           continue_ramping_ = true;
-          if (startRampThread() == kEtcPalErrOk)
+          if (StartRampThread() == kEtcPalErrOk)
           {
-            runSourceExample();
+            RunSourceExample();
           }
         }
       }
@@ -111,7 +166,7 @@ SACNSourceExample::~SACNSourceExample()
   sacn_deinit();
 }  // ~SACNSourceExample
 
-etcpal_error_t SACNSourceExample::initSACNLibrary()
+etcpal::Error SACNSourceExample::InitSACNLibrary()
 {
   // Initialize the sACN library, allowing it to log messages through our callback
   EtcPalLogParams log_params;
@@ -119,27 +174,22 @@ etcpal_error_t SACNSourceExample::initSACNLibrary()
   log_params.log_fn = log_callback;
   log_params.time_fn = NULL;
   log_params.log_mask = ETCPAL_LOG_UPTO(ETCPAL_LOG_DEBUG);
-  SacnNetintConfig sys_netint_config;
-  std::vector<SacnMcastInterface> netints;
-  network_select_.getMcastInterfaces(netints);
-  sys_netint_config.netints = &(netints[0]);
-  sys_netint_config.num_netints = netints.size();
-  sys_netint_config.no_netints = false;
+  std::vector<SacnMcastInterface> netints = network_select_.GetMcastInterfaces();
 
   std::cout << "Initializing sACN library... ";
-  etcpal_error_t result = sacn_init(&log_params, &sys_netint_config);
+  etcpal::Error result = sacn::Init(&log_params, netints);
   if (result == kEtcPalErrOk)
   {
     std::cout << "success\n";
   }
   else
   {
-    std::cout << "failed, " << etcpal_strerror(result) << "\n";
+    std::cout << "failed, " << result.ToString() << "\n";
   }
   return result;
-}  // initSACNLibrary
+}  // InitSACNLibrary
 
-etcpal_error_t SACNSourceExample::initSACNSource()
+etcpal_error_t SACNSourceExample::InitSACNSource()
 {
   etcpal::Uuid my_cid = etcpal::Uuid::V4();
   if (my_cid.IsNull())
@@ -160,9 +210,9 @@ etcpal_error_t SACNSourceExample::initSACNSource()
     std::cout << "fail, " << result.ToString() << "\n";
   }
   return result.code();
-}  // initSACNSource
+}  // InitSACNSource
 
-void SACNSourceExample::doRamping()
+void SACNSourceExample::DoRamping()
 {
   if (etcpal_rwlock_writelock(&universe_infos_lock_))
   {
@@ -170,64 +220,40 @@ void SACNSourceExample::doRamping()
     {
       uint16_t universe = pair.first;
       UniverseInfo* universe_info = pair.second.get();
-      if (universe_info->effect == kEffectRamp)
+      if (universe_info->effect_ == kEffectRamp)
       {
-        uint8_t new_level = 0;
-        uint8_t existing_level = universe_info->levels[DMX_ADDRESS_COUNT - 1];
-        if (existing_level < LEVEL_MAX)
-        {
-          new_level = existing_level + 1;
-        }
-        else
-        {
-          new_level = 0;
-        }
-        for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
-        {
-          // 'universe_info' is a copy
-          // universe_info.levels[i] = new_level;
-          universe_infos_[universe]->levels[i] = new_level;
-        }
-        if (universe_info->priority_type == kUniversePriority)
-        {
-          sacn_source_.UpdateLevels(universe, universe_info->levels, DMX_ADDRESS_COUNT);
-        }
-        else
-        {
-          sacn_source_.UpdateLevelsAndPap(universe, universe_info->levels, DMX_ADDRESS_COUNT,
-                                          universe_info->per_address_priorities,
-                                          DMX_ADDRESS_COUNT);
-        }
+        universe_info->IncrementLevels();
+        sacn_source_.UpdateLevels(universe, universe_info->levels_, DMX_ADDRESS_COUNT);
       }
     }
     etcpal_rwlock_writeunlock(&universe_infos_lock_);
   }
   else
   {
-    std::cout << "doRamping: error getting write lock\n";
+    std::cout << "DoRamping: error getting write lock\n";
   }
-}  // doRamping
+}  // DoRamping
 
-void ramp_function(void* arg)
+void RampFunction(void* arg)
 {
   SACNSourceExample* me = (SACNSourceExample*)arg;
   if (!me)
   {
-    std::cout << "Error: ramp_function() argument is NULL.\n";
+    std::cout << "Error: RampFunction() argument is NULL.\n";
     return;
   }
-  while (me->getContinueRamping())
+  while (me->GetContinueRamping())
   {
-    me->doRamping();
+    me->DoRamping();
     etcpal_thread_sleep(100);  // Sleep for 100 milliseconds
   }
-}  // ramp_function
+}  // RampFunction
 
-etcpal_error_t SACNSourceExample::startRampThread()
+etcpal_error_t SACNSourceExample::StartRampThread()
 {
   EtcPalThreadParams params = ETCPAL_THREAD_PARAMS_INIT;
   std::cout << "Starting ramp thread... ";
-  etcpal_error_t result = etcpal_thread_create(&ramp_thread_handle_, &params, ramp_function, this);
+  etcpal_error_t result = etcpal_thread_create(&ramp_thread_handle_, &params, RampFunction, this);
   if (result == kEtcPalErrOk)
   {
     std::cout << "success\n";
@@ -237,9 +263,9 @@ etcpal_error_t SACNSourceExample::startRampThread()
     std::cout << "fail, " << etcpal_strerror(result) << "\n";
   }
   return result;
-}  // startRampThread
+}  // StartRampThread
 
-void SACNSourceExample::printHelp()
+void SACNSourceExample::PrintHelp()
 {
   std::cout << BEGIN_BORDER_STRING;
   std::cout << "Commands\n";
@@ -252,118 +278,65 @@ void SACNSourceExample::printHelp()
   std::cout << "n : Reset networking.\n";
   std::cout << "q : Exit.\n";
   std::cout << END_BORDER_STRING;
-}  // printHelp
+}  // PrintHelp
 
-uint16_t SACNSourceExample::getUniverse()
+void SACNSourceExample::AddUniverse()
 {
-  bool print_prompt = true;
-  uint16_t universe = UNIVERSE_INVALID;
-  while (universe == UNIVERSE_INVALID)
+  uint16_t new_universe = GetUniverseFromInput();
+  if (VerifyNewUniverse(new_universe))
   {
-    std::string universe_string;
-    if (print_prompt)
+    std::unique_ptr<UniverseInfo> new_universe_info = std::make_unique<UniverseInfo>();
+    int effect = GetSingleCharFromInput("Enter effect:\nc : constant\nr : ramp\n", {'c', 'r'});
+    if (effect == 'c')
     {
-      std::cout << "Universe (" << UNIVERSE_MIN << " - " << UNIVERSE_MAX << "): ";
+      uint8_t level = GetUint8FromInput(LEVEL_MIN, LEVEL_MAX, "Level");
+      new_universe_info->SetEffectStateConstant(level);
     }
-    std::getline(std::cin, universe_string);
-    if (universe_string == "")
+    else if (effect == 'r')
     {
-      print_prompt = false;
-      continue;
+      new_universe_info->SetEffectStateRamping();
     }
-    print_prompt = true;
-    int temp = atoi(universe_string.c_str());
-    if ((temp >= UNIVERSE_MIN) && (temp <= UNIVERSE_MAX))
+    int priority_type = GetSingleCharFromInput("Enter priority:\nu : universe\na : per address\n", {'u', 'a'});
+    if (priority_type == 'u')
     {
-      universe = (uint16_t)temp;
+      new_universe_info->SetPriorityStateUniverse(GetUniversePriorityFromInput());
+    }
+    else if (priority_type == 'a')
+    {
+      new_universe_info->SetPriorityStatePerAddress(GetPerAddressPriorityFromInput());
+    }
+    if (AddNewUniverseToSACNSource(new_universe, new_universe_info))
+    {
+      if (etcpal_rwlock_writelock(&universe_infos_lock_))
+      {
+        universe_infos_[new_universe] = std::move(new_universe_info);
+        etcpal_rwlock_writeunlock(&universe_infos_lock_);
+      }
+      else
+      {
+        std::cout << "Error getting write lock\n";
+      }
     }
   }
-  return universe;
-}  // getUniverse
+} // AddUniverse
 
-bool SACNSourceExample::addUniverse()
+bool SACNSourceExample::VerifyNewUniverse(const uint16_t new_universe)
 {
-  new_universe_ = UNIVERSE_INVALID;
-  new_universe_info_ = std::make_unique<UniverseInfo>();
-  uint16_t universe = getUniverse();
   std::vector<uint16_t> existing_universes = sacn_source_.GetUniverses();
-  if (std::find(existing_universes.begin(), existing_universes.end(), universe) == existing_universes.end())
+  if (std::find(existing_universes.begin(), existing_universes.end(), new_universe) == existing_universes.end())
   {
-    new_universe_ = universe;
     return true;
   }
-  std::cout << "Universe " << universe << " already exists.\n";
+  std::cout << "Universe " << new_universe << " already exists.\n";
   return false;
-}  // addUniverse
+}  // VerifyNewUniverse
 
-uint8_t SACNSourceExample::getLevel()
+bool SACNSourceExample::AddNewUniverseToSACNSource(const uint16_t new_universe,
+                                                   const std::unique_ptr<UniverseInfo>& new_universe_info)
 {
-  return getUint8(LEVEL_MIN, LEVEL_MAX, "Level");
-}  // getLevel
-
-void SACNSourceExample::setEffect()
-{
-  int ch = getSingleChar("Enter effect:\nc : constant\nr : ramp\n", {'c', 'r'});
-  if (ch == 'c')
-  {
-    new_universe_info_->effect = kEffectConstant;
-    uint8_t level = getLevel();
-    for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
-    {
-      new_universe_info_->levels[i] = level;
-    }
-  }
-  else if (ch == 'r')
-  {
-    new_universe_info_->effect = kEffectRamp;
-    for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
-    {
-      new_universe_info_->levels[i] = LEVEL_MIN;
-    }
-  }
-}  // setEffect
-
-#define UNIVERSE_PRIORITY_MIN 0
-#define UNIVERSE_PRIORITY_MAX 200
-uint8_t SACNSourceExample::getUniversePriority()
-{
-  return getUint8(UNIVERSE_PRIORITY_MIN, UNIVERSE_PRIORITY_MAX, "Universe Priority");
-}  // getUniversePriority
-
-#define PER_ADDRESS_PRIORITY_MIN 0
-#define PER_ADDRESS_PRIORITY_MAX 200
-uint8_t SACNSourceExample::getPerAddressPriority()
-{
-  return getUint8(PER_ADDRESS_PRIORITY_MIN, PER_ADDRESS_PRIORITY_MAX, "Per Address Priority");
-}  // getPerAddressPriority
-
-bool SACNSourceExample::setPriority()
-{
-  bool success = true;
-  int ch = getSingleChar("Enter priority:\nu : universe\na : per address\n", {'u', 'a'});
-  if (ch == 'u')
-  {
-    new_universe_info_->priority_type = kUniversePriority;
-    new_universe_info_->universe_priority = getUniversePriority();
-  }
-  else if (ch == 'a')
-  {
-    new_universe_info_->priority_type = kPerAddressPriority;
-    uint8_t priority = getPerAddressPriority();
-    for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
-    {
-      new_universe_info_->per_address_priorities[i] = priority;
-    }
-  }
-  return success;
-}  // setPriority
-
-bool SACNSourceExample::addNewUniverseToSACNSource()
-{
-  std::vector<SacnMcastInterface> netints;
-  network_select_.getMcastInterfaces(netints);
-  std::cout << "Adding universe " << new_universe_ << "... ";
-  etcpal::Error result = sacn_source_.AddUniverse(sacn::Source::UniverseSettings(new_universe_), netints);
+  std::vector<SacnMcastInterface> netints = network_select_.GetMcastInterfaces();
+  std::cout << "Adding universe " << new_universe << "... ";
+  etcpal::Error result = sacn_source_.AddUniverse(sacn::Source::UniverseSettings(new_universe), netints);
   if (result == kEtcPalErrOk)
   {
     bool success = true;
@@ -378,15 +351,15 @@ bool SACNSourceExample::addNewUniverseToSACNSource()
     if (success)
     {
       std::cout << "success\n";
-      if (new_universe_info_->priority_type == kUniversePriority)
+      if (new_universe_info->priority_type_ == kUniversePriority)
       {
-        sacn_source_.ChangePriority(new_universe_, new_universe_info_->universe_priority);
-        sacn_source_.UpdateLevels(new_universe_, new_universe_info_->levels, DMX_ADDRESS_COUNT);
+        sacn_source_.ChangePriority(new_universe, new_universe_info->universe_priority_);
+        sacn_source_.UpdateLevels(new_universe, new_universe_info->levels_, DMX_ADDRESS_COUNT);
       }
       else
       {
-        sacn_source_.UpdateLevelsAndPap(new_universe_, new_universe_info_->levels, DMX_ADDRESS_COUNT,
-                                        new_universe_info_->per_address_priorities, DMX_ADDRESS_COUNT);
+        sacn_source_.UpdateLevelsAndPap(new_universe, new_universe_info->levels_, DMX_ADDRESS_COUNT,
+                                        new_universe_info->per_address_priorities_, DMX_ADDRESS_COUNT);
       }
       return true;
     }
@@ -396,15 +369,15 @@ bool SACNSourceExample::addNewUniverseToSACNSource()
     std::cout << "fail, " << result.ToString() << "\n";
   }
   return false;
-} // addNewUniverseToSACNSource
+} // AddNewUniverseToSACNSource
 
-void SACNSourceExample::removeUniverse()
+void SACNSourceExample::RemoveUniverse()
 {
-  uint16_t universe = getUniverse();
-  removeUniverseCommon(universe);
-}  // removeUniverse
+  uint16_t universe = GetUniverseFromInput();
+  RemoveUniverseCommon(universe);
+}  // RemoveUniverse
 
-void SACNSourceExample::removeUniverseCommon(uint16_t universe)
+void SACNSourceExample::RemoveUniverseCommon(uint16_t universe)
 {
   std::vector<uint16_t> existing_universes = sacn_source_.GetUniverses();
   if (std::find(existing_universes.begin(), existing_universes.end(), universe) != existing_universes.end())
@@ -419,22 +392,22 @@ void SACNSourceExample::removeUniverseCommon(uint16_t universe)
     }
     else
     {
-      std::cout << "removeUniverse: error getting write lock\n";
+      std::cout << "RemoveUniverse: error getting write lock\n";
     }
   }
   else
   {
     std::cout << "Universe " << universe << " not found.\n";
   }
-}
+} // RemoveUniverseCommon
 
-void SACNSourceExample::addUnicastAddress()
+void SACNSourceExample::AddUnicastAddress()
 {
-  uint16_t universe = getUniverse();
+  uint16_t universe = GetUniverseFromInput();
   std::vector<uint16_t> existing_universes = sacn_source_.GetUniverses();
   if (std::find(existing_universes.begin(), existing_universes.end(), universe) != existing_universes.end())
   {
-    etcpal::IpAddr address = getIPAddress();
+    etcpal::IpAddr address = GetIPAddressFromInput();
     std::vector<etcpal::IpAddr> addresses = sacn_source_.GetUnicastDestinations(universe);
     if (std::find(addresses.begin(), addresses.end(), address) == addresses.end())
     {
@@ -458,15 +431,15 @@ void SACNSourceExample::addUnicastAddress()
   {
     std::cout << "Universe " << universe << " not found.\n";
   }
-} // addUnicastAddress
+} // AddUnicastAddress
 
-void SACNSourceExample::removeUnicastAddress()
+void SACNSourceExample::RemoveUnicastAddress()
 {
-  uint16_t universe = getUniverse();
+  uint16_t universe = GetUniverseFromInput();
   std::vector<uint16_t> existing_universes = sacn_source_.GetUniverses();
   if (std::find(existing_universes.begin(), existing_universes.end(), universe) != existing_universes.end())
   {
-    etcpal::IpAddr address = getIPAddress();
+    etcpal::IpAddr address = GetIPAddressFromInput();
     std::vector<etcpal::IpAddr> addresses = sacn_source_.GetUnicastDestinations(universe);
     if (std::find(addresses.begin(), addresses.end(), address) != addresses.end())
     {
@@ -483,12 +456,11 @@ void SACNSourceExample::removeUnicastAddress()
   {
     std::cout << "Universe " << universe << " not found.\n";
   }
-} // removeUnicastAddress
+} // RemoveUnicastAddress
 
-void SACNSourceExample::resetNetworking()
+void SACNSourceExample::ResetNetworking()
 {
-  std::vector<SacnMcastInterface> interfaces;
-  network_select_.getMcastInterfaces(interfaces);
+  std::vector<SacnMcastInterface> interfaces = network_select_.GetMcastInterfaces();
   std::cout << "Resetting network interface(s)... ";
   etcpal::Error result = sacn_source_.ResetNetworking(interfaces);
   if (result == kEtcPalErrOk)
@@ -499,60 +471,44 @@ void SACNSourceExample::resetNetworking()
   {
     std::cout << "fail, " << result.ToString() << "\n";
   }
-}
+} // ResetNetworking
 
-void SACNSourceExample::runSourceExample()
+void SACNSourceExample::RunSourceExample()
 {
   // Handle user input until we are told to stop
   while (keep_running)
   {
-    int ch = getSingleChar("Enter input (enter h for help):\n", {'h', 'a', 'r', '+', '-', 'n', 'q'});
+    int ch = GetSingleCharFromInput("Enter input (enter h for help):\n", {'h', 'a', 'r', '+', '-', 'n', 'q'});
     switch (ch)
     {
       case 'h':
-        printHelp();
+        PrintHelp();
         break;
       case 'a':
-        if (addUniverse())
-        {
-          setEffect();
-          if (setPriority())
-          {
-            if (addNewUniverseToSACNSource())
-            {
-              if (etcpal_rwlock_writelock(&universe_infos_lock_))
-              {
-                universe_infos_[new_universe_] = std::move(new_universe_info_);
-                etcpal_rwlock_writeunlock(&universe_infos_lock_);
-              }
-              else
-              {
-                std::cout << "Error getting write lock\n";
-              }
-            }
-          }
-        }
+        AddUniverse();
         break;
       case 'r':
-        removeUniverse();
+        RemoveUniverse();
         break;
       case '+':
-        addUnicastAddress();
+        AddUnicastAddress();
         break;
       case '-':
-        removeUnicastAddress();
+        RemoveUnicastAddress();
         break;
       case 'n':
-        resetNetworking();
+        ResetNetworking();
         break;
       case 'q':
         keep_running = false;
         break;
     }
   }
-}  // runSourceExample
+}  // RunSourceExample
 
-uint8_t SACNSourceExample::getUint8(const uint8_t min, const uint8_t max, const std::string label)
+/* utility functions */
+
+uint8_t SACNSourceExample::GetUint8FromInput(const uint8_t min, const uint8_t max, const std::string label)
 {
   uint8_t value = min;
   bool print_prompt = true;
@@ -579,9 +535,50 @@ uint8_t SACNSourceExample::getUint8(const uint8_t min, const uint8_t max, const 
     }
   }
   return value;
-} // getUint8
+} // GetUint8FromInput
 
-int SACNSourceExample::getSingleChar(const std::string prompt, const std::vector<int> valid_letters)
+uint16_t SACNSourceExample::GetUniverseFromInput()
+{
+  bool print_prompt = true;
+  uint16_t universe = UNIVERSE_INVALID;
+  while (universe == UNIVERSE_INVALID)
+  {
+    std::string universe_string;
+    if (print_prompt)
+    {
+      std::cout << "Universe (" << UNIVERSE_MIN << " - " << UNIVERSE_MAX << "): ";
+    }
+    std::getline(std::cin, universe_string);
+    if (universe_string == "")
+    {
+      print_prompt = false;
+      continue;
+    }
+    print_prompt = true;
+    int temp = atoi(universe_string.c_str());
+    if ((temp >= UNIVERSE_MIN) && (temp <= UNIVERSE_MAX))
+    {
+      universe = (uint16_t)temp;
+    }
+  }
+  return universe;
+}  // GetUniverseFromInput
+
+#define UNIVERSE_PRIORITY_MIN 0
+#define UNIVERSE_PRIORITY_MAX 200
+uint8_t SACNSourceExample::GetUniversePriorityFromInput()
+{
+  return GetUint8FromInput(UNIVERSE_PRIORITY_MIN, UNIVERSE_PRIORITY_MAX, "Universe Priority");
+}  // GetUniversePriorityFromInput
+
+#define PER_ADDRESS_PRIORITY_MIN 0
+#define PER_ADDRESS_PRIORITY_MAX 200
+uint8_t SACNSourceExample::GetPerAddressPriorityFromInput()
+{
+  return GetUint8FromInput(PER_ADDRESS_PRIORITY_MIN, PER_ADDRESS_PRIORITY_MAX, "Per Address Priority");
+}  // GetPerAddressPriorityFromInput
+
+int SACNSourceExample::GetSingleCharFromInput(const std::string prompt, const std::vector<int> valid_letters)
 {
   bool print_prompt = true;
   while (true)
@@ -609,7 +606,7 @@ int SACNSourceExample::getSingleChar(const std::string prompt, const std::vector
     }
   }
   return 0;
-}  // getSingleChar
+}  // GetSingleCharFromInput
 
 std::vector<std::string> SACNSourceExample::split(const std::string& s, char separator)
 {
@@ -626,7 +623,7 @@ std::vector<std::string> SACNSourceExample::split(const std::string& s, char sep
   return tokens;
 } // split
 
-etcpal::IpAddr SACNSourceExample::getIPAddress()
+etcpal::IpAddr SACNSourceExample::GetIPAddressFromInput()
 {
   etcpal::IpAddr address;
   bool success = false;
@@ -664,4 +661,4 @@ etcpal::IpAddr SACNSourceExample::getIPAddress()
     }
   }
   return address;
-}  // getIPAddress
+}  // GetIPAddressFromInput

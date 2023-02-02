@@ -24,7 +24,7 @@ NetworkSelect::NetworkSelect()
 {
 }
   
-void NetworkSelect::getNICs(void)
+void NetworkSelect::InitializeNics(void)
 {
   size_t num_netints = 4;  // Start with estimate which eventually has the actual number written to it
   EtcPalNetintInfo* netints = (EtcPalNetintInfo*)calloc(num_netints, sizeof(EtcPalNetintInfo));
@@ -49,16 +49,16 @@ void NetworkSelect::getNICs(void)
         network_interface->ui_index = char_index++;
         network_interface->os_index = netint->index;
         network_interface->addr = netint->addr;
-        ETCPAL_MSVC_NO_DEP_WRN strcpy(network_interface->addr_string, addr_string);
-        ETCPAL_MSVC_NO_DEP_WRN strcpy(network_interface->name, netint->friendly_name);
+        network_interface->addr_string = addr_string;
+        network_interface->name = netint->friendly_name;
         all_network_interfaces_.push_back(std::move(network_interface));
       }
     }
   }
   free(netints);
-} // getNICs
+} // InitializeNics
 
-void NetworkSelect::printNICs(void)
+void NetworkSelect::PrintNics(void)
 {
   std::cout << "Selected Index Network Interface\n";
   std::cout << "======== ===== =================\n";
@@ -75,9 +75,9 @@ void NetworkSelect::printNICs(void)
     std::cout << "   " << network_interface->ui_index << "   " << network_interface->name << " ("
               << network_interface->addr_string << ")\n";
   }
-} // printNICs
+} // PrintNics
 
-bool NetworkSelect::isAnyNICSelected()
+bool NetworkSelect::IsAnyNicSelected()
 {
   for (const auto& network_interface : all_network_interfaces_)
   {
@@ -87,22 +87,22 @@ bool NetworkSelect::isAnyNICSelected()
     }
   }
   return false;
-} // isAnyNICSelected
+} // IsAnyNicSelected
 
-void NetworkSelect::selectNICs(void)
+void NetworkSelect::SelectNics(void)
 {
   int ch = -1;
-  while (1)
+  while (true)
   {
     if (ch != '\n')
     {
-      printNICs();
+      PrintNics();
       std::cout << "Type index letter to select / deselect a network interface, type 0 when finished\n";
     }
     ch = getchar();
     if (ch == '0')
     {
-      if (isAnyNICSelected())
+      if (IsAnyNicSelected())
       {
         return;
       }
@@ -126,17 +126,19 @@ void NetworkSelect::selectNICs(void)
       }
     }
   }
-}  // selectNICs
+}  // SelectNics
 
-void NetworkSelect::getMcastInterfaces(std::vector<SacnMcastInterface> interfaces)
+std::vector<SacnMcastInterface> NetworkSelect::GetMcastInterfaces(void)
 {
-  interfaces.clear();
+  std::vector<SacnMcastInterface> interfaces;
   for (const auto& network_interface : all_network_interfaces_)
   {
     if (network_interface->selected)
     {
-      SacnMcastInterface i = {{network_interface->addr.type, network_interface->os_index}, kEtcPalErrOk};
+      SacnMcastInterface i = {
+          {static_cast<etcpal_iptype_t>(network_interface->addr.type()), network_interface->os_index}, kEtcPalErrOk};
       interfaces.push_back(i);
     }
   }
-}
+  return interfaces;
+} // GetMcastInterfaces

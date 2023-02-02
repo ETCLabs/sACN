@@ -31,67 +31,70 @@
 #include "etcpal/thread.h"
 #include "etcpal/rwlock.h"
 
+typedef enum
+{
+  kEffectConstant,
+  kEffectRamp
+} effect_t;
+
+typedef enum
+{
+  kUniversePriority,
+  kPerAddressPriority
+} priority_type_t;
+
+class UniverseInfo
+{
+public:
+  UniverseInfo() = default;
+  void SetEffectStateConstant(const uint8_t level);
+  void SetEffectStateRamping();
+  void SetPriorityStateUniverse(const uint8_t universe_priority);
+  void SetPriorityStatePerAddress(const uint8_t per_address_priority);
+  void IncrementLevels();
+
+  effect_t effect_;
+  priority_type_t priority_type_;
+  uint8_t universe_priority_;
+  uint8_t per_address_priorities_[DMX_ADDRESS_COUNT];
+  uint8_t levels_[DMX_ADDRESS_COUNT];
+};
+
 class SACNSourceExample
 {
 public:
-  typedef enum
-  {
-    kEffectConstant,
-    kEffectRamp
-  } effect_t;
-
-  typedef enum
-  {
-    kUniversePriority,
-    kPerAddressPriority
-  } priority_type_t;
-
-  typedef struct UniverseInfo
-  {
-    effect_t effect;
-    priority_type_t priority_type;
-    uint8_t universe_priority;
-    uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
-    uint8_t levels[DMX_ADDRESS_COUNT];
-
-    UniverseInfo() = default;
-  } UniverseInfo;
 
   SACNSourceExample();
   ~SACNSourceExample();
-  void doRamping();
-  bool getContinueRamping() { return continue_ramping_; }
+  void DoRamping();
+  bool GetContinueRamping() { return continue_ramping_; }
 
 private:
-  etcpal_error_t initSACNLibrary();
-  etcpal_error_t initSACNSource();
-  etcpal_error_t startRampThread();
-  void printHelp();
-  uint16_t getUniverse();
-  bool addUniverse();
-  uint8_t getLevel();
-  void setEffect();
-  uint8_t getUniversePriority();
-  uint8_t getPerAddressPriority();
-  bool setPriority();
-  bool addNewUniverseToSACNSource();
-  void removeUniverse();
-  void removeUniverseCommon(uint16_t universe);
-  void addUnicastAddress();
-  void removeUnicastAddress();
-  void resetNetworking();
-  void runSourceExample();
+  etcpal::Error InitSACNLibrary();
+  etcpal_error_t InitSACNSource();
+  etcpal_error_t StartRampThread();
+  void PrintHelp();
+  void AddUniverse();
+  bool VerifyNewUniverse(uint16_t new_universe);
+  bool AddNewUniverseToSACNSource(const uint16_t new_universe, const std::unique_ptr<UniverseInfo>& new_universe_info);
+  void RemoveUniverse();
+  void RemoveUniverseCommon(uint16_t universe);
+  void AddUnicastAddress();
+  void RemoveUnicastAddress();
+  void ResetNetworking();
+  void RunSourceExample();
 
   /* utility functions */
-  uint8_t getUint8(const uint8_t min, const uint8_t max, const std::string label);
-  int getSingleChar(const std::string prompt, const std::vector<int> valid_letters);
+  uint8_t GetUint8FromInput(const uint8_t min, const uint8_t max, const std::string label);
+  uint16_t GetUniverseFromInput();
+  uint8_t GetUniversePriorityFromInput();
+  uint8_t GetPerAddressPriorityFromInput();
+  int GetSingleCharFromInput(const std::string prompt, const std::vector<int> valid_letters);
   std::vector<std::string> split(const std::string& s, char separator);
-  etcpal::IpAddr getIPAddress();
+  etcpal::IpAddr GetIPAddressFromInput();
 
   NetworkSelect network_select_;
   sacn::Source sacn_source_;
-  uint16_t new_universe_;
-  std::unique_ptr<UniverseInfo> new_universe_info_;
   etcpal_rwlock_t universe_infos_lock_;
   std::unordered_map < uint16_t, std::unique_ptr<UniverseInfo>> universe_infos_;
   bool continue_ramping_;

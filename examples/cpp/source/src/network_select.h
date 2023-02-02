@@ -28,6 +28,7 @@
 #include <list>
 #include <memory>
 #include <vector>
+#include "etcpal/cpp/inet.h"
 #include "etcpal/netint.h"
 #include "sacn/cpp/common.h"
 
@@ -35,24 +36,25 @@
 class NetworkSelect
 {
 public:
-  typedef struct EtcPalNetintInfoSelect
+  NetworkSelect();
+  void InitializeNics(void);
+  void SelectNics(void);
+  std::vector<SacnMcastInterface> GetMcastInterfaces(void);
+
+private:
+  struct EtcPalNetintInfoSelect
   {
     bool selected;
     char ui_index;
     unsigned int os_index;
-    EtcPalIpAddr addr;
-    char name[ETCPAL_NETINTINFO_FRIENDLY_NAME_LEN];
-    char addr_string[50];
-  } EtcPalNetintInfoSelect;
+    etcpal::IpAddr addr;
+    std::string name;
+    std::string addr_string;
+  };
 
-  NetworkSelect();
-  void getNICs(void);
-  void printNICs(void);
-  void selectNICs(void);
-  bool isAnyNICSelected();
-  void getMcastInterfaces(std::vector<SacnMcastInterface> interfaces);
+  void PrintNics(void);
+  bool IsAnyNicSelected(void);
 
-private:
   std::list<std::unique_ptr<EtcPalNetintInfoSelect>> all_network_interfaces_;
 };
 
