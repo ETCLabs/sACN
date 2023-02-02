@@ -438,7 +438,7 @@ inline void Source::RemoveUniverse(uint16_t universe)
 }
 
 /**
- * @brief Obtain a vector of this source's universes.
+ * @brief Obtain a vector of this source's universes (sorted lowest to highest).
  *
  * @return A vector of this source's universes.
  */

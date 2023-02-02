@@ -86,6 +86,9 @@ static constexpr uint16_t kTestUniverse = 456u;
 static constexpr uint16_t kTestUniverse2 = 789u;
 static constexpr uint16_t kTestUniverse3 = 321u;
 
+static constexpr uint16_t kTestSmallerUniverse = 111u;
+static constexpr uint16_t kTestLargerUniverse2 = 222u;
+
 static constexpr uint8_t kTestPriority = 77u;
 static constexpr uint8_t kTestInvalidPriority = 201u;
 
@@ -113,10 +116,10 @@ static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, k
                                                        {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
 
 static const std::vector<SacnSourceUniverseNetintList> kTestNetintLists = {
-    {kTestHandle, kTestUniverse, kTestNetints.data(), kTestNetints.size(), false},
-    {kTestHandle, kTestUniverse2, kTestNetints.data(), kTestNetints.size(), false},
-    {kTestHandle2, kTestUniverse, kTestNetints.data(), kTestNetints.size(), false},
-    {kTestHandle2, kTestUniverse2, kTestNetints.data(), kTestNetints.size(), false}};
+    {kTestHandle, kTestLargerUniverse2, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle, kTestSmallerUniverse, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle2, kTestLargerUniverse2, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle2, kTestSmallerUniverse, kTestNetints.data(), kTestNetints.size(), false}};
 static constexpr size_t kTestNetintListsNumSources = 2u;
 static constexpr size_t kTestNetintListsNumUniverses = 2u;
 

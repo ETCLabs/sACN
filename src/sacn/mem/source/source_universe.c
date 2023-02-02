@@ -64,9 +64,11 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     CHECK_ROOM_FOR_ONE_MORE(source, universes, SacnSourceUniverse, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE,
                             kEtcPalErrNoMem);
 
-    // Keep the universes array sorted so that universe discovery packets will remain sorted
+    // The send loop iterates the universe array in reverse in order to enable easy removal from the array if needed. In
+    // order to send the universes from lowest to highest (see SACN-308), the universes array must be sorted from
+    // highest to lowest. This must be factored in when constructing universe discovery packets.
     size_t insert_index = 0;
-    while ((insert_index < source->num_universes) && (source->universes[insert_index].universe_id < config->universe))
+    while ((insert_index < source->num_universes) && (source->universes[insert_index].universe_id > config->universe))
       ++insert_index;
 
     if (insert_index < source->num_universes)
