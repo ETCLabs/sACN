@@ -58,8 +58,8 @@ git add --all
 # Check to see if there are any differences in the documentation.
 if ! git diff-index --quiet HEAD; then
   echo 'Uploading documentation to the docs repository...'
-  # Commit the added files with a title and description containing the Azure Pipelines
-  # build number and the GitHub commit reference that issued this build.
+  # Commit the added files with a title and description containing the pipeline
+  # number and the commit reference that issued this build.
   git commit -m "Deploy code docs to GitHub Pages" -m "Pipeline: ${CI_PIPELINE_ID}" -m "Commit: ${CI_COMMIT_SHA}"
 
   # Force push to the remote main branch.
