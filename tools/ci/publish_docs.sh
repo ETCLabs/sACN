@@ -11,7 +11,7 @@
 ################################################################################
 
 ################################################################################
-##### Setup this script and get the current main branch.               #####
+##### Setup this script and get the current main branch.                   #####
 echo 'Publishing documentation...'
 # Exit with nonzero exit code if anything fails
 set -e
@@ -47,7 +47,7 @@ etcdevtool docs -o docs/build/sACNDocs . 1.9.1
 cd docs/build/${GH_REPO_NAME}
 
 ################################################################################
-##### Upload the documentation to the main branch of the repository.   #####
+##### Upload the documentation to the main branch of the repository.       #####
 
 # Add everything in this directory (the Doxygen code documentation) to the
 # main branch.
