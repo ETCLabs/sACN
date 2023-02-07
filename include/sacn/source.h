@@ -69,7 +69,7 @@ typedef int sacn_source_t;
 #define SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT 800
 
 /** The default per-address priority keep-alive interval for sources, in milliseconds. */
-#define SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT 800
+#define SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT 1000
 
 /** A set of configuration information for a sACN source. */
 typedef struct SacnSourceConfig
