@@ -30,6 +30,9 @@
 #include "sacn/private/merge_receiver.h"
 #include "sacn/private/source_detector.h"
 
+#include <stdlib.h>
+#include <time.h>
+
 /*************************** Private constants *******************************/
 
 #define SACN_ETCPAL_FEATURES \
@@ -161,6 +164,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
 
     if (res == kEtcPalErrOk)
     {
+      srand(time(NULL));
       sacn_pool_sacn_state.initted = true;
     }
     else

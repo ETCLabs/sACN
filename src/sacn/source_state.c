@@ -31,6 +31,8 @@
 #include "etcpal/rbtree.h"
 #include "etcpal/timer.h"
 
+#include <stdlib.h>
+
 #if SACN_SOURCE_ENABLED
 
 // Suppress strncpy() warning on Windows/MSVC.
@@ -85,6 +87,8 @@ static void reset_universe(SacnSourceUniverse* universe);
 static void cancel_termination_if_not_removing(SacnSourceUniverse* universe);
 
 static void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* universe);
+
+static uint32_t get_randomized_keep_alive_interval(int full_interval);
 
 /*************************** Function definitions ****************************/
 
@@ -398,7 +402,8 @@ bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
     if (universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
       ++universe->level_packets_sent_before_suppression;
 
-    etcpal_timer_reset(&universe->level_keep_alive_timer);
+    // In case the randomized interval just elapsed (see reset_transmission_suppression()), set the full interval next.
+    etcpal_timer_start(&universe->level_keep_alive_timer, source->keep_alive_interval);
   }
 #if SACN_ETC_PRIORITY_EXTENSION
   // If 0xDD data is ready to send
@@ -419,7 +424,8 @@ bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
     if (universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
       ++universe->pap_packets_sent_before_suppression;
 
-    etcpal_timer_reset(&universe->pap_keep_alive_timer);
+    // In case the randomized interval just elapsed (see reset_transmission_suppression()), set the full interval next.
+    etcpal_timer_start(&universe->pap_keep_alive_timer, source->pap_keep_alive_interval);
   }
 #endif
 
@@ -826,12 +832,17 @@ void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
     return;
 
+  // Whenever transmission suppression is reset, we randomize the initial keep-alive interval to avoid lost packets by
+  // easing the burden on the network stack. Subsequent keep-alive intervals will reset the timer to the full interval.
   if ((behavior == kResetLevel) || (behavior == kResetLevelAndPap))
   {
     universe->level_packets_sent_before_suppression = 0;
 
     if (universe->has_level_data)
-      etcpal_timer_start(&universe->level_keep_alive_timer, source->keep_alive_interval);
+    {
+      etcpal_timer_start(&universe->level_keep_alive_timer,
+                         get_randomized_keep_alive_interval(source->keep_alive_interval));
+    }
   }
 
   if ((behavior == kResetPap) || (behavior == kResetLevelAndPap))
@@ -839,7 +850,10 @@ void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse
     universe->pap_packets_sent_before_suppression = 0;
 
     if (universe->has_pap_data)
-      etcpal_timer_start(&universe->pap_keep_alive_timer, source->pap_keep_alive_interval);
+    {
+      etcpal_timer_start(&universe->pap_keep_alive_timer,
+                         get_randomized_keep_alive_interval(source->pap_keep_alive_interval));
+    }
   }
 }
 
@@ -1126,6 +1140,14 @@ void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* univer
   }
 
   universe->anything_sent_this_tick = true;
+}
+
+uint32_t get_randomized_keep_alive_interval(int full_interval)
+{
+  if (!SACN_ASSERT_VERIFY(full_interval > 0))
+    return 0;
+
+  return (uint32_t)(rand() % full_interval);
 }
 
 #endif  // SACN_SOURCE_ENABLED
