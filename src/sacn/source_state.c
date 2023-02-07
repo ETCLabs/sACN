@@ -839,7 +839,7 @@ void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse
     universe->pap_packets_sent_before_suppression = 0;
 
     if (universe->has_pap_data)
-      etcpal_timer_start(&universe->pap_keep_alive_timer, source->keep_alive_interval);
+      etcpal_timer_start(&universe->pap_keep_alive_timer, source->pap_keep_alive_interval);
   }
 }
 

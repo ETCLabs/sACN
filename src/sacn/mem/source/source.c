@@ -97,6 +97,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->process_manually = config->manually_process_source;
     source->ip_supported = config->ip_supported;
     source->keep_alive_interval = config->keep_alive_interval;
+    source->pap_keep_alive_interval = config->pap_keep_alive_interval;
     source->universe_count_max = config->universe_count_max;
 
     etcpal_timer_start(&source->stats_log_timer, SACN_STATS_LOG_INTERVAL);

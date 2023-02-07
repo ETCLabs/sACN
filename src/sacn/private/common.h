@@ -814,6 +814,7 @@ typedef struct SacnSource
   bool process_manually;
   sacn_ip_support_t ip_supported;
   int keep_alive_interval;
+  int pap_keep_alive_interval;
   size_t universe_count_max;
 
   EtcPalTimer stats_log_timer;  // Maintains a repeating interval, at the end of which statistics are logged
