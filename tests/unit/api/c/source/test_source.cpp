@@ -262,6 +262,7 @@ TEST_F(TestSource, SourceConfigInitWorks)
   EXPECT_EQ(config.manually_process_source, false);
   EXPECT_EQ(config.ip_supported, kSacnIpV4AndIpV6);
   EXPECT_EQ(config.keep_alive_interval, SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
+  EXPECT_EQ(config.pap_keep_alive_interval, SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT);
 }
 
 TEST_F(TestSource, SourceConfigInitHandlesNull)
@@ -338,6 +339,10 @@ TEST_F(TestSource, SourceCreateErrInvalidWorks)
   zero_keep_alive_config.keep_alive_interval = 0;
   SacnSourceConfig negative_keep_alive_config = valid_config;
   negative_keep_alive_config.keep_alive_interval = -100;
+  SacnSourceConfig zero_pap_keep_alive_config = valid_config;
+  zero_pap_keep_alive_config.pap_keep_alive_interval = 0;
+  SacnSourceConfig negative_pap_keep_alive_config = valid_config;
+  negative_pap_keep_alive_config.pap_keep_alive_interval = -100;
 
   sacn_source_t handle = SACN_SOURCE_INVALID;
 
@@ -347,6 +352,8 @@ TEST_F(TestSource, SourceCreateErrInvalidWorks)
   VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_create(&lengthy_name_config, &handle), kEtcPalErrInvalid);
   VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_create(&zero_keep_alive_config, &handle), kEtcPalErrInvalid);
   VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_create(&negative_keep_alive_config, &handle), kEtcPalErrInvalid);
+  VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_create(&zero_pap_keep_alive_config, &handle), kEtcPalErrInvalid);
+  VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_create(&negative_pap_keep_alive_config, &handle), kEtcPalErrInvalid);
   VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_create(&valid_config, nullptr), kEtcPalErrInvalid);
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&valid_config, &handle), kEtcPalErrOk);
 }

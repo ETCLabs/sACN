@@ -73,7 +73,8 @@ static const SacnSourceConfig kTestSourceConfig = {
     SACN_SOURCE_INFINITE_UNIVERSES,
     false,
     kSacnIpV4AndIpV6,
-    SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT};
+    SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT,
+    SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT};
 static constexpr SacnSourceUniverseConfig kTestUniverseConfig = {1, 100, false, false, NULL, 0, 0};
 
 static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
@@ -248,6 +249,7 @@ protected:
   {
     SacnSourceConfig source_config = kTestSourceConfig;
     source_config.keep_alive_interval = keep_alive_interval;
+    source_config.pap_keep_alive_interval = keep_alive_interval;
     sacn_source_t source = AddSource(source_config);
     uint16_t universe = AddUniverse(source, kTestUniverseConfig);
     AddTestUnicastDests(source, universe);
@@ -354,7 +356,7 @@ protected:
     {
       for (int j = 0; j <= 10; ++j)
       {
-        etcpal_getms_fake.return_val += ((source_config.keep_alive_interval / 10) + 1);
+        etcpal_getms_fake.return_val += ((keep_alive_interval / 10) + 1);
         VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
       }
 
@@ -1946,7 +1948,7 @@ TEST_F(TestSourceState, ResetLevelAndPapTransmissionSuppressionWorks)
   EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.interval,
             (uint32_t)kTestSourceConfig.keep_alive_interval);
   EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.interval,
-            (uint32_t)kTestSourceConfig.keep_alive_interval);
+            (uint32_t)kTestSourceConfig.pap_keep_alive_interval);
 }
 
 TEST_F(TestSourceState, ResetLevelTransmissionSuppressionWorks)
@@ -1996,7 +1998,7 @@ TEST_F(TestSourceState, ResetPapTransmissionSuppressionWorks)
   EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.reset_time, etcpal_getms_fake.return_val);
   EXPECT_EQ(GetUniverse(source, universe)->level_keep_alive_timer.interval, 0u);
   EXPECT_EQ(GetUniverse(source, universe)->pap_keep_alive_timer.interval,
-            (uint32_t)kTestSourceConfig.keep_alive_interval);
+            (uint32_t)kTestSourceConfig.pap_keep_alive_interval);
 }
 
 TEST_F(TestSourceState, SetUniverseTerminatingWorks)
