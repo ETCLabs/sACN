@@ -60,6 +60,7 @@ void sacn_source_config_init(SacnSourceConfig* config)
     config->manually_process_source = false;
     config->ip_supported = kSacnIpV4AndIpV6;
     config->keep_alive_interval = SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT;
+    config->pap_keep_alive_interval = SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT;
   }
 }
 
@@ -112,7 +113,8 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
   if (result == kEtcPalErrOk)
   {
     if (!config || ETCPAL_UUID_IS_NULL(&config->cid) || !config->name ||
-        (strlen(config->name) > (SACN_SOURCE_NAME_MAX_LEN - 1)) || (config->keep_alive_interval <= 0) || !handle)
+        (strlen(config->name) > (SACN_SOURCE_NAME_MAX_LEN - 1)) || (config->keep_alive_interval <= 0) ||
+        (config->pap_keep_alive_interval <= 0) || !handle)
     {
       result = kEtcPalErrInvalid;
     }

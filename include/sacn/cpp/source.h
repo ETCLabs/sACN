@@ -89,9 +89,13 @@ public:
     /** What IP networking the source will support. */
     sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6};
 
-    /** The interval at which the source will send keep-alive packets during transmission suppression, in milliseconds.
-     */
+    /** The interval at which the source will send NULL start code keep-alive packets during transmission suppression,
+        in milliseconds. */
     int keep_alive_interval{SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT};
+
+    /** The interval at which the source will send per-address priority keep-alive packets during transmission
+        suppression, in milliseconds. */
+    int pap_keep_alive_interval{SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT};
 
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
@@ -931,7 +935,8 @@ inline SacnSourceConfig Source::TranslateConfig(const Settings& settings)
     settings.universe_count_max,
     settings.manually_process_source,
     settings.ip_supported,
-    settings.keep_alive_interval
+    settings.keep_alive_interval,
+    settings.pap_keep_alive_interval
   };
   // clang-format on
 

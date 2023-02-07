@@ -117,6 +117,7 @@ TEST_F(TestSource, SettingsConstructorWorks)
   EXPECT_EQ(settings.manually_process_source, false);
   EXPECT_EQ(settings.ip_supported, kSacnIpV4AndIpV6);
   EXPECT_EQ(settings.keep_alive_interval, SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
+  EXPECT_EQ(settings.pap_keep_alive_interval, SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT);
 }
 
 TEST_F(TestSource, SettingsIsValidWorks)
@@ -171,6 +172,7 @@ TEST_F(TestSource, StartupWorks)
     EXPECT_EQ(config->manually_process_source, false);
     EXPECT_EQ(config->ip_supported, kSacnIpV4AndIpV6);
     EXPECT_EQ(config->keep_alive_interval, SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
+    EXPECT_EQ(config->pap_keep_alive_interval, SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT);
     EXPECT_NE(handle, nullptr);
     *handle = kTestHandle;
     return kEtcPalErrOk;

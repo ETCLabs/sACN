@@ -65,8 +65,11 @@ typedef int sacn_source_t;
  */
 #define SACN_SOURCE_INFINITE_UNIVERSES 0
 
-/** The default keep-alive interval for sources, in milliseconds. */
+/** The default NULL start code keep-alive interval for sources, in milliseconds. */
 #define SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT 800
+
+/** The default per-address priority keep-alive interval for sources, in milliseconds. */
+#define SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT 800
 
 /** A set of configuration information for a sACN source. */
 typedef struct SacnSourceConfig
@@ -93,16 +96,20 @@ typedef struct SacnSourceConfig
   /** What IP networking the source will support.  The default is #kSacnIpV4AndIpV6. */
   sacn_ip_support_t ip_supported;
 
-  /** The interval at which the source will send keep-alive packets during transmission suppression, in milliseconds.
-      The default is #SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT. */
+  /** The interval at which the source will send keep-alive NULL start code packets during transmission suppression, in
+      milliseconds. The default is #SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT. */
   int keep_alive_interval;
+
+  /** The interval at which the source will send keep-alive per-address priority packets during transmission
+      suppression, in milliseconds. The default is #SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT. */
+  int pap_keep_alive_interval;
 } SacnSourceConfig;
 
 /** A default-value initializer for an SacnSourceConfig struct. */
-#define SACN_SOURCE_CONFIG_DEFAULT_INIT                                             \
-  {                                                                                 \
-    kEtcPalNullUuid, NULL, SACN_SOURCE_INFINITE_UNIVERSES, false, kSacnIpV4AndIpV6, \
-        SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT                                     \
+#define SACN_SOURCE_CONFIG_DEFAULT_INIT                                                      \
+  {                                                                                          \
+    kEtcPalNullUuid, NULL, SACN_SOURCE_INFINITE_UNIVERSES, false, kSacnIpV4AndIpV6,          \
+        SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT, SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT \
   }
 
 void sacn_source_config_init(SacnSourceConfig* config);
