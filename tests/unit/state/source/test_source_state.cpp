@@ -162,10 +162,10 @@ protected:
     sacn_source_mem_deinit();
   }
 
-  int RunThreadCycle()
+  int RunThreadCycle(process_sources_behavior_t behavior = kProcessThreadedSources)
   {
-    take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsOnly);
-    return take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessPapOnly);
+    take_lock_and_process_sources(behavior, kSacnSourceTickModeProcessLevelsOnly);
+    return take_lock_and_process_sources(behavior, kSacnSourceTickModeProcessPapOnly);
   }
 
   sacn_source_t AddSource(const SacnSourceConfig& config)
@@ -435,9 +435,8 @@ TEST_F(TestSourceState, ProcessSourcesCountsSources)
   AddSource(config);
   int num_threaded_sources = ((int)get_num_sources() - num_manual_sources);
 
-  VERIFY_LOCKING_AND_RETURN_VALUE(
-      take_lock_and_process_sources(kProcessManualSources, kSacnSourceTickModeProcessLevelsAndPap), num_manual_sources);
-  VERIFY_LOCKING_AND_RETURN_VALUE(RunThreadCycle(), num_threaded_sources);
+  VERIFY_LOCKING_AND_RETURN_VALUE(RunThreadCycle(kProcessManualSources), num_manual_sources);
+  VERIFY_LOCKING_AND_RETURN_VALUE(RunThreadCycle(kProcessThreadedSources), num_threaded_sources);
 }
 
 TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
@@ -459,8 +458,8 @@ TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
 
   EXPECT_EQ(initialize_source_thread(), kEtcPalErrOk);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessManualSources, kSacnSourceTickModeProcessLevelsAndPap));
-  VERIFY_LOCKING(RunThreadCycle());
+  VERIFY_LOCKING(RunThreadCycle(kProcessManualSources));
+  VERIFY_LOCKING(RunThreadCycle(kProcessThreadedSources));
 
   EXPECT_EQ((GetSource(manual_source_1))->terminating, false);
   EXPECT_EQ((GetSource(manual_source_2))->terminating, false);
@@ -469,14 +468,14 @@ TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
 
   sacn_source_state_deinit();
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessManualSources, kSacnSourceTickModeProcessLevelsAndPap));
+  VERIFY_LOCKING(RunThreadCycle(kProcessManualSources));
 
   EXPECT_EQ((GetSource(manual_source_1))->terminating, false);
   EXPECT_EQ((GetSource(manual_source_2))->terminating, false);
   EXPECT_EQ((GetSource(threaded_source_1))->terminating, false);
   EXPECT_EQ((GetSource(threaded_source_2))->terminating, false);
 
-  VERIFY_LOCKING(RunThreadCycle());
+  VERIFY_LOCKING(RunThreadCycle(kProcessThreadedSources));
 
   EXPECT_EQ((GetSource(manual_source_1))->terminating, false);
   EXPECT_EQ((GetSource(manual_source_2))->terminating, false);
