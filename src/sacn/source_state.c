@@ -64,8 +64,8 @@ static int process_sources(process_sources_behavior_t behavior);
 static bool process_universe_discovery(SacnSource* source);
 static bool process_universes(SacnSource* source);
 static void process_stats_log(SacnSource* source, bool all_sends_succeeded);
-static bool process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, bool* terminating);
-static bool process_universe_termination(SacnSource* source, size_t index, bool unicast_terminating);
+static bool process_unicast_termination(SacnSource* source, SacnSourceUniverse* universe, bool* terminating);
+static bool process_multicast_termination(SacnSource* source, size_t index, bool unicast_terminating);
 static bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe);
 static bool send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe);
 static bool send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe,
@@ -277,7 +277,7 @@ bool process_universes(SacnSource* source)
 
     // Unicast destination-specific processing
     bool unicast_terminating;
-    all_sends_succeeded = process_unicast_dests(source, universe, &unicast_terminating);
+    all_sends_succeeded = process_unicast_termination(source, universe, &unicast_terminating);
 
     // Either transmit start codes 0x00 & 0xDD, or terminate and clean up universe
     if (universe->termination_state == kNotTerminating)
@@ -287,7 +287,7 @@ bool process_universes(SacnSource* source)
     else
     {
       all_sends_succeeded = all_sends_succeeded &&
-                            process_universe_termination(source, initial_num_universes - 1 - i, unicast_terminating);
+                            process_multicast_termination(source, initial_num_universes - 1 - i, unicast_terminating);
     }
 
     increment_sequence_number(universe);
@@ -330,7 +330,7 @@ void process_stats_log(SacnSource* source, bool all_sends_succeeded)
 }
 
 // Needs lock
-bool process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, bool* terminating)
+bool process_unicast_termination(SacnSource* source, SacnSourceUniverse* universe, bool* terminating)
 {
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(terminating))
     return false;
@@ -361,7 +361,7 @@ bool process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, boo
 }
 
 // Needs lock
-bool process_universe_termination(SacnSource* source, size_t index, bool unicast_terminating)
+bool process_multicast_termination(SacnSource* source, size_t index, bool unicast_terminating)
 {
   if (!SACN_ASSERT_VERIFY(source))
     return false;
