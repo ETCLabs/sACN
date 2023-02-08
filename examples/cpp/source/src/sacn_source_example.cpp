@@ -35,15 +35,11 @@
  * Constants
  **************************************************************************************************/
 
-#define UNIVERSE_INVALID 0
-#define UNIVERSE_MIN     1
-#define UNIVERSE_MAX     63999
-#define LEVEL_MIN 0
-#define LEVEL_MAX 255
-#define BEGIN_BORDER_STRING \
-  ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
-#define END_BORDER_STRING \
-  "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n"
+constexpr const uint16_t UNIVERSE_INVALID = 0;
+constexpr const uint16_t UNIVERSE_MIN = 1;
+constexpr const uint16_t UNIVERSE_MAX = 63999;
+constexpr const uint8_t LEVEL_MIN = 0;
+constexpr const uint8_t LEVEL_MAX = 255;
 
 /**************************************************************************************************
  * Logging Callback
@@ -72,7 +68,7 @@ extern void install_keyboard_interrupt_handler(void (*handler)());
 
 void UniverseInfo::SetEffectStateConstant(const uint8_t level)
 {
-  effect_ = kEffectConstant;
+  effect_ = Effect::kConstant;
   for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
   {
     levels_[i] = level;
@@ -81,7 +77,7 @@ void UniverseInfo::SetEffectStateConstant(const uint8_t level)
 
 void UniverseInfo::SetEffectStateRamping()
 {
-  effect_ = kEffectRamp;
+  effect_ = Effect::kRamp;
   for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
   {
     levels_[i] = LEVEL_MIN;
@@ -90,13 +86,13 @@ void UniverseInfo::SetEffectStateRamping()
 
 void UniverseInfo::SetPriorityStateUniverse(const uint8_t universe_priority)
 {
-  priority_type_ = kUniversePriority;
+  priority_type_ = Priority::kUniverse;
   universe_priority_ = universe_priority;
 } // SetPriorityStateUniverse
 
 void UniverseInfo::SetPriorityStatePerAddress(const uint8_t per_address_priority)
 {
-  priority_type_ = kPerAddressPriority;
+  priority_type_ = Priority::kPerAddress;
   for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
   {
     per_address_priorities_[i] = per_address_priority;
@@ -132,7 +128,7 @@ SACNSourceExample::SACNSourceExample()
     network_select_.InitializeNics();
     network_select_.SelectNics();
     continue_ramping_ = true;
-    if (InitSACNLibrary().IsOk() && InitSACNSource().IsOk() && StartRampThread().IsOk())
+    if (InitSACNLibrary() && InitSACNSource() && StartRampThread())
     {
       RunSourceExample();
     }
@@ -143,7 +139,7 @@ SACNSourceExample::~SACNSourceExample()
 {
   continue_ramping_ = false;
   etcpal::Error result = ramp_thread_.Join();
-  if (!result.IsOk())
+  if (!result)
   {
     std::cout << "Waiting for ramping thread to finish failed, " << result.ToString() << "\n";
   }
@@ -156,7 +152,7 @@ bool SACNSourceExample::InitEtcPal()
 {
   std::cout << "Initializing ETCPAL... ";
   etcpal::Error result = etcpal_init(ETCPAL_FEATURE_NETINTS);
-  if (result.IsOk())
+  if (result)
   {
     std::cout << "success\n";
     return true;
@@ -177,7 +173,7 @@ etcpal::Error SACNSourceExample::InitSACNLibrary()
 
   std::cout << "Initializing sACN library... ";
   etcpal::Error result = sacn::Init(&log_params, netints);
-  if (result.IsOk())
+  if (result)
   {
     std::cout << "success\n";
   }
@@ -200,7 +196,7 @@ etcpal::Error SACNSourceExample::InitSACNSource()
   sacn::Source::Settings my_config(my_cid, my_name);
   std::cout << "Starting sACN source... ";
   etcpal::Error result = sacn_source_.Startup(my_config);
-  if (result.IsOk())
+  if (result)
   {
     std::cout << "success\n";
   }
@@ -245,7 +241,7 @@ etcpal::Error SACNSourceExample::StartRampThread()
 {
   std::cout << "Starting ramp thread... ";
   etcpal::Error result = ramp_thread_.Start(RampFunction, this);
-  if (result.IsOk())
+  if (result)
   {
     std::cout << "success\n";
   }
@@ -258,7 +254,7 @@ etcpal::Error SACNSourceExample::StartRampThread()
 
 void SACNSourceExample::PrintHelp()
 {
-  std::cout << BEGIN_BORDER_STRING;
+  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
   std::cout << "Commands\n";
   std::cout << "========\n";
   std::cout << "h : Print help.\n";
@@ -268,7 +264,7 @@ void SACNSourceExample::PrintHelp()
   std::cout << "- : Remove a unicast address.\n";
   std::cout << "n : Reset networking.\n";
   std::cout << "q : Exit.\n";
-  std::cout << END_BORDER_STRING;
+  std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n";
 }  // PrintHelp
 
 void SACNSourceExample::AddUniverse()
@@ -332,7 +328,7 @@ bool SACNSourceExample::AddNewUniverseToSACNSource(const uint16_t new_universe,
   std::vector<SacnMcastInterface> netints = network_select_.GetMcastInterfaces();
   std::cout << "Adding universe " << new_universe << "... ";
   etcpal::Error result = sacn_source_.AddUniverse(sacn::Source::UniverseSettings(new_universe), netints);
-  if (result.IsOk())
+  if (result)
   {
     bool success = true;
     for (SacnMcastInterface netint : netints)
@@ -350,7 +346,7 @@ bool SACNSourceExample::AddNewUniverseToSACNSource(const uint16_t new_universe,
       {
         std::cout << "Setting universe priority... ";
         etcpal::Error local_result = sacn_source_.ChangePriority(new_universe, new_universe_info->universe_priority_);
-        if (local_result.IsOk())
+        if (local_result)
         {
           std::cout << "success\n";
           std::cout << "Setting levels... ";

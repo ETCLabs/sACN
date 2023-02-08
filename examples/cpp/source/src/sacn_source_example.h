@@ -34,29 +34,29 @@
 class UniverseInfo
 {
 public:
-  typedef enum
+  enum class Effect
   {
-    kEffectConstant,
-    kEffectRamp
-  } effect_t;
+    kConstant,
+    kRamp
+  };
 
-  typedef enum
+  enum class Priority
   {
-    kUniversePriority,
-    kPerAddressPriority
-  } priority_type_t;
+    kUniverse,
+    kPerAddress
+  };
 
   UniverseInfo() = default;
   void SetEffectStateConstant(const uint8_t level);
   void SetEffectStateRamping();
   void SetPriorityStateUniverse(const uint8_t universe_priority);
   void SetPriorityStatePerAddress(const uint8_t per_address_priority);
-  bool IsUniversePriority() const { return priority_type_ == kUniversePriority; }
-  bool IsRamping() const { return effect_ == kEffectRamp; }
+  bool IsUniversePriority() const { return priority_type_ == Priority::kUniverse; }
+  bool IsRamping() const { return effect_ == Effect::kRamp; }
   void IncrementLevels();
 
-  effect_t effect_;
-  priority_type_t priority_type_;
+  Effect effect_;
+  Priority priority_type_;
   uint8_t universe_priority_;
   uint8_t per_address_priorities_[DMX_ADDRESS_COUNT];
   uint8_t levels_[DMX_ADDRESS_COUNT];
