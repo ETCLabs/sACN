@@ -151,7 +151,8 @@ protected:
 
   void RunThreadCycle()
   {
-    take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap);
+    take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsOnly);
+    take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessPapOnly);
   }
 
   void ResetNetworking(Source& source, const std::deque<SacnMcastInterface>& sys_netints)

@@ -164,7 +164,8 @@ protected:
 
   int RunThreadCycle()
   {
-    return take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap);
+    take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsOnly);
+    return take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessPapOnly);
   }
 
   sacn_source_t AddSource(const SacnSourceConfig& config)
@@ -285,7 +286,7 @@ protected:
           ++num_pap_multicast_sends;
           EXPECT_EQ(num_pap_multicast_sends,
                     (num_level_multicast_sends - kTestNetints.size()) + current_netint_index + 1);
-          EXPECT_EQ(send_buf[SACN_SEQ_OFFSET], test_universe->next_seq_num + 1u);
+          EXPECT_EQ(send_buf[SACN_SEQ_OFFSET], test_universe->next_seq_num);
         }
         else
         {
@@ -320,7 +321,7 @@ protected:
           ++num_pap_unicast_sends;
           EXPECT_EQ(num_pap_unicast_sends,
                     (num_level_unicast_sends - kTestRemoteAddrs.size()) + current_remote_addr_index + 1);
-          EXPECT_EQ(send_buf[SACN_SEQ_OFFSET], test_universe->next_seq_num + 1u);
+          EXPECT_EQ(send_buf[SACN_SEQ_OFFSET], test_universe->next_seq_num);
         }
         else
         {
