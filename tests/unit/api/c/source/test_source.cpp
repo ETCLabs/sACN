@@ -1498,12 +1498,12 @@ TEST_F(TestSource, SourceUpdateValuesAndPapAndForceSyncHandlesNotFound)
 
 TEST_F(TestSource, SourceProcessManualWorks)
 {
-  take_lock_and_process_sources_fake.custom_fake = [](process_sources_behavior_t behavior) {
+  take_lock_and_process_sources_fake.custom_fake = [](process_sources_behavior_t behavior, sacn_source_tick_mode_t) {
     EXPECT_EQ(behavior, kProcessManualSources);
     return kTestReturnInt;
   };
 
-  EXPECT_EQ(sacn_source_process_manual(), kTestReturnInt);
+  EXPECT_EQ(sacn_source_process_manual(kSacnSourceTickModeProcessLevelsAndPap), kTestReturnInt);
   EXPECT_EQ(take_lock_and_process_sources_fake.call_count, 1u);
 }
 

@@ -30,7 +30,7 @@ extern "C" {
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_state_init);
 DECLARE_FAKE_VOID_FUNC(sacn_source_state_deinit);
 
-DECLARE_FAKE_VALUE_FUNC(int, take_lock_and_process_sources, process_sources_behavior_t);
+DECLARE_FAKE_VALUE_FUNC(int, take_lock_and_process_sources, process_sources_behavior_t, sacn_source_tick_mode_t);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, initialize_source_thread);
 DECLARE_FAKE_VALUE_FUNC(sacn_source_t, get_next_source_handle);
 DECLARE_FAKE_VOID_FUNC(update_levels_and_or_pap, SacnSource*, SacnSourceUniverse*, const uint8_t*, size_t,

@@ -340,7 +340,7 @@ protected:
       EXPECT_EQ(test_universe->level_packets_sent_before_suppression, i);
       EXPECT_EQ(test_universe->pap_packets_sent_before_suppression, i);
       EXPECT_EQ(test_universe->next_seq_num, (uint8_t)(i * 2));
-      VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+      VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
     }
 
     EXPECT_EQ(test_universe->level_packets_sent_before_suppression, 4);
@@ -357,7 +357,7 @@ protected:
       for (int j = 0; j <= 10; ++j)
       {
         etcpal_getms_fake.return_val += ((keep_alive_interval / 10) + 1);
-        VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+        VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
       }
 
       EXPECT_EQ(test_universe->level_packets_sent_before_suppression, 4);
@@ -429,8 +429,11 @@ TEST_F(TestSourceState, ProcessSourcesCountsSources)
   AddSource(config);
   int num_threaded_sources = ((int)get_num_sources() - num_manual_sources);
 
-  VERIFY_LOCKING_AND_RETURN_VALUE(take_lock_and_process_sources(kProcessManualSources), num_manual_sources);
-  VERIFY_LOCKING_AND_RETURN_VALUE(take_lock_and_process_sources(kProcessThreadedSources), num_threaded_sources);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      take_lock_and_process_sources(kProcessManualSources, kSacnSourceTickModeProcessLevelsAndPap), num_manual_sources);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap),
+      num_threaded_sources);
 }
 
 TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
@@ -452,8 +455,8 @@ TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
 
   EXPECT_EQ(initialize_source_thread(), kEtcPalErrOk);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessManualSources));
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessManualSources, kSacnSourceTickModeProcessLevelsAndPap));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ((GetSource(manual_source_1))->terminating, false);
   EXPECT_EQ((GetSource(manual_source_2))->terminating, false);
@@ -462,14 +465,14 @@ TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
 
   sacn_source_state_deinit();
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessManualSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessManualSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ((GetSource(manual_source_1))->terminating, false);
   EXPECT_EQ((GetSource(manual_source_2))->terminating, false);
   EXPECT_EQ((GetSource(threaded_source_1))->terminating, false);
   EXPECT_EQ((GetSource(threaded_source_2))->terminating, false);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ((GetSource(manual_source_1))->terminating, false);
   EXPECT_EQ((GetSource(manual_source_2))->terminating, false);
@@ -495,12 +498,12 @@ TEST_F(TestSourceState, UniverseDiscoveryTimingIsCorrect)
 
   for (int i = 0; i < 10; ++i)
   {
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
     EXPECT_EQ(num_universe_discovery_sends, kTestNetints.size() * i);
 
     etcpal_getms_fake.return_val += SACN_UNIVERSE_DISCOVERY_INTERVAL;
 
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
     EXPECT_EQ(num_universe_discovery_sends, kTestNetints.size() * i);
 
     ++etcpal_getms_fake.return_val;
@@ -523,18 +526,18 @@ TEST_F(TestSourceState, SourceTerminatingStopsUniverseDiscovery)
   AddUniverse(source_handle, kTestUniverseConfig);
   InitTestData(source_handle, kTestUniverseConfig.universe, kTestBuffer);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
   EXPECT_EQ(num_universe_discovery_sends, 0u);
 
   etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
   EXPECT_EQ(num_universe_discovery_sends, kTestNetints.size());
 
   set_source_terminating(GetSource(source_handle));
   etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
   EXPECT_EQ(num_universe_discovery_sends, kTestNetints.size());
   EXPECT_EQ(get_num_sources(), 1u);
 }
@@ -561,7 +564,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsForEachPage)
 
     etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
 
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
     EXPECT_EQ(num_universe_discovery_sends, num_pages * kTestNetints.size());
 
     num_universe_discovery_sends = 0u;
@@ -633,7 +636,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
     }
 
     etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
   }
 }
 
@@ -659,7 +662,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectPageNumbers)
     AddUniverseForUniverseDiscovery(source_handle, universe_config);
 
   etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 }
 
 TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
@@ -688,7 +691,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
       AddUniverseForUniverseDiscovery(source_handle, universe_config);
 
     etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
   }
 }
 
@@ -719,7 +722,7 @@ TEST_F(TestSourceState, UniverseDiscoveryZeroesReservedBytes)
       AddUniverseForUniverseDiscovery(source_handle, universe_config);
 
     etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
   }
 }
 
@@ -746,7 +749,7 @@ TEST_F(TestSourceState, UniverseDiscoveryUsesCorrectNetints)
     AddUniverseForUniverseDiscovery(source_handle, universe_config, kTestNetints[i]);
 
   etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(num_universe_discovery_sends, kTestNetints.size());
 }
@@ -787,7 +790,7 @@ TEST_F(TestSourceState, UniverseDiscoveryExcludesUniversesWithoutData)
   }
 
   etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 }
 
 TEST_F(TestSourceState, UniverseDiscoveryExcludesUnicastOnlyUniverses)
@@ -822,7 +825,7 @@ TEST_F(TestSourceState, UniverseDiscoveryExcludesUnicastOnlyUniverses)
   }
 
   etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 }
 
 TEST_F(TestSourceState, RemovingUniversesUpdatesUniverseDiscovery)
@@ -867,7 +870,7 @@ TEST_F(TestSourceState, RemovingUniversesUpdatesUniverseDiscovery)
     for (int i = 0; i < 3; ++i)
     {
       etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
-      VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+      VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
     }
 
     EXPECT_EQ(num_universe_discovery_sends, kTestNetints.size() * 3u * (current_test_iteration + 1u));
@@ -902,7 +905,7 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateAndRemove)
     uint8_t old_seq_num = universe->next_seq_num;
 
     current_remote_addr_index = ((int)kTestRemoteAddrs.size() - 1);
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
     for (size_t j = 0; j < kTestRemoteAddrs.size(); ++j)
       EXPECT_EQ(universe->unicast_dests[j].num_terminations_sent, i + 1);
@@ -957,7 +960,7 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateWithoutRemoving)
     uint8_t old_seq_num = universe->next_seq_num;
 
     current_remote_addr_index = ((int)kTestRemoteAddrs.size() - 1);
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
     for (size_t j = 0u; j < kTestRemoteAddrs.size(); ++j)
     {
@@ -973,7 +976,7 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateWithoutRemoving)
   iteration = 2;
 
   current_remote_addr_index = ((int)kTestRemoteAddrs.size() - 1);
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   for (size_t j = 0u; j < kTestRemoteAddrs.size(); ++j)
   {
@@ -1002,7 +1005,7 @@ TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateAndRemove)
 
   EXPECT_EQ(universe->num_unicast_dests, kTestRemoteAddrs.size());
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(universe->num_unicast_dests, 0u);
   EXPECT_EQ(universe->next_seq_num - old_seq_num, (uint8_t)0u);  // No data to send.
@@ -1030,7 +1033,7 @@ TEST_F(TestSourceState, UnicastDestsWithoutDataTerminateWithoutRemoving)
     EXPECT_EQ(universe->unicast_dests[j].termination_state, kTerminatingWithoutRemoving);
   }
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(universe->num_unicast_dests, kTestRemoteAddrs.size());
 
@@ -1086,7 +1089,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
 
     current_universe = 1;
     current_netint_index = 0;
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
     if (i < 2)
     {
@@ -1151,7 +1154,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
 
     current_universe = 1;
     current_netint_index = 0;
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
     if (i < 2)
     {
@@ -1192,7 +1195,7 @@ TEST_F(TestSourceState, UniversesWithoutDataTerminateAndRemove)
 
   EXPECT_EQ(GetSource(source)->num_universes, 10u);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(GetSource(source)->num_universes, 0u);
   EXPECT_EQ(num_universe_data_sends, 0u);
@@ -1219,7 +1222,7 @@ TEST_F(TestSourceState, UniversesWithoutDataTerminateWithoutRemoving)
 
   EXPECT_EQ(GetSource(source)->num_universes, 10u);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(GetSource(source)->num_universes, 10u);
   EXPECT_EQ(num_universe_data_sends, 0u);
@@ -1250,7 +1253,7 @@ TEST_F(TestSourceState, InterruptTerminatingWithoutRemovingWorks)
   EXPECT_EQ(sacn_send_multicast_fake.call_count, 0u);
   EXPECT_EQ(sacn_send_unicast_fake.call_count, 0u);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size());
   EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size());
@@ -1270,34 +1273,34 @@ TEST_F(TestSourceState, InterruptTerminatingWithoutRemovingWorks)
 
   InitTestData(source, kTestUniverseConfig.universe, kTestBuffer2);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 2u);
   EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 2u);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 3u);
   EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 3u);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 4u);
   EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 4u);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 5u);
   EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 5u);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 5u);
   EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 5u);
 
   etcpal_getms_fake.return_val += (SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT + 1u);
 
-  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+  VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 6u);
   EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 6u);
@@ -1324,25 +1327,25 @@ TEST_F(TestSourceState, OnlyActiveUniverseRemovalsUpdateCounter)
 
   set_universe_terminating(GetUniverse(source, inactive_universe_1), kTerminateAndRemove);
   for (int i = 0; i < 3; ++i)
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(GetSource(source)->num_active_universes, old_count);
 
   set_universe_terminating(GetUniverse(source, inactive_universe_2), kTerminateAndRemove);
   for (int i = 0; i < 3; ++i)
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(GetSource(source)->num_active_universes, old_count);
 
   set_universe_terminating(GetUniverse(source, inactive_universe_3), kTerminateAndRemove);
   for (int i = 0; i < 3; ++i)
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(GetSource(source)->num_active_universes, old_count);
 
   set_universe_terminating(GetUniverse(source, active_universe), kTerminateAndRemove);
   for (int i = 0; i < 3; ++i)
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
 
   EXPECT_EQ(GetSource(source)->num_active_universes, old_count - 1u);
 }
@@ -1379,7 +1382,7 @@ TEST_F(TestSourceState, UniverseRemovalUpdatesSourceNetints)
     }
 
     set_universe_terminating(GetUniverse(source, (uint16_t)(i + 1u)), kTerminateAndRemove);
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
   }
 
   EXPECT_EQ(GetSource(source)->num_netints, 0u);
@@ -1422,7 +1425,7 @@ TEST_F(TestSourceState, SendUnicastOnlyWorks)
   for (int i = 0; i < 100; ++i)
   {
     etcpal_getms_fake.return_val += 100u;
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
   }
 
   EXPECT_EQ(num_universe_data_sends, 0u);
@@ -1459,7 +1462,7 @@ TEST_F(TestSourceState, TerminatingUnicastDestsOnlySendTerminations)
   for (int i = 0; i < 100; ++i)
   {
     etcpal_getms_fake.return_val += 100u;
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
   }
 }
 
@@ -1480,7 +1483,7 @@ TEST_F(TestSourceState, PapNotTransmittedIfNotAdded)
   for (int i = 0; i < 100; ++i)
   {
     etcpal_getms_fake.return_val += 100u;
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
   }
 }
 
@@ -1500,7 +1503,7 @@ TEST_F(TestSourceState, SourcesTerminateCorrectly)
   for (int i = 0; i < 3; ++i)
   {
     EXPECT_NE(GetSource(source), nullptr);
-    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources));
+    VERIFY_LOCKING(take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap));
   }
 
   EXPECT_EQ(GetSource(source), nullptr);

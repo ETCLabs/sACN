@@ -66,7 +66,7 @@ DECLARE_FAKE_VOID_FUNC(sacn_source_update_levels_and_force_sync, sacn_source_t, 
 DECLARE_FAKE_VOID_FUNC(sacn_source_update_levels_and_pap_and_force_sync, sacn_source_t, uint16_t, const uint8_t*,
                        size_t, const uint8_t*, size_t);
 
-DECLARE_FAKE_VALUE_FUNC(int, sacn_source_process_manual);
+DECLARE_FAKE_VALUE_FUNC(int, sacn_source_process_manual, sacn_source_tick_mode_t);
 
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_reset_networking, const SacnNetintConfig*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_reset_networking_per_universe, const SacnNetintConfig*,

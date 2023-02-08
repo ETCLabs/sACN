@@ -71,6 +71,17 @@ typedef int sacn_source_t;
 /** The default per-address priority keep-alive interval for sources, in milliseconds. */
 #define SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT 1000
 
+/** This enum determines the type of start code (levels and/or PAP) to process/transmit in a source tick. */
+typedef enum
+{
+  /** Process/send levels only (includes termination). */
+  kSacnSourceTickModeProcessLevelsOnly,
+  /** Process/send PAP only (excludes termination). */
+  kSacnSourceTickModeProcessPapOnly,
+  /** Process/send everything (both levels and PAP + termination). */
+  kSacnSourceTickModeProcessLevelsAndPap
+} sacn_source_tick_mode_t;
+
 /** A set of configuration information for a sACN source. */
 typedef struct SacnSourceConfig
 {
@@ -90,7 +101,8 @@ typedef struct SacnSourceConfig
 
   /** If false (default), this source will be added to a background thread that will send sACN updates at a
       maximum rate of every 23 ms. If true, the source will not be added to the thread and the application
-      must call sacn_source_process_manual() at its maximum DMX rate, typically 23 ms. */
+      must call sacn_source_process_manual() such that all needed start codes are sent at its maximum DMX rate,
+      typically 23 ms. */
   bool manually_process_source;
 
   /** What IP networking the source will support.  The default is #kSacnIpV4AndIpV6. */
@@ -207,7 +219,7 @@ void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t handle, uint
                                                       const uint8_t* new_levels, size_t new_levels_size,
                                                       const uint8_t* new_priorities, size_t new_priorities_size);
 
-int sacn_source_process_manual(void);
+int sacn_source_process_manual(sacn_source_tick_mode_t tick_mode);
 
 etcpal_error_t sacn_source_reset_networking(const SacnNetintConfig* sys_netint_config);
 etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig* sys_netint_config,

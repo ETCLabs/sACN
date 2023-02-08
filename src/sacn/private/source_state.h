@@ -54,7 +54,7 @@ extern "C" {
 etcpal_error_t sacn_source_state_init(void);
 void sacn_source_state_deinit(void);
 
-int take_lock_and_process_sources(process_sources_behavior_t behavior);
+int take_lock_and_process_sources(process_sources_behavior_t behavior, sacn_source_tick_mode_t tick_mode);
 etcpal_error_t initialize_source_thread();
 sacn_source_t get_next_source_handle();
 void update_levels_and_or_pap(SacnSource* source, SacnSourceUniverse* universe, const uint8_t* new_values,

@@ -985,19 +985,20 @@ void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t handle, uint
  *
  * Note: Unless you created the source with manually_process_source set to true, similar functionality will be
  * automatically called by an internal thread of the module. Otherwise, this must be called at the maximum rate
- * at which the application will send sACN.
+ * at which the application will send sACN (see tick_mode for details of what is actually sent in a call).
  *
  * Sends the current data for universes which have been updated, and sends keep-alive data for universes which
- * haven't been updated. Also destroys sources & universes that have been marked for termination after sending the
- * required three terminated packets.
+ * haven't been updated. If levels are processed (see tick_mode), this also destroys sources & universes that have been
+ * marked for termination after sending the required three terminated packets.
  *
+ * @param[in] tick_mode Specifies whether to process levels (and by extension termination) and/or PAP.
  * @return Current number of manual sources tracked by the library, including sources that have been destroyed but are
  * still sending termination packets. This can be useful on shutdown to track when destroyed sources have finished
  * sending the terminated packets and actually been destroyed.
  */
-int sacn_source_process_manual(void)
+int sacn_source_process_manual(sacn_source_tick_mode_t tick_mode)
 {
-  return take_lock_and_process_sources(kProcessManualSources);
+  return take_lock_and_process_sources(kProcessManualSources, tick_mode);
 }
 
 /**
