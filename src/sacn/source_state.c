@@ -58,6 +58,7 @@ static bool source_handle_in_use(int handle_val, void* cookie);
 static etcpal_error_t start_tick_thread();
 static void stop_tick_thread();
 
+static void sleep_until_time_elapsed(const EtcPalTimer* timer, uint32_t target_elapsed_ms);
 static void source_thread_function(void* arg);
 
 static int process_sources(process_sources_behavior_t behavior, sacn_source_tick_mode_t tick_mode);
@@ -145,6 +146,16 @@ void stop_tick_thread()
   etcpal_thread_join(&thread_handle);
 }
 
+void sleep_until_time_elapsed(const EtcPalTimer* timer, uint32_t target_elapsed_ms)
+{
+  uint32_t elapsed_ms = etcpal_timer_elapsed(timer);
+  while (elapsed_ms < target_elapsed_ms)
+  {
+    etcpal_thread_sleep(target_elapsed_ms - elapsed_ms);
+    elapsed_ms = etcpal_timer_elapsed(timer);
+  }
+}
+
 // Takes lock
 void source_thread_function(void* arg)
 {
@@ -161,10 +172,19 @@ void source_thread_function(void* arg)
   // num_thread_based_sources > 0).
   while (keep_running_thread || (num_thread_based_sources > 0))
   {
-    num_thread_based_sources =
-        take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsAndPap);  // TODO
+    // Space out sending of levels & PAP as follows:
+    // |------------------------------- 23ms -------------------------------|
+    // |--- Send Levels ---|              |--- Send PAP ---|
+    //
+    // This is to help reduce packet dropping when sending hundreds of universes.
+    take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsOnly);
 
-    etcpal_thread_sleep(etcpal_timer_remaining(&interval_timer));
+    sleep_until_time_elapsed(&interval_timer, SOURCE_THREAD_INTERVAL / 2);
+
+    num_thread_based_sources =
+        take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessPapOnly);
+
+    sleep_until_time_elapsed(&interval_timer, SOURCE_THREAD_INTERVAL);
     etcpal_timer_reset(&interval_timer);
 
     if (sacn_lock())
