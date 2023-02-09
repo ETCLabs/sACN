@@ -39,7 +39,7 @@ public:
   NetworkSelect();
   void InitializeNics(void);
   void SelectNics(void);
-  std::vector<SacnMcastInterface> GetMcastInterfaces(void);
+  std::vector<SacnMcastInterface> GetMcastInterfaces(void) const;
 
 private:
   struct EtcPalNetintInfoSelect
@@ -52,8 +52,8 @@ private:
     std::string addr_string;
   };
 
-  void PrintNics(void);
-  bool IsAnyNicSelected(void);
+  void PrintNics(void) const;
+  bool IsAnyNicSelected(void) const;
 
   std::list<std::unique_ptr<EtcPalNetintInfoSelect>> all_network_interfaces_;
 };

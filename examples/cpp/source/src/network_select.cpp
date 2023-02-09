@@ -40,25 +40,21 @@ void NetworkSelect::InitializeNics(void)
   {
     if ((strlen(netint->friendly_name) > 0) && (netint->addr.type != kEtcPalIpTypeInvalid))
     {
-      char addr_string[50];
-      etcpal_error_t result = etcpal_ip_to_string(&(netint->addr), addr_string);
-      if (result == kEtcPalErrOk)
-      {
-        std::unique_ptr<EtcPalNetintInfoSelect> network_interface = std::make_unique<EtcPalNetintInfoSelect>();
-        network_interface->selected = false;
-        network_interface->ui_index = char_index++;
-        network_interface->os_index = netint->index;
-        network_interface->addr = netint->addr;
-        network_interface->addr_string = addr_string;
-        network_interface->name = netint->friendly_name;
-        all_network_interfaces_.push_back(std::move(network_interface));
-      }
+      etcpal::IpAddr ip_address = netint->addr;
+      std::unique_ptr<EtcPalNetintInfoSelect> network_interface = std::make_unique<EtcPalNetintInfoSelect>();
+      network_interface->selected = false;
+      network_interface->ui_index = char_index++;
+      network_interface->os_index = netint->index;
+      network_interface->addr = netint->addr;
+      network_interface->addr_string = ip_address.ToString();
+      network_interface->name = netint->friendly_name;
+      all_network_interfaces_.push_back(std::move(network_interface));
     }
   }
   free(netints);
 } // InitializeNics
 
-void NetworkSelect::PrintNics(void)
+void NetworkSelect::PrintNics(void) const
 {
   std::cout << "Selected Index Network Interface\n";
   std::cout << "======== ===== =================\n";
@@ -77,7 +73,7 @@ void NetworkSelect::PrintNics(void)
   }
 } // PrintNics
 
-bool NetworkSelect::IsAnyNicSelected()
+bool NetworkSelect::IsAnyNicSelected() const
 {
   for (const auto& network_interface : all_network_interfaces_)
   {
@@ -128,7 +124,7 @@ void NetworkSelect::SelectNics(void)
   }
 }  // SelectNics
 
-std::vector<SacnMcastInterface> NetworkSelect::GetMcastInterfaces(void)
+std::vector<SacnMcastInterface> NetworkSelect::GetMcastInterfaces(void) const
 {
   std::vector<SacnMcastInterface> interfaces;
   for (const auto& network_interface : all_network_interfaces_)

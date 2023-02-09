@@ -28,33 +28,35 @@
 #include <unordered_map>
 #include "network_select.h"
 #include "sacn/cpp/source.h"
-#include "etcpal/thread.h"
-#include "etcpal/rwlock.h"
-
-typedef enum
-{
-  kEffectConstant,
-  kEffectRamp
-} effect_t;
-
-typedef enum
-{
-  kUniversePriority,
-  kPerAddressPriority
-} priority_type_t;
+#include "etcpal/cpp/mutex.h"
+#include "etcpal/cpp/thread.h"
 
 class UniverseInfo
 {
 public:
+  enum class Effect
+  {
+    kConstant,
+    kRamp
+  };
+
+  enum class Priority
+  {
+    kUniverse,
+    kPerAddress
+  };
+
   UniverseInfo() = default;
   void SetEffectStateConstant(const uint8_t level);
   void SetEffectStateRamping();
   void SetPriorityStateUniverse(const uint8_t universe_priority);
   void SetPriorityStatePerAddress(const uint8_t per_address_priority);
+  bool IsUniversePriority() const { return priority_type_ == Priority::kUniverse; }
+  bool IsRamping() const { return effect_ == Effect::kRamp; }
   void IncrementLevels();
 
-  effect_t effect_;
-  priority_type_t priority_type_;
+  Effect effect_;
+  Priority priority_type_;
   uint8_t universe_priority_;
   uint8_t per_address_priorities_[DMX_ADDRESS_COUNT];
   uint8_t levels_[DMX_ADDRESS_COUNT];
@@ -63,17 +65,17 @@ public:
 class SACNSourceExample
 {
 public:
-
   SACNSourceExample();
   ~SACNSourceExample();
   void DoRamping();
-  bool GetContinueRamping() { return continue_ramping_; }
+  bool GetContinueRamping() const { return continue_ramping_; }
 
 private:
+  static bool InitEtcPal();
   etcpal::Error InitSACNLibrary();
-  etcpal_error_t InitSACNSource();
-  etcpal_error_t StartRampThread();
-  void PrintHelp();
+  etcpal::Error InitSACNSource();
+  etcpal::Error StartRampThread();
+  static void PrintHelp();
   void AddUniverse();
   bool VerifyNewUniverse(uint16_t new_universe);
   bool AddNewUniverseToSACNSource(const uint16_t new_universe, const std::unique_ptr<UniverseInfo>& new_universe_info);
@@ -85,20 +87,20 @@ private:
   void RunSourceExample();
 
   /* utility functions */
-  uint8_t GetUint8FromInput(const uint8_t min, const uint8_t max, const std::string label);
-  uint16_t GetUniverseFromInput();
-  uint8_t GetUniversePriorityFromInput();
-  uint8_t GetPerAddressPriorityFromInput();
-  int GetSingleCharFromInput(const std::string prompt, const std::vector<int> valid_letters);
-  std::vector<std::string> split(const std::string& s, char separator);
-  etcpal::IpAddr GetIPAddressFromInput();
+  static uint8_t GetUint8FromInput(const uint8_t min, const uint8_t max, const std::string label);
+  static uint16_t GetUniverseFromInput();
+  static uint8_t GetUniversePriorityFromInput();
+  static uint8_t GetPerAddressPriorityFromInput();
+  static int GetSingleCharFromInput(const std::string prompt, const std::vector<int> valid_letters,
+                                    bool* ctrl_c_pressed);
+  static etcpal::IpAddr GetIPAddressFromInput();
 
   NetworkSelect network_select_;
   sacn::Source sacn_source_;
-  etcpal_rwlock_t universe_infos_lock_;
+  etcpal::Mutex universe_infos_mutex_;
   std::unordered_map < uint16_t, std::unique_ptr<UniverseInfo>> universe_infos_;
   bool continue_ramping_;
-  etcpal_thread_t ramp_thread_handle_;
+  etcpal::Thread ramp_thread_;
 };
 
 #endif  // SACN_SOURCE_EXAMPLE_H_
