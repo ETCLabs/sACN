@@ -58,15 +58,17 @@ static bool source_handle_in_use(int handle_val, void* cookie);
 static etcpal_error_t start_tick_thread();
 static void stop_tick_thread();
 
+static void sleep_until_time_elapsed(const EtcPalTimer* timer, uint32_t target_elapsed_ms);
 static void source_thread_function(void* arg);
 
-static int process_sources(process_sources_behavior_t behavior);
+static int process_sources(process_sources_behavior_t behavior, sacn_source_tick_mode_t tick_mode);
 static bool process_universe_discovery(SacnSource* source);
-static bool process_universes(SacnSource* source);
+static bool process_universes(SacnSource* source, sacn_source_tick_mode_t tick_mode);
 static void process_stats_log(SacnSource* source, bool all_sends_succeeded);
-static bool process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, bool* terminating);
-static bool process_universe_termination(SacnSource* source, size_t index, bool unicast_terminating);
-static bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe);
+static bool process_unicast_termination(SacnSource* source, SacnSourceUniverse* universe, bool* terminating);
+static bool process_multicast_termination(SacnSource* source, size_t index, bool unicast_terminating);
+static bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe,
+                                                sacn_source_tick_mode_t tick_mode);
 static bool send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe);
 static bool send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe,
                                      SacnUnicastDestination* dest);
@@ -144,6 +146,16 @@ void stop_tick_thread()
   etcpal_thread_join(&thread_handle);
 }
 
+void sleep_until_time_elapsed(const EtcPalTimer* timer, uint32_t target_elapsed_ms)
+{
+  uint32_t elapsed_ms = etcpal_timer_elapsed(timer);
+  while (elapsed_ms < target_elapsed_ms)
+  {
+    etcpal_thread_sleep(target_elapsed_ms - elapsed_ms);
+    elapsed_ms = etcpal_timer_elapsed(timer);
+  }
+}
+
 // Takes lock
 void source_thread_function(void* arg)
 {
@@ -160,9 +172,19 @@ void source_thread_function(void* arg)
   // num_thread_based_sources > 0).
   while (keep_running_thread || (num_thread_based_sources > 0))
   {
-    num_thread_based_sources = take_lock_and_process_sources(kProcessThreadedSources);
+    // Space out sending of levels & PAP as follows:
+    // |------------------------------- 23ms -------------------------------|
+    // |--- Send Levels ---|              |--- Send PAP ---|
+    //
+    // This is to help reduce packet dropping when sending hundreds of universes.
+    take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsOnly);
 
-    etcpal_thread_sleep(etcpal_timer_remaining(&interval_timer));
+    sleep_until_time_elapsed(&interval_timer, SOURCE_THREAD_INTERVAL / 2);
+
+    num_thread_based_sources =
+        take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessPapOnly);
+
+    sleep_until_time_elapsed(&interval_timer, SOURCE_THREAD_INTERVAL);
     etcpal_timer_reset(&interval_timer);
 
     if (sacn_lock())
@@ -174,13 +196,13 @@ void source_thread_function(void* arg)
 }
 
 // Takes lock
-int take_lock_and_process_sources(process_sources_behavior_t behavior)
+int take_lock_and_process_sources(process_sources_behavior_t behavior, sacn_source_tick_mode_t tick_mode)
 {
   int num_sources_tracked = 0;
 
   if (sacn_lock())
   {
-    num_sources_tracked = process_sources(behavior);
+    num_sources_tracked = process_sources(behavior, tick_mode);
     sacn_unlock();
   }
 
@@ -210,7 +232,7 @@ sacn_source_t get_next_source_handle()
 }
 
 // Needs lock
-int process_sources(process_sources_behavior_t behavior)
+int process_sources(process_sources_behavior_t behavior, sacn_source_tick_mode_t tick_mode)
 {
   int num_sources_tracked = 0;
 
@@ -232,7 +254,7 @@ int process_sources(process_sources_behavior_t behavior)
         ++num_sources_tracked;
 
         // Universe processing
-        bool all_sends_succeeded = process_universe_discovery(source) && process_universes(source);
+        bool all_sends_succeeded = process_universe_discovery(source) && process_universes(source, tick_mode);
         process_stats_log(source, all_sends_succeeded);
 
         // Clean up this source if needed
@@ -263,7 +285,7 @@ bool process_universe_discovery(SacnSource* source)
 }
 
 // Needs lock
-bool process_universes(SacnSource* source)
+bool process_universes(SacnSource* source, sacn_source_tick_mode_t tick_mode)
 {
   if (!SACN_ASSERT_VERIFY(source))
     return false;
@@ -276,18 +298,19 @@ bool process_universes(SacnSource* source)
     SacnSourceUniverse* universe = &source->universes[initial_num_universes - 1 - i];
 
     // Unicast destination-specific processing
-    bool unicast_terminating;
-    all_sends_succeeded = process_unicast_dests(source, universe, &unicast_terminating);
+    bool unicast_terminating = false;
+    if (tick_mode != kSacnSourceTickModeProcessPapOnly)  // Only do termination if processing levels
+      all_sends_succeeded = process_unicast_termination(source, universe, &unicast_terminating);
 
-    // Either transmit start codes 0x00 & 0xDD, or terminate and clean up universe
+    // Either transmit start codes 0x00 and/or 0xDD, or terminate and clean up universe
     if (universe->termination_state == kNotTerminating)
     {
-      all_sends_succeeded = all_sends_succeeded && transmit_levels_and_pap_when_needed(source, universe);
+      all_sends_succeeded = all_sends_succeeded && transmit_levels_and_pap_when_needed(source, universe, tick_mode);
     }
-    else
+    else if (tick_mode != kSacnSourceTickModeProcessPapOnly)  // Only do termination if processing levels
     {
       all_sends_succeeded = all_sends_succeeded &&
-                            process_universe_termination(source, initial_num_universes - 1 - i, unicast_terminating);
+                            process_multicast_termination(source, initial_num_universes - 1 - i, unicast_terminating);
     }
 
     increment_sequence_number(universe);
@@ -330,7 +353,7 @@ void process_stats_log(SacnSource* source, bool all_sends_succeeded)
 }
 
 // Needs lock
-bool process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, bool* terminating)
+bool process_unicast_termination(SacnSource* source, SacnSourceUniverse* universe, bool* terminating)
 {
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(terminating))
     return false;
@@ -361,7 +384,7 @@ bool process_unicast_dests(SacnSource* source, SacnSourceUniverse* universe, boo
 }
 
 // Needs lock
-bool process_universe_termination(SacnSource* source, size_t index, bool unicast_terminating)
+bool process_multicast_termination(SacnSource* source, size_t index, bool unicast_terminating)
 {
   if (!SACN_ASSERT_VERIFY(source))
     return false;
@@ -380,16 +403,23 @@ bool process_universe_termination(SacnSource* source, size_t index, bool unicast
 }
 
 // Needs lock
-bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe)
+bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe,
+                                         sacn_source_tick_mode_t tick_mode)
 {
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
     return false;
 
+  bool can_process_levels =
+      (tick_mode == kSacnSourceTickModeProcessLevelsOnly) || (tick_mode == kSacnSourceTickModeProcessLevelsAndPap);
+  bool can_process_pap =
+      (tick_mode == kSacnSourceTickModeProcessPapOnly) || (tick_mode == kSacnSourceTickModeProcessLevelsAndPap);
+
   bool all_sends_succeeded = true;
 
   // If 0x00 data is ready to send
-  if (universe->has_level_data && ((universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
-                                   etcpal_timer_is_expired(&universe->level_keep_alive_timer)))
+  if (can_process_levels && universe->has_level_data &&
+      ((universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
+       etcpal_timer_is_expired(&universe->level_keep_alive_timer)))
   {
     // Send 0x00 data & reset the keep-alive timer
     all_sends_succeeded = send_universe_multicast(source, universe, universe->level_send_buf);
@@ -402,10 +432,11 @@ bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse*
   }
 #if SACN_ETC_PRIORITY_EXTENSION
   // If 0xDD data is ready to send
-  if (universe->has_pap_data && ((universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
-                                 etcpal_timer_is_expired(&universe->pap_keep_alive_timer)))
+  if (can_process_pap && universe->has_pap_data &&
+      ((universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
+       etcpal_timer_is_expired(&universe->pap_keep_alive_timer)))
   {
-    // PAP will always be sent after levels, so if levels were sent, PAP's seq_num should be one greater.
+    // PAP will always be sent after levels, so if levels were sent this tick, PAP's seq_num should be one greater.
     // This is the only place where we can determine whether or not we need to do this prior to sending PAP. If we do,
     // the increment_sequence_number function will know to increment next_seq_num by 2 based on the send flags.
     // Likewise, if we don't, then it'll increment by 1.
