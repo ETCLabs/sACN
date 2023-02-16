@@ -2,7 +2,6 @@
 
 set(TEST_SOURCE_SOURCES
   test_cpp_source.cpp
-  test_cpp_ipv4_ipv6.cpp
   main.cpp
   
   ${SACN_SOURCES}
