@@ -377,3 +377,116 @@ TEST_F(TestSourceIpv4Ipv6, IPv4AndIPv6WorkTogether)
   EXPECT_TRUE(ipv4_packet_sent_);
   EXPECT_TRUE(ipv6_packet_sent_);
 }
+
+/*===========================================================================*/
+
+typedef struct UnicastInfo
+{
+  char addr_string[20];
+  bool found_dest_addr;
+} UnicastInfo;
+
+class TestSourceUnicast : public TestSourceBase
+{
+protected:
+  void SetUp() override
+  {
+    TestSourceBase::SetUp();
+
+    ResetSentInfo();
+
+    etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void*, size_t, int, const EtcPalSockAddr* dest_addr) {
+      if (dest_addr->ip.type == kEtcPalIpTypeV4)
+      {
+        ipv4_packet_sent_ = true;
+      }
+      else if (dest_addr->ip.type == kEtcPalIpTypeV6)
+      {
+        ipv6_packet_sent_ = true;
+      }
+
+      char s[100];
+      etcpal_ip_to_string(&(dest_addr->ip), s);
+      for (size_t i = 0; i < fake_unicasts_info_.size(); i++)
+      {
+        if (strcmp(fake_unicasts_info_[i].addr_string, s) == 0)
+        {
+          fake_unicasts_info_[i].found_dest_addr = true;
+        }
+      }
+
+      return 0;
+    };
+
+    ASSERT_EQ(Init().code(), kEtcPalErrOk);
+  }
+
+  void TearDown() override
+  {
+    source_.Shutdown();
+    Deinit();
+  }
+
+  void ResetSentInfo()
+  {
+    ipv4_packet_sent_ = false;
+    ipv6_packet_sent_ = false;
+    for (size_t i = 0; i < fake_unicasts_info_.size(); i++)
+    {
+      fake_unicasts_info_[i].found_dest_addr = false;
+    }
+  }
+
+  void StartAndRunSource(bool add_unicast)
+  {
+    Source::Settings settings(etcpal::Uuid::V4(), "Test Source");
+    EXPECT_EQ(source_.Startup(settings).code(), kEtcPalErrOk);
+    EXPECT_EQ(source_.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
+    source_.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+    if (add_unicast)
+    {
+      for (auto fake_unicast_info : fake_unicasts_info_)
+      {
+        etcpal::IpAddr dest_addr = etcpal::IpAddr::FromString(fake_unicast_info.addr_string);
+        source_.AddUnicastDestination(kTestUniverse, dest_addr);
+      }
+    }
+    for (int i = 0; i < 4; ++i)
+      RunThreadCycle();
+  }
+
+  static Source source_;
+  static bool ipv4_packet_sent_;
+  static bool ipv6_packet_sent_;
+  static std::vector<UnicastInfo> fake_unicasts_info_;
+};
+
+Source TestSourceUnicast::source_;
+bool TestSourceUnicast::ipv4_packet_sent_;
+bool TestSourceUnicast::ipv6_packet_sent_;
+std::vector<UnicastInfo> TestSourceUnicast::fake_unicasts_info_ = {
+    {"10.101.20.1", false},
+    {"10.101.20.2", false},
+};
+
+TEST_F(TestSourceUnicast, MulticastOnly)
+{
+  StartAndRunSource(false);
+  EXPECT_TRUE(ipv4_packet_sent_);
+  EXPECT_TRUE(ipv6_packet_sent_);
+  for (auto fake_unicast_info : fake_unicasts_info_)
+  {
+    EXPECT_FALSE(fake_unicast_info.found_dest_addr);
+  }
+}
+
+TEST_F(TestSourceUnicast, MulticastAndUnicast)
+{
+  StartAndRunSource(true);
+  EXPECT_TRUE(ipv4_packet_sent_);
+  EXPECT_TRUE(ipv6_packet_sent_);
+  for (auto fake_unicast_info : fake_unicasts_info_)
+  {
+    EXPECT_TRUE(fake_unicast_info.found_dest_addr);
+  }
+}
