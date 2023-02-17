@@ -79,7 +79,7 @@ static const std::vector<FakeNetworkInfo> kFakeNetworksInfo = {
     {7u, kEtcPalIpTypeV4, "60.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:27", "eth_v4_5", false},
 };
 
-class TestSourceParent : public ::testing::Test
+class TestSourceBase : public ::testing::Test
 {
 protected:
   void SetUp() override
@@ -162,16 +162,16 @@ protected:
   static std::vector<EtcPalNetintInfo> fake_netints_;
 };
 
-std::vector<EtcPalNetintInfo> TestSourceParent::fake_netints_;
+std::vector<EtcPalNetintInfo> TestSourceBase::fake_netints_;
 
 /*===========================================================================*/
 
-class TestSource : public TestSourceParent
+class TestSource : public TestSourceBase
 {
 protected:
   void SetUp() override
   {
-    TestSourceParent::SetUp();
+    TestSourceBase::SetUp();
 
     ASSERT_EQ(Init().code(), kEtcPalErrOk);
   }
@@ -298,23 +298,23 @@ TEST_F(TestSource, UniverseRemovalUsesOldNetintsAsAllowedByPerUniverseReset)
 
 /*===========================================================================*/
 
-class TestSourceIpv4Ipv6 : public TestSourceParent
+class TestSourceIpv4Ipv6 : public TestSourceBase
 {
 protected:
   void SetUp() override
   {
-    TestSourceParent::SetUp();
+    TestSourceBase::SetUp();
 
     ResetSentInfo();
 
     etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void*, size_t, int, const EtcPalSockAddr* dest_addr) {
       if (dest_addr->ip.type == kEtcPalIpTypeV4)
       {
-        ipv4_packet_sent = true;
+        ipv4_packet_sent_ = true;
       }
       else if (dest_addr->ip.type == kEtcPalIpTypeV6)
       {
-        ipv6_packet_sent = true;
+        ipv6_packet_sent_ = true;
       }
 
       return 0;
@@ -325,55 +325,55 @@ protected:
 
   void TearDown() override
   {
-    ipv4_ipv6_source.Shutdown();
+    ipv4_ipv6_source_.Shutdown();
     Deinit();
   }
 
   void ResetSentInfo()
   {
-    ipv4_packet_sent = false;
-    ipv6_packet_sent = false;
+    ipv4_packet_sent_ = false;
+    ipv6_packet_sent_ = false;
   }
 
   void StartAndRunSource(sacn_ip_support_t ip_supported)
   {
-    ipv4_ipv6_settings.ip_supported = ip_supported;
-    EXPECT_EQ(ipv4_ipv6_source.Startup(ipv4_ipv6_settings).code(), kEtcPalErrOk);
-    EXPECT_EQ(ipv4_ipv6_source.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
-    ipv4_ipv6_source.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+    ipv4_ipv6_settings_.ip_supported = ip_supported;
+    EXPECT_EQ(ipv4_ipv6_source_.Startup(ipv4_ipv6_settings_).code(), kEtcPalErrOk);
+    EXPECT_EQ(ipv4_ipv6_source_.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
+    ipv4_ipv6_source_.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
 
     for (int i = 0; i < 4; ++i)
       RunThreadCycle();
   }
 
-  static Source::Settings ipv4_ipv6_settings;
-  static Source ipv4_ipv6_source;
-  static bool ipv4_packet_sent;
-  static bool ipv6_packet_sent;
+  static Source::Settings ipv4_ipv6_settings_;
+  static Source ipv4_ipv6_source_;
+  static bool ipv4_packet_sent_;
+  static bool ipv6_packet_sent_;
 };
 
-Source::Settings TestSourceIpv4Ipv6::ipv4_ipv6_settings(etcpal::Uuid::V4(), "Test Source");
-Source TestSourceIpv4Ipv6::ipv4_ipv6_source;
-bool TestSourceIpv4Ipv6::ipv4_packet_sent;
-bool TestSourceIpv4Ipv6::ipv6_packet_sent;
+Source::Settings TestSourceIpv4Ipv6::ipv4_ipv6_settings_(etcpal::Uuid::V4(), "Test Source");
+Source TestSourceIpv4Ipv6::ipv4_ipv6_source_;
+bool TestSourceIpv4Ipv6::ipv4_packet_sent_;
+bool TestSourceIpv4Ipv6::ipv6_packet_sent_;
 
 TEST_F(TestSourceIpv4Ipv6, IPv4Works)
 {
   StartAndRunSource(kSacnIpV4Only);
-  EXPECT_TRUE(ipv4_packet_sent);
-  EXPECT_FALSE(ipv6_packet_sent);
+  EXPECT_TRUE(ipv4_packet_sent_);
+  EXPECT_FALSE(ipv6_packet_sent_);
 }
 
 TEST_F(TestSourceIpv4Ipv6, IPv6Works)
 {
   StartAndRunSource(kSacnIpV6Only);
-  EXPECT_FALSE(ipv4_packet_sent);
-  EXPECT_TRUE(ipv6_packet_sent);
+  EXPECT_FALSE(ipv4_packet_sent_);
+  EXPECT_TRUE(ipv6_packet_sent_);
 }
 
 TEST_F(TestSourceIpv4Ipv6, IPv4AndIPv6WorkTogether)
 {
   StartAndRunSource(kSacnIpV4AndIpV6);
-  EXPECT_TRUE(ipv4_packet_sent);
-  EXPECT_TRUE(ipv6_packet_sent);
+  EXPECT_TRUE(ipv4_packet_sent_);
+  EXPECT_TRUE(ipv6_packet_sent_);
 }
