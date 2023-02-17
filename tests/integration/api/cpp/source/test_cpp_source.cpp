@@ -57,12 +57,36 @@ static constexpr uint16_t kTestUniverse2 = 456u;
 
 static etcpal_socket_t next_socket = (etcpal_socket_t)0;
 
+typedef struct FakeNetworkInfo
+{
+  unsigned int index;
+  etcpal_iptype_t type;
+  char addr[20];
+  char mask_v4[20];
+  unsigned int mask_v6;
+  char mac[20];
+  char name[ETCPAL_NETINTINFO_ID_LEN];
+  bool is_default;
+} FakeNetworkInfo;
+
+static const std::vector<FakeNetworkInfo> kFakeNetworksInfo = {
+    {1u, kEtcPalIpTypeV4, "10.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:22", "eth_v4_0", true},
+    {2u, kEtcPalIpTypeV6, "fe80::1234", "", 64u, "00:c0:16:33:33:33", "eth_v6_0", false},
+    {3u, kEtcPalIpTypeV4, "20.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:23", "eth_v4_1", false},
+    {4u, kEtcPalIpTypeV4, "30.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:24", "eth_v4_2", false},
+    {5u, kEtcPalIpTypeV4, "40.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:25", "eth_v4_3", false},
+    {6u, kEtcPalIpTypeV4, "50.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:26", "eth_v4_4", false},
+    {7u, kEtcPalIpTypeV4, "60.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:27", "eth_v4_5", false},
+};
+
 class TestSourceParent : public ::testing::Test
 {
 protected:
   void SetUp() override
   {
     etcpal_reset_all_fakes();
+
+    PopulateFakeNetints();
 
     static auto validate_get_interfaces_args = [](EtcPalNetintInfo* netints, size_t* num_netints) {
       if (!num_netints)
@@ -106,6 +130,29 @@ protected:
     };
   }
 
+  void PopulateFakeNetints()
+  {
+    EtcPalNetintInfo fake_netint;
+    for (auto fake_network_info : kFakeNetworksInfo)
+    {
+      fake_netint.index = fake_network_info.index;
+      fake_netint.addr = etcpal::IpAddr::FromString(fake_network_info.addr).get();
+      if (fake_network_info.type == kEtcPalIpTypeV4)
+      {
+        fake_netint.mask = etcpal::IpAddr::FromString(fake_network_info.mask_v4).get();
+      }
+      else
+      {
+        fake_netint.mask = etcpal::IpAddr::NetmaskV6(fake_network_info.mask_v6).get();
+      }
+      fake_netint.mac = etcpal::MacAddr::FromString(fake_network_info.mac).get();
+      strcpy(fake_netint.id, fake_network_info.name);
+      strcpy(fake_netint.friendly_name, fake_network_info.name);
+      fake_netint.is_default = fake_network_info.is_default;
+      fake_netints_.push_back(fake_netint);
+    }
+  }
+
   void RunThreadCycle()
   {
     take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsOnly);
@@ -126,49 +173,10 @@ protected:
   {
     TestSourceParent::SetUp();
 
-    PopulateFakeNetints();
-
     ASSERT_EQ(Init().code(), kEtcPalErrOk);
   }
 
   void TearDown() override { Deinit(); }
-
-  void PopulateFakeNetints()
-  {
-    // Add a fake IPv4-only interface
-    EtcPalNetintInfo fake_netint_v4;
-    fake_netint_v4.index = 1u;
-    fake_netint_v4.addr = etcpal::IpAddr::FromString("10.101.20.30").get();
-    fake_netint_v4.mask = etcpal::IpAddr::FromString("255.255.0.0").get();
-    fake_netint_v4.mac = etcpal::MacAddr::FromString("00:c0:16:22:22:22").get();
-    strcpy(fake_netint_v4.id, "eth_v4_0");
-    strcpy(fake_netint_v4.friendly_name, "eth_v4_0");
-    fake_netint_v4.is_default = true;
-    fake_netints_.push_back(fake_netint_v4);
-
-    // Add a fake IPv6-only interface
-    EtcPalNetintInfo fake_netint_v6;
-    fake_netint_v6.index = 2u;
-    fake_netint_v6.addr = etcpal::IpAddr::FromString("fe80::1234").get();
-    fake_netint_v6.mask = etcpal::IpAddr::NetmaskV6(64).get();
-    fake_netint_v6.mac = etcpal::MacAddr::FromString("00:c0:16:33:33:33").get();
-    strcpy(fake_netint_v6.id, "eth_v6_0");
-    strcpy(fake_netint_v6.friendly_name, "eth_v6_0");
-    fake_netint_v6.is_default = false;
-    fake_netints_.push_back(fake_netint_v6);
-
-    // Add IPv4 test interfaces
-    for (auto netint : kTestV4Netints)
-    {
-      fake_netint_v4.index = netint.iface.index;
-      ++fake_netint_v4.addr.addr.v4;
-      ++fake_netint_v4.mac.data[ETCPAL_MAC_BYTES - 1];
-      ++fake_netint_v4.id[7];
-      ++fake_netint_v4.friendly_name[7];
-      fake_netint_v4.is_default = false;
-      fake_netints_.push_back(fake_netint_v4);
-    }
-  }
 
   void ResetNetworking(Source& source, const std::deque<SacnMcastInterface>& sys_netints)
   {
@@ -290,36 +298,12 @@ TEST_F(TestSource, UniverseRemovalUsesOldNetintsAsAllowedByPerUniverseReset)
 
 /*===========================================================================*/
 
-typedef struct FakeNetworkInfo
-{
-  unsigned int index;
-  etcpal_iptype_t type;
-  char addr[20];
-  char mask_v4[20];
-  unsigned int mask_v6;
-  char mac[20];
-  char name[ETCPAL_NETINTINFO_ID_LEN];
-  bool is_default;
-} FakeNetworkInfo;
-
-static std::vector<FakeNetworkInfo> fake_networks_info = {
-    {1u, kEtcPalIpTypeV4, "10.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:22", "eth_v4_0", true},
-    {2u, kEtcPalIpTypeV6, "fe80::1234", "", 64u, "00:c0:16:33:33:33", "eth_v6_0", false},
-};
-
-static Source::Settings ipv4_ipv6_settings(etcpal::Uuid::V4(), "Test Source");
-static Source ipv4_ipv6_source;
-static bool ipv4_packet_sent;
-static bool ipv6_packet_sent;
-
 class TestSourceIpv4Ipv6 : public TestSourceParent
 {
 protected:
   void SetUp() override
   {
     TestSourceParent::SetUp();
-
-    PopulateFakeNetints();
 
     ResetSentInfo();
 
@@ -345,29 +329,6 @@ protected:
     Deinit();
   }
 
-  void PopulateFakeNetints()
-  {
-    EtcPalNetintInfo fake_netint;
-    for (auto fake_network_info : fake_networks_info)
-    {
-      fake_netint.index = fake_network_info.index;
-      fake_netint.addr = etcpal::IpAddr::FromString(fake_network_info.addr).get();
-      if (fake_network_info.type == kEtcPalIpTypeV4)
-      {
-        fake_netint.mask = etcpal::IpAddr::FromString(fake_network_info.mask_v4).get();
-      }
-      else
-      {
-        fake_netint.mask = etcpal::IpAddr::NetmaskV6(fake_network_info.mask_v6).get();
-      }
-      fake_netint.mac = etcpal::MacAddr::FromString(fake_network_info.mac).get();
-      strcpy(fake_netint.id, fake_network_info.name);
-      strcpy(fake_netint.friendly_name, fake_network_info.name);
-      fake_netint.is_default = fake_network_info.is_default;
-      fake_netints_.push_back(fake_netint);
-    }
-  }
-
   void ResetSentInfo()
   {
     ipv4_packet_sent = false;
@@ -384,7 +345,17 @@ protected:
     for (int i = 0; i < 4; ++i)
       RunThreadCycle();
   }
+
+  static Source::Settings ipv4_ipv6_settings;
+  static Source ipv4_ipv6_source;
+  static bool ipv4_packet_sent;
+  static bool ipv6_packet_sent;
 };
+
+Source::Settings TestSourceIpv4Ipv6::ipv4_ipv6_settings(etcpal::Uuid::V4(), "Test Source");
+Source TestSourceIpv4Ipv6::ipv4_ipv6_source;
+bool TestSourceIpv4Ipv6::ipv4_packet_sent;
+bool TestSourceIpv4Ipv6::ipv6_packet_sent;
 
 TEST_F(TestSourceIpv4Ipv6, IPv4Works)
 {
