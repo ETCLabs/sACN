@@ -407,11 +407,11 @@ protected:
 
       char s[100];
       etcpal_ip_to_string(&(dest_addr->ip), s);
-      for (size_t i = 0; i < fake_unicasts_info_.size(); i++)
+      for (auto& fake_unicast_info : fake_unicasts_info_)
       {
-        if (strcmp(fake_unicasts_info_[i].addr_string, s) == 0)
+        if (strcmp(fake_unicast_info.addr_string, s) == 0)
         {
-          fake_unicasts_info_[i].found_dest_addr = true;
+          fake_unicast_info.found_dest_addr = true;
         }
       }
 
@@ -431,9 +431,9 @@ protected:
   {
     ipv4_packet_sent_ = false;
     ipv6_packet_sent_ = false;
-    for (size_t i = 0; i < fake_unicasts_info_.size(); i++)
+    for (auto& fake_unicast_info : fake_unicasts_info_)
     {
-      fake_unicasts_info_[i].found_dest_addr = false;
+      fake_unicast_info.found_dest_addr = false;
     }
   }
 
