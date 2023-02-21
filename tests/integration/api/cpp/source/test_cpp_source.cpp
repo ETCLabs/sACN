@@ -53,6 +53,8 @@ static const std::deque<SacnMcastInterface> kTestV4Netints = {{{kEtcPalIpTypeV4,
                                                               {{kEtcPalIpTypeV4, 7u}, kEtcPalErrOk}};
 
 static constexpr uint16_t kTestUniverse = 123u;
+static constexpr char kTestUniverseIPv4Multicast[] = "239.255.0.123";
+static constexpr char kTestUniverseIPv6Multicast[] = "ff18::8300:7b";
 static constexpr uint16_t kTestUniverse2 = 456u;
 
 static etcpal_socket_t next_socket = (etcpal_socket_t)0;
@@ -78,6 +80,12 @@ static const std::vector<FakeNetworkInfo> kFakeNetworksInfo = {
     {6u, kEtcPalIpTypeV4, "50.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:26", "eth_v4_4", false},
     {7u, kEtcPalIpTypeV4, "60.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:27", "eth_v4_5", false},
 };
+
+typedef struct UnicastInfo
+{
+  char addr_string[20];
+  bool found_dest_addr;
+} UnicastInfo;
 
 class TestSourceBase : public ::testing::Test
 {
@@ -160,9 +168,14 @@ protected:
   }
 
   static std::vector<EtcPalNetintInfo> fake_netints_;
+  static std::vector<UnicastInfo> fake_unicasts_info_;
 };
 
 std::vector<EtcPalNetintInfo> TestSourceBase::fake_netints_;
+std::vector<UnicastInfo> TestSourceBase::fake_unicasts_info_ = {
+    {"10.101.20.1", false},
+    {"10.101.20.2", false},
+};
 
 /*===========================================================================*/
 
@@ -308,13 +321,15 @@ protected:
     ResetSentInfo();
 
     etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void*, size_t, int, const EtcPalSockAddr* dest_addr) {
-      if (dest_addr->ip.type == kEtcPalIpTypeV4)
+      char dest_addr_ip_string[20];
+      etcpal_ip_to_string(&(dest_addr->ip), dest_addr_ip_string);
+      if (strcmp(dest_addr_ip_string, kTestUniverseIPv4Multicast) == 0)
       {
-        ipv4_packet_sent_ = true;
+        ipv4_multicast_packet_sent_ = true;
       }
-      else if (dest_addr->ip.type == kEtcPalIpTypeV6)
+      else if (strcmp(dest_addr_ip_string, kTestUniverseIPv6Multicast) == 0)
       {
-        ipv6_packet_sent_ = true;
+        ipv6_multicast_packet_sent_ = true;
       }
 
       return 0;
@@ -331,8 +346,8 @@ protected:
 
   void ResetSentInfo()
   {
-    ipv4_packet_sent_ = false;
-    ipv6_packet_sent_ = false;
+    ipv4_multicast_packet_sent_ = false;
+    ipv6_multicast_packet_sent_ = false;
   }
 
   void StartAndRunSource(sacn_ip_support_t ip_supported)
@@ -348,43 +363,37 @@ protected:
 
   static Source::Settings ipv4_ipv6_settings_;
   static Source ipv4_ipv6_source_;
-  static bool ipv4_packet_sent_;
-  static bool ipv6_packet_sent_;
+  static bool ipv4_multicast_packet_sent_;
+  static bool ipv6_multicast_packet_sent_;
 };
 
 Source::Settings TestSourceIpv4Ipv6::ipv4_ipv6_settings_(etcpal::Uuid::V4(), "Test Source");
 Source TestSourceIpv4Ipv6::ipv4_ipv6_source_;
-bool TestSourceIpv4Ipv6::ipv4_packet_sent_;
-bool TestSourceIpv4Ipv6::ipv6_packet_sent_;
+bool TestSourceIpv4Ipv6::ipv4_multicast_packet_sent_;
+bool TestSourceIpv4Ipv6::ipv6_multicast_packet_sent_;
 
 TEST_F(TestSourceIpv4Ipv6, IPv4Works)
 {
   StartAndRunSource(kSacnIpV4Only);
-  EXPECT_TRUE(ipv4_packet_sent_);
-  EXPECT_FALSE(ipv6_packet_sent_);
+  EXPECT_TRUE(ipv4_multicast_packet_sent_);
+  EXPECT_FALSE(ipv6_multicast_packet_sent_);
 }
 
 TEST_F(TestSourceIpv4Ipv6, IPv6Works)
 {
   StartAndRunSource(kSacnIpV6Only);
-  EXPECT_FALSE(ipv4_packet_sent_);
-  EXPECT_TRUE(ipv6_packet_sent_);
+  EXPECT_FALSE(ipv4_multicast_packet_sent_);
+  EXPECT_TRUE(ipv6_multicast_packet_sent_);
 }
 
 TEST_F(TestSourceIpv4Ipv6, IPv4AndIPv6WorkTogether)
 {
   StartAndRunSource(kSacnIpV4AndIpV6);
-  EXPECT_TRUE(ipv4_packet_sent_);
-  EXPECT_TRUE(ipv6_packet_sent_);
+  EXPECT_TRUE(ipv4_multicast_packet_sent_);
+  EXPECT_TRUE(ipv6_multicast_packet_sent_);
 }
 
 /*===========================================================================*/
-
-typedef struct UnicastInfo
-{
-  char addr_string[20];
-  bool found_dest_addr;
-} UnicastInfo;
 
 class TestSourceUnicast : public TestSourceBase
 {
@@ -396,22 +405,24 @@ protected:
     ResetSentInfo();
 
     etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void*, size_t, int, const EtcPalSockAddr* dest_addr) {
-      if (dest_addr->ip.type == kEtcPalIpTypeV4)
+      char dest_addr_ip_string[20];
+      etcpal_ip_to_string(&(dest_addr->ip), dest_addr_ip_string);
+      if (strcmp(dest_addr_ip_string, kTestUniverseIPv4Multicast) == 0)
       {
-        ipv4_packet_sent_ = true;
+        ipv4_multicast_packet_sent_ = true;
       }
-      else if (dest_addr->ip.type == kEtcPalIpTypeV6)
+      else if (strcmp(dest_addr_ip_string, kTestUniverseIPv6Multicast) == 0)
       {
-        ipv6_packet_sent_ = true;
+        ipv6_multicast_packet_sent_ = true;
       }
-
-      char s[100];
-      etcpal_ip_to_string(&(dest_addr->ip), s);
-      for (auto& fake_unicast_info : fake_unicasts_info_)
+      else
       {
-        if (strcmp(fake_unicast_info.addr_string, s) == 0)
+        for (auto& fake_unicast_info : fake_unicasts_info_)
         {
-          fake_unicast_info.found_dest_addr = true;
+          if (strcmp(fake_unicast_info.addr_string, dest_addr_ip_string) == 0)
+          {
+            fake_unicast_info.found_dest_addr = true;
+          }
         }
       }
 
@@ -429,8 +440,8 @@ protected:
 
   void ResetSentInfo()
   {
-    ipv4_packet_sent_ = false;
-    ipv6_packet_sent_ = false;
+    ipv4_multicast_packet_sent_ = false;
+    ipv6_multicast_packet_sent_ = false;
     for (auto& fake_unicast_info : fake_unicasts_info_)
     {
       fake_unicast_info.found_dest_addr = false;
@@ -456,24 +467,19 @@ protected:
   }
 
   static Source source_;
-  static bool ipv4_packet_sent_;
-  static bool ipv6_packet_sent_;
-  static std::vector<UnicastInfo> fake_unicasts_info_;
+  static bool ipv4_multicast_packet_sent_;
+  static bool ipv6_multicast_packet_sent_;
 };
 
 Source TestSourceUnicast::source_;
-bool TestSourceUnicast::ipv4_packet_sent_;
-bool TestSourceUnicast::ipv6_packet_sent_;
-std::vector<UnicastInfo> TestSourceUnicast::fake_unicasts_info_ = {
-    {"10.101.20.1", false},
-    {"10.101.20.2", false},
-};
+bool TestSourceUnicast::ipv4_multicast_packet_sent_;
+bool TestSourceUnicast::ipv6_multicast_packet_sent_;
 
 TEST_F(TestSourceUnicast, MulticastOnly)
 {
   StartAndRunSource(false);
-  EXPECT_TRUE(ipv4_packet_sent_);
-  EXPECT_TRUE(ipv6_packet_sent_);
+  EXPECT_TRUE(ipv4_multicast_packet_sent_);
+  EXPECT_TRUE(ipv6_multicast_packet_sent_);
   for (auto fake_unicast_info : fake_unicasts_info_)
   {
     EXPECT_FALSE(fake_unicast_info.found_dest_addr);
@@ -483,10 +489,113 @@ TEST_F(TestSourceUnicast, MulticastOnly)
 TEST_F(TestSourceUnicast, MulticastAndUnicast)
 {
   StartAndRunSource(true);
-  EXPECT_TRUE(ipv4_packet_sent_);
-  EXPECT_TRUE(ipv6_packet_sent_);
+  EXPECT_TRUE(ipv4_multicast_packet_sent_);
+  EXPECT_TRUE(ipv6_multicast_packet_sent_);
   for (auto fake_unicast_info : fake_unicasts_info_)
   {
     EXPECT_TRUE(fake_unicast_info.found_dest_addr);
   }
+}
+
+/*===========================================================================*/
+
+static constexpr uint8_t kCidLength = 16u;
+static constexpr uint8_t kDmxCidOffset = 22u; /* DMX packet CID offset
+                                                 preamble:     2 bytes
+                                                 postamble:    2 bytes
+                                                 "ASC-E1.17": 12 bytes
+                                                 flags & len:  2 bytes
+                                                 protocol:     4 bytes
+                                                 cid:         16 bytes
+                                              */
+
+class TestSourceCID : public TestSourceBase
+{
+protected:
+  void SetUp() override
+  {
+    TestSourceBase::SetUp();
+
+    ResetSentInfo();
+
+    etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void* message, size_t, int,
+                                        const EtcPalSockAddr* dest_addr) {
+      const uint8_t* source_cid_data = settings_.cid.data();
+      bool cid_match = (memcmp(source_cid_data, &(((uint8_t*)message)[kDmxCidOffset]), kCidLength) == 0);
+      if (cid_match)
+      {
+        char dest_addr_ip_string[20];
+        etcpal_ip_to_string(&(dest_addr->ip), dest_addr_ip_string);
+        if (strcmp(dest_addr_ip_string, kTestUniverseIPv4Multicast) == 0)
+        {
+          ipv4_multicast_cid_found_ = true;
+        }
+        else if (strcmp(dest_addr_ip_string, kTestUniverseIPv6Multicast) == 0)
+        {
+          ipv6_multicast_cid_found_ = true;
+        }
+        else
+        {
+          for (auto& fake_unicast_info : fake_unicasts_info_)
+          {
+            if (strcmp(fake_unicast_info.addr_string, dest_addr_ip_string) == 0)
+            {
+              unicast_cid_found_ = true;
+            }
+          }
+        }
+      }
+
+      return 0;
+    };
+
+    ASSERT_EQ(Init().code(), kEtcPalErrOk);
+  }
+
+  void TearDown() override
+  {
+    source_.Shutdown();
+    Deinit();
+  }
+
+  void ResetSentInfo()
+  {
+    ipv4_multicast_cid_found_ = false;
+    ipv6_multicast_cid_found_ = false;
+    unicast_cid_found_ = false;
+  }
+
+  void StartAndRunSource()
+  {
+    EXPECT_EQ(source_.Startup(settings_).code(), kEtcPalErrOk);
+    EXPECT_EQ(source_.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
+    source_.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+    for (auto fake_unicast_info : fake_unicasts_info_)
+    {
+      etcpal::IpAddr dest_addr = etcpal::IpAddr::FromString(fake_unicast_info.addr_string);
+      source_.AddUnicastDestination(kTestUniverse, dest_addr);
+    }
+    for (int i = 0; i < 4; ++i)
+      RunThreadCycle();
+  }
+
+  static Source source_;
+  static Source::Settings settings_;
+  static bool ipv4_multicast_cid_found_;
+  static bool ipv6_multicast_cid_found_;
+  static bool unicast_cid_found_;
+};
+
+Source TestSourceCID::source_;
+Source::Settings TestSourceCID::settings_(etcpal::Uuid::V4(), "Test Source");
+bool TestSourceCID::ipv4_multicast_cid_found_;
+bool TestSourceCID::ipv6_multicast_cid_found_;
+bool TestSourceCID::unicast_cid_found_;
+
+TEST_F(TestSourceCID, SourceCID)
+{
+  StartAndRunSource();
+  EXPECT_TRUE(ipv4_multicast_cid_found_);
+  EXPECT_TRUE(ipv6_multicast_cid_found_);
+  EXPECT_TRUE(unicast_cid_found_);
 }
