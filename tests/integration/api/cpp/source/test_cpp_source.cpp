@@ -187,12 +187,12 @@ protected:
     take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessPapOnly);
   }
 
-  static bool IsIPv4Multicast(const etcpal::SockAddr sock_addr)
+  static bool IsIPv4Multicast(const etcpal::SockAddr& sock_addr)
   {
     return (sock_addr.ip().ToString() == kTestUniverseIPv4Multicast);
   }
 
-  static bool IsIPv6Multicast(const etcpal::SockAddr sock_addr)
+  static bool IsIPv6Multicast(const etcpal::SockAddr& sock_addr)
   {
     return (sock_addr.ip().ToString() == kTestUniverseIPv6Multicast);
   }
