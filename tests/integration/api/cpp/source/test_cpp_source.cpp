@@ -187,15 +187,13 @@ protected:
     take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessPapOnly);
   }
 
-  static bool IsIPv4Multicast(const EtcPalSockAddr* addr)
+  static bool IsIPv4Multicast(const etcpal::SockAddr sock_addr)
   {
-    etcpal::SockAddr sock_addr(*addr);
     return (sock_addr.ip().ToString() == kTestUniverseIPv4Multicast);
   }
 
-  static bool IsIPv6Multicast(const EtcPalSockAddr* addr)
+  static bool IsIPv6Multicast(const etcpal::SockAddr sock_addr)
   {
-    etcpal::SockAddr sock_addr(*addr);
     return (sock_addr.ip().ToString() == kTestUniverseIPv6Multicast);
   }
 
@@ -356,11 +354,11 @@ protected:
     TestSourceBase::SetUp();
 
     etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void*, size_t, int, const EtcPalSockAddr* dest_addr) {
-      if (IsIPv4Multicast(dest_addr))
+      if (IsIPv4Multicast(etcpal::SockAddr(*dest_addr)))
       {
         ipv4_multicast_packet_sent_ = true;
       }
-      else if (IsIPv6Multicast(dest_addr))
+      else if (IsIPv6Multicast(etcpal::SockAddr(*dest_addr)))
       {
         ipv6_multicast_packet_sent_ = true;
       }
@@ -371,7 +369,7 @@ protected:
     ASSERT_EQ(Init().code(), kEtcPalErrOk);
   }
   
-  void StartAndRunSource(sacn_ip_support_t ip_supported)
+  void StartAndRunSource(const sacn_ip_support_t ip_supported)
   {
     settings_.ip_supported = ip_supported;
     StartAndAddUniverse();
@@ -413,17 +411,17 @@ protected:
     ResetUnicastSentInfo();
 
     etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void*, size_t, int, const EtcPalSockAddr* dest_addr) {
-      if (IsIPv4Multicast(dest_addr))
+      etcpal::SockAddr dest_sock_addr(*dest_addr);
+      if (IsIPv4Multicast(dest_sock_addr))
       {
         ipv4_multicast_packet_sent_ = true;
       }
-      else if (IsIPv6Multicast(dest_addr))
+      else if (IsIPv6Multicast(dest_sock_addr))
       {
         ipv6_multicast_packet_sent_ = true;
       }
       else
       {
-        etcpal::SockAddr dest_sock_addr(*dest_addr);
         for (auto& fake_unicast_info : fake_unicasts_info_)
         {
           if (fake_unicast_info.addr_string == dest_sock_addr.ip().ToString())
