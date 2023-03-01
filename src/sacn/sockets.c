@@ -68,6 +68,12 @@ typedef struct SysNetintList
   size_t num_netints;
 } SysNetintList;
 
+typedef enum
+{
+  kSourceResetModeDoAllCleanupNow,
+  kSourceResetModeDeferMulticastCleanup
+} source_reset_mode_t;
+
 /**************************** Private variables ******************************/
 
 #if SACN_DYNAMIC_MEM
@@ -85,7 +91,7 @@ static etcpal_socket_t ipv6_unicast_send_socket;
 
 static etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_type_t net_type);
 static etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, networking_type_t net_type);
-static void clear_source_networking();
+static void reset_source_networking(source_reset_mode_t reset_mode);
 #if SACN_RECEIVER_ENABLED
 static etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_netints, bool currently_sampling,
                                                      EtcPalRbTree* sampling_period_netints,
@@ -157,7 +163,7 @@ etcpal_error_t sacn_sockets_init(const SacnNetintConfig* netint_config)
 
   if (res != kEtcPalErrOk)
   {
-    clear_source_networking();
+    reset_source_networking(kSourceResetModeDoAllCleanupNow);
 
     CLEAR_BUF(&receiver_sys_netints, sys_netints);
     CLEAR_BUF(&source_detector_sys_netints, sys_netints);
@@ -168,7 +174,7 @@ etcpal_error_t sacn_sockets_init(const SacnNetintConfig* netint_config)
 
 void sacn_sockets_deinit(void)
 {
-  clear_source_networking();
+  reset_source_networking(kSourceResetModeDoAllCleanupNow);
 
   CLEAR_BUF(&receiver_sys_netints, sys_netints);
   CLEAR_BUF(&source_detector_sys_netints, sys_netints);
@@ -1193,7 +1199,7 @@ etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, networking_t
         CLEAR_BUF(&source_detector_sys_netints, sys_netints);
         break;
       case kSource:
-        clear_source_networking();
+        reset_source_networking(kSourceResetModeDeferMulticastCleanup);
         break;
     }
 
@@ -1203,32 +1209,35 @@ etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, networking_t
   return res;
 }
 
-void clear_source_networking()
+void reset_source_networking(source_reset_mode_t reset_mode)
 {
   if (ipv4_unicast_send_socket != ETCPAL_SOCKET_INVALID)
     etcpal_close(ipv4_unicast_send_socket);
   if (ipv6_unicast_send_socket != ETCPAL_SOCKET_INVALID)
     etcpal_close(ipv6_unicast_send_socket);
 
-#if SACN_DYNAMIC_MEM
-  if (multicast_send_sockets)
-#endif
+  if (reset_mode == kSourceResetModeDoAllCleanupNow)
   {
-    for (size_t i = 0; i < source_sys_netints.num_sys_netints; ++i)
+#if SACN_DYNAMIC_MEM
+    if (multicast_send_sockets)
+#endif
     {
-      if (multicast_send_sockets[i].socket != ETCPAL_SOCKET_INVALID)
-        etcpal_close(multicast_send_sockets[i].socket);
+      for (size_t i = 0; i < source_sys_netints.num_sys_netints; ++i)
+      {
+        if (multicast_send_sockets[i].socket != ETCPAL_SOCKET_INVALID)
+          etcpal_close(multicast_send_sockets[i].socket);
+      }
     }
-  }
 
 #if SACN_DYNAMIC_MEM
-  if (multicast_send_sockets)
-    free(multicast_send_sockets);
+    if (multicast_send_sockets)
+      free(multicast_send_sockets);
 
-  multicast_send_sockets = NULL;
+    multicast_send_sockets = NULL;
 #endif
 
-  CLEAR_BUF(&source_sys_netints, sys_netints);
+    CLEAR_BUF(&source_sys_netints, sys_netints);
+  }
 }
 
 #if SACN_RECEIVER_ENABLED
