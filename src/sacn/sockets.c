@@ -107,7 +107,9 @@ static int netint_id_index_in_array(const EtcPalMcastNetintId* id, const SacnMca
 
 static etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id, etcpal_socket_t* socket);
 static etcpal_error_t create_unicast_send_socket(etcpal_iptype_t ip_type, etcpal_socket_t* socket);
+#if SACN_FULL_OS_AVAILABLE_HINT
 static void configure_sndbuf_size(etcpal_socket_t new_sock, const char* sock_desc);
+#endif
 static etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAddr* bind_addr, bool set_sockopts,
                                             ReceiveSocket* socket);
 static void poll_add_socket(SacnRecvThreadContext* recv_thread_context, ReceiveSocket* socket);
