@@ -44,6 +44,8 @@ using namespace sacn;
 static constexpr uint8_t kSacnDataOffest = 126u;
 static constexpr uint16_t kTestUniverse = 1u;
 
+static etcpal_socket_t next_socket = (etcpal_socket_t)0;
+
 typedef struct FakeNetworkInfo
 {
   unsigned int index;
@@ -346,6 +348,12 @@ protected:
         return result;
 
       return copy_out_interfaces(fake_source_netints_.data(), fake_source_netints_.size(), netints, num_netints);
+    };
+
+    etcpal_socket_fake.custom_fake = [](unsigned int, unsigned int, etcpal_socket_t* new_sock) {
+      EXPECT_NE(new_sock, nullptr);
+      *new_sock = next_socket++;
+      return kEtcPalErrOk;
     };
 
     fake_receive_address_index = 0;
