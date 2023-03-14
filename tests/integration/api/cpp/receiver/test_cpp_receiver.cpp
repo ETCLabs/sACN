@@ -209,7 +209,7 @@ class TestNotifyHandler : public Receiver::NotifyHandler
 {
 public:
   void HandleUniverseData(Receiver::Handle receiver_handle, const etcpal::SockAddr& source_addr,
-                          const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data)
+                          const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data) override
   {
     ETCPAL_UNUSED_ARG(receiver_handle);
     ETCPAL_UNUSED_ARG(source_info);
@@ -243,7 +243,7 @@ public:
     }
   }
 
-  void HandleSourcesLost(Receiver::Handle handle, uint16_t universe, const std::vector<SacnLostSource>& lost_sources)
+  void HandleSourcesLost(Receiver::Handle handle, uint16_t universe, const std::vector<SacnLostSource>& lost_sources) override
   {
     ETCPAL_UNUSED_ARG(handle);
     ETCPAL_UNUSED_ARG(lost_sources);
