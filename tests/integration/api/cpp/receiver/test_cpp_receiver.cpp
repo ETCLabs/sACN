@@ -265,7 +265,7 @@ class TestReceiverBase : public ::testing::Test
 {
 protected:
 
-  enum FakeReceiveMode { kMulticast, kUnicast };
+  enum class FakeReceiveMode { kMulticast, kUnicast };
 
   void SetUp() override
   {
