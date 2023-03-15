@@ -41,7 +41,6 @@
 
 using namespace sacn;
 
-static constexpr uint8_t kSacnDataOffest = 126u;
 static constexpr uint16_t kTestUniverse = 1u;
 
 static etcpal_socket_t next_socket = (etcpal_socket_t)0;
@@ -56,30 +55,25 @@ typedef struct FakeNetworkInfo
   std::string mac;
   std::string name;
   bool is_default;
-  bool found;
+  bool got_universe_data;
 } FakeNetworkInfo;
 
 static std::vector<FakeNetworkInfo> fake_networks_info = {
     {1u, kEtcPalIpTypeV4, "10.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:22", "eth_v4_0", true, false},
     {2u, kEtcPalIpTypeV6, "fe80::1234", "", 64u, "00:c0:16:33:33:33", "eth_v6_0", false, false},
-    {3u, kEtcPalIpTypeV4, "20.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:23", "eth_v4_1", false, false},
-    {4u, kEtcPalIpTypeV6, "fe90::5678", "", 64u, "00:c0:16:33:33:34", "eth_v6_1", false, false},
 };
 
 typedef struct UnicastInfo
 {
   etcpal_iptype_t type;
   std::string addr_string;
-  bool found;
+  bool got_universe_data;
 } UnicastInfo;
 
 std::vector<UnicastInfo> fake_unicasts_info = {
     {kEtcPalIpTypeV4, "10.101.20.1", false},
     {kEtcPalIpTypeV4, "10.101.20.2", false},
 };
-
-bool fake_receive_multicast = true;
-uint8_t fake_receive_address_index = 0;
 
 // clang-format off
 std::vector<uint8_t> test_levels_data =
@@ -222,7 +216,7 @@ public:
     {
       if (fake_network_info.addr == source_addr_str)
       {
-        fake_network_info.found = true;
+        fake_network_info.got_universe_data = true;
         break;
       }
     }
@@ -230,7 +224,7 @@ public:
     {
       if (fake_unicast_info.addr_string == source_addr_str)
       {
-        fake_unicast_info.found = true;
+        fake_unicast_info.got_universe_data = true;
         break;
       }
     }
@@ -270,6 +264,9 @@ public:
 class TestReceiverBase : public ::testing::Test
 {
 protected:
+
+  enum FakeReceiveMode { kMulticast, kUnicast };
+
   void SetUp() override
   {
     etcpal_reset_all_fakes();
@@ -312,42 +309,12 @@ protected:
       return kEtcPalErrOk;
     };
 
-    etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
-      EXPECT_NE(msg, nullptr);
-      if (fake_receive_multicast)
-      {
-        auto fake_network_info = fake_networks_info[fake_receive_address_index];
-        EtcPalIpAddr ip;
-        etcpal_string_to_ip(fake_network_info.type, fake_network_info.addr.c_str(), &ip);
-        EtcPalSockAddr etcpal_sock_addr;
-        etcpal_sock_addr.ip = ip;
-        etcpal_sock_addr.port = 0;
-        msg->flags = 0;
-        msg->name = etcpal_sock_addr;
-      }
-      else
-      {
-        auto& fake_unicast_info = fake_unicasts_info[fake_receive_address_index];
-        EtcPalIpAddr ip;
-        etcpal_string_to_ip(fake_unicast_info.type, fake_unicast_info.addr_string.c_str(), &ip);
-        EtcPalSockAddr etcpal_sock_addr;
-        etcpal_sock_addr.ip = ip;
-        etcpal_sock_addr.port = 0;
-        msg->flags = 0;
-        msg->name = etcpal_sock_addr;
-      }
-      std::vector<uint8_t> test_data = fake_receive_levels_ ? test_levels_data : test_pap_data;
-      memcpy(msg->buf, test_data.data(), test_data.size());
-      msg->buflen = test_data.size();
-      return (int)test_data.size();
-    };
-
     etcpal_netint_get_interfaces_fake.custom_fake = [](EtcPalNetintInfo* netints, size_t* num_netints) {
       auto result = validate_get_interfaces_args(netints, num_netints);
       if (result != kEtcPalErrOk)
         return result;
 
-      return copy_out_interfaces(fake_source_netints_.data(), fake_source_netints_.size(), netints, num_netints);
+      return copy_out_interfaces(fake_sys_netints_.data(), fake_sys_netints_.size(), netints, num_netints);
     };
 
     etcpal_socket_fake.custom_fake = [](unsigned int, unsigned int, etcpal_socket_t* new_sock) {
@@ -356,11 +323,34 @@ protected:
       return kEtcPalErrOk;
     };
 
-    fake_receive_address_index = 0;
     ResetNotifyVariables();
 
     ASSERT_EQ(Init().code(), kEtcPalErrOk);
     is_sampling = false;
+    EXPECT_EQ(receiver_.Startup(receiver_settings_, notify_handler_), kEtcPalErrOk);
+  }
+
+  static int FakeReceive(FakeReceiveMode mode, uint8_t index, std::vector<uint8_t> data, EtcPalMsgHdr* msg) {
+    EXPECT_NE(msg, nullptr);
+    EtcPalSockAddr etcpal_sock_addr;
+    EtcPalIpAddr ip;
+    if (mode == FakeReceiveMode::kMulticast)
+    {
+      auto& fake_network_info = fake_networks_info[index];
+      etcpal_string_to_ip(fake_network_info.type, fake_network_info.addr.c_str(), &ip);
+    }
+    else
+    {
+      auto& fake_unicast_info = fake_unicasts_info[index];
+      etcpal_string_to_ip(fake_unicast_info.type, fake_unicast_info.addr_string.c_str(), &ip);
+    }
+    etcpal_sock_addr.ip = ip;
+    etcpal_sock_addr.port = 0;
+    msg->flags = 0;
+    msg->name = etcpal_sock_addr;
+    memcpy(msg->buf, data.data(), data.size());
+    msg->buflen = data.size();
+    return (int)data.size();
   }
 
   void PopulateFakeNetints()
@@ -382,41 +372,31 @@ protected:
       strcpy(fake_netint.id, fake_network_info.name.c_str());
       strcpy(fake_netint.friendly_name, fake_network_info.name.c_str());
       fake_netint.is_default = fake_network_info.is_default;
-      fake_source_netints_.push_back(fake_netint);
-
-      fake_receiver_netints_.push_back({{fake_network_info.type, fake_network_info.index}, kEtcPalErrOk});
+      fake_sys_netints_.push_back(fake_netint);
     }
   }
 
   void ResetNotifyVariables()
   {
-    fake_receive_levels_ = true;
     received_levels_data = false;
     received_pap_data = false;
     for (auto& fake_network_info : fake_networks_info)
     {
-      fake_network_info.found = false;
+      fake_network_info.got_universe_data = false;
     }
     for (auto& fake_unicast_info : fake_unicasts_info)
     {
-      fake_unicast_info.found = false;
+      fake_unicast_info.got_universe_data = false;
     }
   }
 
-  void SetLevel(std::vector<uint8_t> buffer, uint8_t slot, uint8_t level) { buffer[kSacnDataOffest + slot] = level; }
-
-  void Start()
-  {
-    EXPECT_EQ(receiver_.Startup(receiver_settings_, notify_handler_, fake_receiver_netints_), kEtcPalErrOk);
-  }
-
-  void RunThreadCycle()
+  void RunThreadCycle(bool increment_sequence_num)
   {
     sacn_thread_id_t thread_id = 0;
     SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread_id);
     read_network_and_process(recv_thread_context);
 
-    if (increment_sequence_num_)
+    if (increment_sequence_num)
     {
       ++seq_num_;
       test_levels_data[SACN_SEQ_OFFSET] = seq_num_;
@@ -430,109 +410,99 @@ protected:
     Deinit();
   }
 
-  static std::vector<EtcPalNetintInfo> fake_source_netints_;
-
+  static std::vector<EtcPalNetintInfo> fake_sys_netints_;
   static uint8_t seq_num_;
-  static bool increment_sequence_num_;
-  static std::vector<SacnMcastInterface> fake_receiver_netints_;
   static Receiver receiver_;
   static Receiver::Settings receiver_settings_;
   static TestNotifyHandler notify_handler_;
-  static bool fake_receive_levels_;
 };
 
-std::vector<EtcPalNetintInfo> TestReceiverBase::fake_source_netints_;
-
+std::vector<EtcPalNetintInfo> TestReceiverBase::fake_sys_netints_;
 uint8_t TestReceiverBase::seq_num_ = 0u;
-bool TestReceiverBase::increment_sequence_num_ = true;
-std::vector<SacnMcastInterface> TestReceiverBase::fake_receiver_netints_;
 Receiver TestReceiverBase::receiver_;
 Receiver::Settings TestReceiverBase::receiver_settings_(kTestUniverse);
 TestNotifyHandler TestReceiverBase::notify_handler_;
-bool TestReceiverBase::fake_receive_levels_ = true;
 
 /*===========================================================================*/
 
 TEST_F(TestReceiverBase, SamplingPeriod)
 {
-  Start();
-
-  fake_receive_levels_ = true;
-  fake_receive_multicast = true;
-  fake_receive_address_index = 1;
-  EXPECT_FALSE(is_sampling);
-  RunThreadCycle();
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg);
+  };
+  is_sampling = false;
+  RunThreadCycle(true);
   etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
-  RunThreadCycle();
+  RunThreadCycle(true);
   EXPECT_TRUE(is_sampling);
   etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
-  RunThreadCycle();
+  RunThreadCycle(true);
   EXPECT_FALSE(is_sampling);
 }
 
 TEST_F(TestReceiverBase, ReceivePap)
 {
-  Start();
-
-  fake_receive_levels_ = true;
-  fake_receive_multicast = true;
-  RunThreadCycle();
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg);
+  };
+  RunThreadCycle(true);
   EXPECT_TRUE(received_levels_data);
   EXPECT_FALSE(received_pap_data);
 
-  ResetNotifyVariables();
-  fake_receive_levels_ = false;
-  RunThreadCycle();
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, test_pap_data, msg);
+  };
+  received_levels_data = false;
+  received_pap_data = false;
+  RunThreadCycle(true);
   EXPECT_FALSE(received_levels_data);
   EXPECT_TRUE(received_pap_data);
 }
 
 TEST_F(TestReceiverBase, Ipv4Ipv6)
 {
-  Start();
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg);
+  };
+  RunThreadCycle(true);
+  EXPECT_TRUE(fake_networks_info[0].got_universe_data);
 
-  fake_receive_levels_ = true;
-  fake_receive_multicast = true;
-  fake_receive_address_index = 0;
-  RunThreadCycle();
-  EXPECT_TRUE(fake_networks_info[fake_receive_address_index].found);
-
-  ResetNotifyVariables();
-  fake_receive_address_index = 1;
-  RunThreadCycle();
-  EXPECT_TRUE(fake_networks_info[fake_receive_address_index].found);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 1, test_levels_data, msg);
+  };
+  fake_networks_info[1].got_universe_data = false;
+  RunThreadCycle(true);
+  EXPECT_TRUE(fake_networks_info[1].got_universe_data);
 }
 
 TEST_F(TestReceiverBase, SamePacketIpv4Ipv6)
 {
-  Start();
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg);
+  };
+  RunThreadCycle(false);
+  EXPECT_TRUE(fake_networks_info[0].got_universe_data);
 
-  fake_receive_levels_ = true;
-  fake_receive_multicast = true;
-  fake_receive_address_index = 0;
-  increment_sequence_num_ = false;
-  RunThreadCycle();
-  EXPECT_TRUE(fake_networks_info[fake_receive_address_index].found);
-
-  ResetNotifyVariables();
-  fake_receive_address_index = 1;
-  increment_sequence_num_ = true;
-  RunThreadCycle();
-  EXPECT_FALSE(fake_networks_info[fake_receive_address_index].found);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 1, test_levels_data, msg);
+  };
+  fake_networks_info[1].got_universe_data = false;
+  RunThreadCycle(true);
+  EXPECT_FALSE(fake_networks_info[1].got_universe_data);
 }
 
 TEST_F(TestReceiverBase, MulticastAndUnicast)
 {
-  Start();
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg);
+  };
+  RunThreadCycle(true);
+  EXPECT_TRUE(fake_networks_info[0].got_universe_data);
 
-  fake_receive_levels_ = true;
-  fake_receive_multicast = true;
-  fake_receive_address_index = 0;
-  RunThreadCycle();
-  EXPECT_TRUE(fake_networks_info[fake_receive_address_index].found);
-
-  ResetNotifyVariables();
-  fake_receive_multicast = false;
-  RunThreadCycle();
-  EXPECT_TRUE(fake_unicasts_info[fake_receive_address_index].found);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kUnicast, 0, test_levels_data, msg);
+  };
+  fake_unicasts_info[0].got_universe_data = false;
+  RunThreadCycle(true);
+  EXPECT_TRUE(fake_unicasts_info[0].got_universe_data);
 }
