@@ -107,7 +107,9 @@ static int netint_id_index_in_array(const EtcPalMcastNetintId* id, const SacnMca
 
 static etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id, etcpal_socket_t* socket);
 static etcpal_error_t create_unicast_send_socket(etcpal_iptype_t ip_type, etcpal_socket_t* socket);
+#if SACN_FULL_OS_AVAILABLE_HINT
 static void configure_sndbuf_size(etcpal_socket_t new_sock, const char* sock_desc);
+#endif
 static etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAddr* bind_addr, bool set_sockopts,
                                             ReceiveSocket* socket);
 static void poll_add_socket(SacnRecvThreadContext* recv_thread_context, ReceiveSocket* socket);
@@ -296,8 +298,8 @@ etcpal_error_t send_multicast(uint16_t universe_id, const uint8_t* send_buf, con
     char netint_addr[ETCPAL_IP_STRING_BYTES] = {'\0'};
     get_netint_ip_string(netint->ip_type, netint->index, netint_addr);
 
-    SACN_LOG_ERR("Multicast send on network interface %s failed at least once with error '%s'.", netint_addr,
-                 etcpal_strerror(res));
+    SACN_LOG_WARNING("Multicast send on network interface %s failed at least once with error '%s'.", netint_addr,
+                     etcpal_strerror(res));
 
     *last_send_error = res;
   }
@@ -339,7 +341,7 @@ etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_ad
   {
     char addr_str[ETCPAL_IP_STRING_BYTES] = {'\0'};
     etcpal_ip_to_string(dest_addr, addr_str);
-    SACN_LOG_ERR("Unicast send to %s failed at least once with error '%s'.", addr_str, etcpal_strerror(res));
+    SACN_LOG_WARNING("Unicast send to %s failed at least once with error '%s'.", addr_str, etcpal_strerror(res));
 
     *last_send_error = res;
   }
