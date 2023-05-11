@@ -156,9 +156,13 @@ public:
     /**
      * @brief Notify that a merge receiver's sampling period has ended.
      *
-     * All sources that were included in this sampling period will officially be included in future merged data
+     * All sources that were included in this sampling period will now officially be included in merged data
      * notifications. If there was a networking reset during this sampling period, another sampling period may have been
      * scheduled, in which case this will be immediately followed by a sampling period started notification.
+     *
+     * If there were any active levels received during the sampling period, they were factored into the merged data
+     * notification called immediately before this notification. If the merged data notification wasn't called before
+     * this notification, that means there currently isn't any active data on the universe.
      *
      * @param handle The merge receiver's handle.
      * @param universe The universe the merge receiver is monitoring.

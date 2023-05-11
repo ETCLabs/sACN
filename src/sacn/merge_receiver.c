@@ -923,6 +923,7 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
     merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
   }
 
+  // Call this after merged data
   if (sampling_ended_callback)
     sampling_ended_callback((sacn_merge_receiver_t)handle, universe, context);
 }
