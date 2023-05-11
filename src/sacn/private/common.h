@@ -703,11 +703,13 @@ typedef struct SacnMergeReceiver
 
   sacn_dmx_merger_t merger_handle;
   uint8_t levels[DMX_ADDRESS_COUNT];
+  uint8_t priorities[DMX_ADDRESS_COUNT];
   sacn_dmx_merger_source_t owners[DMX_ADDRESS_COUNT];
 
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
   sacn_dmx_merger_t sampling_merger_handle;
   uint8_t sampling_levels[DMX_ADDRESS_COUNT];
+  uint8_t sampling_priorities[DMX_ADDRESS_COUNT];
   sacn_dmx_merger_source_t sampling_owners[DMX_ADDRESS_COUNT];
 #endif
 
@@ -728,6 +730,7 @@ typedef struct MergeReceiverMergedDataNotification
   uint16_t universe;
   SacnRecvUniverseSubrange slot_range;
   uint8_t levels[DMX_ADDRESS_COUNT];
+  uint8_t priorities[DMX_ADDRESS_COUNT];
   sacn_remote_source_t owners[DMX_ADDRESS_COUNT];
   SACN_DECLARE_MERGE_RECEIVER_BUF(sacn_remote_source_t, active_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_active_sources;

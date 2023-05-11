@@ -72,6 +72,11 @@ typedef struct SacnRecvMergedData
    */
   const uint8_t* levels;
   /**
+   * The merged per-address priorities for the universe at the location indicated by slot_range. This buffer is owned by
+   * the library.
+   */
+  const uint8_t* priorities;
+  /**
    * The source handles of the owners of the slots within slot_range.  If a value in the buffer is
    * #SACN_REMOTE_SOURCE_INVALID, the corresponding slot is not currently controlled. This buffer is owned by the
    * library.
