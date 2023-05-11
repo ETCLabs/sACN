@@ -117,7 +117,13 @@ public:
      * slot of the currently configured footprint.
      */
     virtual void HandleNonDmxData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
-                                  const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data) = 0;
+                                  const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data)
+    {
+      ETCPAL_UNUSED_ARG(receiver_handle);
+      ETCPAL_UNUSED_ARG(source_addr);
+      ETCPAL_UNUSED_ARG(source_info);
+      ETCPAL_UNUSED_ARG(universe_data);
+    }
 
     /**
      * @brief Notify that one or more sources have entered a source loss state.

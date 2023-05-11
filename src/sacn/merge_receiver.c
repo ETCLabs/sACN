@@ -95,7 +95,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
     result = kEtcPalErrNotInit;
   else if (!config || !handle)
     result = kEtcPalErrInvalid;
-  else if (!config->callbacks.universe_data || !config->callbacks.universe_non_dmx)
+  else if (!config->callbacks.universe_data)
     result = kEtcPalErrInvalid;
 
   if (result == kEtcPalErrOk)

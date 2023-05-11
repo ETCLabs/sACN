@@ -210,7 +210,7 @@ typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(sacn_merge_receiver
 typedef struct SacnMergeReceiverCallbacks
 {
   SacnMergeReceiverMergedDataCallback universe_data;                      /**< Required */
-  SacnMergeReceiverNonDmxCallback universe_non_dmx;                       /**< Required */
+  SacnMergeReceiverNonDmxCallback universe_non_dmx;                       /**< Optional */
   SacnMergeReceiverSourcesLostCallback sources_lost;                      /**< Optional */
   SacnMergeReceiverSamplingPeriodStartedCallback sampling_period_started; /**< Optional */
   SacnMergeReceiverSamplingPeriodEndedCallback sampling_period_ended;     /**< Optional */
