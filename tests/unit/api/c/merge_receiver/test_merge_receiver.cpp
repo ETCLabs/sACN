@@ -1087,6 +1087,8 @@ TEST_F(TestMergeReceiver, DirectsDmxMergerOutputCorrectly)
   static constexpr sacn_remote_source_t kSourceHandle2 = 2u;
   static constexpr uint8_t kLevel1 = 10u;
   static constexpr uint8_t kLevel2 = 20u;
+  static constexpr uint8_t kPriority1 = 30u;
+  static constexpr uint8_t kPriority2 = 40u;
   static constexpr sacn_receiver_t kReceiver2Handle = kTestHandle2;
 
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
@@ -1115,32 +1117,45 @@ TEST_F(TestMergeReceiver, DirectsDmxMergerOutputCorrectly)
   RunSamplingEnded(kReceiver2Handle);
 
   // Minimal DMX merger fake for testing output
-  update_sacn_dmx_merger_levels_fake.custom_fake = [](sacn_dmx_merger_t, sacn_dmx_merger_source_t source,
+  update_sacn_dmx_merger_levels_fake.custom_fake = [](sacn_dmx_merger_t, sacn_dmx_merger_source_t,
                                                       const uint8_t* new_levels, size_t) {
     merger_configs_[kReceiver2MergerHandle].levels[0] = new_levels[0];
+    return kEtcPalErrOk;
+  };
+  update_sacn_dmx_merger_pap_fake.custom_fake = [](sacn_dmx_merger_t, sacn_dmx_merger_source_t source,
+                                                   const uint8_t* new_priorities, size_t) {
+    merger_configs_[kReceiver2MergerHandle].per_address_priorities[0] = new_priorities[0];
     merger_configs_[kReceiver2MergerHandle].owners[0] = source;  // Just assume the next source always wins
     return kEtcPalErrOk;
   };
 
+  EXPECT_EQ(universe_data_fake.call_count, 0u);
+
   // Now test that the first source makes it to the merged data callback
+
+  RunUniverseData(kSourceHandle1, kCid1, SACN_STARTCODE_DMX, {kLevel1}, kTestPriority, kReceiver2Handle);
+
   universe_data_fake.custom_fake = [](sacn_merge_receiver_t, const SacnRecvMergedData* merged_data, void*) {
     EXPECT_EQ(merged_data->levels[0], kLevel1);
+    EXPECT_EQ(merged_data->priorities[0], kPriority1);
     EXPECT_EQ(merged_data->owners[0], kSourceHandle1);
   };
+  RunUniverseData(kSourceHandle1, kCid1, SACN_STARTCODE_PRIORITY, {kPriority1}, kTestPriority, kReceiver2Handle);
 
-  EXPECT_EQ(universe_data_fake.call_count, 0u);
-  RunUniverseData(kSourceHandle1, kCid1, SACN_STARTCODE_DMX, {kLevel1}, kTestPriority, kReceiver2Handle);
-  EXPECT_EQ(universe_data_fake.call_count, 1u);
+  EXPECT_EQ(universe_data_fake.call_count, 2u);
 
   // Test that the second source makes it as well after removing the first merge receiver
   EXPECT_EQ(sacn_merge_receiver_destroy(receiver_1), kEtcPalErrOk);
 
+  universe_data_fake.custom_fake = [](sacn_merge_receiver_t, const SacnRecvMergedData*, void*) {};
+  RunUniverseData(kSourceHandle2, kCid2, SACN_STARTCODE_DMX, {kLevel2}, kTestPriority, kReceiver2Handle);
+
   universe_data_fake.custom_fake = [](sacn_merge_receiver_t, const SacnRecvMergedData* merged_data, void*) {
     EXPECT_EQ(merged_data->levels[0], kLevel2);
+    EXPECT_EQ(merged_data->priorities[0], kPriority2);
     EXPECT_EQ(merged_data->owners[0], kSourceHandle2);
   };
+  RunUniverseData(kSourceHandle2, kCid2, SACN_STARTCODE_PRIORITY, {kPriority2}, kTestPriority, kReceiver2Handle);
 
-  EXPECT_EQ(universe_data_fake.call_count, 1u);
-  RunUniverseData(kSourceHandle2, kCid2, SACN_STARTCODE_DMX, {kLevel2}, kTestPriority, kReceiver2Handle);
-  EXPECT_EQ(universe_data_fake.call_count, 2u);
+  EXPECT_EQ(universe_data_fake.call_count, 4u);
 }

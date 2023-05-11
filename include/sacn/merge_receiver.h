@@ -72,6 +72,11 @@ typedef struct SacnRecvMergedData
    */
   const uint8_t* levels;
   /**
+   * The merged per-address priorities for the universe at the location indicated by slot_range. This buffer is owned by
+   * the library.
+   */
+  const uint8_t* priorities;
+  /**
    * The source handles of the owners of the slots within slot_range.  If a value in the buffer is
    * #SACN_REMOTE_SOURCE_INVALID, the corresponding slot is not currently controlled. This buffer is owned by the
    * library.
@@ -177,9 +182,13 @@ typedef void (*SacnMergeReceiverSamplingPeriodStartedCallback)(sacn_merge_receiv
 /**
  * @brief Notify that a merge receiver's sampling period has ended.
  *
- * All sources that were included in this sampling period will officially be included in future merged data
+ * All sources that were included in this sampling period will now officially be included in merged data
  * notifications. If there was a networking reset during this sampling period, another sampling period may have been
  * scheduled, in which case this will be immediately followed by a sampling period started notification.
+ *
+ * If there were any active levels received during the sampling period, they were factored into the merged data
+ * notification called immediately before this notification. If the merged data notification wasn't called before
+ * this notification, that means there currently isn't any active data on the universe.
  *
  * @param[in] handle Handle to the merge receiver instance for which the sampling period ended.
  * @param[in] universe The universe this merge receiver is monitoring.
@@ -205,7 +214,7 @@ typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(sacn_merge_receiver
 typedef struct SacnMergeReceiverCallbacks
 {
   SacnMergeReceiverMergedDataCallback universe_data;                      /**< Required */
-  SacnMergeReceiverNonDmxCallback universe_non_dmx;                       /**< Required */
+  SacnMergeReceiverNonDmxCallback universe_non_dmx;                       /**< Optional */
   SacnMergeReceiverSourcesLostCallback sources_lost;                      /**< Optional */
   SacnMergeReceiverSamplingPeriodStartedCallback sampling_period_started; /**< Optional */
   SacnMergeReceiverSamplingPeriodEndedCallback sampling_period_ended;     /**< Optional */
