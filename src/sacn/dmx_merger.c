@@ -180,7 +180,10 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
   {
     if (!config || !handle || !config->levels)
       result = kEtcPalErrInvalid;
+  }
 
+  if (result == kEtcPalErrOk)
+  {
 #if SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER
     if (!config->per_address_priorities)
       result = kEtcPalErrInvalid;
