@@ -75,34 +75,35 @@ public:
    */
   struct Settings
   {
-    /********* Required values **********/
-
-    /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.  Slots that are not sourced
+    /** This is always required to be non-NULL.
+        Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.  Slots that are not sourced
         are set to 0.
         Memory is owned by the application and must remain allocated until the merger is destroyed. While this merger
         exists, the application must not modify this buffer directly!  Doing so would affect the results of the merge.*/
     uint8_t* levels{nullptr};
 
-    /********* Optional values **********/
-
-    /** Buffer of #DMX_ADDRESS_COUNT per-address priorities for each winning slot. This is used if the merge
+    /** This is only allowed to be NULL if and only if #SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER is 0.
+        Buffer of #DMX_ADDRESS_COUNT per-address priorities for each winning slot. This is used if the merge
         results need to be sent over sACN. Otherwise this can just be set to nullptr. If a source with a universe
         priority of 0 wins, that priority is converted to 1. If there is no winner for a slot, then a per-address
         priority of 0 is used to show that there is no source for that slot.
         Memory is owned by the application and must remain allocated until the merger is destroyed.*/
     uint8_t* per_address_priorities{nullptr};
 
-    /** If the merger output is being transmitted via sACN, this is set to true if per-address-priority packets should
+    /** This is allowed to be NULL.
+        If the merger output is being transmitted via sACN, this is set to true if per-address-priority packets should
         be transmitted. Otherwise this is set to false. This can be set to nullptr if not needed, which can save some
         performance.*/
     bool* per_address_priorities_active{nullptr};
 
-    /** This is set to the highest universe priority of the currently winning sources. If the merger's output is
+    /** This is allowed to be NULL.
+        This is set to the highest universe priority of the currently winning sources. If the merger's output is
         transmitted by a sACN source, this can be used for the packets' universe priority field. Otherwise this can be
         set to nullptr if not needed.*/
     uint8_t* universe_priority{nullptr};
 
-    /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
+    /** This is only allowed to be NULL if and only if #SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER is 0.
+        Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
         #SACN_DMX_MERGER_SOURCE_INVALID to indicate that there is no winner for that slot. This is used if
         you need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to
         NULL and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of
