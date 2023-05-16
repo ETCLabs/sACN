@@ -439,6 +439,26 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #define SACN_DMX_MERGER_MAX_SLOTS 512
 
 /**
+ * @brief Disables internal DMX merger PAP buffer for merge results.
+ *
+ * This is a memory optimization for use cases where an output pointer will always be supplied for PAP in the DMX merger
+ * configuration. Enabling this makes it required instead of optional.
+ */
+#ifndef SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER
+#define SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER 0
+#endif
+
+/**
+ * @brief Disables internal DMX merger owner buffer for merge results.
+ *
+ * This is a memory optimization for use cases where an output pointer will always be supplied for owners in the DMX
+ * merger configuration. Enabling this makes it required instead of optional.
+ */
+#ifndef SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER
+#define SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER 0
+#endif
+
+/**
  * @}
  */
 
