@@ -938,6 +938,10 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
   }
 
   MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
+
+  SacnMergeReceiverSourcePapLostCallback source_pap_lost_callback = NULL;
+  SacnRemoteSource remote_source;
+
   void* context = NULL;
 
   if (sacn_lock())
@@ -981,6 +985,11 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
           }
         }
 
+        remote_source.handle = source->handle;
+        memcpy(remote_source.cid.data, source->cid.data, ETCPAL_UUID_BYTES);
+        memcpy(remote_source.name, source->name, SACN_SOURCE_NAME_MAX_LEN);
+
+        source_pap_lost_callback = merge_receiver->callbacks.source_pap_lost;
         context = merge_receiver->callbacks.callback_context;
       }
     }
@@ -1004,6 +1013,9 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
 
     merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
   }
+
+  if (source_pap_lost_callback)
+    source_pap_lost_callback((sacn_merge_receiver_t)handle, universe, &remote_source, context);
 }
 
 void merge_receiver_source_limit_exceeded(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id)

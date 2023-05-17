@@ -174,6 +174,19 @@ public:
     }
 
     /**
+     * @brief Notify that a source has stopped transmission of per-address priority packets.
+     * @param handle The merge receiver's handle.
+     * @param universe The universe this merge receiver is monitoring.
+     * @param source Information about the source that has stopped transmission of per-address priority.
+     */
+    virtual void HandleSourcePapLost(Handle handle, uint16_t universe, const SacnRemoteSource& source)
+    {
+      ETCPAL_UNUSED_ARG(handle);
+      ETCPAL_UNUSED_ARG(universe);
+      ETCPAL_UNUSED_ARG(source);
+    }
+
+    /**
      * @brief Notify that more than the configured maximum number of sources are currently sending on
      *        the universe being listened to.
      *
@@ -352,6 +365,16 @@ extern "C" inline void MergeReceiverCbSamplingPeriodEnded(sacn_merge_receiver_t 
   {
     static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSamplingPeriodEnded(MergeReceiver::Handle(handle),
                                                                                    universe);
+  }
+}
+
+extern "C" inline void MergeReceiverCbSourcePapLost(sacn_merge_receiver_t handle, uint16_t universe,
+                                                    const SacnRemoteSource* source, void* context)
+{
+  if (context && source)
+  {
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourcePapLost(MergeReceiver::Handle(handle),
+                                                                             universe, *source);
   }
 }
 
@@ -790,6 +813,7 @@ inline SacnMergeReceiverConfig MergeReceiver::TranslateConfig(const Settings& se
       internal::MergeReceiverCbSourcesLost,
       internal::MergeReceiverCbSamplingPeriodStarted,
       internal::MergeReceiverCbSamplingPeriodEnded,
+      internal::MergeReceiverCbSourcePapLost,
       internal::MergeReceiverCbSourceLimitExceeded,
       &notify_handler
     },

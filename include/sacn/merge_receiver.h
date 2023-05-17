@@ -198,6 +198,24 @@ typedef void (*SacnMergeReceiverSamplingPeriodEndedCallback)(sacn_merge_receiver
                                                              void* context);
 
 /**
+ * @brief Notify that a source has stopped transmission of per-address priority packets.
+ *
+ * If #SACN_ETC_PRIORITY_EXTENSION was defined to 0 when sACN was compiled, this callback will
+ * never be called and may be set to NULL. This is only called due to a timeout condition; a
+ * termination bit is treated as the termination of the entire stream and will result in a
+ * sources_lost() notification.
+ *
+ * @param[in] handle Handle to the merge receiver instance for which a source stopped sending per-address
+ *                   priority.
+ * @param[in] universe The universe this merge receiver is monitoring.
+ * @param[in] source Information about the source that has stopped transmission of per-address
+ *                   priority.
+ * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
+ */
+typedef void (*SacnMergeReceiverSourcePapLostCallback)(sacn_merge_receiver_t handle, uint16_t universe,
+                                                       const SacnRemoteSource* source, void* context);
+
+/**
  * @brief Notify that more than the configured maximum number of sources are currently sending on
  *        the universe being listened to.
  *
@@ -218,6 +236,7 @@ typedef struct SacnMergeReceiverCallbacks
   SacnMergeReceiverSourcesLostCallback sources_lost;                      /**< Optional */
   SacnMergeReceiverSamplingPeriodStartedCallback sampling_period_started; /**< Optional */
   SacnMergeReceiverSamplingPeriodEndedCallback sampling_period_ended;     /**< Optional */
+  SacnMergeReceiverSourcePapLostCallback source_pap_lost;                 /**< Optional */
   SacnMergeReceiverSourceLimitExceededCallback source_limit_exceeded;     /**< Optional */
   void* callback_context; /**< (optional) Pointer to opaque data passed back with each callback. */
 } SacnMergeReceiverCallbacks;

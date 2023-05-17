@@ -46,6 +46,7 @@ FAKE_VOID_FUNC(universe_non_dmx, sacn_merge_receiver_t, const EtcPalSockAddr*, c
 FAKE_VOID_FUNC(sources_lost, sacn_merge_receiver_t, uint16_t, const SacnLostSource*, size_t, void*);
 FAKE_VOID_FUNC(sampling_started, sacn_merge_receiver_t, uint16_t, void*);
 FAKE_VOID_FUNC(sampling_ended, sacn_merge_receiver_t, uint16_t, void*);
+FAKE_VOID_FUNC(source_pap_lost, sacn_merge_receiver_t, uint16_t, const SacnRemoteSource*, void*);
 FAKE_VOID_FUNC(source_limit_exceeded, sacn_merge_receiver_t, uint16_t, void*);
 
 static constexpr uint16_t kTestUniverse = 123u;
@@ -55,7 +56,8 @@ static constexpr int kTestHandle2 = 1234u;
 static constexpr sacn_dmx_merger_t kInitialMergerHandle = 0;
 static constexpr SacnMergeReceiverConfig kTestConfig = {
     kTestUniverse,
-    {universe_data, universe_non_dmx, sources_lost, sampling_started, sampling_ended, source_limit_exceeded, NULL},
+    {universe_data, universe_non_dmx, sources_lost, sampling_started, sampling_ended, source_pap_lost,
+     source_limit_exceeded, NULL},
     {1, DMX_ADDRESS_COUNT},
     SACN_RECEIVER_INFINITE_SOURCES,
     true,
@@ -99,6 +101,7 @@ protected:
     RESET_FAKE(sources_lost);
     RESET_FAKE(sampling_started);
     RESET_FAKE(sampling_ended);
+    RESET_FAKE(source_pap_lost);
     RESET_FAKE(source_limit_exceeded);
 
     active_sources_to_expect_ = std::nullopt;
@@ -214,10 +217,23 @@ protected:
     merge_receiver_sources_lost(kTestHandle, kTestUniverse, lost_sources.data(), lost_sources.size(), 0u);
   }
 
-  void RunPapLost(sacn_remote_source_t handle, const etcpal::Uuid& cid)
+  enum class RunPapLostExpectation
   {
+    kPapLostCbCalled,
+    kPapLostCbNotCalled
+  };
+  void RunPapLost(sacn_remote_source_t handle, const etcpal::Uuid& cid,
+                  RunPapLostExpectation expectation = RunPapLostExpectation::kPapLostCbCalled)
+  {
+    auto old_call_count = source_pap_lost_fake.call_count;
+
     SacnRemoteSource source = {handle, cid.get(), {'\0'}};
     merge_receiver_pap_lost(kTestHandle, kTestUniverse, &source, 0u);
+
+    if (expectation == RunPapLostExpectation::kPapLostCbCalled)
+      EXPECT_EQ(source_pap_lost_fake.call_count, old_call_count + 1u);
+    else
+      EXPECT_EQ(source_pap_lost_fake.call_count, old_call_count);
   }
 
   void RunSourceLimitExceeded() { merge_receiver_source_limit_exceeded(kTestHandle, kTestUniverse, 0u); }
@@ -1039,7 +1055,7 @@ TEST_F(TestMergeReceiver, PapBlockedWhenUsePapDisabled)
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 
   EXPECT_EQ(remove_sacn_dmx_merger_pap_fake.call_count, 0u);
-  RunPapLost(1u, cid);
+  RunPapLost(1u, cid, RunPapLostExpectation::kPapLostCbNotCalled);
   EXPECT_EQ(remove_sacn_dmx_merger_pap_fake.call_count, 0u);
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 }
