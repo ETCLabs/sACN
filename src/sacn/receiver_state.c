@@ -1050,8 +1050,8 @@ void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* sou
     {
       char cid_str[ETCPAL_UUID_STRING_BYTES];
       etcpal_uuid_to_string(&source_info->cid, cid_str);
-      SACN_LOG_DEBUG("Tracking new source %s (%s) with initial start code 0x%02x", source_info->name, cid_str,
-                     universe_data->start_code);
+      SACN_LOG_DEBUG("Tracking new source %s (%s) on universe %u with initial start code 0x%02x", source_info->name,
+                     cid_str, universe_data->universe_id, universe_data->start_code);
     }
   }
   else
