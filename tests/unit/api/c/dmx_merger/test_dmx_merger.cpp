@@ -338,8 +338,18 @@ TEST_F(TestDmxMerger, MergerCreateErrInvalidWorks)
   EXPECT_EQ(null_handle_result, kEtcPalErrInvalid);
   EXPECT_EQ(null_levels_result, kEtcPalErrInvalid);
 
+#if SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER
+  EXPECT_EQ(null_pap_result, kEtcPalErrInvalid);
+#else
   EXPECT_NE(null_pap_result, kEtcPalErrInvalid);
+#endif
+
+#if SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER
+  EXPECT_EQ(null_owners_result, kEtcPalErrInvalid);
+#else
   EXPECT_NE(null_owners_result, kEtcPalErrInvalid);
+#endif
+
   EXPECT_NE(non_null_result, kEtcPalErrInvalid);
 }
 

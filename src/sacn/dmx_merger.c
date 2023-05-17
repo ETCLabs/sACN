@@ -184,6 +184,19 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
 
   if (result == kEtcPalErrOk)
   {
+#if SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER
+    if (!config->per_address_priorities)
+      result = kEtcPalErrInvalid;
+#endif
+
+#if SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER
+    if (!config->owners)
+      result = kEtcPalErrInvalid;
+#endif
+  }
+
+  if (result == kEtcPalErrOk)
+  {
     if (sacn_lock())
     {
       result = create_sacn_dmx_merger(config, handle);
@@ -1228,6 +1241,19 @@ MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMerge
   if (!SACN_ASSERT_VERIFY(config) || !SACN_ASSERT_VERIFY(handle != SACN_DMX_MERGER_INVALID))
     return NULL;
 
+  if (!SACN_ASSERT_VERIFY(config->levels))
+    return NULL;
+
+#if SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER
+  if (!SACN_ASSERT_VERIFY(config->per_address_priorities))
+    return NULL;
+#endif
+
+#if SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER
+  if (!SACN_ASSERT_VERIFY(config->owners))
+    return NULL;
+#endif
+
   MergerState* merger_state = ALLOC_MERGER_STATE();
 
   if (merger_state)
@@ -1242,13 +1268,17 @@ MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMerge
     merger_state->config = *config;
     memset(merger_state->config.levels, 0, DMX_ADDRESS_COUNT);
 
+#if !SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER
     if (merger_state->config.per_address_priorities == NULL)  // We need to track this - use internal storage.
       merger_state->config.per_address_priorities = merger_state->pap_internal;
+#endif
 
     memset(merger_state->config.per_address_priorities, 0, DMX_ADDRESS_COUNT);
 
+#if !SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER
     if (merger_state->config.owners == NULL)  // We need to track this - use internal storage.
       merger_state->config.owners = merger_state->owners_internal;
+#endif
 
     for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
       merger_state->config.owners[i] = SACN_DMX_MERGER_SOURCE_INVALID;
