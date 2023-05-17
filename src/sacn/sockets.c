@@ -1719,7 +1719,11 @@ etcpal_error_t populate_sys_netint_list(SysNetintList* netint_list)
   if (!SACN_ASSERT_VERIFY(netint_list))
     return kEtcPalErrSys;
 
+#if SACN_DYNAMIC_MEM
   netint_list->num_netints = 4;  // Start with estimate which eventually has the actual number written to it
+#else
+  netint_list->num_netints = SACN_MAX_NETINTS;
+#endif
 
   etcpal_error_t res = kEtcPalErrOk;
   do
