@@ -103,6 +103,29 @@ static sacn_remote_source_t GetHandle(const EtcPalUuid& cid)
 class TestReceiverState : public ::testing::Test
 {
 protected:
+  static bool SocketPresentInState(etcpal_socket_t socket, const SacnInternalSocketState* state)
+  {
+#if SACN_RECEIVER_SOCKET_PER_NIC
+    for (const auto* ipv4_socket = state->ipv4_sockets; ipv4_socket < (state->ipv4_sockets + state->num_ipv4_sockets);
+         ++ipv4_socket)
+    {
+      if (socket == *ipv4_socket)
+        return true;
+    }
+
+    for (const auto* ipv6_socket = state->ipv6_sockets; ipv6_socket < (state->ipv6_sockets + state->num_ipv6_sockets);
+         ++ipv6_socket)
+    {
+      if (socket == *ipv6_socket)
+        return true;
+    }
+
+    return false;
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
+    return (socket == state->ipv4_socket) || (socket == state->ipv6_socket);
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
+  }
+
   void SetUp() override
   {
     etcpal_reset_all_fakes();
@@ -636,7 +659,7 @@ TEST_F(TestReceiverState, AddReceiverSocketsWorks)
     }
 
     EXPECT_EQ(num_netints, kTestNetints.size());
-    EXPECT_TRUE((socket == &state->ipv4_socket) || (socket == &state->ipv6_socket));
+    EXPECT_TRUE(SocketPresentInState(*socket, &state->sockets));
 
     return kEtcPalErrOk;
   };
@@ -654,7 +677,7 @@ TEST_F(TestReceiverState, AddReceiverSocketsHandlesIpv4Only)
     lookup_receiver_by_universe(kTestUniverse, &state);
 
     EXPECT_EQ(ip_type, kEtcPalIpTypeV4);
-    EXPECT_EQ(socket, &state->ipv4_socket);
+    EXPECT_TRUE(SocketPresentInState(*socket, &state->sockets));
 
     return kEtcPalErrOk;
   };
@@ -672,7 +695,7 @@ TEST_F(TestReceiverState, AddReceiverSocketsHandlesIpv6Only)
     lookup_receiver_by_universe(kTestUniverse, &state);
 
     EXPECT_EQ(ip_type, kEtcPalIpTypeV6);
-    EXPECT_EQ(socket, &state->ipv6_socket);
+    EXPECT_TRUE(SocketPresentInState(*socket, &state->sockets));
 
     return kEtcPalErrOk;
   };
@@ -890,7 +913,7 @@ TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesIpv4AndIpv6)
     lookup_receiver_by_universe(kTestUniverse, &state);
 
     EXPECT_EQ(thread_id, 0u);
-    EXPECT_TRUE((socket == &state->ipv4_socket) || (socket == &state->ipv6_socket));
+    EXPECT_TRUE(SocketPresentInState(*socket, &state->sockets));
     EXPECT_EQ(cleanup_behavior, kPerformAllSocketCleanupNow);
 
     *socket = ETCPAL_SOCKET_INVALID;
@@ -921,7 +944,7 @@ TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesOnlyIpv4)
     lookup_receiver_by_universe(kTestUniverse, &state);
 
     EXPECT_EQ(thread_id, 0u);
-    EXPECT_EQ(socket, &state->ipv4_socket);
+    EXPECT_TRUE(SocketPresentInState(*socket, &state->sockets));
     EXPECT_EQ(cleanup_behavior, kPerformAllSocketCleanupNow);
 
     *socket = ETCPAL_SOCKET_INVALID;
@@ -952,7 +975,7 @@ TEST_F(TestReceiverState, RemoveReceiverSocketsRemovesOnlyIpv6)
     lookup_receiver_by_universe(kTestUniverse, &state);
 
     EXPECT_EQ(thread_id, 0u);
-    EXPECT_EQ(socket, &state->ipv6_socket);
+    EXPECT_TRUE(SocketPresentInState(*socket, &state->sockets));
     EXPECT_EQ(cleanup_behavior, kPerformAllSocketCleanupNow);
 
     *socket = ETCPAL_SOCKET_INVALID;
@@ -985,7 +1008,7 @@ TEST_F(TestReceiverState, RemoveAllReceiverSocketsWorks)
     SacnReceiver* state = nullptr;
     lookup_receiver_by_universe(universe, &state);
 
-    EXPECT_TRUE((socket == &state->ipv4_socket) || (socket == &state->ipv6_socket));
+    EXPECT_TRUE(SocketPresentInState(*socket, &state->sockets));
     EXPECT_EQ(cleanup_behavior, kPerformAllSocketCleanupNow);
   };
 

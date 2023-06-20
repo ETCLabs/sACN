@@ -197,8 +197,13 @@ void unsubscribe_socket_ref(SacnRecvThreadContext* recv_thread_context, int ref_
                             const EtcPalMcastNetintId* netints, size_t num_netints,
                             socket_cleanup_behavior_t cleanup_behavior)
 {
-  if (!SACN_ASSERT_VERIFY(recv_thread_context) || !SACN_ASSERT_VERIFY(netints))
+  if (!SACN_ASSERT_VERIFY(recv_thread_context) || !SACN_ASSERT_VERIFY(netints) || !SACN_ASSERT_VERIFY(num_netints > 0))
     return;
+
+#if SACN_RECEIVER_SOCKET_PER_NIC
+  if (!SACN_ASSERT_VERIFY(num_netints == 1))
+    return;
+#endif
 
   ReceiveSocket socket = recv_thread_context->socket_refs[ref_index].socket;
 
@@ -531,12 +536,14 @@ etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAd
       intval = SACN_RECEIVER_SOCKET_RCVBUF_SIZE;
       etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_RCVBUF, &intval, sizeof intval);
 
+#if !SACN_RECEIVER_SOCKET_PER_NIC
       // The PKTINFO socket option, however, IS required to work, so check for any errors from that.
       intval = 1;
       if (ip_type == kEtcPalIpTypeV6)
         res = etcpal_setsockopt(new_sock, ETCPAL_IPPROTO_IPV6, ETCPAL_IPV6_PKTINFO, &intval, sizeof intval);
       else
         res = etcpal_setsockopt(new_sock, ETCPAL_IPPROTO_IP, ETCPAL_IP_PKTINFO, &intval, sizeof intval);
+#endif
     }
 
     if (res == kEtcPalErrOk)
@@ -616,10 +623,16 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
                                         const EtcPalMcastNetintId* netints, size_t num_netints, etcpal_socket_t* socket)
 {
   if (!SACN_ASSERT_VERIFY(ip_type == kEtcPalIpTypeV4 || ip_type == kEtcPalIpTypeV6) ||
-      !SACN_ASSERT_VERIFY(universe >= 1 && ((universe <= 63999) || (universe == SACN_DISCOVERY_UNIVERSE))))
+      !SACN_ASSERT_VERIFY(universe >= 1 && ((universe <= 63999) || (universe == SACN_DISCOVERY_UNIVERSE))) ||
+      !SACN_ASSERT_VERIFY(netints) || !SACN_ASSERT_VERIFY(num_netints > 0) || !SACN_ASSERT_VERIFY(socket))
   {
     return kEtcPalErrSys;
   }
+
+#if SACN_RECEIVER_SOCKET_PER_NIC
+  if (!SACN_ASSERT_VERIFY(num_netints == 1) || !SACN_ASSERT_VERIFY(netints[0].ip_type == ip_type))
+    return kEtcPalErrSys;
+#endif
 
   SacnRecvThreadContext* context = get_recv_thread_context(thread_id);
   if (!SACN_ASSERT_VERIFY(context))
@@ -633,13 +646,17 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
 
   // Find or create a shared socket.
   SocketRef* ref = NULL;
+#if SACN_RECEIVER_SOCKET_PER_NIC
+  int ref_index = find_socket_ref_with_room(context, ip_type, netints[0].index);
+#else
   int ref_index = find_socket_ref_with_room(context, ip_type);
+#endif
   if (ref_index >= 0)
   {
     ref = &context->socket_refs[ref_index];
     ++ref->refcount;
   }
-  else  // No shared sockets have room; must create a new one.
+  else  // Couldn't find a matching shared socket that has room; must create a new one.
   {
     EtcPalSockAddr recv_any = get_bind_address(ip_type);
 #if SACN_RECEIVER_LIMIT_BIND
@@ -655,6 +672,9 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptyp
     // Try to add the new socket ref to the array
     if (res == kEtcPalErrOk)
     {
+#if SACN_RECEIVER_SOCKET_PER_NIC
+      new_socket.ifindex = netints[0].index;
+#endif
       ref_index = add_socket_ref(context, &new_socket);
 
       if (ref_index == -1)
@@ -695,7 +715,13 @@ void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* so
                                  const EtcPalMcastNetintId* netints, size_t num_netints,
                                  socket_cleanup_behavior_t cleanup_behavior)
 {
-  if (SACN_ASSERT_VERIFY(socket != NULL) && SACN_ASSERT_VERIFY(*socket != ETCPAL_SOCKET_INVALID))
+#if SACN_RECEIVER_SOCKET_PER_NIC
+  if (!SACN_ASSERT_VERIFY(num_netints == 1))
+    return;
+#endif
+
+  if (SACN_ASSERT_VERIFY(socket != NULL) && SACN_ASSERT_VERIFY(*socket != ETCPAL_SOCKET_INVALID) &&
+      SACN_ASSERT_VERIFY(netints) && SACN_ASSERT_VERIFY(num_netints > 0))
   {
     SacnRecvThreadContext* context = get_recv_thread_context(thread_id);
 
@@ -729,6 +755,11 @@ etcpal_error_t queue_subscription(SacnRecvThreadContext* recv_thread_context, et
   {
     return kEtcPalErrSys;
   }
+
+#if SACN_RECEIVER_SOCKET_PER_NIC
+  if (!SACN_ASSERT_VERIFY(num_netints == 1))
+    return kEtcPalErrSys;
+#endif
 
   etcpal_error_t res = kEtcPalErrNoNetints;
 
@@ -775,6 +806,11 @@ etcpal_error_t unsubscribe_socket(SacnRecvThreadContext* recv_thread_context, et
     return kEtcPalErrSys;
   }
 
+#if SACN_RECEIVER_SOCKET_PER_NIC
+  if (!SACN_ASSERT_VERIFY(num_netints == 1))
+    return kEtcPalErrSys;
+#endif
+
   etcpal_error_t res = kEtcPalErrNoNetints;
 
   EtcPalGroupReq greq;
@@ -782,7 +818,11 @@ etcpal_error_t unsubscribe_socket(SacnRecvThreadContext* recv_thread_context, et
 
   for (const EtcPalMcastNetintId* netint = netints; netint < netints + num_netints; ++netint)
   {
+#if SACN_RECEIVER_SOCKET_PER_NIC
+    if (SACN_ASSERT_VERIFY(netint->ip_type == group->type))
+#else
     if (netint->ip_type == group->type)
+#endif
     {
       greq.ifindex = netint->index;
 
@@ -936,6 +976,7 @@ void sacn_unsubscribe_sockets(SacnRecvThreadContext* recv_thread_context)
  */
 etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadResult* read_result)
 {
+#if SACN_RECEIVER_ENABLED
   if (!SACN_ASSERT_VERIFY(recv_thread_context) || !SACN_ASSERT_VERIFY(read_result))
     return kEtcPalErrSys;
 
@@ -950,6 +991,18 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
     }
     else if (event.events & ETCPAL_POLL_IN)
     {
+#if SACN_RECEIVER_SOCKET_PER_NIC
+      int recv_res = etcpal_recvfrom(event.socket, recv_thread_context->recv_buf, SACN_MTU, 0, &read_result->from_addr);
+      if (recv_res > 0)
+      {
+        int index = find_socket_ref_by_handle(recv_thread_context, event.socket);
+        if (SACN_ASSERT_VERIFY(index >= 0))
+        {
+          read_result->netint.ip_type = recv_thread_context->socket_refs[index].socket.ip_type;
+          read_result->netint.index = recv_thread_context->socket_refs[index].socket.ifindex;
+        }
+      }
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
       uint8_t control_buf[ETCPAL_MAX_CONTROL_SIZE_PKTINFO];  // Ancillary data
 
       EtcPalMsgHdr msg;
@@ -962,19 +1015,17 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
       if (recv_res > 0)
       {
         if (msg.flags & ETCPAL_MSG_TRUNC)
-        {
           recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than SACN_MTU.
-        }
         else if ((msg.flags & ETCPAL_MSG_CTRUNC) || !get_netint_id(&msg, &read_result->netint))
-        {
           recv_res = kEtcPalErrSys;
-        }
         else
-        {
           read_result->from_addr = msg.name;
-          read_result->data_len = (size_t)recv_res;
-          read_result->data = recv_thread_context->recv_buf;
-        }
+      }
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
+      if (recv_res > 0)
+      {
+        read_result->data_len = (size_t)recv_res;
+        read_result->data = recv_thread_context->recv_buf;
       }
 
       if (recv_res < 0)
@@ -985,6 +1036,11 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
     }
   }
   return poll_res;
+#else   // SACN_RECEIVER_ENABLED
+  ETCPAL_UNUSED_ARG(recv_thread_context);
+  ETCPAL_UNUSED_ARG(read_result);
+  return kEtcPalErrNotImpl;
+#endif  // SACN_RECEIVER_ENABLED
 }
 
 etcpal_error_t sacn_send_multicast(uint16_t universe_id, sacn_ip_support_t ip_supported, const uint8_t* send_buf,
@@ -1516,6 +1572,29 @@ etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* interna
   }
 
   return result;
+}
+
+etcpal_error_t sacn_initialize_internal_sockets(SacnInternalSocketState* sockets)
+{
+#if SACN_RECEIVER_SOCKET_PER_NIC
+#if SACN_DYNAMIC_MEM
+  sockets->ipv4_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
+  sockets->ipv6_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
+  if (!sockets->ipv4_sockets || !sockets->ipv6_sockets)
+    return kEtcPalErrNoMem;
+
+  sockets->ipv4_sockets_capacity = INITIAL_CAPACITY;
+  sockets->ipv6_sockets_capacity = INITIAL_CAPACITY;
+#endif  // SACN_DYNAMIC_MEM
+
+  sockets->num_ipv4_sockets = 0;
+  sockets->num_ipv6_sockets = 0;
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
+  sockets->ipv4_socket = ETCPAL_SOCKET_INVALID;
+  sockets->ipv6_socket = ETCPAL_SOCKET_INVALID;
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
+
+  return kEtcPalErrOk;
 }
 
 etcpal_error_t test_sacn_receiver_netint(unsigned int index, etcpal_iptype_t ip_type, const EtcPalIpAddr* addr,

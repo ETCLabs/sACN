@@ -81,6 +81,8 @@ etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* interna
                                                 const SacnNetintConfig* app_netint_config, size_t num_valid_app_netints,
                                                 const SacnMcastInterface* sys_netints, size_t num_sys_netints);
 
+etcpal_error_t sacn_initialize_internal_sockets(SacnInternalSocketState* sockets);
+
 void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAddr* ip);
 etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
                                         const EtcPalMcastNetintId* netints, size_t num_netints,

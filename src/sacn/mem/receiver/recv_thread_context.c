@@ -161,7 +161,11 @@ bool add_unsubscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const
 }
 
 // Return index in context->socket_refs or -1 if not found.
+#if SACN_RECEIVER_SOCKET_PER_NIC
+int find_socket_ref_with_room(SacnRecvThreadContext* context, etcpal_iptype_t ip_type, unsigned int ifindex)
+#else
 int find_socket_ref_with_room(SacnRecvThreadContext* context, etcpal_iptype_t ip_type)
+#endif
 {
   if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(ip_type != kEtcPalIpTypeInvalid))
     return -1;
@@ -169,7 +173,12 @@ int find_socket_ref_with_room(SacnRecvThreadContext* context, etcpal_iptype_t ip
   int index = 0;
   for (SocketRef* entry = context->socket_refs; entry < (context->socket_refs + context->num_socket_refs); ++entry)
   {
-    if ((entry->socket.ip_type == ip_type) && (entry->refcount < SACN_RECEIVER_MAX_SUBS_PER_SOCKET))
+    bool matches = (entry->socket.ip_type == ip_type);
+#if SACN_RECEIVER_SOCKET_PER_NIC
+    matches = matches && (entry->socket.ifindex == ifindex);
+#endif
+
+    if (matches && (entry->refcount < SACN_RECEIVER_MAX_SUBS_PER_SOCKET))
       return index;
     else
       ++index;

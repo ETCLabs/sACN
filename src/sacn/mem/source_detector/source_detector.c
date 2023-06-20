@@ -59,10 +59,10 @@ etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, 
   {
     source_detector.thread_id = SACN_THREAD_ID_INVALID;
 
-    source_detector.ipv4_socket = ETCPAL_SOCKET_INVALID;
-    source_detector.ipv6_socket = ETCPAL_SOCKET_INVALID;
+    res = sacn_initialize_internal_sockets(&source_detector.sockets);
 
-    res = sacn_initialize_source_detector_netints(&source_detector.netints, netint_config);
+    if (res == kEtcPalErrOk)
+      res = sacn_initialize_source_detector_netints(&source_detector.netints, netint_config);
   }
 
   if (res == kEtcPalErrOk)
@@ -89,7 +89,18 @@ SacnSourceDetector* get_sacn_source_detector()
 
 void remove_sacn_source_detector()
 {
-  source_detector.created = false;
+  if (source_detector.created)
+  {
+#if SACN_DYNAMIC_MEM
+#if SACN_RECEIVER_SOCKET_PER_NIC
+    free(source_detector.sockets.ipv4_sockets);
+    free(source_detector.sockets.ipv6_sockets);
+#endif
+
+    free(source_detector.netints.netints);
+#endif
+    source_detector.created = false;
+  }
 }
 
 etcpal_error_t init_source_detector(void)

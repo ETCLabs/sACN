@@ -45,6 +45,20 @@
 
 /* Macros for dynamic allocation. */
 #define ALLOC_RECEIVER() malloc(sizeof(SacnReceiver))
+
+#if SACN_RECEIVER_SOCKET_PER_NIC
+#define FREE_RECEIVER(ptr)             \
+  do                                   \
+  {                                    \
+    if (ptr->netints.netints)          \
+    {                                  \
+      free(ptr->sockets.ipv4_sockets); \
+      free(ptr->sockets.ipv6_sockets); \
+      free(ptr->netints.netints);      \
+    }                                  \
+    free(ptr);                         \
+  } while (0)
+#else  // SACN_RECEIVER_SOCKET_PER_NIC
 #define FREE_RECEIVER(ptr)        \
   do                              \
   {                               \
@@ -54,6 +68,7 @@
     }                             \
     free(ptr);                    \
   } while (0)
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
 
 #else  // SACN_DYNAMIC_MEM
 
@@ -92,6 +107,8 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
  * Allocate a new receiver instances and do essential first initialization, in preparation for
  * creating the sockets and subscriptions.
  *
+ * If an error occurs, make sure to call remove_sacn_receiver since memory may need to be freed.
+ *
  * [in] handle Handle to use for this receiver.
  * [in] config Receiver configuration data.
  * [in] netint_config Network interface list for the receiver to use.
@@ -122,8 +139,9 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   receiver->keys.universe = config->universe_id;
   receiver->thread_id = SACN_THREAD_ID_INVALID;
 
-  receiver->ipv4_socket = ETCPAL_SOCKET_INVALID;
-  receiver->ipv6_socket = ETCPAL_SOCKET_INVALID;
+  etcpal_error_t res = sacn_initialize_internal_sockets(&receiver->sockets);
+  if (!res)
+    return res;
 
 #if SACN_DYNAMIC_MEM
   receiver->netints.netints = NULL;
@@ -134,13 +152,9 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   etcpal_rbtree_init(&receiver->sampling_period_netints, sampling_period_netint_compare,
                      sampling_period_netint_node_alloc, sampling_period_netint_node_dealloc);
 
-  etcpal_error_t initialize_receiver_netints_result =
-      sacn_initialize_receiver_netints(&receiver->netints, false, &receiver->sampling_period_netints, netint_config);
-  if (initialize_receiver_netints_result != kEtcPalErrOk)
-  {
-    FREE_RECEIVER(receiver);
-    return initialize_receiver_netints_result;
-  }
+  res = sacn_initialize_receiver_netints(&receiver->netints, false, &receiver->sampling_period_netints, netint_config);
+  if (!res)
+    return res;
 
   receiver->sampling = false;
   receiver->notified_sampling_started = false;

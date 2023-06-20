@@ -271,6 +271,28 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #endif
 
 /**
+ * @brief Configure whether or not to use the PKTINFO sockopts to determine which NIC received a packet.
+ *
+ * If set to 0, the corresponding PKTINFO sockopts for IPv4 and/or IPv6 are enabled, and the NIC is obtained from
+ * ancillary data via recvmsg. This is not supported on Windows due to performance issues that occur when either of the
+ * PKTINFO sockopts are enabled.
+ *
+ * If set to 1, a socket will only be able to subscribe on one NIC instead of all of them. This will result in the
+ * creation of more sockets to cover all the NICs on the system. The NIC will then be determined by the socket that
+ * received the data. This will likely not work on Linux or lwIP, since each bound socket is susceptible to receiving
+ * data from subscriptions on other sockets.
+ *
+ * Don't change this option unless you know what you're doing.
+ */
+#ifdef SACN_RECEIVER_SOCKET_PER_NIC
+#if !SACN_RECEIVER_SOCKET_PER_NIC && _WIN32
+#error "Error: SACN_RECEIVER_SOCKET_PER_NIC was set to 0 on Windows, which is not supported due to performance issues."
+#endif
+#else
+#define SACN_RECEIVER_SOCKET_PER_NIC (_WIN32)
+#endif
+
+/**
  * @brief The maximum number of multicast subscriptions supported per shared socket.
  *
  * We cap multicast subscriptions at a certain number to keep it below the system limit.

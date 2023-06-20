@@ -70,9 +70,16 @@ extern "C" {
 /*
  * This ensures there are always enough SocketRefs. This is multiplied by 2 because SocketRefs come in pairs - one for
  * IPv4, and another for IPv6. This is because a single SocketRef cannot intermix IPv4 and IPv6.
+ *
+ * If SACN_RECEIVER_SOCKET_PER_NIC is enabled, this is further multiplied by the max number of NICs.
  */
+#if SACN_RECEIVER_SOCKET_PER_NIC
+#define SACN_RECEIVER_MAX_SOCKET_REFS \
+  ((((SACN_RECEIVER_MAX_UNIVERSES - 1) / SACN_RECEIVER_MAX_SUBS_PER_SOCKET) + 1) * 2 * SACN_MAX_NETINTS)
+#else
 #define SACN_RECEIVER_MAX_SOCKET_REFS \
   ((((SACN_RECEIVER_MAX_UNIVERSES - 1) / SACN_RECEIVER_MAX_SUBS_PER_SOCKET) + 1) * 2)
+#endif
 
 typedef unsigned int sacn_thread_id_t;
 #define SACN_THREAD_ID_INVALID UINT_MAX
@@ -201,6 +208,19 @@ typedef struct SacnInternalNetintArray
   size_t num_netints;
 } SacnInternalNetintArray;
 
+typedef struct SacnInternalSocketState
+{
+#if SACN_RECEIVER_SOCKET_PER_NIC
+  SACN_DECLARE_BUF(etcpal_socket_t, ipv4_sockets, SACN_MAX_NETINTS);
+  SACN_DECLARE_BUF(etcpal_socket_t, ipv6_sockets, SACN_MAX_NETINTS);
+  size_t num_ipv4_sockets;
+  size_t num_ipv6_sockets;
+#else
+  etcpal_socket_t ipv4_socket;
+  etcpal_socket_t ipv6_socket;
+#endif
+} SacnInternalSocketState;
+
 /******************************************************************************
  * Types used by the source loss module
  *****************************************************************************/
@@ -255,8 +275,7 @@ typedef struct SacnSourceDetector
   sacn_thread_id_t thread_id;
 
   // Sockets / network interface info
-  etcpal_socket_t ipv4_socket;
-  etcpal_socket_t ipv6_socket;
+  SacnInternalSocketState sockets;
   /* Array of network interfaces on which to listen to the specified universe. */
   SacnInternalNetintArray netints;
 
@@ -440,8 +459,7 @@ struct SacnReceiver
   sacn_thread_id_t thread_id;
 
   // Sockets / network interface info
-  etcpal_socket_t ipv4_socket;
-  etcpal_socket_t ipv6_socket;
+  SacnInternalSocketState sockets;
   /* Array of network interfaces on which to listen to the specified universe. */
   SacnInternalNetintArray netints;
 
@@ -619,6 +637,9 @@ typedef struct ReceiveSocket
   etcpal_iptype_t ip_type; /* The IP type used in multicast subscriptions and the bind address. */
   bool bound;              /* True if bind was called on this socket, false otherwise. */
   bool polling;            /* True if this socket was added to a poll context, false otherwise. */
+#if SACN_RECEIVER_SOCKET_PER_NIC
+  unsigned int ifindex; /* Index of network interface on which this socket is subscribed. */
+#endif
 } ReceiveSocket;
 
 #define RECV_SOCKET_DEFAULT_INIT                              \
