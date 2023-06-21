@@ -26,6 +26,7 @@
 #include "sacn/private/opts.h"
 #include "sacn/private/sockets.h"
 #include "sacn/private/mem/common.h"
+#include "sacn/private/mem/receiver/receiver.h"
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>
@@ -59,7 +60,7 @@ etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, 
   {
     source_detector.thread_id = SACN_THREAD_ID_INVALID;
 
-    res = sacn_initialize_internal_sockets(&source_detector.sockets);
+    res = initialize_receiver_sockets(&source_detector.sockets);
 
     if (res == kEtcPalErrOk)
       res = sacn_initialize_source_detector_netints(&source_detector.netints, netint_config);
