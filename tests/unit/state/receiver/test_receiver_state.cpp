@@ -182,7 +182,9 @@ protected:
     {
       context.socket_refs[i].socket.handle = kTestSocket + i;
       context.socket_refs[i].socket.ip_type = kTestNetints[i].iface.ip_type;
+#if SACN_RECEIVER_SOCKET_PER_NIC
       context.socket_refs[i].socket.ifindex = kTestNetints[i].iface.index;
+#endif
     }
 
     context.num_socket_refs = kTestNetints.size();
@@ -224,7 +226,9 @@ protected:
     {
       EXPECT_EQ(initialize_receiver_sockets(&receiver->sockets), kEtcPalErrOk);
       if (add_mode == ReceiverAddMode::kComplete)
+      {
         EXPECT_EQ(assign_receiver_to_thread(receiver), kEtcPalErrOk);
+      }
     }
 
     return receiver;
@@ -570,7 +574,6 @@ TEST_F(TestReceiverState, ClearTermSetsAndSourcesWorks)
 
 TEST_F(TestReceiverState, AssignReceiverToThreadWorks)
 {
-  static etcpal_socket_t next_socket = kTestSocket;
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t universe,
                                                  const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
     EXPECT_EQ(universe, kTestUniverse);
