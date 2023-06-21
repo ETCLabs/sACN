@@ -622,25 +622,28 @@ etcpal_error_t add_sockets(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, 
   etcpal_error_t res = kEtcPalErrOk;
   for (const EtcPalMcastNetintId* netint = netints; netint < (netints + num_netints); ++netint)
   {
-    if (ip_type == kEtcPalIpTypeV4)
+    if (netint->ip_type == ip_type)
     {
-      CHECK_ROOM_FOR_ONE_MORE(sockets, ipv4_sockets, etcpal_socket_t, SACN_MAX_NETINTS, kEtcPalErrNoMem);
-      res = sacn_add_receiver_socket(thread_id, ip_type, universe, netint, 1,
-                                     &sockets->ipv4_sockets[sockets->num_ipv4_sockets]);
-      if (res == kEtcPalErrOk)
-        ++sockets->num_ipv4_sockets;
-      else
-        break;
-    }
-    else  // ip_type == kEtcPalIpTypeV6
-    {
-      CHECK_ROOM_FOR_ONE_MORE(sockets, ipv6_sockets, etcpal_socket_t, SACN_MAX_NETINTS, kEtcPalErrNoMem);
-      res = sacn_add_receiver_socket(thread_id, ip_type, universe, netint, 1,
-                                     &sockets->ipv6_sockets[sockets->num_ipv6_sockets]);
-      if (res == kEtcPalErrOk)
-        ++sockets->num_ipv6_sockets;
-      else
-        break;
+      if (ip_type == kEtcPalIpTypeV4)
+      {
+        CHECK_ROOM_FOR_ONE_MORE(sockets, ipv4_sockets, etcpal_socket_t, SACN_MAX_NETINTS, kEtcPalErrNoMem);
+        res = sacn_add_receiver_socket(thread_id, ip_type, universe, netint, 1,
+                                       &sockets->ipv4_sockets[sockets->num_ipv4_sockets]);
+        if (res == kEtcPalErrOk)
+          ++sockets->num_ipv4_sockets;
+        else
+          break;
+      }
+      else  // ip_type == kEtcPalIpTypeV6
+      {
+        CHECK_ROOM_FOR_ONE_MORE(sockets, ipv6_sockets, etcpal_socket_t, SACN_MAX_NETINTS, kEtcPalErrNoMem);
+        res = sacn_add_receiver_socket(thread_id, ip_type, universe, netint, 1,
+                                       &sockets->ipv6_sockets[sockets->num_ipv6_sockets]);
+        if (res == kEtcPalErrOk)
+          ++sockets->num_ipv6_sockets;
+        else
+          break;
+      }
     }
   }
 

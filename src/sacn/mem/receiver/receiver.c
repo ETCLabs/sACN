@@ -140,7 +140,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   receiver->thread_id = SACN_THREAD_ID_INVALID;
 
   etcpal_error_t res = sacn_initialize_internal_sockets(&receiver->sockets);
-  if (!res)
+  if (res != kEtcPalErrOk)
     return res;
 
 #if SACN_DYNAMIC_MEM
@@ -153,7 +153,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
                      sampling_period_netint_node_alloc, sampling_period_netint_node_dealloc);
 
   res = sacn_initialize_receiver_netints(&receiver->netints, false, &receiver->sampling_period_netints, netint_config);
-  if (!res)
+  if (res != kEtcPalErrOk)
     return res;
 
   receiver->sampling = false;

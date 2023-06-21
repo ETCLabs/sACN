@@ -768,7 +768,11 @@ etcpal_error_t queue_subscription(SacnRecvThreadContext* recv_thread_context, et
 
   for (const EtcPalMcastNetintId* netint = netints; netint < netints + num_netints; ++netint)
   {
+#if SACN_RECEIVER_SOCKET_PER_NIC
+    if (SACN_ASSERT_VERIFY(netint->ip_type == group->type))
+#else
     if (netint->ip_type == group->type)
+#endif
     {
       greq.ifindex = netint->index;
 
