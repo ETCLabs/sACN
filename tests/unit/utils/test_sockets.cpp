@@ -231,7 +231,7 @@ protected:
       }
     }
 #else   // SACN_RECEIVER_SOCKET_PER_NIC
-    res = sacn_add_receiver_socket(thread_id, ip_type, universe, netints, num_netints, &socket);
+    res = sacn_add_receiver_socket(thread_id, ip_type, universe, netints.data(), netints.size(), &socket);
     if (res == kEtcPalErrOk)
       sockets.push_back(socket);
 #endif  // SACN_RECEIVER_SOCKET_PER_NIC
@@ -652,12 +652,8 @@ TEST_F(TestSockets, AddAndRemoveReceiverSocketBindWhenNeeded)
   static constexpr sacn_thread_id_t kThreadId = 0u;
   static constexpr uint16_t kStartUniverse = 1u;
   static constexpr int kNumIterations = 4;
-#if SACN_RECEIVER_SOCKET_PER_NIC && !SACN_RECEIVER_LIMIT_BIND
+
   ASSERT_EQ(fake_v4_netint_ids_.size(), fake_v6_netint_ids_.size());
-  const size_t kNumBindsPerAdd = fake_v4_netint_ids_.size();
-#else
-  const size_t kNumBindsPerAdd = 1u;
-#endif
 
   std::vector<etcpal_socket_t> sockets[SACN_RECEIVER_MAX_SUBS_PER_SOCKET * kNumIterations * 2];
   uint16_t universe = kStartUniverse;
