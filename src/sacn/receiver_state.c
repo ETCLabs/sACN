@@ -659,7 +659,11 @@ etcpal_error_t add_sockets(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, 
 void remove_sockets(sacn_thread_id_t thread_id, SacnInternalSocketState* sockets, uint16_t universe,
                     const EtcPalMcastNetintId* netints, size_t num_netints, socket_cleanup_behavior_t cleanup_behavior)
 {
-  if (SACN_ASSERT_VERIFY(sockets) && SACN_ASSERT_VERIFY(netints) && SACN_ASSERT_VERIFY(num_netints > 0))
+#if SACN_RECEIVER_SOCKET_PER_NIC
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(num_netints);
+#endif
+  if (SACN_ASSERT_VERIFY(sockets))
   {
 #if SACN_RECEIVER_SOCKET_PER_NIC
     SacnRecvThreadContext* context = get_recv_thread_context(thread_id);

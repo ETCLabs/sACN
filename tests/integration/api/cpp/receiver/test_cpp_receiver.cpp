@@ -239,7 +239,8 @@ public:
     }
   }
 
-  void HandleSourcesLost(Receiver::Handle handle, uint16_t universe, const std::vector<SacnLostSource>& lost_sources) override
+  void HandleSourcesLost(Receiver::Handle handle, uint16_t universe,
+                         const std::vector<SacnLostSource>& lost_sources) override
   {
     ETCPAL_UNUSED_ARG(handle);
     ETCPAL_UNUSED_ARG(lost_sources);
@@ -252,7 +253,7 @@ public:
     ETCPAL_UNUSED_ARG(universe);
     is_sampling = true;
   }
-  
+
   void HandleSamplingPeriodEnded(Receiver::Handle handle, uint16_t universe) override
   {
     ETCPAL_UNUSED_ARG(handle);
@@ -264,8 +265,11 @@ public:
 class TestReceiverBase : public ::testing::Test
 {
 protected:
-
-  enum class FakeReceiveMode { kMulticast, kUnicast };
+  enum class FakeReceiveMode
+  {
+    kMulticast,
+    kUnicast
+  };
 
   void SetUp() override
   {
@@ -305,6 +309,7 @@ protected:
     etcpal_cmsg_firsthdr_fake.custom_fake = [](EtcPalMsgHdr*, EtcPalCMsgHdr*) { return true; };
 
     etcpal_poll_wait_fake.custom_fake = [](EtcPalPollContext*, EtcPalPollEvent* event, int) {
+      event->socket = (next_socket - 1);
       event->events = ETCPAL_POLL_IN;
       return kEtcPalErrOk;
     };
@@ -330,7 +335,8 @@ protected:
     EXPECT_EQ(receiver_.Startup(receiver_settings_, notify_handler_), kEtcPalErrOk);
   }
 
-  static int FakeReceive(FakeReceiveMode mode, uint8_t index, std::vector<uint8_t> data, EtcPalMsgHdr* msg) {
+  static int FakeReceive(FakeReceiveMode mode, uint8_t index, std::vector<uint8_t> data, EtcPalMsgHdr* msg)
+  {
     EXPECT_NE(msg, nullptr);
     EtcPalSockAddr etcpal_sock_addr;
     EtcPalIpAddr ip;

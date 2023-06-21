@@ -197,11 +197,11 @@ void unsubscribe_socket_ref(SacnRecvThreadContext* recv_thread_context, int ref_
                             const EtcPalMcastNetintId* netints, size_t num_netints,
                             socket_cleanup_behavior_t cleanup_behavior)
 {
-  if (!SACN_ASSERT_VERIFY(recv_thread_context) || !SACN_ASSERT_VERIFY(netints) || !SACN_ASSERT_VERIFY(num_netints > 0))
+  if (!SACN_ASSERT_VERIFY(recv_thread_context))
     return;
 
 #if SACN_RECEIVER_SOCKET_PER_NIC
-  if (!SACN_ASSERT_VERIFY(num_netints == 1))
+  if (!SACN_ASSERT_VERIFY(num_netints <= 1))
     return;
 #endif
 
@@ -716,12 +716,11 @@ void sacn_remove_receiver_socket(sacn_thread_id_t thread_id, etcpal_socket_t* so
                                  socket_cleanup_behavior_t cleanup_behavior)
 {
 #if SACN_RECEIVER_SOCKET_PER_NIC
-  if (!SACN_ASSERT_VERIFY(num_netints == 1))
+  if (!SACN_ASSERT_VERIFY(num_netints <= 1))
     return;
 #endif
 
-  if (SACN_ASSERT_VERIFY(socket != NULL) && SACN_ASSERT_VERIFY(*socket != ETCPAL_SOCKET_INVALID) &&
-      SACN_ASSERT_VERIFY(netints) && SACN_ASSERT_VERIFY(num_netints > 0))
+  if (SACN_ASSERT_VERIFY(socket != NULL) && SACN_ASSERT_VERIFY(*socket != ETCPAL_SOCKET_INVALID))
   {
     SacnRecvThreadContext* context = get_recv_thread_context(thread_id);
 
@@ -805,7 +804,7 @@ etcpal_error_t unsubscribe_socket(SacnRecvThreadContext* recv_thread_context, et
                                   socket_cleanup_behavior_t cleanup_behavior)
 {
   if (!SACN_ASSERT_VERIFY(recv_thread_context) || !SACN_ASSERT_VERIFY(sock != ETCPAL_SOCKET_INVALID) ||
-      !SACN_ASSERT_VERIFY(group) || !SACN_ASSERT_VERIFY(netints) || !SACN_ASSERT_VERIFY(num_netints > 0))
+      !SACN_ASSERT_VERIFY(group))
   {
     return kEtcPalErrSys;
   }
@@ -995,18 +994,6 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
     }
     else if (event.events & ETCPAL_POLL_IN)
     {
-#if SACN_RECEIVER_SOCKET_PER_NIC
-      int recv_res = etcpal_recvfrom(event.socket, recv_thread_context->recv_buf, SACN_MTU, 0, &read_result->from_addr);
-      if (recv_res > 0)
-      {
-        int index = find_socket_ref_by_handle(recv_thread_context, event.socket);
-        if (SACN_ASSERT_VERIFY(index >= 0))
-        {
-          read_result->netint.ip_type = recv_thread_context->socket_refs[index].socket.ip_type;
-          read_result->netint.index = recv_thread_context->socket_refs[index].socket.ifindex;
-        }
-      }
-#else   // SACN_RECEIVER_SOCKET_PER_NIC
       uint8_t control_buf[ETCPAL_MAX_CONTROL_SIZE_PKTINFO];  // Ancillary data
 
       EtcPalMsgHdr msg;
@@ -1019,17 +1006,32 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
       if (recv_res > 0)
       {
         if (msg.flags & ETCPAL_MSG_TRUNC)
+        {
           recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than SACN_MTU.
-        else if ((msg.flags & ETCPAL_MSG_CTRUNC) || !get_netint_id(&msg, &read_result->netint))
-          recv_res = kEtcPalErrSys;
+        }
         else
+        {
           read_result->from_addr = msg.name;
-      }
+          read_result->data_len = (size_t)recv_res;
+          read_result->data = recv_thread_context->recv_buf;
+
+          // Obtain the network interface the packet came in on using one of two configured methods
+#if SACN_RECEIVER_SOCKET_PER_NIC
+          int index = find_socket_ref_by_handle(recv_thread_context, event.socket);
+          if (SACN_ASSERT_VERIFY(index >= 0))
+          {
+            read_result->netint.ip_type = recv_thread_context->socket_refs[index].socket.ip_type;
+            read_result->netint.index = recv_thread_context->socket_refs[index].socket.ifindex;
+          }
+          else
+          {
+            recv_res = kEtcPalErrSys;
+          }
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
+          if ((msg.flags & ETCPAL_MSG_CTRUNC) || !get_netint_id(&msg, &read_result->netint))
+            recv_res = kEtcPalErrSys;
 #endif  // SACN_RECEIVER_SOCKET_PER_NIC
-      if (recv_res > 0)
-      {
-        read_result->data_len = (size_t)recv_res;
-        read_result->data = recv_thread_context->recv_buf;
+        }
       }
 
       if (recv_res < 0)
