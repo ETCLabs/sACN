@@ -135,7 +135,9 @@ static etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* 
 static EtcPalSockAddr get_bind_address(etcpal_iptype_t ip_type);
 #endif  // SACN_RECEIVER_ENABLED
 
+#if !SACN_RECEIVER_SOCKET_PER_NIC
 static bool get_netint_id(EtcPalMsgHdr* msg, EtcPalMcastNetintId* netint_id);
+#endif  // !SACN_RECEIVER_SOCKET_PER_NIC
 
 static etcpal_error_t init_sys_netint_list(SysNetintList* netint_list);
 static void deinit_sys_netint_list(SysNetintList* netint_list);
@@ -366,6 +368,8 @@ EtcPalSockAddr get_bind_address(etcpal_iptype_t ip_type)
 
 #endif  // SACN_RECEIVER_ENABLED
 
+#if !SACN_RECEIVER_SOCKET_PER_NIC
+
 bool get_netint_id(EtcPalMsgHdr* msg, EtcPalMcastNetintId* netint_id)
 {
   if (!SACN_ASSERT_VERIFY(msg) || !SACN_ASSERT_VERIFY(netint_id))
@@ -390,6 +394,8 @@ bool get_netint_id(EtcPalMsgHdr* msg, EtcPalMcastNetintId* netint_id)
 
   return pktinfo_found;
 }
+
+#endif  // !SACN_RECEIVER_SOCKET_PER_NIC
 
 /*
  * Internal function to create a new send socket for multicast, associated with an interface.
