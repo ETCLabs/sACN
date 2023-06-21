@@ -139,7 +139,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   receiver->keys.universe = config->universe_id;
   receiver->thread_id = SACN_THREAD_ID_INVALID;
 
-  etcpal_error_t res = sacn_initialize_internal_sockets(&receiver->sockets);
+  etcpal_error_t res = initialize_receiver_sockets(&receiver->sockets);
   if (!res)
     return res;
 
@@ -256,6 +256,29 @@ void remove_sacn_receiver(SacnReceiver* receiver)
   etcpal_rbtree_clear_with_cb(&receiver->sources, tracked_source_tree_dealloc);
   remove_receiver_from_maps(receiver);
   FREE_RECEIVER(receiver);
+}
+
+etcpal_error_t initialize_receiver_sockets(SacnInternalSocketState* sockets)
+{
+#if SACN_RECEIVER_SOCKET_PER_NIC
+#if SACN_DYNAMIC_MEM
+  sockets->ipv4_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
+  sockets->ipv6_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
+  if (!sockets->ipv4_sockets || !sockets->ipv6_sockets)
+    return kEtcPalErrNoMem;
+
+  sockets->ipv4_sockets_capacity = INITIAL_CAPACITY;
+  sockets->ipv6_sockets_capacity = INITIAL_CAPACITY;
+#endif  // SACN_DYNAMIC_MEM
+
+  sockets->num_ipv4_sockets = 0;
+  sockets->num_ipv6_sockets = 0;
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
+  sockets->ipv4_socket = ETCPAL_SOCKET_INVALID;
+  sockets->ipv6_socket = ETCPAL_SOCKET_INVALID;
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
+
+  return kEtcPalErrOk;
 }
 
 /*

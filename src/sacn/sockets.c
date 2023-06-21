@@ -1574,29 +1574,6 @@ etcpal_error_t sacn_initialize_internal_netints(SacnInternalNetintArray* interna
   return result;
 }
 
-etcpal_error_t sacn_initialize_internal_sockets(SacnInternalSocketState* sockets)
-{
-#if SACN_RECEIVER_SOCKET_PER_NIC
-#if SACN_DYNAMIC_MEM
-  sockets->ipv4_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
-  sockets->ipv6_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
-  if (!sockets->ipv4_sockets || !sockets->ipv6_sockets)
-    return kEtcPalErrNoMem;
-
-  sockets->ipv4_sockets_capacity = INITIAL_CAPACITY;
-  sockets->ipv6_sockets_capacity = INITIAL_CAPACITY;
-#endif  // SACN_DYNAMIC_MEM
-
-  sockets->num_ipv4_sockets = 0;
-  sockets->num_ipv6_sockets = 0;
-#else   // SACN_RECEIVER_SOCKET_PER_NIC
-  sockets->ipv4_socket = ETCPAL_SOCKET_INVALID;
-  sockets->ipv6_socket = ETCPAL_SOCKET_INVALID;
-#endif  // SACN_RECEIVER_SOCKET_PER_NIC
-
-  return kEtcPalErrOk;
-}
-
 etcpal_error_t test_sacn_receiver_netint(unsigned int index, etcpal_iptype_t ip_type, const EtcPalIpAddr* addr,
                                          SacnMcastInterface* sys_netints, size_t* num_sys_netints)
 {

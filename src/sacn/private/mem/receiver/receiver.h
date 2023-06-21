@@ -42,6 +42,7 @@ SacnReceiver* get_first_receiver(EtcPalRbIter* iterator);
 SacnReceiver* get_next_receiver(EtcPalRbIter* iterator);
 etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_universe);
 void remove_sacn_receiver(SacnReceiver* receiver);
+etcpal_error_t initialize_receiver_sockets(SacnInternalSocketState* sockets);
 
 #ifdef __cplusplus
 }
