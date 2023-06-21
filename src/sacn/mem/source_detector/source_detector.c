@@ -60,10 +60,20 @@ etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, 
   {
     source_detector.thread_id = SACN_THREAD_ID_INVALID;
 
-    res = initialize_receiver_sockets(&source_detector.sockets);
+#if SACN_RECEIVER_SOCKET_PER_NIC
+#if SACN_DYNAMIC_MEM
+    source_detector.sockets.ipv4_sockets = NULL;
+    source_detector.sockets.ipv6_sockets = NULL;
+#endif  // SACN_DYNAMIC_MEM
 
-    if (res == kEtcPalErrOk)
-      res = sacn_initialize_source_detector_netints(&source_detector.netints, netint_config);
+    source_detector.sockets.num_ipv4_sockets = 0;
+    source_detector.sockets.num_ipv6_sockets = 0;
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
+    source_detector.sockets.ipv4_socket = ETCPAL_SOCKET_INVALID;
+    source_detector.sockets.ipv6_socket = ETCPAL_SOCKET_INVALID;
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
+
+    res = sacn_initialize_source_detector_netints(&source_detector.netints, netint_config);
   }
 
   if (res == kEtcPalErrOk)

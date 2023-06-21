@@ -1017,15 +1017,22 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
 
           // Obtain the network interface the packet came in on using one of two configured methods
 #if SACN_RECEIVER_SOCKET_PER_NIC
-          int index = find_socket_ref_by_handle(recv_thread_context, event.socket);
-          if (SACN_ASSERT_VERIFY(index >= 0))
+          if (sacn_lock())
           {
-            read_result->netint.ip_type = recv_thread_context->socket_refs[index].socket.ip_type;
-            read_result->netint.index = recv_thread_context->socket_refs[index].socket.ifindex;
-          }
-          else
-          {
-            recv_res = kEtcPalErrSys;
+            int index = find_socket_ref_by_handle(recv_thread_context, event.socket);
+
+            if (index >= 0)
+            {
+              read_result->netint.ip_type = recv_thread_context->socket_refs[index].socket.ip_type;
+              read_result->netint.index = recv_thread_context->socket_refs[index].socket.ifindex;
+            }
+            else
+            {
+              // Data from a socket we just removed (kEtcPalErrNoSockets will not log an error)
+              recv_res = kEtcPalErrNoSockets;
+            }
+
+            sacn_unlock();
           }
 #else   // SACN_RECEIVER_SOCKET_PER_NIC
           if ((msg.flags & ETCPAL_MSG_CTRUNC) || !get_netint_id(&msg, &read_result->netint))

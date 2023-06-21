@@ -336,6 +336,8 @@ etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
   etcpal_error_t ipv4_res = kEtcPalErrNoNetints;
   etcpal_error_t ipv6_res = kEtcPalErrNoNetints;
 
+  initialize_receiver_sockets(&receiver->sockets);
+
   if (supports_ipv4(receiver->ip_supported))
   {
     ipv4_res = add_sockets(receiver->thread_id, kEtcPalIpTypeV4, receiver->keys.universe, receiver->netints.netints,

@@ -139,9 +139,18 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   receiver->keys.universe = config->universe_id;
   receiver->thread_id = SACN_THREAD_ID_INVALID;
 
-  etcpal_error_t res = initialize_receiver_sockets(&receiver->sockets);
-  if (res != kEtcPalErrOk)
-    return res;
+#if SACN_RECEIVER_SOCKET_PER_NIC
+#if SACN_DYNAMIC_MEM
+  receiver->sockets.ipv4_sockets = NULL;
+  receiver->sockets.ipv6_sockets = NULL;
+#endif  // SACN_DYNAMIC_MEM
+
+  receiver->sockets.num_ipv4_sockets = 0;
+  receiver->sockets.num_ipv6_sockets = 0;
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
+  receiver->sockets.ipv4_socket = ETCPAL_SOCKET_INVALID;
+  receiver->sockets.ipv6_socket = ETCPAL_SOCKET_INVALID;
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
 
 #if SACN_DYNAMIC_MEM
   receiver->netints.netints = NULL;
@@ -152,7 +161,8 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   etcpal_rbtree_init(&receiver->sampling_period_netints, sampling_period_netint_compare,
                      sampling_period_netint_node_alloc, sampling_period_netint_node_dealloc);
 
-  res = sacn_initialize_receiver_netints(&receiver->netints, false, &receiver->sampling_period_netints, netint_config);
+  etcpal_error_t res =
+      sacn_initialize_receiver_netints(&receiver->netints, false, &receiver->sampling_period_netints, netint_config);
   if (res != kEtcPalErrOk)
     return res;
 
@@ -262,13 +272,20 @@ etcpal_error_t initialize_receiver_sockets(SacnInternalSocketState* sockets)
 {
 #if SACN_RECEIVER_SOCKET_PER_NIC
 #if SACN_DYNAMIC_MEM
-  sockets->ipv4_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
-  sockets->ipv6_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
+  if (!sockets->ipv4_sockets)
+  {
+    sockets->ipv4_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
+    sockets->ipv4_sockets_capacity = INITIAL_CAPACITY;
+  }
+
+  if (!sockets->ipv6_sockets)
+  {
+    sockets->ipv6_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
+    sockets->ipv6_sockets_capacity = INITIAL_CAPACITY;
+  }
+
   if (!sockets->ipv4_sockets || !sockets->ipv6_sockets)
     return kEtcPalErrNoMem;
-
-  sockets->ipv4_sockets_capacity = INITIAL_CAPACITY;
-  sockets->ipv6_sockets_capacity = INITIAL_CAPACITY;
 #endif  // SACN_DYNAMIC_MEM
 
   sockets->num_ipv4_sockets = 0;
