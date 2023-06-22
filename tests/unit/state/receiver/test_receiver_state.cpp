@@ -800,7 +800,11 @@ TEST_F(TestReceiverState, AddReceiverSocketsHandlesErrors)
   };
 
   EXPECT_EQ(add_receiver_sockets(receiver), kEtcPalErrOk);
+#if SACN_RECEIVER_SOCKET_PER_NIC
   EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 8u);  // 1 call for IPv4, 3 for IPv6
+#else
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 6u);  // 1 call for IPv4, 1 for IPv6
+#endif
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
 
   sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t ip_type, uint16_t,
@@ -813,7 +817,11 @@ TEST_F(TestReceiverState, AddReceiverSocketsHandlesErrors)
 
   // Call assign_receiver_to_thread at the end to finish receiver init (so TearDown works correctly)
   EXPECT_EQ(assign_receiver_to_thread(receiver), kEtcPalErrOk);
+#if SACN_RECEIVER_SOCKET_PER_NIC
   EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 12u);  // 3 calls for IPv4, 1 for IPv6
+#else
+  EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 8u);  // 1 call for IPv4, 1 for IPv6
+#endif
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
 }
 

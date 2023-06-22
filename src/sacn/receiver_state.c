@@ -703,8 +703,10 @@ void remove_sockets(sacn_thread_id_t thread_id, SacnInternalSocketState* sockets
       CLEAR_BUF(sockets, ipv6_sockets);
     }
 #else   // SACN_RECEIVER_SOCKET_PER_NIC
-    sacn_remove_receiver_socket(thread_id, &sockets->ipv4_socket, universe, netints, num_netints, cleanup_behavior);
-    sacn_remove_receiver_socket(thread_id, &sockets->ipv6_socket, universe, netints, num_netints, cleanup_behavior);
+    if (sockets->ipv4_socket != ETCPAL_SOCKET_INVALID)
+      sacn_remove_receiver_socket(thread_id, &sockets->ipv4_socket, universe, netints, num_netints, cleanup_behavior);
+    if (sockets->ipv6_socket != ETCPAL_SOCKET_INVALID)
+      sacn_remove_receiver_socket(thread_id, &sockets->ipv6_socket, universe, netints, num_netints, cleanup_behavior);
 #endif  // SACN_RECEIVER_SOCKET_PER_NIC
   }
 }
