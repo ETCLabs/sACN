@@ -45,7 +45,7 @@ static const EtcPalSockAddr kTestSourceAddr = {SACN_PORT, etcpal::IpAddr::FromSt
 const std::string kTestName = "Test Name";
 
 #if SACN_DYNAMIC_MEM
-constexpr int kTestMaxSources = 3;
+constexpr unsigned int kTestMaxSources = 3;
 constexpr uint16_t kTestMaxUniverses = 2000u;
 #else
 constexpr unsigned int kTestMaxSources = SACN_SOURCE_DETECTOR_MAX_SOURCES;

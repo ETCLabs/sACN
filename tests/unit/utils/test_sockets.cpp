@@ -259,8 +259,8 @@ protected:
       sacn_remove_receiver_socket(thread_id, &socket, universe, &netint, 1, cleanup_behavior);
     }
 #else   // SACN_RECEIVER_SOCKET_PER_NIC
-    ASSERT_TRUE(sockets.size() == 1);
-    sacn_remove_receiver_socket(thread_id, &sockets[0], universe, netints.data(), netints.size(), cleanup_behavior);
+    for (auto socket : sockets)
+      sacn_remove_receiver_socket(thread_id, &socket, universe, netints.data(), netints.size(), cleanup_behavior);
 #endif  // SACN_RECEIVER_SOCKET_PER_NIC
   }
 
