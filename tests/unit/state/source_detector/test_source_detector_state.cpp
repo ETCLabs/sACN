@@ -250,6 +250,8 @@ TEST_F(TestSourceDetectorState, SourceUpdatedFiltersDroppedLists)
   EXPECT_EQ(source_updated_fake.call_count, 1u);
 }
 
+#if SACN_DYNAMIC_MEM  // Disabled in static memory mode until SACN-337 is implemented
+
 TEST_F(TestSourceDetectorState, SourceExpiredWorksAllAtOnce)
 {
   static etcpal::Uuid test_cids[kTestMaxSources];
@@ -265,20 +267,19 @@ TEST_F(TestSourceDetectorState, SourceExpiredWorksAllAtOnce)
     etcpal_getms_fake.return_val += 200u;
   }
 
-  // etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL * 2u);
+  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL * 2u);
 
-  // static unsigned int index = 0u;
-  // source_expired_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name, void* context)
-  // {
-  //   EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cids[index].get()), 0);
-  //   EXPECT_EQ(strcmp(name, kTestName.c_str()), 0);
-  //   EXPECT_EQ(context, nullptr);
-  //   index = ((index + 1) % kTestMaxSources);
-  // };
+  static unsigned int index = 0u;
+  source_expired_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name, void* context) {
+    EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cids[index].get()), 0);
+    EXPECT_EQ(strcmp(name, kTestName.c_str()), 0);
+    EXPECT_EQ(context, nullptr);
+    index = ((index + 1) % kTestMaxSources);
+  };
 
-  // EXPECT_EQ(source_expired_fake.call_count, 0u);
-  // ProcessSourceDetector();
-  // EXPECT_EQ(source_expired_fake.call_count, kTestMaxSources);
+  EXPECT_EQ(source_expired_fake.call_count, 0u);
+  ProcessSourceDetector();
+  EXPECT_EQ(source_expired_fake.call_count, kTestMaxSources);
 }
 
 TEST_F(TestSourceDetectorState, SourceExpiredWorksOneAtATime)
@@ -342,6 +343,8 @@ TEST_F(TestSourceDetectorState, SourceLimitExceededWorks)
   ProcessUniverseDiscoveryPages(etcpal::Uuid::V4(), universe_list);
   EXPECT_EQ(limit_exceeded_fake.call_count, 2u);
 }
+
+#endif  // SACN_DYNAMIC_MEM
 
 TEST_F(TestSourceDetectorState, UniverseLimitExceededWorks)
 {
