@@ -299,7 +299,9 @@ protected:
         EXPECT_EQ(etcpal_ip_cmp(&queue[queue_index].group.group, &expected_sub.ip), 0)
             << "Test failed on queue index " << queue_index << ".";
         ++queue_index;
+#if SACN_RECEIVER_SOCKET_PER_NIC
         ++socket_index;
+#endif
       }
     }
   }

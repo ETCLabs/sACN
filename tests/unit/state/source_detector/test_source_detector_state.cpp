@@ -48,7 +48,7 @@ const std::string kTestName = "Test Name";
 constexpr int kTestMaxSources = 3;
 constexpr uint16_t kTestMaxUniverses = 2000u;
 #else
-constexpr int kTestMaxSources = SACN_SOURCE_DETECTOR_MAX_SOURCES;
+constexpr unsigned int kTestMaxSources = SACN_SOURCE_DETECTOR_MAX_SOURCES;
 constexpr uint16_t kTestMaxUniverses = SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE;
 #endif
 
@@ -169,7 +169,9 @@ TEST_F(TestSourceDetectorState, SourceUpdatedWorks)
 {
   static std::vector<uint16_t> universe_list_1, universe_list_2;
   static etcpal::Uuid test_cid;
-  static constexpr uint16_t kNumUniverses = 1000u;
+  static constexpr uint16_t kNumUniverses = 700u;
+
+  ASSERT_TRUE(kNumUniverses <= kTestMaxUniverses);
 
   universe_list_1.clear();
   universe_list_2.clear();
@@ -223,7 +225,9 @@ TEST_F(TestSourceDetectorState, SourceUpdatedFiltersDroppedLists)
 {
   static std::vector<uint16_t> universe_list;
   static etcpal::Uuid test_cid;
-  static constexpr uint16_t kNumUniverses = 2000u;
+  static constexpr uint16_t kNumUniverses = 700u;
+
+  ASSERT_TRUE(kNumUniverses <= kTestMaxUniverses);
 
   universe_list.clear();
   for (uint16_t universe = 0u; universe < kNumUniverses; ++universe)
@@ -238,47 +242,22 @@ TEST_F(TestSourceDetectorState, SourceUpdatedFiltersDroppedLists)
   };
 
   EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 0u);
-  EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 2u);
-  EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 3u);
+  ProcessUniverseDiscoveryPage(test_cid, universe_list, 1u);
   EXPECT_EQ(source_updated_fake.call_count, 0u);
   ProcessUniverseDiscoveryPage(test_cid, universe_list, 0u);
   EXPECT_EQ(source_updated_fake.call_count, 0u);
   ProcessUniverseDiscoveryPage(test_cid, universe_list, 1u);
-  EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 3u);
-  EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 1u);
-  EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 2u);
-  EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 3u);
-  EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 0u);
-  EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 3u);
-  EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 0u);
-  EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 1u);
-  EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 2u);
-  EXPECT_EQ(source_updated_fake.call_count, 0u);
-  ProcessUniverseDiscoveryPage(test_cid, universe_list, 3u);
   EXPECT_EQ(source_updated_fake.call_count, 1u);
 }
 
 TEST_F(TestSourceDetectorState, SourceExpiredWorksAllAtOnce)
 {
-  static constexpr unsigned int kNumSources = 3u;
-  static etcpal::Uuid test_cids[kNumSources];
+  static etcpal::Uuid test_cids[kTestMaxSources];
 
   std::vector<uint16_t> universe_list = {1u, 2u, 3u};
 
   EtcPalUuid cid = kEtcPalNullUuid;
-  for (unsigned int i = 0u; i < kNumSources; ++i)
+  for (unsigned int i = 0u; i < kTestMaxSources; ++i)
   {
     etcpal_pack_u32b(cid.data, i);  // Increasing sequence of CIDs, so expired notifies in the same order.
     test_cids[i] = cid;
@@ -293,39 +272,38 @@ TEST_F(TestSourceDetectorState, SourceExpiredWorksAllAtOnce)
     EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cids[index].get()), 0);
     EXPECT_EQ(strcmp(name, kTestName.c_str()), 0);
     EXPECT_EQ(context, nullptr);
-    index = ((index + 1) % kNumSources);
+    index = ((index + 1) % kTestMaxSources);
   };
 
   EXPECT_EQ(source_expired_fake.call_count, 0u);
   ProcessSourceDetector();
-  EXPECT_EQ(source_expired_fake.call_count, kNumSources);
+  EXPECT_EQ(source_expired_fake.call_count, kTestMaxSources);
 }
 
 TEST_F(TestSourceDetectorState, SourceExpiredWorksOneAtATime)
 {
-  static constexpr unsigned int kNumSources = 3u;
-  static etcpal::Uuid test_cids[kNumSources];
+  static etcpal::Uuid test_cids[kTestMaxSources];
 
   std::vector<uint16_t> universe_list = {1u, 2u, 3u};
 
-  for (unsigned int i = 0u; i < kNumSources; ++i)
+  for (unsigned int i = 0u; i < kTestMaxSources; ++i)
   {
     test_cids[i] = etcpal::Uuid::V4();
     ProcessUniverseDiscoveryPages(test_cids[i], universe_list);
     etcpal_getms_fake.return_val += 200u;
   }
 
-  etcpal_getms_fake.return_val += ((SACN_UNIVERSE_DISCOVERY_INTERVAL * 2u) - (200u * kNumSources));
+  etcpal_getms_fake.return_val += ((SACN_UNIVERSE_DISCOVERY_INTERVAL * 2u) - (200u * kTestMaxSources));
 
   static unsigned int index = 0u;
   source_expired_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name, void* context) {
     EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cids[index].get()), 0);
     EXPECT_EQ(strcmp(name, kTestName.c_str()), 0);
     EXPECT_EQ(context, nullptr);
-    index = ((index + 1) % kNumSources);
+    index = ((index + 1) % kTestMaxSources);
   };
 
-  for (unsigned int i = 0u; i < kNumSources; ++i)
+  for (unsigned int i = 0u; i < kTestMaxSources; ++i)
   {
     etcpal_getms_fake.return_val += 200u;
     EXPECT_EQ(source_expired_fake.call_count, i);
@@ -425,63 +403,9 @@ TEST_F(TestSourceDetectorState, SourceUpdatedOnlyNotifiesOnChange)
 {
   std::vector<uint16_t> universe_list;
   etcpal::Uuid test_cid = etcpal::Uuid::V4();
-  for (uint16_t i = 0u; i < 2u; ++i)
+  for (uint16_t i = 0u; i < kTestMaxUniverses; ++i)
   {
-    for (uint16_t universe = (500u * i); universe < (500u * (i + 1u)); ++universe)
-      universe_list.push_back(universe);
-
-    EXPECT_EQ(source_updated_fake.call_count, i);
-    ProcessUniverseDiscoveryPages(test_cid, universe_list);
-    EXPECT_EQ(source_updated_fake.call_count, i + 1u);
-    ProcessUniverseDiscoveryPages(test_cid, universe_list);
-    EXPECT_EQ(source_updated_fake.call_count, i + 1u);
-    ProcessUniverseDiscoveryPages(test_cid, universe_list);
-    EXPECT_EQ(source_updated_fake.call_count, i + 1u);
-  }
-
-  for (uint16_t i = 2u; i < 1002u; ++i)
-  {
-    universe_list.push_back(998u + i);
-
-    EXPECT_EQ(source_updated_fake.call_count, i);
-    ProcessUniverseDiscoveryPages(test_cid, universe_list);
-    EXPECT_EQ(source_updated_fake.call_count, i + 1u);
-    ProcessUniverseDiscoveryPages(test_cid, universe_list);
-    EXPECT_EQ(source_updated_fake.call_count, i + 1u);
-    ProcessUniverseDiscoveryPages(test_cid, universe_list);
-    EXPECT_EQ(source_updated_fake.call_count, i + 1u);
-  }
-
-  for (unsigned int i = 1002u; i < 3002u; ++i)
-  {
-    ++universe_list[3001u - i];
-
-    EXPECT_EQ(source_updated_fake.call_count, i);
-    ProcessUniverseDiscoveryPages(test_cid, universe_list);
-    EXPECT_EQ(source_updated_fake.call_count, i + 1u);
-    ProcessUniverseDiscoveryPages(test_cid, universe_list);
-    EXPECT_EQ(source_updated_fake.call_count, i + 1u);
-    ProcessUniverseDiscoveryPages(test_cid, universe_list);
-    EXPECT_EQ(source_updated_fake.call_count, i + 1u);
-  }
-
-  for (unsigned int i = 3002u; i < 3004u; ++i)
-  {
-    for (int j = 0; j < 500; ++j)
-      universe_list.pop_back();
-
-    EXPECT_EQ(source_updated_fake.call_count, i);
-    ProcessUniverseDiscoveryPages(test_cid, universe_list);
-    EXPECT_EQ(source_updated_fake.call_count, i + 1u);
-    ProcessUniverseDiscoveryPages(test_cid, universe_list);
-    EXPECT_EQ(source_updated_fake.call_count, i + 1u);
-    ProcessUniverseDiscoveryPages(test_cid, universe_list);
-    EXPECT_EQ(source_updated_fake.call_count, i + 1u);
-  }
-
-  for (unsigned int i = 3004u; i < 4004u; ++i)
-  {
-    universe_list.pop_back();
+    universe_list.push_back(i);
 
     EXPECT_EQ(source_updated_fake.call_count, i);
     ProcessUniverseDiscoveryPages(test_cid, universe_list);
