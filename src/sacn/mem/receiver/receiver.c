@@ -45,6 +45,20 @@
 
 /* Macros for dynamic allocation. */
 #define ALLOC_RECEIVER() malloc(sizeof(SacnReceiver))
+
+#if SACN_RECEIVER_SOCKET_PER_NIC
+#define FREE_RECEIVER(ptr)             \
+  do                                   \
+  {                                    \
+    if (ptr->netints.netints)          \
+    {                                  \
+      free(ptr->sockets.ipv4_sockets); \
+      free(ptr->sockets.ipv6_sockets); \
+      free(ptr->netints.netints);      \
+    }                                  \
+    free(ptr);                         \
+  } while (0)
+#else  // SACN_RECEIVER_SOCKET_PER_NIC
 #define FREE_RECEIVER(ptr)        \
   do                              \
   {                               \
@@ -54,6 +68,7 @@
     }                             \
     free(ptr);                    \
   } while (0)
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
 
 #else  // SACN_DYNAMIC_MEM
 
@@ -92,6 +107,8 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
  * Allocate a new receiver instances and do essential first initialization, in preparation for
  * creating the sockets and subscriptions.
  *
+ * If an error occurs, make sure to call remove_sacn_receiver since memory may need to be freed.
+ *
  * [in] handle Handle to use for this receiver.
  * [in] config Receiver configuration data.
  * [in] netint_config Network interface list for the receiver to use.
@@ -122,8 +139,18 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   receiver->keys.universe = config->universe_id;
   receiver->thread_id = SACN_THREAD_ID_INVALID;
 
-  receiver->ipv4_socket = ETCPAL_SOCKET_INVALID;
-  receiver->ipv6_socket = ETCPAL_SOCKET_INVALID;
+#if SACN_RECEIVER_SOCKET_PER_NIC
+#if SACN_DYNAMIC_MEM
+  receiver->sockets.ipv4_sockets = NULL;
+  receiver->sockets.ipv6_sockets = NULL;
+#endif  // SACN_DYNAMIC_MEM
+
+  receiver->sockets.num_ipv4_sockets = 0;
+  receiver->sockets.num_ipv6_sockets = 0;
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
+  receiver->sockets.ipv4_socket = ETCPAL_SOCKET_INVALID;
+  receiver->sockets.ipv6_socket = ETCPAL_SOCKET_INVALID;
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
 
 #if SACN_DYNAMIC_MEM
   receiver->netints.netints = NULL;
@@ -134,13 +161,10 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   etcpal_rbtree_init(&receiver->sampling_period_netints, sampling_period_netint_compare,
                      sampling_period_netint_node_alloc, sampling_period_netint_node_dealloc);
 
-  etcpal_error_t initialize_receiver_netints_result =
+  etcpal_error_t res =
       sacn_initialize_receiver_netints(&receiver->netints, false, &receiver->sampling_period_netints, netint_config);
-  if (initialize_receiver_netints_result != kEtcPalErrOk)
-  {
-    FREE_RECEIVER(receiver);
-    return initialize_receiver_netints_result;
-  }
+  if (res != kEtcPalErrOk)
+    return res;
 
   receiver->sampling = false;
   receiver->notified_sampling_started = false;
@@ -242,6 +266,36 @@ void remove_sacn_receiver(SacnReceiver* receiver)
   etcpal_rbtree_clear_with_cb(&receiver->sources, tracked_source_tree_dealloc);
   remove_receiver_from_maps(receiver);
   FREE_RECEIVER(receiver);
+}
+
+etcpal_error_t initialize_receiver_sockets(SacnInternalSocketState* sockets)
+{
+#if SACN_RECEIVER_SOCKET_PER_NIC
+#if SACN_DYNAMIC_MEM
+  if (!sockets->ipv4_sockets)
+  {
+    sockets->ipv4_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
+    sockets->ipv4_sockets_capacity = INITIAL_CAPACITY;
+  }
+
+  if (!sockets->ipv6_sockets)
+  {
+    sockets->ipv6_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
+    sockets->ipv6_sockets_capacity = INITIAL_CAPACITY;
+  }
+
+  if (!sockets->ipv4_sockets || !sockets->ipv6_sockets)
+    return kEtcPalErrNoMem;
+#endif  // SACN_DYNAMIC_MEM
+
+  sockets->num_ipv4_sockets = 0;
+  sockets->num_ipv6_sockets = 0;
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
+  sockets->ipv4_socket = ETCPAL_SOCKET_INVALID;
+  sockets->ipv6_socket = ETCPAL_SOCKET_INVALID;
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
+
+  return kEtcPalErrOk;
 }
 
 /*

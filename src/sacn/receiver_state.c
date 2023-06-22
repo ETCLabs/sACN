@@ -70,6 +70,13 @@ static etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_c
 
 static void sacn_receive_thread(void* arg);
 
+static etcpal_error_t add_sockets(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
+                                  const EtcPalMcastNetintId* netints, size_t num_netints,
+                                  SacnInternalSocketState* sockets);
+static void remove_sockets(sacn_thread_id_t thread_id, SacnInternalSocketState* sockets, uint16_t universe,
+                           const EtcPalMcastNetintId* netints, size_t num_netints,
+                           socket_cleanup_behavior_t cleanup_behavior);
+
 // Receiving incoming data
 static void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
                             const EtcPalSockAddr* from_addr, const EtcPalMcastNetintId* netint);
@@ -329,18 +336,18 @@ etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
   etcpal_error_t ipv4_res = kEtcPalErrNoNetints;
   etcpal_error_t ipv6_res = kEtcPalErrNoNetints;
 
+  initialize_receiver_sockets(&receiver->sockets);
+
   if (supports_ipv4(receiver->ip_supported))
   {
-    ipv4_res =
-        sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV4, receiver->keys.universe,
-                                 receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv4_socket);
+    ipv4_res = add_sockets(receiver->thread_id, kEtcPalIpTypeV4, receiver->keys.universe, receiver->netints.netints,
+                           receiver->netints.num_netints, &receiver->sockets);
   }
 
   if (((ipv4_res == kEtcPalErrOk) || (ipv4_res == kEtcPalErrNoNetints)) && supports_ipv6(receiver->ip_supported))
   {
-    ipv6_res =
-        sacn_add_receiver_socket(receiver->thread_id, kEtcPalIpTypeV6, receiver->keys.universe,
-                                 receiver->netints.netints, receiver->netints.num_netints, &receiver->ipv6_socket);
+    ipv6_res = add_sockets(receiver->thread_id, kEtcPalIpTypeV6, receiver->keys.universe, receiver->netints.netints,
+                           receiver->netints.num_netints, &receiver->sockets);
   }
 
   etcpal_error_t result =
@@ -350,8 +357,8 @@ etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
 
   if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
   {
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, receiver->keys.universe,
-                                receiver->netints.netints, receiver->netints.num_netints, kQueueSocketCleanup);
+    remove_sockets(receiver->thread_id, &receiver->sockets, receiver->keys.universe, receiver->netints.netints,
+                   receiver->netints.num_netints, kQueueSocketCleanup);
   }
 
   return result;
@@ -367,16 +374,14 @@ etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector)
 
   if (supports_ipv4(detector->ip_supported))
   {
-    ipv4_res =
-        sacn_add_receiver_socket(detector->thread_id, kEtcPalIpTypeV4, SACN_DISCOVERY_UNIVERSE,
-                                 detector->netints.netints, detector->netints.num_netints, &detector->ipv4_socket);
+    ipv4_res = add_sockets(detector->thread_id, kEtcPalIpTypeV4, SACN_DISCOVERY_UNIVERSE, detector->netints.netints,
+                           detector->netints.num_netints, &detector->sockets);
   }
 
   if (((ipv4_res == kEtcPalErrOk) || (ipv4_res == kEtcPalErrNoNetints)) && supports_ipv6(detector->ip_supported))
   {
-    ipv6_res =
-        sacn_add_receiver_socket(detector->thread_id, kEtcPalIpTypeV6, SACN_DISCOVERY_UNIVERSE,
-                                 detector->netints.netints, detector->netints.num_netints, &detector->ipv6_socket);
+    ipv6_res = add_sockets(detector->thread_id, kEtcPalIpTypeV6, SACN_DISCOVERY_UNIVERSE, detector->netints.netints,
+                           detector->netints.num_netints, &detector->sockets);
   }
 
   etcpal_error_t result =
@@ -386,8 +391,8 @@ etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector)
 
   if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
   {
-    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv4_socket, SACN_DISCOVERY_UNIVERSE,
-                                detector->netints.netints, detector->netints.num_netints, kQueueSocketCleanup);
+    remove_sockets(detector->thread_id, &detector->sockets, SACN_DISCOVERY_UNIVERSE, detector->netints.netints,
+                   detector->netints.num_netints, kQueueSocketCleanup);
   }
 
   return result;
@@ -417,17 +422,8 @@ void remove_receiver_sockets(SacnReceiver* receiver, socket_cleanup_behavior_t c
   if (!SACN_ASSERT_VERIFY(receiver))
     return;
 
-  if (receiver->ipv4_socket != ETCPAL_SOCKET_INVALID)
-  {
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv4_socket, receiver->keys.universe,
-                                receiver->netints.netints, receiver->netints.num_netints, cleanup_behavior);
-  }
-
-  if (receiver->ipv6_socket != ETCPAL_SOCKET_INVALID)
-  {
-    sacn_remove_receiver_socket(receiver->thread_id, &receiver->ipv6_socket, receiver->keys.universe,
-                                receiver->netints.netints, receiver->netints.num_netints, cleanup_behavior);
-  }
+  remove_sockets(receiver->thread_id, &receiver->sockets, receiver->keys.universe, receiver->netints.netints,
+                 receiver->netints.num_netints, cleanup_behavior);
 }
 
 /*
@@ -441,17 +437,8 @@ void remove_source_detector_sockets(SacnSourceDetector* detector, socket_cleanup
   if (!SACN_ASSERT_VERIFY(detector))
     return;
 
-  if (detector->ipv4_socket != ETCPAL_SOCKET_INVALID)
-  {
-    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv4_socket, SACN_DISCOVERY_UNIVERSE,
-                                detector->netints.netints, detector->netints.num_netints, cleanup_behavior);
-  }
-
-  if (detector->ipv6_socket != ETCPAL_SOCKET_INVALID)
-  {
-    sacn_remove_receiver_socket(detector->thread_id, &detector->ipv6_socket, SACN_DISCOVERY_UNIVERSE,
-                                detector->netints.netints, detector->netints.num_netints, cleanup_behavior);
-  }
+  remove_sockets(detector->thread_id, &detector->sockets, SACN_DISCOVERY_UNIVERSE, detector->netints.netints,
+                 detector->netints.num_netints, cleanup_behavior);
 }
 
 /*
@@ -620,6 +607,107 @@ void sacn_receive_thread(void* arg)
     context->poll_context_initialized = false;
 
     sacn_unlock();
+  }
+}
+
+etcpal_error_t add_sockets(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
+                           const EtcPalMcastNetintId* netints, size_t num_netints, SacnInternalSocketState* sockets)
+{
+  if (!SACN_ASSERT_VERIFY(ip_type == kEtcPalIpTypeV4 || ip_type == kEtcPalIpTypeV6) ||
+      !SACN_ASSERT_VERIFY(universe >= 1 && ((universe <= 63999) || (universe == SACN_DISCOVERY_UNIVERSE))) ||
+      !SACN_ASSERT_VERIFY(netints) || !SACN_ASSERT_VERIFY(num_netints > 0) || !SACN_ASSERT_VERIFY(sockets))
+  {
+    return kEtcPalErrSys;
+  }
+
+#if SACN_RECEIVER_SOCKET_PER_NIC
+  etcpal_error_t res = kEtcPalErrOk;
+  for (const EtcPalMcastNetintId* netint = netints; netint < (netints + num_netints); ++netint)
+  {
+    if (netint->ip_type == ip_type)
+    {
+      if (ip_type == kEtcPalIpTypeV4)
+      {
+        CHECK_ROOM_FOR_ONE_MORE(sockets, ipv4_sockets, etcpal_socket_t, SACN_MAX_NETINTS, kEtcPalErrNoMem);
+        res = sacn_add_receiver_socket(thread_id, ip_type, universe, netint, 1,
+                                       &sockets->ipv4_sockets[sockets->num_ipv4_sockets]);
+        if (res == kEtcPalErrOk)
+          ++sockets->num_ipv4_sockets;
+        else
+          break;
+      }
+      else  // ip_type == kEtcPalIpTypeV6
+      {
+        CHECK_ROOM_FOR_ONE_MORE(sockets, ipv6_sockets, etcpal_socket_t, SACN_MAX_NETINTS, kEtcPalErrNoMem);
+        res = sacn_add_receiver_socket(thread_id, ip_type, universe, netint, 1,
+                                       &sockets->ipv6_sockets[sockets->num_ipv6_sockets]);
+        if (res == kEtcPalErrOk)
+          ++sockets->num_ipv6_sockets;
+        else
+          break;
+      }
+    }
+  }
+
+  return res;
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
+  if (ip_type == kEtcPalIpTypeV4)
+    return sacn_add_receiver_socket(thread_id, ip_type, universe, netints, num_netints, &sockets->ipv4_socket);
+
+  return sacn_add_receiver_socket(thread_id, ip_type, universe, netints, num_netints, &sockets->ipv6_socket);
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
+}
+
+void remove_sockets(sacn_thread_id_t thread_id, SacnInternalSocketState* sockets, uint16_t universe,
+                    const EtcPalMcastNetintId* netints, size_t num_netints, socket_cleanup_behavior_t cleanup_behavior)
+{
+#if SACN_RECEIVER_SOCKET_PER_NIC
+  ETCPAL_UNUSED_ARG(netints);
+  ETCPAL_UNUSED_ARG(num_netints);
+#endif
+  if (SACN_ASSERT_VERIFY(sockets))
+  {
+#if SACN_RECEIVER_SOCKET_PER_NIC
+    SacnRecvThreadContext* context = get_recv_thread_context(thread_id);
+    if (SACN_ASSERT_VERIFY(context))
+    {
+      for (etcpal_socket_t* ipv4_socket = sockets->ipv4_sockets;
+           ipv4_socket < (sockets->ipv4_sockets + sockets->num_ipv4_sockets); ++ipv4_socket)
+      {
+        int index = find_socket_ref_by_handle(context, *ipv4_socket);
+        if (SACN_ASSERT_VERIFY(index >= 0))
+        {
+          EtcPalMcastNetintId netint;
+          netint.ip_type = kEtcPalIpTypeV4;
+          netint.index = context->socket_refs[index].socket.ifindex;
+
+          sacn_remove_receiver_socket(thread_id, ipv4_socket, universe, &netint, 1, cleanup_behavior);
+        }
+      }
+
+      for (etcpal_socket_t* ipv6_socket = sockets->ipv6_sockets;
+           ipv6_socket < (sockets->ipv6_sockets + sockets->num_ipv6_sockets); ++ipv6_socket)
+      {
+        int index = find_socket_ref_by_handle(context, *ipv6_socket);
+        if (SACN_ASSERT_VERIFY(index >= 0))
+        {
+          EtcPalMcastNetintId netint;
+          netint.ip_type = kEtcPalIpTypeV6;
+          netint.index = context->socket_refs[index].socket.ifindex;
+
+          sacn_remove_receiver_socket(thread_id, ipv6_socket, universe, &netint, 1, cleanup_behavior);
+        }
+      }
+
+      CLEAR_BUF(sockets, ipv4_sockets);
+      CLEAR_BUF(sockets, ipv6_sockets);
+    }
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
+    if (sockets->ipv4_socket != ETCPAL_SOCKET_INVALID)
+      sacn_remove_receiver_socket(thread_id, &sockets->ipv4_socket, universe, netints, num_netints, cleanup_behavior);
+    if (sockets->ipv6_socket != ETCPAL_SOCKET_INVALID)
+      sacn_remove_receiver_socket(thread_id, &sockets->ipv6_socket, universe, netints, num_netints, cleanup_behavior);
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
   }
 }
 

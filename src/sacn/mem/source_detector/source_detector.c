@@ -26,6 +26,7 @@
 #include "sacn/private/opts.h"
 #include "sacn/private/sockets.h"
 #include "sacn/private/mem/common.h"
+#include "sacn/private/mem/receiver/receiver.h"
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>
@@ -59,8 +60,18 @@ etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, 
   {
     source_detector.thread_id = SACN_THREAD_ID_INVALID;
 
-    source_detector.ipv4_socket = ETCPAL_SOCKET_INVALID;
-    source_detector.ipv6_socket = ETCPAL_SOCKET_INVALID;
+#if SACN_RECEIVER_SOCKET_PER_NIC
+#if SACN_DYNAMIC_MEM
+    source_detector.sockets.ipv4_sockets = NULL;
+    source_detector.sockets.ipv6_sockets = NULL;
+#endif  // SACN_DYNAMIC_MEM
+
+    source_detector.sockets.num_ipv4_sockets = 0;
+    source_detector.sockets.num_ipv6_sockets = 0;
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
+    source_detector.sockets.ipv4_socket = ETCPAL_SOCKET_INVALID;
+    source_detector.sockets.ipv6_socket = ETCPAL_SOCKET_INVALID;
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
 
     res = sacn_initialize_source_detector_netints(&source_detector.netints, netint_config);
   }
@@ -89,7 +100,18 @@ SacnSourceDetector* get_sacn_source_detector()
 
 void remove_sacn_source_detector()
 {
-  source_detector.created = false;
+  if (source_detector.created)
+  {
+#if SACN_DYNAMIC_MEM
+#if SACN_RECEIVER_SOCKET_PER_NIC
+    free(source_detector.sockets.ipv4_sockets);
+    free(source_detector.sockets.ipv6_sockets);
+#endif
+
+    free(source_detector.netints.netints);
+#endif
+    source_detector.created = false;
+  }
 }
 
 etcpal_error_t init_source_detector(void)
