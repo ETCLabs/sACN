@@ -1353,7 +1353,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
       to_erase[num_to_erase++] = src;
       if (SACN_CAN_LOG(ETCPAL_LOG_DEBUG))
       {
-        char cid_str[ETCPAL_UUID_STRING_BYTES];
+        char cid_str[ETCPAL_UUID_STRING_BYTES] = {0};
         etcpal_uuid_to_string(get_remote_source_cid(src->handle), cid_str);
         SACN_LOG_DEBUG("Removing internally tracked source %s", cid_str);
       }

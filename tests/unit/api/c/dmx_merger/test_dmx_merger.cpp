@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2022 ETC Inc.
+ * Copyright 2023 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1629,4 +1629,20 @@ TEST_F(TestDmxMerger, RespectsMaxLimits)
     for (int j = 0; j < SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER; ++j)
       EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_handle), kEtcPalErrOk);
   }
+}
+
+TEST_F(TestDmxMerger, HandlesManySourcesAppearing)
+{
+  static constexpr int kNumIterations = 0x10000;  // Cause 16-bit source handles to wrap around
+
+  EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+
+  for (int i = 0; i < kNumIterations; ++i)
+  {
+    sacn_dmx_merger_source_t source_handle;
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_handle), kEtcPalErrOk);
+    EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_handle), kEtcPalErrOk);
+  }
+
+  EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
 }

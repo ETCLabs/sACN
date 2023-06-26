@@ -90,7 +90,8 @@ etcpal_error_t init_remote_sources(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
 
-  init_int_handle_manager(&remote_source_handle_manager, 0xffff, remote_source_handle_in_use, NULL);
+  const int kMaxValidHandleValue = 0xffff - 1;  // This is the max VALID value, therefore invalid - 1 (0xffff - 1)
+  init_int_handle_manager(&remote_source_handle_manager, kMaxValidHandleValue, remote_source_handle_in_use, NULL);
 
 #if !SACN_DYNAMIC_MEM
   res |= etcpal_mempool_init(sacn_pool_recv_remote_source_handles);
