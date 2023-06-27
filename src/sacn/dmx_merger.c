@@ -638,8 +638,7 @@ bool source_handle_in_use(int handle_val, void* cookie)
 
   MergerState* merger_state = (MergerState*)cookie;
 
-  return (handle_val == SACN_DMX_MERGER_SOURCE_INVALID) ||
-         etcpal_rbtree_find(&merger_state->source_state_lookup, &handle_val);
+  return etcpal_rbtree_find(&merger_state->source_state_lookup, &handle_val);
 }
 
 // Needs lock
@@ -1260,7 +1259,9 @@ MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMerge
   {
     // Initialize merger state.
     merger_state->handle = handle;
-    init_int_handle_manager(&merger_state->source_handle_mgr, 0xffff, source_handle_in_use, merger_state);
+
+    const int kMaxValidHandleValue = 0xffff - 1;  // This is the max VALID value, therefore invalid - 1 (0xffff - 1)
+    init_int_handle_manager(&merger_state->source_handle_mgr, kMaxValidHandleValue, source_handle_in_use, merger_state);
 
     etcpal_rbtree_init(&merger_state->source_state_lookup, source_state_lookup_compare_func,
                        dmx_merger_rb_node_alloc_func, dmx_merger_rb_node_dealloc_func);

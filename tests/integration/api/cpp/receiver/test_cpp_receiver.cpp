@@ -18,6 +18,7 @@
  *****************************************************************************/
 
 #include "sacn/cpp/receiver.h"
+#include "sacn/cpp/merge_receiver.h"
 
 #include "etcpal_mock/common.h"
 #include "etcpal_mock/netint.h"
@@ -29,9 +30,13 @@
 #include "gtest/gtest.h"
 
 #if SACN_DYNAMIC_MEM
+#define TestReceiverBase TestCppReceiverBaseDynamic
 #define TestReceiver TestCppReceiverDynamic
+#define TestMergeReceiver TestCppMergeReceiverDynamic
 #else
+#define TestReceiverBase TestCppReceiverBaseStatic
 #define TestReceiver TestCppReceiverStatic
+#define TestMergeReceiver TestCppMergeReceiverStatic
 #endif
 
 #ifdef _MSC_VER
@@ -42,6 +47,8 @@
 using namespace sacn;
 
 static constexpr uint16_t kTestUniverse = 1u;
+static constexpr size_t kCidOffset = 22u;
+static constexpr size_t kOptionsOffset = 112u;
 
 static etcpal_socket_t next_socket = (etcpal_socket_t)0;
 
@@ -201,7 +208,7 @@ static bool received_levels_data = false;
 static bool received_pap_data = false;
 static bool is_sampling = false;
 
-class TestNotifyHandler : public Receiver::NotifyHandler
+class TestReceiverNotifyHandler : public Receiver::NotifyHandler
 {
 public:
   void HandleUniverseData(Receiver::Handle receiver_handle, const etcpal::SockAddr& source_addr,
@@ -262,6 +269,16 @@ public:
   }
 };
 
+class TestMergeReceiverNotifyHandler : public MergeReceiver::NotifyHandler
+{
+public:
+  void HandleMergedData(MergeReceiver::Handle handle, const SacnRecvMergedData& merged_data) override
+  {
+    ETCPAL_UNUSED_ARG(handle);
+    ETCPAL_UNUSED_ARG(merged_data);
+  }
+};
+
 class TestReceiverBase : public ::testing::Test
 {
 protected:
@@ -269,6 +286,12 @@ protected:
   {
     kMulticast,
     kUnicast
+  };
+
+  enum class FakeReceiveFlags
+  {
+    kTerminate,
+    kNoTermination
   };
 
   void SetUp() override
@@ -328,14 +351,19 @@ protected:
       return kEtcPalErrOk;
     };
 
+    etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr*, int) {
+      return static_cast<int>(kEtcPalErrTimedOut);
+    };
+
     ResetNotifyVariables();
 
     ASSERT_EQ(Init().code(), kEtcPalErrOk);
     is_sampling = false;
-    EXPECT_EQ(receiver_.Startup(receiver_settings_, notify_handler_), kEtcPalErrOk);
   }
 
-  static int FakeReceive(FakeReceiveMode mode, uint8_t index, std::vector<uint8_t> data, EtcPalMsgHdr* msg)
+  static int FakeReceive(FakeReceiveMode mode, uint8_t index, const std::vector<uint8_t>& data, EtcPalMsgHdr* msg,
+                         const etcpal::Uuid& source_cid = etcpal::Uuid(),
+                         FakeReceiveFlags flags = FakeReceiveFlags::kNoTermination)
   {
     EXPECT_NE(msg, nullptr);
     EtcPalSockAddr etcpal_sock_addr;
@@ -354,7 +382,14 @@ protected:
     etcpal_sock_addr.port = 0;
     msg->flags = 0;
     msg->name = etcpal_sock_addr;
-    memcpy(msg->buf, data.data(), data.size());
+
+    char* msg_buf = reinterpret_cast<char*>(msg->buf);
+    memcpy(msg_buf, data.data(), data.size());
+    if (!source_cid.IsNull())
+      memcpy(&msg_buf[kCidOffset], source_cid.data(), ETCPAL_UUID_BYTES);
+    if (flags == FakeReceiveFlags::kTerminate)
+      msg_buf[kOptionsOffset] |= SACN_OPTVAL_TERMINATED;
+
     msg->buflen = data.size();
     return (int)data.size();
   }
@@ -410,28 +445,68 @@ protected:
     }
   }
 
-  void TearDown() override
-  {
-    receiver_.Shutdown();
-    Deinit();
-  }
+  void TearDown() override { Deinit(); }
 
   static std::vector<EtcPalNetintInfo> fake_sys_netints_;
   static uint8_t seq_num_;
+};
+
+class TestReceiver : public TestReceiverBase
+{
+protected:
+  void SetUp() override
+  {
+    TestReceiverBase::SetUp();
+
+    EXPECT_EQ(receiver_.Startup(receiver_settings_, notify_handler_), kEtcPalErrOk);
+  }
+
+  void TearDown() override
+  {
+    receiver_.Shutdown();
+
+    TestReceiverBase::TearDown();
+  }
+
   static Receiver receiver_;
   static Receiver::Settings receiver_settings_;
-  static TestNotifyHandler notify_handler_;
+  static TestReceiverNotifyHandler notify_handler_;
+};
+
+class TestMergeReceiver : public TestReceiverBase
+{
+protected:
+  void SetUp() override
+  {
+    TestReceiverBase::SetUp();
+
+    EXPECT_EQ(merge_receiver_.Startup(merge_receiver_settings_, notify_handler_), kEtcPalErrOk);
+  }
+
+  void TearDown() override
+  {
+    merge_receiver_.Shutdown();
+
+    TestReceiverBase::TearDown();
+  }
+
+  static MergeReceiver merge_receiver_;
+  static MergeReceiver::Settings merge_receiver_settings_;
+  static TestMergeReceiverNotifyHandler notify_handler_;
 };
 
 std::vector<EtcPalNetintInfo> TestReceiverBase::fake_sys_netints_;
 uint8_t TestReceiverBase::seq_num_ = 0u;
-Receiver TestReceiverBase::receiver_;
-Receiver::Settings TestReceiverBase::receiver_settings_(kTestUniverse);
-TestNotifyHandler TestReceiverBase::notify_handler_;
+Receiver TestReceiver::receiver_;
+Receiver::Settings TestReceiver::receiver_settings_(kTestUniverse);
+TestReceiverNotifyHandler TestReceiver::notify_handler_;
+MergeReceiver TestMergeReceiver::merge_receiver_;
+MergeReceiver::Settings TestMergeReceiver::merge_receiver_settings_(kTestUniverse);
+TestMergeReceiverNotifyHandler TestMergeReceiver::notify_handler_;
 
 /*===========================================================================*/
 
-TEST_F(TestReceiverBase, SamplingPeriod)
+TEST_F(TestReceiver, SamplingPeriod)
 {
   etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
     return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg);
@@ -446,7 +521,7 @@ TEST_F(TestReceiverBase, SamplingPeriod)
   EXPECT_FALSE(is_sampling);
 }
 
-TEST_F(TestReceiverBase, ReceivePap)
+TEST_F(TestReceiver, ReceivePap)
 {
   etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
     return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg);
@@ -465,7 +540,7 @@ TEST_F(TestReceiverBase, ReceivePap)
   EXPECT_TRUE(received_pap_data);
 }
 
-TEST_F(TestReceiverBase, Ipv4Ipv6)
+TEST_F(TestReceiver, Ipv4Ipv6)
 {
   etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
     return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg);
@@ -481,7 +556,7 @@ TEST_F(TestReceiverBase, Ipv4Ipv6)
   EXPECT_TRUE(fake_networks_info[1].got_universe_data);
 }
 
-TEST_F(TestReceiverBase, SamePacketIpv4Ipv6)
+TEST_F(TestReceiver, SamePacketIpv4Ipv6)
 {
   etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
     return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg);
@@ -497,7 +572,7 @@ TEST_F(TestReceiverBase, SamePacketIpv4Ipv6)
   EXPECT_FALSE(fake_networks_info[1].got_universe_data);
 }
 
-TEST_F(TestReceiverBase, MulticastAndUnicast)
+TEST_F(TestReceiver, MulticastAndUnicast)
 {
   etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
     return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg);
@@ -511,4 +586,68 @@ TEST_F(TestReceiverBase, MulticastAndUnicast)
   fake_unicasts_info[0].got_universe_data = false;
   RunThreadCycle(true);
   EXPECT_TRUE(fake_unicasts_info[0].got_universe_data);
+}
+
+TEST_F(TestMergeReceiver, HandlesSameSourceReappearing)
+{
+  static constexpr int kNumIterations = 0x10000;  // Cause 16-bit source handles to wrap around
+  static etcpal::Uuid source_cid;
+
+  // Elapse sampling period
+  RunThreadCycle(false);
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle(false);
+
+  // New source
+  source_cid = etcpal::Uuid::V4();
+
+  for (int i = 0; i < kNumIterations; ++i)
+  {
+    // Data packet
+    etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+      return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg, source_cid,
+                         FakeReceiveFlags::kNoTermination);
+    };
+    RunThreadCycle(true);
+
+    // Termination packet
+    etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+      return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg, source_cid,
+                         FakeReceiveFlags::kTerminate);
+    };
+    etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+    RunThreadCycle(true);
+  }
+}
+
+TEST_F(TestMergeReceiver, HandlesManySourcesAppearing)
+{
+  static constexpr int kNumIterations = 0x10000;  // Cause 16-bit source handles to wrap around
+  static etcpal::Uuid source_cid;
+
+  // Elapse sampling period
+  RunThreadCycle(false);
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle(false);
+
+  for (int i = 0; i < kNumIterations; ++i)
+  {
+    // New source
+    source_cid = etcpal::Uuid::V4();
+
+    // Data packet
+    etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+      return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg, source_cid,
+                         FakeReceiveFlags::kNoTermination);
+    };
+    RunThreadCycle(true);
+
+    // Termination packet
+    etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+      return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg, source_cid,
+                         FakeReceiveFlags::kTerminate);
+    };
+    etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+    RunThreadCycle(true);
+  }
 }
