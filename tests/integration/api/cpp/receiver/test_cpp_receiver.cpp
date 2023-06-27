@@ -588,6 +588,38 @@ TEST_F(TestReceiver, MulticastAndUnicast)
   EXPECT_TRUE(fake_unicasts_info[0].got_universe_data);
 }
 
+TEST_F(TestMergeReceiver, HandlesSameSourceReappearing)
+{
+  static constexpr int kNumIterations = 0x10000;  // Cause 16-bit source handles to wrap around
+  static etcpal::Uuid source_cid;
+
+  // Elapse sampling period
+  RunThreadCycle(false);
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle(false);
+
+  // New source
+  source_cid = etcpal::Uuid::V4();
+
+  for (int i = 0; i < kNumIterations; ++i)
+  {
+    // Data packet
+    etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+      return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg, source_cid,
+                         FakeReceiveFlags::kNoTermination);
+    };
+    RunThreadCycle(true);
+
+    // Termination packet
+    etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+      return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg, source_cid,
+                         FakeReceiveFlags::kTerminate);
+    };
+    etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+    RunThreadCycle(true);
+  }
+}
+
 TEST_F(TestMergeReceiver, HandlesManySourcesAppearing)
 {
   static constexpr int kNumIterations = 0x10000;  // Cause 16-bit source handles to wrap around
