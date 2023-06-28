@@ -726,3 +726,39 @@ TEST_F(TestMergeReceiver, MergesInitialPapPacketDuringSampling)
   };
   RunThreadCycle(true);
 }
+
+TEST_F(TestMergeReceiver, MergesInitialLevelsPacketDuringSampling)
+{
+  static const std::vector<uint8_t> kTestLevelData = {255u, 255u, 255u, 255u, 255u, 255u};
+  static const std::vector<uint8_t> kTestPapData = {100u, 100u, 100u, 100u, 100u, 100u};
+
+  // Begin sampling period
+  RunThreadCycle(false);
+
+  // Levels arrive first
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomLevelData(kTestLevelData), msg);
+  };
+  RunThreadCycle(true);
+
+  // Followed by PAP
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomPapData(kTestPapData), msg);
+  };
+  RunThreadCycle(true);
+
+  // Sampling period ends, merged data callback fires
+  EXPECT_CALL(mock_notify_handler_, HandleMergedData(_, ControlsLevels(kTestLevelData))).Times(1);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr*, int) {
+    return static_cast<int>(kEtcPalErrTimedOut);
+  };
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle(false);
+
+  // Levels come in again, firing merged data callback once more
+  EXPECT_CALL(mock_notify_handler_, HandleMergedData(_, ControlsLevels(kTestLevelData))).Times(1);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomLevelData(kTestLevelData), msg);
+  };
+  RunThreadCycle(true);
+}
