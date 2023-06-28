@@ -161,6 +161,8 @@ typedef struct SacnLostSource
 /**
  * @brief Notify that new universe data within the configured footprint has been received.
  *
+ * TODO: Rewrite
+ *
  * This will not be called if the Stream_Terminated bit is set, or if the Preview_Data bit is set and preview packets
  * are being filtered.
  *

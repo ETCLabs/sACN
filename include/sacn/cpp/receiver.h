@@ -76,13 +76,15 @@ public:
     /**
      * @brief Notify that new universe data within the configured footprint has been received.
      *
+     * TODO: Rewrite
+     *
      * This will not be called if the Stream_Terminated bit is set, or if the Preview_Data bit is set and preview
      * packets are being filtered.
      *
      * Start code 0xDD packets will only trigger this notification if #SACN_ETC_PRIORITY_EXTENSION is set to 1. This
      * callback will be called for all other start codes received, even those without a startcode of 0x00 or 0xDD.
      *
-     * This notification will not be called for a source until the first NULL start code packet is received. After that
+     * This notification will not be called for a source until the first 0x00 packet is received. After that
      * happens, this notification is always called immediately during the sampling period, if
      * #SACN_ETC_PRIORITY_EXTENSION is set to 0, or if the start code is not 0x00 or 0xDD. Otherwise, this notification
      * won't be called until both 0x00 and 0xDD start codes are received (in which case the 0xDD notification comes

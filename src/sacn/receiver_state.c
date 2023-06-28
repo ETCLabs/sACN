@@ -1130,7 +1130,7 @@ void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* sou
                               new_source) == kEtcPalErrOk)
   {
 #if SACN_ETC_PRIORITY_EXTENSION
-    if ((receiver->sampling && (universe_data->start_code == SACN_STARTCODE_PRIORITY)) || !receiver->sampling)
+    if (!receiver->sampling)
       *notify = false;
 #endif
 
