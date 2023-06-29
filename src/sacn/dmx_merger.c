@@ -1036,7 +1036,7 @@ void update_universe_priority_multi_source(MergerState* merger, SourceState* sou
     return;
 
   // Always track PAP per-source, but only merge priorities for levels that have come in.
-  memcpy(source->source.address_priority, pap, DMX_ADDRESS_COUNT);
+  memset(source->source.address_priority, pap, DMX_ADDRESS_COUNT);
   for (size_t i = 0; i < source->source.valid_level_count; ++i)
     merge_new_priority(merger, source, i);
 }
