@@ -622,9 +622,9 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
       {
         if (universe_data->start_code == SACN_STARTCODE_DMX)
         {
+          update_sacn_dmx_merger_universe_priority(merger_handle, merger_source_handle, universe_data->priority);
           update_sacn_dmx_merger_levels(merger_handle, merger_source_handle, universe_data->values,
                                         universe_data->slot_range.address_count);
-          update_sacn_dmx_merger_universe_priority(merger_handle, merger_source_handle, universe_data->priority);
           new_merge_occurred = true;
         }
         else if ((universe_data->start_code == SACN_STARTCODE_PRIORITY) && merge_receiver->use_pap)
@@ -850,8 +850,6 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
           if (SACN_ASSERT_VERIFY(source_state))
           {
             add_sacn_dmx_merger_source_with_handle(merge_receiver->merger_handle, merger_source_handle);
-            update_sacn_dmx_merger_levels(merge_receiver->merger_handle, merger_source_handle,
-                                          source_state->source.levels, source_state->source.valid_level_count);
             update_sacn_dmx_merger_universe_priority(merge_receiver->merger_handle, merger_source_handle,
                                                      source_state->source.universe_priority);
             if (!source_state->source.using_universe_priority)
@@ -859,6 +857,9 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
               update_sacn_dmx_merger_pap(merge_receiver->merger_handle, merger_source_handle,
                                          source_state->source.address_priority, source_state->source.valid_level_count);
             }
+
+            update_sacn_dmx_merger_levels(merge_receiver->merger_handle, merger_source_handle,
+                                          source_state->source.levels, source_state->source.valid_level_count);
 
             remove_sacn_dmx_merger_source(merge_receiver->sampling_merger_handle, merger_source_handle);
           }
