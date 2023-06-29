@@ -161,8 +161,8 @@ typedef struct SacnDmxMergerSource
 
   /** The sACN per-address (startcode 0xdd) priority (1-255, 0 means not sourced).
       If the source is using universe priority, then using_universe_priority will be true, and this array contains the
-      universe priority converted to per-address priorities (so 0 is converted to 1s) for all 512 slots. These are the
-      priorities that will actually be used for the merge. */
+      universe priority converted to per-address priorities (so 0 is converted to 1s). These are the priorities that
+      will actually be used for the merge. Priorities beyond valid_level_count are automatically zeroed. */
   uint8_t address_priority[DMX_ADDRESS_COUNT];
 
   /** Whether or not the source is currently using universe priority (converted to address priorities) for the merge. */

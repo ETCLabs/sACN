@@ -269,14 +269,19 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_dmx_merger_sourc
 /**
  * @brief Updates a source's levels and recalculates outputs.
  *
- * This function updates the levels of the specified source, and then triggers the recalculation of each slot. For each
- * slot, the source will only be included in the merge if it has a priority at that slot. Otherwise the level will be
- * saved for when a priority is eventually inputted.
+ * This function updates the levels of the specified source, and then triggers the recalculation of each slot. Only
+ * slots within the valid level range will ever be factored into the merge. If the level count increased (it is 0
+ * initially), previously inputted priorities will be factored into the recalculation for the added slots. However, if
+ * the level count decreased, the slots that were lost will be released and will no longer be part of the merge. For
+ * each slot, the source will only be included in the merge if it has a priority at that slot. Otherwise the level will
+ * be saved for when a priority is eventually inputted.
+ *
+ * This function should be called after priority data is inputted via the update PAP or update universe priority
+ * functions.
  *
  * @param[in] source The id of the source to modify.
  * @param[in] new_levels The new DMX levels to be copied in, starting from the first slot.
- * @param[in] new_levels_count The length of new_levels. If this is less than DMX_ADDRESS_COUNT, the levels for all
- * remaining levels will be set to 0.
+ * @param[in] new_levels_count The length of new_levels. Only slots within this range will ever factored into the merge.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -293,10 +298,14 @@ inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source, co
  * @brief Updates a source's per-address priorities (PAP) and recalculates outputs.
  *
  * This function updates the per-address priorities (PAP) of the specified source, and then triggers the recalculation
- * of each slot. For each slot, the source will only be included in the merge if it has a priority at that slot.
+ * of each slot within the current valid level count (thus no merging will occur if levels haven't been inputted yet).
+ * Priorities beyond this count are saved, and eventually merged once levels beyond this count are inputted. For each
+ * slot, the source will only be included in the merge if it has a priority at that slot.
  *
  * If PAP is not specified for all levels, then the remaining levels will default to a PAP of 0. To remove PAP for this
- * source and revert to the universe priority, call DmxMerger::RemovePap.
+ * source and revert to the universe priority, call sacn_dmx_merger_remove_pap.
+ *
+ * This should be called before calling the update levels function to input the levels.
  *
  * @param[in] source The id of the source to modify.
  * @param[in] pap The per-address priorities to be copied in, starting from the first slot.
@@ -316,14 +325,18 @@ inline etcpal::Error DmxMerger::UpdatePap(sacn_dmx_merger_source_t source, const
  * @brief Updates a source's universe priority and recalculates outputs.
  *
  * This function updates the universe priority of the specified source, and then triggers the recalculation of each
- * slot. For each slot, the source will only be included in the merge if it has a priority at that slot.
+ * slot within the current valid level count (thus no merging will occur if levels haven't been inputted yet).
+ * Priorities for slots beyond this count are saved, and eventually merged once levels beyond this count are inputted.
+ * For each slot, the source will only be included in the merge if it has a priority at that slot.
  *
- * If this source currently has per-address priorities (PAP) via DmxMerger::UpdatePap, then the
- * universe priority can have no effect on the merge results until the application calls DmxMerger::RemovePap, at which
- * point the priorities of each slot will revert to the universe priority passed in here.
+ * If this source currently has per-address priorities (PAP) via sacn_dmx_merger_update_pap, then the
+ * universe priority can have no effect on the merge results until the application calls sacn_dmx_merger_remove_pap, at
+ * which point the priorities of each slot will revert to the universe priority passed in here.
  *
  * If this source doesn't have PAP, then the universe priority is converted into PAP for each slot. These are the
  * priorities used for the merge. This means a universe priority of 0 will be converted to a PAP of 1.
+ *
+ * This should be called before calling the update levels function to input the levels.
  *
  * @param[in] source The id of the source to modify.
  * @param[in] universe_priority The universe-level priority of the source.
@@ -343,7 +356,8 @@ inline etcpal::Error DmxMerger::UpdateUniversePriority(sacn_dmx_merger_source_t 
  *
  * Per-address priority data can time out in sACN just like levels.
  * This is a convenience function to immediately turn off the per-address priority data for a source and recalculate the
- * outputs.
+ * outputs currently within the valid level count (no merging will occur if levels haven't been inputted yet).
+ * Priorities for slots beyond this count will eventually be merged once levels beyond this count are inputted.
  *
  * @param[in] source The id of the source to modify.
  * @return #kEtcPalErrOk: Source updated and merge completed.
