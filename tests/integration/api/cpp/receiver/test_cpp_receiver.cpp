@@ -762,3 +762,48 @@ TEST_F(TestMergeReceiver, MergesInitialLevelsPacketDuringSampling)
   };
   RunThreadCycle(true);
 }
+
+TEST_F(TestMergeReceiver, InitialPapDoesNotMergeUntilLevelsArrive)
+{
+  static const std::vector<uint8_t> kEmptyLevelData = {};
+  static const std::vector<uint8_t> kSrc1LevelData = {255u, 255u, 255u, 255u, 255u, 255u};
+  static const std::vector<uint8_t> kSrc1PapData = {100u, 100u, 100u, 100u, 100u, 100u};
+  static const std::vector<uint8_t> kSrc2LevelData = {0u, 0u, 0u, 0u, 0u, 0u};
+  static const std::vector<uint8_t> kSrc2PapData = {200u, 200u, 200u, 200u, 200u, 200u};
+
+  static etcpal::Uuid source_1_cid = etcpal::Uuid::V4();
+  static etcpal::Uuid source_2_cid = etcpal::Uuid::V4();
+
+  // Elapse sampling period
+  RunThreadCycle(false);
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle(false);
+
+  // Source 1 0xDD received - expect empty merge results
+  EXPECT_CALL(mock_notify_handler_, HandleMergedData(_, ControlsLevels(kEmptyLevelData))).Times(1);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomPapData(kSrc1PapData), msg, source_1_cid);
+  };
+  RunThreadCycle(true);
+
+  // Source 1 0x00 received - should be seen in merge now
+  EXPECT_CALL(mock_notify_handler_, HandleMergedData(_, ControlsLevels(kSrc1LevelData))).Times(1);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomLevelData(kSrc1LevelData), msg, source_1_cid);
+  };
+  RunThreadCycle(true);
+
+  // Source 2 0xDD received - merge should be unaffected
+  EXPECT_CALL(mock_notify_handler_, HandleMergedData(_, ControlsLevels(kSrc1LevelData))).Times(1);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomPapData(kSrc2PapData), msg, source_2_cid);
+  };
+  RunThreadCycle(true);
+
+  // Source 2 0x00 received - merge should be affected
+  EXPECT_CALL(mock_notify_handler_, HandleMergedData(_, ControlsLevels(kSrc2LevelData))).Times(1);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomLevelData(kSrc2LevelData), msg, source_2_cid);
+  };
+  RunThreadCycle(true);
+}
