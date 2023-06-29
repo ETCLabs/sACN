@@ -1115,7 +1115,8 @@ void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* sou
                               new_source) == kEtcPalErrOk)
   {
 #if SACN_ETC_PRIORITY_EXTENSION
-    if (!receiver->sampling)
+    // After the sampling period, 0x00 packets should always notify after 0xDD
+    if ((universe_data->start_code == SACN_STARTCODE_DMX) && !receiver->sampling)
       *notify = false;
 #endif
 
