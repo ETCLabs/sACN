@@ -505,9 +505,9 @@ typedef struct SacnSourceStatusLists
 #if SACN_ETC_PRIORITY_EXTENSION
 typedef enum
 {
-  kRecvStateWaitingForDmx,
   kRecvStateWaitingForPap,
   kRecvStateHaveDmxOnly,
+  kRecvStateHavePapOnly,
   kRecvStateHaveDmxAndPap
 } sacn_recv_state_t;
 #endif
