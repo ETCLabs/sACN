@@ -303,7 +303,7 @@ inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source, co
  * slot, the source will only be included in the merge if it has a priority at that slot.
  *
  * If PAP is not specified for all levels, then the remaining levels will default to a PAP of 0. To remove PAP for this
- * source and revert to the universe priority, call sacn_dmx_merger_remove_pap.
+ * source and revert to the universe priority, call DmxMerger::RemovePap.
  *
  * This should be called before calling the update levels function to input the levels.
  *
@@ -329,9 +329,9 @@ inline etcpal::Error DmxMerger::UpdatePap(sacn_dmx_merger_source_t source, const
  * Priorities for slots beyond this count are saved, and eventually merged once levels beyond this count are inputted.
  * For each slot, the source will only be included in the merge if it has a priority at that slot.
  *
- * If this source currently has per-address priorities (PAP) via sacn_dmx_merger_update_pap, then the
- * universe priority can have no effect on the merge results until the application calls sacn_dmx_merger_remove_pap, at
- * which point the priorities of each slot will revert to the universe priority passed in here.
+ * If this source currently has per-address priorities (PAP) via DmxMerger::UpdatePap, then the universe priority can
+ * have no effect on the merge results until the application calls DmxMerger::RemovePap, at which point the priorities
+ * of each slot will revert to the universe priority passed in here.
  *
  * If this source doesn't have PAP, then the universe priority is converted into PAP for each slot. These are the
  * priorities used for the merge. This means a universe priority of 0 will be converted to a PAP of 1.
