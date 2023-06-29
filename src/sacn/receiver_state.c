@@ -992,19 +992,8 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
 #if SACN_ETC_PRIORITY_EXTENSION
   switch (src->recv_state)
   {
-    case kRecvStateWaitingForDmx:
-      // We had previously received PAP, were waiting for DMX and got it.
-      if (receiver->sampling)
-      {
-        // We are in the sample period - notify immediately.
-        src->recv_state = kRecvStateHaveDmxAndPap;
-      }
-      else
-      {
-        // Now we wait for one more PAP packet before notifying.
-        src->recv_state = kRecvStateWaitingForPap;
-        *notify = false;
-      }
+    case kRecvStateHavePapOnly:
+      src->recv_state = kRecvStateHaveDmxAndPap;
       break;
     case kRecvStateWaitingForPap:
       if (etcpal_timer_is_expired(&src->pap_timer))
@@ -1070,17 +1059,13 @@ void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* not
 
   switch (src->recv_state)
   {
-    case kRecvStateWaitingForDmx:
-      // Still waiting for DMX - ignore PAP packets until we've seen at least one DMX packet.
-      *notify = false;
-      etcpal_timer_reset(&src->pap_timer);
-      break;
     case kRecvStateWaitingForPap:
     case kRecvStateHaveDmxOnly:
       src->recv_state = kRecvStateHaveDmxAndPap;
       etcpal_timer_start(&src->pap_timer, SACN_SOURCE_LOSS_TIMEOUT);
       break;
     case kRecvStateHaveDmxAndPap:
+    case kRecvStateHavePapOnly:
       etcpal_timer_reset(&src->pap_timer);
       break;
     default:
@@ -1130,7 +1115,8 @@ void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* sou
                               new_source) == kEtcPalErrOk)
   {
 #if SACN_ETC_PRIORITY_EXTENSION
-    if ((receiver->sampling && (universe_data->start_code == SACN_STARTCODE_PRIORITY)) || !receiver->sampling)
+    // After the sampling period, 0x00 packets should always notify after 0xDD
+    if ((universe_data->start_code == SACN_STARTCODE_DMX) && !receiver->sampling)
       *notify = false;
 #endif
 
@@ -1411,15 +1397,12 @@ bool check_source_timeouts(SacnTrackedSource* src, SacnSourceStatusLists* status
 
   switch (src->recv_state)
   {
-    case kRecvStateWaitingForDmx:
-      if (etcpal_timer_is_expired(&src->pap_timer))
-        res = false;
-      break;
     case kRecvStateWaitingForPap:
       if (etcpal_timer_is_expired(&src->packet_timer))
         res = false;
       break;
     case kRecvStateHaveDmxOnly:
+    case kRecvStateHavePapOnly:
     case kRecvStateHaveDmxAndPap:
       update_source_status(src, status_lists);
       break;

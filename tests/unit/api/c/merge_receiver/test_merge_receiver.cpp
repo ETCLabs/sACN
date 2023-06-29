@@ -337,7 +337,7 @@ TEST_F(TestMergeReceiver, ChangeUniverseWorks)
   for (size_t i = 0u; i < kNumSources; ++i)
   {
     source_info.handle = static_cast<sacn_remote_source_t>(i);
-    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false, false), kEtcPalErrOk);
+    EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false), kEtcPalErrOk);
   }
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), kNumSources);
@@ -402,15 +402,6 @@ TEST_F(TestMergeReceiver, UniverseDataAddsPapSourceAfterSampling)
 
   etcpal::Uuid cid = etcpal::Uuid::V4();
 
-  RunUniverseData(1u, cid, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
-
-  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 1u);
-  EXPECT_EQ(add_sacn_dmx_merger_source_with_handle_fake.call_count, 1u);
-  EXPECT_EQ(update_sacn_dmx_merger_levels_fake.call_count, 0u);
-  EXPECT_EQ(update_sacn_dmx_merger_universe_priority_fake.call_count, 0u);
-  EXPECT_EQ(update_sacn_dmx_merger_pap_fake.call_count, 1u);
-  EXPECT_EQ(universe_data_fake.call_count, 0u);
-
   universe_data_fake.custom_fake = [](sacn_merge_receiver_t handle, const SacnRecvMergedData* merged_data, void*) {
     EXPECT_EQ(handle, kTestHandle);
     EXPECT_EQ(merged_data->universe_id, kTestUniverse);
@@ -418,6 +409,15 @@ TEST_F(TestMergeReceiver, UniverseDataAddsPapSourceAfterSampling)
   };
 
   SetActiveSourcesToExpect({1u});
+  RunUniverseData(1u, cid, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
+
+  EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 1u);
+  EXPECT_EQ(add_sacn_dmx_merger_source_with_handle_fake.call_count, 1u);
+  EXPECT_EQ(update_sacn_dmx_merger_levels_fake.call_count, 0u);
+  EXPECT_EQ(update_sacn_dmx_merger_universe_priority_fake.call_count, 0u);
+  EXPECT_EQ(update_sacn_dmx_merger_pap_fake.call_count, 1u);
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
+
   RunUniverseData(1u, cid, SACN_STARTCODE_DMX, {0x01u, 0x02u});
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 1u);
@@ -425,7 +425,7 @@ TEST_F(TestMergeReceiver, UniverseDataAddsPapSourceAfterSampling)
   EXPECT_EQ(update_sacn_dmx_merger_levels_fake.call_count, 1u);
   EXPECT_EQ(update_sacn_dmx_merger_universe_priority_fake.call_count, 1u);
   EXPECT_EQ(update_sacn_dmx_merger_pap_fake.call_count, 1u);
-  EXPECT_EQ(universe_data_fake.call_count, 1u);
+  EXPECT_EQ(universe_data_fake.call_count, 2u);
 }
 
 TEST_F(TestMergeReceiver, UniverseDataAddsNoPapSourceAfterSampling)
@@ -463,7 +463,7 @@ TEST_F(TestMergeReceiver, UniverseDataAddsNoPapSourceAfterSampling)
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 }
 
-TEST_F(TestMergeReceiver, PendingSourceBlocksUniverseData)
+TEST_F(TestMergeReceiver, UniverseDataFiresWithPendingSource)
 {
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
   EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
@@ -491,7 +491,7 @@ TEST_F(TestMergeReceiver, PendingSourceBlocksUniverseData)
   EXPECT_EQ(update_sacn_dmx_merger_levels_fake.call_count, 0u);
   EXPECT_EQ(update_sacn_dmx_merger_universe_priority_fake.call_count, 0u);
   EXPECT_EQ(update_sacn_dmx_merger_pap_fake.call_count, 1u);
-  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
 
   RunUniverseData(2u, cid2, SACN_STARTCODE_DMX, {0x01u, 0x02u});
 
@@ -500,7 +500,7 @@ TEST_F(TestMergeReceiver, PendingSourceBlocksUniverseData)
   EXPECT_EQ(update_sacn_dmx_merger_levels_fake.call_count, 1u);
   EXPECT_EQ(update_sacn_dmx_merger_universe_priority_fake.call_count, 1u);
   EXPECT_EQ(update_sacn_dmx_merger_pap_fake.call_count, 1u);
-  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  EXPECT_EQ(universe_data_fake.call_count, 2u);
 
   RunUniverseData(2u, cid2, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
 
@@ -509,7 +509,7 @@ TEST_F(TestMergeReceiver, PendingSourceBlocksUniverseData)
   EXPECT_EQ(update_sacn_dmx_merger_levels_fake.call_count, 1u);
   EXPECT_EQ(update_sacn_dmx_merger_universe_priority_fake.call_count, 1u);
   EXPECT_EQ(update_sacn_dmx_merger_pap_fake.call_count, 2u);
-  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  EXPECT_EQ(universe_data_fake.call_count, 3u);
 
   RunUniverseData(2u, cid2, SACN_STARTCODE_DMX, {0x03u, 0x04u});
 
@@ -518,7 +518,7 @@ TEST_F(TestMergeReceiver, PendingSourceBlocksUniverseData)
   EXPECT_EQ(update_sacn_dmx_merger_levels_fake.call_count, 2u);
   EXPECT_EQ(update_sacn_dmx_merger_universe_priority_fake.call_count, 2u);
   EXPECT_EQ(update_sacn_dmx_merger_pap_fake.call_count, 2u);
-  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  EXPECT_EQ(universe_data_fake.call_count, 4u);
 
   SetActiveSourcesToExpect({1u, 2u});
   RunUniverseData(1u, cid1, SACN_STARTCODE_DMX, {0x05u, 0x06u});
@@ -528,43 +528,43 @@ TEST_F(TestMergeReceiver, PendingSourceBlocksUniverseData)
   EXPECT_EQ(update_sacn_dmx_merger_levels_fake.call_count, 3u);
   EXPECT_EQ(update_sacn_dmx_merger_universe_priority_fake.call_count, 3u);
   EXPECT_EQ(update_sacn_dmx_merger_pap_fake.call_count, 2u);
-  EXPECT_EQ(universe_data_fake.call_count, 1u);
+  EXPECT_EQ(universe_data_fake.call_count, 5u);
 
   etcpal::Uuid cid3 = etcpal::Uuid::V4();
 
+  SetActiveSourcesToExpect({1u, 2u, 3u});
   RunUniverseData(3u, cid3, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
-
-  EXPECT_EQ(universe_data_fake.call_count, 1u);
+  EXPECT_EQ(universe_data_fake.call_count, 6u);
   RunUniverseData(1u, cid1, SACN_STARTCODE_DMX, {0x01u, 0x02u});
-  EXPECT_EQ(universe_data_fake.call_count, 1u);
+  EXPECT_EQ(universe_data_fake.call_count, 7u);
   RunUniverseData(1u, cid1, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
-  EXPECT_EQ(universe_data_fake.call_count, 1u);
+  EXPECT_EQ(universe_data_fake.call_count, 8u);
   RunUniverseData(2u, cid2, SACN_STARTCODE_DMX, {0x03u, 0x04u});
-  EXPECT_EQ(universe_data_fake.call_count, 1u);
-  RunSourcesLost({{(sacn_remote_source_t)2u, cid2}});
-  EXPECT_EQ(universe_data_fake.call_count, 1u);
-  RunPapLost(1u, cid1);
-  EXPECT_EQ(universe_data_fake.call_count, 1u);
-
+  EXPECT_EQ(universe_data_fake.call_count, 9u);
   SetActiveSourcesToExpect({1u, 3u});
+  RunSourcesLost({{(sacn_remote_source_t)2u, cid2}});
+  EXPECT_EQ(universe_data_fake.call_count, 10u);
+  RunPapLost(1u, cid1);
+  EXPECT_EQ(universe_data_fake.call_count, 11u);
+
   RunUniverseData(3u, cid3, SACN_STARTCODE_DMX, {0x07u, 0x08u});
-  EXPECT_EQ(universe_data_fake.call_count, 2u);
+  EXPECT_EQ(universe_data_fake.call_count, 12u);
 
   RunUniverseData(1u, cid1, SACN_STARTCODE_DMX, {0x01u, 0x02u});
-  EXPECT_EQ(universe_data_fake.call_count, 3u);
+  EXPECT_EQ(universe_data_fake.call_count, 13u);
   RunUniverseData(1u, cid1, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
-  EXPECT_EQ(universe_data_fake.call_count, 4u);
+  EXPECT_EQ(universe_data_fake.call_count, 14u);
   SetActiveSourcesToExpect({1u, 2u, 3u});
   RunUniverseData(2u, cid2, SACN_STARTCODE_DMX, {0x03u, 0x04u});
-  EXPECT_EQ(universe_data_fake.call_count, 5u);
+  EXPECT_EQ(universe_data_fake.call_count, 15u);
   SetActiveSourcesToExpect({1u, 3u});
   RunSourcesLost({{(sacn_remote_source_t)2u, cid2}});
-  EXPECT_EQ(universe_data_fake.call_count, 6u);
+  EXPECT_EQ(universe_data_fake.call_count, 16u);
   RunPapLost(1u, cid1);
-  EXPECT_EQ(universe_data_fake.call_count, 7u);
+  EXPECT_EQ(universe_data_fake.call_count, 17u);
 }
 
-TEST_F(TestMergeReceiver, MultiplePendingSourcesBlockUniverseData)
+TEST_F(TestMergeReceiver, UniverseDataFiresWithMultiplePendingSources)
 {
   sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
   EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
@@ -595,7 +595,7 @@ TEST_F(TestMergeReceiver, MultiplePendingSourcesBlockUniverseData)
   EXPECT_EQ(update_sacn_dmx_merger_levels_fake.call_count, 0u);
   EXPECT_EQ(update_sacn_dmx_merger_universe_priority_fake.call_count, 0u);
   EXPECT_EQ(update_sacn_dmx_merger_pap_fake.call_count, 3u);
-  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  EXPECT_EQ(universe_data_fake.call_count, 3u);
 
   RunUniverseData(1u, cid1, SACN_STARTCODE_DMX, {0x01u, 0x02u});
   RunUniverseData(2u, cid2, SACN_STARTCODE_DMX, {0x03u, 0x04u});
@@ -605,7 +605,7 @@ TEST_F(TestMergeReceiver, MultiplePendingSourcesBlockUniverseData)
   EXPECT_EQ(update_sacn_dmx_merger_levels_fake.call_count, 2u);
   EXPECT_EQ(update_sacn_dmx_merger_universe_priority_fake.call_count, 2u);
   EXPECT_EQ(update_sacn_dmx_merger_pap_fake.call_count, 3u);
-  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  EXPECT_EQ(universe_data_fake.call_count, 5u);
 
   SetActiveSourcesToExpect({1u, 2u, 3u});
   RunUniverseData(3u, cid3, SACN_STARTCODE_DMX, {0x05u, 0x06u});
@@ -615,7 +615,7 @@ TEST_F(TestMergeReceiver, MultiplePendingSourcesBlockUniverseData)
   EXPECT_EQ(update_sacn_dmx_merger_levels_fake.call_count, 3u);
   EXPECT_EQ(update_sacn_dmx_merger_universe_priority_fake.call_count, 3u);
   EXPECT_EQ(update_sacn_dmx_merger_pap_fake.call_count, 3u);
-  EXPECT_EQ(universe_data_fake.call_count, 1u);
+  EXPECT_EQ(universe_data_fake.call_count, 6u);
 }
 
 TEST_F(TestMergeReceiver, SamplingPeriodBlocksUniverseData)
@@ -841,10 +841,10 @@ TEST_F(TestMergeReceiver, UniverseDataHandlesPapLost)
 
   EXPECT_EQ(universe_data_fake.call_count, 0u);
   RunUniverseData(1u, cid1, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
-  EXPECT_EQ(universe_data_fake.call_count, 0u);
+  EXPECT_EQ(universe_data_fake.call_count, 1u);
   SetActiveSourcesToExpect({1u});
   RunUniverseData(1u, cid1, SACN_STARTCODE_DMX, {0x01u, 0x02u});
-  EXPECT_EQ(universe_data_fake.call_count, 1u);
+  EXPECT_EQ(universe_data_fake.call_count, 2u);
 
   remove_sacn_dmx_merger_pap_fake.custom_fake = [](sacn_dmx_merger_t merger, sacn_dmx_merger_source_t) {
     EXPECT_EQ(merger, kPrimaryMergerHandle);
@@ -854,7 +854,7 @@ TEST_F(TestMergeReceiver, UniverseDataHandlesPapLost)
   EXPECT_EQ(remove_sacn_dmx_merger_pap_fake.call_count, 0u);
   RunPapLost(1u, cid1);
   EXPECT_EQ(remove_sacn_dmx_merger_pap_fake.call_count, 1u);
-  EXPECT_EQ(universe_data_fake.call_count, 2u);
+  EXPECT_EQ(universe_data_fake.call_count, 3u);
 
   // Now say a new interface is brought in and enters a sampling period - PAP lost should remove from the correct merger
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
