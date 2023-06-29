@@ -712,7 +712,6 @@ typedef struct SacnMergeReceiverInternalSource
   sacn_remote_source_t handle;  // This must be the first struct member.
   char name[SACN_SOURCE_NAME_MAX_LEN];
   EtcPalSockAddr addr;
-  bool pending;
   bool sampling;
 } SacnMergeReceiverInternalSource;
 
@@ -736,7 +735,6 @@ typedef struct SacnMergeReceiver
 
   EtcPalRbTree sources;
 
-  int num_pending_sources;
   bool sampling;
 } SacnMergeReceiver;
 

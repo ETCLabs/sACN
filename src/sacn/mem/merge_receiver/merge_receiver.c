@@ -120,7 +120,6 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
     etcpal_rbtree_init(&merge_receiver->sources, remote_source_compare, merge_receiver_source_node_alloc,
                        merge_receiver_source_node_dealloc);
 
-    merge_receiver->num_pending_sources = 0;
     merge_receiver->sampling = true;
 
     result = etcpal_rbtree_insert(&merge_receivers, merge_receiver);

@@ -608,22 +608,12 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
       if (lookup_merge_receiver_source(merge_receiver, source_handle, &source) == kEtcPalErrOk)
       {
         update_merge_receiver_source_info(source, source_addr, source_info);
-
-        // The source is pending until the first 0x00 packet is received. After the sampling period, this indicates
-        // that 0xDD must have either already been notified or timed out.
-        if (source->pending && (universe_data->start_code == SACN_STARTCODE_DMX))
-        {
-          source->pending = false;
-          --merge_receiver->num_pending_sources;
-        }
       }
       else
       {
         add_sacn_dmx_merger_source_with_handle(merger_handle, merger_source_handle);
 
-        add_sacn_merge_receiver_source(
-            merge_receiver, source_addr, source_info,
-            (merge_receiver->use_pap && (universe_data->start_code == SACN_STARTCODE_PRIORITY)), sampling);
+        add_sacn_merge_receiver_source(merge_receiver, source_addr, source_info, sampling);
       }
 
       bool new_merge_occurred = false;
@@ -646,7 +636,7 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
       }
 
       // Notify if needed.
-      if (merged_data_notification && new_merge_occurred && !sampling && (merge_receiver->num_pending_sources == 0))
+      if (merged_data_notification && new_merge_occurred && !sampling)
       {
         if (add_active_sources(merged_data_notification, merge_receiver))
         {
@@ -739,7 +729,7 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
         }
       }
 
-      if (merged_data_notification && non_sampling_merge_occurred && (merge_receiver->num_pending_sources == 0))
+      if (merged_data_notification && non_sampling_merge_occurred)
       {
         if (add_active_sources(merged_data_notification, merge_receiver))
         {
@@ -877,8 +867,7 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
         source->sampling = false;
       }
 
-      if (merged_data_notification && (etcpal_rbtree_size(&merge_receiver->sources) > 0) &&
-          (merge_receiver->num_pending_sources == 0))
+      if (merged_data_notification && (etcpal_rbtree_size(&merge_receiver->sources) > 0))
       {
         if (add_active_sources(merged_data_notification, merge_receiver))
         {
@@ -965,7 +954,7 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
         // The receiver handle is interchangable with the DMX Merger source IDs, so use it here via cast.
         remove_sacn_dmx_merger_pap(merger_handle, (sacn_dmx_merger_source_t)source->handle);
 
-        if (merged_data_notification && !internal_source->sampling && (merge_receiver->num_pending_sources == 0))
+        if (merged_data_notification && !internal_source->sampling)
         {
           if (add_active_sources(merged_data_notification, merge_receiver))
           {

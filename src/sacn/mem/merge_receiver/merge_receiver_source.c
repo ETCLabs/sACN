@@ -81,7 +81,7 @@ etcpal_error_t init_merge_receiver_sources(void)
 
 // Needs lock
 etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, const EtcPalSockAddr* addr,
-                                              const SacnRemoteSource* remote_source, bool pending, bool sampling)
+                                              const SacnRemoteSource* remote_source, bool sampling)
 {
   if (!SACN_ASSERT_VERIFY(merge_receiver) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(remote_source))
     return kEtcPalErrSys;
@@ -92,7 +92,6 @@ etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver,
   if (src)
   {
     src->handle = remote_source->handle;
-    src->pending = pending;
     src->sampling = sampling;
     update_merge_receiver_source_info(src, addr, remote_source);
 
@@ -100,8 +99,6 @@ etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver,
 
     if (result != kEtcPalErrOk)
       FREE_MERGE_RECEIVER_SOURCE(src);
-    else if (pending)
-      ++merge_receiver->num_pending_sources;
   }
 
   return result;
@@ -129,12 +126,7 @@ void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_r
 
   SacnMergeReceiverInternalSource* source = etcpal_rbtree_find(&merge_receiver->sources, &source_handle);
   if (SACN_ASSERT_VERIFY(source))
-  {
-    if (source->pending)
-      --merge_receiver->num_pending_sources;
-
     etcpal_rbtree_remove_with_cb(&merge_receiver->sources, source, merge_receiver_sources_tree_dealloc);
-  }
 }
 
 // Needs lock
@@ -144,7 +136,6 @@ void clear_sacn_merge_receiver_sources(SacnMergeReceiver* merge_receiver)
     return;
 
   etcpal_rbtree_clear_with_cb(&merge_receiver->sources, merge_receiver_sources_tree_dealloc);
-  merge_receiver->num_pending_sources = 0;
 }
 
 // Needs lock
