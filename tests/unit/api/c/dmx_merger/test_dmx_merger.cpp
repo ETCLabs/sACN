@@ -141,8 +141,11 @@ protected:
   {
     for (size_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
     {
-      // If this slot's priority is being sourced:
-      if (((!pap && priority) || (pap && (i < pap->size()) && (pap->at(i) != 0))))
+      bool level_sourced = levels && (i < levels->size());
+      bool priority_sourced = (!pap && priority) || (pap && (i < pap->size()) && (pap->at(i) != 0));
+
+      // If this slot is being sourced:
+      if (level_sourced && priority_sourced)
       {
         // Determine the current level and priority for this slot.
         int current_level = (levels && (i < levels->size())) ? levels->at(i) : 0;

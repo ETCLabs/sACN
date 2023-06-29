@@ -276,9 +276,6 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_dmx_merger_sourc
  * each slot, the source will only be included in the merge if it has a priority at that slot. Otherwise the level will
  * be saved for when a priority is eventually inputted.
  *
- * This function should be called after priority data is inputted via the update PAP or update universe priority
- * functions.
- *
  * @param[in] source The id of the source to modify.
  * @param[in] new_levels The new DMX levels to be copied in, starting from the first slot.
  * @param[in] new_levels_count The length of new_levels. Only slots within this range will ever factored into the merge.
@@ -304,8 +301,6 @@ inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source, co
  *
  * If PAP is not specified for all levels, then the remaining levels will default to a PAP of 0. To remove PAP for this
  * source and revert to the universe priority, call DmxMerger::RemovePap.
- *
- * This should be called before calling the update levels function to input the levels.
  *
  * @param[in] source The id of the source to modify.
  * @param[in] pap The per-address priorities to be copied in, starting from the first slot.
@@ -335,8 +330,6 @@ inline etcpal::Error DmxMerger::UpdatePap(sacn_dmx_merger_source_t source, const
  *
  * If this source doesn't have PAP, then the universe priority is converted into PAP for each slot. These are the
  * priorities used for the merge. This means a universe priority of 0 will be converted to a PAP of 1.
- *
- * This should be called before calling the update levels function to input the levels.
  *
  * @param[in] source The id of the source to modify.
  * @param[in] universe_priority The universe-level priority of the source.
