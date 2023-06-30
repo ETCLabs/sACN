@@ -115,14 +115,17 @@ public:
     EXPECT_EQ(sacn_dmx_merger_update_pap(merger_handle_, source, pap.data(), pap.size()), kEtcPalErrOk);
   }
 
-  virtual void UpdateUniversePriority(sacn_dmx_merger_source_t& source, uint8_t universe_priority)
+  virtual void UpdateUniversePriority(sacn_dmx_merger_source_t& source, int universe_priority)
   {
+    ASSERT_LE(universe_priority, 0xFF);
+
     if (sacn_dmx_merger_get_source(merger_handle_, source) == nullptr)
     {
       ASSERT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source), kEtcPalErrOk);
     }
 
-    EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, source, universe_priority), kEtcPalErrOk);
+    EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, source, static_cast<uint8_t>(universe_priority)),
+              kEtcPalErrOk);
   }
 
 protected:
@@ -159,6 +162,17 @@ public:
   {
     std::function<void()> setup_expectations_fn{[]() {}};
     std::vector<MergerCall> merger_calls{};
+  };
+
+  struct TestMergeInfo
+  {
+    std::optional<std::vector<uint8_t>> src_1_levels;
+    std::optional<std::vector<uint8_t>> src_1_paps;
+    std::optional<int> src_1_universe_priority;
+
+    std::optional<std::vector<uint8_t>> src_2_levels;
+    std::optional<std::vector<uint8_t>> src_2_paps;
+    std::optional<int> src_2_universe_priority;
   };
 
   void SetUp() override
@@ -300,6 +314,42 @@ public:
     } while (std::next_permutation(current_permutation.begin(), current_permutation.end()));
 
     return true;
+  }
+
+  bool VerifyMerge(const TestMergeInfo& info)
+  {
+    return VerifyAllPermutations(
+        {.setup_expectations_fn =
+             [&]() {
+               UpdateExpectedMergeResults(merge_source_1_, info.src_1_universe_priority, info.src_1_levels,
+                                          info.src_1_paps);
+               UpdateExpectedMergeResults(merge_source_2_, info.src_2_universe_priority, info.src_2_levels,
+                                          info.src_2_paps);
+             },
+         .merger_calls = {MergerCall([&]() {  // Element 1 (source 1 PAP)
+                            if (info.src_1_paps)
+                              UpdatePap(merge_source_1_, *info.src_1_paps);
+                          }),
+                          MergerCall([&]() {  // Element 2 (source 2 PAP)
+                            if (info.src_2_paps)
+                              UpdatePap(merge_source_2_, *info.src_2_paps);
+                          }),
+                          MergerCall([&]() {  // Element 3 (source 1 levels)
+                            if (info.src_1_levels)
+                              UpdateLevels(merge_source_1_, *info.src_1_levels);
+                          }),
+                          MergerCall([&]() {  // Element 4 (source 2 levels)
+                            if (info.src_2_levels)
+                              UpdateLevels(merge_source_2_, *info.src_2_levels);
+                          }),
+                          MergerCall([&]() {  // Element 5 (source 1 universe priority)
+                            if (info.src_1_universe_priority)
+                              UpdateUniversePriority(merge_source_1_, *info.src_1_universe_priority);
+                          }),
+                          MergerCall([&]() {  // Element 6 (source 2 universe priority)
+                            if (info.src_2_universe_priority)
+                              UpdateUniversePriority(merge_source_2_, *info.src_2_universe_priority);
+                          })}});
   }
 
   void RemoveAllSources()
@@ -1270,27 +1320,13 @@ TEST_F(TestDmxMergerUpdate, SingleSourceHandlesLessPap)
 
 TEST_F(TestDmxMergerUpdate, LevelsNotWrittenForReleasedSlots)
 {
-  static const std::vector<uint8_t> kSrc1Levels = {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-                                                   255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
-  static const std::vector<uint8_t> kSrc1Paps = {100, 100, 100, 100, 100, 100, 0, 0, 0, 0, 0, 0,
-                                                 0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0};
-  static const std::vector<uint8_t> kSrc2Levels = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  static const std::vector<uint8_t> kSrc2Paps = {100, 100, 100, 150, 150, 150, 0, 0, 0, 0, 0, 0,
-                                                 0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0};
-
-  VerifyAllPermutations(
-      {.setup_expectations_fn =
-           [&]() {
-             UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, kSrc1Levels, kSrc1Paps);
-             UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, kSrc2Levels, kSrc2Paps);
-           },
-       .merger_calls = {MergerCall([&]() { UpdatePap(merge_source_1_, kSrc1Paps); }),
-                        MergerCall([&]() { UpdatePap(merge_source_2_, kSrc2Paps); }),
-                        MergerCall([&]() { UpdateLevels(merge_source_1_, kSrc1Levels); }),
-                        MergerCall([&]() { UpdateLevels(merge_source_2_, kSrc2Levels); }),
-                        MergerCall([&]() { UpdateUniversePriority(merge_source_1_, VALID_PRIORITY); }),
-                        MergerCall([&]() { UpdateUniversePriority(merge_source_2_, VALID_PRIORITY); })}});
+  VerifyMerge({.src_1_levels = {{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                                 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}},
+               .src_1_paps = {{100, 100, 100, 100, 100, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+               .src_1_universe_priority = VALID_PRIORITY,
+               .src_2_levels = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+               .src_2_paps = {{100, 100, 100, 150, 150, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+               .src_2_universe_priority = VALID_PRIORITY});
 }
 
 TEST_F(TestDmxMerger, UpdateLevelsErrInvalidWorks)
