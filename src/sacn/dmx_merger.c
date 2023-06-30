@@ -1157,10 +1157,11 @@ void recalculate_winning_priority(MergerState* merger, const SourceState* source
   {
     uint8_t candidate_pap = CALC_SRC_PAP(candidate, slot);
 
-    // Make this source the new owner if it has the same priority and a higher level OR a higher priority.
-    if ((candidate->handle != source->handle) && ((candidate_pap > merger->config.per_address_priorities[slot]) ||
-                                                  ((candidate_pap == merger->config.per_address_priorities[slot]) &&
-                                                   (candidate->source.levels[slot] > merger->config.levels[slot]))))
+    // Make this source the new owner if it has the same (non-0) priority and a higher level OR a higher priority.
+    if ((candidate->handle != source->handle) &&
+        ((candidate_pap > merger->config.per_address_priorities[slot]) ||
+         ((candidate_pap > 0) && (candidate_pap == merger->config.per_address_priorities[slot]) &&
+          (candidate->source.levels[slot] > merger->config.levels[slot]))))
     {
       merger->config.levels[slot] = candidate->source.levels[slot];
       merger->config.owners[slot] = candidate->handle;

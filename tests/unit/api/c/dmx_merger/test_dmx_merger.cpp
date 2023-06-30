@@ -19,6 +19,8 @@
 
 #include "sacn/dmx_merger.h"
 
+#include <algorithm>
+#include <functional>
 #include <limits>
 #include <optional>
 #include "etcpal_mock/common.h"
@@ -105,14 +107,35 @@ protected:
 class TestDmxMergerUpdate : public TestDmxMerger
 {
 protected:
+  class MergerCall
+  {
+  public:
+    MergerCall(const std::function<void()>& call) : id_(next_id_++), call_(call) {}
+
+    void operator()() const { call_(); }
+    bool operator<(const MergerCall& rhs) const { return id_ < rhs.id_; }
+    bool operator==(const MergerCall& rhs) const { return id_ == rhs.id_; }
+
+  private:
+    static int next_id_;
+
+    int id_;
+    std::function<void()> call_;
+  };
+
+  struct TestPermutationsInfo
+  {
+    std::function<void()> setup_expectations_fn{[]() {}};
+    std::vector<MergerCall> merger_calls{};
+  };
+
   void SetUp() override
   {
     TestDmxMerger::SetUp();
 
     // Initialize the merger and sources.
     EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &merge_source_1_), kEtcPalErrOk);
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &merge_source_2_), kEtcPalErrOk);
+    AddAllSources();
 
     // Initialize expected merge results.
     ClearExpectedMergeResults();
@@ -121,15 +144,7 @@ protected:
   void TearDown() override
   {
     // Deinitialize the sources and merger.
-    if (sacn_dmx_merger_get_source(merger_handle_, merge_source_1_) != nullptr)
-    {
-      EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_1_), kEtcPalErrOk);
-    }
-
-    if (sacn_dmx_merger_get_source(merger_handle_, merge_source_2_) != nullptr)
-    {
-      EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_2_), kEtcPalErrOk);
-    }
+    RemoveAllSources();
 
     EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
 
@@ -215,6 +230,90 @@ protected:
     expected_merge_universe_priority_ = 0;
   }
 
+  bool VerifyAllPermutations(const TestPermutationsInfo& info)
+  {
+    std::vector<MergerCall> current_permutation = info.merger_calls;
+    std::sort(current_permutation.begin(), current_permutation.end());
+
+    int permutation_num = 1;
+    do
+    {
+      RefreshMerger();
+      ClearExpectedMergeResults();
+
+      info.setup_expectations_fn();
+
+      std::string current_permutation_readable;
+      for (const auto& merger_call : current_permutation)
+      {
+        merger_call();
+
+        // Generate string to identify the current permutation (vector indexes) on failure.
+        for (size_t i = 0u; i < info.merger_calls.size(); ++i)
+        {
+          if (merger_call == info.merger_calls[i])
+          {
+            current_permutation_readable.append(" ");
+            current_permutation_readable.append(std::to_string(i + 1));
+          }
+        }
+      }
+
+      bool merge_results_pass = VerifyMergeResults();
+      EXPECT_TRUE(merge_results_pass) << "Test failed for permutation " << permutation_num
+                                      << " (1-based merger_calls order:" << current_permutation_readable << ").";
+
+      if (!merge_results_pass)
+        return false;  // Return early to avoid spam.
+
+      ++permutation_num;
+    } while (std::next_permutation(current_permutation.begin(), current_permutation.end()));
+
+    return true;
+  }
+
+  void UpdateLevels(sacn_dmx_merger_source_t source, const uint8_t* new_levels, size_t new_levels_count)
+  {
+    EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, source, new_levels, new_levels_count), kEtcPalErrOk);
+  }
+
+  void UpdatePap(sacn_dmx_merger_source_t source, const uint8_t* pap, size_t pap_count)
+  {
+    EXPECT_EQ(sacn_dmx_merger_update_pap(merger_handle_, source, pap, pap_count), kEtcPalErrOk);
+  }
+
+  void UpdateUniversePriority(sacn_dmx_merger_source_t source, uint8_t universe_priority)
+  {
+    EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, source, universe_priority), kEtcPalErrOk);
+  }
+
+  void RemoveAllSources()
+  {
+    if (sacn_dmx_merger_get_source(merger_handle_, merge_source_1_) != nullptr)
+    {
+      EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_1_), kEtcPalErrOk);
+    }
+
+    if (sacn_dmx_merger_get_source(merger_handle_, merge_source_2_) != nullptr)
+    {
+      EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_2_), kEtcPalErrOk);
+    }
+  }
+
+  void AddAllSources()
+  {
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &merge_source_1_), kEtcPalErrOk);
+    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &merge_source_2_), kEtcPalErrOk);
+  }
+
+  void RefreshMerger()
+  {
+    RemoveAllSources();
+    EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
+    EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+    AddAllSources();
+  }
+
   sacn_dmx_merger_source_t merge_source_1_;
   sacn_dmx_merger_source_t merge_source_2_;
   int expected_merge_levels_[DMX_ADDRESS_COUNT];
@@ -258,6 +357,8 @@ protected:
     return vect;
   }();
 };
+
+int TestDmxMergerUpdate::MergerCall::next_id_ = 0;
 
 TEST_F(TestDmxMerger, DeinitClearsMergers)
 {
@@ -1379,6 +1480,31 @@ TEST_F(TestDmxMergerUpdate, SingleSourceHandlesLessPap)
     merge_results_pass = VerifyMergeResults();
     EXPECT_TRUE(merge_results_pass) << "Test failed with i == " << i << ".";
   }
+}
+
+TEST_F(TestDmxMergerUpdate, LevelsNotWrittenForReleasedSlots)
+{
+  static const std::vector<uint8_t> kSrc1Levels = {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+                                                   255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
+  static const std::vector<uint8_t> kSrc1Paps = {100, 100, 100, 100, 100, 100, 0, 0, 0, 0, 0, 0,
+                                                 0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0};
+  static const std::vector<uint8_t> kSrc2Levels = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  static const std::vector<uint8_t> kSrc2Paps = {100, 100, 100, 150, 150, 150, 0, 0, 0, 0, 0, 0,
+                                                 0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0, 0};
+
+  VerifyAllPermutations(
+      {.setup_expectations_fn =
+           [&]() {
+             UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, kSrc1Levels, kSrc1Paps);
+             UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, kSrc2Levels, kSrc2Paps);
+           },
+       .merger_calls = {MergerCall([&]() { UpdatePap(merge_source_1_, kSrc1Paps.data(), kSrc1Paps.size()); }),
+                        MergerCall([&]() { UpdatePap(merge_source_2_, kSrc2Paps.data(), kSrc2Paps.size()); }),
+                        MergerCall([&]() { UpdateLevels(merge_source_1_, kSrc1Levels.data(), kSrc1Levels.size()); }),
+                        MergerCall([&]() { UpdateLevels(merge_source_2_, kSrc2Levels.data(), kSrc2Levels.size()); }),
+                        MergerCall([&]() { UpdateUniversePriority(merge_source_1_, VALID_PRIORITY); }),
+                        MergerCall([&]() { UpdateUniversePriority(merge_source_2_, VALID_PRIORITY); })}});
 }
 
 TEST_F(TestDmxMerger, UpdateLevelsErrInvalidWorks)
