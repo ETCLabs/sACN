@@ -94,7 +94,7 @@ public:
     EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
   }
 
-  virtual void UpdateLevels(sacn_dmx_merger_source_t& source, const std::vector<uint8_t>& new_levels)
+  void UpdateLevels(sacn_dmx_merger_source_t& source, const std::vector<uint8_t>& new_levels)
   {
     if (sacn_dmx_merger_get_source(merger_handle_, source) == nullptr)
     {
@@ -105,7 +105,7 @@ public:
               kEtcPalErrOk);
   }
 
-  virtual void UpdatePap(sacn_dmx_merger_source_t& source, const std::vector<uint8_t>& pap)
+  void UpdatePap(sacn_dmx_merger_source_t& source, const std::vector<uint8_t>& pap)
   {
     if (sacn_dmx_merger_get_source(merger_handle_, source) == nullptr)
     {
@@ -115,7 +115,7 @@ public:
     EXPECT_EQ(sacn_dmx_merger_update_pap(merger_handle_, source, pap.data(), pap.size()), kEtcPalErrOk);
   }
 
-  virtual void UpdateUniversePriority(sacn_dmx_merger_source_t& source, int universe_priority)
+  void UpdateUniversePriority(sacn_dmx_merger_source_t& source, int universe_priority)
   {
     ASSERT_LE(universe_priority, 0xFF);
 
