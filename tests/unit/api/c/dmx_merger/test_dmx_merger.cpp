@@ -94,19 +94,34 @@ public:
     EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
   }
 
-  virtual void UpdateLevels(sacn_dmx_merger_source_t source, const std::vector<uint8_t>& new_levels)
+  virtual void UpdateLevels(sacn_dmx_merger_source_t& source, const std::vector<uint8_t>& new_levels)
   {
+    if (sacn_dmx_merger_get_source(merger_handle_, source) == nullptr)
+    {
+      ASSERT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source), kEtcPalErrOk);
+    }
+
     EXPECT_EQ(sacn_dmx_merger_update_levels(merger_handle_, source, new_levels.data(), new_levels.size()),
               kEtcPalErrOk);
   }
 
-  virtual void UpdatePap(sacn_dmx_merger_source_t source, const std::vector<uint8_t>& pap)
+  virtual void UpdatePap(sacn_dmx_merger_source_t& source, const std::vector<uint8_t>& pap)
   {
+    if (sacn_dmx_merger_get_source(merger_handle_, source) == nullptr)
+    {
+      ASSERT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source), kEtcPalErrOk);
+    }
+
     EXPECT_EQ(sacn_dmx_merger_update_pap(merger_handle_, source, pap.data(), pap.size()), kEtcPalErrOk);
   }
 
-  virtual void UpdateUniversePriority(sacn_dmx_merger_source_t source, uint8_t universe_priority)
+  virtual void UpdateUniversePriority(sacn_dmx_merger_source_t& source, uint8_t universe_priority)
   {
+    if (sacn_dmx_merger_get_source(merger_handle_, source) == nullptr)
+    {
+      ASSERT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source), kEtcPalErrOk);
+    }
+
     EXPECT_EQ(sacn_dmx_merger_update_universe_priority(merger_handle_, source, universe_priority), kEtcPalErrOk);
   }
 
@@ -150,9 +165,8 @@ public:
   {
     TestDmxMerger::SetUp();
 
-    // Initialize the merger and sources.
+    // Initialize the merger.
     EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
-    AddAllSources();
 
     // Initialize expected merge results.
     ClearExpectedMergeResults();
@@ -256,9 +270,6 @@ public:
     do
     {
       RefreshMerger();
-      ClearExpectedMergeResults();
-
-      info.setup_expectations_fn();
 
       std::string current_permutation_readable;
       for (const auto& merger_call : current_permutation)
@@ -276,6 +287,8 @@ public:
         }
       }
 
+      ClearExpectedMergeResults();
+      info.setup_expectations_fn();
       bool merge_results_pass = VerifyMergeResults();
       EXPECT_TRUE(merge_results_pass) << "Test failed for permutation " << permutation_num
                                       << " (1-based merger_calls order:" << current_permutation_readable << ").";
@@ -294,18 +307,14 @@ public:
     if (sacn_dmx_merger_get_source(merger_handle_, merge_source_1_) != nullptr)
     {
       EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_1_), kEtcPalErrOk);
+      merge_source_1_ = SACN_DMX_MERGER_SOURCE_INVALID;
     }
 
     if (sacn_dmx_merger_get_source(merger_handle_, merge_source_2_) != nullptr)
     {
       EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_2_), kEtcPalErrOk);
+      merge_source_2_ = SACN_DMX_MERGER_SOURCE_INVALID;
     }
-  }
-
-  void AddAllSources()
-  {
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &merge_source_1_), kEtcPalErrOk);
-    EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &merge_source_2_), kEtcPalErrOk);
   }
 
   void RefreshMerger()
@@ -313,12 +322,11 @@ public:
     RemoveAllSources();
     EXPECT_EQ(sacn_dmx_merger_destroy(merger_handle_), kEtcPalErrOk);
     EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
-    AddAllSources();
   }
 
 protected:
-  sacn_dmx_merger_source_t merge_source_1_;
-  sacn_dmx_merger_source_t merge_source_2_;
+  sacn_dmx_merger_source_t merge_source_1_{SACN_DMX_MERGER_SOURCE_INVALID};
+  sacn_dmx_merger_source_t merge_source_2_{SACN_DMX_MERGER_SOURCE_INVALID};
   int expected_merge_levels_[DMX_ADDRESS_COUNT];
   int expected_merge_priorities_[DMX_ADDRESS_COUNT];
   bool expected_merge_pap_active_;
@@ -781,184 +789,170 @@ TEST_F(TestDmxMerger, GetSourceWorks)
 
 TEST_F(TestDmxMergerUpdate, MergesLevelsPermutation1)
 {
-  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
-  UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, test_values_descending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateUniversePriority(merge_source_1_, VALID_PRIORITY);
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdateUniversePriority(merge_source_2_, VALID_PRIORITY);
 
+  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, test_values_descending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesLevelsPermutation2)
 {
-  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
-  UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, test_values_descending_, std::nullopt);
-
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdateUniversePriority(merge_source_2_, VALID_PRIORITY);
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateUniversePriority(merge_source_1_, VALID_PRIORITY);
 
+  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, test_values_descending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesLevelsPermutation3)
 {
-  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
-  UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, test_values_descending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdateUniversePriority(merge_source_1_, VALID_PRIORITY);
   UpdateUniversePriority(merge_source_2_, VALID_PRIORITY);
 
+  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, test_values_descending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesLevelsPermutation4)
 {
-  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
-  UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, test_values_descending_, std::nullopt);
-
   UpdateUniversePriority(merge_source_1_, VALID_PRIORITY);
   UpdateUniversePriority(merge_source_2_, VALID_PRIORITY);
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateLevels(merge_source_2_, test_values_descending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, test_values_descending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesPapPermutation1)
 {
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
-  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, test_values_ascending_);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdatePap(merge_source_1_, test_values_descending_);
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdatePap(merge_source_2_, test_values_ascending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, test_values_ascending_);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesPapPermutation2)
 {
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
-  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, test_values_ascending_);
-
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdatePap(merge_source_2_, test_values_ascending_);
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdatePap(merge_source_1_, test_values_descending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, test_values_ascending_);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesPapPermutation3)
 {
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
-  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, test_values_ascending_);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdatePap(merge_source_1_, test_values_descending_);
   UpdatePap(merge_source_2_, test_values_ascending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, test_values_ascending_);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesPapPermutation4)
 {
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
-  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, test_values_ascending_);
-
   UpdatePap(merge_source_1_, test_values_descending_);
   UpdatePap(merge_source_2_, test_values_ascending_);
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateLevels(merge_source_2_, test_values_descending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, test_values_ascending_);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesUps1)
 {
-  UpdateExpectedMergeResults(merge_source_1_, LOW_PRIORITY, test_values_ascending_, std::nullopt);
-  UpdateExpectedMergeResults(merge_source_2_, LOW_PRIORITY, test_values_descending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateUniversePriority(merge_source_1_, LOW_PRIORITY);
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdateUniversePriority(merge_source_2_, LOW_PRIORITY);
 
+  UpdateExpectedMergeResults(merge_source_1_, LOW_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, LOW_PRIORITY, test_values_descending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesUps2)
 {
-  UpdateExpectedMergeResults(merge_source_1_, LOW_PRIORITY, test_values_ascending_, std::nullopt);
-  UpdateExpectedMergeResults(merge_source_2_, HIGH_PRIORITY, test_values_descending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateUniversePriority(merge_source_1_, LOW_PRIORITY);
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdateUniversePriority(merge_source_2_, HIGH_PRIORITY);
 
+  UpdateExpectedMergeResults(merge_source_1_, LOW_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, HIGH_PRIORITY, test_values_descending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesUps3)
 {
-  UpdateExpectedMergeResults(merge_source_1_, HIGH_PRIORITY, test_values_ascending_, std::nullopt);
-  UpdateExpectedMergeResults(merge_source_2_, LOW_PRIORITY, test_values_descending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateUniversePriority(merge_source_1_, HIGH_PRIORITY);
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdateUniversePriority(merge_source_2_, LOW_PRIORITY);
 
+  UpdateExpectedMergeResults(merge_source_1_, HIGH_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, LOW_PRIORITY, test_values_descending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesUps4)
 {
-  UpdateExpectedMergeResults(merge_source_1_, MINIMUM_PRIORITY, test_values_ascending_, std::nullopt);
-  UpdateExpectedMergeResults(merge_source_2_, LOW_PRIORITY, test_values_descending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateUniversePriority(merge_source_1_, HIGH_PRIORITY);
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdateUniversePriority(merge_source_2_, LOW_PRIORITY);
   UpdateUniversePriority(merge_source_1_, MINIMUM_PRIORITY);
 
+  UpdateExpectedMergeResults(merge_source_1_, MINIMUM_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, LOW_PRIORITY, test_values_descending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesPapWithUps)
 {
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
-  UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, test_values_descending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdatePap(merge_source_1_, test_values_descending_);
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdateUniversePriority(merge_source_2_, VALID_PRIORITY);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
+  UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, test_values_descending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, MergesUpsWithPap)
 {
-  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
-  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, test_values_ascending_);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateUniversePriority(merge_source_1_, VALID_PRIORITY);
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdatePap(merge_source_2_, test_values_ascending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, test_values_ascending_);
   VerifyMergeResults();
 }
 
@@ -980,7 +974,6 @@ TEST_F(TestDmxMergerUpdate, HandlesLevelCount)
     ClearExpectedMergeResults();
     UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
     UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, variable_levels, std::nullopt);
-
     merge_results_pass = VerifyMergeResults();
     EXPECT_TRUE(merge_results_pass) << "Test failed with i == " << i << ".";
   }
@@ -1004,7 +997,6 @@ TEST_F(TestDmxMergerUpdate, HandlesLessPap)
     ClearExpectedMergeResults();
     UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
     UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, variable_pap);
-
     merge_results_pass = VerifyMergeResults();
     EXPECT_TRUE(merge_results_pass) << "Test failed with i == " << i << ".";
   }
@@ -1026,12 +1018,11 @@ TEST_F(TestDmxMergerUpdate, MergesLevelsOnChange)
     else
       variable_levels[i] = (test_values_ascending_[i] - 1) % 256;
 
+    UpdateLevels(merge_source_2_, variable_levels);
+
     ClearExpectedMergeResults();
     UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
     UpdateExpectedMergeResults(merge_source_2_, VALID_PRIORITY, variable_levels, std::nullopt);
-
-    UpdateLevels(merge_source_2_, variable_levels);
-
     merge_results_pass = VerifyMergeResults();
     EXPECT_TRUE(merge_results_pass) << "Test failed with i == " << i << ".";
 
@@ -1062,12 +1053,11 @@ TEST_F(TestDmxMergerUpdate, MergesPapOnChange)
     else
       variable_pap[i] = (test_values_descending_[i] - 1) % 256;
 
+    UpdatePap(merge_source_2_, variable_pap);
+
     ClearExpectedMergeResults();
     UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
     UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, variable_pap);
-
-    UpdatePap(merge_source_2_, variable_pap);
-
     merge_results_pass = VerifyMergeResults();
     EXPECT_TRUE(merge_results_pass) << "Test failed with i == " << i << ".";
 
@@ -1091,12 +1081,11 @@ TEST_F(TestDmxMergerUpdate, MergesUniversePriorityOnChange)
   bool merge_results_pass = true;
   for (uint8_t variable_up = LOW_PRIORITY; (variable_up <= HIGH_PRIORITY) && merge_results_pass; ++variable_up)
   {
+    UpdateUniversePriority(merge_source_2_, variable_up);
+
     ClearExpectedMergeResults();
     UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
     UpdateExpectedMergeResults(merge_source_2_, variable_up, test_values_descending_, std::nullopt);
-
-    UpdateUniversePriority(merge_source_2_, variable_up);
-
     merge_results_pass = VerifyMergeResults();
     EXPECT_TRUE(merge_results_pass) << "Test failed with variable_up == " << variable_up << ".";
 
@@ -1111,170 +1100,136 @@ TEST_F(TestDmxMergerUpdate, MergesUniversePriorityOnChange)
 
 TEST_F(TestDmxMergerUpdate, HandlesUnsourcedLevels1)
 {
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, std::nullopt, test_values_ascending_);
-  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, std::nullopt, test_values_descending_);
-
   UpdatePap(merge_source_1_, test_values_ascending_);
   UpdatePap(merge_source_2_, test_values_descending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, std::nullopt, test_values_ascending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, std::nullopt, test_values_descending_);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, HandlesUnsourcedLevels2)
 {
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_ascending_);
-  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, std::nullopt, test_values_descending_);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdatePap(merge_source_1_, test_values_ascending_);
   UpdatePap(merge_source_2_, test_values_descending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_ascending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, std::nullopt, test_values_descending_);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, HandlesUnsourcedLevels3)
 {
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, std::nullopt, test_values_ascending_);
-  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_ascending_, test_values_descending_);
-
   UpdatePap(merge_source_1_, test_values_ascending_);
   UpdateLevels(merge_source_2_, test_values_ascending_);
   UpdatePap(merge_source_2_, test_values_descending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, std::nullopt, test_values_ascending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_ascending_, test_values_descending_);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, DoesNotMergeWithoutUpOrPap1)
 {
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, std::nullopt);
-  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateLevels(merge_source_2_, test_values_descending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, DoesNotMergeWithoutUpOrPap2)
 {
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_ascending_);
-  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdatePap(merge_source_1_, test_values_ascending_);
   UpdateLevels(merge_source_2_, test_values_descending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_ascending_);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_descending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, DoesNotMergeWithoutUpOrPap3)
 {
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, std::nullopt);
-  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_ascending_, test_values_descending_);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateLevels(merge_source_2_, test_values_ascending_);
   UpdatePap(merge_source_2_, test_values_descending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_ascending_, test_values_descending_);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, ConvertsUp0ToPap1)
 {
-  UpdateExpectedMergeResults(merge_source_1_, MINIMUM_PRIORITY, test_values_ascending_, std::nullopt);
-  UpdateExpectedMergeResults(merge_source_2_, MINIMUM_PRIORITY, test_values_descending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateLevels(merge_source_2_, test_values_descending_);
   UpdateUniversePriority(merge_source_1_, MINIMUM_PRIORITY);
   UpdateUniversePriority(merge_source_2_, MINIMUM_PRIORITY);
 
+  UpdateExpectedMergeResults(merge_source_1_, MINIMUM_PRIORITY, test_values_ascending_, std::nullopt);
+  UpdateExpectedMergeResults(merge_source_2_, MINIMUM_PRIORITY, test_values_descending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, SingleSourceMergesLevelsAndUp)
 {
-  ASSERT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_2_), kEtcPalErrOk);
-  // Now only merge_source_1_ is left.
-
-  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateUniversePriority(merge_source_1_, VALID_PRIORITY);
 
+  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_ascending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, SingleSourceMergesPartialLevelsAndUp)
 {
-  ASSERT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_2_), kEtcPalErrOk);
-  // Now only merge_source_1_ is left.
-
-  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_partial_ascending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_partial_ascending_);
   UpdateUniversePriority(merge_source_1_, VALID_PRIORITY);
 
+  UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, test_values_partial_ascending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, SingleSourceMergesLevelsAndPap)
 {
-  ASSERT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_2_), kEtcPalErrOk);
-  // Now only merge_source_1_ is left.
-
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdatePap(merge_source_1_, test_values_descending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_descending_);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, SingleSourceMergesPartialLevelsAndPap)
 {
-  ASSERT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_2_), kEtcPalErrOk);
-  // Now only merge_source_1_ is left.
-
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_partial_ascending_, test_values_descending_);
-
   UpdateLevels(merge_source_1_, test_values_partial_ascending_);
   UpdatePap(merge_source_1_, test_values_descending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_partial_ascending_, test_values_descending_);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, SingleSourceMergesLevelsAndPartialPap)
 {
-  ASSERT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_2_), kEtcPalErrOk);
-  // Now only merge_source_1_ is left.
-
-  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_partial_descending_);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdatePap(merge_source_1_, test_values_partial_descending_);
 
+  UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_partial_descending_);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, SingleSourceMergesLevelsAndUp0)
 {
-  ASSERT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_2_), kEtcPalErrOk);
-  // Now only merge_source_1_ is left.
-
-  UpdateExpectedMergeResults(merge_source_1_, MINIMUM_PRIORITY, test_values_ascending_, std::nullopt);
-
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdateUniversePriority(merge_source_1_, MINIMUM_PRIORITY);
 
+  UpdateExpectedMergeResults(merge_source_1_, MINIMUM_PRIORITY, test_values_ascending_, std::nullopt);
   VerifyMergeResults();
 }
 
 TEST_F(TestDmxMergerUpdate, SingleSourceHandlesLevelCount)
 {
-  ASSERT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_2_), kEtcPalErrOk);
-  // Now only merge_source_1_ is left.
-
   UpdateUniversePriority(merge_source_1_, VALID_PRIORITY);
 
   std::vector<uint8_t> variable_levels;
@@ -1288,7 +1243,6 @@ TEST_F(TestDmxMergerUpdate, SingleSourceHandlesLevelCount)
 
     ClearExpectedMergeResults();
     UpdateExpectedMergeResults(merge_source_1_, VALID_PRIORITY, variable_levels, std::nullopt);
-
     merge_results_pass = VerifyMergeResults();
     EXPECT_TRUE(merge_results_pass) << "Test failed with i == " << i << ".";
   }
@@ -1296,9 +1250,6 @@ TEST_F(TestDmxMergerUpdate, SingleSourceHandlesLevelCount)
 
 TEST_F(TestDmxMergerUpdate, SingleSourceHandlesLessPap)
 {
-  ASSERT_EQ(sacn_dmx_merger_remove_source(merger_handle_, merge_source_2_), kEtcPalErrOk);
-  // Now only merge_source_1_ is left.
-
   UpdateLevels(merge_source_1_, test_values_descending_);
 
   std::vector<uint8_t> variable_pap;
@@ -1312,7 +1263,6 @@ TEST_F(TestDmxMergerUpdate, SingleSourceHandlesLessPap)
 
     ClearExpectedMergeResults();
     UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_descending_, variable_pap);
-
     merge_results_pass = VerifyMergeResults();
     EXPECT_TRUE(merge_results_pass) << "Test failed with i == " << i << ".";
   }
@@ -1504,9 +1454,6 @@ TEST_F(TestDmxMerger, UpdateUniversePriorityErrNotFoundWorks)
 
 TEST_F(TestDmxMergerUpdate, StopSourcePapWorks)
 {
-  UpdateExpectedMergeResults(merge_source_1_, LOW_PRIORITY, test_values_ascending_, test_values_descending_);
-  UpdateExpectedMergeResults(merge_source_2_, HIGH_PRIORITY, test_values_descending_, std::nullopt);
-
   UpdateUniversePriority(merge_source_1_, LOW_PRIORITY);
   UpdateLevels(merge_source_1_, test_values_ascending_);
   UpdatePap(merge_source_1_, test_values_descending_);
@@ -1515,14 +1462,15 @@ TEST_F(TestDmxMergerUpdate, StopSourcePapWorks)
   UpdatePap(merge_source_2_, test_values_ascending_);
   EXPECT_EQ(sacn_dmx_merger_remove_pap(merger_handle_, merge_source_2_), kEtcPalErrOk);
 
+  UpdateExpectedMergeResults(merge_source_1_, LOW_PRIORITY, test_values_ascending_, test_values_descending_);
+  UpdateExpectedMergeResults(merge_source_2_, HIGH_PRIORITY, test_values_descending_, std::nullopt);
   VerifyMergeResults();
+
+  EXPECT_EQ(sacn_dmx_merger_remove_pap(merger_handle_, merge_source_1_), kEtcPalErrOk);
 
   ClearExpectedMergeResults();
   UpdateExpectedMergeResults(merge_source_1_, LOW_PRIORITY, test_values_ascending_, std::nullopt);
   UpdateExpectedMergeResults(merge_source_2_, HIGH_PRIORITY, test_values_descending_, std::nullopt);
-
-  EXPECT_EQ(sacn_dmx_merger_remove_pap(merger_handle_, merge_source_1_), kEtcPalErrOk);
-
   VerifyMergeResults();
 }
 
