@@ -1109,7 +1109,7 @@ TEST_F(TestDmxMergerUpdate, MergesUniversePriorityOnChange)
   }
 }
 
-TEST_F(TestDmxMergerUpdate, MergesUnsourcedLevels1)
+TEST_F(TestDmxMergerUpdate, HandlesUnsourcedLevels1)
 {
   UpdateExpectedMergeResults(merge_source_1_, std::nullopt, std::nullopt, test_values_ascending_);
   UpdateExpectedMergeResults(merge_source_2_, std::nullopt, std::nullopt, test_values_descending_);
@@ -1120,7 +1120,7 @@ TEST_F(TestDmxMergerUpdate, MergesUnsourcedLevels1)
   VerifyMergeResults();
 }
 
-TEST_F(TestDmxMergerUpdate, MergesUnsourcedLevels2)
+TEST_F(TestDmxMergerUpdate, HandlesUnsourcedLevels2)
 {
   UpdateExpectedMergeResults(merge_source_1_, std::nullopt, test_values_ascending_, test_values_ascending_);
   UpdateExpectedMergeResults(merge_source_2_, std::nullopt, std::nullopt, test_values_descending_);
@@ -1132,7 +1132,7 @@ TEST_F(TestDmxMergerUpdate, MergesUnsourcedLevels2)
   VerifyMergeResults();
 }
 
-TEST_F(TestDmxMergerUpdate, MergesUnsourcedLevels3)
+TEST_F(TestDmxMergerUpdate, HandlesUnsourcedLevels3)
 {
   UpdateExpectedMergeResults(merge_source_1_, std::nullopt, std::nullopt, test_values_ascending_);
   UpdateExpectedMergeResults(merge_source_2_, std::nullopt, test_values_ascending_, test_values_descending_);
