@@ -963,8 +963,9 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
       }
 
       SACN_LOG_DEBUG(
-          "SRC %u RECEIVED 0x%02x ON UNIVERSE %u (SRC REMAINING: %ums OUT OF %ums) (TS REMAINING: %ums OUT OF %ums)",
-          src->handle, universe_data->universe_data.start_code, universe_data->universe_data.universe_id,
+          "SRC %u RECEIVED 0x%02x ON UNIVERSE %u NETINT %u (SRC REMAINING: %ums OUT OF %ums) (TS REMAINING: %ums OUT "
+          "OF %ums)",
+          src->handle, universe_data->universe_data.start_code, universe_data->universe_data.universe_id, netint->index,
           src_remaining_ms, SACN_SOURCE_LOSS_TIMEOUT, ts_remaining_ms, get_expired_wait());
     }
 
