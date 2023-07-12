@@ -488,6 +488,10 @@ void read_network_and_process(SacnRecvThreadContext* context)
     {
       SACN_LOG_WARNING("Error occurred while attempting to read sACN incoming data: '%s'.", etcpal_strerror(read_res));
     }
+    else
+    {
+      SACN_LOG_DEBUG("READ ERROR NO SOCKETS");
+    }
     etcpal_thread_sleep(SACN_RECEIVER_READ_TIMEOUT_MS);
   }
 
@@ -735,7 +739,10 @@ void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t
 
   AcnUdpPreamble preamble;
   if (!acn_parse_udp_preamble(data, datalen, &preamble))
+  {
+    SACN_LOG_DEBUG("INVALID UDP PREAMBLE");
     return;
+  }
 
   AcnRootLayerPdu rlp;
   AcnPdu lpdu = ACN_PDU_INIT;
@@ -746,6 +753,9 @@ void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t
     else if (rlp.vector == ACN_VECTOR_ROOT_E131_EXTENDED)
       handle_sacn_extended_packet(context, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr);
   }
+
+  if (rlp.vector != ACN_VECTOR_ROOT_E131_DATA)
+    SACN_LOG_DEBUG("NON DATA PACKET");
 }
 
 /*
@@ -800,7 +810,10 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
   // Ignore SACN_STARTCODE_PRIORITY packets if SACN_ETC_PRIORITY_EXTENSION is disabled.
 #if !SACN_ETC_PRIORITY_EXTENSION
   if (universe_data->universe_data.start_code == SACN_STARTCODE_PRIORITY)
+  {
+    SACN_LOG_DEBUG("DROPPING 0xDD PACKET (PAP DISABLED)");
     return;
+  }
 #endif
 
   if (sacn_lock())
@@ -809,6 +822,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     if (lookup_receiver_by_universe(universe_data->universe_data.universe_id, &receiver) != kEtcPalErrOk)
     {
       // We are not listening to this universe.
+      SACN_LOG_DEBUG("DROPPING PACKET FROM OTHER UNIVERSE");
       sacn_unlock();
       return;
     }
@@ -818,6 +832,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     // Drop all packets from netints scheduled for a future sampling period
     if (sp_netint && sp_netint->in_future_sampling_period)
     {
+      SACN_LOG_DEBUG("DROPPING FUTURE SP NETINT PACKET");
       sacn_unlock();
       return;
     }
@@ -840,6 +855,9 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
         }
         else
         {
+        SACN_LOG_DEBUG("SRC NETINT MISMATCH (src %s interface %u != netint %s interface %u)",
+                       (src->netint.ip_type == kEtcPalIpTypeV4) ? "IPv4" : "IPv6", src->netint.index,
+                       (netint->ip_type == kEtcPalIpTypeV4) ? "IPv4" : "IPv6", netint->index);
           sacn_unlock();
           return;
         }
@@ -853,6 +871,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
       // but not yet removed.
       if (src->terminated)
       {
+        SACN_LOG_DEBUG("DROPPING TERMINATION PACKET");
         sacn_unlock();
         return;
       }
@@ -860,6 +879,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
       if (!check_sequence(seq, src->seq))
       {
         // Drop the packet
+        SACN_LOG_DEBUG("DROPPING OUT OF SEQUENCE PACKET");
         sacn_unlock();
         return;
       }
@@ -882,6 +902,10 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
       {
         notify = true;
       }
+      else
+      {
+        SACN_LOG_DEBUG("IGNORING 0xDD (PAP DISABLED)");
+      }
     }
     else if (!is_termination_packet)
     {
@@ -890,14 +914,21 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 
       if (src)
         universe_data->source_info.handle = src->handle;
+      else
+        SACN_LOG_DEBUG("FAILED TO CREATE SRC");
     }
-    // Else we weren't tracking this source before and it is a termination packet. Ignore.
+    else  // Else we weren't tracking this source before and it is a termination packet. Ignore.
+    {
+      SACN_LOG_DEBUG("UNTRACKED SOURCE TERMINATION");
+    }
 
     if (src)
     {
       if (universe_data->universe_data.preview && receiver->filter_preview_data)
       {
         notify = false;
+
+        SACN_LOG_DEBUG("FILTERING PREVIEW DATA");
       }
 
       if (notify)
@@ -938,6 +969,10 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     }
 
     sacn_unlock();
+  }
+  else
+  {
+    SACN_LOG_DEBUG("FAILED TO LOCK");
   }
 
   // Deliver callbacks if applicable.
