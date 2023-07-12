@@ -247,6 +247,8 @@ etcpal_error_t mark_sources_offline(uint16_t universe, const SacnLostSourceInter
           ts_ptr = &(*ts_ptr)->next;
 
         *ts_ptr = ts_new;
+
+        SACN_LOG_DEBUG("TS ADDED");
       }
     }
   }
@@ -275,6 +277,8 @@ void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification
 
     if (etcpal_timer_is_expired(&ts->wait_period))
     {
+      SACN_LOG_DEBUG("TS WAIT PERIOD EXPIRED");
+
       // Check each source in the termination set to determine whether it is online or offline. Each termination set has
       // at least one unique source.
       size_t num_expired_sources_this_ts = 0;
@@ -322,6 +326,8 @@ void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification
       ts = ts->next;
 
       remove_term_set_from_list(term_set_list, to_remove, last_ts);
+
+      SACN_LOG_DEBUG("TS REMOVED");
     }
     else
     {

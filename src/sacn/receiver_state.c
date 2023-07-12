@@ -826,6 +826,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     universe_data->source_info.handle = get_remote_source_handle(sender_cid);
     SacnTrackedSource* src =
         (SacnTrackedSource*)etcpal_rbtree_find(&receiver->sources, &universe_data->source_info.handle);
+    uint32_t src_remaining_ms = SACN_SOURCE_LOSS_TIMEOUT;
     if (src)
     {
       // We only associate a source with one netint, so packets received on other netints should be dropped
@@ -863,6 +864,8 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
         return;
       }
       src->seq = seq;
+
+      src_remaining_ms = etcpal_timer_remaining(&src->packet_timer);
 
       // Based on the start code, update the timers.
       if (universe_data->universe_data.start_code == SACN_STARTCODE_DMX)
@@ -907,6 +910,31 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
         universe_data->thread_id = thread_id;
         universe_data->context = receiver->api_callbacks.context;
       }
+
+      uint32_t ts_remaining_ms = get_expired_wait();
+      TerminationSet* ts = receiver->term_sets;
+      while (ts)
+      {
+        EtcPalRbIter ts_src_it;
+        etcpal_rbiter_init(&ts_src_it);
+
+        TerminationSetSource* ts_src = (TerminationSetSource*)etcpal_rbiter_first(&ts_src_it, &ts->sources);
+        while (ts_src)
+        {
+          if ((ts_src->key.handle == src->handle) && (ts_src->key.universe == universe_data->universe_data.universe_id))
+          {
+            ts_remaining_ms = etcpal_timer_remaining(&ts->wait_period);
+          }
+          ts_src = etcpal_rbiter_next(&ts_src_it);
+        }
+
+        ts = ts->next;
+      }
+
+      SACN_LOG_DEBUG(
+          "RECEIVED 0x%02x ON UNIVERSE %u (SRC REMAINING: %ums OUT OF %ums) (TS REMAINING: %ums OUT OF %ums)",
+          universe_data->universe_data.start_code, universe_data->universe_data.universe_id, src_remaining_ms,
+          SACN_SOURCE_LOSS_TIMEOUT, ts_remaining_ms, get_expired_wait());
     }
 
     sacn_unlock();
@@ -1435,6 +1463,8 @@ void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_
 
   if (etcpal_timer_is_expired(&src->packet_timer))
   {
+    SACN_LOG_DEBUG("MARKING SRC %u OFFLINE", src->handle);
+
     if (!add_offline_source(status_lists, src->handle, src->name, src->terminated) && SACN_CAN_LOG(ETCPAL_LOG_ERR))
     {
       char cid_str[ETCPAL_UUID_BYTES];
