@@ -1209,8 +1209,14 @@ TEST_F(TestReceiverThread, UniverseDataFiltersSubsequentSourceNetints)
       {
         for (const auto& netint : ordered_netints)
         {
-          InitTestData(SACN_STARTCODE_PRIORITY, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, cids[j],
-                       seq_num_, netint.iface);
+          // Select whichever start code will be allowed immediately through to the callback
+#if SACN_ETC_PRIORITY_EXTENSION
+          uint8_t start_code = SACN_STARTCODE_PRIORITY;
+#else
+          uint8_t start_code = SACN_STARTCODE_DMX;
+#endif
+          InitTestData(start_code, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, cids[j], seq_num_,
+                       netint.iface);
           RunThreadCycle();
           EXPECT_EQ(universe_data_fake.call_count,
                     (i * kNumSources * kNumDataCallsPerSource) + (j * kNumDataCallsPerSource) + k + 1)
