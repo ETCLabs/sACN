@@ -831,8 +831,17 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
       // We only associate a source with one netint, so packets received on other netints should be dropped
       if ((src->netint.ip_type != netint->ip_type) || (src->netint.index != netint->index))
       {
-        sacn_unlock();
-        return;
+        // Only drop these after the sampling period, because certain stacks such as lwIP may not always provide the
+        // netint ID in PKTINFO right away - plus, dropping these only has value after the sampling period.
+        if (receiver->sampling)
+        {
+          src->netint = *netint;  // Keep updating the ID (whichever the source ends up with will be the definitive one)
+        }
+        else
+        {
+          sacn_unlock();
+          return;
+        }
       }
 
       // Check to see if the 'stream terminated' bit is set in the options
