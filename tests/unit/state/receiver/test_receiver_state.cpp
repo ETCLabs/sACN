@@ -1191,6 +1191,11 @@ TEST_F(TestReceiverThread, UniverseDataFiltersSubsequentSourceNetints)
   for (size_t i = 0; i < kNumSources; ++i)
     cids.push_back(etcpal::Uuid::V4().get());
 
+  // Elapse sampling period - filtering only takes place after
+  RunThreadCycle();
+  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  RunThreadCycle();
+
   for (size_t i = 0; i < kNumTestIterations; ++i)
   {
     for (size_t j = 0; j < kNumSources; ++j)
@@ -1204,8 +1209,8 @@ TEST_F(TestReceiverThread, UniverseDataFiltersSubsequentSourceNetints)
       {
         for (const auto& netint : ordered_netints)
         {
-          InitTestData(SACN_STARTCODE_DMX, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, cids[j], seq_num_,
-                       netint.iface);
+          InitTestData(SACN_STARTCODE_PRIORITY, kTestUniverse, kTestBuffer.data(), kTestBuffer.size(), 0u, cids[j],
+                       seq_num_, netint.iface);
           RunThreadCycle();
           EXPECT_EQ(universe_data_fake.call_count,
                     (i * kNumSources * kNumDataCallsPerSource) + (j * kNumDataCallsPerSource) + k + 1)
