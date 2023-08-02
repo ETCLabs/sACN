@@ -1,0 +1,7 @@
+# sACN config unit tests
+
+add_subdirectory(receiver_disabled)
+add_subdirectory(source_disabled)
+add_subdirectory(dmx_merger_disabled)
+add_subdirectory(source_detector_disabled)
+add_subdirectory(merge_receiver_disabled)
