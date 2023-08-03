@@ -47,6 +47,8 @@ linux-build:
   script:
     - mkdir build
     - cd build
+    - export CC=/usr/bin/clang
+    - export CXX=/usr/bin/clang++
     - cmake ${GLOBAL_CMAKE_OPTIONS} -DSACN_ENABLE_ASAN=ON ..
     - cmake --build .
     - ctest --output-on-failure
