@@ -1665,11 +1665,11 @@ etcpal_error_t test_sacn_source_netint(unsigned int index, etcpal_iptype_t ip_ty
 
   // create_multicast_send_socket() also tests setting the relevant send socket options and the
   // MULTICAST_IF on the relevant interface.
-  etcpal_socket_t test_socket = ETCPAL_SOCKET_INVALID;
-  etcpal_error_t test_res = create_multicast_send_socket(&netint_id, &test_socket);
+  etcpal_socket_t new_source_socket = ETCPAL_SOCKET_INVALID;
+  etcpal_error_t test_res = create_multicast_send_socket(&netint_id, &new_source_socket);
 
-  if (!add_sacn_source_sys_netint(&netint_id, test_res, test_socket))
-    etcpal_close(test_socket);
+  if (!add_sacn_source_sys_netint(&netint_id, test_res, new_source_socket))
+    etcpal_close(new_source_socket);
 
   if (test_res != kEtcPalErrOk)
   {
