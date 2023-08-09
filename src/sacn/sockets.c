@@ -75,9 +75,9 @@ static MulticastSendSocket* multicast_send_sockets = NULL;
 #else
 static MulticastSendSocket multicast_send_sockets[SACN_MAX_NETINTS];
 #endif
-static SacnSocketsSysNetints receiver_sys_netints = {{0}};
-static SacnSocketsSysNetints source_detector_sys_netints = {{0}};
-static SacnSocketsSysNetints source_sys_netints = {{0}};
+static SacnSocketsSysNetints receiver_sys_netints;
+static SacnSocketsSysNetints source_detector_sys_netints;
+static SacnSocketsSysNetints source_sys_netints;
 static etcpal_socket_t ipv4_unicast_send_socket = ETCPAL_SOCKET_INVALID;
 static etcpal_socket_t ipv6_unicast_send_socket = ETCPAL_SOCKET_INVALID;
 
@@ -147,6 +147,10 @@ static etcpal_error_t get_netint_ip_string(etcpal_iptype_t ip_type, unsigned int
 
 etcpal_error_t sacn_sockets_init(const SacnNetintConfig* netint_config)
 {
+  memset(&receiver_sys_netints, 0, sizeof(receiver_sys_netints));
+  memset(&source_detector_sys_netints, 0, sizeof(source_detector_sys_netints));
+  memset(&source_sys_netints, 0, sizeof(source_sys_netints));
+
   etcpal_error_t res = (netint_config && !netints_valid(netint_config->netints, netint_config->num_netints))
                            ? kEtcPalErrInvalid
                            : kEtcPalErrOk;
