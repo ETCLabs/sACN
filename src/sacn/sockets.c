@@ -1223,9 +1223,12 @@ etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_ty
 #else
   if (res == kEtcPalErrOk)
   {
-    memset(multicast_send_sockets, 0, sizeof(multicast_send_sockets));
-    for (size_t i = 0; i < SACN_MAX_NETINTS; ++i)
-      multicast_send_sockets[i].socket = ETCPAL_SOCKET_INVALID;
+    if (net_type == kSource)
+    {
+      memset(multicast_send_sockets, 0, sizeof(multicast_send_sockets));
+      for (size_t i = 0; i < SACN_MAX_NETINTS; ++i)
+        multicast_send_sockets[i].socket = ETCPAL_SOCKET_INVALID;
+    }
 
     memset(sys_netints->sys_netints, 0, sizeof(sys_netints->sys_netints));
   }
