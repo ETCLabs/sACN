@@ -75,9 +75,9 @@ static MulticastSendSocket* multicast_send_sockets = NULL;
 #else
 static MulticastSendSocket multicast_send_sockets[SACN_MAX_NETINTS];
 #endif
-static SacnSocketsSysNetints receiver_sys_netints = {0};
-static SacnSocketsSysNetints source_detector_sys_netints = {0};
-static SacnSocketsSysNetints source_sys_netints = {0};
+static SacnSocketsSysNetints receiver_sys_netints = {{0}};
+static SacnSocketsSysNetints source_detector_sys_netints = {{0}};
+static SacnSocketsSysNetints source_sys_netints = {{0}};
 static etcpal_socket_t ipv4_unicast_send_socket = ETCPAL_SOCKET_INVALID;
 static etcpal_socket_t ipv6_unicast_send_socket = ETCPAL_SOCKET_INVALID;
 
