@@ -41,11 +41,7 @@ typedef struct SacnReadResult
 
 typedef struct SacnSocketsSysNetints
 {
-#if SACN_DYNAMIC_MEM
-  SacnMcastInterface* sys_netints;
-#else
-  SacnMcastInterface sys_netints[SACN_MAX_NETINTS];
-#endif
+  SACN_DECLARE_BUF(SacnMcastInterface, sys_netints, SACN_MAX_NETINTS);
   size_t num_sys_netints;
 } SacnSocketsSysNetints;
 
