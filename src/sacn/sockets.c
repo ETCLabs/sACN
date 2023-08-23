@@ -543,7 +543,7 @@ etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAd
 
       if (res == kEtcPalErrOk)
       {
-        int intval = 1;
+        intval = 1;
         res = etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_REUSEPORT, &intval, sizeof intval);
 
         if (res == kEtcPalErrInvalid)  // Ignore cases where this sockopt is not supported
@@ -552,7 +552,7 @@ etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAd
 
       if (res == kEtcPalErrOk)
       {
-        int intval = SACN_RECEIVER_SOCKET_RCVBUF_SIZE;
+        intval = SACN_RECEIVER_SOCKET_RCVBUF_SIZE;
         etcpal_error_t set_so_rcvbuf_res =
             etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_RCVBUF, &intval, sizeof intval);
 
@@ -563,7 +563,7 @@ etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAd
 #if !SACN_RECEIVER_SOCKET_PER_NIC
       if (res == kEtcPalErrOk)
       {
-        int intval = 1;
+        intval = 1;
         if (ip_type == kEtcPalIpTypeV6)
           res = etcpal_setsockopt(new_sock, ETCPAL_IPPROTO_IPV6, ETCPAL_IPV6_PKTINFO, &intval, sizeof intval);
         else
