@@ -3,7 +3,7 @@
     {
       "name": "EtcPal",
       "gitlabPath": "etc/common-tech/general/etcpal",
-      "gitTag": "e7b28c0630736377029631e7b7fc1a83501eed0a"
+      "gitTag": "94c193a593d414c4378d93b0a464727bdbbf7896"
     },
     {
       "name": "googletest",
