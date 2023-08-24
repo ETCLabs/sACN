@@ -411,6 +411,9 @@ etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id
   int sockopt_ip_level = (netint_id->ip_type == kEtcPalIpTypeV6) ? ETCPAL_IPPROTO_IPV6 : ETCPAL_IPPROTO_IP;
   char* sockopt_ip_level_str = (netint_id->ip_type == kEtcPalIpTypeV6) ? "IPv6" : "IPv4";
 
+  if (!SACN_CAN_LOG(ETCPAL_LOG_ERR))
+    ETCPAL_UNUSED_ARG(sockopt_ip_level_str);
+
   etcpal_socket_t new_sock = ETCPAL_SOCKET_INVALID;
   etcpal_error_t res = etcpal_socket(netint_id->ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET,
                                      ETCPAL_SOCK_DGRAM, &new_sock);
