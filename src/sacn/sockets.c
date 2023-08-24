@@ -408,7 +408,11 @@ etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id
   if (!SACN_ASSERT_VERIFY(netint_id) || !SACN_ASSERT_VERIFY(socket))
     return kEtcPalErrSys;
 
-  int sockopt_ip_level = (netint_id->ip_type == kEtcPalIpTypeV6 ? ETCPAL_IPPROTO_IPV6 : ETCPAL_IPPROTO_IP);
+  int sockopt_ip_level = (netint_id->ip_type == kEtcPalIpTypeV6) ? ETCPAL_IPPROTO_IPV6 : ETCPAL_IPPROTO_IP;
+  char* sockopt_ip_level_str = (netint_id->ip_type == kEtcPalIpTypeV6) ? "IPv6" : "IPv4";
+
+  if (!SACN_CAN_LOG(ETCPAL_LOG_ERR))
+    ETCPAL_UNUSED_ARG(sockopt_ip_level_str);
 
   etcpal_socket_t new_sock = ETCPAL_SOCKET_INVALID;
   etcpal_error_t res = etcpal_socket(netint_id->ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET,
@@ -418,21 +422,42 @@ etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id
   {
     const int ttl = SACN_SOURCE_MULTICAST_TTL;
     res = etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_TTL, &ttl, sizeof ttl);
+
+    if (res != kEtcPalErrOk)
+    {
+      SACN_LOG_ERR("Failed to set %s IP_MULTICAST_TTL socket option to %d: '%s'", sockopt_ip_level_str, ttl,
+                   etcpal_strerror(res));
+    }
   }
 
   if (res == kEtcPalErrOk)
   {
     res = etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_IF, &netint_id->index,
                             sizeof netint_id->index);
+
+    if (res != kEtcPalErrOk)
+    {
+      SACN_LOG_ERR("Failed to set %s IP_MULTICAST_IF socket option to %u: '%s'", sockopt_ip_level_str, netint_id->index,
+                   etcpal_strerror(res));
+    }
   }
+
+#if SACN_LOOPBACK
+  if (res == kEtcPalErrOk)
+  {
+    int loopback = 1;
+    res = etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_LOOP, &loopback, sizeof loopback);
+
+    if (res != kEtcPalErrOk)
+    {
+      SACN_LOG_ERR("Failed to enable %s IP_MULTICAST_LOOP socket option: '%s'", sockopt_ip_level_str,
+                   etcpal_strerror(res));
+    }
+  }
+#endif
 
   if (res == kEtcPalErrOk)
   {
-#if SACN_LOOPBACK
-    int loopback = 1;
-    etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_LOOP, &loopback, sizeof loopback);
-#endif
-
 #if SACN_FULL_OS_AVAILABLE_HINT
     char netint_addr[ETCPAL_IP_STRING_BYTES] = {'\0'};
     get_netint_ip_string(netint_id->ip_type, netint_id->index, netint_addr);
@@ -532,21 +557,54 @@ etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAd
   {
     if (set_sockopts)
     {
-      // Set some socket options. We don't check failure on these because they might not work on all
-      // platforms.
       int intval = 1;
-      etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_REUSEADDR, &intval, sizeof intval);
-      etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_REUSEPORT, &intval, sizeof intval);
-      intval = SACN_RECEIVER_SOCKET_RCVBUF_SIZE;
-      etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_RCVBUF, &intval, sizeof intval);
+      res = etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_REUSEADDR, &intval, sizeof intval);
+
+      if (res == kEtcPalErrInvalid)
+        res = kEtcPalErrOk;  // Ignore cases where this sockopt is not supported
+      else if (res != kEtcPalErrOk)
+        SACN_LOG_ERR("Failed to enable SO_REUSEADDR socket option: '%s'", etcpal_strerror(res));
+
+      if (res == kEtcPalErrOk)
+      {
+        intval = 1;
+        res = etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_REUSEPORT, &intval, sizeof intval);
+
+        if (res == kEtcPalErrInvalid)
+          res = kEtcPalErrOk;  // Ignore cases where this sockopt is not supported
+        else if (res != kEtcPalErrOk)
+          SACN_LOG_ERR("Failed to enable SO_REUSEPORT socket option: '%s'", etcpal_strerror(res));
+      }
+
+      if (res == kEtcPalErrOk)
+      {
+        intval = SACN_RECEIVER_SOCKET_RCVBUF_SIZE;
+        etcpal_error_t set_so_rcvbuf_res =
+            etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_RCVBUF, &intval, sizeof intval);
+
+        if (set_so_rcvbuf_res != kEtcPalErrOk)
+          SACN_LOG_ERR("Error setting receive buffer size to %d: '%s'", intval, etcpal_strerror(set_so_rcvbuf_res));
+      }
 
 #if !SACN_RECEIVER_SOCKET_PER_NIC
-      // The PKTINFO socket option, however, IS required to work, so check for any errors from that.
-      intval = 1;
-      if (ip_type == kEtcPalIpTypeV6)
-        res = etcpal_setsockopt(new_sock, ETCPAL_IPPROTO_IPV6, ETCPAL_IPV6_PKTINFO, &intval, sizeof intval);
-      else
-        res = etcpal_setsockopt(new_sock, ETCPAL_IPPROTO_IP, ETCPAL_IP_PKTINFO, &intval, sizeof intval);
+      if (res == kEtcPalErrOk)
+      {
+        intval = 1;
+        if (ip_type == kEtcPalIpTypeV6)
+        {
+          res = etcpal_setsockopt(new_sock, ETCPAL_IPPROTO_IPV6, ETCPAL_IPV6_PKTINFO, &intval, sizeof intval);
+
+          if (res != kEtcPalErrOk)
+            SACN_LOG_ERR("Failed to enable IPV6_PKTINFO socket option: '%s'", etcpal_strerror(res));
+        }
+        else
+        {
+          res = etcpal_setsockopt(new_sock, ETCPAL_IPPROTO_IP, ETCPAL_IP_PKTINFO, &intval, sizeof intval);
+
+          if (res != kEtcPalErrOk)
+            SACN_LOG_ERR("Failed to enable IP_PKTINFO socket option: '%s'", etcpal_strerror(res));
+        }
+      }
 #endif
     }
 
