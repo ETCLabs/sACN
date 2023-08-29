@@ -40,6 +40,9 @@ if(NOT COMPILING_AS_OSS)
   setup_clang_format()
   # TODO: setup_clang_tidy()
   setup_address_sanitizer()
+  setup_memory_sanitizer()
+  setup_undefined_behavior_sanitizer()
+  setup_thread_sanitizer()
 endif()
 
 ################################ Main libraries ###############################
