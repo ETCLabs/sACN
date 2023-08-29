@@ -22,18 +22,12 @@ option(SACN_BUILD_EXAMPLES "Build the sACN example applications" OFF)
 option(SACN_BUILD_TEST_TOOLS "Build the sACN test tools (typically used in development only)" OFF)
 option(SACN_INSTALL_PDBS "Include PDBs in sACN install target" ON)
 
-################################# Dependencies ################################
+####################### Dependencies & standalone support ######################
 
 include(${SACN_CMAKE}/OssDependencyTools.cmake)
 determine_compile_environment()
 if(NOT COMPILING_AS_OSS)
   include(${SACN_CMAKE}/AddCMakeTools.cmake)
-endif()
-include(${SACN_CMAKE}/ResolveDependencies.cmake)
-
-############################## Standalone support #############################
-
-if(NOT COMPILING_AS_OSS)
   include(${CMAKE_TOOLS_MODULES}/QualityGateHelpers.cmake)
 
   setup_standalone_compile()
@@ -44,6 +38,8 @@ if(NOT COMPILING_AS_OSS)
   setup_undefined_behavior_sanitizer()
   setup_thread_sanitizer()
 endif()
+
+include(${SACN_CMAKE}/ResolveDependencies.cmake)
 
 ################################ Main libraries ###############################
 
