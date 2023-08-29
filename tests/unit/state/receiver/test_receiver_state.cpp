@@ -136,6 +136,12 @@ protected:
 
   void SetUp() override
   {
+    int* x = (int*)malloc(10 * sizeof(int));
+    free(x);
+    int x5 = x[5];
+
+    EXPECT_GE(x5, 0);
+
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
