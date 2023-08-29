@@ -136,11 +136,11 @@ protected:
 
   void SetUp() override
   {
-    int* x = (int*)malloc(10 * sizeof(int));
+    unsigned int* x = (unsigned int*)malloc(10 * sizeof(unsigned int));
     free(x);
-    int x5 = x[5];
+    unsigned int x5 = x[5];
 
-    EXPECT_GE(x5, 0);
+    EXPECT_GE(x5, 0u);
 
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
