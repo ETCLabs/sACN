@@ -3,7 +3,7 @@
     {
       "name": "EtcPal",
       "gitlabPath": "etc/common-tech/general/etcpal",
-      "gitTag": "fix-mac-cpp-warnings"
+      "gitTag": "f0f976143173656458ef665548c8605f3ad8c83b"
     },
     {
       "name": "googletest",
