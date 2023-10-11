@@ -1034,8 +1034,8 @@ void update_universe_priority_multi_source(MergerState* merger, SourceState* sou
  */
 void merge_new_level(MergerState* merger, const SourceState* source, size_t slot)
 {
-  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(slot < DMX_ADDRESS_COUNT))
-    return;
+  // Skipping asserts here for performance reasons - putting faith in asserts at higher levels and responsible for loop
+  // iteration.
 
   // Perform HTP merge when source priority is non-zero and equal to current winning priority.
   if ((source->source.address_priority[slot] > 0) &&
@@ -1101,8 +1101,8 @@ void merge_new_priority(MergerState* merger, const SourceState* source, size_t s
  */
 void recalculate_winning_level(MergerState* merger, const SourceState* source, size_t slot)
 {
-  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(slot < DMX_ADDRESS_COUNT))
-    return;
+  // Skipping asserts here for performance reasons - putting faith in asserts at higher levels and responsible for loop
+  // iteration.
 
   // Start with this source as the owner.
   merger->config.levels[slot] = source->source.levels[slot];
