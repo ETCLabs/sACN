@@ -1108,7 +1108,7 @@ void recalculate_winning_level(MergerState* merger, const SourceState* source, s
   merger->config.levels[slot] = source->source.levels[slot];
 
   // Now check if any other sources beat the current source.
-  EtcPalRbIter tree_iter;
+  static EtcPalRbIter tree_iter;  // Make this static to avoid performance issues from repeated allocation
   etcpal_rbiter_init(&tree_iter);
   const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
   do
