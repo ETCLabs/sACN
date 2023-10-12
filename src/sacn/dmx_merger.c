@@ -889,7 +889,7 @@ void update_levels_single_source(MergerState* merger, SourceState* source, const
  *
  * Priority and owner outputs will also be updated if the level count changed.
  *
- * This requires sacn_lock to be taken before calling.
+ * The sacn_lock MUST be taken before calling this (to protect state as well as static EtcPalRbIter tree_iter).
  */
 void update_levels_multi_source(MergerState* merger, SourceState* source, const uint8_t* new_levels,
                                 size_t old_levels_count, size_t new_levels_count)
@@ -908,7 +908,6 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
     memset(&source->source.levels[new_levels_count], 0, old_levels_count - new_levels_count);
 
   // Merge levels.
-  EtcPalRbIter tree_iter;  // Declare this outside loop to avoid performance issues due to stack reallocation
   size_t min_levels_count = (new_levels_count < old_levels_count) ? new_levels_count : old_levels_count;
   for (size_t slot = 0; slot < min_levels_count; ++slot)
   {
@@ -931,6 +930,9 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
         merger->config.levels[slot] = source->source.levels[slot];
 
         // Now check if any other sources beat the current source.
+        static EtcPalRbIter tree_iter;  // Declaring iterator static to avoid stack reallocation. This was determined
+                                        // through testing to be the most efficient way to allocate the iterator. This
+                                        // is safe because this function requires that sacn_lock be taken beforehand.
         etcpal_rbiter_init(&tree_iter);
         const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
         do
@@ -1061,7 +1063,7 @@ void update_universe_priority_multi_source(MergerState* merger, SourceState* sou
 /*
  * Merge a source's new priority on a range of slots. Assumes the level has not changed since the last merge.
  *
- * This requires sacn_lock to be taken before calling.
+ * The sacn_lock MUST be taken before calling this (to protect state as well as static EtcPalRbIter tree_iter).
  */
 void merge_new_priorities(MergerState* merger, const SourceState* source, size_t slot_range_start,
                           size_t slot_range_end)
@@ -1071,7 +1073,6 @@ void merge_new_priorities(MergerState* merger, const SourceState* source, size_t
   assert(source);
   assert(slot_range_end <= DMX_ADDRESS_COUNT);
 
-  EtcPalRbIter tree_iter;  // Declare this outside loop to avoid performance issues due to stack reallocation
   for (size_t slot = slot_range_start; slot < slot_range_end; ++slot)
   {
     uint8_t source_pap = CALC_SRC_PAP(source, slot);
@@ -1108,6 +1109,9 @@ void merge_new_priorities(MergerState* merger, const SourceState* source, size_t
       }
 
       // Now check if any other sources beat the current source.
+      static EtcPalRbIter tree_iter;  // Declaring iterator static to avoid stack reallocation. This was determined
+                                      // through testing to be the most efficient way to allocate the iterator. This
+                                      // is safe because this function requires that sacn_lock be taken beforehand.
       etcpal_rbiter_init(&tree_iter);
       const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
       do
