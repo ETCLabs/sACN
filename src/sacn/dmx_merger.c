@@ -1064,8 +1064,8 @@ void merge_new_level(MergerState* merger, const SourceState* source, size_t slot
  */
 void merge_new_priority(MergerState* merger, const SourceState* source, size_t slot)
 {
-  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(slot < DMX_ADDRESS_COUNT))
-    return;
+  // Skipping asserts here for performance reasons - putting faith in asserts at higher levels and responsible for loop
+  // iteration.
 
   uint8_t source_pap = CALC_SRC_PAP(source, slot);
 
@@ -1136,8 +1136,8 @@ void recalculate_winning_level(MergerState* merger, const SourceState* source, s
  */
 void recalculate_winning_priority(MergerState* merger, const SourceState* source, size_t slot)
 {
-  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(slot < DMX_ADDRESS_COUNT))
-    return;
+  // Skipping asserts here for performance reasons - putting faith in asserts at higher levels and responsible for loop
+  // iteration.
 
   // Start with this source as the owner.
   merger->config.per_address_priorities[slot] = CALC_SRC_PAP(source, slot);
