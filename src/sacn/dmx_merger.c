@@ -910,21 +910,15 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
     memset(&source->source.levels[new_levels_count], 0, old_levels_count - new_levels_count);
 
   // Merge levels. If the level count goes up, merge priorities as well. If it goes down, release slots.
-  if (new_levels_count > old_levels_count)
-  {
-    for (size_t i = 0; i < old_levels_count; ++i)
-      merge_new_level(merger, source, i);
-    for (size_t i = old_levels_count; i < new_levels_count; ++i)
-      merge_new_priority(merger, source, i);  // Priorities were stored in source state, but not yet merged.
-  }
+  size_t min_levels_count = (new_levels_count < old_levels_count) : new_levels_count : old_levels_count;
+  for (size_t i = 0; i < min_levels_count; ++i)
+    merge_new_level(merger, source, i);
 
-  if (old_levels_count >= new_levels_count)
-  {
-    for (size_t i = 0; i < new_levels_count; ++i)
-      merge_new_level(merger, source, i);
-    for (size_t i = new_levels_count; i < old_levels_count; ++i)
-      merge_new_priority(merger, source, i);  // Causes slots to be released due to reduced level count.
-  }
+  for (size_t i = old_levels_count; i < new_levels_count; ++i)
+    merge_new_priority(merger, source, i);  // Priorities were stored in source state, but not yet merged.
+
+  for (size_t i = new_levels_count; i < old_levels_count; ++i)
+    merge_new_priority(merger, source, i);  // Causes slots to be released due to reduced level count.
 }
 
 /*
