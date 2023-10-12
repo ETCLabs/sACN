@@ -907,7 +907,7 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
     memset(&source->source.levels[new_levels_count], 0, old_levels_count - new_levels_count);
 
   // Merge levels.
-  EtcPalRbIter tree_iter;  // Declare this outside loop to avoid performance issues due to reallocation
+  EtcPalRbIter tree_iter;  // Declare this outside loop to avoid performance issues due to stack reallocation
   size_t min_levels_count = (new_levels_count < old_levels_count) ? new_levels_count : old_levels_count;
   for (size_t slot = 0; slot < min_levels_count; ++slot)
   {
