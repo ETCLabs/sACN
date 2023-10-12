@@ -101,7 +101,6 @@ static void update_pap_multi_source(MergerState* merger, SourceState* source, co
 static void update_universe_priority_single_source(MergerState* merger, SourceState* source, uint8_t pap);
 static void update_universe_priority_multi_source(MergerState* merger, SourceState* source, uint8_t pap);
 static void merge_new_priority(MergerState* merger, const SourceState* source, size_t slot);
-static void recalculate_winning_priority(MergerState* merger, const SourceState* source, size_t slot);
 static void recalculate_pap_active(MergerState* merger);
 static void recalculate_universe_priority(MergerState* merger);
 
@@ -1096,51 +1095,36 @@ void merge_new_priority(MergerState* merger, const SourceState* source, size_t s
   // If this source is the current owner and its priority decreased, check for a new owner.
   else if (source_pap < merger->config.per_address_priorities[slot])
   {
-    recalculate_winning_priority(merger, source, slot);
-  }
-}
+    // Start with this source as the owner.
+    merger->config.per_address_priorities[slot] = CALC_SRC_PAP(source, slot);
 
-/*
- * Recalculate the winning priority on a slot. Assumes the level has not changed since the last merge.
- *
- * This requires sacn_lock to be taken before calling.
- */
-void recalculate_winning_priority(MergerState* merger, const SourceState* source, size_t slot)
-{
-  // Use regular asserts for performance
-  assert(merger);
-  assert(source);
-  assert(slot < DMX_ADDRESS_COUNT);
-
-  // Start with this source as the owner.
-  merger->config.per_address_priorities[slot] = CALC_SRC_PAP(source, slot);
-
-  // When unsourced, set the level to 0 and owner to invalid.
-  if (merger->config.per_address_priorities[slot] == 0)
-  {
-    merger->config.levels[slot] = 0;
-    merger->config.owners[slot] = SACN_DMX_MERGER_SOURCE_INVALID;
-  }
-
-  // Now check if any other sources beat the current source.
-  EtcPalRbIter tree_iter;
-  etcpal_rbiter_init(&tree_iter);
-  const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
-  do
-  {
-    uint8_t candidate_pap = CALC_SRC_PAP(candidate, slot);
-
-    // Make this source the new owner if it has the same (non-0) priority and a higher level OR a higher priority.
-    if ((candidate->handle != source->handle) &&
-        ((candidate_pap > merger->config.per_address_priorities[slot]) ||
-         ((candidate_pap > 0) && (candidate_pap == merger->config.per_address_priorities[slot]) &&
-          (candidate->source.levels[slot] > merger->config.levels[slot]))))
+    // When unsourced, set the level to 0 and owner to invalid.
+    if (merger->config.per_address_priorities[slot] == 0)
     {
-      merger->config.levels[slot] = candidate->source.levels[slot];
-      merger->config.owners[slot] = candidate->handle;
-      merger->config.per_address_priorities[slot] = candidate_pap;
+      merger->config.levels[slot] = 0;
+      merger->config.owners[slot] = SACN_DMX_MERGER_SOURCE_INVALID;
     }
-  } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
+
+    // Now check if any other sources beat the current source.
+    EtcPalRbIter tree_iter;
+    etcpal_rbiter_init(&tree_iter);
+    const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
+    do
+    {
+      uint8_t candidate_pap = CALC_SRC_PAP(candidate, slot);
+
+      // Make this source the new owner if it has the same (non-0) priority and a higher level OR a higher priority.
+      if ((candidate->handle != source->handle) &&
+          ((candidate_pap > merger->config.per_address_priorities[slot]) ||
+           ((candidate_pap > 0) && (candidate_pap == merger->config.per_address_priorities[slot]) &&
+            (candidate->source.levels[slot] > merger->config.levels[slot]))))
+      {
+        merger->config.levels[slot] = candidate->source.levels[slot];
+        merger->config.owners[slot] = candidate->handle;
+        merger->config.per_address_priorities[slot] = candidate_pap;
+      }
+    } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
+  }
 }
 
 /*
