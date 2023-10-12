@@ -908,6 +908,7 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
     memset(&source->source.levels[new_levels_count], 0, old_levels_count - new_levels_count);
 
   // Merge levels.
+  EtcPalRbIter tree_iter;  // Declare this outside loop to avoid performance issues due to reallocation
   size_t min_levels_count = (new_levels_count < old_levels_count) ? new_levels_count : old_levels_count;
   for (size_t slot = 0; slot < min_levels_count; ++slot)
   {
@@ -930,7 +931,6 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
         merger->config.levels[slot] = source->source.levels[slot];
 
         // Now check if any other sources beat the current source.
-        EtcPalRbIter tree_iter;
         etcpal_rbiter_init(&tree_iter);
         const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
         do
