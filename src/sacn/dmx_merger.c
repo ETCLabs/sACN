@@ -908,7 +908,7 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
     memset(&source->source.levels[new_levels_count], 0, old_levels_count - new_levels_count);
 
   // Merge levels. If the level count goes up, merge priorities as well. If it goes down, release slots.
-  size_t min_levels_count = (new_levels_count < old_levels_count) : new_levels_count : old_levels_count;
+  size_t min_levels_count = (new_levels_count < old_levels_count) ? new_levels_count : old_levels_count;
   for (size_t slot = 0; slot < min_levels_count; ++slot)
   {
     // Perform HTP merge when source priority is non-zero and equal to current winning priority.
