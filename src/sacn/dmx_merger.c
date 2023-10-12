@@ -1072,6 +1072,7 @@ void merge_new_priorities(MergerState* merger, const SourceState* source, size_t
   assert(slot_range_start < DMX_ADDRESS_COUNT);
   assert(slot_range_end <= DMX_ADDRESS_COUNT);
 
+  EtcPalRbIter tree_iter;  // Declare this outside loop to avoid performance issues due to stack reallocation
   for (size_t slot = slot_range_start; slot < slot_range_end; ++slot)
   {
     uint8_t source_pap = CALC_SRC_PAP(source, slot);
@@ -1108,7 +1109,6 @@ void merge_new_priorities(MergerState* merger, const SourceState* source, size_t
       }
 
       // Now check if any other sources beat the current source.
-      EtcPalRbIter tree_iter;
       etcpal_rbiter_init(&tree_iter);
       const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
       do
