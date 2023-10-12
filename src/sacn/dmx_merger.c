@@ -1069,7 +1069,6 @@ void merge_new_priorities(MergerState* merger, const SourceState* source, size_t
   // Use regular asserts for performance
   assert(merger);
   assert(source);
-  assert(slot_range_start < DMX_ADDRESS_COUNT);
   assert(slot_range_end <= DMX_ADDRESS_COUNT);
 
   EtcPalRbIter tree_iter;  // Declare this outside loop to avoid performance issues due to stack reallocation
