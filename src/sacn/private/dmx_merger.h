@@ -50,7 +50,6 @@ typedef struct MergerState
   sacn_dmx_merger_t handle;  // This must be the first struct member.
   IntHandleManager source_handle_mgr;
   EtcPalRbTree source_state_lookup;
-  EtcPalRbIter source_state_iter;  // Avoid stack reallocation during performance intensive merging by declaring here
   SacnDmxMergerConfig config;
 
 #if !SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER

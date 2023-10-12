@@ -908,6 +908,7 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
     memset(&source->source.levels[new_levels_count], 0, old_levels_count - new_levels_count);
 
   // Merge levels.
+  EtcPalRbIter tree_iter;  // Declare this outside loop to avoid performance issues due to stack reallocation
   size_t min_levels_count = (new_levels_count < old_levels_count) ? new_levels_count : old_levels_count;
   for (size_t slot = 0; slot < min_levels_count; ++slot)
   {
@@ -930,8 +931,8 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
         merger->config.levels[slot] = source->source.levels[slot];
 
         // Now check if any other sources beat the current source.
-        etcpal_rbiter_init(&merger->source_state_iter);
-        const SourceState* candidate = etcpal_rbiter_first(&merger->source_state_iter, &merger->source_state_lookup);
+        etcpal_rbiter_init(&tree_iter);
+        const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
         do
         {
           if (candidate->handle != source->handle)
@@ -947,7 +948,7 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
               merger->config.owners[slot] = candidate->handle;
             }
           }
-        } while ((candidate = etcpal_rbiter_next(&merger->source_state_iter)) != NULL);
+        } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
       }
     }
   }
@@ -1070,6 +1071,7 @@ void merge_new_priorities(MergerState* merger, const SourceState* source, size_t
   assert(source);
   assert(slot_range_end <= DMX_ADDRESS_COUNT);
 
+  EtcPalRbIter tree_iter;  // Declare this outside loop to avoid performance issues due to stack reallocation
   for (size_t slot = slot_range_start; slot < slot_range_end; ++slot)
   {
     uint8_t source_pap = CALC_SRC_PAP(source, slot);
@@ -1106,8 +1108,8 @@ void merge_new_priorities(MergerState* merger, const SourceState* source, size_t
       }
 
       // Now check if any other sources beat the current source.
-      etcpal_rbiter_init(&merger->source_state_iter);
-      const SourceState* candidate = etcpal_rbiter_first(&merger->source_state_iter, &merger->source_state_lookup);
+      etcpal_rbiter_init(&tree_iter);
+      const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
       do
       {
         uint8_t candidate_pap = CALC_SRC_PAP(candidate, slot);
@@ -1122,7 +1124,7 @@ void merge_new_priorities(MergerState* merger, const SourceState* source, size_t
           merger->config.owners[slot] = candidate->handle;
           merger->config.per_address_priorities[slot] = candidate_pap;
         }
-      } while ((candidate = etcpal_rbiter_next(&merger->source_state_iter)) != NULL);
+      } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
     }
   }
 }
