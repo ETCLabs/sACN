@@ -100,8 +100,8 @@ static void update_pap_multi_source(MergerState* merger, SourceState* source, co
                                     size_t old_pap_count, size_t new_pap_count);
 static void update_universe_priority_single_source(MergerState* merger, SourceState* source, uint8_t pap);
 static void update_universe_priority_multi_source(MergerState* merger, SourceState* source, uint8_t pap);
-static inline void merge_new_priorities(MergerState* merger, const SourceState* source, size_t slot_range_start,
-                                        size_t slot_range_end);
+static void merge_new_priorities(MergerState* merger, const SourceState* source, size_t slot_range_start,
+                                 size_t slot_range_end);
 static void recalculate_pap_active(MergerState* merger);
 static void recalculate_universe_priority(MergerState* merger);
 
