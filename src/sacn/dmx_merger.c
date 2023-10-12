@@ -1034,8 +1034,10 @@ void update_universe_priority_multi_source(MergerState* merger, SourceState* sou
  */
 void merge_new_level(MergerState* merger, const SourceState* source, size_t slot)
 {
-  // Skipping asserts here for performance reasons - putting faith in asserts at higher levels and responsible for loop
-  // iteration.
+  // Using regular asserts here for performance reasons.
+  SACN_ASSERT(merger);
+  SACN_ASSERT(source);
+  SACN_ASSERT(slot < DMX_ADDRESS_COUNT);
 
   // Perform HTP merge when source priority is non-zero and equal to current winning priority.
   if ((source->source.address_priority[slot] > 0) &&
@@ -1064,8 +1066,10 @@ void merge_new_level(MergerState* merger, const SourceState* source, size_t slot
  */
 void merge_new_priority(MergerState* merger, const SourceState* source, size_t slot)
 {
-  // Skipping asserts here for performance reasons - putting faith in asserts at higher levels and responsible for loop
-  // iteration.
+  // Using regular asserts here for performance reasons.
+  SACN_ASSERT(merger);
+  SACN_ASSERT(source);
+  SACN_ASSERT(slot < DMX_ADDRESS_COUNT);
 
   uint8_t source_pap = CALC_SRC_PAP(source, slot);
 
@@ -1101,8 +1105,10 @@ void merge_new_priority(MergerState* merger, const SourceState* source, size_t s
  */
 void recalculate_winning_level(MergerState* merger, const SourceState* source, size_t slot)
 {
-  // Skipping asserts here for performance reasons - putting faith in asserts at higher levels and responsible for loop
-  // iteration.
+  // Using regular asserts here for performance reasons.
+  SACN_ASSERT(merger);
+  SACN_ASSERT(source);
+  SACN_ASSERT(slot < DMX_ADDRESS_COUNT);
 
   // Start with this source as the owner.
   merger->config.levels[slot] = source->source.levels[slot];
@@ -1136,8 +1142,10 @@ void recalculate_winning_level(MergerState* merger, const SourceState* source, s
  */
 void recalculate_winning_priority(MergerState* merger, const SourceState* source, size_t slot)
 {
-  // Skipping asserts here for performance reasons - putting faith in asserts at higher levels and responsible for loop
-  // iteration.
+  // Using regular asserts here for performance reasons.
+  SACN_ASSERT(merger);
+  SACN_ASSERT(source);
+  SACN_ASSERT(slot < DMX_ADDRESS_COUNT);
 
   // Start with this source as the owner.
   merger->config.per_address_priorities[slot] = CALC_SRC_PAP(source, slot);
