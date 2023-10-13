@@ -315,7 +315,7 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
  *
  * If enabled, the library will try to enable this socket option and fail to initialize if it fails.
  *
- * Define to 0 to disable. This may allow the library to initialize if it was failing before.
+ * Define to 0 to disable. Then the library will not attempt this sockopt, avoiding potential errors.
  */
 #ifndef SACN_RECEIVER_ENABLE_SO_REUSEPORT
 #define SACN_RECEIVER_ENABLE_SO_REUSEPORT 1
@@ -326,7 +326,7 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
  *
  * If enabled, the library will try to set it to #SACN_RECEIVER_SOCKET_RCVBUF_SIZE and log an error if it failed.
  *
- * Define to 0 to disable. This will prevent any errors that may have been logged previously regarding this sockopt.
+ * Define to 0 to disable. Then the library will not attempt this sockopt, avoiding potential errors.
  */
 #ifndef SACN_RECEIVER_ENABLE_SO_RCVBUF
 #define SACN_RECEIVER_ENABLE_SO_RCVBUF 1
