@@ -81,7 +81,7 @@ etcpal_error_t init_merge_receiver_sources(void)
 
 // Needs lock
 etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, const EtcPalSockAddr* addr,
-                                              const SacnRemoteSource* remote_source,
+                                              const SacnRemoteSource* remote_source, bool sampling,
                                               const SacnRecvUniverseData* universe_data)
 {
   if (!SACN_ASSERT_VERIFY(merge_receiver) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(remote_source) ||
@@ -96,7 +96,7 @@ etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver,
   if (src)
   {
     src->handle = remote_source->handle;
-    src->sampling = universe_data->is_sampling;
+    src->sampling = sampling;
     src->per_address_priorities_active = false;  // The call below will set to true if PAP is detected
     update_merge_receiver_source_info(src, addr, remote_source, universe_data);
 

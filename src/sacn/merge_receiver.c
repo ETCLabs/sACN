@@ -599,8 +599,9 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
     if (lookup_merge_receiver((sacn_merge_receiver_t)receiver_handle, &merge_receiver) == kEtcPalErrOk)
     {
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+      bool sampling = universe_data->is_sampling;
       sacn_dmx_merger_t merger_handle =
-          universe_data->is_sampling ? merge_receiver->sampling_merger_handle : merge_receiver->merger_handle;
+          sampling ? merge_receiver->sampling_merger_handle : merge_receiver->merger_handle;
 #else
       bool sampling = merge_receiver->sampling;
       sacn_dmx_merger_t merger_handle = merge_receiver->merger_handle;
@@ -614,7 +615,7 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
       {
         add_sacn_dmx_merger_source_with_handle(merger_handle, merger_source_handle);
 
-        add_sacn_merge_receiver_source(merge_receiver, source_addr, source_info, universe_data);
+        add_sacn_merge_receiver_source(merge_receiver, source_addr, source_info, sampling, universe_data);
       }
 
       bool new_merge_occurred = false;
@@ -637,7 +638,7 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
       }
 
       // Notify if needed.
-      if (merged_data_notification && new_merge_occurred && !universe_data->is_sampling)
+      if (merged_data_notification && new_merge_occurred && !sampling)
       {
         if (add_active_sources(merged_data_notification, merge_receiver))
         {
