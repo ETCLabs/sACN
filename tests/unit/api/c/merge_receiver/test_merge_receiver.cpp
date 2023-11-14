@@ -240,6 +240,16 @@ protected:
 
   void RunSourceLimitExceeded() { merge_receiver_source_limit_exceeded(kTestHandle, kTestUniverse, 0u); }
 
+  void VerifySourceDataIsEqual(const SacnMergeReceiverSource& s1, const SacnMergeReceiverSource& s2)
+  {
+    EXPECT_EQ(s1.handle, s2.handle);
+    EXPECT_EQ(memcmp(s1.cid.data, s2.cid.data, ETCPAL_UUID_BYTES), 0);
+    EXPECT_EQ(memcmp(s1.name, s2.name, SACN_SOURCE_NAME_MAX_LEN), 0);
+    EXPECT_TRUE(etcpal_ip_and_port_equal(&s1.addr, &s2.addr));
+    EXPECT_EQ(s1.per_address_priorities_active, s2.per_address_priorities_active);
+    EXPECT_EQ(s1.universe_priority, s2.universe_priority);
+  }
+
   static std::optional<std::unordered_set<sacn_remote_source_t>> active_sources_to_expect_;
   static SourceState dummy_dmx_merger_source_state_;
   static std::map<sacn_dmx_merger_t, SacnDmxMergerConfig> merger_configs_;
@@ -1091,11 +1101,11 @@ TEST_F(TestMergeReceiver, TracksSourceInfo)
 
   RunUniverseData(source1, SACN_STARTCODE_DMX, {0x12u, 0x34u});
   EXPECT_EQ(sacn_merge_receiver_get_source(merge_receiver_handle, source_1_handle, &get_source_result), kEtcPalErrOk);
-  EXPECT_EQ(get_source_result, source1);
+  VerifySourceDataIsEqual(get_source_result, source1);
 
   RunUniverseData(source2, SACN_STARTCODE_DMX, {0x56u, 0x78u});
   EXPECT_EQ(sacn_merge_receiver_get_source(merge_receiver_handle, source_2_handle, &get_source_result), kEtcPalErrOk);
-  EXPECT_EQ(get_source_result, source2);
+  VerifySourceDataIsEqual(get_source_result, source2);
 }
 
 TEST_F(TestMergeReceiver, TracksUniversePriority)
@@ -1116,13 +1126,13 @@ TEST_F(TestMergeReceiver, TracksUniversePriority)
   {
     RunUniverseData(source1, SACN_STARTCODE_DMX, {0x12u, 0x34u});
     EXPECT_EQ(sacn_merge_receiver_get_source(merge_receiver_handle, source_1_handle, &get_source_result), kEtcPalErrOk);
-    EXPECT_EQ(get_source_result, source1);
+    VerifySourceDataIsEqual(get_source_result, source1);
 
     ++source1.universe_priority;
 
     RunUniverseData(source2, SACN_STARTCODE_DMX, {0x56u, 0x78u});
     EXPECT_EQ(sacn_merge_receiver_get_source(merge_receiver_handle, source_2_handle, &get_source_result), kEtcPalErrOk);
-    EXPECT_EQ(get_source_result, source2);
+    VerifySourceDataIsEqual(get_source_result, source2);
 
     --source2.universe_priority;
   }
@@ -1148,14 +1158,14 @@ TEST_F(TestMergeReceiver, TracksPriorityType)
   {
     RunUniverseData(source1, SACN_STARTCODE_DMX, {0x12u, 0x34u});
     EXPECT_EQ(sacn_merge_receiver_get_source(merge_receiver_handle, source_1_handle, &get_source_result), kEtcPalErrOk);
-    EXPECT_EQ(get_source_result, source1);
+    VerifySourceDataIsEqual(get_source_result, source1);
 
     if (i <= 5)
       RunUniverseData(source2, SACN_STARTCODE_PRIORITY, {0x7fu, 0x7fu});
 
     RunUniverseData(source2, SACN_STARTCODE_DMX, {0x56u, 0x78u});
     EXPECT_EQ(sacn_merge_receiver_get_source(merge_receiver_handle, source_2_handle, &get_source_result), kEtcPalErrOk);
-    EXPECT_EQ(get_source_result, source2);
+    VerifySourceDataIsEqual(get_source_result, source2);
 
     if (i == 5)
     {
