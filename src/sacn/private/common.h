@@ -713,6 +713,8 @@ typedef struct SacnMergeReceiverInternalSource
   char name[SACN_SOURCE_NAME_MAX_LEN];
   EtcPalSockAddr addr;
   bool sampling;
+  bool per_address_priorities_active;
+  uint8_t universe_priority;
 } SacnMergeReceiverInternalSource;
 
 typedef struct SacnMergeReceiver

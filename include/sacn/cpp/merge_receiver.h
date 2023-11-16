@@ -277,6 +277,10 @@ public:
     std::string name;
     /** The network address from which the most recent sACN packet originated. */
     etcpal::SockAddr addr;
+    /** Whether the source is sending per-address priority packets, or only per-universe. */
+    bool per_address_priorities_active;
+    /** The source's current per-universe priority. */
+    uint8_t universe_priority;
   };
 
   MergeReceiver() = default;
@@ -373,8 +377,8 @@ extern "C" inline void MergeReceiverCbSourcePapLost(sacn_merge_receiver_t handle
 {
   if (context && source)
   {
-    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourcePapLost(MergeReceiver::Handle(handle),
-                                                                             universe, *source);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourcePapLost(MergeReceiver::Handle(handle), universe,
+                                                                             *source);
   }
 }
 
@@ -661,6 +665,8 @@ inline etcpal::Expected<MergeReceiver::Source> MergeReceiver::GetSource(sacn_rem
     res.cid = c_info.cid;
     res.name = c_info.name;
     res.addr = c_info.addr;
+    res.per_address_priorities_active = c_info.per_address_priorities_active;
+    res.universe_priority = c_info.universe_priority;
     return res;
   }
 

@@ -558,6 +558,8 @@ etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t merge_receiv
       source_info->handle = source->handle;
       memcpy(source_info->name, source->name, SACN_SOURCE_NAME_MAX_LEN);
       source_info->addr = source->addr;
+      source_info->per_address_priorities_active = source->per_address_priorities_active;
+      source_info->universe_priority = source->universe_priority;
     }
 
     sacn_unlock();
@@ -607,13 +609,13 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
       SacnMergeReceiverInternalSource* source = NULL;
       if (lookup_merge_receiver_source(merge_receiver, source_handle, &source) == kEtcPalErrOk)
       {
-        update_merge_receiver_source_info(source, source_addr, source_info);
+        update_merge_receiver_source_info(source, source_addr, source_info, universe_data);
       }
       else
       {
         add_sacn_dmx_merger_source_with_handle(merger_handle, merger_source_handle);
 
-        add_sacn_merge_receiver_source(merge_receiver, source_addr, source_info, sampling);
+        add_sacn_merge_receiver_source(merge_receiver, source_addr, source_info, sampling, universe_data);
       }
 
       bool new_merge_occurred = false;
@@ -944,6 +946,8 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
 
       if (SACN_ASSERT_VERIFY(internal_source))
       {
+        internal_source->per_address_priorities_active = false;
+
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
         sacn_dmx_merger_t merger_handle =
             internal_source->sampling ? merge_receiver->sampling_merger_handle : merge_receiver->merger_handle;
