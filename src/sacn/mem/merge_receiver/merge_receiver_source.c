@@ -144,6 +144,7 @@ void clear_sacn_merge_receiver_sources(SacnMergeReceiver* merge_receiver)
 }
 
 // Needs lock
+// This function is called when a source is added and when a packet is received.
 void update_merge_receiver_source_info(SacnMergeReceiverInternalSource* info, const EtcPalSockAddr* addr,
                                        const SacnRemoteSource* remote_source, const SacnRecvUniverseData* universe_data)
 {
@@ -157,7 +158,7 @@ void update_merge_receiver_source_info(SacnMergeReceiverInternalSource* info, co
   info->addr = *addr;
 
   if (universe_data->start_code == SACN_STARTCODE_PRIORITY)
-    info->per_address_priorities_active = true;
+    info->per_address_priorities_active = true;  // Only sets to true if PAP is present - PAP lost handler sets to false
 
   info->universe_priority = universe_data->priority;
 }
