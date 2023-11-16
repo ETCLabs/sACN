@@ -1157,6 +1157,9 @@ TEST_F(TestMergeReceiver, TracksPriorityType)
   SacnMergeReceiverSource get_source_result;
   for (int i = 0; i < 10; ++i)
   {
+    if (i > 5)
+      RunUniverseData(source1, SACN_STARTCODE_PRIORITY, {0x7fu, 0x7fu});
+
     RunUniverseData(source1, SACN_STARTCODE_DMX, {0x12u, 0x34u});
     EXPECT_EQ(sacn_merge_receiver_get_source(merge_receiver_handle, source_1_handle, &get_source_result), kEtcPalErrOk);
     VerifySourceDataIsEqual(get_source_result, source1);
@@ -1170,6 +1173,8 @@ TEST_F(TestMergeReceiver, TracksPriorityType)
 
     if (i == 5)
     {
+      source1.per_address_priorities_active = true;
+
       RunPapLost(source_2_handle, kSource2Cid);
       source2.per_address_priorities_active = false;
     }
