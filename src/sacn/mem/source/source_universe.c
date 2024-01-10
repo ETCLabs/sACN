@@ -148,7 +148,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     CLEAR_BUF(&universe->netints, netints);
     CLEAR_BUF(universe, unicast_dests);
 
-    // Undo the previously memory shift so that a valid universe isn't lost
+    // Undo the previous memory shift so that a valid universe isn't lost
     if (insert_index < source->num_universes)
     {
       memmove(&source->universes[insert_index], &source->universes[insert_index + 1],
