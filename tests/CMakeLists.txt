@@ -13,8 +13,8 @@ function(sacn_add_test test_name config_dir)
     ${SACN_INCLUDE}
     ${SACN_SRC}
   )
-  target_link_libraries(${target_name} PRIVATE EtcPalMock gtest meekrosoft::fff)
-  set_target_properties(${target_name} PROPERTIES CXX_STANDARD 17 FOLDER tests)
+  target_link_libraries(${target_name} PRIVATE EtcPalMock gtest gmock meekrosoft::fff)
+  set_target_properties(${target_name} PROPERTIES CXX_STANDARD 20 FOLDER tests)
   gtest_discover_tests(${target_name} EXTRA_ARGS "--gtest_output=xml:${TEST_BIN_DIR}/test-results/")
 endfunction()
 

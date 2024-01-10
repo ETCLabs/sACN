@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2022 ETC Inc.
+ * Copyright 2023 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,11 +53,41 @@ static const std::deque<SacnMcastInterface> kTestV4Netints = {{{kEtcPalIpTypeV4,
                                                               {{kEtcPalIpTypeV4, 7u}, kEtcPalErrOk}};
 
 static constexpr uint16_t kTestUniverse = 123u;
+static const std::string kTestUniverseIPv4Multicast = "239.255.0.123";  // can't use 'constexpr' with std::string
+static const std::string kTestUniverseIPv6Multicast = "ff18::8300:7b";
 static constexpr uint16_t kTestUniverse2 = 456u;
 
 static etcpal_socket_t next_socket = (etcpal_socket_t)0;
 
-class TestSource : public ::testing::Test
+typedef struct FakeNetworkInfo
+{
+  unsigned int index;
+  etcpal_iptype_t type;
+  std::string addr;
+  std::string mask_v4;
+  unsigned int mask_v6;
+  std::string mac;
+  std::string name;
+  bool is_default;
+} FakeNetworkInfo;
+
+static const std::vector<FakeNetworkInfo> kFakeNetworksInfo = {
+    {1u, kEtcPalIpTypeV4, "10.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:22", "eth_v4_0", true},
+    {2u, kEtcPalIpTypeV6, "fe80::1234", "", 64u, "00:c0:16:33:33:33", "eth_v6_0", false},
+    {3u, kEtcPalIpTypeV4, "20.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:23", "eth_v4_1", false},
+    {4u, kEtcPalIpTypeV4, "30.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:24", "eth_v4_2", false},
+    {5u, kEtcPalIpTypeV4, "40.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:25", "eth_v4_3", false},
+    {6u, kEtcPalIpTypeV4, "50.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:26", "eth_v4_4", false},
+    {7u, kEtcPalIpTypeV4, "60.101.20.30", "255.255.0.0", 0, "00:c0:16:22:22:27", "eth_v4_5", false},
+};
+
+typedef struct UnicastInfo
+{
+  std::string addr_string;
+  bool found;
+} UnicastInfo;
+
+class TestSourceBase : public ::testing::Test
 {
 protected:
   void SetUp() override
@@ -65,6 +95,8 @@ protected:
     etcpal_reset_all_fakes();
 
     PopulateFakeNetints();
+
+    ResetMulticastSentInfo();
 
     static auto validate_get_interfaces_args = [](EtcPalNetintInfo* netints, size_t* num_netints) {
       if (!num_netints)
@@ -106,50 +138,100 @@ protected:
 
       return copy_out_interfaces(fake_netints_.data(), fake_netints_.size(), netints, num_netints);
     };
-
-    ASSERT_EQ(Init().code(), kEtcPalErrOk);
   }
-
-  void TearDown() override { Deinit(); }
 
   void PopulateFakeNetints()
   {
-    // Add a fake IPv4-only interface
-    EtcPalNetintInfo fake_netint_v4;
-    fake_netint_v4.index = 1u;
-    fake_netint_v4.addr = etcpal::IpAddr::FromString("10.101.20.30").get();
-    fake_netint_v4.mask = etcpal::IpAddr::FromString("255.255.0.0").get();
-    fake_netint_v4.mac = etcpal::MacAddr::FromString("00:c0:16:22:22:22").get();
-    strcpy(fake_netint_v4.id, "eth_v4_0");
-    strcpy(fake_netint_v4.friendly_name, "eth_v4_0");
-    fake_netint_v4.is_default = true;
-    fake_netints_.push_back(fake_netint_v4);
-
-    // Add a fake IPv6-only interface
-    EtcPalNetintInfo fake_netint_v6;
-    fake_netint_v6.index = 2u;
-    fake_netint_v6.addr = etcpal::IpAddr::FromString("fe80::1234").get();
-    fake_netint_v6.mask = etcpal::IpAddr::NetmaskV6(64).get();
-    fake_netint_v6.mac = etcpal::MacAddr::FromString("00:c0:16:33:33:33").get();
-    strcpy(fake_netint_v6.id, "eth_v6_0");
-    strcpy(fake_netint_v6.friendly_name, "eth_v6_0");
-    fake_netint_v6.is_default = false;
-    fake_netints_.push_back(fake_netint_v6);
-
-    // Add IPv4 test interfaces
-    for (auto netint : kTestV4Netints)
+    EtcPalNetintInfo fake_netint;
+    for (auto fake_network_info : kFakeNetworksInfo)
     {
-      fake_netint_v4.index = netint.iface.index;
-      ++fake_netint_v4.addr.addr.v4;
-      ++fake_netint_v4.mac.data[ETCPAL_MAC_BYTES - 1];
-      ++fake_netint_v4.id[7];
-      ++fake_netint_v4.friendly_name[7];
-      fake_netint_v4.is_default = false;
-      fake_netints_.push_back(fake_netint_v4);
+      fake_netint.index = fake_network_info.index;
+      fake_netint.addr = etcpal::IpAddr::FromString(fake_network_info.addr).get();
+      if (fake_network_info.type == kEtcPalIpTypeV4)
+      {
+        fake_netint.mask = etcpal::IpAddr::FromString(fake_network_info.mask_v4).get();
+      }
+      else
+      {
+        fake_netint.mask = etcpal::IpAddr::NetmaskV6(fake_network_info.mask_v6).get();
+      }
+      fake_netint.mac = etcpal::MacAddr::FromString(fake_network_info.mac).get();
+      strcpy(fake_netint.id, fake_network_info.name.c_str());
+      strcpy(fake_netint.friendly_name, fake_network_info.name.c_str());
+      fake_netint.is_default = fake_network_info.is_default;
+      fake_netints_.push_back(fake_netint);
     }
   }
 
-  void RunThreadCycle() { take_lock_and_process_sources(kProcessThreadedSources); }
+  void ResetMulticastSentInfo()
+  {
+    ipv4_multicast_packet_sent_ = false;
+    ipv6_multicast_packet_sent_ = false;
+  }
+
+  void Start()
+  {
+    EXPECT_EQ(source_.Startup(settings_).code(), kEtcPalErrOk);
+  }
+
+  void StartAndAddUniverse()
+  {
+    EXPECT_EQ(source_.Startup(settings_).code(), kEtcPalErrOk);
+    EXPECT_EQ(source_.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
+    source_.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  }
+
+  void RunThreadCycle()
+  {
+    take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsOnly);
+    take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessPapOnly);
+  }
+
+  static bool IsIPv4Multicast(const etcpal::SockAddr& sock_addr)
+  {
+    return (sock_addr.ip().ToString() == kTestUniverseIPv4Multicast);
+  }
+
+  static bool IsIPv6Multicast(const etcpal::SockAddr& sock_addr)
+  {
+    return (sock_addr.ip().ToString() == kTestUniverseIPv6Multicast);
+  }
+
+  void TearDown() override
+  {
+    source_.Shutdown();
+    Deinit();
+  }
+
+  static std::vector<EtcPalNetintInfo> fake_netints_;
+  static std::vector<UnicastInfo> fake_unicasts_info_;
+  static Source source_;
+  static Source::Settings settings_;
+  static bool ipv4_multicast_packet_sent_;
+  static bool ipv6_multicast_packet_sent_;
+};
+
+std::vector<EtcPalNetintInfo> TestSourceBase::fake_netints_;
+std::vector<UnicastInfo> TestSourceBase::fake_unicasts_info_ = {
+    {"10.101.20.1", false},
+    {"10.101.20.2", false},
+};
+Source TestSourceBase::source_;
+Source::Settings TestSourceBase::settings_(etcpal::Uuid::V4(), "Test Source");
+bool TestSourceBase::ipv4_multicast_packet_sent_;
+bool TestSourceBase::ipv6_multicast_packet_sent_;
+
+/*===========================================================================*/
+
+class TestSource : public TestSourceBase
+{
+protected:
+  void SetUp() override
+  {
+    TestSourceBase::SetUp();
+
+    ASSERT_EQ(Init().code(), kEtcPalErrOk);
+  }
 
   void ResetNetworking(Source& source, const std::deque<SacnMcastInterface>& sys_netints)
   {
@@ -163,58 +245,49 @@ protected:
     std::vector<SacnMcastInterface> vect(sys_netints.begin(), sys_netints.end());
     EXPECT_TRUE(source.ResetNetworking(vect, netint_lists).IsOk());
   }
-
-  static std::vector<EtcPalNetintInfo> fake_netints_;
 };
-
-std::vector<EtcPalNetintInfo> TestSource::fake_netints_;
 
 TEST_F(TestSource, AddingLotsOfUniversesWorks)
 {
-  Source source;
-  EXPECT_EQ(source.Startup(Source::Settings(etcpal::Uuid::V4(), "Test Source Name")).code(), kEtcPalErrOk);
+  Start();
 
   for (uint16_t universe = 1u; universe <= 256u; ++universe)
-    EXPECT_EQ(source.AddUniverse(Source::UniverseSettings(universe)).code(), kEtcPalErrOk);
+    EXPECT_EQ(source_.AddUniverse(Source::UniverseSettings(universe)).code(), kEtcPalErrOk);
 
-  source.Shutdown();
+  source_.Shutdown();
 }
 
 TEST_F(TestSource, AddUniverseHandlesTerminationCorrectly)
 {
-  Source source;
-  EXPECT_EQ(source.Startup(Source::Settings(etcpal::Uuid::V4(), "Test Source Name")).code(), kEtcPalErrOk);
-  EXPECT_EQ(source.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
-  source.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
-  EXPECT_EQ(source.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrExists);
-  source.UpdateLevels(kTestUniverse, nullptr, 0u);
-  EXPECT_EQ(source.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrExists);
-  source.RemoveUniverse(kTestUniverse);
-  EXPECT_EQ(source.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
+  StartAndAddUniverse();
+  EXPECT_EQ(source_.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrExists);
+  source_.UpdateLevels(kTestUniverse, nullptr, 0u);
+  EXPECT_EQ(source_.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrExists);
+  source_.RemoveUniverse(kTestUniverse);
+  EXPECT_EQ(source_.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, AddUnicastDestHandlesTerminationCorrectly)
 {
   const etcpal::IpAddr kTestAddr = etcpal::IpAddr::FromString("10.101.1.1");
 
-  Source source;
-  EXPECT_EQ(source.Startup(Source::Settings(etcpal::Uuid::V4(), "Test Source Name")).code(), kEtcPalErrOk);
-  EXPECT_EQ(source.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
-  EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrOk);
-  source.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
-  EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrExists);
-  source.UpdateLevels(kTestUniverse, nullptr, 0u);
-  EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrExists);
-  source.RemoveUnicastDestination(kTestUniverse, kTestAddr);
-  EXPECT_EQ(source.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrOk);
+  Start();
+  EXPECT_EQ(source_.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
+
+  EXPECT_EQ(source_.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrOk);
+  source_.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  EXPECT_EQ(source_.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrExists);
+  source_.UpdateLevels(kTestUniverse, nullptr, 0u);
+  EXPECT_EQ(source_.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrExists);
+  source_.RemoveUnicastDestination(kTestUniverse, kTestAddr);
+  EXPECT_EQ(source_.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, UniverseRemovalUsesOldNetintsAsAllowedByPerUniverseReset)
 {
   static constexpr int kNumCurrentNetints = 3;
 
-  Source source;
-  EXPECT_EQ(source.Startup(Source::Settings(etcpal::Uuid::V4(), "Test Source Name")).code(), kEtcPalErrOk);
+  Start();
 
   std::deque<SacnMcastInterface> future_sys_netints(kTestV4Netints);
   std::deque<SacnMcastInterface> current_sys_netints;
@@ -227,11 +300,11 @@ TEST_F(TestSource, UniverseRemovalUsesOldNetintsAsAllowedByPerUniverseReset)
     future_sys_netints.pop_front();
   }
 
-  ResetNetworking(source, current_sys_netints);
+  ResetNetworking(source_, current_sys_netints);
 
-  EXPECT_EQ(source.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
-  source.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
-  source.RemoveUniverse(kTestUniverse);
+  EXPECT_EQ(source_.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
+  source_.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
+  source_.RemoveUniverse(kTestUniverse);
 
   // Track number of terminations on multicast.
   static int num_terminations_sent = 0;
@@ -246,10 +319,10 @@ TEST_F(TestSource, UniverseRemovalUsesOldNetintsAsAllowedByPerUniverseReset)
   };
 
   // Add another universe so per-universe network reset can still run.
-  EXPECT_EQ(source.AddUniverse(Source::UniverseSettings(kTestUniverse2)).code(), kEtcPalErrOk);
+  EXPECT_EQ(source_.AddUniverse(Source::UniverseSettings(kTestUniverse2)).code(), kEtcPalErrOk);
 
   std::vector<Source::UniverseNetintList> universe_netint_lists(
-      1, Source::UniverseNetintList(source.handle().value(), kTestUniverse2));
+      1, Source::UniverseNetintList(source_.handle().value(), kTestUniverse2));
 
   for (int i = 0; i < 3; ++i)
   {
@@ -266,7 +339,208 @@ TEST_F(TestSource, UniverseRemovalUsesOldNetintsAsAllowedByPerUniverseReset)
       current_sys_netints.push_back(future_sys_netints.front());
       future_sys_netints.pop_front();
 
-      ResetNetworkingPerUniverse(source, current_sys_netints, universe_netint_lists);
+      ResetNetworkingPerUniverse(source_, current_sys_netints, universe_netint_lists);
     }
   }
+}
+
+/*===========================================================================*/
+
+class TestSourceIpv4Ipv6 : public TestSourceBase
+{
+protected:
+  void SetUp() override
+  {
+    TestSourceBase::SetUp();
+
+    etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void*, size_t, int, const EtcPalSockAddr* dest_addr) {
+      if (IsIPv4Multicast(etcpal::SockAddr(*dest_addr)))
+      {
+        ipv4_multicast_packet_sent_ = true;
+      }
+      else if (IsIPv6Multicast(etcpal::SockAddr(*dest_addr)))
+      {
+        ipv6_multicast_packet_sent_ = true;
+      }
+
+      return 0;
+    };
+
+    ASSERT_EQ(Init().code(), kEtcPalErrOk);
+  }
+  
+  void StartAndRunSource(const sacn_ip_support_t ip_supported)
+  {
+    settings_.ip_supported = ip_supported;
+    StartAndAddUniverse();
+    for (int i = 0; i < 4; ++i)
+      RunThreadCycle();
+  }
+};
+
+TEST_F(TestSourceIpv4Ipv6, IPv4Works)
+{
+  StartAndRunSource(kSacnIpV4Only);
+  EXPECT_TRUE(ipv4_multicast_packet_sent_);
+  EXPECT_FALSE(ipv6_multicast_packet_sent_);
+}
+
+TEST_F(TestSourceIpv4Ipv6, IPv6Works)
+{
+  StartAndRunSource(kSacnIpV6Only);
+  EXPECT_FALSE(ipv4_multicast_packet_sent_);
+  EXPECT_TRUE(ipv6_multicast_packet_sent_);
+}
+
+TEST_F(TestSourceIpv4Ipv6, IPv4AndIPv6WorkTogether)
+{
+  StartAndRunSource(kSacnIpV4AndIpV6);
+  EXPECT_TRUE(ipv4_multicast_packet_sent_);
+  EXPECT_TRUE(ipv6_multicast_packet_sent_);
+}
+
+/*===========================================================================*/
+
+class TestSourceUnicast : public TestSourceBase
+{
+protected:
+  void SetUp() override
+  {
+    TestSourceBase::SetUp();
+
+    ResetUnicastSentInfo();
+
+    etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void*, size_t, int, const EtcPalSockAddr* dest_addr) {
+      etcpal::SockAddr dest_sock_addr(*dest_addr);
+      if (IsIPv4Multicast(dest_sock_addr))
+      {
+        ipv4_multicast_packet_sent_ = true;
+      }
+      else if (IsIPv6Multicast(dest_sock_addr))
+      {
+        ipv6_multicast_packet_sent_ = true;
+      }
+      else
+      {
+        for (auto& fake_unicast_info : fake_unicasts_info_)
+        {
+          if (fake_unicast_info.addr_string == dest_sock_addr.ip().ToString())
+          {
+            fake_unicast_info.found = true;
+          }
+        }
+      }
+
+      return 0;
+    };
+
+    ASSERT_EQ(Init().code(), kEtcPalErrOk);
+  }
+
+  void ResetUnicastSentInfo()
+  {
+    for (auto& fake_unicast_info : fake_unicasts_info_)
+    {
+      fake_unicast_info.found = false;
+    }
+  }
+
+  void StartAndRunSource(bool add_unicast)
+  {
+    StartAndAddUniverse();
+    if (add_unicast)
+    {
+      for (auto fake_unicast_info : fake_unicasts_info_)
+      {
+        etcpal::IpAddr dest_addr = etcpal::IpAddr::FromString(fake_unicast_info.addr_string);
+        source_.AddUnicastDestination(kTestUniverse, dest_addr);
+      }
+    }
+    for (int i = 0; i < 4; ++i)
+      RunThreadCycle();
+  }
+};
+
+TEST_F(TestSourceUnicast, MulticastOnly)
+{
+  StartAndRunSource(false);
+  EXPECT_TRUE(ipv4_multicast_packet_sent_);
+  EXPECT_TRUE(ipv6_multicast_packet_sent_);
+  for (auto fake_unicast_info : fake_unicasts_info_)
+  {
+    EXPECT_FALSE(fake_unicast_info.found);
+  }
+}
+
+TEST_F(TestSourceUnicast, MulticastAndUnicast)
+{
+  StartAndRunSource(true);
+  EXPECT_TRUE(ipv4_multicast_packet_sent_);
+  EXPECT_TRUE(ipv6_multicast_packet_sent_);
+  for (auto fake_unicast_info : fake_unicasts_info_)
+  {
+    EXPECT_TRUE(fake_unicast_info.found);
+  }
+}
+
+/*===========================================================================*/
+
+static constexpr uint8_t kDmxCidOffset = 22u; /* DMX packet CID offset
+                                                 preamble:     2 bytes
+                                                 postamble:    2 bytes
+                                                 "ASC-E1.17": 12 bytes
+                                                 flags & len:  2 bytes
+                                                 protocol:     4 bytes
+                                                 cid:         16 bytes
+                                              */
+
+class TestSourceCid : public TestSourceBase
+{
+protected:
+  void SetUp() override
+  {
+    TestSourceBase::SetUp();
+
+    ResetFoundInfo();
+
+    etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void* message, size_t, int,
+                                        const EtcPalSockAddr*) {
+      etcpal::Uuid dest_cid(&((uint8_t*)message)[kDmxCidOffset]);
+      if (settings_.cid != dest_cid)
+      {
+        cid_found_always_ = false;
+      }
+
+      return 0;
+    };
+
+    ASSERT_EQ(Init().code(), kEtcPalErrOk);
+  }
+
+  void ResetFoundInfo()
+  {
+    cid_found_always_ = true;
+  }
+
+  void StartAndRunSource()
+  {
+    StartAndAddUniverse();
+    for (auto fake_unicast_info : fake_unicasts_info_)
+    {
+      etcpal::IpAddr dest_addr = etcpal::IpAddr::FromString(fake_unicast_info.addr_string);
+      source_.AddUnicastDestination(kTestUniverse, dest_addr);
+    }
+    for (int i = 0; i < 4; ++i)
+      RunThreadCycle();
+  }
+
+  static bool cid_found_always_;
+};
+
+bool TestSourceCid::cid_found_always_;
+
+TEST_F(TestSourceCid, SourceCID)
+{
+  StartAndRunSource();
+  EXPECT_TRUE(cid_found_always_);
 }

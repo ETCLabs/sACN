@@ -75,34 +75,35 @@ public:
    */
   struct Settings
   {
-    /********* Required values **********/
-
-    /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.  Slots that are not sourced
+    /** This is always required to be non-NULL.
+        Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.  Slots that are not sourced
         are set to 0.
         Memory is owned by the application and must remain allocated until the merger is destroyed. While this merger
         exists, the application must not modify this buffer directly!  Doing so would affect the results of the merge.*/
     uint8_t* levels{nullptr};
 
-    /********* Optional values **********/
-
-    /** Buffer of #DMX_ADDRESS_COUNT per-address priorities for each winning slot. This is used if the merge
+    /** This is only allowed to be NULL if and only if #SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER is 0.
+        Buffer of #DMX_ADDRESS_COUNT per-address priorities for each winning slot. This is used if the merge
         results need to be sent over sACN. Otherwise this can just be set to nullptr. If a source with a universe
         priority of 0 wins, that priority is converted to 1. If there is no winner for a slot, then a per-address
         priority of 0 is used to show that there is no source for that slot.
         Memory is owned by the application and must remain allocated until the merger is destroyed.*/
     uint8_t* per_address_priorities{nullptr};
 
-    /** If the merger output is being transmitted via sACN, this is set to true if per-address-priority packets should
+    /** This is allowed to be NULL.
+        If the merger output is being transmitted via sACN, this is set to true if per-address-priority packets should
         be transmitted. Otherwise this is set to false. This can be set to nullptr if not needed, which can save some
         performance.*/
     bool* per_address_priorities_active{nullptr};
 
-    /** This is set to the highest universe priority of the currently winning sources. If the merger's output is
+    /** This is allowed to be NULL.
+        This is set to the highest universe priority of the currently winning sources. If the merger's output is
         transmitted by a sACN source, this can be used for the packets' universe priority field. Otherwise this can be
         set to nullptr if not needed.*/
     uint8_t* universe_priority{nullptr};
 
-    /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
+    /** This is only allowed to be NULL if and only if #SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER is 0.
+        Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
         #SACN_DMX_MERGER_SOURCE_INVALID to indicate that there is no winner for that slot. This is used if
         you need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to
         NULL and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of
@@ -268,14 +269,17 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_dmx_merger_sourc
 /**
  * @brief Updates a source's levels and recalculates outputs.
  *
- * This function updates the levels of the specified source, and then triggers the recalculation of each slot. For each
- * slot, the source will only be included in the merge if it has a priority at that slot. Otherwise the level will be
- * saved for when a priority is eventually inputted.
+ * This function updates the levels of the specified source, and then triggers the recalculation of each slot. Only
+ * slots within the valid level range will ever be factored into the merge. If the level count increased (it is 0
+ * initially), previously inputted priorities will be factored into the recalculation for the added slots. However, if
+ * the level count decreased, the slots that were lost will be released and will no longer be part of the merge. For
+ * each slot, the source will only be included in the merge if it has a priority at that slot. Otherwise the level will
+ * be saved for when a priority is eventually inputted.
  *
  * @param[in] source The id of the source to modify.
  * @param[in] new_levels The new DMX levels to be copied in, starting from the first slot.
- * @param[in] new_levels_count The length of new_levels. If this is less than DMX_ADDRESS_COUNT, the levels for all
- * remaining levels will be set to 0.
+ * @param[in] new_levels_count The length of new_levels. Only slots within this range will ever be factored into the
+ * merge.
  * @return #kEtcPalErrOk: Source updated and merge completed.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -292,7 +296,9 @@ inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source, co
  * @brief Updates a source's per-address priorities (PAP) and recalculates outputs.
  *
  * This function updates the per-address priorities (PAP) of the specified source, and then triggers the recalculation
- * of each slot. For each slot, the source will only be included in the merge if it has a priority at that slot.
+ * of each slot within the current valid level count (thus no merging will occur if levels haven't been inputted yet).
+ * Priorities beyond this count are saved, and eventually merged once levels beyond this count are inputted. For each
+ * slot, the source will only be included in the merge if it has a priority at that slot.
  *
  * If PAP is not specified for all levels, then the remaining levels will default to a PAP of 0. To remove PAP for this
  * source and revert to the universe priority, call DmxMerger::RemovePap.
@@ -315,11 +321,13 @@ inline etcpal::Error DmxMerger::UpdatePap(sacn_dmx_merger_source_t source, const
  * @brief Updates a source's universe priority and recalculates outputs.
  *
  * This function updates the universe priority of the specified source, and then triggers the recalculation of each
- * slot. For each slot, the source will only be included in the merge if it has a priority at that slot.
+ * slot within the current valid level count (thus no merging will occur if levels haven't been inputted yet).
+ * Priorities for slots beyond this count are saved, and eventually merged once levels beyond this count are inputted.
+ * For each slot, the source will only be included in the merge if it has a priority at that slot.
  *
- * If this source currently has per-address priorities (PAP) via DmxMerger::UpdatePap, then the
- * universe priority can have no effect on the merge results until the application calls DmxMerger::RemovePap, at which
- * point the priorities of each slot will revert to the universe priority passed in here.
+ * If this source currently has per-address priorities (PAP) via DmxMerger::UpdatePap, then the universe priority can
+ * have no effect on the merge results until the application calls DmxMerger::RemovePap, at which point the priorities
+ * of each slot will revert to the universe priority passed in here.
  *
  * If this source doesn't have PAP, then the universe priority is converted into PAP for each slot. These are the
  * priorities used for the merge. This means a universe priority of 0 will be converted to a PAP of 1.
@@ -342,7 +350,8 @@ inline etcpal::Error DmxMerger::UpdateUniversePriority(sacn_dmx_merger_source_t 
  *
  * Per-address priority data can time out in sACN just like levels.
  * This is a convenience function to immediately turn off the per-address priority data for a source and recalculate the
- * outputs.
+ * outputs currently within the valid level count (no merging will occur if levels haven't been inputted yet).
+ * Priorities for slots beyond this count will eventually be merged once levels beyond this count are inputted.
  *
  * @param[in] source The id of the source to modify.
  * @return #kEtcPalErrOk: Source updated and merge completed.

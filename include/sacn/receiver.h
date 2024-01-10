@@ -164,14 +164,14 @@ typedef struct SacnLostSource
  * This will not be called if the Stream_Terminated bit is set, or if the Preview_Data bit is set and preview packets
  * are being filtered.
  *
- * Start code 0xDD packets will only trigger this notification if #SACN_ETC_PRIORITY_EXTENSION is set to 1. This
- * callback will be called for all other start codes received, even those without a startcode of 0x00 or 0xDD.
+ * During the sampling period, any valid sACN data packet received will trigger this notification, no matter the start
+ * code.
  *
- * This notification will not be called for a source until the first NULL start code packet is received. After that
- * happens, this notification is always called immediately during the sampling period, if #SACN_ETC_PRIORITY_EXTENSION
- * is set to 0, or if the start code is not 0x00 or 0xDD. Otherwise, this notification won't be called until both 0x00
- * and 0xDD start codes are received (in which case the 0xDD notification comes first), or the 0xDD timer has expired
- * and a 0x00 packet is received.
+ * After the sampling period, if #SACN_ETC_PRIORITY_EXTENSION is set to 1, NULL start code packets will not trigger this
+ * notification until either the PAP timeout expires or a PAP (0xDD) packet is received. PAP packets received will
+ * always trigger this notification. This guarantees that if both start codes are active, PAP will always notify first.
+ * All other start codes will always trigger this notification once received. If #SACN_ETC_PRIORITY_EXTENSION is set to
+ * 0, NULL start code packets received will always trigger this notification.
  *
  * If the source is sending sACN Sync packets, this callback will only be called when the sync packet is received,
  * if the source forces the packet, or if the source sends a data packet without a sync universe.

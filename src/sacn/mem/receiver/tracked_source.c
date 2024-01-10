@@ -133,26 +133,23 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid*
 #if SACN_ETC_PRIORITY_EXTENSION
     if (receiver->sampling)
     {
+      // During the sampling period, any packet should trigger a notification
       if (first_start_code == SACN_STARTCODE_PRIORITY)
       {
-        // Need to wait for DMX - ignore PAP packets until we've seen at least one DMX packet.
-        src->recv_state = kRecvStateWaitingForDmx;
+        src->recv_state = kRecvStateHavePapOnly;
         etcpal_timer_start(&src->pap_timer, SACN_SOURCE_LOSS_TIMEOUT);
       }
       else
       {
-        // If we are in the sampling period, the wait period for PAP is not necessary.
         src->recv_state = kRecvStateHaveDmxOnly;
       }
     }
     else
     {
-      // Even if this is a priority packet, we want to make sure that DMX packets are also being
-      // sent before notifying.
       if (first_start_code == SACN_STARTCODE_PRIORITY)
-        src->recv_state = kRecvStateWaitingForDmx;
+        src->recv_state = kRecvStateHavePapOnly;  // Always allow 0xDD packets to notify
       else
-        src->recv_state = kRecvStateWaitingForPap;
+        src->recv_state = kRecvStateWaitingForPap;  // 0x00 packets should always notify after 0xDD
       etcpal_timer_start(&src->pap_timer, SACN_WAIT_FOR_PRIORITY);
     }
 #endif

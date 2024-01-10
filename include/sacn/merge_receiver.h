@@ -72,6 +72,11 @@ typedef struct SacnRecvMergedData
    */
   const uint8_t* levels;
   /**
+   * The merged per-address priorities for the universe at the location indicated by slot_range. This buffer is owned by
+   * the library.
+   */
+  const uint8_t* priorities;
+  /**
    * The source handles of the owners of the slots within slot_range.  If a value in the buffer is
    * #SACN_REMOTE_SOURCE_INVALID, the corresponding slot is not currently controlled. This buffer is owned by the
    * library.
@@ -177,9 +182,13 @@ typedef void (*SacnMergeReceiverSamplingPeriodStartedCallback)(sacn_merge_receiv
 /**
  * @brief Notify that a merge receiver's sampling period has ended.
  *
- * All sources that were included in this sampling period will officially be included in future merged data
+ * All sources that were included in this sampling period will now officially be included in merged data
  * notifications. If there was a networking reset during this sampling period, another sampling period may have been
  * scheduled, in which case this will be immediately followed by a sampling period started notification.
+ *
+ * If there were any active levels received during the sampling period, they were factored into the merged data
+ * notification called immediately before this notification. If the merged data notification wasn't called before
+ * this notification, that means there currently isn't any active data on the universe.
  *
  * @param[in] handle Handle to the merge receiver instance for which the sampling period ended.
  * @param[in] universe The universe this merge receiver is monitoring.
@@ -187,6 +196,24 @@ typedef void (*SacnMergeReceiverSamplingPeriodStartedCallback)(sacn_merge_receiv
  */
 typedef void (*SacnMergeReceiverSamplingPeriodEndedCallback)(sacn_merge_receiver_t handle, uint16_t universe,
                                                              void* context);
+
+/**
+ * @brief Notify that a source has stopped transmission of per-address priority packets.
+ *
+ * If #SACN_ETC_PRIORITY_EXTENSION was defined to 0 when sACN was compiled, this callback will
+ * never be called and may be set to NULL. This is only called due to a timeout condition; a
+ * termination bit is treated as the termination of the entire stream and will result in a
+ * sources_lost() notification.
+ *
+ * @param[in] handle Handle to the merge receiver instance for which a source stopped sending per-address
+ *                   priority.
+ * @param[in] universe The universe this merge receiver is monitoring.
+ * @param[in] source Information about the source that has stopped transmission of per-address
+ *                   priority.
+ * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
+ */
+typedef void (*SacnMergeReceiverSourcePapLostCallback)(sacn_merge_receiver_t handle, uint16_t universe,
+                                                       const SacnRemoteSource* source, void* context);
 
 /**
  * @brief Notify that more than the configured maximum number of sources are currently sending on
@@ -205,10 +232,11 @@ typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(sacn_merge_receiver
 typedef struct SacnMergeReceiverCallbacks
 {
   SacnMergeReceiverMergedDataCallback universe_data;                      /**< Required */
-  SacnMergeReceiverNonDmxCallback universe_non_dmx;                       /**< Required */
+  SacnMergeReceiverNonDmxCallback universe_non_dmx;                       /**< Optional */
   SacnMergeReceiverSourcesLostCallback sources_lost;                      /**< Optional */
   SacnMergeReceiverSamplingPeriodStartedCallback sampling_period_started; /**< Optional */
   SacnMergeReceiverSamplingPeriodEndedCallback sampling_period_ended;     /**< Optional */
+  SacnMergeReceiverSourcePapLostCallback source_pap_lost;                 /**< Optional */
   SacnMergeReceiverSourceLimitExceededCallback source_limit_exceeded;     /**< Optional */
   void* callback_context; /**< (optional) Pointer to opaque data passed back with each callback. */
 } SacnMergeReceiverCallbacks;
@@ -274,6 +302,10 @@ typedef struct SacnMergeReceiverSource
   char name[SACN_SOURCE_NAME_MAX_LEN];
   /** The network address from which the most recent sACN packet originated. */
   EtcPalSockAddr addr;
+  /** Whether the source is sending per-address priority packets, or only per-universe. */
+  bool per_address_priorities_active;
+  /** The source's current per-universe priority. */
+  uint8_t universe_priority;
 } SacnMergeReceiverSource;
 
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);

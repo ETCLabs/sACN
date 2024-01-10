@@ -77,33 +77,34 @@ typedef uint16_t sacn_dmx_merger_source_t;
 /** A set of configuration information for a merger instance. */
 typedef struct SacnDmxMergerConfig
 {
-  /********* Required values **********/
-
-  /** Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.  Slots that are not sourced
+  /** This is always required to be non-NULL.
+      Buffer of #DMX_ADDRESS_COUNT levels that this library keeps up to date as it merges.  Slots that are not sourced
       are set to 0.
       Memory is owned by the application and must remain allocated until the merger is destroyed. While this merger
       exists, the application must not modify this buffer directly!  Doing so would affect the results of the merge.*/
   uint8_t* levels;
 
-  /********* Optional values **********/
-
-  /** Buffer of #DMX_ADDRESS_COUNT per-address priorities for each winning slot. This is used if the merge results need
+  /** This is only allowed to be NULL if and only if #SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER is 0.
+      Buffer of #DMX_ADDRESS_COUNT per-address priorities for each winning slot. This is used if the merge results need
       to be sent over sACN. Otherwise this can just be set to NULL. If a source with a universe priority of 0 wins, that
       priority is converted to 1. If there is no winner for a slot, then a per-address priority of 0 is used to show
       that there is no source for that slot.
       Memory is owned by the application and must remain allocated until the merger is destroyed.*/
   uint8_t* per_address_priorities;
 
-  /** If the merger output is being transmitted via sACN, this is set to true if per-address-priority packets should be
+  /** This is allowed to be NULL.
+      If the merger output is being transmitted via sACN, this is set to true if per-address-priority packets should be
       transmitted. Otherwise this is set to false. This can be set to NULL if not needed, which can save some
       performance.*/
   bool* per_address_priorities_active;
 
-  /** If the merger output is being transmitted via sACN, this is set to the universe priority that should be used in
+  /** This is allowed to be NULL.
+      If the merger output is being transmitted via sACN, this is set to the universe priority that should be used in
       the transmitted sACN packets. This can be set to NULL if not needed, which can save some performance.*/
   uint8_t* universe_priority;
 
-  /** Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
+  /** This is only allowed to be NULL if and only if #SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER is 0.
+      Buffer of #DMX_ADDRESS_COUNT source IDs that indicate the current winner of the merge for that slot, or
       #SACN_DMX_MERGER_SOURCE_INVALID to indicate that there is no winner for that slot. This is used if you
       need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to NULL
       and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of 0 (not
@@ -111,7 +112,7 @@ typedef struct SacnDmxMergerConfig
       Memory is owned by the application and must remain allocated until the merger is destroyed.*/
   sacn_dmx_merger_source_t* owners;
 
-  /** The maximum number of sources this merger will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
+  /** The maximum number of sources this merger will listen to.  Defaults to #SACN_RECEIVER_INFINITE_SOURCES.
       This parameter is ignored when configured to use static memory -- #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used
       instead.*/
   int source_count_max;
@@ -160,8 +161,8 @@ typedef struct SacnDmxMergerSource
 
   /** The sACN per-address (startcode 0xdd) priority (1-255, 0 means not sourced).
       If the source is using universe priority, then using_universe_priority will be true, and this array contains the
-      universe priority converted to per-address priorities (so 0 is converted to 1s) for all 512 slots. These are the
-      priorities that will actually be used for the merge. */
+      universe priority converted to per-address priorities (so 0 is converted to 1s). These are the priorities that
+      will actually be used for the merge. Priorities beyond valid_level_count are automatically zeroed. */
   uint8_t address_priority[DMX_ADDRESS_COUNT];
 
   /** Whether or not the source is currently using universe priority (converted to address priorities) for the merge. */

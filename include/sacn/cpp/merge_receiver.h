@@ -117,7 +117,13 @@ public:
      * slot of the currently configured footprint.
      */
     virtual void HandleNonDmxData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
-                                  const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data) = 0;
+                                  const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data)
+    {
+      ETCPAL_UNUSED_ARG(receiver_handle);
+      ETCPAL_UNUSED_ARG(source_addr);
+      ETCPAL_UNUSED_ARG(source_info);
+      ETCPAL_UNUSED_ARG(universe_data);
+    }
 
     /**
      * @brief Notify that one or more sources have entered a source loss state.
@@ -150,9 +156,13 @@ public:
     /**
      * @brief Notify that a merge receiver's sampling period has ended.
      *
-     * All sources that were included in this sampling period will officially be included in future merged data
+     * All sources that were included in this sampling period will now officially be included in merged data
      * notifications. If there was a networking reset during this sampling period, another sampling period may have been
      * scheduled, in which case this will be immediately followed by a sampling period started notification.
+     *
+     * If there were any active levels received during the sampling period, they were factored into the merged data
+     * notification called immediately before this notification. If the merged data notification wasn't called before
+     * this notification, that means there currently isn't any active data on the universe.
      *
      * @param handle The merge receiver's handle.
      * @param universe The universe the merge receiver is monitoring.
@@ -161,6 +171,19 @@ public:
     {
       ETCPAL_UNUSED_ARG(handle);
       ETCPAL_UNUSED_ARG(universe);
+    }
+
+    /**
+     * @brief Notify that a source has stopped transmission of per-address priority packets.
+     * @param handle The merge receiver's handle.
+     * @param universe The universe this merge receiver is monitoring.
+     * @param source Information about the source that has stopped transmission of per-address priority.
+     */
+    virtual void HandleSourcePapLost(Handle handle, uint16_t universe, const SacnRemoteSource& source)
+    {
+      ETCPAL_UNUSED_ARG(handle);
+      ETCPAL_UNUSED_ARG(universe);
+      ETCPAL_UNUSED_ARG(source);
     }
 
     /**
@@ -254,6 +277,10 @@ public:
     std::string name;
     /** The network address from which the most recent sACN packet originated. */
     etcpal::SockAddr addr;
+    /** Whether the source is sending per-address priority packets, or only per-universe. */
+    bool per_address_priorities_active;
+    /** The source's current per-universe priority. */
+    uint8_t universe_priority;
   };
 
   MergeReceiver() = default;
@@ -342,6 +369,16 @@ extern "C" inline void MergeReceiverCbSamplingPeriodEnded(sacn_merge_receiver_t 
   {
     static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSamplingPeriodEnded(MergeReceiver::Handle(handle),
                                                                                    universe);
+  }
+}
+
+extern "C" inline void MergeReceiverCbSourcePapLost(sacn_merge_receiver_t handle, uint16_t universe,
+                                                    const SacnRemoteSource* source, void* context)
+{
+  if (context && source)
+  {
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourcePapLost(MergeReceiver::Handle(handle), universe,
+                                                                             *source);
   }
 }
 
@@ -628,6 +665,8 @@ inline etcpal::Expected<MergeReceiver::Source> MergeReceiver::GetSource(sacn_rem
     res.cid = c_info.cid;
     res.name = c_info.name;
     res.addr = c_info.addr;
+    res.per_address_priorities_active = c_info.per_address_priorities_active;
+    res.universe_priority = c_info.universe_priority;
     return res;
   }
 
@@ -780,6 +819,7 @@ inline SacnMergeReceiverConfig MergeReceiver::TranslateConfig(const Settings& se
       internal::MergeReceiverCbSourcesLost,
       internal::MergeReceiverCbSamplingPeriodStarted,
       internal::MergeReceiverCbSamplingPeriodEnded,
+      internal::MergeReceiverCbSourcePapLost,
       internal::MergeReceiverCbSourceLimitExceeded,
       &notify_handler
     },

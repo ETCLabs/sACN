@@ -86,6 +86,9 @@ static constexpr uint16_t kTestUniverse = 456u;
 static constexpr uint16_t kTestUniverse2 = 789u;
 static constexpr uint16_t kTestUniverse3 = 321u;
 
+static constexpr uint16_t kTestSmallerUniverse = 111u;
+static constexpr uint16_t kTestLargerUniverse2 = 222u;
+
 static constexpr uint8_t kTestPriority = 77u;
 static constexpr uint8_t kTestInvalidPriority = 201u;
 
@@ -113,10 +116,10 @@ static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, k
                                                        {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk}};
 
 static const std::vector<SacnSourceUniverseNetintList> kTestNetintLists = {
-    {kTestHandle, kTestUniverse, kTestNetints.data(), kTestNetints.size(), false},
-    {kTestHandle, kTestUniverse2, kTestNetints.data(), kTestNetints.size(), false},
-    {kTestHandle2, kTestUniverse, kTestNetints.data(), kTestNetints.size(), false},
-    {kTestHandle2, kTestUniverse2, kTestNetints.data(), kTestNetints.size(), false}};
+    {kTestHandle, kTestLargerUniverse2, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle, kTestSmallerUniverse, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle2, kTestLargerUniverse2, kTestNetints.data(), kTestNetints.size(), false},
+    {kTestHandle2, kTestSmallerUniverse, kTestNetints.data(), kTestNetints.size(), false}};
 static constexpr size_t kTestNetintListsNumSources = 2u;
 static constexpr size_t kTestNetintListsNumUniverses = 2u;
 
@@ -259,6 +262,7 @@ TEST_F(TestSource, SourceConfigInitWorks)
   EXPECT_EQ(config.manually_process_source, false);
   EXPECT_EQ(config.ip_supported, kSacnIpV4AndIpV6);
   EXPECT_EQ(config.keep_alive_interval, SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
+  EXPECT_EQ(config.pap_keep_alive_interval, SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT);
 }
 
 TEST_F(TestSource, SourceConfigInitHandlesNull)
@@ -335,6 +339,10 @@ TEST_F(TestSource, SourceCreateErrInvalidWorks)
   zero_keep_alive_config.keep_alive_interval = 0;
   SacnSourceConfig negative_keep_alive_config = valid_config;
   negative_keep_alive_config.keep_alive_interval = -100;
+  SacnSourceConfig zero_pap_keep_alive_config = valid_config;
+  zero_pap_keep_alive_config.pap_keep_alive_interval = 0;
+  SacnSourceConfig negative_pap_keep_alive_config = valid_config;
+  negative_pap_keep_alive_config.pap_keep_alive_interval = -100;
 
   sacn_source_t handle = SACN_SOURCE_INVALID;
 
@@ -344,6 +352,8 @@ TEST_F(TestSource, SourceCreateErrInvalidWorks)
   VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_create(&lengthy_name_config, &handle), kEtcPalErrInvalid);
   VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_create(&zero_keep_alive_config, &handle), kEtcPalErrInvalid);
   VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_create(&negative_keep_alive_config, &handle), kEtcPalErrInvalid);
+  VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_create(&zero_pap_keep_alive_config, &handle), kEtcPalErrInvalid);
+  VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_create(&negative_pap_keep_alive_config, &handle), kEtcPalErrInvalid);
   VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_create(&valid_config, nullptr), kEtcPalErrInvalid);
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_create(&valid_config, &handle), kEtcPalErrOk);
 }
@@ -1095,6 +1105,7 @@ TEST_F(TestSource, SourceSendNowWorks)
     EXPECT_EQ(universe->universe_id, kTestUniverse);
     EXPECT_EQ(send_buf[SACN_DATA_HEADER_SIZE - 1], kTestStartCode);
     EXPECT_EQ(memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer.data(), kTestBuffer.size()), 0);
+    return true;
   };
   send_universe_unicast_fake.custom_fake = [](const SacnSource* source, SacnSourceUniverse* universe,
                                               const uint8_t* send_buf) {
@@ -1102,6 +1113,7 @@ TEST_F(TestSource, SourceSendNowWorks)
     EXPECT_EQ(universe->universe_id, kTestUniverse);
     EXPECT_EQ(send_buf[SACN_DATA_HEADER_SIZE - 1], kTestStartCode);
     EXPECT_EQ(memcmp(&send_buf[SACN_DATA_HEADER_SIZE], kTestBuffer.data(), kTestBuffer.size()), 0);
+    return true;
   };
   increment_sequence_number_fake.custom_fake = [](SacnSourceUniverse* universe) {
     EXPECT_EQ(universe->universe_id, kTestUniverse);
@@ -1113,7 +1125,6 @@ TEST_F(TestSource, SourceSendNowWorks)
 
   EXPECT_EQ(send_universe_multicast_fake.call_count, 1u);
   EXPECT_EQ(send_universe_unicast_fake.call_count, 1u);
-  EXPECT_EQ(increment_sequence_number_fake.call_count, 1u);
 }
 
 TEST_F(TestSource, SourceSendNowErrInvalidWorks)
@@ -1487,12 +1498,12 @@ TEST_F(TestSource, SourceUpdateValuesAndPapAndForceSyncHandlesNotFound)
 
 TEST_F(TestSource, SourceProcessManualWorks)
 {
-  take_lock_and_process_sources_fake.custom_fake = [](process_sources_behavior_t behavior) {
+  take_lock_and_process_sources_fake.custom_fake = [](process_sources_behavior_t behavior, sacn_source_tick_mode_t) {
     EXPECT_EQ(behavior, kProcessManualSources);
     return kTestReturnInt;
   };
 
-  EXPECT_EQ(sacn_source_process_manual(), kTestReturnInt);
+  EXPECT_EQ(sacn_source_process_manual(kSacnSourceTickModeProcessLevelsAndPap), kTestReturnInt);
   EXPECT_EQ(take_lock_and_process_sources_fake.call_count, 1u);
 }
 

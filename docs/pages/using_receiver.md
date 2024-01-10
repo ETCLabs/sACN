@@ -63,15 +63,15 @@ sacn_receiver_destroy(my_receiver_handle);
 class MyNotifyHandler : public sacn::Receiver::NotifyHandler
 {
   // Required callbacks that must be implemented:
-  void HandleUniverseData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
+  void HandleUniverseData(sacn::Receiver::Handle receiver_handle, const etcpal::SockAddr& source_addr,
                           const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data) override;
-  void HandleSourcesLost(Handle handle, uint16_t universe, const std::vector<SacnLostSource>& lost_sources) override;
+  void HandleSourcesLost(sacn::Receiver::Handle handle, uint16_t universe, const std::vector<SacnLostSource>& lost_sources) override;
 
   // Optional callbacks - these don't have to be a part of MyNotifyHandler:
-  void HandleSamplingPeriodStarted(Handle handle, uint16_t universe) override;
-  void HandleSamplingPeriodEnded(Handle handle, uint16_t universe) override;
-  void HandleSourcePapLost(Handle handle, uint16_t universe, const SacnRemoteSource& source) override;
-  void HandleSourceLimitExceeded(Handle handle, uint16_t universe) override;
+  void HandleSamplingPeriodStarted(sacn::Receiver::Handle handle, uint16_t universe) override;
+  void HandleSamplingPeriodEnded(sacn::Receiver::Handle handle, uint16_t universe) override;
+  void HandleSourcePapLost(sacn::Receiver::Handle handle, uint16_t universe, const SacnRemoteSource& source) override;
+  void HandleSourceLimitExceeded(sacn::Receiver::Handle handle, uint16_t universe) override;
 };
 
 // Now to set up a receiver:
@@ -211,7 +211,7 @@ void my_universe_data_callback(sacn_receiver_t receiver_handle, const EtcPalSock
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleUniverseData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
+void MyNotifyHandler::HandleUniverseData(sacn::Receiver::Handle receiver_handle, const etcpal::SockAddr& source_addr,
                                          const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
@@ -268,7 +268,7 @@ void my_sampling_period_ended_callback(sacn_receiver_t handle, uint16_t universe
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSamplingPeriodEnded(Handle handle, uint16_t universe)
+void MyNotifyHandler::HandleSamplingPeriodEnded(sacn::Receiver::Handle handle, uint16_t universe)
 {
   // Apply universe data as needed...
 }
@@ -323,7 +323,7 @@ void my_source_pap_lost_callback(sacn_receiver_t handle, uint16_t universe, cons
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourcePapLost(Handle handle, uint16_t universe, const SacnRemoteSource& source)
+void MyNotifyHandler::HandleSourcePapLost(sacn::Receiver::Handle handle, uint16_t universe, const SacnRemoteSource& source)
 {
   // Revert to using the per-packet priority value to resolve priorities for this universe.
 }
@@ -378,7 +378,7 @@ void my_sources_lost_callback(sacn_receiver_t handle, uint16_t universe, const S
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourcesLost(Handle handle, uint16_t universe,
+void MyNotifyHandler::HandleSourcesLost(sacn::Receiver::Handle handle, uint16_t universe,
                                         const std::vector<SacnLostSource>& lost_sources)
 {
   // You might not normally print a message on this condition, but this is just to demonstrate
@@ -428,7 +428,7 @@ void my_source_limit_exceeded_callback(sacn_receiver_t handle, uint16_t universe
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourceLimitExceeded(Handle handle, uint16_t universe)
+void MyNotifyHandler::HandleSourceLimitExceeded(sacn::Receiver::Handle handle, uint16_t universe)
 {
   // Handle the condition in an application-defined way. Maybe log it?
 }

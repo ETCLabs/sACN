@@ -59,12 +59,26 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 #endif
 
   SacnSourceUniverse* universe = NULL;
+  size_t insert_index = 0;
   if (result == kEtcPalErrOk)
   {
     CHECK_ROOM_FOR_ONE_MORE(source, universes, SacnSourceUniverse, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE,
                             kEtcPalErrNoMem);
 
-    universe = &source->universes[source->num_universes];
+    // The send loop iterates the universe array in reverse in order to enable easy removal from the array if needed. In
+    // order to send the universes from lowest to highest (see SACN-308), the universes array must be sorted from
+    // highest to lowest. This must be factored in when constructing universe discovery packets.
+    while ((insert_index < source->num_universes) && (source->universes[insert_index].universe_id > config->universe))
+      ++insert_index;
+
+    if (insert_index < source->num_universes)
+    {
+      memmove(&source->universes[insert_index + 1], &source->universes[insert_index],
+              (source->num_universes - insert_index) * sizeof(SacnSourceUniverse));
+    }
+
+    universe = &source->universes[insert_index];
+    memset(universe, 0, sizeof(SacnSourceUniverse));
 
     universe->universe_id = config->universe;
 
@@ -74,19 +88,24 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     universe->priority = config->priority;
     universe->sync_universe = config->sync_universe;
     universe->send_preview = config->send_preview;
-    universe->seq_num = 0;
+    universe->next_seq_num = 0;
 
     universe->level_packets_sent_before_suppression = 0;
     init_sacn_data_send_buf(universe->level_send_buf, SACN_STARTCODE_DMX, &source->cid, source->name, config->priority,
                             config->universe, config->sync_universe, config->send_preview);
     universe->has_level_data = false;
+    universe->levels_sent_this_tick = false;
 
 #if SACN_ETC_PRIORITY_EXTENSION
     universe->pap_packets_sent_before_suppression = 0;
     init_sacn_data_send_buf(universe->pap_send_buf, SACN_STARTCODE_PRIORITY, &source->cid, source->name,
                             config->priority, config->universe, config->sync_universe, config->send_preview);
     universe->has_pap_data = false;
+    universe->pap_sent_this_tick = false;
 #endif
+
+    universe->other_sent_this_tick = false;
+    universe->anything_sent_this_tick = false;
 
     universe->send_unicast_only = config->send_unicast_only;
 
@@ -97,6 +116,8 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 
     if (!universe->unicast_dests)
       result = kEtcPalErrNoMem;
+
+    universe->last_send_error = kEtcPalErrOk;
 
     universe->netints.netints = NULL;
     universe->netints.netints_capacity = 0;
@@ -126,6 +147,13 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
   {
     CLEAR_BUF(&universe->netints, netints);
     CLEAR_BUF(universe, unicast_dests);
+
+    // Undo the previous memory shift so that a valid universe isn't lost
+    if (insert_index < source->num_universes)
+    {
+      memmove(&source->universes[insert_index], &source->universes[insert_index + 1],
+              (source->num_universes - insert_index) * sizeof(SacnSourceUniverse));
+    }
   }
 
   *universe_state = universe;

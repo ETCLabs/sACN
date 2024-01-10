@@ -64,15 +64,15 @@ sacn_merge_receiver_destroy(my_merge_receiver_handle);
 class MyNotifyHandler : public sacn::MergeReceiver::NotifyHandler
 {
   // Required callbacks that must be implemented:
-  void HandleMergedData(Handle handle, const SacnRecvMergedData& merged_data) override;
-  void HandleNonDmxData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
+  void HandleMergedData(sacn::MergeReceiver::Handle handle, const SacnRecvMergedData& merged_data) override;
+  void HandleNonDmxData(sacn::MergeReceiver::Handle receiver_handle, const etcpal::SockAddr& source_addr,
                         const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data) override;
 
   // Optional callbacks - these don't have to be a part of MyNotifyHandler:
-  void HandleSourcesLost(Handle handle, uint16_t universe, const std::vector<SacnLostSource>& lost_sources) override;
-  void HandleSamplingPeriodStarted(Handle handle, uint16_t universe) override;
-  void HandleSamplingPeriodEnded(Handle handle, uint16_t universe) override;
-  void HandleSourceLimitExceeded(Handle handle, uint16_t universe) override;
+  void HandleSourcesLost(sacn::MergeReceiver::Handle handle, uint16_t universe, const std::vector<SacnLostSource>& lost_sources) override;
+  void HandleSamplingPeriodStarted(sacn::MergeReceiver::Handle handle, uint16_t universe) override;
+  void HandleSamplingPeriodEnded(sacn::MergeReceiver::Handle handle, uint16_t universe) override;
+  void HandleSourceLimitExceeded(sacn::MergeReceiver::Handle handle, uint16_t universe) override;
 };
 
 // Now to set up a merge receiver:
@@ -252,7 +252,7 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& merged_data)
+void MyNotifyHandler::HandleMergedData(sacn::MergeReceiver::Handle handle, const SacnRecvMergedData& merged_data)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
   // fields available:
@@ -304,7 +304,7 @@ void my_universe_non_dmx_callback(sacn_merge_receiver_t receiver_handle, const E
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleNonDmxData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
+void MyNotifyHandler::HandleNonDmxData(sacn::MergeReceiver::Handle receiver_handle, const etcpal::SockAddr& source_addr,
                                        const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data)
 {
   // You wouldn't normally print a message on each sACN update, but this is just to demonstrate the
@@ -364,7 +364,7 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleMergedData(Handle handle, const SacnRecvMergedData& merged_data)
+void MyNotifyHandler::HandleMergedData(sacn::MergeReceiver::Handle handle, const SacnRecvMergedData& merged_data)
 {
   // How to get the merge receiver instance from the handle is application-defined. For example:
   auto merge_receiver = my_app_state.GetMergeReceiver(handle);
@@ -420,7 +420,7 @@ void my_source_limit_exceeded_callback(sacn_merge_receiver_t handle, uint16_t un
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-void MyNotifyHandler::HandleSourceLimitExceeded(Handle handle, uint16_t universe)
+void MyNotifyHandler::HandleSourceLimitExceeded(sacn::MergeReceiver::Handle handle, uint16_t universe)
 {
   // Handle the condition in an application-defined way. Maybe log it?
 }

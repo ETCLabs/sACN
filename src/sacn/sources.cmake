@@ -8,6 +8,12 @@ set(SACN_PUBLIC_HEADERS
   ${SACN_INCLUDE}/sacn/version.h
   ${SACN_INCLUDE}/sacn/dmx_merger.h
   ${SACN_INCLUDE}/sacn/source_detector.h
+  ${SACN_INCLUDE}/sacn/cpp/common.h
+  ${SACN_INCLUDE}/sacn/cpp/dmx_merger.h
+  ${SACN_INCLUDE}/sacn/cpp/merge_receiver.h
+  ${SACN_INCLUDE}/sacn/cpp/receiver.h
+  ${SACN_INCLUDE}/sacn/cpp/source_detector.h
+  ${SACN_INCLUDE}/sacn/cpp/source.h
 )
 set(SACN_MEM_HEADERS
   ${SACN_SRC}/sacn/private/mem.h

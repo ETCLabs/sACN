@@ -63,6 +63,17 @@ public:
   /** A handle type used by the sACN library to identify source instances. */
   using Handle = etcpal::OpaqueId<detail::SourceHandleType, sacn_source_t, SACN_SOURCE_INVALID>;
 
+  /** This enum determines the type of start code (levels and/or PAP) to process/transmit in a source tick. */
+  enum class TickMode
+  {
+    /** Process/send levels only (includes termination). */
+    kProcessLevelsOnly = kSacnSourceTickModeProcessLevelsOnly,
+    /** Process/send PAP only (excludes termination). */
+    kProcessPapOnly = kSacnSourceTickModeProcessPapOnly,
+    /** Process/send everything (both levels and PAP + termination). */
+    kProcessLevelsAndPap = kSacnSourceTickModeProcessLevelsAndPap
+  };
+
   /**
    * @ingroup sacn_source_cpp
    * @brief A set of configuration settings that a source needs to initialize.
@@ -89,9 +100,13 @@ public:
     /** What IP networking the source will support. */
     sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6};
 
-    /** The interval at which the source will send keep-alive packets during transmission suppression, in milliseconds.
-     */
+    /** The interval at which the source will send NULL start code keep-alive packets during transmission suppression,
+        in milliseconds. */
     int keep_alive_interval{SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT};
+
+    /** The interval at which the source will send per-address priority keep-alive packets during transmission
+        suppression, in milliseconds. */
+    int pap_keep_alive_interval{SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT};
 
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
@@ -202,7 +217,7 @@ public:
 
   constexpr Handle handle() const;
 
-  static int ProcessManual();
+  static int ProcessManual(TickMode tick_mode);
 
   static etcpal::Error ResetNetworking(McastMode mcast_mode);
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
@@ -438,7 +453,7 @@ inline void Source::RemoveUniverse(uint16_t universe)
 }
 
 /**
- * @brief Obtain a vector of this source's universes.
+ * @brief Obtain a vector of this source's universes (sorted lowest to highest).
  *
  * @return A vector of this source's universes.
  */
@@ -613,6 +628,7 @@ inline etcpal::Error Source::ChangeSynchronizationUniverse(uint16_t universe, ui
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
  *                              source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @return The last error returned by etcpal_sendto() if all sends failed.
  */
 inline etcpal::Error Source::SendNow(uint16_t universe, uint8_t start_code, const uint8_t* buffer, size_t buflen)
 {
@@ -746,19 +762,20 @@ inline void Source::UpdateLevelsAndPapAndForceSync(uint16_t universe, const uint
  *
  * Note: Unless you created the source with manually_process_source set to true, similar functionality will be
  * automatically called by an internal thread of the module. Otherwise, this must be called at the maximum rate
- * at which the application will send sACN.
+ * at which the application will send sACN (see tick_mode for details of what is actually sent in a call).
  *
  * Sends the current data for universes which have been updated, and sends keep-alive data for universes which
- * haven't been updated. Also destroys sources & universes that have been marked for termination after sending the
- * required three terminated packets.
+ * haven't been updated. If levels are processed (see tick_mode), this also destroys sources & universes that have been
+ * marked for termination after sending the required three terminated packets.
  *
+ * @param[in] tick_mode Specifies whether to process levels (and by extension termination) and/or PAP.
  * @return Current number of manual sources tracked by the library, including sources that have been destroyed but are
  * still sending termination packets. This can be useful on shutdown to track when destroyed sources have finished
  * sending the terminated packets and actually been destroyed.
  */
-inline int Source::ProcessManual()
+inline int Source::ProcessManual(TickMode tick_mode = TickMode::kProcessLevelsAndPap)
 {
-  return sacn_source_process_manual();
+  return sacn_source_process_manual(static_cast<sacn_source_tick_mode_t>(tick_mode));
 }
 
 /**
@@ -930,7 +947,8 @@ inline SacnSourceConfig Source::TranslateConfig(const Settings& settings)
     settings.universe_count_max,
     settings.manually_process_source,
     settings.ip_supported,
-    settings.keep_alive_interval
+    settings.keep_alive_interval,
+    settings.pap_keep_alive_interval
   };
   // clang-format on
 

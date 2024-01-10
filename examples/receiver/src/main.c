@@ -164,12 +164,24 @@ static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t univ
   // be called at any time on another thread.
   size_t num_sys_netints = 4;  // Start with estimate which eventually has the actual number written to it
   EtcPalNetintInfo* netint_list = calloc(num_sys_netints, sizeof(EtcPalNetintInfo));
-  do
+  if (!netint_list)
+    result = kEtcPalErrNoMem;
+
+  if (result == kEtcPalErrOk)
   {
-    result = etcpal_netint_get_interfaces(netint_list, &num_sys_netints);
-    if (result == kEtcPalErrBufSize)
-      netint_list = realloc(netint_list, num_sys_netints * sizeof(EtcPalNetintInfo));
-  } while (result == kEtcPalErrBufSize);
+    do
+    {
+      result = etcpal_netint_get_interfaces(netint_list, &num_sys_netints);
+      if (result == kEtcPalErrBufSize)
+      {
+        EtcPalNetintInfo* new_netint_list = realloc(netint_list, num_sys_netints * sizeof(EtcPalNetintInfo));
+        if (new_netint_list)
+          netint_list = new_netint_list;
+        else
+          result = kEtcPalErrNoMem;
+      }
+    } while (result == kEtcPalErrBufSize);
+  }
 
   if (result == kEtcPalErrOk)
   {

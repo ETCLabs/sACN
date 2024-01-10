@@ -60,6 +60,7 @@ void sacn_source_config_init(SacnSourceConfig* config)
     config->manually_process_source = false;
     config->ip_supported = kSacnIpV4AndIpV6;
     config->keep_alive_interval = SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT;
+    config->pap_keep_alive_interval = SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT;
   }
 }
 
@@ -112,7 +113,8 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
   if (result == kEtcPalErrOk)
   {
     if (!config || ETCPAL_UUID_IS_NULL(&config->cid) || !config->name ||
-        (strlen(config->name) > (SACN_SOURCE_NAME_MAX_LEN - 1)) || (config->keep_alive_interval <= 0) || !handle)
+        (strlen(config->name) > (SACN_SOURCE_NAME_MAX_LEN - 1)) || (config->keep_alive_interval <= 0) ||
+        (config->pap_keep_alive_interval <= 0) || !handle)
     {
       result = kEtcPalErrInvalid;
     }
@@ -362,7 +364,7 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 }
 
 /**
- * @brief Obtain a list of a source's universes.
+ * @brief Obtain a list of a source's universes (sorted lowest to highest).
  *
  * @param[in] handle Handle to the source for which to obtain the list of universes.
  * @param[out] universes A pointer to an application-owned array where the universe list will be written.
@@ -703,6 +705,7 @@ etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source, or the universe was not found on this
  *                              source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ * @return The last error returned by etcpal_sendto() if all sends failed.
  */
 etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uint8_t start_code, const uint8_t* buffer,
                                     size_t buflen)
@@ -742,11 +745,16 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
         init_sacn_data_send_buf(send_buf, start_code, &source_state->cid, source_state->name, universe_state->priority,
                                 universe_state->universe_id, universe_state->sync_universe,
                                 universe_state->send_preview);
+        pack_sequence_number(send_buf, universe_state->next_seq_num);
         update_send_buf_data(send_buf, buffer, (uint16_t)buflen, kDisableForceSync);
 
         // Send on the network
         send_universe_multicast(source_state, universe_state, send_buf);
         send_universe_unicast(source_state, universe_state, send_buf);
+
+        if (!universe_state->anything_sent_this_tick)
+          result = universe_state->last_send_error;
+
         increment_sequence_number(universe_state);
       }
 
@@ -977,19 +985,20 @@ void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t handle, uint
  *
  * Note: Unless you created the source with manually_process_source set to true, similar functionality will be
  * automatically called by an internal thread of the module. Otherwise, this must be called at the maximum rate
- * at which the application will send sACN.
+ * at which the application will send sACN (see tick_mode for details of what is actually sent in a call).
  *
  * Sends the current data for universes which have been updated, and sends keep-alive data for universes which
- * haven't been updated. Also destroys sources & universes that have been marked for termination after sending the
- * required three terminated packets.
+ * haven't been updated. If levels are processed (see tick_mode), this also destroys sources & universes that have been
+ * marked for termination after sending the required three terminated packets.
  *
+ * @param[in] tick_mode Specifies whether to process levels (and by extension termination) and/or PAP.
  * @return Current number of manual sources tracked by the library, including sources that have been destroyed but are
  * still sending termination packets. This can be useful on shutdown to track when destroyed sources have finished
  * sending the terminated packets and actually been destroyed.
  */
-int sacn_source_process_manual(void)
+int sacn_source_process_manual(sacn_source_tick_mode_t tick_mode)
 {
-  return take_lock_and_process_sources(kProcessManualSources);
+  return take_lock_and_process_sources(kProcessManualSources, tick_mode);
 }
 
 /**

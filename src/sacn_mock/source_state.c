@@ -22,14 +22,15 @@
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_state_init);
 DEFINE_FAKE_VOID_FUNC(sacn_source_state_deinit);
 
-DEFINE_FAKE_VALUE_FUNC(int, take_lock_and_process_sources, process_sources_behavior_t);
+DEFINE_FAKE_VALUE_FUNC(int, take_lock_and_process_sources, process_sources_behavior_t, sacn_source_tick_mode_t);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, initialize_source_thread);
 DEFINE_FAKE_VALUE_FUNC(sacn_source_t, get_next_source_handle);
 DEFINE_FAKE_VOID_FUNC(update_levels_and_or_pap, SacnSource*, SacnSourceUniverse*, const uint8_t*, size_t,
                       const uint8_t*, size_t, force_sync_behavior_t);
+DEFINE_FAKE_VOID_FUNC(pack_sequence_number, uint8_t*, uint8_t);
 DEFINE_FAKE_VOID_FUNC(increment_sequence_number, SacnSourceUniverse*);
-DEFINE_FAKE_VOID_FUNC(send_universe_unicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*);
-DEFINE_FAKE_VOID_FUNC(send_universe_multicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*);
+DEFINE_FAKE_VALUE_FUNC(bool, send_universe_unicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*);
+DEFINE_FAKE_VALUE_FUNC(bool, send_universe_multicast, const SacnSource*, SacnSourceUniverse*, const uint8_t*);
 DEFINE_FAKE_VOID_FUNC(set_preview_flag, const SacnSource*, SacnSourceUniverse*, bool);
 DEFINE_FAKE_VOID_FUNC(set_universe_priority, const SacnSource*, SacnSourceUniverse*, uint8_t);
 DEFINE_FAKE_VOID_FUNC(set_unicast_dest_terminating, SacnUnicastDestination*, set_terminating_behavior_t);
@@ -56,6 +57,7 @@ void sacn_source_state_reset_all_fakes(void)
   RESET_FAKE(initialize_source_thread);
   RESET_FAKE(get_next_source_handle);
   RESET_FAKE(update_levels_and_or_pap);
+  RESET_FAKE(pack_sequence_number);
   RESET_FAKE(increment_sequence_number);
   RESET_FAKE(send_universe_unicast);
   RESET_FAKE(send_universe_multicast);

@@ -16,7 +16,7 @@ bool SacnTestingAssertHandler(const char* expression, const char* file, const ch
 #define SACN_RECEIVER_MAX_UNIVERSES 30
 #define SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE 8
 #define SACN_RECEIVER_MAX_SUBS_PER_SOCKET 5
-#define SACN_MAX_NETINTS 5
+#define SACN_MAX_NETINTS 6
 
 #define SACN_SOURCE_MAX_SOURCES 10
 #define SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE 2048

@@ -52,13 +52,17 @@ typedef struct MergerState
   EtcPalRbTree source_state_lookup;
   SacnDmxMergerConfig config;
 
+#if !SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER
   /* If a merger config is passed in with per_address_priorities set to NULL, config.per_address_priorities will be set
    * to point to this so that the winning priorities can still be tracked. */
   uint8_t pap_internal[DMX_ADDRESS_COUNT];
+#endif
 
+#if !SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER
   /* If a merger config is passed in with owners set to NULL, config.owners will be set to point to this so that the
    * merge winners can still be tracked. */
   sacn_dmx_merger_source_t owners_internal[DMX_ADDRESS_COUNT];
+#endif
 } MergerState;
 
 etcpal_error_t sacn_dmx_merger_init();

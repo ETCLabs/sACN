@@ -64,6 +64,7 @@ MergeReceiverMergedDataNotification* get_merged_data(sacn_thread_id_t thread_id)
     to_return->slot_range.start_address = 1;
     to_return->slot_range.address_count = DMX_ADDRESS_COUNT;
     memset(to_return->levels, 0, DMX_ADDRESS_COUNT);
+    memset(to_return->priorities, 0, DMX_ADDRESS_COUNT);
     memset(to_return->owners, 0, DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));
     to_return->num_active_sources = 0;
 

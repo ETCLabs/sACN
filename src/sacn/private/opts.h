@@ -271,6 +271,28 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #endif
 
 /**
+ * @brief Configure whether or not to use the PKTINFO sockopts to determine which NIC received a packet.
+ *
+ * If set to 0, the corresponding PKTINFO sockopts for IPv4 and/or IPv6 are enabled, and the NIC is obtained from
+ * ancillary data via recvmsg. This is not supported on Windows due to performance issues that occur when either of the
+ * PKTINFO sockopts are enabled.
+ *
+ * If set to 1, a socket will only be able to subscribe on one NIC instead of all of them. This will result in the
+ * creation of more sockets to cover all the NICs on the system. The NIC will then be determined by the socket that
+ * received the data. This will likely not work on Linux or lwIP, since each bound socket is susceptible to receiving
+ * data from subscriptions on other sockets.
+ *
+ * Don't change this option unless you know what you're doing.
+ */
+#ifdef SACN_RECEIVER_SOCKET_PER_NIC
+#if !SACN_RECEIVER_SOCKET_PER_NIC && _WIN32
+#error "Error: SACN_RECEIVER_SOCKET_PER_NIC was set to 0 on Windows, which is not supported due to performance issues."
+#endif
+#else
+#define SACN_RECEIVER_SOCKET_PER_NIC (_WIN32)
+#endif
+
+/**
  * @brief The maximum number of multicast subscriptions supported per shared socket.
  *
  * We cap multicast subscriptions at a certain number to keep it below the system limit.
@@ -287,6 +309,28 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #define SACN_RECEIVER_SOCKET_RCVBUF_SIZE 32768
 #endif
 /** @endcond */
+
+/**
+ * @brief Determines whether sACN should try to enable the SO_REUSEPORT socket option.
+ *
+ * If enabled, the library will try to enable this socket option and fail to initialize if it fails.
+ *
+ * Define to 0 to disable. Then the library will not attempt this sockopt, avoiding potential errors.
+ */
+#ifndef SACN_RECEIVER_ENABLE_SO_REUSEPORT
+#define SACN_RECEIVER_ENABLE_SO_REUSEPORT 1
+#endif
+
+/**
+ * @brief Determines whether sACN should try to set the SO_RCVBUF socket option.
+ *
+ * If enabled, the library will try to set it to #SACN_RECEIVER_SOCKET_RCVBUF_SIZE and log an error if it failed.
+ *
+ * Define to 0 to disable. Then the library will not attempt this sockopt, avoiding potential errors.
+ */
+#ifndef SACN_RECEIVER_ENABLE_SO_RCVBUF
+#define SACN_RECEIVER_ENABLE_SO_RCVBUF 1
+#endif
 
 /**
  * @brief Currently unconfigurable; will be configurable in the future.
@@ -347,6 +391,20 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #define SACN_SOURCE_MULTICAST_TTL 64
 #endif
 /** @endcond */
+
+/**
+ * @brief The size of the send buffer to use for sockets that send sACN over multicast and unicast.
+ *
+ * This buffer size will only be used on Windows, Mac, and Linux. This isn't used for embedded platforms since their
+ * support for SO_SNDBUF is sparse and more limited.
+ *
+ * Increasing this can improve the performance of sACN sources when sending a large number of universes. The default
+ * chosen for this (115000) was determined to be sufficient to prevent the send buffer from getting full when running 1
+ * source to 100 universes at 1 unicast destination.
+ */
+#ifndef SACN_SOURCE_SOCKET_SNDBUF_SIZE
+#define SACN_SOURCE_SOCKET_SNDBUF_SIZE 115000
+#endif
 
 /**
  * @brief The maximum number of sources that can be created.
@@ -423,6 +481,26 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
  */
 #undef SACN_DMX_MERGER_MAX_SLOTS
 #define SACN_DMX_MERGER_MAX_SLOTS 512
+
+/**
+ * @brief Disables internal DMX merger PAP buffer for merge results.
+ *
+ * This is a memory optimization for use cases where an output pointer will always be supplied for PAP in the DMX merger
+ * configuration. Enabling this makes it required instead of optional.
+ */
+#ifndef SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER
+#define SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER 0
+#endif
+
+/**
+ * @brief Disables internal DMX merger owner buffer for merge results.
+ *
+ * This is a memory optimization for use cases where an output pointer will always be supplied for owners in the DMX
+ * merger configuration. Enabling this makes it required instead of optional.
+ */
+#ifndef SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER
+#define SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER 0
+#endif
 
 /**
  * @}
