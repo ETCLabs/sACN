@@ -97,7 +97,11 @@ etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver,
   {
     src->handle = remote_source->handle;
     src->sampling = sampling;
-    src->per_address_priorities_active = false;  // The call below will set to true if PAP is detected
+
+    // The call below will set these to true if their respective start code is detected
+    src->per_address_priorities_active = false;
+    src->levels_active = false;
+
     update_merge_receiver_source_info(src, addr, remote_source, universe_data);
 
     result = etcpal_rbtree_insert(&merge_receiver->sources, src);
@@ -159,6 +163,8 @@ void update_merge_receiver_source_info(SacnMergeReceiverInternalSource* info, co
 
   if (universe_data->start_code == SACN_STARTCODE_PRIORITY)
     info->per_address_priorities_active = true;  // Only sets to true if PAP is present - PAP lost handler sets to false
+  else if (universe_data->start_code == SACN_STARTCODE_DMX)
+    info->levels_active = true;
 
   info->universe_priority = universe_data->priority;
 }

@@ -422,7 +422,7 @@ TEST_F(TestMergeReceiver, UniverseDataAddsPapSourceAfterSampling)
     CheckActiveSources(merged_data->active_sources, merged_data->num_active_sources);
   };
 
-  SetActiveSourcesToExpect({1u});
+  SetActiveSourcesToExpect({});  // Shouldn't count as active until levels are received
   RunUniverseData(1u, cid, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 1u);
@@ -432,6 +432,7 @@ TEST_F(TestMergeReceiver, UniverseDataAddsPapSourceAfterSampling)
   EXPECT_EQ(update_sacn_dmx_merger_pap_fake.call_count, 1u);
   EXPECT_EQ(universe_data_fake.call_count, 1u);
 
+  SetActiveSourcesToExpect({1u});
   RunUniverseData(1u, cid, SACN_STARTCODE_DMX, {0x01u, 0x02u});
 
   EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), 1u);
@@ -546,7 +547,6 @@ TEST_F(TestMergeReceiver, UniverseDataFiresWithPendingSource)
 
   etcpal::Uuid cid3 = etcpal::Uuid::V4();
 
-  SetActiveSourcesToExpect({1u, 2u, 3u});
   RunUniverseData(3u, cid3, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
   EXPECT_EQ(universe_data_fake.call_count, 6u);
   RunUniverseData(1u, cid1, SACN_STARTCODE_DMX, {0x01u, 0x02u});
@@ -555,12 +555,13 @@ TEST_F(TestMergeReceiver, UniverseDataFiresWithPendingSource)
   EXPECT_EQ(universe_data_fake.call_count, 8u);
   RunUniverseData(2u, cid2, SACN_STARTCODE_DMX, {0x03u, 0x04u});
   EXPECT_EQ(universe_data_fake.call_count, 9u);
-  SetActiveSourcesToExpect({1u, 3u});
+  SetActiveSourcesToExpect({1u});
   RunSourcesLost({{(sacn_remote_source_t)2u, cid2}});
   EXPECT_EQ(universe_data_fake.call_count, 10u);
   RunPapLost(1u, cid1);
   EXPECT_EQ(universe_data_fake.call_count, 11u);
 
+  SetActiveSourcesToExpect({1u, 3u});
   RunUniverseData(3u, cid3, SACN_STARTCODE_DMX, {0x07u, 0x08u});
   EXPECT_EQ(universe_data_fake.call_count, 12u);
 
@@ -1260,4 +1261,32 @@ TEST_F(TestMergeReceiver, DirectsDmxMergerOutputCorrectly)
   RunUniverseData(kSourceHandle2, kCid2, SACN_STARTCODE_PRIORITY, {kPriority2}, kTestPriority, kReceiver2Handle);
 
   EXPECT_EQ(universe_data_fake.call_count, 4u);
+}
+
+TEST_F(TestMergeReceiver, PapOnlySourcesNotCountedAsActive)
+{
+  sacn_merge_receiver_t handle = SACN_MERGE_RECEIVER_INVALID;
+  EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &handle, nullptr), kEtcPalErrOk);
+
+  RunSamplingStarted();
+  RunSamplingEnded();
+
+  auto cid1 = etcpal::Uuid::V4();
+  auto cid2 = etcpal::Uuid::V4();
+
+  SetActiveSourcesToExpect({});  // Shouldn't count as active until levels are received
+  RunUniverseData(1u, cid1, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
+  RunUniverseData(2u, cid2, SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
+
+  SetActiveSourcesToExpect({3u});
+  RunUniverseData(3u, etcpal::Uuid::V4(), SACN_STARTCODE_DMX, {0x01u, 0x02u});
+  SetActiveSourcesToExpect({3u, 4u});
+  RunUniverseData(4u, etcpal::Uuid::V4(), SACN_STARTCODE_DMX, {0x01u, 0x02u});
+  RunUniverseData(5u, etcpal::Uuid::V4(), SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
+  RunUniverseData(6u, etcpal::Uuid::V4(), SACN_STARTCODE_PRIORITY, {0xFFu, 0xFFu});
+
+  SetActiveSourcesToExpect({1u, 3u, 4u});
+  RunUniverseData(1u, cid1, SACN_STARTCODE_DMX, {0x01u, 0x02u});
+  SetActiveSourcesToExpect({1u, 2u, 3u, 4u});
+  RunUniverseData(2u, cid2, SACN_STARTCODE_DMX, {0x01u, 0x02u});
 }

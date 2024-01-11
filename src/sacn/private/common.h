@@ -714,6 +714,7 @@ typedef struct SacnMergeReceiverInternalSource
   EtcPalSockAddr addr;
   bool sampling;
   bool per_address_priorities_active;
+  bool levels_active;
   uint8_t universe_priority;
 } SacnMergeReceiverInternalSource;
 
