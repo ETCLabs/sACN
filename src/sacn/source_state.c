@@ -174,15 +174,15 @@ void source_thread_function(void* arg)
   {
     // Space out sending of levels & PAP as follows:
     // |------------------------------- 23ms -------------------------------|
-    // |--- Send Levels ---|              |--- Send PAP ---|
+    // |--- Send PAP ---|              |--- Send Levels ---|
     //
     // This is to help reduce packet dropping when sending hundreds of universes.
-    take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsOnly);
+    take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessPapOnly);
 
     sleep_until_time_elapsed(&interval_timer, SOURCE_THREAD_INTERVAL / 2);
 
     num_thread_based_sources =
-        take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessPapOnly);
+        take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsOnly);
 
     sleep_until_time_elapsed(&interval_timer, SOURCE_THREAD_INTERVAL);
     etcpal_timer_reset(&interval_timer);
