@@ -89,7 +89,7 @@ docs:
       - docs-build
 
 deploy-docs:
-  stage: build
+  stage: deploy
   rules:
     - if: '$CI_COMMIT_REF_NAME == "main"'
   tags:
