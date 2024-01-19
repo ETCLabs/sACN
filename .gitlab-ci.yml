@@ -7,7 +7,7 @@ workflow:
 variables:
   GIT_STRATEGY: clone
   GIT_SUBMODULE_STRATEGY: normal
-  GLOBAL_CMAKE_OPTIONS: -DSACN_BUILD_TESTS=ON -DSACN_BUILD_EXAMPLES=ON -DSACN_WARN_AS_ERROR=OFF
+  GLOBAL_CMAKE_OPTIONS: -DSACN_BUILD_TESTS=ON -DSACN_BUILD_EXAMPLES=ON -DSACN_WARN_AS_ERROR=ON
 
 windows-build:
   stage: build
@@ -33,7 +33,7 @@ macos-build:
   parallel:
     matrix:
       - SANITIZER_DEFS:
-          - -DSACN_ENABLE_UBSAN=ON
+          - -DSACN_ENABLE_ASAN=ON -DSACN_ENABLE_UBSAN=ON
           - -DSACN_ENABLE_TSAN=ON
   script:
     - mkdir build
@@ -54,7 +54,7 @@ linux-build:
   parallel:
     matrix:
       - SANITIZER_DEFS:
-          - -DSACN_ENABLE_UBSAN=ON
+          - -DSACN_ENABLE_ASAN=ON -DSACN_ENABLE_UBSAN=ON
           - -DSACN_ENABLE_TSAN=ON
   script:
     - mkdir build

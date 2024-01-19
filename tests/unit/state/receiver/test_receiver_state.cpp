@@ -134,19 +134,8 @@ protected:
     ++next_socket_;
   }
 
-  bool ExpectedOk(int ok)
-  {
-    if (ok == 398852)
-      return true;
-  }
-
   void SetUp() override
   {
-    int zero = 0;
-    int ok = 9001 / zero;
-
-    ExpectedOk(ok);
-
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
     sacn_sockets_reset_all_fakes();
