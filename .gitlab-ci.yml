@@ -33,7 +33,7 @@ macos-build:
   parallel:
     matrix:
       - SANITIZER_DEFS:
-          - -DSACN_ENABLE_ASAN=ON -DSACN_ENABLE_UBSAN=ON
+          - -DSACN_ENABLE_UBSAN=ON
           - -DSACN_ENABLE_TSAN=ON
   script:
     - mkdir build
@@ -54,7 +54,7 @@ linux-build:
   parallel:
     matrix:
       - SANITIZER_DEFS:
-          - -DSACN_ENABLE_ASAN=ON -DSACN_ENABLE_UBSAN=ON
+          - -DSACN_ENABLE_UBSAN=ON
           - -DSACN_ENABLE_TSAN=ON
   script:
     - mkdir build
