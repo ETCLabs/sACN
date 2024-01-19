@@ -19,7 +19,7 @@ windows-build:
     - mkdir build
     - cd build
     - cmake -G "Visual Studio 16 2019" -A x64 $env:GLOBAL_CMAKE_OPTIONS.Split(" ") $env:SANITIZER_DEFS.Split(" ") ..
-    - cmake --build . --config RelWithDebInfo -j
+    - cmake --build . --config Release -j
     - ctest -C Release --output-on-failure
   artifacts:
     when: always
@@ -39,7 +39,7 @@ macos-build:
     - mkdir build
     - cd build
     - cmake ${GLOBAL_CMAKE_OPTIONS} ${SANITIZER_DEFS} ..
-    - cmake --build . --config RelWithDebInfo
+    - cmake --build .
     - ctest --output-on-failure
   artifacts:
     when: always
@@ -60,7 +60,7 @@ linux-build:
     - mkdir build
     - cd build
     - cmake ${GLOBAL_CMAKE_OPTIONS} ${SANITIZER_DEFS} ..
-    - cmake --build . --config RelWithDebInfo
+    - cmake --build .
     - ctest --output-on-failure
   artifacts:
     when: always
