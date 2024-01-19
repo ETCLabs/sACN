@@ -14,7 +14,7 @@ windows-build:
   tags:
     - ct-windows
   variables:
-    SANITIZER_DEFS: -DETCPAL_ENABLE_ASAN=ON
+    SANITIZER_DEFS: -DSACN_ENABLE_ASAN=ON
   script:
     - mkdir build
     - cd build
@@ -33,8 +33,8 @@ macos-build:
   parallel:
     matrix:
       - SANITIZER_DEFS:
-          - -DETCPAL_ENABLE_ASAN=ON -DETCPAL_ENABLE_UBSAN=ON
-          - -DETCPAL_ENABLE_TSAN=ON
+          - -DSACN_ENABLE_ASAN=ON -DSACN_ENABLE_UBSAN=ON
+          - -DSACN_ENABLE_TSAN=ON
   script:
     - mkdir build
     - cd build
@@ -54,8 +54,8 @@ linux-build:
   parallel:
     matrix:
       - SANITIZER_DEFS:
-          - -DETCPAL_ENABLE_ASAN=ON -DETCPAL_ENABLE_UBSAN=ON
-          - -DETCPAL_ENABLE_TSAN=ON
+          - -DSACN_ENABLE_ASAN=ON -DSACN_ENABLE_UBSAN=ON
+          - -DSACN_ENABLE_TSAN=ON
   script:
     - mkdir build
     - cd build
