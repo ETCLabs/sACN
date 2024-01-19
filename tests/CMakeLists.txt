@@ -4,8 +4,6 @@ set(TEST_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR})
 include(${SACN_CMAKE}/SacnSourceManifest.cmake)
 
 function(sacn_test_setup target_name config_dir)
-  add_executable(${target_name} ${ARGN})
-
   target_compile_definitions(${target_name} PRIVATE SACN_HAVE_CONFIG_H)
   target_include_directories(${target_name} PRIVATE
     ${config_dir}
@@ -18,6 +16,7 @@ endfunction()
 
 function(sacn_add_test test_name config_dir)
   set(target_name ${test_name})
+  add_executable(${target_name} ${ARGN})
   sacn_test_setup(target_name config_dir ${ARGN})
   target_link_libraries(${target_name} PRIVATE EtcPalMock gtest gmock meekrosoft::fff)
 endfunction()
