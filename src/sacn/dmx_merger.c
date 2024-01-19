@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2022 ETC Inc.
+ * Copyright 2024 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -100,10 +100,8 @@ static void update_pap_multi_source(MergerState* merger, SourceState* source, co
                                     size_t old_pap_count, size_t new_pap_count);
 static void update_universe_priority_single_source(MergerState* merger, SourceState* source, uint8_t pap);
 static void update_universe_priority_multi_source(MergerState* merger, SourceState* source, uint8_t pap);
-static void merge_new_level(MergerState* merger, const SourceState* source, size_t slot);
-static void merge_new_priority(MergerState* merger, const SourceState* source, size_t slot);
-static void recalculate_winning_level(MergerState* merger, const SourceState* source, size_t slot);
-static void recalculate_winning_priority(MergerState* merger, const SourceState* source, size_t slot);
+static void merge_new_priorities(MergerState* merger, const SourceState* source, size_t slot_range_start,
+                                 size_t slot_range_end);
 static void recalculate_pap_active(MergerState* merger);
 static void recalculate_universe_priority(MergerState* merger);
 
@@ -891,7 +889,7 @@ void update_levels_single_source(MergerState* merger, SourceState* source, const
  *
  * Priority and owner outputs will also be updated if the level count changed.
  *
- * This requires sacn_lock to be taken before calling.
+ * The sacn_lock MUST be taken before calling this (to protect state as well as static EtcPalRbIter tree_iter).
  */
 void update_levels_multi_source(MergerState* merger, SourceState* source, const uint8_t* new_levels,
                                 size_t old_levels_count, size_t new_levels_count)
@@ -909,22 +907,59 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
   if (old_levels_count > new_levels_count)
     memset(&source->source.levels[new_levels_count], 0, old_levels_count - new_levels_count);
 
-  // Merge levels. If the level count goes up, merge priorities as well. If it goes down, release slots.
-  if (new_levels_count > old_levels_count)
+  // Merge levels.
+  size_t min_levels_count = (new_levels_count < old_levels_count) ? new_levels_count : old_levels_count;
+  for (size_t slot = 0; slot < min_levels_count; ++slot)
   {
-    for (size_t i = 0; i < old_levels_count; ++i)
-      merge_new_level(merger, source, i);
-    for (size_t i = old_levels_count; i < new_levels_count; ++i)
-      merge_new_priority(merger, source, i);  // Priorities were stored in source state, but not yet merged.
+    // Perform HTP merge when source priority is non-zero and equal to current winning priority.
+    if ((source->source.address_priority[slot] > 0) &&
+        (source->source.address_priority[slot] == merger->config.per_address_priorities[slot]))
+    {
+      // Take ownership if source level is greater than current level.
+      if (source->source.levels[slot] > merger->config.levels[slot])
+      {
+        // In merger->config, levels and owners are guaranteed to be non-NULL.
+        merger->config.levels[slot] = source->source.levels[slot];
+        merger->config.owners[slot] = source->handle;
+      }
+      // If this source is the current owner and its level decreased, check for a new owner.
+      else if ((source->handle == merger->config.owners[slot]) &&
+               (source->source.levels[slot] < merger->config.levels[slot]))
+      {
+        // Start with this source as the owner.
+        merger->config.levels[slot] = source->source.levels[slot];
+
+        // Now check if any other sources beat the current source.
+        static EtcPalRbIter tree_iter;  // Declaring iterator static to avoid stack reallocation. This was determined
+                                        // through testing to be the most efficient way to allocate the iterator. This
+                                        // is safe because this function requires that sacn_lock be taken beforehand.
+        etcpal_rbiter_init(&tree_iter);
+        const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
+        do
+        {
+          if (candidate->handle != source->handle)
+          {
+            uint8_t candidate_level = candidate->source.levels[slot];
+
+            // Make this source the new owner if it has the same priority and a higher level.
+            // Don't need to worry about PAPs beyond level count since candidate_level will be 0.
+            if ((candidate->source.address_priority[slot] == merger->config.per_address_priorities[slot]) &&
+                (candidate_level > merger->config.levels[slot]))
+            {
+              merger->config.levels[slot] = candidate_level;
+              merger->config.owners[slot] = candidate->handle;
+            }
+          }
+        } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
+      }
+    }
   }
 
-  if (old_levels_count >= new_levels_count)
-  {
-    for (size_t i = 0; i < new_levels_count; ++i)
-      merge_new_level(merger, source, i);
-    for (size_t i = new_levels_count; i < old_levels_count; ++i)
-      merge_new_priority(merger, source, i);  // Causes slots to be released due to reduced level count.
-  }
+  // If level count increased, merges priorities were stored in source state, but not yet merged.
+  merge_new_priorities(merger, source, old_levels_count, new_levels_count);
+
+  // If level count went down, causes slots to be released.
+  merge_new_priorities(merger, source, new_levels_count, old_levels_count);
 }
 
 /*
@@ -985,8 +1020,7 @@ void update_pap_multi_source(MergerState* merger, SourceState* source, const uin
   if (old_pap_count > new_pap_count)
     memset(&source->source.address_priority[new_pap_count], 0, old_pap_count - new_pap_count);
 
-  for (size_t i = 0; i < source->source.valid_level_count; ++i)
-    merge_new_priority(merger, source, i);
+  merge_new_priorities(merger, source, 0, source->source.valid_level_count);
 }
 
 /*
@@ -1023,151 +1057,80 @@ void update_universe_priority_multi_source(MergerState* merger, SourceState* sou
 
   // Always track PAP per-source, but only merge priorities for levels that have come in.
   memset(source->source.address_priority, pap, DMX_ADDRESS_COUNT);
-  for (size_t i = 0; i < source->source.valid_level_count; ++i)
-    merge_new_priority(merger, source, i);
+  merge_new_priorities(merger, source, 0, source->source.valid_level_count);
 }
 
 /*
- * Merge a source's new level on a slot. Assumes the priority has not changed since the last merge.
+ * Merge a source's new priority on a range of slots. Assumes the level has not changed since the last merge.
  *
- * This requires sacn_lock to be taken before calling.
+ * The sacn_lock MUST be taken before calling this (to protect state as well as static EtcPalRbIter tree_iter).
  */
-void merge_new_level(MergerState* merger, const SourceState* source, size_t slot)
+void merge_new_priorities(MergerState* merger, const SourceState* source, size_t slot_range_start,
+                          size_t slot_range_end)
 {
-  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(slot < DMX_ADDRESS_COUNT))
-    return;
+  // Use regular asserts for performance
+  assert(merger);
+  assert(source);
+  assert(slot_range_end <= DMX_ADDRESS_COUNT);
 
-  // Perform HTP merge when source priority is non-zero and equal to current winning priority.
-  if ((source->source.address_priority[slot] > 0) &&
-      (source->source.address_priority[slot] == merger->config.per_address_priorities[slot]))
+  for (size_t slot = slot_range_start; slot < slot_range_end; ++slot)
   {
-    // Take ownership if source level is greater than current level.
-    if (source->source.levels[slot] > merger->config.levels[slot])
+    uint8_t source_pap = CALC_SRC_PAP(source, slot);
+
+    // Take ownership if source priority is greater than current priority.
+    if (source_pap > merger->config.per_address_priorities[slot])
     {
-      // In merger->config, levels and owners are guaranteed to be non-NULL.
+      // In merger->config, levels and owners and per_address_priorities are guaranteed to be non-NULL.
       merger->config.levels[slot] = source->source.levels[slot];
       merger->config.owners[slot] = source->handle;
+      merger->config.per_address_priorities[slot] = source_pap;
     }
-    // If this source is the current owner and its level decreased, check for a new owner.
-    else if ((source->handle == merger->config.owners[slot]) &&
-             (source->source.levels[slot] < merger->config.levels[slot]))
+    // If this source is not the current owner but has the same priority, take ownership if it has a higher level.
+    else if (source->handle != merger->config.owners[slot])
     {
-      recalculate_winning_level(merger, source, slot);
-    }
-  }
-}
-
-/*
- * Merge a source's new priority on a slot. Assumes the level has not changed since the last merge.
- *
- * This requires sacn_lock to be taken before calling.
- */
-void merge_new_priority(MergerState* merger, const SourceState* source, size_t slot)
-{
-  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(slot < DMX_ADDRESS_COUNT))
-    return;
-
-  uint8_t source_pap = CALC_SRC_PAP(source, slot);
-
-  // Take ownership if source priority is greater than current priority.
-  if (source_pap > merger->config.per_address_priorities[slot])
-  {
-    // In merger->config, levels and owners and per_address_priorities are guaranteed to be non-NULL.
-    merger->config.levels[slot] = source->source.levels[slot];
-    merger->config.owners[slot] = source->handle;
-    merger->config.per_address_priorities[slot] = source_pap;
-  }
-  // If this source is not the current owner but has the same priority, take ownership if it has a higher level.
-  else if (source->handle != merger->config.owners[slot])
-  {
-    if ((source_pap > 0) && (source_pap == merger->config.per_address_priorities[slot]) &&
-        (source->source.levels[slot] > merger->config.levels[slot]))
-    {
-      merger->config.levels[slot] = source->source.levels[slot];
-      merger->config.owners[slot] = source->handle;
-    }
-  }
-  // If this source is the current owner and its priority decreased, check for a new owner.
-  else if (source_pap < merger->config.per_address_priorities[slot])
-  {
-    recalculate_winning_priority(merger, source, slot);
-  }
-}
-
-/*
- * Recalculate the winning level on a slot. Assumes the priority has not changed since the last merge.
- *
- * This requires sacn_lock to be taken before calling.
- */
-void recalculate_winning_level(MergerState* merger, const SourceState* source, size_t slot)
-{
-  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(slot < DMX_ADDRESS_COUNT))
-    return;
-
-  // Start with this source as the owner.
-  merger->config.levels[slot] = source->source.levels[slot];
-
-  // Now check if any other sources beat the current source.
-  EtcPalRbIter tree_iter;
-  etcpal_rbiter_init(&tree_iter);
-  const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
-  do
-  {
-    if (candidate->handle != source->handle)
-    {
-      uint8_t candidate_level = candidate->source.levels[slot];
-
-      // Make this source the new owner if it has the same priority and a higher level.
-      // Don't need to worry about PAPs beyond level count since candidate_level will be 0.
-      if ((candidate->source.address_priority[slot] == merger->config.per_address_priorities[slot]) &&
-          (candidate_level > merger->config.levels[slot]))
+      if ((source_pap > 0) && (source_pap == merger->config.per_address_priorities[slot]) &&
+          (source->source.levels[slot] > merger->config.levels[slot]))
       {
-        merger->config.levels[slot] = candidate_level;
-        merger->config.owners[slot] = candidate->handle;
+        merger->config.levels[slot] = source->source.levels[slot];
+        merger->config.owners[slot] = source->handle;
       }
     }
-  } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
-}
-
-/*
- * Recalculate the winning priority on a slot. Assumes the level has not changed since the last merge.
- *
- * This requires sacn_lock to be taken before calling.
- */
-void recalculate_winning_priority(MergerState* merger, const SourceState* source, size_t slot)
-{
-  if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(slot < DMX_ADDRESS_COUNT))
-    return;
-
-  // Start with this source as the owner.
-  merger->config.per_address_priorities[slot] = CALC_SRC_PAP(source, slot);
-
-  // When unsourced, set the level to 0 and owner to invalid.
-  if (merger->config.per_address_priorities[slot] == 0)
-  {
-    merger->config.levels[slot] = 0;
-    merger->config.owners[slot] = SACN_DMX_MERGER_SOURCE_INVALID;
-  }
-
-  // Now check if any other sources beat the current source.
-  EtcPalRbIter tree_iter;
-  etcpal_rbiter_init(&tree_iter);
-  const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
-  do
-  {
-    uint8_t candidate_pap = CALC_SRC_PAP(candidate, slot);
-
-    // Make this source the new owner if it has the same (non-0) priority and a higher level OR a higher priority.
-    if ((candidate->handle != source->handle) &&
-        ((candidate_pap > merger->config.per_address_priorities[slot]) ||
-         ((candidate_pap > 0) && (candidate_pap == merger->config.per_address_priorities[slot]) &&
-          (candidate->source.levels[slot] > merger->config.levels[slot]))))
+    // If this source is the current owner and its priority decreased, check for a new owner.
+    else if (source_pap < merger->config.per_address_priorities[slot])
     {
-      merger->config.levels[slot] = candidate->source.levels[slot];
-      merger->config.owners[slot] = candidate->handle;
-      merger->config.per_address_priorities[slot] = candidate_pap;
+      // Start with this source as the owner.
+      merger->config.per_address_priorities[slot] = CALC_SRC_PAP(source, slot);
+
+      // When unsourced, set the level to 0 and owner to invalid.
+      if (merger->config.per_address_priorities[slot] == 0)
+      {
+        merger->config.levels[slot] = 0;
+        merger->config.owners[slot] = SACN_DMX_MERGER_SOURCE_INVALID;
+      }
+
+      // Now check if any other sources beat the current source.
+      static EtcPalRbIter tree_iter;  // Declaring iterator static to avoid stack reallocation. This was determined
+                                      // through testing to be the most efficient way to allocate the iterator. This
+                                      // is safe because this function requires that sacn_lock be taken beforehand.
+      etcpal_rbiter_init(&tree_iter);
+      const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
+      do
+      {
+        uint8_t candidate_pap = CALC_SRC_PAP(candidate, slot);
+
+        // Make this source the new owner if it has the same (non-0) priority and a higher level OR a higher priority.
+        if ((candidate->handle != source->handle) &&
+            ((candidate_pap > merger->config.per_address_priorities[slot]) ||
+             ((candidate_pap > 0) && (candidate_pap == merger->config.per_address_priorities[slot]) &&
+              (candidate->source.levels[slot] > merger->config.levels[slot]))))
+        {
+          merger->config.levels[slot] = candidate->source.levels[slot];
+          merger->config.owners[slot] = candidate->handle;
+          merger->config.per_address_priorities[slot] = candidate_pap;
+        }
+      } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
     }
-  } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
+  }
 }
 
 /*
@@ -1476,8 +1439,7 @@ etcpal_error_t remove_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_dmx_
   {
     // Merge the source with unsourced priorities to remove this source from the merge output.
     memset(source_being_removed->source.address_priority, 0, DMX_ADDRESS_COUNT);
-    for (size_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
-      merge_new_priority(merger_state, source_being_removed, i);
+    merge_new_priorities(merger_state, source_being_removed, 0, DMX_ADDRESS_COUNT);
 
     // Also update universe priority and PAP active outputs if needed.
     if ((merger_state->config.per_address_priorities_active != NULL) &&
@@ -1624,8 +1586,7 @@ etcpal_error_t remove_sacn_dmx_merger_pap(sacn_dmx_merger_t merger, sacn_dmx_mer
            DMX_ADDRESS_COUNT);
 
     // Only merge priorities for levels that have come in.
-    for (size_t i = 0; i < source_state->source.valid_level_count; ++i)
-      merge_new_priority(merger_state, source_state, i);
+    merge_new_priorities(merger_state, source_state, 0, source_state->source.valid_level_count);
 
     // Also update the PAP active output if needed.
     if ((merger_state->config.per_address_priorities_active != NULL) && pap_was_active)

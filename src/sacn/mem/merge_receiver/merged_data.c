@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2022 ETC Inc.
+ * Copyright 2024 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,7 +91,7 @@ bool add_active_sources(MergeReceiverMergedDataNotification* notification, SacnM
   for (SacnMergeReceiverInternalSource* source = etcpal_rbiter_first(&iter, &merge_receiver->sources); source;
        source = etcpal_rbiter_next(&iter))
   {
-    if (!source->sampling)
+    if (!source->sampling && source->levels_active)
     {
       CHECK_ROOM_FOR_ONE_MORE(notification, active_sources, sacn_remote_source_t,
                               SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);

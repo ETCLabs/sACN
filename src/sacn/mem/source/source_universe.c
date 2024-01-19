@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2022 ETC Inc.
+ * Copyright 2024 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 #endif
 
   SacnSourceUniverse* universe = NULL;
+  size_t insert_index = 0;
   if (result == kEtcPalErrOk)
   {
     CHECK_ROOM_FOR_ONE_MORE(source, universes, SacnSourceUniverse, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE,
@@ -67,7 +68,6 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
     // The send loop iterates the universe array in reverse in order to enable easy removal from the array if needed. In
     // order to send the universes from lowest to highest (see SACN-308), the universes array must be sorted from
     // highest to lowest. This must be factored in when constructing universe discovery packets.
-    size_t insert_index = 0;
     while ((insert_index < source->num_universes) && (source->universes[insert_index].universe_id > config->universe))
       ++insert_index;
 
@@ -147,6 +147,13 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
   {
     CLEAR_BUF(&universe->netints, netints);
     CLEAR_BUF(universe, unicast_dests);
+
+    // Undo the previous memory shift so that a valid universe isn't lost
+    if (insert_index < source->num_universes)
+    {
+      memmove(&source->universes[insert_index], &source->universes[insert_index + 1],
+              (source->num_universes - insert_index) * sizeof(SacnSourceUniverse));
+    }
   }
 
   *universe_state = universe;

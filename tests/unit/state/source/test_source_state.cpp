@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2022 ETC Inc.
+ * Copyright 2024 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2335,4 +2335,36 @@ TEST_F(TestSourceState, UpdateLevelsAndPapWorksWithLargestBuffers)
   EXPECT_EQ(memcmp(&universe_state->pap_send_buf[SACN_DATA_HEADER_SIZE], test_buffer_512_slots_.data(),
                    test_buffer_512_slots_.size()),
             0);
+}
+
+TEST_F(TestSourceState, AddUniverseCleansUpOnFailure)
+{
+  sacn_source_t source = AddSource(kTestSourceConfig);
+
+  SacnSourceUniverse* universe_state = nullptr;
+
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints = kTestNetints.data();
+  netint_config.num_netints = kTestNetints.size();
+
+  auto lesser_universe_config = kTestUniverseConfig;
+  auto greater_universe_config = kTestUniverseConfig;
+  ++greater_universe_config.universe;
+
+  auto& src_state = *GetSource(source);
+  EXPECT_EQ(add_sacn_source_universe(&src_state, &lesser_universe_config, &netint_config, &universe_state),
+            kEtcPalErrOk);
+
+  // Cause the 2nd universe add to fail
+  sacn_initialize_source_netints_fake.custom_fake = [](SacnInternalNetintArray*, const SacnNetintConfig*) {
+    return kEtcPalErrNoNetints;
+  };
+  EXPECT_EQ(add_sacn_source_universe(&src_state, &greater_universe_config, &netint_config, &universe_state),
+            kEtcPalErrNoNetints);
+
+  ASSERT_EQ(src_state.num_universes, 1u);
+
+  auto& univ_state = src_state.universes[0];
+  EXPECT_EQ(univ_state.universe_id, lesser_universe_config.universe);
+  EXPECT_GT(univ_state.netints.num_netints, 0u);
 }

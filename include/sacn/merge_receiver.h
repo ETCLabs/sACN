@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2022 ETC Inc.
+ * Copyright 2024 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -302,6 +302,10 @@ typedef struct SacnMergeReceiverSource
   char name[SACN_SOURCE_NAME_MAX_LEN];
   /** The network address from which the most recent sACN packet originated. */
   EtcPalSockAddr addr;
+  /** Whether the source is sending per-address priority packets, or only per-universe. */
+  bool per_address_priorities_active;
+  /** The source's current per-universe priority. */
+  uint8_t universe_priority;
 } SacnMergeReceiverSource;
 
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);

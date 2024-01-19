@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2022 ETC Inc.
+ * Copyright 2024 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,10 +81,14 @@ etcpal_error_t init_merge_receiver_sources(void)
 
 // Needs lock
 etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, const EtcPalSockAddr* addr,
-                                              const SacnRemoteSource* remote_source, bool sampling)
+                                              const SacnRemoteSource* remote_source, bool sampling,
+                                              const SacnRecvUniverseData* universe_data)
 {
-  if (!SACN_ASSERT_VERIFY(merge_receiver) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(remote_source))
+  if (!SACN_ASSERT_VERIFY(merge_receiver) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(remote_source) ||
+      !SACN_ASSERT_VERIFY(universe_data))
+  {
     return kEtcPalErrSys;
+  }
 
   etcpal_error_t result = kEtcPalErrNoMem;
 
@@ -93,7 +97,12 @@ etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver,
   {
     src->handle = remote_source->handle;
     src->sampling = sampling;
-    update_merge_receiver_source_info(src, addr, remote_source);
+
+    // The call below will set these to true if their respective start code is detected
+    src->per_address_priorities_active = false;
+    src->levels_active = false;
+
+    update_merge_receiver_source_info(src, addr, remote_source, universe_data);
 
     result = etcpal_rbtree_insert(&merge_receiver->sources, src);
 
@@ -139,14 +148,25 @@ void clear_sacn_merge_receiver_sources(SacnMergeReceiver* merge_receiver)
 }
 
 // Needs lock
+// This function is called when a source is added and when a packet is received.
 void update_merge_receiver_source_info(SacnMergeReceiverInternalSource* info, const EtcPalSockAddr* addr,
-                                       const SacnRemoteSource* remote_source)
+                                       const SacnRemoteSource* remote_source, const SacnRecvUniverseData* universe_data)
 {
-  if (!SACN_ASSERT_VERIFY(info) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(remote_source))
+  if (!SACN_ASSERT_VERIFY(info) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(remote_source) ||
+      !SACN_ASSERT_VERIFY(universe_data))
+  {
     return;
+  }
 
   memcpy(info->name, remote_source->name, SACN_SOURCE_NAME_MAX_LEN);
   info->addr = *addr;
+
+  if (universe_data->start_code == SACN_STARTCODE_PRIORITY)
+    info->per_address_priorities_active = true;  // Only sets to true if PAP is present - PAP lost handler sets to false
+  else if (universe_data->start_code == SACN_STARTCODE_DMX)
+    info->levels_active = true;
+
+  info->universe_priority = universe_data->priority;
 }
 
 EtcPalRbNode* merge_receiver_source_node_alloc(void)

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2022 ETC Inc.
+ * Copyright 2024 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -309,6 +309,28 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #define SACN_RECEIVER_SOCKET_RCVBUF_SIZE 32768
 #endif
 /** @endcond */
+
+/**
+ * @brief Determines whether sACN should try to enable the SO_REUSEPORT socket option.
+ *
+ * If enabled, the library will try to enable this socket option and fail to initialize if it fails.
+ *
+ * Define to 0 to disable. Then the library will not attempt this sockopt, avoiding potential errors.
+ */
+#ifndef SACN_RECEIVER_ENABLE_SO_REUSEPORT
+#define SACN_RECEIVER_ENABLE_SO_REUSEPORT 1
+#endif
+
+/**
+ * @brief Determines whether sACN should try to set the SO_RCVBUF socket option.
+ *
+ * If enabled, the library will try to set it to #SACN_RECEIVER_SOCKET_RCVBUF_SIZE and log an error if it failed.
+ *
+ * Define to 0 to disable. Then the library will not attempt this sockopt, avoiding potential errors.
+ */
+#ifndef SACN_RECEIVER_ENABLE_SO_RCVBUF
+#define SACN_RECEIVER_ENABLE_SO_RCVBUF 1
+#endif
 
 /**
  * @brief Currently unconfigurable; will be configurable in the future.

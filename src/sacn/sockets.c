@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2022 ETC Inc.
+ * Copyright 2024 ETC Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -565,6 +565,7 @@ etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAd
       else if (res != kEtcPalErrOk)
         SACN_LOG_ERR("Failed to enable SO_REUSEADDR socket option: '%s'", etcpal_strerror(res));
 
+#if SACN_RECEIVER_ENABLE_SO_REUSEPORT
       if (res == kEtcPalErrOk)
       {
         intval = 1;
@@ -575,7 +576,9 @@ etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAd
         else if (res != kEtcPalErrOk)
           SACN_LOG_ERR("Failed to enable SO_REUSEPORT socket option: '%s'", etcpal_strerror(res));
       }
+#endif  // SACN_RECEIVER_ENABLE_SO_REUSEPORT
 
+#if SACN_RECEIVER_ENABLE_SO_RCVBUF
       if (res == kEtcPalErrOk)
       {
         intval = SACN_RECEIVER_SOCKET_RCVBUF_SIZE;
@@ -585,6 +588,7 @@ etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAd
         if (set_so_rcvbuf_res != kEtcPalErrOk)
           SACN_LOG_ERR("Error setting receive buffer size to %d: '%s'", intval, etcpal_strerror(set_so_rcvbuf_res));
       }
+#endif  // SACN_RECEIVER_ENABLE_SO_RCVBUF
 
 #if !SACN_RECEIVER_SOCKET_PER_NIC
       if (res == kEtcPalErrOk)
