@@ -17,7 +17,7 @@ endfunction()
 function(sacn_add_test test_name config_dir)
   set(target_name ${test_name})
   add_executable(${target_name} ${ARGN})
-  sacn_test_setup(target_name config_dir ${ARGN})
+  sacn_test_setup(${target_name} ${config_dir} ${ARGN})
   target_link_libraries(${target_name} PRIVATE EtcPalMock gtest gmock meekrosoft::fff)
 endfunction()
 
