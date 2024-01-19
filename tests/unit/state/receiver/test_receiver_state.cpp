@@ -35,6 +35,8 @@
 #include "gtest/gtest.h"
 #include "fff.h"
 
+#include <pthread.h>
+
 #if SACN_DYNAMIC_MEM
 #define TestReceiverState TestReceiverStateDynamic
 #define TestReceiverThread TestReceiverThreadDynamic
@@ -93,6 +95,13 @@ static constexpr bool kTestPreview = false;
 static constexpr etcpal_socket_t kTestSocket = static_cast<etcpal_socket_t>(7);
 static TerminationSet kTestTermSet = {{0u, 0u}, {nullptr, nullptr, 0u, nullptr, nullptr, nullptr}, nullptr};
 
+int Global;
+void* Thread1(void* x)
+{
+  Global = 42;
+  return x;
+}
+
 static const EtcPalUuid& GetCid(const SacnRemoteSourceInternal& src)
 {
   return *(get_remote_source_cid(src.handle));
@@ -136,11 +145,16 @@ protected:
 
   void SetUp() override
   {
-    unsigned int* x = (unsigned int*)malloc(10 * sizeof(unsigned int));
-    free(x);
-    unsigned int x5 = x[5];
+    int overflow = INT_MAX - 10;
+    for (int i = 0; i < 20; ++i)
+      ++overflow;
 
-    EXPECT_GE(x5, 0u);
+    pthread_t t;
+    pthread_create(&t, NULL, Thread1, NULL);
+    Global = 43;
+    pthread_join(t, NULL);
+
+    EXPECT_EQ(Global, Global);
 
     etcpal_reset_all_fakes();
     sacn_common_reset_all_fakes();
