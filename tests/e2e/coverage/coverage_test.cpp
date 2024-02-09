@@ -26,8 +26,9 @@
 #include "sacn/cpp/source.h"
 #include "sacn/cpp/source_detector.h"
 
-#include "etcpal/cpp/thread.h"
+#include "etcpal/cpp/netint.h"
 #include "etcpal/cpp/signal.h"
+#include "etcpal/cpp/thread.h"
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -37,6 +38,8 @@
 #include <ctime>
 #include <unordered_map>
 #include <unordered_set>
+
+#include "sacn_config.h"
 
 using testing::_;
 using testing::AtLeast;
@@ -101,26 +104,54 @@ public:
 class TestMergeReceiver
 {
 public:
-  TestMergeReceiver() = default;
+  struct UniverseChange
+  {
+    UniverseId from{kDefaultUniverse};
+    UniverseId to;
+  };
+
+  static void ResetNetworking(std::vector<SacnMcastInterface>& sys_netints)
+  {
+    sacn::MergeReceiver::ResetNetworking(sys_netints);
+  }
+
+  TestMergeReceiver(sacn::McastMode initial_mcast_mode = sacn::McastMode::kEnabledOnAllInterfaces)
+      : initial_mcast_mode_(initial_mcast_mode)
+  {
+  }
 
   ~TestMergeReceiver()
   {
     for (auto& [universe_id, state] : universes_)
-      state.merge_receiver.Shutdown();
+      state->merge_receiver.Shutdown();
   }
 
   void AddUniverse(UniverseId universe_id = kDefaultUniverse)
   {
-    ASSERT_EQ(universes_.find(universe_id), universes_.end());
+    EXPECT_EQ(universes_.find(universe_id), universes_.end());
 
-    UniverseState& state = universes_[universe_id];
-    EXPECT_TRUE(state.merge_receiver.Startup(sacn::MergeReceiver::Settings(universe_id), state.notify));
+    auto& state = universes_[universe_id];
+    state = std::make_unique<UniverseState>();
+    EXPECT_TRUE(
+        state->merge_receiver.Startup(sacn::MergeReceiver::Settings(universe_id), state->notify, initial_mcast_mode_));
+  }
+
+  void ChangeUniverse(const UniverseChange& change)
+  {
+    ASSERT_NE(universes_.find(change.from), universes_.end());
+    ASSERT_EQ(universes_.find(change.to), universes_.end());
+
+    auto& state = universes_[change.to];
+    state = std::move(universes_[change.from]);
+    universes_.erase(change.from);
+
+    EXPECT_TRUE(state->merge_receiver.ChangeUniverse(change.to));
   }
 
   MockMergeReceiverNotifyHandler& GetNotifyHandlerForUniverse(UniverseId universe_id = kDefaultUniverse)
   {
     EXPECT_NE(universes_.find(universe_id), universes_.end());
-    return universes_[universe_id].notify;
+    return universes_[universe_id]->notify;
   }
 
 private:
@@ -130,20 +161,30 @@ private:
     NiceMock<MockMergeReceiverNotifyHandler> notify;
   };
 
-  std::unordered_map<UniverseId, UniverseState> universes_;
+  std::unordered_map<UniverseId, std::unique_ptr<UniverseState>> universes_;
+  sacn::McastMode initial_mcast_mode_{sacn::McastMode::kEnabledOnAllInterfaces};
 };
 
 class TestSourceDetector
 {
 public:
-  TestSourceDetector() = default;
+  static void ResetNetworking(std::vector<SacnMcastInterface>& sys_netints)
+  {
+    sacn::SourceDetector::ResetNetworking(sys_netints);
+  }
+
+  TestSourceDetector(sacn::McastMode initial_mcast_mode = sacn::McastMode::kEnabledOnAllInterfaces)
+      : initial_mcast_mode_(initial_mcast_mode)
+  {
+  }
   ~TestSourceDetector() { sacn::SourceDetector::Shutdown(); }
 
-  void Startup() { EXPECT_TRUE(sacn::SourceDetector::Startup(notify_)); }
+  void Startup() { EXPECT_TRUE(sacn::SourceDetector::Startup(notify_, initial_mcast_mode_)); }
   MockSourceDetectorNotifyHandler& GetNotifyHandler() { return notify_; }
 
 private:
   NiceMock<MockSourceDetectorNotifyHandler> notify_;
+  sacn::McastMode initial_mcast_mode_{sacn::McastMode::kEnabledOnAllInterfaces};
 };
 
 class TestSource
@@ -164,28 +205,41 @@ public:
     std::vector<StartCodeParams> start_codes;
   };
 
-  TestSource()
+  static void ResetNetworking(std::vector<SacnMcastInterface>& sys_netints)
+  {
+    sacn::Source::ResetNetworking(sys_netints);
+  }
+
+  TestSource(sacn::McastMode initial_mcast_mode = sacn::McastMode::kEnabledOnAllInterfaces)
+      : initial_mcast_mode_(initial_mcast_mode)
   {
     auto cid = etcpal::Uuid::V4();
-    EXPECT_TRUE(source_.Startup(sacn::Source::Settings(cid, std::string("Test Source ") + cid.ToString())));
+    source_ = std::make_unique<sacn::Source>();
+    EXPECT_TRUE(source_->Startup(sacn::Source::Settings(cid, std::string("Test Source ") + cid.ToString())));
   }
+
+  TestSource(const TestSource& rhs) = default;
+  TestSource(TestSource&& rhs) noexcept = default;
 
   ~TestSource()
   {
     for (auto& [universe_id, state] : universes_)
-      state.terminate.Notify();
+      state->terminate.Notify();
 
     for (auto& [universe_id, state] : universes_)
-      state.thread.Join();
+      state->thread.Join();
 
-    source_.Shutdown();
+    if (source_)  // Could be empty if moved
+      source_->Shutdown();
   }
 
   void AddUniverse(const UniverseParams& params)
   {
     ASSERT_EQ(universes_.find(params.universe), universes_.end());
 
-    UniverseState& state = universes_[params.universe];
+    universes_[params.universe] = std::make_unique<UniverseState>();
+    ASSERT_TRUE(universes_[params.universe]);
+    auto& state = *universes_[params.universe];
 
     for (const auto& start_code : params.start_codes)
     {
@@ -205,12 +259,13 @@ public:
     sacn::Source::UniverseSettings settings;
     settings.universe = params.universe;
     settings.priority = params.universe_priority;
-    EXPECT_TRUE(source_.AddUniverse(settings));
+    EXPECT_TRUE(source_->AddUniverse(settings, initial_mcast_mode_));
 
-    state.thread.Start([this, params, &state]() {
+    auto& source = *source_;
+    state.thread.Start([params, &source, &state]() {
       while (!state.terminate.TryWait())
       {
-        UniverseTick(params.universe, state);
+        UniverseTick(source, params.universe, state);
         etcpal::Thread::Sleep(kUniverseSleepMs);
       }
     });
@@ -220,12 +275,12 @@ public:
   {
     ASSERT_NE(universes_.find(universe_id), universes_.end());
 
-    universes_[universe_id].terminate.Notify();
-    universes_[universe_id].thread.Join();
+    universes_[universe_id]->terminate.Notify();
+    universes_[universe_id]->thread.Join();
 
     universes_.erase(universe_id);
 
-    source_.RemoveUniverse(universe_id);
+    source_->RemoveUniverse(universe_id);
   }
 
 private:
@@ -249,29 +304,29 @@ private:
     etcpal::Signal terminate;
   };
 
-  void UniverseTick(UniverseId universe_id, UniverseState& state)
+  static void UniverseTick(sacn::Source& source, UniverseId universe_id, UniverseState& state)
   {
     UpdateStartCodeData(state.null_start_code);
     if (state.pap_start_code)
     {
       UpdateStartCodeData(*state.pap_start_code);
-      source_.UpdateLevelsAndPap(universe_id, state.null_start_code.buffer.data(), state.null_start_code.buffer.size(),
-                                 state.pap_start_code->buffer.data(), state.pap_start_code->buffer.size());
+      source.UpdateLevelsAndPap(universe_id, state.null_start_code.buffer.data(), state.null_start_code.buffer.size(),
+                                state.pap_start_code->buffer.data(), state.pap_start_code->buffer.size());
     }
     else
     {
-      source_.UpdateLevels(universe_id, state.null_start_code.buffer.data(), state.null_start_code.buffer.size());
+      source.UpdateLevels(universe_id, state.null_start_code.buffer.data(), state.null_start_code.buffer.size());
     }
 
     for (auto& custom_code : state.custom_start_codes)
     {
       UpdateStartCodeData(custom_code);
-      source_.SendNow(universe_id, static_cast<uint8_t>(custom_code.params.code), custom_code.buffer.data(),
-                      custom_code.buffer.size());
+      source.SendNow(universe_id, static_cast<uint8_t>(custom_code.params.code), custom_code.buffer.data(),
+                     custom_code.buffer.size());
     }
   }
 
-  void UpdateStartCodeData(StartCodeState& state)
+  static void UpdateStartCodeData(StartCodeState& state)
   {
     if (state.params.min && state.params.max)
     {
@@ -280,8 +335,9 @@ private:
     }
   }
 
-  sacn::Source source_;
-  std::unordered_map<UniverseId, UniverseState> universes_;
+  std::unique_ptr<sacn::Source> source_;
+  std::unordered_map<UniverseId, std::unique_ptr<UniverseState>> universes_;
+  sacn::McastMode initial_mcast_mode_{sacn::McastMode::kEnabledOnAllInterfaces};
 };
 
 class CoverageTest : public ::testing::Test
@@ -305,6 +361,64 @@ protected:
 
   NiceMock<MockLogMessageHandler> mock_log_handler_;
 };
+
+TEST_F(CoverageTest, ResetNetworkingAtScale)
+{
+  static constexpr int kNumUniverses = 25;
+  static constexpr int kNumSources = 2;
+
+  auto sys_netints = etcpal::netint::GetInterfaces();
+  ASSERT_TRUE(sys_netints);
+
+  TestMergeReceiver merge_receiver(sacn::McastMode::kDisabledOnAllInterfaces);
+  for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
+    merge_receiver.AddUniverse(universe_id);
+
+  TestSourceDetector source_detector(sacn::McastMode::kDisabledOnAllInterfaces);
+  source_detector.Startup();
+  EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceUpdated(_, _, _, _)).Times(AtLeast(1));
+
+  std::vector<TestSource> sources;
+  for (int i = 0; i < kNumSources; ++i)
+  {
+    TestSource source(sacn::McastMode::kDisabledOnAllInterfaces);
+    for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
+      source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
+
+    sources.push_back(std::move(source));
+  }
+
+  std::vector<SacnMcastInterface> netints = {};
+  size_t add_until_this_many_netints_left = sys_netints->size() / 2;  // First, add half of the netints
+  while (!sys_netints->empty())
+  {
+    etcpal::Thread::Sleep(500u);  // Allow for some network activity each time
+
+    while (sys_netints->size() > add_until_this_many_netints_left)
+    {
+      netints.push_back(
+          {.iface = {.ip_type = sys_netints->back().addr().get().type, .index = sys_netints->back().index().value()}});
+      sys_netints->pop_back();
+
+      add_until_this_many_netints_left = 0u;  // Next time add the other half
+    }
+
+    TestMergeReceiver::ResetNetworking(netints);
+    TestSourceDetector::ResetNetworking(netints);
+
+    TestSource::ResetNetworking(netints);
+  }
+
+  etcpal::Thread::Sleep(3000u);  // Wait for last reset to take effect
+
+  // Now sanity check things are still working after all those resets
+  for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
+  {
+    EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleMergedData(_, _)).Times(AtLeast(1));
+  }
+
+  etcpal::Thread::Sleep(8000u);  // Remaining time for source detector to detect sources
+}
 
 TEST_F(CoverageTest, SendAndReceiveSimpleUniverse)
 {
@@ -337,16 +451,15 @@ TEST_F(CoverageTest, SendReceiveAndMergeAtScale)
         .Times(AtLeast(1));
   }
 
-  std::vector<std::unique_ptr<TestSource>> sources;
+  std::vector<TestSource> sources;
   for (int i = 0; i < kNumTestSources; ++i)
   {
-    auto source = std::make_unique<TestSource>();
-    ASSERT_TRUE(source);
+    TestSource source;
     for (UniverseId universe_id : kTestUniverses)
     {
-      source->AddUniverse({.universe = universe_id,
-                           .start_codes = {{.code = SACN_STARTCODE_DMX, .min = 0x00, .max = 0xFF},
-                                           {.code = SACN_STARTCODE_PRIORITY, .min = 0x00, .max = 0xFF}}});
+      source.AddUniverse({.universe = universe_id,
+                          .start_codes = {{.code = SACN_STARTCODE_DMX, .min = 0x00, .max = 0xFF},
+                                          {.code = SACN_STARTCODE_PRIORITY, .min = 0x00, .max = 0xFF}}});
     }
 
     sources.push_back(std::move(source));
@@ -355,7 +468,33 @@ TEST_F(CoverageTest, SendReceiveAndMergeAtScale)
   etcpal::Thread::Sleep(2000u);  // Cover sampling period
 }
 
-#if 0  // TODO: WIP - fix sacn_config.h issue (sACN is being built and linked separately)
+TEST_F(CoverageTest, SwitchThroughUniverses)
+{
+  static constexpr UniverseId kTestUniverses[] = {1u, 2u, 3u};
+  static constexpr int kNumTestUniverses = sizeof(kTestUniverses) / sizeof(UniverseId);
+
+  TestMergeReceiver merge_receiver;
+  merge_receiver.AddUniverse(kTestUniverses[0]);
+  EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(kTestUniverses[0]), HandleMergedData(_, _)).Times(AtLeast(1));
+  EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(kTestUniverses[0]), HandleSamplingPeriodStarted(_, _))
+      .Times(kNumTestUniverses);
+  EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(kTestUniverses[0]), HandleSamplingPeriodEnded(_, _))
+      .Times(kNumTestUniverses);
+
+  TestSource source;
+  for (UniverseId universe_id : kTestUniverses)
+    source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
+
+  for (int i = 0, j = 1; j < kNumTestUniverses; ++i, ++j)
+  {
+    etcpal::Thread::Sleep(2000u);  // Cover sampling period
+    merge_receiver.ChangeUniverse({.from = kTestUniverses[i], .to = kTestUniverses[j]});
+    EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(kTestUniverses[j]), HandleMergedData(_, _))
+        .Times(AtLeast(1));
+  }
+
+  etcpal::Thread::Sleep(2000u);  // Cover sampling period
+}
 
 TEST_F(CoverageTest, DetectSourcesComingAndGoing)
 {
@@ -367,23 +506,20 @@ TEST_F(CoverageTest, DetectSourcesComingAndGoing)
   EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceUpdated(_, _, _, _)).Times(AtLeast(1));
   EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceExpired(_, _, _)).Times(AtLeast(1));
 
-  std::vector<std::unique_ptr<TestSource>> sources;
+  std::vector<TestSource> sources;
   for (int i = 0; i < kNumTestSources; ++i)
   {
-    auto source = std::make_unique<TestSource>();
-    ASSERT_TRUE(source);
+    TestSource source;
     for (UniverseId universe_id : kTestUniverses)
-      source->AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
+      source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
 
     sources.push_back(std::move(source));
   }
 
-  etcpal::Thread::Sleep(500u);  // Some time to detect sources
+  etcpal::Thread::Sleep(11000u);  // Some time to detect sources
 
   for (int i = 0; i < kNumTestSources; ++i)
     sources.pop_back();
 
   etcpal::Thread::Sleep(21000u);  // Cover universe discovery expiration
 }
-
-#endif

@@ -372,6 +372,8 @@ etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector)
   etcpal_error_t ipv4_res = kEtcPalErrNoNetints;
   etcpal_error_t ipv6_res = kEtcPalErrNoNetints;
 
+  initialize_receiver_sockets(&detector->sockets);
+
   if (supports_ipv4(detector->ip_supported))
   {
     ipv4_res = add_sockets(detector->thread_id, kEtcPalIpTypeV4, SACN_DISCOVERY_UNIVERSE, detector->netints.netints,
@@ -615,14 +617,15 @@ etcpal_error_t add_sockets(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, 
 {
   if (!SACN_ASSERT_VERIFY(ip_type == kEtcPalIpTypeV4 || ip_type == kEtcPalIpTypeV6) ||
       !SACN_ASSERT_VERIFY(universe >= 1 && ((universe <= 63999) || (universe == SACN_DISCOVERY_UNIVERSE))) ||
-      !SACN_ASSERT_VERIFY(netints) || !SACN_ASSERT_VERIFY(num_netints > 0) || !SACN_ASSERT_VERIFY(sockets))
+      !SACN_ASSERT_VERIFY(sockets))
   {
     return kEtcPalErrSys;
   }
 
-#if SACN_RECEIVER_SOCKET_PER_NIC
   etcpal_error_t res = kEtcPalErrOk;
-  for (const EtcPalMcastNetintId* netint = netints; netint < (netints + num_netints); ++netint)
+
+#if SACN_RECEIVER_SOCKET_PER_NIC
+  for (const EtcPalMcastNetintId* netint = netints; netint && (netint < (netints + num_netints)); ++netint)
   {
     if (netint->ip_type == ip_type)
     {
@@ -648,14 +651,17 @@ etcpal_error_t add_sockets(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, 
       }
     }
   }
+#else   // SACN_RECEIVER_SOCKET_PER_NIC
+  if (netints && (num_netints > 0))
+  {
+    if (ip_type == kEtcPalIpTypeV4)
+      return sacn_add_receiver_socket(thread_id, ip_type, universe, netints, num_netints, &sockets->ipv4_socket);
+
+    return sacn_add_receiver_socket(thread_id, ip_type, universe, netints, num_netints, &sockets->ipv6_socket);
+  }
+#endif  // SACN_RECEIVER_SOCKET_PER_NIC
 
   return res;
-#else   // SACN_RECEIVER_SOCKET_PER_NIC
-  if (ip_type == kEtcPalIpTypeV4)
-    return sacn_add_receiver_socket(thread_id, ip_type, universe, netints, num_netints, &sockets->ipv4_socket);
-
-  return sacn_add_receiver_socket(thread_id, ip_type, universe, netints, num_netints, &sockets->ipv6_socket);
-#endif  // SACN_RECEIVER_SOCKET_PER_NIC
 }
 
 void remove_sockets(sacn_thread_id_t thread_id, SacnInternalSocketState* sockets, uint16_t universe,

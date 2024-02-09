@@ -108,7 +108,7 @@ void remove_sacn_source_detector()
     free(source_detector.sockets.ipv6_sockets);
 #endif
 
-    free(source_detector.netints.netints);
+    CLEAR_BUF(&source_detector.netints, netints);
 #endif
     source_detector.created = false;
   }
