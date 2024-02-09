@@ -50,6 +50,8 @@ include(${SACN_CMAKE}/ResolveDependencies.cmake)
 
 ################################ Main libraries ###############################
 
+# Get the local source variables
+
 add_subdirectory(src)
 
 #################################### Tests ####################################

@@ -6,33 +6,16 @@ set(SACN_TARGETS_EXPORT_NAME ${PROJECT_NAME}Targets)
 
 ################################# sACN Library ################################
 
-# Get the local source variables
-include(sacn/sources.cmake)
+include(${SACN_CMAKE}/AddCoreLibraryTarget.cmake)
 
-add_library(${SACN_LIB_TARGET_NAME}
-  ${SACN_PUBLIC_HEADERS}
-  ${SACN_PRIVATE_HEADERS}
-  ${SACN_SOURCES}
-)
-target_include_directories(${SACN_LIB_TARGET_NAME}
-  PUBLIC ${SACN_INCLUDE}
-  PRIVATE ${SACN_SRC}
-)
 if(DEFINED SACN_CONFIG_LOC)
-  target_include_directories(${SACN_LIB_TARGET_NAME} PRIVATE ${SACN_CONFIG_LOC})
-  target_compile_definitions(${SACN_LIB_TARGET_NAME} PRIVATE SACN_HAVE_CONFIG_H)
+  sacn_add_core_library_target(${SACN_LIB_TARGET_NAME} ${SACN_CONFIG_LOC})
+else()
+  sacn_add_core_library_target(${SACN_LIB_TARGET_NAME})
 endif()
-target_link_libraries(${SACN_LIB_TARGET_NAME} PUBLIC EtcPal)
 
 set_target_properties(${SACN_LIB_TARGET_NAME} PROPERTIES COMPILE_PDB_NAME "${SACN_LIB_TARGET_NAME}")
 set_target_properties(${SACN_LIB_TARGET_NAME} PROPERTIES COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
-
-# Organize sources in IDEs
-source_group(TREE ${SACN_SRC}/sacn PREFIX src FILES
-  ${SACN_PRIVATE_HEADERS}
-  ${SACN_SOURCES}
-)
-source_group(TREE ${SACN_INCLUDE}/sacn PREFIX include FILES ${SACN_PUBLIC_HEADERS})
 
 # Installation
 install(TARGETS ${SACN_LIB_TARGET_NAME}
