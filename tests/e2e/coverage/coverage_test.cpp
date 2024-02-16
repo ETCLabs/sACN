@@ -203,7 +203,7 @@ public:
     EXPECT_TRUE(source_->Startup(sacn::Source::Settings(cid, std::string("Test Source ") + cid.ToString())));
   }
 
-  TestSource(const TestSource& rhs) = default;
+  TestSource(const TestSource& rhs) = delete;
   TestSource(TestSource&& rhs) noexcept = default;
 
   ~TestSource()
