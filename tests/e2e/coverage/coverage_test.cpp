@@ -233,6 +233,7 @@ public:
 
     for (const auto& start_code : params.start_codes)
     {
+      ASSERT_TRUE((start_code.code == SACN_STARTCODE_DMX) || (start_code.code == SACN_STARTCODE_PRIORITY));
       switch (start_code.code)
       {
         case SACN_STARTCODE_DMX:
@@ -241,8 +242,6 @@ public:
         case SACN_STARTCODE_PRIORITY:
           state.pap_start_code = StartCodeState(start_code);
           break;
-        default:
-          state.custom_start_codes.emplace_back(start_code);
       }
     }
 
@@ -283,46 +282,52 @@ private:
 
     StartCodeParams params;
     std::array<uint8_t, DMX_ADDRESS_COUNT> buffer{};
+    bool uninitialized{true};
   };
 
   struct UniverseState
   {
     StartCodeState null_start_code;
     std::optional<StartCodeState> pap_start_code;
-    std::vector<StartCodeState> custom_start_codes;
     etcpal::Thread thread;
     etcpal::Signal terminate;
   };
 
   static void UniverseTick(sacn::Source& source, UniverseId universe_id, UniverseState& state)
   {
-    UpdateStartCodeData(state.null_start_code);
-    if (state.pap_start_code)
+    bool updated_null = UpdateStartCodeData(state.null_start_code);
+    bool updated_pap = state.pap_start_code && UpdateStartCodeData(*state.pap_start_code);
+    if (updated_null || updated_pap)
     {
-      UpdateStartCodeData(*state.pap_start_code);
-      source.UpdateLevelsAndPap(universe_id, state.null_start_code.buffer.data(), state.null_start_code.buffer.size(),
-                                state.pap_start_code->buffer.data(), state.pap_start_code->buffer.size());
-    }
-    else
-    {
-      source.UpdateLevels(universe_id, state.null_start_code.buffer.data(), state.null_start_code.buffer.size());
-    }
-
-    for (auto& custom_code : state.custom_start_codes)
-    {
-      UpdateStartCodeData(custom_code);
-      source.SendNow(universe_id, static_cast<uint8_t>(custom_code.params.code), custom_code.buffer.data(),
-                     custom_code.buffer.size());
+      if (state.pap_start_code)
+      {
+        source.UpdateLevelsAndPap(universe_id, state.null_start_code.buffer.data(), state.null_start_code.buffer.size(),
+                                  state.pap_start_code->buffer.data(), state.pap_start_code->buffer.size());
+      }
+      else
+      {
+        source.UpdateLevels(universe_id, state.null_start_code.buffer.data(), state.null_start_code.buffer.size());
+      }
     }
   }
 
-  static void UpdateStartCodeData(StartCodeState& state)
+  static bool UpdateStartCodeData(StartCodeState& state)
   {
     if (state.params.min && state.params.max)
     {
       for (uint8_t& slot : state.buffer)
         slot = static_cast<uint8_t>(rand() % (*state.params.max - *state.params.min + 1) + *state.params.min);
+
+      return true;
     }
+
+    if (state.uninitialized)
+    {
+      state.uninitialized = false;
+      return true;
+    }
+
+    return false;
   }
 
   std::unique_ptr<sacn::Source> source_;
