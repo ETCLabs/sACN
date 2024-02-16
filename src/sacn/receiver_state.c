@@ -134,7 +134,7 @@ void sacn_receiver_state_deinit(void)
       SacnRecvThreadContext* thread_context = get_recv_thread_context(i);
       if (thread_context && thread_context->running)
       {
-        thread_context->running = false;
+        etcpal_signal_post(&thread_context->deinit_signal);
         threads_ids_to_deinit[num_threads_to_deinit] = thread_context->thread_id;
         threads_handles_to_deinit[num_threads_to_deinit] = &thread_context->thread_handle;
         ++num_threads_to_deinit;
@@ -599,7 +599,7 @@ void sacn_receive_thread(void* arg)
     return;
   }
 
-  while (context->running)
+  while (!etcpal_signal_try_wait(&context->deinit_signal))
     read_network_and_process(context);
 
   // Destroy the poll context

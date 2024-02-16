@@ -32,6 +32,7 @@
 #include "etcpal/mutex.h"
 #include "etcpal/log.h"
 #include "etcpal/rbtree.h"
+#include "etcpal/signal.h"
 #include "etcpal/socket.h"
 #include "etcpal/timer.h"
 #include "sacn/receiver.h"
@@ -667,6 +668,7 @@ typedef struct SacnRecvThreadContext
 {
   sacn_thread_id_t thread_id;
   etcpal_thread_t thread_handle;
+  etcpal_signal_t deinit_signal;
   bool running;
 
   SacnReceiver* receivers;

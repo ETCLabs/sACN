@@ -403,6 +403,7 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
 
   context->source_detector = NULL;
 
+  etcpal_signal_create(&context->deinit_signal);
   context->running = false;
   context->poll_context_initialized = false;
   context->periodic_timer_started = false;
@@ -435,6 +436,8 @@ void deinit_recv_thread_context_entry(SacnRecvThreadContext* context)
   CLEAR_BUF(context, socket_refs);
   CLEAR_BUF(context, subscribes);
   CLEAR_BUF(context, unsubscribes);
+
+  etcpal_signal_destroy(&context->deinit_signal);
 }
 
 bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_socket_t sock, const EtcPalGroupReq* group)
