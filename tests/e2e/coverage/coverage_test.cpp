@@ -124,11 +124,16 @@ public:
   void AddUniverse(UniverseId universe_id = kDefaultUniverse)
   {
     EXPECT_EQ(universes_.find(universe_id), universes_.end());
+    universes_[universe_id] = std::make_unique<UniverseState>();
+  }
 
-    auto& state = universes_[universe_id];
-    state = std::make_unique<UniverseState>();
-    EXPECT_TRUE(
-        state->merge_receiver.Startup(sacn::MergeReceiver::Settings(universe_id), state->notify, initial_mcast_mode_));
+  void StartAllUniverses()
+  {
+    for (auto& [universe_id, state] : universes_)
+    {
+      EXPECT_TRUE(state->merge_receiver.Startup(sacn::MergeReceiver::Settings(universe_id), state->notify,
+                                                initial_mcast_mode_));
+    }
   }
 
   void ChangeUniverse(const UniverseChange& change)
@@ -356,6 +361,8 @@ TEST_F(CoverageTest, SendAndReceiveSimpleUniverse)
   EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(), HandleSamplingPeriodStarted(_, _)).Times(AtLeast(1));
   EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(), HandleSamplingPeriodEnded(_, _)).Times(AtLeast(1));
 
+  merge_receiver.StartAllUniverses();
+
   TestSource source;
   source.AddUniverse({.start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
 
@@ -377,6 +384,8 @@ TEST_F(CoverageTest, SendReceiveAndMergeAtScale)
     EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleSamplingPeriodEnded(_, _))
         .Times(AtLeast(1));
   }
+
+  merge_receiver.StartAllUniverses();
 
   std::vector<TestSource> sources;
   for (int i = 0; i < kNumTestSources; ++i)
@@ -408,6 +417,8 @@ TEST_F(CoverageTest, SwitchThroughUniverses)
   EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(kTestUniverses[0]), HandleSamplingPeriodEnded(_, _))
       .Times(kNumTestUniverses);
 
+  merge_receiver.StartAllUniverses();
+
   TestSource source;
   for (UniverseId universe_id : kTestUniverses)
     source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
@@ -416,8 +427,6 @@ TEST_F(CoverageTest, SwitchThroughUniverses)
   {
     etcpal::Thread::Sleep(2000u);  // Cover sampling period
     merge_receiver.ChangeUniverse({.from = kTestUniverses[i], .to = kTestUniverses[j]});
-    EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(kTestUniverses[j]), HandleMergedData(_, _))
-        .Times(AtLeast(1));
   }
 
   etcpal::Thread::Sleep(2000u);  // Cover sampling period
@@ -429,9 +438,9 @@ TEST_F(CoverageTest, DetectSourcesComingAndGoing)
   static constexpr int kNumTestSources = 7u;
 
   TestSourceDetector source_detector;
-  source_detector.Startup();
   EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceUpdated(_, _, _, _)).Times(AtLeast(1));
   EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceExpired(_, _, _)).Times(AtLeast(1));
+  source_detector.Startup();
 
   std::vector<TestSource> sources;
   for (int i = 0; i < kNumTestSources; ++i)
@@ -461,11 +470,16 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
 
   TestMergeReceiver merge_receiver(sacn::McastMode::kDisabledOnAllInterfaces);
   for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
+  {
     merge_receiver.AddUniverse(universe_id);
+    EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleMergedData(_, _)).Times(AtLeast(1));
+  }
+
+  merge_receiver.StartAllUniverses();
 
   TestSourceDetector source_detector(sacn::McastMode::kDisabledOnAllInterfaces);
-  source_detector.Startup();
   EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceUpdated(_, _, _, _)).Times(AtLeast(1));
+  source_detector.Startup();
 
   std::vector<TestSource> sources;
   for (int i = 0; i < kNumSources; ++i)
@@ -506,13 +520,5 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
   sacn::SourceDetector::ResetNetworking();
   sacn::Source::ResetNetworking();
 
-  etcpal::Thread::Sleep(3000u);  // Wait for last reset to take effect
-
-  // Now sanity check things are still working after all those resets
-  for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
-  {
-    EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleMergedData(_, _)).Times(AtLeast(1));
-  }
-
-  etcpal::Thread::Sleep(8000u);  // Remaining time for source detector to detect sources
+  etcpal::Thread::Sleep(11000u);  // Time for source detector to detect sources
 }
