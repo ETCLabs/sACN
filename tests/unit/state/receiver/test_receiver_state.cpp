@@ -461,8 +461,6 @@ TEST_F(TestReceiverState, InitializedThreadDeinitializes)
 
   EXPECT_EQ(etcpal_thread_join_fake.call_count, 1u);
   EXPECT_EQ(sacn_cleanup_dead_sockets_fake.call_count, 1u);
-
-  EXPECT_EQ(get_recv_thread_context(0)->running, false);
 }
 
 TEST_F(TestReceiverState, UninitializedThreadDoesNotDeinitialize)

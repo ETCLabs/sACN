@@ -608,6 +608,8 @@ void sacn_receive_thread(void* arg)
     etcpal_poll_context_deinit(&context->poll_context);
     context->poll_context_initialized = false;
 
+    context->running = false;
+
     sacn_unlock();
   }
 }
