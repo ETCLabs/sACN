@@ -110,11 +110,6 @@ public:
     UniverseId to;
   };
 
-  static void ResetNetworking(std::vector<SacnMcastInterface>& sys_netints)
-  {
-    sacn::MergeReceiver::ResetNetworking(sys_netints);
-  }
-
   TestMergeReceiver(sacn::McastMode initial_mcast_mode = sacn::McastMode::kEnabledOnAllInterfaces)
       : initial_mcast_mode_(initial_mcast_mode)
   {
@@ -168,11 +163,6 @@ private:
 class TestSourceDetector
 {
 public:
-  static void ResetNetworking(std::vector<SacnMcastInterface>& sys_netints)
-  {
-    sacn::SourceDetector::ResetNetworking(sys_netints);
-  }
-
   TestSourceDetector(sacn::McastMode initial_mcast_mode = sacn::McastMode::kEnabledOnAllInterfaces)
       : initial_mcast_mode_(initial_mcast_mode)
   {
@@ -204,11 +194,6 @@ public:
     uint8_t universe_priority{100u};
     std::vector<StartCodeParams> start_codes;
   };
-
-  static void ResetNetworking(std::vector<SacnMcastInterface>& sys_netints)
-  {
-    sacn::Source::ResetNetworking(sys_netints);
-  }
 
   TestSource(sacn::McastMode initial_mcast_mode = sacn::McastMode::kEnabledOnAllInterfaces)
       : initial_mcast_mode_(initial_mcast_mode)
@@ -284,7 +269,7 @@ public:
   }
 
 private:
-  static constexpr unsigned int kUniverseSleepMs = 100u;
+  static constexpr unsigned int kUniverseSleepMs = 500u;
 
   struct StartCodeState
   {
@@ -392,7 +377,7 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
   size_t add_until_this_many_netints_left = sys_netints->size() / 2;  // First, add half of the netints
   while (!sys_netints->empty())
   {
-    etcpal::Thread::Sleep(500u);  // Allow for some network activity each time
+    etcpal::Thread::Sleep(1000u);  // Allow for some network activity each time
 
     while (sys_netints->size() > add_until_this_many_netints_left)
     {
@@ -403,11 +388,19 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
       add_until_this_many_netints_left = 0u;  // Next time add the other half
     }
 
-    TestMergeReceiver::ResetNetworking(netints);
-    TestSourceDetector::ResetNetworking(netints);
+    sacn::MergeReceiver::ResetNetworking(netints);
+    sacn::SourceDetector::ResetNetworking(netints);
+    sacn::Source::ResetNetworking(netints);
 
-    TestSource::ResetNetworking(netints);
+    netints.clear();  // Try each half individually
   }
+
+  // One last reset, this time with all netints
+  etcpal::Thread::Sleep(1000u);
+
+  sacn::MergeReceiver::ResetNetworking();
+  sacn::SourceDetector::ResetNetworking();
+  sacn::Source::ResetNetworking();
 
   etcpal::Thread::Sleep(3000u);  // Wait for last reset to take effect
 
