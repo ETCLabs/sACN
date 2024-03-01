@@ -25,6 +25,7 @@
 #include "sacn/private/common.h"
 #include "sacn/private/opts.h"
 #include "sacn/private/sockets.h"
+#include "sacn/private/source_loss.h"
 #include "sacn/private/mem.h"
 
 #if SACN_DYNAMIC_MEM
@@ -262,6 +263,7 @@ void remove_sacn_receiver(SacnReceiver* receiver)
   if (!SACN_ASSERT_VERIFY(receiver))
     return;
 
+  clear_term_set_list(receiver->term_sets);
   etcpal_rbtree_clear_with_cb(&receiver->sampling_period_netints, sampling_period_netint_tree_dealloc);
   etcpal_rbtree_clear_with_cb(&receiver->sources, tracked_source_tree_dealloc);
   remove_receiver_from_maps(receiver);
@@ -387,6 +389,8 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node)
     return;
 
   SacnReceiver* receiver = (SacnReceiver*)node->value;
+
+  clear_term_set_list(receiver->term_sets);
   etcpal_rbtree_clear_with_cb(&receiver->sampling_period_netints, sampling_period_netint_tree_dealloc);
   etcpal_rbtree_clear_with_cb(&receiver->sources, tracked_source_tree_dealloc);
   CLEAR_BUF(&receiver->netints, netints);
