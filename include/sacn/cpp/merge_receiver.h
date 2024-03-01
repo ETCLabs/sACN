@@ -202,9 +202,6 @@ public:
     }
   };
 
-  /** A map type used internally to forward underlying C callbacks. */
-  using NotifyMap = internal::NotifyMap<sacn_merge_receiver_t, NotifyHandler>;
-
   /**
    * @ingroup sacn_merge_receiver_cpp
    * @brief A set of configuration settings that a merge receiver needs to initialize.
@@ -292,8 +289,6 @@ public:
   MergeReceiver(MergeReceiver&& other) = default;            /**< Move a merge receiver instance. */
   MergeReceiver& operator=(MergeReceiver&& other) = default; /**< Move a merge receiver instance. */
 
-  ~MergeReceiver();
-
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler, McastMode mcast_mode);
   etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
                         std::vector<SacnMcastInterface>& netints);
@@ -314,15 +309,10 @@ public:
   constexpr Handle handle() const;
 
 private:
-  SacnMergeReceiverConfig TranslateConfig(const Settings& settings);
-
-  static NotifyMap notify_map_allocation_;
+  SacnMergeReceiverConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
 
   Handle handle_;
-  NotifyMap& notify_map_{notify_map_allocation_};  // Avoid internal linkage issues
 };
-
-MergeReceiver::NotifyMap MergeReceiver::notify_map_allocation_;
 
 /**
  * @cond device_c_callbacks
@@ -335,11 +325,7 @@ extern "C" inline void MergeReceiverCbMergedData(sacn_merge_receiver_t handle, c
 {
   if (context && merged_data)
   {
-    auto& notify_map = *static_cast<MergeReceiver::NotifyMap*>(context);
-    etcpal::MutexGuard guard(notify_map.lock);
-
-    if (notify_map.map[handle])
-      notify_map.map[handle]->HandleMergedData(MergeReceiver::Handle(handle), *merged_data);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleMergedData(MergeReceiver::Handle(handle), *merged_data);
   }
 }
 
@@ -349,14 +335,8 @@ extern "C" inline void MergeReceiverCbNonDmx(sacn_merge_receiver_t receiver_hand
 {
   if (context && source_addr && source_info && universe_data)
   {
-    auto& notify_map = *static_cast<MergeReceiver::NotifyMap*>(context);
-    etcpal::MutexGuard guard(notify_map.lock);
-
-    if (notify_map.map[receiver_handle])
-    {
-      notify_map.map[receiver_handle]->HandleNonDmxData(MergeReceiver::Handle(receiver_handle), *source_addr,
-                                                        *source_info, *universe_data);
-    }
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleNonDmxData(MergeReceiver::Handle(receiver_handle),
+                                                                          *source_addr, *source_info, *universe_data);
   }
 }
 
@@ -366,14 +346,9 @@ extern "C" inline void MergeReceiverCbSourcesLost(sacn_merge_receiver_t handle, 
 {
   if (context && lost_sources && (num_lost_sources > 0))
   {
-    auto& notify_map = *static_cast<MergeReceiver::NotifyMap*>(context);
-    etcpal::MutexGuard guard(notify_map.lock);
-
-    if (notify_map.map[handle])
-    {
-      std::vector<SacnLostSource> lost_vec(lost_sources, lost_sources + num_lost_sources);
-      notify_map.map[handle]->HandleSourcesLost(MergeReceiver::Handle(handle), universe, lost_vec);
-    }
+    std::vector<SacnLostSource> lost_vec(lost_sources, lost_sources + num_lost_sources);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourcesLost(MergeReceiver::Handle(handle), universe,
+                                                                           lost_vec);
   }
 }
 
@@ -382,11 +357,8 @@ extern "C" inline void MergeReceiverCbSamplingPeriodStarted(sacn_merge_receiver_
 {
   if (context)
   {
-    auto& notify_map = *static_cast<MergeReceiver::NotifyMap*>(context);
-    etcpal::MutexGuard guard(notify_map.lock);
-
-    if (notify_map.map[handle])
-      notify_map.map[handle]->HandleSamplingPeriodStarted(MergeReceiver::Handle(handle), universe);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSamplingPeriodStarted(MergeReceiver::Handle(handle),
+                                                                                     universe);
   }
 }
 
@@ -395,11 +367,8 @@ extern "C" inline void MergeReceiverCbSamplingPeriodEnded(sacn_merge_receiver_t 
 {
   if (context)
   {
-    auto& notify_map = *static_cast<MergeReceiver::NotifyMap*>(context);
-    etcpal::MutexGuard guard(notify_map.lock);
-
-    if (notify_map.map[handle])
-      notify_map.map[handle]->HandleSamplingPeriodEnded(MergeReceiver::Handle(handle), universe);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSamplingPeriodEnded(MergeReceiver::Handle(handle),
+                                                                                   universe);
   }
 }
 
@@ -408,11 +377,8 @@ extern "C" inline void MergeReceiverCbSourcePapLost(sacn_merge_receiver_t handle
 {
   if (context && source)
   {
-    auto& notify_map = *static_cast<MergeReceiver::NotifyMap*>(context);
-    etcpal::MutexGuard guard(notify_map.lock);
-
-    if (notify_map.map[handle])
-      notify_map.map[handle]->HandleSourcePapLost(MergeReceiver::Handle(handle), universe, *source);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourcePapLost(MergeReceiver::Handle(handle), universe,
+                                                                             *source);
   }
 }
 
@@ -421,11 +387,8 @@ extern "C" inline void MergeReceiverCbSourceLimitExceeded(sacn_merge_receiver_t 
 {
   if (context)
   {
-    auto& notify_map = *static_cast<MergeReceiver::NotifyMap*>(context);
-    etcpal::MutexGuard guard(notify_map.lock);
-
-    if (notify_map.map[handle])
-      notify_map.map[handle]->HandleSourceLimitExceeded(MergeReceiver::Handle(handle), universe);
+    static_cast<MergeReceiver::NotifyHandler*>(context)->HandleSourceLimitExceeded(MergeReceiver::Handle(handle),
+                                                                                   universe);
   }
 }
 
@@ -475,16 +438,6 @@ inline MergeReceiver::NetintList::NetintList(sacn_merge_receiver_t merge_receive
 {
 }
 
-/** @brief Merge receiver destructor. */
-inline MergeReceiver::~MergeReceiver()
-{
-  if (handle_)
-  {
-    etcpal::MutexGuard guard(notify_map_.lock);
-    notify_map_.map.erase(handle_.value());
-  }
-}
-
 /**
  * @brief Start listening for sACN data on a universe.
  *
@@ -498,8 +451,7 @@ inline MergeReceiver::~MergeReceiver()
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] settings Configuration parameters for the sACN merge receiver and this class instance.
- * @param[in] notify_handler The notification interface to call back to the application. The reference must remain valid
- * until this merge receiver is shut down or destroyed.
+ * @param[in] notify_handler The notification interface to call back to the application.
  * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this merge receiver.
  * @return #kEtcPalErrOk: Merge Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
@@ -513,7 +465,7 @@ inline MergeReceiver::~MergeReceiver()
 inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHandler& notify_handler,
                                             McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
-  SacnMergeReceiverConfig config = TranslateConfig(settings);
+  SacnMergeReceiverConfig config = TranslateConfig(settings, notify_handler);
 
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
@@ -523,9 +475,6 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
   etcpal::Error result = sacn_merge_receiver_create(&config, &c_handle, &netint_config);
 
   handle_.SetValue(c_handle);
-
-  etcpal::MutexGuard guard(notify_map_.lock);
-  notify_map_.map[c_handle] = &notify_handler;
 
   return result;
 }
@@ -540,8 +489,7 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] settings Configuration parameters for the sACN merge receiver and this class instance.
- * @param[in] notify_handler The notification interface to call back to the application. The reference must remain valid
- * until this merge receiver is shut down or destroyed.
+ * @param[in] notify_handler The notification interface to call back to the application.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Merge Receiver created successfully.
@@ -556,7 +504,7 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
 inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHandler& notify_handler,
                                             std::vector<SacnMcastInterface>& netints)
 {
-  SacnMergeReceiverConfig config = TranslateConfig(settings);
+  SacnMergeReceiverConfig config = TranslateConfig(settings, notify_handler);
 
   sacn_merge_receiver_t c_handle = SACN_MERGE_RECEIVER_INVALID;
   etcpal::Error result = kEtcPalErrOk;
@@ -576,9 +524,6 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
 
   handle_.SetValue(c_handle);
 
-  etcpal::MutexGuard guard(notify_map_.lock);
-  notify_map_.map[c_handle] = &notify_handler;
-
   return result;
 }
 
@@ -591,9 +536,6 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
 inline void MergeReceiver::Shutdown()
 {
   sacn_merge_receiver_destroy(handle_.value());
-
-  etcpal::MutexGuard guard(notify_map_.lock);
-  notify_map_.map.erase(handle_.value());
   handle_.Clear();
 }
 
@@ -866,7 +808,7 @@ inline constexpr MergeReceiver::Handle MergeReceiver::handle() const
   return handle_;
 }
 
-inline SacnMergeReceiverConfig MergeReceiver::TranslateConfig(const Settings& settings)
+inline SacnMergeReceiverConfig MergeReceiver::TranslateConfig(const Settings& settings, NotifyHandler& notify_handler)
 {
   // clang-format off
   SacnMergeReceiverConfig config = {
@@ -879,7 +821,7 @@ inline SacnMergeReceiverConfig MergeReceiver::TranslateConfig(const Settings& se
       internal::MergeReceiverCbSamplingPeriodEnded,
       internal::MergeReceiverCbSourcePapLost,
       internal::MergeReceiverCbSourceLimitExceeded,
-      &notify_map_
+      &notify_handler
     },
     settings.footprint,
     settings.source_count_max,

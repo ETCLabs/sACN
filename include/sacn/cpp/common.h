@@ -27,12 +27,8 @@
 
 #include "etcpal/cpp/error.h"
 #include "etcpal/cpp/log.h"
-#include "etcpal/cpp/mutex.h"
 #include "etcpal/cpp/uuid.h"
 #include "sacn/common.h"
-
-#include <unordered_map>
-#include <functional>
 
 /**
  * @defgroup sacn_cpp_api sACN C++ Language APIs
@@ -235,24 +231,6 @@ inline etcpal::Expected<etcpal::Uuid> GetRemoteSourceCid(RemoteSourceHandle sour
 
   return error;
 }
-
-/**
- * @cond device_c_callbacks
- * Forwarding support for underlying C callbacks
- */
-namespace internal
-{
-template <typename HandleType, class NotifyType>
-struct NotifyMap
-{
-  etcpal::Mutex lock;
-  std::unordered_map<HandleType, NotifyType*> map;
-};
-};  // namespace internal
-
-/**
- * @endcond
- */
 
 };  // namespace sacn
 
