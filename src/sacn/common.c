@@ -121,6 +121,21 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
     if (res == kEtcPalErrOk)
       sockets_initted = ((res = sacn_sockets_init(sys_netint_config)) == kEtcPalErrOk);
 
+#if SACN_MERGE_RECEIVER_ENABLED
+    bool merge_receiver_initted = false;
+    if (res == kEtcPalErrOk)
+      merge_receiver_initted = ((res = sacn_merge_receiver_init()) == kEtcPalErrOk);
+#endif  // SACN_MERGE_RECEIVER_ENABLED
+
+#if SACN_SOURCE_DETECTOR_ENABLED
+    bool source_detector_state_initted = false;
+    bool source_detector_initted = false;
+    if (res == kEtcPalErrOk)
+      source_detector_state_initted = ((res = sacn_source_detector_state_init()) == kEtcPalErrOk);
+    if (res == kEtcPalErrOk)
+      source_detector_initted = ((res = sacn_source_detector_init()) == kEtcPalErrOk);
+#endif  // SACN_SOURCE_DETECTOR_ENABLED
+
 #if SACN_RECEIVER_ENABLED
     bool source_loss_initted = false;
     bool receiver_state_initted = false;
@@ -148,21 +163,6 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
       merger_initted = ((res = sacn_dmx_merger_init()) == kEtcPalErrOk);
 #endif  // SACN_DMX_MERGER_ENABLED
 
-#if SACN_MERGE_RECEIVER_ENABLED
-    bool merge_receiver_initted = false;
-    if (res == kEtcPalErrOk)
-      merge_receiver_initted = ((res = sacn_merge_receiver_init()) == kEtcPalErrOk);
-#endif  // SACN_MERGE_RECEIVER_ENABLED
-
-#if SACN_SOURCE_DETECTOR_ENABLED
-    bool source_detector_state_initted = false;
-    bool source_detector_initted = false;
-    if (res == kEtcPalErrOk)
-      source_detector_state_initted = ((res = sacn_source_detector_state_init()) == kEtcPalErrOk);
-    if (res == kEtcPalErrOk)
-      source_detector_initted = ((res = sacn_source_detector_init()) == kEtcPalErrOk);
-#endif  // SACN_SOURCE_DETECTOR_ENABLED
-
     if (res == kEtcPalErrOk)
     {
       sacn_pool_sacn_state.initted = true;
@@ -170,16 +170,6 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
     else
     {
       // Clean up
-#if SACN_SOURCE_DETECTOR_ENABLED
-      if (source_detector_initted)
-        sacn_source_detector_deinit();
-      if (source_detector_state_initted)
-        sacn_source_detector_state_deinit();
-#endif  // SACN_SOURCE_DETECTOR_ENABLED
-#if SACN_MERGE_RECEIVER_ENABLED
-      if (merge_receiver_initted)
-        sacn_merge_receiver_deinit();
-#endif  // SACN_MERGE_RECEIVER_ENABLED
 #if SACN_DMX_MERGER_ENABLED
       if (merger_initted)
         sacn_dmx_merger_deinit();
@@ -198,6 +188,16 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
       if (source_loss_initted)
         sacn_source_loss_deinit();
 #endif  // SACN_RECEIVER_ENABLED
+#if SACN_SOURCE_DETECTOR_ENABLED
+      if (source_detector_initted)
+        sacn_source_detector_deinit();
+      if (source_detector_state_initted)
+        sacn_source_detector_state_deinit();
+#endif  // SACN_SOURCE_DETECTOR_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED
+      if (merge_receiver_initted)
+        sacn_merge_receiver_deinit();
+#endif  // SACN_MERGE_RECEIVER_ENABLED
       if (sockets_initted)
         sacn_sockets_deinit();
 #if SACN_SOURCE_DETECTOR_ENABLED
@@ -243,13 +243,6 @@ void sacn_deinit(void)
   {
     sacn_pool_sacn_state.initted = false;
 
-#if SACN_SOURCE_DETECTOR_ENABLED
-    sacn_source_detector_deinit();
-    sacn_source_detector_state_deinit();
-#endif  // SACN_SOURCE_DETECTOR_ENABLED
-#if SACN_MERGE_RECEIVER_ENABLED
-    sacn_merge_receiver_deinit();
-#endif  // SACN_MERGE_RECEIVER_ENABLED
 #if SACN_DMX_MERGER_ENABLED
     sacn_dmx_merger_deinit();
 #endif  // SACN_DMX_MERGER_ENABLED
@@ -262,6 +255,13 @@ void sacn_deinit(void)
     sacn_receiver_state_deinit();
     sacn_source_loss_deinit();
 #endif  // SACN_RECEIVER_ENABLED
+#if SACN_SOURCE_DETECTOR_ENABLED
+    sacn_source_detector_deinit();
+    sacn_source_detector_state_deinit();
+#endif  // SACN_SOURCE_DETECTOR_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED
+    sacn_merge_receiver_deinit();
+#endif  // SACN_MERGE_RECEIVER_ENABLED
     sacn_sockets_deinit();
 #if SACN_SOURCE_DETECTOR_ENABLED
     sacn_source_detector_mem_deinit();
