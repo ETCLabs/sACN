@@ -29,6 +29,7 @@
 #include "sacn/private/dmx_merger.h"
 #include "sacn/private/merge_receiver.h"
 #include "sacn/private/source_detector.h"
+#include "sacn/private/source_detector_state.h"
 
 /*************************** Private constants *******************************/
 
@@ -154,7 +155,10 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
 #endif  // SACN_MERGE_RECEIVER_ENABLED
 
 #if SACN_SOURCE_DETECTOR_ENABLED
+    bool source_detector_state_initted = false;
     bool source_detector_initted = false;
+    if (res == kEtcPalErrOk)
+      source_detector_state_initted = ((res = sacn_source_detector_state_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
       source_detector_initted = ((res = sacn_source_detector_init()) == kEtcPalErrOk);
 #endif  // SACN_SOURCE_DETECTOR_ENABLED
@@ -169,6 +173,8 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
 #if SACN_SOURCE_DETECTOR_ENABLED
       if (source_detector_initted)
         sacn_source_detector_deinit();
+      if (source_detector_state_initted)
+        sacn_source_detector_state_deinit();
 #endif  // SACN_SOURCE_DETECTOR_ENABLED
 #if SACN_MERGE_RECEIVER_ENABLED
       if (merge_receiver_initted)
@@ -239,6 +245,7 @@ void sacn_deinit(void)
 
 #if SACN_SOURCE_DETECTOR_ENABLED
     sacn_source_detector_deinit();
+    sacn_source_detector_state_deinit();
 #endif  // SACN_SOURCE_DETECTOR_ENABLED
 #if SACN_MERGE_RECEIVER_ENABLED
     sacn_merge_receiver_deinit();

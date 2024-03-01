@@ -122,19 +122,30 @@ etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* confi
 /**
  * @brief Destroy the sACN Source Detector.
  *
+ * WARNING: Calling this from a source detector callback will deadlock!
+ *
+ * After this function completes, callbacks will no longer be called for the source detector.
  */
 void sacn_source_detector_destroy()
 {
-  if (sacn_initialized() && sacn_lock())
+  if (sacn_initialized())
   {
-    SacnSourceDetector* detector = get_sacn_source_detector();
-    if (detector)
+    if (source_detector_cb_lock())
     {
-      remove_source_detector_from_thread(detector);
-      remove_sacn_source_detector();
-    }
+      if (sacn_lock())
+      {
+        SacnSourceDetector* detector = get_sacn_source_detector();
+        if (detector)
+        {
+          remove_source_detector_from_thread(detector);
+          remove_sacn_source_detector();
+        }
 
-    sacn_unlock();
+        sacn_unlock();
+      }
+
+      source_detector_cb_unlock();
+    }
   }
 }
 

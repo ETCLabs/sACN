@@ -127,8 +127,12 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
 /**
  * @brief Destroy a sACN receiver instance.
  *
+ * WARNING: Calling this from a receiver callback will deadlock!
+ *
  * Tears down the receiver and any sources currently being tracked on the receiver's universe.
  * Stops listening for sACN on that universe.
+ *
+ * After this function completes, callbacks will no longer be called for this receiver.
  *
  * @param[in] handle Handle to the receiver to destroy.
  * @return #kEtcPalErrOk: Receiver destroyed successfully.
@@ -148,10 +152,19 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 
   if (res == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (receiver_cb_lock())
     {
-      res = destroy_sacn_receiver(handle);
-      sacn_unlock();
+      if (sacn_lock())
+      {
+        res = destroy_sacn_receiver(handle);
+        sacn_unlock();
+      }
+      else
+      {
+        res = kEtcPalErrSys;
+      }
+
+      receiver_cb_unlock();
     }
     else
     {
@@ -618,7 +631,7 @@ etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_recei
   return res;
 }
 
-// Needs lock
+// Needs sACN lock (and receiver_cb lock if called from receiver API)
 etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle)
 {
   if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))

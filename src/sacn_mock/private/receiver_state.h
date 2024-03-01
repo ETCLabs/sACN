@@ -47,6 +47,9 @@ DECLARE_FAKE_VOID_FUNC(remove_all_receiver_sockets, socket_cleanup_behavior_t);
 DECLARE_FAKE_VOID_FUNC(read_network_and_process, SacnRecvThreadContext*);
 DECLARE_FAKE_VOID_FUNC(terminate_sources_on_removed_netints, SacnReceiver*);
 
+DECLARE_FAKE_VALUE_FUNC(bool, receiver_cb_lock);
+DECLARE_FAKE_VOID_FUNC(receiver_cb_unlock);
+
 void sacn_receiver_state_reset_all_fakes(void);
 
 #ifdef __cplusplus

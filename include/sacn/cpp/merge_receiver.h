@@ -451,7 +451,8 @@ inline MergeReceiver::NetintList::NetintList(sacn_merge_receiver_t merge_receive
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] settings Configuration parameters for the sACN merge receiver and this class instance.
- * @param[in] notify_handler The notification interface to call back to the application.
+ * @param[in] notify_handler The notification interface to call back to the application. This reference must remain
+ * valid until Shutdown() or sacn::Deinit() is called.
  * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this merge receiver.
  * @return #kEtcPalErrOk: Merge Receiver created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
@@ -489,7 +490,8 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] settings Configuration parameters for the sACN merge receiver and this class instance.
- * @param[in] notify_handler The notification interface to call back to the application.
+ * @param[in] notify_handler The notification interface to call back to the application. This reference must remain
+ * valid until Shutdown() or sacn::Deinit() is called.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Merge Receiver created successfully.
@@ -530,8 +532,12 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings, NotifyHand
 /**
  * @brief Stop listening for sACN data on a universe.
  *
+ * WARNING: Calling this from a merge receiver callback will deadlock!
+ *
  * Tears down the merge receiver and any sources currently being tracked on the merge receiver's universe.
  * Stops listening for sACN on that universe.
+ *
+ * After this function completes, callbacks will no longer be called for this merge receiver.
  */
 inline void MergeReceiver::Shutdown()
 {
