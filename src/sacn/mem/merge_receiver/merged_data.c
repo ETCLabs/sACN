@@ -32,7 +32,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_MERGE_RECEIVER_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED || DOXYGEN
 
 /**************************** Private variables ******************************/
 
@@ -148,4 +148,4 @@ void deinit_merged_data_buf(void)
 
 #endif  // SACN_DYNAMIC_MEM
 
-#endif  // SACN_MERGE_RECEIVER_ENABLED
+#endif  // SACN_MERGE_RECEIVER_ENABLED || DOXYGEN

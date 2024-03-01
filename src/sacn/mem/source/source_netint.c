@@ -32,7 +32,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED || DOXYGEN
 
 /*********************** Private function prototypes *************************/
 
@@ -114,4 +114,4 @@ size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id
   return index;
 }
 
-#endif  // SACN_SOURCE_ENABLED
+#endif  // SACN_SOURCE_ENABLED || DOXYGEN

@@ -34,7 +34,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_SOURCE_DETECTOR_ENABLED
+#if SACN_SOURCE_DETECTOR_ENABLED || DOXYGEN
 
 /**************************** Private variables ******************************/
 
@@ -132,4 +132,4 @@ void deinit_source_detector(void)
   CLEAR_BUF(&source_detector.netints, netints);
 }
 
-#endif  // SACN_SOURCE_DETECTOR_ENABLED
+#endif  // SACN_SOURCE_DETECTOR_ENABLED || DOXYGEN

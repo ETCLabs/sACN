@@ -32,7 +32,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 
 /**************************** Private variables ******************************/
 
@@ -470,4 +470,4 @@ bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_sock
   return found;
 }
 
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN

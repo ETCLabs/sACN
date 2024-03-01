@@ -33,7 +33,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 
 /**************************** Private constants ******************************/
 
@@ -419,4 +419,4 @@ void deinit_receivers(void)
   etcpal_rbtree_clear(&receivers_by_universe);
 }
 
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN

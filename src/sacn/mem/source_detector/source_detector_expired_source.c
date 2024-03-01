@@ -33,7 +33,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_SOURCE_DETECTOR_ENABLED
+#if SACN_SOURCE_DETECTOR_ENABLED || DOXYGEN
 
 // Suppress strncpy() warning on Windows/MSVC.
 #ifdef _MSC_VER
@@ -80,4 +80,4 @@ etcpal_error_t add_sacn_source_detector_expired_source(SourceDetectorSourceExpir
   return kEtcPalErrOk;
 }
 
-#endif  // SACN_SOURCE_DETECTOR_ENABLED
+#endif  // SACN_SOURCE_DETECTOR_ENABLED || DOXYGEN

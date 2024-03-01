@@ -34,7 +34,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_MERGE_RECEIVER_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED || DOXYGEN
 
 /**************************** Private constants ******************************/
 
@@ -228,4 +228,4 @@ void deinit_merge_receivers(void)
   }
 }
 
-#endif  // SACN_MERGE_RECEIVER_ENABLED
+#endif  // SACN_MERGE_RECEIVER_ENABLED || DOXYGEN

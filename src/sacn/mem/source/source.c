@@ -34,7 +34,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED || DOXYGEN
 
 /**************************** Private variables ******************************/
 
@@ -237,4 +237,4 @@ void deinit_sources(void)
   }
 }
 
-#endif  // SACN_SOURCE_ENABLED
+#endif  // SACN_SOURCE_ENABLED || DOXYGEN

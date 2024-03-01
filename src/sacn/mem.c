@@ -39,7 +39,7 @@
 /*
  * Memory module initialization and deinitialization (clean up allocated memory) functions.
  */
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 etcpal_error_t sacn_receiver_mem_init(unsigned int number_of_threads)
 {
   if (!SACN_ASSERT_VERIFY(number_of_threads > 0))
@@ -103,9 +103,9 @@ void sacn_receiver_mem_deinit(void)
 #endif  // SACN_DYNAMIC_MEM
   deinit_recv_thread_context_buf();
 }
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN
 
-#if SACN_SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED || DOXYGEN
 etcpal_error_t sacn_source_mem_init(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
@@ -124,9 +124,9 @@ void sacn_source_mem_deinit(void)
 {
   deinit_sources();
 }
-#endif  // SACN_SOURCE_ENABLED
+#endif  // SACN_SOURCE_ENABLED || DOXYGEN
 
-#if SACN_SOURCE_DETECTOR_ENABLED
+#if SACN_SOURCE_DETECTOR_ENABLED || DOXYGEN
 etcpal_error_t sacn_source_detector_mem_init(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
@@ -148,9 +148,9 @@ void sacn_source_detector_mem_deinit(void)
   deinit_source_detector();
   deinit_universe_discovery_sources();
 }
-#endif  // SACN_SOURCE_DETECTOR_ENABLED
+#endif  // SACN_SOURCE_DETECTOR_ENABLED || DOXYGEN
 
-#if SACN_MERGE_RECEIVER_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED || DOXYGEN
 etcpal_error_t sacn_merge_receiver_mem_init(unsigned int number_of_threads)
 {
   if (!SACN_ASSERT_VERIFY(number_of_threads > 0))
@@ -183,4 +183,4 @@ void sacn_merge_receiver_mem_deinit(void)
 #endif
   deinit_merge_receivers();
 }
-#endif  // SACN_MERGE_RECEIVER_ENABLED
+#endif  // SACN_MERGE_RECEIVER_ENABLED || DOXYGEN

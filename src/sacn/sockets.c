@@ -86,11 +86,11 @@ static etcpal_socket_t ipv6_unicast_send_socket = ETCPAL_SOCKET_INVALID;
 static etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_type_t net_type);
 static etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, networking_type_t net_type);
 static void clear_source_networking();
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 static etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_netints, bool currently_sampling,
                                                      EtcPalRbTree* sampling_period_netints,
                                                      const SacnNetintConfig* app_netint_config);
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN
 static bool netints_valid(const SacnMcastInterface* netints, size_t num_netints);
 static size_t apply_netint_config(const SacnNetintConfig* netint_config, SysNetintList* netint_list,
                                   SacnSocketsSysNetints* sys_netints, networking_type_t net_type);
@@ -114,7 +114,7 @@ static void configure_sndbuf_size(etcpal_socket_t new_sock, const char* sock_des
 static etcpal_error_t create_receive_socket(etcpal_iptype_t ip_type, const EtcPalSockAddr* bind_addr, bool set_sockopts,
                                             ReceiveSocket* socket);
 static void poll_add_socket(SacnRecvThreadContext* recv_thread_context, ReceiveSocket* socket);
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 static etcpal_error_t queue_subscription(SacnRecvThreadContext* recv_thread_context, etcpal_socket_t sock,
                                          const EtcPalIpAddr* group, const EtcPalMcastNetintId* netints,
                                          size_t num_netints);
@@ -126,16 +126,16 @@ static void unsubscribe_socket_ref(SacnRecvThreadContext* recv_thread_context, i
                                    socket_cleanup_behavior_t cleanup_behavior);
 static void cleanup_receive_socket(SacnRecvThreadContext* context, const ReceiveSocket* socket,
                                    socket_cleanup_behavior_t cleanup_behavior);
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN
 static etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
 static etcpal_error_t unsubscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
 static etcpal_error_t send_multicast(uint16_t universe_id, const uint8_t* send_buf, const EtcPalMcastNetintId* netint);
 static etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_addr,
                                    etcpal_error_t* last_send_error);
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 static EtcPalSockAddr get_bind_address(etcpal_iptype_t ip_type);
 static bool get_netint_id(EtcPalMsgHdr* msg, EtcPalMcastNetintId* netint_id);
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN
 
 static etcpal_error_t init_sys_netint_list(SysNetintList* netint_list);
 static void deinit_sys_netint_list(SysNetintList* netint_list);
@@ -195,7 +195,7 @@ etcpal_error_t sacn_sockets_reset_source_detector(const SacnNetintConfig* netint
   return sockets_reset(netint_config, kSourceDetector);
 }
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 
 void unsubscribe_socket_ref(SacnRecvThreadContext* recv_thread_context, int ref_index, uint16_t universe,
                             const EtcPalMcastNetintId* netints, size_t num_netints,
@@ -264,7 +264,7 @@ void cleanup_receive_socket(SacnRecvThreadContext* context, const ReceiveSocket*
   }
 }
 
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN
 
 etcpal_error_t send_multicast(uint16_t universe_id, const uint8_t* send_buf, const EtcPalMcastNetintId* netint)
 {
@@ -358,7 +358,7 @@ etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_ad
   return res;
 }
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 
 EtcPalSockAddr get_bind_address(etcpal_iptype_t ip_type)
 {
@@ -393,7 +393,7 @@ bool get_netint_id(EtcPalMsgHdr* msg, EtcPalMcastNetintId* netint_id)
   return pktinfo_found;
 }
 
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN
 
 /*
  * Internal function to create a new send socket for multicast, associated with an interface.
@@ -677,7 +677,7 @@ void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAdd
   }
 }
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 
 /*
  * Creates and subscribes a socket for the given universe.
@@ -912,7 +912,7 @@ etcpal_error_t unsubscribe_socket(SacnRecvThreadContext* recv_thread_context, et
   return res;
 }
 
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN
 
 /*
  * Subscribes a socket to a multicast address on a single interface. Logs the failure if the
@@ -996,7 +996,7 @@ void sacn_add_pending_sockets(SacnRecvThreadContext* recv_thread_context)
   recv_thread_context->new_socket_refs = 0;
 }
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 
 void sacn_cleanup_dead_sockets(SacnRecvThreadContext* recv_thread_context)
 {
@@ -1008,7 +1008,7 @@ void sacn_cleanup_dead_sockets(SacnRecvThreadContext* recv_thread_context)
   recv_thread_context->num_dead_sockets = 0;
 }
 
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN
 
 void sacn_subscribe_sockets(SacnRecvThreadContext* recv_thread_context)
 {
@@ -1182,7 +1182,7 @@ SacnSocketsSysNetints* sacn_sockets_get_sys_netints(networking_type_t type)
   return sys_netints;
 }
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 etcpal_error_t sacn_initialize_receiver_netints(SacnInternalNetintArray* receiver_netints, bool currently_sampling,
                                                 EtcPalRbTree* sampling_period_netints,
                                                 const SacnNetintConfig* app_netint_config)
@@ -1216,7 +1216,7 @@ etcpal_error_t sacn_add_all_netints_to_sampling_period(SacnInternalNetintArray* 
 
   return res;
 }
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN
 
 etcpal_error_t sacn_initialize_source_detector_netints(SacnInternalNetintArray* source_detector_netints,
                                                        const SacnNetintConfig* app_netint_config)
@@ -1383,7 +1383,7 @@ void clear_source_networking()
   CLEAR_BUF(&source_sys_netints, sys_netints);
 }
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_netints, bool currently_sampling,
                                               EtcPalRbTree* sampling_period_netints,
                                               const SacnNetintConfig* app_netint_config)
@@ -1443,7 +1443,7 @@ etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_
 
   return res;
 }
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN
 
 etcpal_error_t sacn_validate_netint_config(const SacnNetintConfig* netint_config, const SacnMcastInterface* sys_netints,
                                            size_t num_sys_netints, size_t* num_valid_netints)

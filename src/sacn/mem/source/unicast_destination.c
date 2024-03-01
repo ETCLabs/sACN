@@ -32,7 +32,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED || DOXYGEN
 
 /*************************** Function definitions ****************************/
 
@@ -99,4 +99,4 @@ size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* 
   return index;
 }
 
-#endif  // SACN_SOURCE_ENABLED
+#endif  // SACN_SOURCE_ENABLED || DOXYGEN

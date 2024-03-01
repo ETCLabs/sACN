@@ -25,7 +25,7 @@
 #include "sacn/private/mem.h"
 #include "sacn/private/opts.h"
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 
 /****************************** Private macros *******************************/
 
@@ -457,4 +457,4 @@ void remove_term_set_from_list(TerminationSet** term_set_list, TerminationSet* t
   FREE_TERM_SET(to_remove);
 }
 
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN

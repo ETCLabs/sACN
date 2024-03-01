@@ -32,7 +32,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 
 /****************************** Private types ********************************/
 
@@ -145,4 +145,4 @@ void deinit_to_erase_buf(ToEraseBuf* to_erase_buf)
 
 #endif  // SACN_DYNAMIC_MEM
 
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN

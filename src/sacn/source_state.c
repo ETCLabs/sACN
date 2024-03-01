@@ -31,7 +31,7 @@
 #include "etcpal/rbtree.h"
 #include "etcpal/timer.h"
 
-#if SACN_SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED || DOXYGEN
 
 // Suppress strncpy() warning on Windows/MSVC.
 #ifdef _MSC_VER
@@ -1159,4 +1159,4 @@ void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* univer
   universe->anything_sent_this_tick = true;
 }
 
-#endif  // SACN_SOURCE_ENABLED
+#endif  // SACN_SOURCE_ENABLED || DOXYGEN

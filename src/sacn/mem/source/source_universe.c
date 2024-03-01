@@ -36,7 +36,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED || DOXYGEN
 
 /*************************** Function definitions ****************************/
 
@@ -222,4 +222,4 @@ size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* fo
   return index;
 }
 
-#endif  // SACN_SOURCE_ENABLED
+#endif  // SACN_SOURCE_ENABLED || DOXYGEN
