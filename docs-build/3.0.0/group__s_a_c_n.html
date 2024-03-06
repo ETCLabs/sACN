@@ -1,0 +1,747 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: sACN</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">3.0.0</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('group__s_a_c_n.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#groups">Modules</a> &#124;
+<a href="#nested-classes">Data Structures</a> &#124;
+<a href="#define-members">Macros</a> &#124;
+<a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
+<a href="#func-members">Functions</a>  </div>
+  <div class="headertitle">
+<div class="title">sACN</div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>sACN: A Streaming ACN (sACN) implementation.  
+<a href="#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="groups"></a>
+Modules</h2></td></tr>
+<tr class="memitem:group__sacn__dmx__merger"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__dmx__merger.html">sACN DMX Merger</a></td></tr>
+<tr class="memdesc:group__sacn__dmx__merger"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sACN DMX Merger API; see <a class="el" href="using_dmx_merger.html">Using the sACN DMX Merger API</a>. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:group__sacn__merge__receiver"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__merge__receiver.html">sACN Merge Receiver</a></td></tr>
+<tr class="memdesc:group__sacn__merge__receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sACN Merge Receiver API; see <a class="el" href="using_merge_receiver.html">Using the sACN Merge Receiver API</a>. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:group__sacn__receiver"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__receiver.html">sACN Receiver</a></td></tr>
+<tr class="memdesc:group__sacn__receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sACN Receiver API; see <a class="el" href="using_receiver.html">Using the sACN Receiver API</a>. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:group__sacn__source"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source.html">sACN Source</a></td></tr>
+<tr class="memdesc:group__sacn__source"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sACN Source API; see <a class="el" href="using_source.html">Using the sACN Source API</a>. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:group__sacn__source__detector"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__source__detector.html">sACN Source Detector</a></td></tr>
+<tr class="memdesc:group__sacn__source__detector"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sACN Source Detector API. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:group__sacnopts"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacnopts.html">sACN Configuration Options</a></td></tr>
+<tr class="memdesc:group__sacnopts"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compile-time configuration options for sACN. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_netint_config.html">SacnNetintConfig</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:ga0a68bef69f737e31072b475521d331c8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8">SACN_SOURCE_NAME_MAX_LEN</a>&#160;&#160;&#160;64</td></tr>
+<tr class="memdesc:ga0a68bef69f737e31072b475521d331c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum length of an sACN source name, including the null-terminator.  <a href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8">More...</a><br /></td></tr>
+<tr class="separator:ga0a68bef69f737e31072b475521d331c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga681f92a30c76ae426e2403a328978abb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>&#160;&#160;&#160;512</td></tr>
+<tr class="separator:ga681f92a30c76ae426e2403a328978abb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4579b31d1f4e1ecff0ecd8214c551956"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga4579b31d1f4e1ecff0ecd8214c551956">SACN_REMOTE_SOURCE_INVALID</a>&#160;&#160;&#160;((<a class="el" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">sacn_remote_source_t</a>)-1)</td></tr>
+<tr class="separator:ga4579b31d1f4e1ecff0ecd8214c551956"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga2dba81c3bf923ae2dbb0aaa6d8d5fa0a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga2dba81c3bf923ae2dbb0aaa6d8d5fa0a">SACN_STARTCODE_DMX</a>&#160;&#160;&#160;0x00u</td></tr>
+<tr class="separator:ga2dba81c3bf923ae2dbb0aaa6d8d5fa0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga92ab22221d9dedb5b22978e6c14c6349"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga92ab22221d9dedb5b22978e6c14c6349">SACN_STARTCODE_PRIORITY</a>&#160;&#160;&#160;0xddu</td></tr>
+<tr class="separator:ga92ab22221d9dedb5b22978e6c14c6349"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3ee0954838bc60d3e04d7a54692533fd"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>SACN_NETINT_CONFIG_DEFAULT_INIT</b></td></tr>
+<tr class="separator:ga3ee0954838bc60d3e04d7a54692533fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:ga31b1febd91134668307803d573ed2f2c"><td class="memItemLeft" align="right" valign="top">typedef uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">sacn_remote_source_t</a></td></tr>
+<tr class="separator:ga31b1febd91134668307803d573ed2f2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabf46c3c353abbd956716fecbe24f2ae4"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#gabf46c3c353abbd956716fecbe24f2ae4">SacnMcastInterface</a></td></tr>
+<tr class="separator:gabf46c3c353abbd956716fecbe24f2ae4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3cd2196005e33f66518a0f0baba34147"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct_sacn_netint_config.html">SacnNetintConfig</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga3cd2196005e33f66518a0f0baba34147">SacnNetintConfig</a></td></tr>
+<tr class="separator:ga3cd2196005e33f66518a0f0baba34147"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:ga02f82b9c734e2d2f70a1106d6480833a"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a> { <a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa900230541148a1eb50b457dfbf75a3c4">kSacnIpV4Only</a>
+, <a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aaa7c7cce56d48e45e33bde272cb0be424">kSacnIpV6Only</a>
+, <a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2">kSacnIpV4AndIpV6</a>
+ }</td></tr>
+<tr class="separator:ga02f82b9c734e2d2f70a1106d6480833a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ga612160fe1d0f1e4f1fae4d72232fee07"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07">sacn_init</a> (const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_log_params.html">EtcPalLogParams</a> *log_params, const <a class="el" href="struct_sacn_netint_config.html">SacnNetintConfig</a> *sys_netint_config)</td></tr>
+<tr class="memdesc:ga612160fe1d0f1e4f1fae4d72232fee07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the sACN library.  <a href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07">More...</a><br /></td></tr>
+<tr class="separator:ga612160fe1d0f1e4f1fae4d72232fee07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7b80ebcafe9eb3240a67785377872f9a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga7b80ebcafe9eb3240a67785377872f9a">sacn_deinit</a> (void)</td></tr>
+<tr class="memdesc:ga7b80ebcafe9eb3240a67785377872f9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deinitialize the sACN library.  <a href="group__s_a_c_n.html#ga7b80ebcafe9eb3240a67785377872f9a">More...</a><br /></td></tr>
+<tr class="separator:ga7b80ebcafe9eb3240a67785377872f9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga65d96208fc89676e2dea18d2ded31872"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">sacn_remote_source_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga65d96208fc89676e2dea18d2ded31872">sacn_get_remote_source_handle</a> (const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_uuid.html">EtcPalUuid</a> *source_cid)</td></tr>
+<tr class="memdesc:ga65d96208fc89676e2dea18d2ded31872"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts a remote source CID to the corresponding handle, or <a class="el" href="group__s_a_c_n.html#ga4579b31d1f4e1ecff0ecd8214c551956">SACN_REMOTE_SOURCE_INVALID</a> if not found.  <a href="group__s_a_c_n.html#ga65d96208fc89676e2dea18d2ded31872">More...</a><br /></td></tr>
+<tr class="separator:ga65d96208fc89676e2dea18d2ded31872"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9a71315342a299c22055fe195e6750ef"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga9a71315342a299c22055fe195e6750ef">sacn_get_remote_source_cid</a> (<a class="el" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">sacn_remote_source_t</a> source_handle, <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_uuid.html">EtcPalUuid</a> *source_cid)</td></tr>
+<tr class="memdesc:ga9a71315342a299c22055fe195e6750ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts a remote source handle to the corresponding source CID.  <a href="group__s_a_c_n.html#ga9a71315342a299c22055fe195e6750ef">More...</a><br /></td></tr>
+<tr class="separator:ga9a71315342a299c22055fe195e6750ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader">sACN version numbers</h2></td></tr>
+<tr class="memitem:ga3b04b863e88d1bae02133dfb19667e06"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga3b04b863e88d1bae02133dfb19667e06">SACN_VERSION_MAJOR</a>&#160;&#160;&#160;3</td></tr>
+<tr class="separator:ga3b04b863e88d1bae02133dfb19667e06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga234bcbd2198002c6ee8d3caa670ba0ed"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga234bcbd2198002c6ee8d3caa670ba0ed">SACN_VERSION_MINOR</a>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:ga234bcbd2198002c6ee8d3caa670ba0ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae1d8849ebfa2d27cec433e54f7f7308d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#gae1d8849ebfa2d27cec433e54f7f7308d">SACN_VERSION_PATCH</a>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:gae1d8849ebfa2d27cec433e54f7f7308d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab22648c510945c218b806ad28e1e9a86"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#gab22648c510945c218b806ad28e1e9a86">SACN_VERSION_BUILD</a>&#160;&#160;&#160;26</td></tr>
+<tr class="separator:gab22648c510945c218b806ad28e1e9a86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader">sACN version strings</h2></td></tr>
+<tr class="memitem:ga2ff6980847182dc1ac56ee3660e0a360"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga2ff6980847182dc1ac56ee3660e0a360">SACN_VERSION_STRING</a>&#160;&#160;&#160;&quot;3.0.0.26&quot;</td></tr>
+<tr class="separator:ga2ff6980847182dc1ac56ee3660e0a360"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga99a95e107267c6f80cc2195f86c11586"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga99a95e107267c6f80cc2195f86c11586">SACN_VERSION_DATESTR</a>&#160;&#160;&#160;&quot;15.Jan.2024&quot;</td></tr>
+<tr class="separator:ga99a95e107267c6f80cc2195f86c11586"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5fd2e6c86426807d2eb598c67121723b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga5fd2e6c86426807d2eb598c67121723b">SACN_VERSION_COPYRIGHT</a>&#160;&#160;&#160;&quot;Copyright 2024 ETC Inc.&quot;</td></tr>
+<tr class="separator:ga5fd2e6c86426807d2eb598c67121723b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga46b3c38236732e08243f8fe79bcf6c06"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__s_a_c_n.html#ga46b3c38236732e08243f8fe79bcf6c06">SACN_VERSION_PRODUCTNAME</a>&#160;&#160;&#160;&quot;sACN&quot;</td></tr>
+<tr class="separator:ga46b3c38236732e08243f8fe79bcf6c06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<p>sACN: A Streaming ACN (sACN) implementation. </p>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="ga681f92a30c76ae426e2403a328978abb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga681f92a30c76ae426e2403a328978abb">&#9670;&nbsp;</a></span>DMX_ADDRESS_COUNT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DMX_ADDRESS_COUNT&#160;&#160;&#160;512</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The number of addresses in a DMX universe. </p>
+
+</div>
+</div>
+<a id="ga3ee0954838bc60d3e04d7a54692533fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga3ee0954838bc60d3e04d7a54692533fd">&#9670;&nbsp;</a></span>SACN_NETINT_CONFIG_DEFAULT_INIT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_NETINT_CONFIG_DEFAULT_INIT</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">  {                                     \</div>
+<div class="line">    NULL, 0, <span class="keyword">false</span>                      \</div>
+<div class="line">  }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="ga4579b31d1f4e1ecff0ecd8214c551956"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga4579b31d1f4e1ecff0ecd8214c551956">&#9670;&nbsp;</a></span>SACN_REMOTE_SOURCE_INVALID</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_REMOTE_SOURCE_INVALID&#160;&#160;&#160;((<a class="el" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">sacn_remote_source_t</a>)-1)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>An invalid remote source handle value. </p>
+
+</div>
+</div>
+<a id="ga0a68bef69f737e31072b475521d331c8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga0a68bef69f737e31072b475521d331c8">&#9670;&nbsp;</a></span>SACN_SOURCE_NAME_MAX_LEN</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_SOURCE_NAME_MAX_LEN&#160;&#160;&#160;64</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The maximum length of an sACN source name, including the null-terminator. </p>
+<p>E1.31 specifies that the Source Name field must be null-terminated on the wire. </p>
+
+</div>
+</div>
+<a id="ga2dba81c3bf923ae2dbb0aaa6d8d5fa0a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga2dba81c3bf923ae2dbb0aaa6d8d5fa0a">&#9670;&nbsp;</a></span>SACN_STARTCODE_DMX</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_STARTCODE_DMX&#160;&#160;&#160;0x00u</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The DMX start code. </p>
+
+</div>
+</div>
+<a id="ga92ab22221d9dedb5b22978e6c14c6349"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga92ab22221d9dedb5b22978e6c14c6349">&#9670;&nbsp;</a></span>SACN_STARTCODE_PRIORITY</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_STARTCODE_PRIORITY&#160;&#160;&#160;0xddu</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The per-address priority start code. </p>
+
+</div>
+</div>
+<a id="gab22648c510945c218b806ad28e1e9a86"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab22648c510945c218b806ad28e1e9a86">&#9670;&nbsp;</a></span>SACN_VERSION_BUILD</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_VERSION_BUILD&#160;&#160;&#160;26</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The build number. </p>
+
+</div>
+</div>
+<a id="ga5fd2e6c86426807d2eb598c67121723b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga5fd2e6c86426807d2eb598c67121723b">&#9670;&nbsp;</a></span>SACN_VERSION_COPYRIGHT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_VERSION_COPYRIGHT&#160;&#160;&#160;&quot;Copyright 2024 ETC Inc.&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The version's copyright string. </p>
+
+</div>
+</div>
+<a id="ga99a95e107267c6f80cc2195f86c11586"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga99a95e107267c6f80cc2195f86c11586">&#9670;&nbsp;</a></span>SACN_VERSION_DATESTR</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_VERSION_DATESTR&#160;&#160;&#160;&quot;15.Jan.2024&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The date this version was released (dd.Mm.yyyy). </p>
+
+</div>
+</div>
+<a id="ga3b04b863e88d1bae02133dfb19667e06"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga3b04b863e88d1bae02133dfb19667e06">&#9670;&nbsp;</a></span>SACN_VERSION_MAJOR</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_VERSION_MAJOR&#160;&#160;&#160;3</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The major version. </p>
+
+</div>
+</div>
+<a id="ga234bcbd2198002c6ee8d3caa670ba0ed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga234bcbd2198002c6ee8d3caa670ba0ed">&#9670;&nbsp;</a></span>SACN_VERSION_MINOR</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_VERSION_MINOR&#160;&#160;&#160;0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The minor version. </p>
+
+</div>
+</div>
+<a id="gae1d8849ebfa2d27cec433e54f7f7308d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gae1d8849ebfa2d27cec433e54f7f7308d">&#9670;&nbsp;</a></span>SACN_VERSION_PATCH</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_VERSION_PATCH&#160;&#160;&#160;0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The patch version. </p>
+
+</div>
+</div>
+<a id="ga46b3c38236732e08243f8fe79bcf6c06"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga46b3c38236732e08243f8fe79bcf6c06">&#9670;&nbsp;</a></span>SACN_VERSION_PRODUCTNAME</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_VERSION_PRODUCTNAME&#160;&#160;&#160;&quot;sACN&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The version's product name. </p>
+
+</div>
+</div>
+<a id="ga2ff6980847182dc1ac56ee3660e0a360"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga2ff6980847182dc1ac56ee3660e0a360">&#9670;&nbsp;</a></span>SACN_VERSION_STRING</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SACN_VERSION_STRING&#160;&#160;&#160;&quot;3.0.0.26&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The 4-digit version string. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Typedef Documentation</h2>
+<a id="ga31b1febd91134668307803d573ed2f2c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga31b1febd91134668307803d573ed2f2c">&#9670;&nbsp;</a></span>sacn_remote_source_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef uint16_t <a class="el" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">sacn_remote_source_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A source discovered on an sACN network that has a CID - used by Receiver and Merge Receiver. </p>
+
+</div>
+</div>
+<a id="gabf46c3c353abbd956716fecbe24f2ae4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gabf46c3c353abbd956716fecbe24f2ae4">&#9670;&nbsp;</a></span>SacnMcastInterface</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>On input, this structure is used to indicate a network interface to use. On output, this structure indicates whether or not the operation was a success. </p>
+
+</div>
+</div>
+<a id="ga3cd2196005e33f66518a0f0baba34147"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga3cd2196005e33f66518a0f0baba34147">&#9670;&nbsp;</a></span>SacnNetintConfig</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="struct_sacn_netint_config.html">SacnNetintConfig</a> <a class="el" href="struct_sacn_netint_config.html">SacnNetintConfig</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Network interface configuration information to give the sACN library. Multicast traffic will be restricted to the network interfaces given. The statuses are filled in for each interface. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="ga02f82b9c734e2d2f70a1106d6480833a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga02f82b9c734e2d2f70a1106d6480833a">&#9670;&nbsp;</a></span>sacn_ip_support_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>This enum defines how the API module will use IPv4 and IPv6 networking. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga02f82b9c734e2d2f70a1106d6480833aa900230541148a1eb50b457dfbf75a3c4"></a>kSacnIpV4Only&#160;</td><td class="fielddoc"><p>Use IPv4 only. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga02f82b9c734e2d2f70a1106d6480833aaa7c7cce56d48e45e33bde272cb0be424"></a>kSacnIpV6Only&#160;</td><td class="fielddoc"><p>Use IPv6 only. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2"></a>kSacnIpV4AndIpV6&#160;</td><td class="fielddoc"><p>Use both IPv4 and IPv6. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="ga7b80ebcafe9eb3240a67785377872f9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7b80ebcafe9eb3240a67785377872f9a">&#9670;&nbsp;</a></span>sacn_deinit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sacn_deinit </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Deinitialize the sACN library. </p>
+<p>Set the sACN library back to an uninitialized state. Calls to other sACN API functions will fail until <a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07" title="Initialize the sACN library.">sacn_init()</a> is called again.</p>
+<p>This function is not thread safe with respect to other sACN API functions. Make sure to join your threads that use the APIs before calling this. </p>
+
+</div>
+</div>
+<a id="ga9a71315342a299c22055fe195e6750ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga9a71315342a299c22055fe195e6750ef">&#9670;&nbsp;</a></span>sacn_get_remote_source_cid()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_get_remote_source_cid </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">sacn_remote_source_t</a>&#160;</td>
+          <td class="paramname"><em>source_handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_uuid.html">EtcPalUuid</a> *&#160;</td>
+          <td class="paramname"><em>source_cid</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Converts a remote source handle to the corresponding source CID. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">source_handle</td><td>The handle of the remote source. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">source_cid</td><td>The UUID of the source CID. Only written to if <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a> is returned.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Lookup was successful. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: The source handle does not match a source that was found by a receiver, merge receiver, or source detector. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ga65d96208fc89676e2dea18d2ded31872"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga65d96208fc89676e2dea18d2ded31872">&#9670;&nbsp;</a></span>sacn_get_remote_source_handle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">sacn_remote_source_t</a> sacn_get_remote_source_handle </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_uuid.html">EtcPalUuid</a> *&#160;</td>
+          <td class="paramname"><em>source_cid</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Converts a remote source CID to the corresponding handle, or <a class="el" href="group__s_a_c_n.html#ga4579b31d1f4e1ecff0ecd8214c551956">SACN_REMOTE_SOURCE_INVALID</a> if not found. </p>
+<p>This is a simple conversion from a remote source CID to it's corresponding remote source handle. A handle will be returned only if it is a source that has been discovered by a receiver, merge receiver, or source detector.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">source_cid</td><td>The UUID of the remote source CID. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The remote source handle, or <a class="el" href="group__s_a_c_n.html#ga4579b31d1f4e1ecff0ecd8214c551956">SACN_REMOTE_SOURCE_INVALID</a> if not found. </dd></dl>
+
+</div>
+</div>
+<a id="ga612160fe1d0f1e4f1fae4d72232fee07"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga612160fe1d0f1e4f1fae4d72232fee07">&#9670;&nbsp;</a></span>sacn_init()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> sacn_init </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_log_params.html">EtcPalLogParams</a> *&#160;</td>
+          <td class="paramname"><em>log_params</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="struct_sacn_netint_config.html">SacnNetintConfig</a> *&#160;</td>
+          <td class="paramname"><em>sys_netint_config</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initialize the sACN library. </p>
+<p>Do all necessary initialization before other sACN API functions can be called.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">log_params</td><td>A struct used by the library to log messages, or NULL for no logging. If <a class="el" href="group__sacnopts__global.html#ga5b77f40b283fa0f754576a64ff6f3d4c" title="Enable message logging from the sACN library.">SACN_LOGGING_ENABLED</a> is 0, this parameter is ignored. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">sys_netint_config</td><td>Optional. If non-NULL, this is the list of system interfaces the library will be limited to (with the added option of not allowing any interfaces to be used), and the status codes are filled in. If NULL, the library is allowed to use all available system interfaces. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Initialization successful. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>

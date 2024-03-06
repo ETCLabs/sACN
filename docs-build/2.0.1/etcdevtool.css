@@ -1,0 +1,68 @@
+/******************************************************************************
+ * Styling for misc. EtcDevTool-inserted constructs
+ *****************************************************************************/
+
+div#otherversions {
+  margin: 0 0 0 30px;
+}
+
+/******************************************************************************
+ * doxygen-awesome compatible CSS for the custom code tabs that can be generated
+ * by EtcDevTool. See the HTML snippets generated in docs.py to associate these
+ * classes with elements.
+ *****************************************************************************/
+
+.code-tab-page-selector {
+  overflow: hidden;
+  background-color: inherit;
+  color: var(--page-foreground-color);
+  border: 1px solid var(--page-foreground-color);
+  border-radius: var(--border-radius-small);
+}
+
+.code-tab-selector {
+  overflow: hidden;
+  background-color: inherit;
+  color: var(--page-foreground-color);
+  border: 1px solid var(--page-foreground-color);
+  border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+  border-bottom: none;
+}
+
+button.code-tab-links {
+  background-color: inherit;
+  color: var(--page-foreground-color);
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+button.code-tab-links:hover {
+  box-shadow: inset 0 -4px 0 0 var(--page-secondary-foreground-color);
+}
+
+button.code-tab-links.active {
+  box-shadow: inset 0 -4px 0 0 var(--primary-dark-color);
+  color: var(--primary-dark-color);
+  font-weight: bolder;
+}
+
+.code-tab-content {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid var(--page-foreground-color);
+  border-radius: 0 0 var(--border-radius-large) var(--border-radius-large);
+  border-top: none;
+}
+
+/******************************************************************************
+ * Patches to doxygen-awesome.css to make it look a bit nicer
+ *****************************************************************************/
+
+/* div.fragment a.code does not cover a.codeRef */
+div.fragment a.codeRef {
+  color: var(--fragment-link);
+}

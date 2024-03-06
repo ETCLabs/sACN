@@ -1,0 +1,1614 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: Source Class Reference</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">2.0.2</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('classsacn_1_1_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#nested-classes">Data Structures</a> &#124;
+<a href="#pub-types">Public Types</a> &#124;
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a>  </div>
+  <div class="headertitle">
+<div class="title">Source Class Reference<div class="ingroups"><a class="el" href="group__sacn__cpp__api.html">sACN C++ Language APIs</a> &raquo; <a class="el" href="group__sacn__source__cpp.html">sACN Source API</a></div></div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>An instance of sACN <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API.">Source</a> functionality; see <a class="el" href="using_source.html">Using the sACN Source API</a>.  
+ <a href="classsacn_1_1_source.html#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_settings.html">Settings</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of configuration settings that a source needs to initialize.  <a href="structsacn_1_1_source_1_1_settings.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of network interfaces for a particular universe.  <a href="structsacn_1_1_source_1_1_universe_netint_list.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_settings.html">UniverseSettings</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A set of configuration settings for a new universe on a source.  <a href="structsacn_1_1_source_1_1_universe_settings.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a3defc9aed71824af85696f0f7e1b9ae4"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a3defc9aed71824af85696f0f7e1b9ae4">Handle</a> = <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html">etcpal::OpaqueId</a>&lt; <a class="el" href="classsacn_1_1detail_1_1_source_handle_type.html">detail::SourceHandleType</a>, <a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>, <a class="el" href="group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153">SACN_SOURCE_INVALID</a> &gt;</td></tr>
+<tr class="separator:a3defc9aed71824af85696f0f7e1b9ae4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:ade9699a755d9e894dd62439e18869a23"><td class="memItemLeft" align="right" valign="top"><a id="ade9699a755d9e894dd62439e18869a23"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Source</b> (const <a class="el" href="classsacn_1_1_source.html">Source</a> &amp;other)=delete</td></tr>
+<tr class="separator:ade9699a755d9e894dd62439e18869a23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace1a98c6e347dddfb9c2b362b93b2a45"><td class="memItemLeft" align="right" valign="top"><a id="ace1a98c6e347dddfb9c2b362b93b2a45"></a>
+<a class="el" href="classsacn_1_1_source.html">Source</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classsacn_1_1_source.html">Source</a> &amp;other)=delete</td></tr>
+<tr class="separator:ace1a98c6e347dddfb9c2b362b93b2a45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3745517fb270270e41c41f0938dc278"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ab3745517fb270270e41c41f0938dc278">Source</a> (<a class="el" href="classsacn_1_1_source.html">Source</a> &amp;&amp;other)=default</td></tr>
+<tr class="separator:ab3745517fb270270e41c41f0938dc278"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70ca8a75288ff8b02f7674f8feea7940"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classsacn_1_1_source.html">Source</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a70ca8a75288ff8b02f7674f8feea7940">operator=</a> (<a class="el" href="classsacn_1_1_source.html">Source</a> &amp;&amp;other)=default</td></tr>
+<tr class="separator:a70ca8a75288ff8b02f7674f8feea7940"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab263565edc9ebf5ffd6e82a18184e4c3"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ab263565edc9ebf5ffd6e82a18184e4c3">Startup</a> (const <a class="el" href="structsacn_1_1_source_1_1_settings.html">Settings</a> &amp;settings)</td></tr>
+<tr class="memdesc:ab263565edc9ebf5ffd6e82a18184e4c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new sACN source to send sACN data.  <a href="classsacn_1_1_source.html#ab263565edc9ebf5ffd6e82a18184e4c3">More...</a><br /></td></tr>
+<tr class="separator:ab263565edc9ebf5ffd6e82a18184e4c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5f038c2b480cf9ef5e19e3eba8dbaf9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">Shutdown</a> ()</td></tr>
+<tr class="memdesc:ac5f038c2b480cf9ef5e19e3eba8dbaf9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy an sACN source instance.  <a href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">More...</a><br /></td></tr>
+<tr class="separator:ac5f038c2b480cf9ef5e19e3eba8dbaf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa33e199741640a65c41cc19d18b4b6f0"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#aa33e199741640a65c41cc19d18b4b6f0">ChangeName</a> (const <a class="elRef" href="https://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;new_name)</td></tr>
+<tr class="memdesc:aa33e199741640a65c41cc19d18b4b6f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the name of an sACN source.  <a href="classsacn_1_1_source.html#aa33e199741640a65c41cc19d18b4b6f0">More...</a><br /></td></tr>
+<tr class="separator:aa33e199741640a65c41cc19d18b4b6f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad899234878a1c955c1cc66a4f097902e"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e">AddUniverse</a> (const <a class="el" href="structsacn_1_1_source_1_1_universe_settings.html">UniverseSettings</a> &amp;settings)</td></tr>
+<tr class="memdesc:ad899234878a1c955c1cc66a4f097902e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a universe to an sACN source, which will use all network interfaces.  <a href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e">More...</a><br /></td></tr>
+<tr class="separator:ad899234878a1c955c1cc66a4f097902e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acde56409812c209c488836f19cf53662"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#acde56409812c209c488836f19cf53662">AddUniverse</a> (const <a class="el" href="structsacn_1_1_source_1_1_universe_settings.html">UniverseSettings</a> &amp;settings, <a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;netints)</td></tr>
+<tr class="memdesc:acde56409812c209c488836f19cf53662"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a universe to an sACN source, which will use the network interfaces passed in.  <a href="classsacn_1_1_source.html#acde56409812c209c488836f19cf53662">More...</a><br /></td></tr>
+<tr class="separator:acde56409812c209c488836f19cf53662"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0293c6689075dd5cb9692f036c8540f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#aa0293c6689075dd5cb9692f036c8540f">RemoveUniverse</a> (uint16_t universe)</td></tr>
+<tr class="memdesc:aa0293c6689075dd5cb9692f036c8540f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a universe from a source.  <a href="classsacn_1_1_source.html#aa0293c6689075dd5cb9692f036c8540f">More...</a><br /></td></tr>
+<tr class="separator:aa0293c6689075dd5cb9692f036c8540f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc1d03b3f1516e7f545862b9096d834c"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; uint16_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#adc1d03b3f1516e7f545862b9096d834c">GetUniverses</a> ()</td></tr>
+<tr class="memdesc:adc1d03b3f1516e7f545862b9096d834c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain a vector of this source's universes.  <a href="classsacn_1_1_source.html#adc1d03b3f1516e7f545862b9096d834c">More...</a><br /></td></tr>
+<tr class="separator:adc1d03b3f1516e7f545862b9096d834c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d7f1f26d1a6f5dbffca60dd08ac0454"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a5d7f1f26d1a6f5dbffca60dd08ac0454">AddUnicastDestination</a> (uint16_t universe, const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a> &amp;dest)</td></tr>
+<tr class="memdesc:a5d7f1f26d1a6f5dbffca60dd08ac0454"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a unicast destination for a universe.  <a href="classsacn_1_1_source.html#a5d7f1f26d1a6f5dbffca60dd08ac0454">More...</a><br /></td></tr>
+<tr class="separator:a5d7f1f26d1a6f5dbffca60dd08ac0454"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2073e5814e81bf1257c7264a1b984966"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966">RemoveUnicastDestination</a> (uint16_t universe, const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a> &amp;dest)</td></tr>
+<tr class="memdesc:a2073e5814e81bf1257c7264a1b984966"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a unicast destination on a universe.  <a href="classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966">More...</a><br /></td></tr>
+<tr class="separator:a2073e5814e81bf1257c7264a1b984966"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a80e1d17f72cc96da34ed4e2ed7b5a439"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a80e1d17f72cc96da34ed4e2ed7b5a439">GetUnicastDestinations</a> (uint16_t universe)</td></tr>
+<tr class="memdesc:a80e1d17f72cc96da34ed4e2ed7b5a439"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain a vector of a universe's unicast destinations.  <a href="classsacn_1_1_source.html#a80e1d17f72cc96da34ed4e2ed7b5a439">More...</a><br /></td></tr>
+<tr class="separator:a80e1d17f72cc96da34ed4e2ed7b5a439"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a250e66ea54b315476f4c201600dd7b5f"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a250e66ea54b315476f4c201600dd7b5f">ChangePriority</a> (uint16_t universe, uint8_t new_priority)</td></tr>
+<tr class="memdesc:a250e66ea54b315476f4c201600dd7b5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the priority of a universe.  <a href="classsacn_1_1_source.html#a250e66ea54b315476f4c201600dd7b5f">More...</a><br /></td></tr>
+<tr class="separator:a250e66ea54b315476f4c201600dd7b5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a386b243f62f7cc246de825add2af3161"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a386b243f62f7cc246de825add2af3161">ChangePreviewFlag</a> (uint16_t universe, bool new_preview_flag)</td></tr>
+<tr class="memdesc:a386b243f62f7cc246de825add2af3161"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the send_preview option on a universe.  <a href="classsacn_1_1_source.html#a386b243f62f7cc246de825add2af3161">More...</a><br /></td></tr>
+<tr class="separator:a386b243f62f7cc246de825add2af3161"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f73aa9c83e7d7266128cba5d4f70ef2"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a6f73aa9c83e7d7266128cba5d4f70ef2">ChangeSynchronizationUniverse</a> (uint16_t universe, uint16_t new_sync_universe)</td></tr>
+<tr class="memdesc:a6f73aa9c83e7d7266128cba5d4f70ef2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Changes the synchronization universe for a universe.  <a href="classsacn_1_1_source.html#a6f73aa9c83e7d7266128cba5d4f70ef2">More...</a><br /></td></tr>
+<tr class="separator:a6f73aa9c83e7d7266128cba5d4f70ef2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a22cf560eca13a3cbc4c8384bad438897"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a22cf560eca13a3cbc4c8384bad438897">SendNow</a> (uint16_t universe, uint8_t start_code, const uint8_t *buffer, size_t buflen)</td></tr>
+<tr class="memdesc:a22cf560eca13a3cbc4c8384bad438897"><td class="mdescLeft">&#160;</td><td class="mdescRight">Immediately sends the provided sACN start code &amp; data.  <a href="classsacn_1_1_source.html#a22cf560eca13a3cbc4c8384bad438897">More...</a><br /></td></tr>
+<tr class="separator:a22cf560eca13a3cbc4c8384bad438897"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecaeb4e484f6b34e839b705a1395765f"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f">SendSynchronization</a> (uint16_t universe)</td></tr>
+<tr class="memdesc:aecaeb4e484f6b34e839b705a1395765f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicate that a new synchronization packet should be sent on the given synchronization universe.  <a href="classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f">More...</a><br /></td></tr>
+<tr class="separator:aecaeb4e484f6b34e839b705a1395765f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbec36dcb6b7ac017788510763dffef3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#acbec36dcb6b7ac017788510763dffef3">UpdateLevels</a> (uint16_t universe, const uint8_t *new_levels, size_t new_levels_size)</td></tr>
+<tr class="memdesc:acbec36dcb6b7ac017788510763dffef3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies the universe's DMX levels into the packet to be sent on the next threaded or manual update.  <a href="classsacn_1_1_source.html#acbec36dcb6b7ac017788510763dffef3">More...</a><br /></td></tr>
+<tr class="separator:acbec36dcb6b7ac017788510763dffef3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d60e097ae578e5f8683fc10b271b126"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a2d60e097ae578e5f8683fc10b271b126">UpdateLevelsAndPap</a> (uint16_t universe, const uint8_t *new_levels, size_t new_levels_size, const uint8_t *new_priorities, size_t new_priorities_size)</td></tr>
+<tr class="memdesc:a2d60e097ae578e5f8683fc10b271b126"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies the universe's DMX levels and per-address priorities into packets that are sent on the next threaded or manual update.  <a href="classsacn_1_1_source.html#a2d60e097ae578e5f8683fc10b271b126">More...</a><br /></td></tr>
+<tr class="separator:a2d60e097ae578e5f8683fc10b271b126"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7249aefa54c1fc4a230439d08fcfddd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ab7249aefa54c1fc4a230439d08fcfddd">UpdateLevelsAndForceSync</a> (uint16_t universe, const uint8_t *new_levels, size_t new_levels_size)</td></tr>
+<tr class="memdesc:ab7249aefa54c1fc4a230439d08fcfddd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Like <a class="el" href="classsacn_1_1_source.html#acbec36dcb6b7ac017788510763dffef3" title="Copies the universe&#39;s DMX levels into the packet to be sent on the next threaded or manual update.">UpdateLevels()</a>, but also sets the force_sync flag on the packet.  <a href="classsacn_1_1_source.html#ab7249aefa54c1fc4a230439d08fcfddd">More...</a><br /></td></tr>
+<tr class="separator:ab7249aefa54c1fc4a230439d08fcfddd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae6ab3c198ab506632e32e186bebe6a56"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ae6ab3c198ab506632e32e186bebe6a56">UpdateLevelsAndPapAndForceSync</a> (uint16_t universe, const uint8_t *new_levels, size_t new_levels_size, const uint8_t *new_priorities, size_t new_priorities_size)</td></tr>
+<tr class="memdesc:ae6ab3c198ab506632e32e186bebe6a56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Like <a class="el" href="classsacn_1_1_source.html#a2d60e097ae578e5f8683fc10b271b126" title="Copies the universe&#39;s DMX levels and per-address priorities into packets that are sent on the next th...">UpdateLevelsAndPap()</a>, but also sets the force_sync flag on the packet.  <a href="classsacn_1_1_source.html#ae6ab3c198ab506632e32e186bebe6a56">More...</a><br /></td></tr>
+<tr class="separator:ae6ab3c198ab506632e32e186bebe6a56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab862dc0dd665318204b83182f016731c"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_mcast_netint_id.html">EtcPalMcastNetintId</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ab862dc0dd665318204b83182f016731c">GetNetworkInterfaces</a> (uint16_t universe)</td></tr>
+<tr class="memdesc:ab862dc0dd665318204b83182f016731c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain a vector of a universe's network interfaces.  <a href="classsacn_1_1_source.html#ab862dc0dd665318204b83182f016731c">More...</a><br /></td></tr>
+<tr class="separator:ab862dc0dd665318204b83182f016731c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f8c06497d45385dbb819d1dd4fc7a25"><td class="memItemLeft" align="right" valign="top">constexpr <a class="el" href="classsacn_1_1_source.html#a3defc9aed71824af85696f0f7e1b9ae4">Handle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25">handle</a> () const</td></tr>
+<tr class="memdesc:a4f8c06497d45385dbb819d1dd4fc7a25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current handle to the underlying C source.  <a href="classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25">More...</a><br /></td></tr>
+<tr class="separator:a4f8c06497d45385dbb819d1dd4fc7a25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:ad0b6181050c6d436a907401688950126"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126">ProcessManual</a> ()</td></tr>
+<tr class="memdesc:ad0b6181050c6d436a907401688950126"><td class="mdescLeft">&#160;</td><td class="mdescRight">Trigger the transmission of sACN packets for all universes of sources that were created with manually_process_source set to true.  <a href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126">More...</a><br /></td></tr>
+<tr class="separator:ad0b6181050c6d436a907401688950126"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a164496f7cd6035473d44731924b7e48a"><td class="memItemLeft" align="right" valign="top">static <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a164496f7cd6035473d44731924b7e48a">ResetNetworking</a> ()</td></tr>
+<tr class="memdesc:a164496f7cd6035473d44731924b7e48a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets for all universes of all sources.  <a href="classsacn_1_1_source.html#a164496f7cd6035473d44731924b7e48a">More...</a><br /></td></tr>
+<tr class="separator:a164496f7cd6035473d44731924b7e48a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26dd2b3b95dbaac498bfc0ba231f42e6"><td class="memItemLeft" align="right" valign="top">static <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#a26dd2b3b95dbaac498bfc0ba231f42e6">ResetNetworking</a> (<a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;netints)</td></tr>
+<tr class="memdesc:a26dd2b3b95dbaac498bfc0ba231f42e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets for all universes of all sources.  <a href="classsacn_1_1_source.html#a26dd2b3b95dbaac498bfc0ba231f42e6">More...</a><br /></td></tr>
+<tr class="separator:a26dd2b3b95dbaac498bfc0ba231f42e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af94950609d80afb351cf8e72a9f174c5"><td class="memItemLeft" align="right" valign="top">static <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsacn_1_1_source.html#af94950609d80afb351cf8e72a9f174c5">ResetNetworking</a> (<a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;sys_netints, <a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a> &gt; &amp;netint_lists)</td></tr>
+<tr class="memdesc:af94950609d80afb351cf8e72a9f174c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets the underlying network sockets and determines network interfaces for each universe of each source.  <a href="classsacn_1_1_source.html#af94950609d80afb351cf8e72a9f174c5">More...</a><br /></td></tr>
+<tr class="separator:af94950609d80afb351cf8e72a9f174c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>An instance of sACN <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API.">Source</a> functionality; see <a class="el" href="using_source.html">Using the sACN Source API</a>. </p>
+<p>Components that send sACN are referred to as sACN Sources. Use this API to act as an sACN <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API.">Source</a>.</p>
+<p>See <a class="el" href="using_source.html">Using the sACN Source API</a> for a detailed description of how to use this API. </p>
+</div><h2 class="groupheader">Member Typedef Documentation</h2>
+<a id="a3defc9aed71824af85696f0f7e1b9ae4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3defc9aed71824af85696f0f7e1b9ae4">&#9670;&nbsp;</a></span>Handle</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="classsacn_1_1_source.html#a3defc9aed71824af85696f0f7e1b9ae4">Handle</a> =  <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html">etcpal::OpaqueId</a>&lt;<a class="el" href="classsacn_1_1detail_1_1_source_handle_type.html">detail::SourceHandleType</a>, <a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>, <a class="el" href="group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153">SACN_SOURCE_INVALID</a>&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A handle type used by the sACN library to identify source instances. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="ab3745517fb270270e41c41f0938dc278"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab3745517fb270270e41c41f0938dc278">&#9670;&nbsp;</a></span>Source()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classsacn_1_1_source.html">Source</a> </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classsacn_1_1_source.html">Source</a> &amp;&amp;&#160;</td>
+          <td class="paramname"><em>other</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">default</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Move a source instance. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a5d7f1f26d1a6f5dbffca60dd08ac0454"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5d7f1f26d1a6f5dbffca60dd08ac0454">&#9670;&nbsp;</a></span>AddUnicastDestination()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> AddUnicastDestination </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a> &amp;&#160;</td>
+          <td class="paramname"><em>dest</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Add a unicast destination for a universe. </p>
+<p>This will reset transmission suppression and include the new unicast destination in transmissions for the universe.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dest</td><td>The destination IP. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Address added successfully. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or the universe is not on that source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afaeab0ae4d277d52dc56a1d78f81868c2d">kEtcPalErrExists</a>: The unicast destination was already added to this universe on this source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afad16b0fe51e8664f8b30b740ea1e51599">kEtcPalErrNoMem</a>: No room to allocate additional destination address. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ad899234878a1c955c1cc66a4f097902e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad899234878a1c955c1cc66a4f097902e">&#9670;&nbsp;</a></span>AddUniverse() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> AddUniverse </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structsacn_1_1_source_1_1_universe_settings.html">UniverseSettings</a> &amp;&#160;</td>
+          <td class="paramname"><em>settings</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Add a universe to an sACN source, which will use all network interfaces. </p>
+<p>Adds a universe to a source. All network interfaces will be used. After this call completes, the applicaton must call one of the Update functions to mark it ready for processing.</p>
+<p>If the source is not marked as unicast_only, the source will add the universe to its sACN Universe Discovery packets once one of the Update functions are called.</p>
+<p>Note that a universe is considered as successfully added if it is able to successfully use any of the network interfaces. This will only return <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">settings</td><td>Configuration parameters for the universe to be added. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Universe successfully added. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a>: None of the system network interfaces were usable by the library. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afaeab0ae4d277d52dc56a1d78f81868c2d">kEtcPalErrExists</a>: Universe given was already added to this source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afad16b0fe51e8664f8b30b740ea1e51599">kEtcPalErrNoMem</a>: No room to allocate additional universe. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="acde56409812c209c488836f19cf53662"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acde56409812c209c488836f19cf53662">&#9670;&nbsp;</a></span>AddUniverse() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> AddUniverse </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structsacn_1_1_source_1_1_universe_settings.html">UniverseSettings</a> &amp;&#160;</td>
+          <td class="paramname"><em>settings</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>netints</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Add a universe to an sACN source, which will use the network interfaces passed in. </p>
+<p>Adds a universe to a source. Only the network interfaces passed in will be used. After this call completes, the applicaton must call one of the Update functions to mark it ready for processing.</p>
+<p>If the source is not marked as unicast_only, the source will add the universe to its sACN Universe Discovery packets once one of the Update functions are called.</p>
+<p>Note that a universe is considered as successfully added if it is able to successfully use any of the network interfaces passed in. This will only return <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">settings</td><td>Configuration parameters for the universe to be added. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">netints</td><td>Optional. If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If empty, all available interfaces are tried and this vector isn't modified. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Universe successfully added. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a>: None of the network interfaces provided were usable by the library. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afaeab0ae4d277d52dc56a1d78f81868c2d">kEtcPalErrExists</a>: Universe given was already added to this source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afad16b0fe51e8664f8b30b740ea1e51599">kEtcPalErrNoMem</a>: No room to allocate additional universe. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="aa33e199741640a65c41cc19d18b4b6f0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa33e199741640a65c41cc19d18b4b6f0">&#9670;&nbsp;</a></span>ChangeName()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> ChangeName </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="elRef" href="https://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;&#160;</td>
+          <td class="paramname"><em>new_name</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Change the name of an sACN source. </p>
+<p>The name is a UTF-8 string representing "a user-assigned name provided by the source of the packet for use in
+displaying the identity of a source to a user." If its length (including the null terminator) is longer than <a class="el" href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8" title="The maximum length of an sACN source name, including the null-terminator.">SACN_SOURCE_NAME_MAX_LEN</a>, then <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a> will be returned.</p>
+<p>This function will update the packet buffers of all this source's universes with the new name. For each universe that is transmitting NULL start code or PAP data, the logic that slows down packet transmission due to inactivity will be reset.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_name</td><td>New name to use for this source. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Name set successfully. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="a386b243f62f7cc246de825add2af3161"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a386b243f62f7cc246de825add2af3161">&#9670;&nbsp;</a></span>ChangePreviewFlag()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> ChangePreviewFlag </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>new_preview_flag</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Change the send_preview option on a universe. </p>
+<p>Sets the state of a flag in the outgoing sACN packets that indicates that the data is (from E1.31) "intended for use in visualization or media server preview applications and shall not be
+used to generate live output."</p>
+<p>This function will update the packet buffers with the new option. If this universe is transmitting NULL start code or PAP data, the logic that slows down packet transmission due to inactivity will be reset.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The universe to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_preview_flag</td><td>The new send_preview option. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: send_preview option set successfully. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or the universe is not on that source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="a250e66ea54b315476f4c201600dd7b5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a250e66ea54b315476f4c201600dd7b5f">&#9670;&nbsp;</a></span>ChangePriority()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> ChangePriority </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>new_priority</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Change the priority of a universe. </p>
+<p>This function will update the packet buffers with the new priority. If this universe is transmitting NULL start code or PAP data, the logic that slows down packet transmission due to inactivity will be reset.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_priority</td><td>New priority of the data sent from this source. Valid range is 0 to 200, inclusive. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Priority set successfully. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or the universe is not on that source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="a6f73aa9c83e7d7266128cba5d4f70ef2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6f73aa9c83e7d7266128cba5d4f70ef2">&#9670;&nbsp;</a></span>ChangeSynchronizationUniverse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> ChangeSynchronizationUniverse </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>new_sync_universe</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Changes the synchronization universe for a universe. </p>
+<p>This will change the synchronization universe used by a sACN universe on this source. If this value is 0, synchronization is turned off for that universe.</p>
+<p>This function will update the packet buffers with the new sync universe. If this universe is transmitting NULL start code or PAP data, the logic that slows down packet transmission due to inactivity will be reset.</p>
+<p>TODO: At this time, synchronization is not supported by this library.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The universe to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_sync_universe</td><td>The new synchronization universe to set. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: sync_universe set successfully. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source or the universe is not on that source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ab862dc0dd665318204b83182f016731c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab862dc0dd665318204b83182f016731c">&#9670;&nbsp;</a></span>GetNetworkInterfaces()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_mcast_netint_id.html">EtcPalMcastNetintId</a> &gt; GetNetworkInterfaces </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Obtain a vector of a universe's network interfaces. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The universe for which to obtain the vector of network interfaces. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A vector of the universe's network interfaces. </dd></dl>
+
+</div>
+</div>
+<a id="a80e1d17f72cc96da34ed4e2ed7b5a439"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a80e1d17f72cc96da34ed4e2ed7b5a439">&#9670;&nbsp;</a></span>GetUnicastDestinations()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a> &gt; GetUnicastDestinations </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Obtain a vector of a universe's unicast destinations. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>The universe for which to obtain the list of unicast destinations. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A vector of unicast destinations for the given universe. </dd></dl>
+
+</div>
+</div>
+<a id="adc1d03b3f1516e7f545862b9096d834c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adc1d03b3f1516e7f545862b9096d834c">&#9670;&nbsp;</a></span>GetUniverses()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; uint16_t &gt; GetUniverses </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Obtain a vector of this source's universes. </p>
+<dl class="section return"><dt>Returns</dt><dd>A vector of this source's universes. </dd></dl>
+
+</div>
+</div>
+<a id="a4f8c06497d45385dbb819d1dd4fc7a25"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f8c06497d45385dbb819d1dd4fc7a25">&#9670;&nbsp;</a></span>handle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr <a class="el" href="classsacn_1_1_source.html#a3defc9aed71824af85696f0f7e1b9ae4">Source::Handle</a> handle </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the current handle to the underlying C source. </p>
+<dl class="section return"><dt>Returns</dt><dd>The handle, which will only be valid if the source has been successfully created using <a class="el" href="classsacn_1_1_source.html#ab263565edc9ebf5ffd6e82a18184e4c3" title="Create a new sACN source to send sACN data.">Startup()</a>. </dd></dl>
+
+</div>
+</div>
+<a id="a70ca8a75288ff8b02f7674f8feea7940"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a70ca8a75288ff8b02f7674f8feea7940">&#9670;&nbsp;</a></span>operator=()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classsacn_1_1_source.html">Source</a>&amp; operator= </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classsacn_1_1_source.html">Source</a> &amp;&amp;&#160;</td>
+          <td class="paramname"><em>other</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">default</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Move a source instance. </p>
+
+</div>
+</div>
+<a id="ad0b6181050c6d436a907401688950126"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad0b6181050c6d436a907401688950126">&#9670;&nbsp;</a></span>ProcessManual()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int ProcessManual </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Trigger the transmission of sACN packets for all universes of sources that were created with manually_process_source set to true. </p>
+<p>Note: Unless you created the source with manually_process_source set to true, similar functionality will be automatically called by an internal thread of the module. Otherwise, this must be called at the maximum rate at which the application will send sACN.</p>
+<p>Sends the current data for universes which have been updated, and sends keep-alive data for universes which haven't been updated. Also destroys sources &amp; universes that have been marked for termination after sending the required three terminated packets.</p>
+<dl class="section return"><dt>Returns</dt><dd>Current number of manual sources tracked by the library, including sources that have been destroyed but are still sending termination packets. This can be useful on shutdown to track when destroyed sources have finished sending the terminated packets and actually been destroyed. </dd></dl>
+
+</div>
+</div>
+<a id="a2073e5814e81bf1257c7264a1b984966"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2073e5814e81bf1257c7264a1b984966">&#9670;&nbsp;</a></span>RemoveUnicastDestination()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RemoveUnicastDestination </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a> &amp;&#160;</td>
+          <td class="paramname"><em>dest</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Remove a unicast destination on a universe. </p>
+<p>This removes a unicast destination address and queues the sending of termination packets to the address, which takes place either on the thread or on calls to <a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126" title="Trigger the transmission of sACN packets for all universes of sources that were created with manually...">ProcessManual()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to change. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dest</td><td>The destination IP to remove. Must match the address passed to <a class="el" href="classsacn_1_1_source.html#a5d7f1f26d1a6f5dbffca60dd08ac0454" title="Add a unicast destination for a universe.">AddUnicastDestination()</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aa0293c6689075dd5cb9692f036c8540f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa0293c6689075dd5cb9692f036c8540f">&#9670;&nbsp;</a></span>RemoveUniverse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RemoveUniverse </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Remove a universe from a source. </p>
+<p>This removes a universe and queues the sending of termination packets to the universe, which takes place either on the thread or on calls to <a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126" title="Trigger the transmission of sACN packets for all universes of sources that were created with manually...">ProcessManual()</a>.</p>
+<p>The source will also stop including the universe in sACN universe discovery packets.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to remove. This source's functions will no longer recognize this universe unless the universe is re-added. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a164496f7cd6035473d44731924b7e48a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a164496f7cd6035473d44731924b7e48a">&#9670;&nbsp;</a></span>ResetNetworking() <span class="overload">[1/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> ResetNetworking </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Resets the underlying network sockets for all universes of all sources. </p>
+<p>This is the overload of ResetNetworking that uses all network interfaces.</p>
+<p>This is typically used when the application detects that the list of networking interfaces has changed. The source API will no longer be limited to specific interfaces (the list passed into <a class="el" href="group__sacn__cpp__common.html#ga65534ea21e4b2adde8d3189b3c4405a3" title="Initialize the sACN library.">sacn::Init()</a>, if any, is overridden for the source API, but not the other APIs). Every universe of every source is set to all system interfaces.</p>
+<p>After this call completes successfully, all universes of all sources are considered to be updated and have new levels and priorities. It's as if every source just started sending levels on all their universes.</p>
+<p>If this call fails, the caller must call <a class="el" href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9" title="Destroy an sACN source instance.">Shutdown()</a> on all sources, because the source API may be in an invalid state.</p>
+<p>Note that the networking reset is considered successful if it is able to successfully use any of the network interfaces. This will only return <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Networking reset successfully. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a>: None of the network interfaces were usable by the library. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="a26dd2b3b95dbaac498bfc0ba231f42e6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26dd2b3b95dbaac498bfc0ba231f42e6">&#9670;&nbsp;</a></span>ResetNetworking() <span class="overload">[2/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> ResetNetworking </td>
+          <td>(</td>
+          <td class="paramtype"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>sys_netints</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Resets the underlying network sockets for all universes of all sources. </p>
+<p>This is typically used when the application detects that the list of networking interfaces has changed. This changes the list of system interfaces the source API will be limited to (the list passed into <a class="el" href="group__sacn__cpp__common.html#ga65534ea21e4b2adde8d3189b3c4405a3" title="Initialize the sACN library.">sacn::Init()</a>, if any, is overridden for the source API, but not the other APIs). Then all universes of all sources will be configured to use all of those interfaces.</p>
+<p>After this call completes successfully, all universes of all sources are considered to be updated and have new levels and priorities. It's as if every source just started sending levels on all their universes.</p>
+<p>If this call fails, the caller must call <a class="el" href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9" title="Destroy an sACN source instance.">Shutdown()</a> on all sources, because the source API may be in an invalid state.</p>
+<p>Note that the networking reset is considered successful if it is able to successfully use any of the network interfaces passed in. This will only return <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sys_netints</td><td>If !empty, this is the list of system interfaces the source API will be limited to, and the status codes are filled in. If empty, the source API is allowed to use all available system interfaces. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Networking reset successfully. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a>: None of the network interfaces provided were usable by the library. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="af94950609d80afb351cf8e72a9f174c5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af94950609d80afb351cf8e72a9f174c5">&#9670;&nbsp;</a></span>ResetNetworking() <span class="overload">[3/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> ResetNetworking </td>
+          <td>(</td>
+          <td class="paramtype"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>sys_netints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>per_universe_netint_lists</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Resets the underlying network sockets and determines network interfaces for each universe of each source. </p>
+<p>This is typically used when the application detects that the list of networking interfaces has changed. This changes the list of system interfaces the source API will be limited to (the list passed into <a class="el" href="group__sacn__cpp__common.html#ga65534ea21e4b2adde8d3189b3c4405a3" title="Initialize the sACN library.">sacn::Init()</a>, if any, is overridden for the source API, but not the other APIs). Then the network interfaces are specified for each universe of each source.</p>
+<p>After this call completes successfully, all universes of all sources are considered to be updated and have new levels and priorities. It's as if every source just started sending levels on all their universes.</p>
+<p>If this call fails, the caller must call <a class="el" href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9" title="Destroy an sACN source instance.">Shutdown()</a> on all sources, because the source API may be in an invalid state.</p>
+<p>Note that the networking reset is considered successful if it is able to successfully use any of the network interfaces passed in for each universe. This will only return <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a> if none of the interfaces work for a universe.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir"></td><td class="paramname">sys_netints</td><td>If !empty, this is the list of system interfaces the source API will be limited to, and the status codes are filled in. If empty, the source API is allowed to use all available system interfaces. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">per_universe_netint_lists</td><td>Vector of lists of interfaces the application wants to use for each universe. Must not be empty. Must include all universes of all sources, and nothing more. The status codes are filled in whenever <a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#a2a0cd7263bacb4663085d28599867b12">UniverseNetintList::netints</a> is !empty. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Networking reset successfully. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa730afdd022ada726bdf8d940eda9759b">kEtcPalErrNoNetints</a>: None of the network interfaces provided for a universe were usable by the library. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="a22cf560eca13a3cbc4c8384bad438897"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a22cf560eca13a3cbc4c8384bad438897">&#9670;&nbsp;</a></span>SendNow()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> SendNow </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>start_code</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>buflen</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Immediately sends the provided sACN start code &amp; data. </p>
+<p>Immediately sends a sACN packet with the provided start code and data. This function is intended for sACN packets that have a startcode other than 0 or 0xdd, since those start codes are taken care of by either the thread or <a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126" title="Trigger the transmission of sACN packets for all universes of sources that were created with manually...">ProcessManual()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to send on. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">start_code</td><td>The start code to send. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>The buffer to send. Must not be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buflen</td><td>The size of buffer. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Message successfully sent. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source, or the universe was not found on this source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="aecaeb4e484f6b34e839b705a1395765f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aecaeb4e484f6b34e839b705a1395765f">&#9670;&nbsp;</a></span>SendSynchronization()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> SendSynchronization </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>sync_universe</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Indicate that a new synchronization packet should be sent on the given synchronization universe. </p>
+<p>This will cause this source to transmit a synchronization packet on the given synchronization universe.</p>
+<p>TODO: At this time, synchronization is not supported by this library, so this function is not implemented.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">sync_universe</td><td>The synchronization universe to send on. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: Message successfully sent. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: Handle does not correspond to a valid source, or the universe was not found on this source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="ac5f038c2b480cf9ef5e19e3eba8dbaf9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac5f038c2b480cf9ef5e19e3eba8dbaf9">&#9670;&nbsp;</a></span>Shutdown()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Shutdown </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Destroy an sACN source instance. </p>
+<p>Stops sending all universes for this source. This removes the source and queues the sending of termination packets to all of the source's universes, which takes place either on the thread or on calls to <a class="el" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126" title="Trigger the transmission of sACN packets for all universes of sources that were created with manually...">ProcessManual()</a>. The source will also stop transmitting sACN universe discovery packets. </p>
+
+</div>
+</div>
+<a id="ab263565edc9ebf5ffd6e82a18184e4c3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab263565edc9ebf5ffd6e82a18184e4c3">&#9670;&nbsp;</a></span>Startup()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> Startup </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structsacn_1_1_source_1_1_settings.html">Settings</a> &amp;&#160;</td>
+          <td class="paramname"><em>settings</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Create a new sACN source to send sACN data. </p>
+<p>This creates the instance of the source and begins sending universe discovery packets for it (which will list no universes until start code data begins transmitting). No start code data is sent until <a class="el" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e" title="Add a universe to an sACN source, which will use all network interfaces.">AddUniverse()</a> and one of the Update functions are called.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">settings</td><td>Configuration parameters for the sACN source to be created. If any of these parameters are invalid, <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a> will be returned. This includes if the source name's length (including the null terminator) is beyond <a class="el" href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8" title="The maximum length of an sACN source name, including the null-terminator.">SACN_SOURCE_NAME_MAX_LEN</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>: <a class="el" href="classsacn_1_1_source.html" title="An instance of sACN Source functionality; see Using the sACN Source API.">Source</a> successfully created. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadfb4ade13d03ed30f6309d2f130f05f7">kEtcPalErrNotInit</a>: Module not initialized. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afad16b0fe51e8664f8b30b740ea1e51599">kEtcPalErrNoMem</a>: No room to allocate an additional source. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="acbec36dcb6b7ac017788510763dffef3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acbec36dcb6b7ac017788510763dffef3">&#9670;&nbsp;</a></span>UpdateLevels()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void UpdateLevels </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_levels</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_levels_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Copies the universe's DMX levels into the packet to be sent on the next threaded or manual update. </p>
+<p>This function will update the outgoing packet data, and reset the logic that slows down packet transmission due to inactivity.</p>
+<p>When you don't have per-address priority changes to make, use this function. Otherwise, use <a class="el" href="classsacn_1_1_source.html#a2d60e097ae578e5f8683fc10b271b126" title="Copies the universe&#39;s DMX levels and per-address priorities into packets that are sent on the next th...">UpdateLevelsAndPap()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_levels</td><td>A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX transmission without removing the universe. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_levels_size</td><td>Size of new_levels. This must be no larger than <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ab7249aefa54c1fc4a230439d08fcfddd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab7249aefa54c1fc4a230439d08fcfddd">&#9670;&nbsp;</a></span>UpdateLevelsAndForceSync()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void UpdateLevelsAndForceSync </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_levels</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_levels_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Like <a class="el" href="classsacn_1_1_source.html#acbec36dcb6b7ac017788510763dffef3" title="Copies the universe&#39;s DMX levels into the packet to be sent on the next threaded or manual update.">UpdateLevels()</a>, but also sets the force_sync flag on the packet. </p>
+<p>This function will update the outgoing packet data to be sent on the next threaded or manual update, and will reset the logic that slows down packet transmission due to inactivity. Additionally, the packet to be sent will have its force_synchronization option flag set.</p>
+<p>If no synchronization universe is configured, this function acts like a direct call to <a class="el" href="classsacn_1_1_source.html#acbec36dcb6b7ac017788510763dffef3" title="Copies the universe&#39;s DMX levels into the packet to be sent on the next threaded or manual update.">UpdateLevels()</a>.</p>
+<p>TODO: At this time, synchronization is not supported by this library.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_levels</td><td>A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX transmission without removing the universe. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_levels_size</td><td>Size of new_levels. This must be no larger than <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a2d60e097ae578e5f8683fc10b271b126"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d60e097ae578e5f8683fc10b271b126">&#9670;&nbsp;</a></span>UpdateLevelsAndPap()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void UpdateLevelsAndPap </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_levels</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_levels_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_priorities</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_priorities_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Copies the universe's DMX levels and per-address priorities into packets that are sent on the next threaded or manual update. </p>
+<p>This function will update the outgoing packet data for both DMX and per-address priority data, and reset the logic that slows down packet transmission due to inactivity.</p>
+<p>The application should adhere to the rules for per-address priority (PAP) specified in <a class="el" href="per_address_priority.html">Per Address Priority</a>. This API will adhere to the rules within the scope of the implementation. This includes handling transmission suppression and the order in which DMX and PAP packets are sent. This also includes automatically setting levels to 0, even if the application specified a different level, for each slot that the application assigns a PAP of 0 (by setting the PAP to 0 or reducing the PAP count).</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_levels</td><td>A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX transmission without removing the universe. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_levels_size</td><td>Size of new_levels. This must be no larger than <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_priorities</td><td>A buffer of per-address priorities to copy from. This will only be sent when DMX is also being sent. This may be NULL if you are not using per-address priorities or want to stop using per-address priorities. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_priorities_size</td><td>Size of new_priorities. This must be no larger than <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ae6ab3c198ab506632e32e186bebe6a56"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae6ab3c198ab506632e32e186bebe6a56">&#9670;&nbsp;</a></span>UpdateLevelsAndPapAndForceSync()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void UpdateLevelsAndPapAndForceSync </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_levels</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_levels_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>new_priorities</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>new_priorities_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Like <a class="el" href="classsacn_1_1_source.html#a2d60e097ae578e5f8683fc10b271b126" title="Copies the universe&#39;s DMX levels and per-address priorities into packets that are sent on the next th...">UpdateLevelsAndPap()</a>, but also sets the force_sync flag on the packet. </p>
+<p>This function will update the outgoing packet data to be sent on the next threaded or manual update, and will reset the logic that slows down packet transmission due to inactivity. Additionally, both packets to be sent by this call will have their force_synchronization option flags set.</p>
+<p>The application should adhere to the rules for per-address priority (PAP) specified in <a class="el" href="per_address_priority.html">Per Address Priority</a>. This API will adhere to the rules within the scope of the implementation. This includes handling transmission suppression and the order in which DMX and PAP packets are sent. This also includes automatically setting levels to 0, even if the application specified a different level, for each slot that the application assigns a PAP of 0 (by setting the PAP to 0 or reducing the PAP count).</p>
+<p>If no synchronization universe is configured, this function acts like a direct call to <a class="el" href="classsacn_1_1_source.html#a2d60e097ae578e5f8683fc10b271b126" title="Copies the universe&#39;s DMX levels and per-address priorities into packets that are sent on the next th...">UpdateLevelsAndPap()</a>.</p>
+<p>TODO: At this time, synchronization is not supported by this library.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">universe</td><td>Universe to update. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_levels</td><td>A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX transmission without removing the universe. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_levels_size</td><td>Size of new_levels. This must be no larger than <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_priorities</td><td>A buffer of per-address priorities to copy from. This will only be sent when DMX is also being sent. This may be NULL if you are not using per-address priorities or want to stop using per-address priorities. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">new_priorities_size</td><td>Size of new_priorities. This must be no larger than <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>include/sacn/cpp/<a class="el" href="cpp_2source_8h_source.html">source.h</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="namespacesacn.html">sacn</a></li><li class="navelem"><a class="el" href="classsacn_1_1_source.html">Source</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>

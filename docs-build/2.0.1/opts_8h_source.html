@@ -1,0 +1,412 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: src/sacn/private/opts.h Source File</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">2.0.1</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('opts_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="headertitle">
+<div class="title">opts.h</div>  </div>
+</div><!--header-->
+<div class="contents">
+<a href="opts_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/******************************************************************************</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * Copyright 2022 ETC Inc.</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment"> * you may not use this file except in compliance with the License.</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment"> * You may obtain a copy of the License at</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment"> *    http://www.apache.org/licenses/LICENSE-2.0</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment"> * Unless required by applicable law or agreed to in writing, software</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment"> * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment"> * See the License for the specific language governing permissions and</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment"> * limitations under the License.</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment"> ******************************************************************************</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> * This file is a part of sACN. For more information, go to:</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment"> * https://github.com/ETCLabs/sACN</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment"> *****************************************************************************/</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#ifndef SACN_PRIVATE_OPTS_H_</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#define SACN_PRIVATE_OPTS_H_</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor">#if SACN_HAVE_CONFIG_H</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment">/* User configuration options. Any non-defined ones will get their defaults in this file. */</span></div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">#include &quot;sacn_config.h&quot;</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor">#include &quot;etcpal/thread.h&quot;</span></div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="comment">/* Some option hints based on well-known compile definitions */</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="comment">/* Are we being compiled for a full-featured OS? */</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">#if defined(_WIN32) || defined(__APPLE__) || defined(__linux__) || defined(__unix__) || defined(_POSIX_VERSION)</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">#define SACN_FULL_OS_AVAILABLE_HINT 1</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#define SACN_FULL_OS_AVAILABLE_HINT 0</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="comment">/*************************** sACN Global Options *****************************/</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="preprocessor">#ifndef SACN_DYNAMIC_MEM</span></div>
+<div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87">   78</a></span>&#160;<span class="preprocessor">#define SACN_DYNAMIC_MEM SACN_FULL_OS_AVAILABLE_HINT</span></div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="preprocessor">#ifndef SACN_LOGGING_ENABLED</span></div>
+<div class="line"><a name="l00088"></a><span class="lineno"><a class="line" href="group__sacnopts__global.html#ga5b77f40b283fa0f754576a64ff6f3d4c">   88</a></span>&#160;<span class="preprocessor">#define SACN_LOGGING_ENABLED 1</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160; </div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="preprocessor">#ifndef SACN_LOG_MSG_PREFIX</span></div>
+<div class="line"><a name="l00095"></a><span class="lineno"><a class="line" href="group__sacnopts__global.html#ga739093ac67975234540c307629ac8280">   95</a></span>&#160;<span class="preprocessor">#define SACN_LOG_MSG_PREFIX &quot;sACN: &quot;</span></div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;<span class="preprocessor">#ifndef SACN_ASSERT</span></div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;<span class="preprocessor">#include &lt;assert.h&gt;</span></div>
+<div class="line"><a name="l00106"></a><span class="lineno"><a class="line" href="group__sacnopts__global.html#gabd4f61db43336221d5947896ef0f2921">  106</a></span>&#160;<span class="preprocessor">#define SACN_ASSERT(expr) assert(expr)</span></div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160; </div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<span class="preprocessor">#ifndef SACN_ETC_PRIORITY_EXTENSION</span></div>
+<div class="line"><a name="l00117"></a><span class="lineno"><a class="line" href="group__sacnopts__global.html#ga59ee3abb2f4eb1554d7be219a9c8028b">  117</a></span>&#160;<span class="preprocessor">#define SACN_ETC_PRIORITY_EXTENSION 1</span></div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160; </div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="preprocessor">#ifndef SACN_LOOPBACK</span></div>
+<div class="line"><a name="l00127"></a><span class="lineno"><a class="line" href="group__sacnopts__global.html#ga6ae6b1e22f87a5c2e49aefbc95a97256">  127</a></span>&#160;<span class="preprocessor">#define SACN_LOOPBACK 1</span></div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160; </div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="preprocessor">#ifndef SACN_MAX_NETINTS</span></div>
+<div class="line"><a name="l00136"></a><span class="lineno"><a class="line" href="group__sacnopts__global.html#ga2dd2edc6a9d13618baaf6d02b4d86e81">  136</a></span>&#160;<span class="preprocessor">#define SACN_MAX_NETINTS 2</span></div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160; </div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;<span class="comment">/*************************** sACN Receive Options ****************************/</span></div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160; </div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;<span class="preprocessor">#ifndef SACN_RECEIVER_THREAD_PRIORITY</span></div>
+<div class="line"><a name="l00159"></a><span class="lineno"><a class="line" href="group__sacnopts__receiver.html#ga0262024b708fa546807d7b01485c7fcf">  159</a></span>&#160;<span class="preprocessor">#define SACN_RECEIVER_THREAD_PRIORITY ETCPAL_THREAD_DEFAULT_PRIORITY</span></div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160; </div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;<span class="preprocessor">#ifndef SACN_RECEIVER_THREAD_STACK</span></div>
+<div class="line"><a name="l00168"></a><span class="lineno"><a class="line" href="group__sacnopts__receiver.html#ga3194913a252cb1da68e5bd919f6c1658">  168</a></span>&#160;<span class="preprocessor">#define SACN_RECEIVER_THREAD_STACK ETCPAL_THREAD_DEFAULT_STACK</span></div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160; </div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;<span class="preprocessor">#ifndef SACN_RECEIVER_THREAD_NAME</span></div>
+<div class="line"><a name="l00177"></a><span class="lineno"><a class="line" href="group__sacnopts__receiver.html#ga0b3b952f010e515ba69fed3767e905f1">  177</a></span>&#160;<span class="preprocessor">#define SACN_RECEIVER_THREAD_NAME &quot;sACN Receive Thread&quot;</span></div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160; </div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<span class="comment">/* Infinite read blocks are not supported due to the potential for hangs on shutdown. */</span></div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;<span class="preprocessor">#if defined(SACN_RECEIVER_READ_TIMEOUT_MS) &amp;&amp; SACN_RECEIVER_READ_TIMEOUT_MS &lt; 0</span></div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;<span class="preprocessor">#undef SACN_RECEIVER_READ_TIMEOUT_MS </span><span class="comment">/* It will get the default value below */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160; </div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="preprocessor">#ifndef SACN_RECEIVER_READ_TIMEOUT_MS</span></div>
+<div class="line"><a name="l00192"></a><span class="lineno"><a class="line" href="group__sacnopts__receiver.html#gae7ae8c07912489f40fa77146cdc93d71">  192</a></span>&#160;<span class="preprocessor">#define SACN_RECEIVER_READ_TIMEOUT_MS 100</span></div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160; </div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;<span class="preprocessor">#ifndef SACN_RECEIVER_MAX_UNIVERSES</span></div>
+<div class="line"><a name="l00204"></a><span class="lineno"><a class="line" href="group__sacnopts__receiver.html#ga5d749b5a5b67d89a114aa2409ba6ff62">  204</a></span>&#160;<span class="preprocessor">#define SACN_RECEIVER_MAX_UNIVERSES 1</span></div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160; </div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;<span class="preprocessor">#ifndef SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</span></div>
+<div class="line"><a name="l00218"></a><span class="lineno"><a class="line" href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e">  218</a></span>&#160;<span class="preprocessor">#define SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE 4</span></div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160; </div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;<span class="preprocessor">#ifndef SACN_RECEIVER_TOTAL_MAX_SOURCES</span></div>
+<div class="line"><a name="l00233"></a><span class="lineno"><a class="line" href="group__sacnopts__receiver.html#ga055b24b2c72073823f4c92ed32e7ddb0">  233</a></span>&#160;<span class="preprocessor">#define SACN_RECEIVER_TOTAL_MAX_SOURCES (SACN_RECEIVER_MAX_UNIVERSES * SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE)</span></div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160; </div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<span class="preprocessor">#ifndef SACN_RECEIVER_LIMIT_BIND</span></div>
+<div class="line"><a name="l00252"></a><span class="lineno"><a class="line" href="group__sacnopts__receiver.html#ga6bfc294d941da830fbb9bd562c45f638">  252</a></span>&#160;<span class="preprocessor">#define SACN_RECEIVER_LIMIT_BIND (!_WIN32 &amp;&amp; !__APPLE__)</span></div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160; </div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="preprocessor">#ifndef SACN_RECEIVER_MAX_SUBS_PER_SOCKET</span></div>
+<div class="line"><a name="l00263"></a><span class="lineno"><a class="line" href="group__sacnopts__receiver.html#gab20e9727556f9656a506bb85628f7df8">  263</a></span>&#160;<span class="preprocessor">#define SACN_RECEIVER_MAX_SUBS_PER_SOCKET 20</span></div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160; </div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;<span class="comment">/* TODO investigate. Windows value was 110592 */</span></div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;<span class="preprocessor">#ifndef SACN_RECEIVER_SOCKET_RCVBUF_SIZE</span></div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;<span class="preprocessor">#define SACN_RECEIVER_SOCKET_RCVBUF_SIZE 32768</span></div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;<span class="preprocessor">#undef SACN_RECEIVER_MAX_THREADS</span></div>
+<div class="line"><a name="l00277"></a><span class="lineno"><a class="line" href="group__sacnopts__receiver.html#ga064a427072df41e909b7d78cdb233c64">  277</a></span>&#160;<span class="preprocessor">#define SACN_RECEIVER_MAX_THREADS 1</span></div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160; </div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;<span class="preprocessor">#undef SACN_RECEIVER_MAX_FOOTPRINT</span></div>
+<div class="line"><a name="l00283"></a><span class="lineno"><a class="line" href="group__sacnopts__receiver.html#gaf0e0364237fe1e26c348fdd53bb5976f">  283</a></span>&#160;<span class="preprocessor">#define SACN_RECEIVER_MAX_FOOTPRINT 512</span></div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160; </div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;<span class="comment">/***************************** sACN Send Options *****************************/</span></div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160; </div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;<span class="preprocessor">#ifndef SACN_SOURCE_THREAD_PRIORITY</span></div>
+<div class="line"><a name="l00305"></a><span class="lineno"><a class="line" href="group__sacnopts__send.html#gac69e2ffb7e6a156134373d687a7cbed7">  305</a></span>&#160;<span class="preprocessor">#define SACN_SOURCE_THREAD_PRIORITY ETCPAL_THREAD_DEFAULT_PRIORITY</span></div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160; </div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;<span class="preprocessor">#ifndef SACN_SOURCE_THREAD_STACK</span></div>
+<div class="line"><a name="l00314"></a><span class="lineno"><a class="line" href="group__sacnopts__send.html#ga197a7ace1de904752a545c799ea9e498">  314</a></span>&#160;<span class="preprocessor">#define SACN_SOURCE_THREAD_STACK ETCPAL_THREAD_DEFAULT_STACK</span></div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160; </div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;<span class="preprocessor">#ifndef SACN_SOURCE_THREAD_NAME</span></div>
+<div class="line"><a name="l00323"></a><span class="lineno"><a class="line" href="group__sacnopts__send.html#ga0a2bddcd541aabbd0b4536d6dae4caa2">  323</a></span>&#160;<span class="preprocessor">#define SACN_SOURCE_THREAD_NAME &quot;sACN Source Thread&quot;</span></div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160; </div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;<span class="comment">/* TODO investigate. Windows value was 20 */</span></div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;<span class="preprocessor">#ifndef SACN_SOURCE_MULTICAST_TTL</span></div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;<span class="preprocessor">#define SACN_SOURCE_MULTICAST_TTL 64</span></div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;<span class="preprocessor">#ifndef SACN_SOURCE_MAX_SOURCES</span></div>
+<div class="line"><a name="l00341"></a><span class="lineno"><a class="line" href="group__sacnopts__send.html#gaa08afe863ab6922c173055d4239184c4">  341</a></span>&#160;<span class="preprocessor">#define SACN_SOURCE_MAX_SOURCES 1</span></div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160; </div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;<span class="preprocessor">#ifndef SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE</span></div>
+<div class="line"><a name="l00352"></a><span class="lineno"><a class="line" href="group__sacnopts__send.html#gaac75390f2990b299303bfbce89e5f7ef">  352</a></span>&#160;<span class="preprocessor">#define SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE 4</span></div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160; </div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;<span class="preprocessor">#ifndef SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE</span></div>
+<div class="line"><a name="l00361"></a><span class="lineno"><a class="line" href="group__sacnopts__send.html#ga53a3e7e498368c3311403912d7c01515">  361</a></span>&#160;<span class="preprocessor">#define SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE 4</span></div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160; </div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;<span class="comment">/***************************** sACN DMX Merger Options *****************************/</span></div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160; </div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;<span class="preprocessor">#ifndef SACN_DMX_MERGER_MAX_MERGERS</span></div>
+<div class="line"><a name="l00386"></a><span class="lineno"><a class="line" href="group__sacnopts__dmx__merger.html#ga7d15f54f43af8434b4967746f1282fb1">  386</a></span>&#160;<span class="preprocessor">#define SACN_DMX_MERGER_MAX_MERGERS SACN_RECEIVER_MAX_UNIVERSES</span></div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160; </div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;<span class="preprocessor">#ifndef SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER</span></div>
+<div class="line"><a name="l00397"></a><span class="lineno"><a class="line" href="group__sacnopts__dmx__merger.html#gaaeaa9701ec2b290ddfb3b31d8463dca4">  397</a></span>&#160;<span class="preprocessor">#define SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE</span></div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160; </div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;<span class="preprocessor">#undef SACN_DMX_MERGER_MAX_SLOTS</span></div>
+<div class="line"><a name="l00404"></a><span class="lineno"><a class="line" href="group__sacnopts__dmx__merger.html#ga01ed1a377484d83e568bd7cf053f392f">  404</a></span>&#160;<span class="preprocessor">#define SACN_DMX_MERGER_MAX_SLOTS 512</span></div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160; </div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;<span class="comment">/***************************** sACN Merge Receiver Options *****************************/</span></div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160; </div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;<span class="preprocessor">#ifndef SACN_MERGE_RECEIVER_ENABLE</span></div>
+<div class="line"><a name="l00429"></a><span class="lineno"><a class="line" href="group__sacnopts__merge__receiver.html#gacb8513985c683aac79b8ead43d84b5f0">  429</a></span>&#160;<span class="preprocessor">#define SACN_MERGE_RECEIVER_ENABLE                                                      \</span></div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;<span class="preprocessor">  ((SACN_RECEIVER_MAX_UNIVERSES &gt; 0) &amp;&amp; (SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE &gt; 0) &amp;&amp; \</span></div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;<span class="preprocessor">   (SACN_RECEIVER_TOTAL_MAX_SOURCES &gt; 0) &amp;&amp; (SACN_DMX_MERGER_MAX_MERGERS &gt; 0) &amp;&amp;        \</span></div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;<span class="preprocessor">   (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER &gt; 0))</span></div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160; </div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;<span class="preprocessor">#if !SACN_DYNAMIC_MEM &amp;&amp; SACN_MERGE_RECEIVER_ENABLE &amp;&amp;                                      \</span></div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;<span class="preprocessor">    ((SACN_RECEIVER_MAX_UNIVERSES &lt;= 0) || (SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE &lt;= 0) || \</span></div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;<span class="preprocessor">     (SACN_RECEIVER_TOTAL_MAX_SOURCES &lt;= 0))</span></div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;<span class="preprocessor">#error &quot;Error: SACN_MERGE_RECEIVER_ENABLE was set to 1, but the sACN Receiver API is disabled!&quot;</span></div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160; </div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;<span class="preprocessor">#if !SACN_DYNAMIC_MEM &amp;&amp; SACN_MERGE_RECEIVER_ENABLE &amp;&amp; \</span></div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;<span class="preprocessor">    ((SACN_DMX_MERGER_MAX_MERGERS &lt;= 0) || (SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER &lt;= 0))</span></div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;<span class="preprocessor">#error &quot;Error: SACN_MERGE_RECEIVER_ENABLE was set to 1, but the sACN DMX Merger API is disabled!&quot;</span></div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160; </div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;<span class="comment">/***************************** sACN Source Detector Options *****************************/</span></div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160; </div>
+<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;<span class="preprocessor">#ifndef SACN_SOURCE_DETECTOR_MAX_SOURCES</span></div>
+<div class="line"><a name="l00471"></a><span class="lineno"><a class="line" href="group__sacnopts__source__detector.html#ga872fc4bd419f3cc3d77e7502f0b1ed0e">  471</a></span>&#160;<span class="preprocessor">#define SACN_SOURCE_DETECTOR_MAX_SOURCES 5</span></div>
+<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160; </div>
+<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;<span class="preprocessor">#ifndef SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE</span></div>
+<div class="line"><a name="l00485"></a><span class="lineno"><a class="line" href="group__sacnopts__source__detector.html#ga24e186592053bd29fbffbfc92825268e">  485</a></span>&#160;<span class="preprocessor">#define SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE 5</span></div>
+<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160; </div>
+<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* SACN_PRIVATE_OPTS_H_ */</span><span class="preprocessor"></span></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_410a23f755eda930d19c18f6f9a7f0a9.html">src</a></li><li class="navelem"><a class="el" href="dir_7c0758b156f194d70efba06d83a9dc9c.html">sacn</a></li><li class="navelem"><a class="el" href="dir_79aa5228417eed366c0ab7c8f2225bdb.html">private</a></li><li class="navelem"><a class="el" href="opts_8h.html">opts.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,474 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: Data Fields - Functions</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">3.0.0</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('functions_func.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="contents">
+&#160;
+
+<h3><a id="index_a"></a>- a -</h3><ul>
+<li>AddSource()
+: <a class="el" href="classsacn_1_1_dmx_merger.html#ac4c679c71b50cde6301145a91b8440ce">DmxMerger</a>
+</li>
+<li>AddUnicastDestination()
+: <a class="el" href="classsacn_1_1_source.html#a5d7f1f26d1a6f5dbffca60dd08ac0454">Source</a>
+</li>
+<li>AddUniverse()
+: <a class="el" href="classsacn_1_1_source.html#a62069c900842c7ca322bd7ed4b587800">Source</a>
+</li>
+</ul>
+
+
+<h3><a id="index_c"></a>- c -</h3><ul>
+<li>ChangeFootprint()
+: <a class="el" href="classsacn_1_1_merge_receiver.html#a6d46635ac84bcb47ff0d01bcafe4ef91">MergeReceiver</a>
+, <a class="el" href="classsacn_1_1_receiver.html#a6d46635ac84bcb47ff0d01bcafe4ef91">Receiver</a>
+</li>
+<li>ChangeName()
+: <a class="el" href="classsacn_1_1_source.html#aa33e199741640a65c41cc19d18b4b6f0">Source</a>
+</li>
+<li>ChangePreviewFlag()
+: <a class="el" href="classsacn_1_1_source.html#a386b243f62f7cc246de825add2af3161">Source</a>
+</li>
+<li>ChangePriority()
+: <a class="el" href="classsacn_1_1_source.html#a250e66ea54b315476f4c201600dd7b5f">Source</a>
+</li>
+<li>ChangeSynchronizationUniverse()
+: <a class="el" href="classsacn_1_1_source.html#a6f73aa9c83e7d7266128cba5d4f70ef2">Source</a>
+</li>
+<li>ChangeUniverse()
+: <a class="el" href="classsacn_1_1_merge_receiver.html#aa94ae64c11fbb22db3e21fba1e85cc64">MergeReceiver</a>
+, <a class="el" href="classsacn_1_1_receiver.html#aa94ae64c11fbb22db3e21fba1e85cc64">Receiver</a>
+</li>
+<li>ChangeUniverseAndFootprint()
+: <a class="el" href="classsacn_1_1_merge_receiver.html#ac097835505ac503b525bcaa566cf506d">MergeReceiver</a>
+, <a class="el" href="classsacn_1_1_receiver.html#ac097835505ac503b525bcaa566cf506d">Receiver</a>
+</li>
+</ul>
+
+
+<h3><a id="index_d"></a>- d -</h3><ul>
+<li>DmxMerger()
+: <a class="el" href="classsacn_1_1_dmx_merger.html#a18d71ec061f6533c49251873b493818f">DmxMerger</a>
+</li>
+</ul>
+
+
+<h3><a id="index_g"></a>- g -</h3><ul>
+<li>GetExpiredWait()
+: <a class="el" href="classsacn_1_1_receiver.html#a042c03773822b8aeada4ea92ee3c3a8a">Receiver</a>
+</li>
+<li>GetFootprint()
+: <a class="el" href="classsacn_1_1_merge_receiver.html#aaa4d2448f1e1f8b23c095742738df97c">MergeReceiver</a>
+, <a class="el" href="classsacn_1_1_receiver.html#aaa4d2448f1e1f8b23c095742738df97c">Receiver</a>
+</li>
+<li>GetNetworkInterfaces()
+: <a class="el" href="classsacn_1_1_merge_receiver.html#a227c8165a2af9b39ac6d53cbea18d121">MergeReceiver</a>
+, <a class="el" href="classsacn_1_1_receiver.html#a227c8165a2af9b39ac6d53cbea18d121">Receiver</a>
+, <a class="el" href="classsacn_1_1_source.html#ab862dc0dd665318204b83182f016731c">Source</a>
+, <a class="el" href="classsacn_1_1_source_detector.html#a227c8165a2af9b39ac6d53cbea18d121">SourceDetector</a>
+</li>
+<li>GetSource()
+: <a class="el" href="classsacn_1_1_merge_receiver.html#aae0754f40a65bc30573808504455cfe5">MergeReceiver</a>
+</li>
+<li>GetSourceInfo()
+: <a class="el" href="classsacn_1_1_dmx_merger.html#a5f5b58945088002ac617cc5b80cd6fa2">DmxMerger</a>
+</li>
+<li>GetUnicastDestinations()
+: <a class="el" href="classsacn_1_1_source.html#a80e1d17f72cc96da34ed4e2ed7b5a439">Source</a>
+</li>
+<li>GetUniverse()
+: <a class="el" href="classsacn_1_1_merge_receiver.html#a3d205f22d3d18f81585fd8d07ea21647">MergeReceiver</a>
+, <a class="el" href="classsacn_1_1_receiver.html#a3d205f22d3d18f81585fd8d07ea21647">Receiver</a>
+</li>
+<li>GetUniverses()
+: <a class="el" href="classsacn_1_1_source.html#adc1d03b3f1516e7f545862b9096d834c">Source</a>
+</li>
+</ul>
+
+
+<h3><a id="index_h"></a>- h -</h3><ul>
+<li>handle()
+: <a class="el" href="classsacn_1_1_dmx_merger.html#a7a9405a7d27a0e79c0cc00f8a7e2e2e7">DmxMerger</a>
+, <a class="el" href="classsacn_1_1_merge_receiver.html#aa4a2884ccfef0338bcb1985f86ae89b7">MergeReceiver</a>
+, <a class="el" href="classsacn_1_1_receiver.html#af5825bc604b5bf0316732a4db412e1f8">Receiver</a>
+, <a class="el" href="classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25">Source</a>
+</li>
+<li>HandleMemoryLimitExceeded()
+: <a class="el" href="classsacn_1_1_source_detector_1_1_notify_handler.html#a7e316ac3388e51f8a4d15e95495bc334">SourceDetector::NotifyHandler</a>
+</li>
+<li>HandleMergedData()
+: <a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html#a0d46e56c609d6edd9806994bb81190fc">MergeReceiver::NotifyHandler</a>
+</li>
+<li>HandleNonDmxData()
+: <a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html#a7d7240a815773ac4a959a56d553588b7">MergeReceiver::NotifyHandler</a>
+</li>
+<li>HandleSamplingPeriodEnded()
+: <a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html#af02397cc6bf09294666b38883dbdf6a5">MergeReceiver::NotifyHandler</a>
+, <a class="el" href="classsacn_1_1_receiver_1_1_notify_handler.html#af02397cc6bf09294666b38883dbdf6a5">Receiver::NotifyHandler</a>
+</li>
+<li>HandleSamplingPeriodStarted()
+: <a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html#a9cd14450c1a43ab482bebaf5a1dcb0cc">MergeReceiver::NotifyHandler</a>
+, <a class="el" href="classsacn_1_1_receiver_1_1_notify_handler.html#a9cd14450c1a43ab482bebaf5a1dcb0cc">Receiver::NotifyHandler</a>
+</li>
+<li>HandleSourceExpired()
+: <a class="el" href="classsacn_1_1_source_detector_1_1_notify_handler.html#a2ed8374706af489c957a72c39cc760e0">SourceDetector::NotifyHandler</a>
+</li>
+<li>HandleSourceLimitExceeded()
+: <a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html#ab517496e89eb88b7ee7fa383558f725b">MergeReceiver::NotifyHandler</a>
+, <a class="el" href="classsacn_1_1_receiver_1_1_notify_handler.html#ab517496e89eb88b7ee7fa383558f725b">Receiver::NotifyHandler</a>
+</li>
+<li>HandleSourcePapLost()
+: <a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html#afc6fd518860704ac4b1f58d5a24f6672">MergeReceiver::NotifyHandler</a>
+, <a class="el" href="classsacn_1_1_receiver_1_1_notify_handler.html#afc6fd518860704ac4b1f58d5a24f6672">Receiver::NotifyHandler</a>
+</li>
+<li>HandleSourcesLost()
+: <a class="el" href="classsacn_1_1_merge_receiver_1_1_notify_handler.html#ae2d27b76147fba2f4d4ed5219d614246">MergeReceiver::NotifyHandler</a>
+, <a class="el" href="classsacn_1_1_receiver_1_1_notify_handler.html#aeb67059ed834bf3d178bbdc4a931adae">Receiver::NotifyHandler</a>
+</li>
+<li>HandleSourceUpdated()
+: <a class="el" href="classsacn_1_1_source_detector_1_1_notify_handler.html#ad449da95881e07e5566be76ebecd862d">SourceDetector::NotifyHandler</a>
+</li>
+<li>HandleUniverseData()
+: <a class="el" href="classsacn_1_1_receiver_1_1_notify_handler.html#a31ed01381fa689d55d77f298fdf3c2c3">Receiver::NotifyHandler</a>
+</li>
+</ul>
+
+
+<h3><a id="index_i"></a>- i -</h3><ul>
+<li>IsValid()
+: <a class="el" href="structsacn_1_1_dmx_merger_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">DmxMerger::Settings</a>
+, <a class="el" href="structsacn_1_1_merge_receiver_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">MergeReceiver::Settings</a>
+, <a class="el" href="structsacn_1_1_receiver_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">Receiver::Settings</a>
+, <a class="el" href="structsacn_1_1_source_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">Source::Settings</a>
+, <a class="el" href="structsacn_1_1_source_1_1_universe_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">Source::UniverseSettings</a>
+</li>
+</ul>
+
+
+<h3><a id="index_m"></a>- m -</h3><ul>
+<li>MergeReceiver()
+: <a class="el" href="classsacn_1_1_merge_receiver.html#acd894017c62b549662194bd84a9f4a15">MergeReceiver</a>
+</li>
+</ul>
+
+
+<h3><a id="index_n"></a>- n -</h3><ul>
+<li>NetintList()
+: <a class="el" href="structsacn_1_1_merge_receiver_1_1_netint_list.html#aab5d1e8b9c2879521f59b7a50388e1a3">MergeReceiver::NetintList</a>
+, <a class="el" href="structsacn_1_1_receiver_1_1_netint_list.html#aab5d1e8b9c2879521f59b7a50388e1a3">Receiver::NetintList</a>
+</li>
+</ul>
+
+
+<h3><a id="index_o"></a>- o -</h3><ul>
+<li>operator=()
+: <a class="el" href="classsacn_1_1_dmx_merger.html#a95bbd64563cbe066ee91cc07cf85db9b">DmxMerger</a>
+, <a class="el" href="classsacn_1_1_merge_receiver.html#a7778785bf8c7ee8aaf1708c6c188cced">MergeReceiver</a>
+, <a class="el" href="classsacn_1_1_receiver.html#a9312079cda8a73e44f853bd361239f39">Receiver</a>
+, <a class="el" href="classsacn_1_1_source.html#a70ca8a75288ff8b02f7674f8feea7940">Source</a>
+</li>
+</ul>
+
+
+<h3><a id="index_p"></a>- p -</h3><ul>
+<li>ProcessManual()
+: <a class="el" href="classsacn_1_1_source.html#a90c818e6bc851e44b833014780ad939c">Source</a>
+</li>
+</ul>
+
+
+<h3><a id="index_r"></a>- r -</h3><ul>
+<li>Receiver()
+: <a class="el" href="classsacn_1_1_receiver.html#a8b226a7db315d39b6fdc4c8e61c3d896">Receiver</a>
+</li>
+<li>RemovePap()
+: <a class="el" href="classsacn_1_1_dmx_merger.html#ae33a69fe3b51efd79d384a462efcd64a">DmxMerger</a>
+</li>
+<li>RemoveSource()
+: <a class="el" href="classsacn_1_1_dmx_merger.html#a826044729a5c70ee16d5fbc26f93414b">DmxMerger</a>
+</li>
+<li>RemoveUnicastDestination()
+: <a class="el" href="classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966">Source</a>
+</li>
+<li>RemoveUniverse()
+: <a class="el" href="classsacn_1_1_source.html#aa0293c6689075dd5cb9692f036c8540f">Source</a>
+</li>
+<li>ResetNetworking()
+: <a class="el" href="classsacn_1_1_merge_receiver.html#aab11585b71f32bd1973f307435ffcd5b">MergeReceiver</a>
+, <a class="el" href="classsacn_1_1_receiver.html#aab11585b71f32bd1973f307435ffcd5b">Receiver</a>
+, <a class="el" href="classsacn_1_1_source.html#aab11585b71f32bd1973f307435ffcd5b">Source</a>
+, <a class="el" href="classsacn_1_1_source_detector.html#aab11585b71f32bd1973f307435ffcd5b">SourceDetector</a>
+</li>
+</ul>
+
+
+<h3><a id="index_s"></a>- s -</h3><ul>
+<li>SendNow()
+: <a class="el" href="classsacn_1_1_source.html#a22cf560eca13a3cbc4c8384bad438897">Source</a>
+</li>
+<li>SendSynchronization()
+: <a class="el" href="classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f">Source</a>
+</li>
+<li>SetExpiredWait()
+: <a class="el" href="classsacn_1_1_receiver.html#a0f7e0ac39dc43d67c53daa787e733859">Receiver</a>
+</li>
+<li>Settings()
+: <a class="el" href="structsacn_1_1_dmx_merger_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">DmxMerger::Settings</a>
+, <a class="el" href="structsacn_1_1_merge_receiver_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">MergeReceiver::Settings</a>
+, <a class="el" href="structsacn_1_1_receiver_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">Receiver::Settings</a>
+, <a class="el" href="structsacn_1_1_source_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">Source::Settings</a>
+, <a class="el" href="structsacn_1_1_source_detector_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">SourceDetector::Settings</a>
+</li>
+<li>Shutdown()
+: <a class="el" href="classsacn_1_1_dmx_merger.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">DmxMerger</a>
+, <a class="el" href="classsacn_1_1_merge_receiver.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">MergeReceiver</a>
+, <a class="el" href="classsacn_1_1_receiver.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">Receiver</a>
+, <a class="el" href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">Source</a>
+, <a class="el" href="classsacn_1_1_source_detector.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">SourceDetector</a>
+</li>
+<li>Source()
+: <a class="el" href="classsacn_1_1_source.html#ab3745517fb270270e41c41f0938dc278">Source</a>
+</li>
+<li>Startup()
+: <a class="el" href="classsacn_1_1_dmx_merger.html#ab263565edc9ebf5ffd6e82a18184e4c3">DmxMerger</a>
+, <a class="el" href="classsacn_1_1_merge_receiver.html#a1fa0e47dc34289f2cffabdfc69c216a2">MergeReceiver</a>
+, <a class="el" href="classsacn_1_1_receiver.html#a1fa0e47dc34289f2cffabdfc69c216a2">Receiver</a>
+, <a class="el" href="classsacn_1_1_source.html#ab263565edc9ebf5ffd6e82a18184e4c3">Source</a>
+, <a class="el" href="classsacn_1_1_source_detector.html#a114885d14c950b73dde9f6168a809f8f">SourceDetector</a>
+</li>
+</ul>
+
+
+<h3><a id="index_u"></a>- u -</h3><ul>
+<li>UniverseNetintList()
+: <a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#a73644ddd63df91014c177680f2336e47">Source::UniverseNetintList</a>
+</li>
+<li>UniverseSettings()
+: <a class="el" href="structsacn_1_1_source_1_1_universe_settings.html#af00507fb4c88058e9363bb4007ddea6f">Source::UniverseSettings</a>
+</li>
+<li>UpdateLevels()
+: <a class="el" href="classsacn_1_1_dmx_merger.html#a1aa19e03ca654b84ed0574bb4c4b5659">DmxMerger</a>
+, <a class="el" href="classsacn_1_1_source.html#acbec36dcb6b7ac017788510763dffef3">Source</a>
+</li>
+<li>UpdateLevelsAndForceSync()
+: <a class="el" href="classsacn_1_1_source.html#ab7249aefa54c1fc4a230439d08fcfddd">Source</a>
+</li>
+<li>UpdateLevelsAndPap()
+: <a class="el" href="classsacn_1_1_source.html#a2d60e097ae578e5f8683fc10b271b126">Source</a>
+</li>
+<li>UpdateLevelsAndPapAndForceSync()
+: <a class="el" href="classsacn_1_1_source.html#ae6ab3c198ab506632e32e186bebe6a56">Source</a>
+</li>
+<li>UpdatePap()
+: <a class="el" href="classsacn_1_1_dmx_merger.html#a6954a0af298bdb2c17829a129ce0aad6">DmxMerger</a>
+</li>
+<li>UpdateUniversePriority()
+: <a class="el" href="classsacn_1_1_dmx_merger.html#ada8d157cee674178ec576caa111afca9">DmxMerger</a>
+</li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>

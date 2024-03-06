@@ -1,0 +1,448 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: include/sacn/cpp/dmx_merger.h Source File</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">3.0.0</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('cpp_2dmx__merger_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="headertitle">
+<div class="title">dmx_merger.h</div>  </div>
+</div><!--header-->
+<div class="contents">
+<a href="cpp_2dmx__merger_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/******************************************************************************</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * Copyright 2024 ETC Inc.</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment"> * you may not use this file except in compliance with the License.</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment"> * You may obtain a copy of the License at</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment"> *    http://www.apache.org/licenses/LICENSE-2.0</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment"> * Unless required by applicable law or agreed to in writing, software</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment"> * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment"> * See the License for the specific language governing permissions and</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment"> * limitations under the License.</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment"> ******************************************************************************</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> * This file is a part of sACN. For more information, go to:</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment"> * https://github.com/ETCLabs/sACN</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment"> *****************************************************************************/</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#ifndef SACN_CPP_DMX_MERGER_H_</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#define SACN_CPP_DMX_MERGER_H_</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="cpp_2common_8h.html">sacn/cpp/common.h</a>&quot;</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="dmx__merger_8h.html">sacn/dmx_merger.h</a>&quot;</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#include &quot;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/cpp_2inet_8h.html">etcpal/cpp/inet.h</a>&quot;</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#include &quot;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/opaque__id_8h.html">etcpal/cpp/opaque_id.h</a>&quot;</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacesacn.html">sacn</a></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;{</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="keyword">namespace </span>detail</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;{</div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="classsacn_1_1detail_1_1_dmx_merger_handle_type.html">   44</a></span>&#160;<span class="keyword">class </span><a class="code" href="classsacn_1_1detail_1_1_dmx_merger_handle_type.html">DmxMergerHandleType</a></div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;{</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;};</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;};  <span class="comment">// namespace detail</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
+<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html">   66</a></span>&#160;<span class="keyword">class </span><a class="code" href="classsacn_1_1_dmx_merger.html">DmxMerger</a></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;{</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#a7b4c9f6ffcd98ecf441928151d890453">   70</a></span>&#160;  <span class="keyword">using</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html">Handle</a> = <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html">etcpal::OpaqueId&lt;detail::DmxMergerHandleType, sacn_dmx_merger_t, SACN_DMX_MERGER_INVALID&gt;</a>;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160; </div>
+<div class="line"><a name="l00076"></a><span class="lineno"><a class="line" href="structsacn_1_1_dmx_merger_1_1_settings.html">   76</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html">Settings</a></div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  {</div>
+<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="structsacn_1_1_dmx_merger_1_1_settings.html#a65f1e6db75de6e20f9df99807d14fe19">   83</a></span>&#160;    uint8_t* <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html#a65f1e6db75de6e20f9df99807d14fe19">levels</a>{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
+<div class="line"><a name="l00091"></a><span class="lineno"><a class="line" href="structsacn_1_1_dmx_merger_1_1_settings.html#a6b8790b29687764423319cc2b8f24c30">   91</a></span>&#160;    uint8_t* <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html#a6b8790b29687764423319cc2b8f24c30">per_address_priorities</a>{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
+<div class="line"><a name="l00097"></a><span class="lineno"><a class="line" href="structsacn_1_1_dmx_merger_1_1_settings.html#aa844a92b4e32e58dee13b77318f8cb8e">   97</a></span>&#160;    <span class="keywordtype">bool</span>* <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html#aa844a92b4e32e58dee13b77318f8cb8e">per_address_priorities_active</a>{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160; </div>
+<div class="line"><a name="l00103"></a><span class="lineno"><a class="line" href="structsacn_1_1_dmx_merger_1_1_settings.html#ae39fb52602dd51d0696c8973b0d5cd44">  103</a></span>&#160;    uint8_t* <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html#ae39fb52602dd51d0696c8973b0d5cd44">universe_priority</a>{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160; </div>
+<div class="line"><a name="l00112"></a><span class="lineno"><a class="line" href="structsacn_1_1_dmx_merger_1_1_settings.html#aec37c8bd38cd533fbff8d704cef812d9">  112</a></span>&#160;    <a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a>* <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html#aec37c8bd38cd533fbff8d704cef812d9">owners</a>{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160; </div>
+<div class="line"><a name="l00114"></a><span class="lineno"><a class="line" href="structsacn_1_1_dmx_merger_1_1_settings.html#aa56795d5b57bff4910ce11baac4003ba">  114</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html#aa56795d5b57bff4910ce11baac4003ba">source_count_max</a>{<a class="code" href="group__sacn__receiver.html#gadb2ea19692692ca852423d0a9de749ea">SACN_RECEIVER_INFINITE_SOURCES</a>}; </div>
+<div class="line"><a name="l00118"></a><span class="lineno"><a class="line" href="structsacn_1_1_dmx_merger_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">  118</a></span>&#160;    <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">Settings</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160; </div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">Settings</a>(uint8_t* levels_ptr);</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160; </div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">IsValid</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  };</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160; </div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  <a class="code" href="classsacn_1_1_dmx_merger.html">DmxMerger</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <a class="code" href="classsacn_1_1_dmx_merger.html">DmxMerger</a>(<span class="keyword">const</span> <a class="code" href="classsacn_1_1_dmx_merger.html">DmxMerger</a>&amp; other) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  <a class="code" href="classsacn_1_1_dmx_merger.html">DmxMerger</a>&amp; operator=(<span class="keyword">const</span> <a class="code" href="classsacn_1_1_dmx_merger.html">DmxMerger</a>&amp; other) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00132"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#a18d71ec061f6533c49251873b493818f">  132</a></span>&#160;  <a class="code" href="classsacn_1_1_dmx_merger.html#a18d71ec061f6533c49251873b493818f">DmxMerger</a>(<a class="code" href="classsacn_1_1_dmx_merger.html">DmxMerger</a>&amp;&amp; other) = <span class="keywordflow">default</span>;            </div>
+<div class="line"><a name="l00133"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#a95bbd64563cbe066ee91cc07cf85db9b">  133</a></span>&#160;  <a class="code" href="classsacn_1_1_dmx_merger.html">DmxMerger</a>&amp; <a class="code" href="classsacn_1_1_dmx_merger.html#a95bbd64563cbe066ee91cc07cf85db9b">operator=</a>(<a class="code" href="classsacn_1_1_dmx_merger.html">DmxMerger</a>&amp;&amp; other) = <span class="keywordflow">default</span>; </div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_dmx_merger.html#ab263565edc9ebf5ffd6e82a18184e4c3">Startup</a>(<span class="keyword">const</span> <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html">Settings</a>&amp; settings);</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_dmx_merger.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">Shutdown</a>();</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160; </div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_expected.html">etcpal::Expected&lt;sacn_dmx_merger_source_t&gt;</a> <a class="code" href="classsacn_1_1_dmx_merger.html#ac4c679c71b50cde6301145a91b8440ce">AddSource</a>();</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_dmx_merger.html#a826044729a5c70ee16d5fbc26f93414b">RemoveSource</a>(<a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source);</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;  <span class="keyword">const</span> <a class="code" href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a>* <a class="code" href="classsacn_1_1_dmx_merger.html#a5f5b58945088002ac617cc5b80cd6fa2">GetSourceInfo</a>(<a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160; </div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_dmx_merger.html#a1aa19e03ca654b84ed0574bb4c4b5659">UpdateLevels</a>(<a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source, <span class="keyword">const</span> uint8_t* new_levels, <span class="keywordtype">size_t</span> new_levels_count);</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_dmx_merger.html#a6954a0af298bdb2c17829a129ce0aad6">UpdatePap</a>(<a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source, <span class="keyword">const</span> uint8_t* pap, <span class="keywordtype">size_t</span> pap_count);</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_dmx_merger.html#ada8d157cee674178ec576caa111afca9">UpdateUniversePriority</a>(<a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source, uint8_t universe_priority);</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_dmx_merger.html#ae33a69fe3b51efd79d384a462efcd64a">RemovePap</a>(<a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source);</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160; </div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;  constexpr <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html">Handle</a> <a class="code" href="classsacn_1_1_dmx_merger.html#a7a9405a7d27a0e79c0cc00f8a7e2e2e7">handle</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160; </div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  <a class="code" href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a> TranslateConfig(<span class="keyword">const</span> <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html">Settings</a>&amp; settings);</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160; </div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html">Handle</a> handle_;</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;};</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160; </div>
+<div class="line"><a name="l00160"></a><span class="lineno"><a class="line" href="structsacn_1_1_dmx_merger_1_1_settings.html#a22fb1d51b3d5315e1cd17f387e1abc77">  160</a></span>&#160;<span class="keyword">inline</span> <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">DmxMerger::Settings::Settings</a>(uint8_t* levels_ptr) : levels(levels_ptr)</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;{</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;}</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160; </div>
+<div class="line"><a name="l00167"></a><span class="lineno"><a class="line" href="structsacn_1_1_dmx_merger_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">  167</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">bool</span> <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">DmxMerger::Settings::IsValid</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;<span class="keyword"></span>{</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;  <span class="keywordflow">return</span> (levels != <span class="keyword">nullptr</span>);</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;}</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160; </div>
+<div class="line"><a name="l00185"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#ab263565edc9ebf5ffd6e82a18184e4c3">  185</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_dmx_merger.html#ab263565edc9ebf5ffd6e82a18184e4c3">DmxMerger::Startup</a>(<span class="keyword">const</span> <a class="code" href="structsacn_1_1_dmx_merger_1_1_settings.html">Settings</a>&amp; settings)</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;{</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;  <a class="code" href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a> config = TranslateConfig(settings);</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160; </div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;  <a class="code" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> c_handle = <a class="code" href="group__sacn__dmx__merger.html#ga4578a59809c13ece174e8dcf59fce26d">SACN_DMX_MERGER_INVALID</a>;</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> result = <a class="code" href="group__sacn__dmx__merger.html#ga8758dad93531c1a5bbf4643157fe2c72">sacn_dmx_merger_create</a>(&amp;config, &amp;c_handle);</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160; </div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;  handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#aa3400e764897b9a5a857300f871ea035">SetValue</a>(c_handle);</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160; </div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;  <span class="keywordflow">return</span> result;</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;}</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160; </div>
+<div class="line"><a name="l00207"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">  207</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_dmx_merger.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">DmxMerger::Shutdown</a>()</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;{</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;  <a class="code" href="group__sacn__dmx__merger.html#ga539b249ea5d0898efce4ee7371fc91ef">sacn_dmx_merger_destroy</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>());</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;  handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#a9f59558d3c06e0f35ae8a5801b4e626d">Clear</a>();</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;}</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160; </div>
+<div class="line"><a name="l00228"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#ac4c679c71b50cde6301145a91b8440ce">  228</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_expected.html">etcpal::Expected&lt;sacn_dmx_merger_source_t&gt;</a> <a class="code" href="classsacn_1_1_dmx_merger.html#ac4c679c71b50cde6301145a91b8440ce">DmxMerger::AddSource</a>()</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;{</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;  <a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> result = <a class="code" href="group__sacn__dmx__merger.html#ga1ca9e023e2091c5a8a4e5e2ba426f055">SACN_DMX_MERGER_SOURCE_INVALID</a>;</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> err = <a class="code" href="group__sacn__dmx__merger.html#gadf879eb673c0ffe91ade6bcc5af615c3">sacn_dmx_merger_add_source</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), &amp;result);</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;  <span class="keywordflow">if</span> (err == <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a>)</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;    <span class="keywordflow">return</span> result;</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;  <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;    <span class="keywordflow">return</span> err;</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;}</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160; </div>
+<div class="line"><a name="l00249"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#a826044729a5c70ee16d5fbc26f93414b">  249</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_dmx_merger.html#a826044729a5c70ee16d5fbc26f93414b">DmxMerger::RemoveSource</a>(<a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source)</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;{</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__dmx__merger.html#gac6ebd9581fb8c6170d4acf1c24681ad7">sacn_dmx_merger_remove_source</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), source);</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;}</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160; </div>
+<div class="line"><a name="l00264"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#a5f5b58945088002ac617cc5b80cd6fa2">  264</a></span>&#160;<span class="keyword">inline</span> <span class="keyword">const</span> <a class="code" href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a>* <a class="code" href="classsacn_1_1_dmx_merger.html#a5f5b58945088002ac617cc5b80cd6fa2">DmxMerger::GetSourceInfo</a>(<a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source)<span class="keyword"> const</span></div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;<span class="keyword"></span>{</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__dmx__merger.html#ga0811c88edb22c748c8b80bbc49984e67">sacn_dmx_merger_get_source</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), source);</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;}</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160; </div>
+<div class="line"><a name="l00289"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#a1aa19e03ca654b84ed0574bb4c4b5659">  289</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_dmx_merger.html#a1aa19e03ca654b84ed0574bb4c4b5659">DmxMerger::UpdateLevels</a>(<a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source, <span class="keyword">const</span> uint8_t* new_levels,</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;                                             <span class="keywordtype">size_t</span> new_levels_count)</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;{</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__dmx__merger.html#ga6ee5e85689e75879fa1db01db0bad8a6">sacn_dmx_merger_update_levels</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), source, new_levels, new_levels_count);</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;}</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160; </div>
+<div class="line"><a name="l00315"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#a6954a0af298bdb2c17829a129ce0aad6">  315</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_dmx_merger.html#a6954a0af298bdb2c17829a129ce0aad6">DmxMerger::UpdatePap</a>(<a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source, <span class="keyword">const</span> uint8_t* pap, <span class="keywordtype">size_t</span> pap_count)</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;{</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__dmx__merger.html#gac28b72fd6849cb6815c0ca58c2d29e65">sacn_dmx_merger_update_pap</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), source, pap, pap_count);</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;}</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160; </div>
+<div class="line"><a name="l00343"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#ada8d157cee674178ec576caa111afca9">  343</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_dmx_merger.html#ada8d157cee674178ec576caa111afca9">DmxMerger::UpdateUniversePriority</a>(<a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source, uint8_t universe_priority)</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;{</div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__dmx__merger.html#gab56b1f0e4fe8d5d1dd23695a1a861b3b">sacn_dmx_merger_update_universe_priority</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), source, universe_priority);</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;}</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160; </div>
+<div class="line"><a name="l00362"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#ae33a69fe3b51efd79d384a462efcd64a">  362</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_dmx_merger.html#ae33a69fe3b51efd79d384a462efcd64a">DmxMerger::RemovePap</a>(<a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source)</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;{</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__dmx__merger.html#gada109b5171e78bc858ab18a7c13931ee">sacn_dmx_merger_remove_pap</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), source);</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;}</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160; </div>
+<div class="line"><a name="l00372"></a><span class="lineno"><a class="line" href="classsacn_1_1_dmx_merger.html#a7a9405a7d27a0e79c0cc00f8a7e2e2e7">  372</a></span>&#160;<span class="keyword">inline</span> constexpr <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html">DmxMerger::Handle</a> <a class="code" href="classsacn_1_1_dmx_merger.html#a7a9405a7d27a0e79c0cc00f8a7e2e2e7">DmxMerger::handle</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;<span class="keyword"></span>{</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  <span class="keywordflow">return</span> handle_;</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;}</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160; </div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;<span class="keyword">inline</span> <a class="code" href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a> DmxMerger::TranslateConfig(<span class="keyword">const</span> Settings&amp; settings)</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;{</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;  <span class="comment">// clang-format off</span></div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;  <a class="code" href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a> config = {</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;    settings.<a class="code" href="struct_sacn_dmx_merger_config.html#a65f1e6db75de6e20f9df99807d14fe19">levels</a>,</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    settings.per_address_priorities,</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    settings.per_address_priorities_active,</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;    settings.universe_priority,</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;    settings.owners,</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    settings.source_count_max</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  };</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  <span class="comment">// clang-format on</span></div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160; </div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  <span class="keywordflow">return</span> config;</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;}</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160; </div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;};  <span class="comment">// namespace sacn</span></div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160; </div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;<span class="preprocessor">#endif  </span><span class="comment">// SACN_CPP_DMX_MERGER_H_</span></div>
+<div class="ttc" id="aclassetcpal_1_1_error_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a></div></div>
+<div class="ttc" id="aclassetcpal_1_1_expected_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_expected.html">etcpal::Expected</a></div></div>
+<div class="ttc" id="aclassetcpal_1_1_opaque_id_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html">etcpal::OpaqueId&lt; detail::DmxMergerHandleType, sacn_dmx_merger_t, SACN_DMX_MERGER_INVALID &gt;</a></div></div>
+<div class="ttc" id="aclassetcpal_1_1_opaque_id_html_a9f59558d3c06e0f35ae8a5801b4e626d"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#a9f59558d3c06e0f35ae8a5801b4e626d">etcpal::OpaqueId::Clear</a></div><div class="ttdeci">ETCPAL_CONSTEXPR_14 void Clear()</div></div>
+<div class="ttc" id="aclassetcpal_1_1_opaque_id_html_aa3400e764897b9a5a857300f871ea035"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#aa3400e764897b9a5a857300f871ea035">etcpal::OpaqueId::SetValue</a></div><div class="ttdeci">ETCPAL_CONSTEXPR_14 void SetValue(const ValueType &amp;new_value)</div></div>
+<div class="ttc" id="aclassetcpal_1_1_opaque_id_html_afbeb3ea2eee6f9695aa8328ce7d9bac4"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">etcpal::OpaqueId::value</a></div><div class="ttdeci">constexpr ValueType value() const</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html">sacn::DmxMerger</a></div><div class="ttdoc">An instance of sACN DMX Merger functionality; see Using the sACN DMX Merger API.</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:67</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html_a18d71ec061f6533c49251873b493818f"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html#a18d71ec061f6533c49251873b493818f">sacn::DmxMerger::DmxMerger</a></div><div class="ttdeci">DmxMerger(DmxMerger &amp;&amp;other)=default</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html_a1aa19e03ca654b84ed0574bb4c4b5659"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html#a1aa19e03ca654b84ed0574bb4c4b5659">sacn::DmxMerger::UpdateLevels</a></div><div class="ttdeci">etcpal::Error UpdateLevels(sacn_dmx_merger_source_t source, const uint8_t *new_levels, size_t new_levels_count)</div><div class="ttdoc">Updates a source's levels and recalculates outputs.</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:289</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html_a5f5b58945088002ac617cc5b80cd6fa2"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html#a5f5b58945088002ac617cc5b80cd6fa2">sacn::DmxMerger::GetSourceInfo</a></div><div class="ttdeci">const SacnDmxMergerSource * GetSourceInfo(sacn_dmx_merger_source_t source) const</div><div class="ttdoc">Gets a read-only view of the source data.</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:264</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html_a6954a0af298bdb2c17829a129ce0aad6"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html#a6954a0af298bdb2c17829a129ce0aad6">sacn::DmxMerger::UpdatePap</a></div><div class="ttdeci">etcpal::Error UpdatePap(sacn_dmx_merger_source_t source, const uint8_t *pap, size_t pap_count)</div><div class="ttdoc">Updates a source's per-address priorities (PAP) and recalculates outputs.</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:315</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html_a7a9405a7d27a0e79c0cc00f8a7e2e2e7"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html#a7a9405a7d27a0e79c0cc00f8a7e2e2e7">sacn::DmxMerger::handle</a></div><div class="ttdeci">constexpr Handle handle() const</div><div class="ttdoc">Get the current handle to the underlying C DMX merger.</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:372</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html_a826044729a5c70ee16d5fbc26f93414b"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html#a826044729a5c70ee16d5fbc26f93414b">sacn::DmxMerger::RemoveSource</a></div><div class="ttdeci">etcpal::Error RemoveSource(sacn_dmx_merger_source_t source)</div><div class="ttdoc">Removes a source from the merger.</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:249</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html_a95bbd64563cbe066ee91cc07cf85db9b"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html#a95bbd64563cbe066ee91cc07cf85db9b">sacn::DmxMerger::operator=</a></div><div class="ttdeci">DmxMerger &amp; operator=(DmxMerger &amp;&amp;other)=default</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html_ab263565edc9ebf5ffd6e82a18184e4c3"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html#ab263565edc9ebf5ffd6e82a18184e4c3">sacn::DmxMerger::Startup</a></div><div class="ttdeci">etcpal::Error Startup(const Settings &amp;settings)</div><div class="ttdoc">Create a new merger instance.</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:185</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html_ac4c679c71b50cde6301145a91b8440ce"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html#ac4c679c71b50cde6301145a91b8440ce">sacn::DmxMerger::AddSource</a></div><div class="ttdeci">etcpal::Expected&lt; sacn_dmx_merger_source_t &gt; AddSource()</div><div class="ttdoc">Adds a new source to the merger.</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:228</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html_ac5f038c2b480cf9ef5e19e3eba8dbaf9"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">sacn::DmxMerger::Shutdown</a></div><div class="ttdeci">void Shutdown()</div><div class="ttdoc">Destroy a merger instance.</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:207</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html_ada8d157cee674178ec576caa111afca9"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html#ada8d157cee674178ec576caa111afca9">sacn::DmxMerger::UpdateUniversePriority</a></div><div class="ttdeci">etcpal::Error UpdateUniversePriority(sacn_dmx_merger_source_t source, uint8_t universe_priority)</div><div class="ttdoc">Updates a source's universe priority and recalculates outputs.</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:343</div></div>
+<div class="ttc" id="aclasssacn_1_1_dmx_merger_html_ae33a69fe3b51efd79d384a462efcd64a"><div class="ttname"><a href="classsacn_1_1_dmx_merger.html#ae33a69fe3b51efd79d384a462efcd64a">sacn::DmxMerger::RemovePap</a></div><div class="ttdeci">etcpal::Error RemovePap(sacn_dmx_merger_source_t source)</div><div class="ttdoc">Removes the per-address priority (PAP) data from the source and recalculate outputs.</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:362</div></div>
+<div class="ttc" id="aclasssacn_1_1detail_1_1_dmx_merger_handle_type_html"><div class="ttname"><a href="classsacn_1_1detail_1_1_dmx_merger_handle_type.html">sacn::detail::DmxMergerHandleType</a></div><div class="ttdef"><b>Definition:</b> dmx_merger.h:45</div></div>
+<div class="ttc" id="acpp_2common_8h_html"><div class="ttname"><a href="cpp_2common_8h.html">common.h</a></div><div class="ttdoc">C++ wrapper for the sACN init/deinit functions.</div></div>
+<div class="ttc" id="acpp_2inet_8h.html_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/cpp_2inet_8h.html">inet.h</a></div></div>
+<div class="ttc" id="admx__merger_8h_html"><div class="ttname"><a href="dmx__merger_8h.html">dmx_merger.h</a></div><div class="ttdoc">sACN DMX Merger API definitions</div></div>
+<div class="ttc" id="agroup__etcpal__error_html_ga743b0648f0ca798ef29c9f69c6e255af"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a></div><div class="ttdeci">etcpal_error_t</div></div>
+<div class="ttc" id="agroup__etcpal__error_html_gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afae403d046b4ba4e81dce121266c2cca8d">kEtcPalErrOk</a></div><div class="ttdeci">kEtcPalErrOk</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga0811c88edb22c748c8b80bbc49984e67"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga0811c88edb22c748c8b80bbc49984e67">sacn_dmx_merger_get_source</a></div><div class="ttdeci">const SacnDmxMergerSource * sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)</div><div class="ttdoc">Gets a read-only view of the source data.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:359</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga1ca9e023e2091c5a8a4e5e2ba426f055"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga1ca9e023e2091c5a8a4e5e2ba426f055">SACN_DMX_MERGER_SOURCE_INVALID</a></div><div class="ttdeci">#define SACN_DMX_MERGER_SOURCE_INVALID</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:75</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga4578a59809c13ece174e8dcf59fce26d"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga4578a59809c13ece174e8dcf59fce26d">SACN_DMX_MERGER_INVALID</a></div><div class="ttdeci">#define SACN_DMX_MERGER_INVALID</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:68</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga539b249ea5d0898efce4ee7371fc91ef"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga539b249ea5d0898efce4ee7371fc91ef">sacn_dmx_merger_destroy</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)</div><div class="ttdoc">Destroy a merger instance.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:227</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga6c4761eedeaaf635ac495265849c07f2"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a></div><div class="ttdeci">uint16_t sacn_dmx_merger_source_t</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:72</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga6ee5e85689e75879fa1db01db0bad8a6"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga6ee5e85689e75879fa1db01db0bad8a6">sacn_dmx_merger_update_levels</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t *new_levels, size_t new_levels_count)</div><div class="ttdoc">Updates a source's levels and recalculates outputs.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:403</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga8758dad93531c1a5bbf4643157fe2c72"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga8758dad93531c1a5bbf4643157fe2c72">sacn_dmx_merger_create</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig *config, sacn_dmx_merger_t *handle)</div><div class="ttdoc">Create a new merger instance.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:172</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_gab56b1f0e4fe8d5d1dd23695a1a861b3b"><div class="ttname"><a href="group__sacn__dmx__merger.html#gab56b1f0e4fe8d5d1dd23695a1a861b3b">sacn_dmx_merger_update_universe_priority</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, uint8_t universe_priority)</div><div class="ttdoc">Updates a source's universe priority and recalculates outputs.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:522</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_gabee79fb378d5942866adc898cb7da38b"><div class="ttname"><a href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a></div><div class="ttdeci">int sacn_dmx_merger_t</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:65</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_gac28b72fd6849cb6815c0ca58c2d29e65"><div class="ttname"><a href="group__sacn__dmx__merger.html#gac28b72fd6849cb6815c0ca58c2d29e65">sacn_dmx_merger_update_pap</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_update_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t *pap, size_t pap_count)</div><div class="ttdoc">Updates a source's per-address priorities (PAP) and recalculates outputs.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:461</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_gac6ebd9581fb8c6170d4acf1c24681ad7"><div class="ttname"><a href="group__sacn__dmx__merger.html#gac6ebd9581fb8c6170d4acf1c24681ad7">sacn_dmx_merger_remove_source</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)</div><div class="ttdoc">Removes a source from the merger.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:317</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_gada109b5171e78bc858ab18a7c13931ee"><div class="ttname"><a href="group__sacn__dmx__merger.html#gada109b5171e78bc858ab18a7c13931ee">sacn_dmx_merger_remove_pap</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_remove_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)</div><div class="ttdoc">Removes the per-address priority (PAP) data from the source and recalculate outputs.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:567</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_gadf879eb673c0ffe91ade6bcc5af615c3"><div class="ttname"><a href="group__sacn__dmx__merger.html#gadf879eb673c0ffe91ade6bcc5af615c3">sacn_dmx_merger_add_source</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t *source_id)</div><div class="ttdoc">Adds a new source to the merger.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:275</div></div>
+<div class="ttc" id="agroup__sacn__receiver_html_gadb2ea19692692ca852423d0a9de749ea"><div class="ttname"><a href="group__sacn__receiver.html#gadb2ea19692692ca852423d0a9de749ea">SACN_RECEIVER_INFINITE_SOURCES</a></div><div class="ttdeci">#define SACN_RECEIVER_INFINITE_SOURCES</div><div class="ttdoc">Constant for &quot;infinite&quot; when listening or merging sACN universes.</div><div class="ttdef"><b>Definition:</b> receiver.h:68</div></div>
+<div class="ttc" id="anamespacesacn_html"><div class="ttname"><a href="namespacesacn.html">sacn</a></div><div class="ttdoc">A namespace which contains all C++ language definitions in the sACN library.</div><div class="ttdef"><b>Definition:</b> common.h:50</div></div>
+<div class="ttc" id="aopaque__id_8h.html_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/opaque__id_8h.html">opaque_id.h</a></div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_config_html"><div class="ttname"><a href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a></div><div class="ttdef"><b>Definition:</b> dmx_merger.h:79</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_config_html_a65f1e6db75de6e20f9df99807d14fe19"><div class="ttname"><a href="struct_sacn_dmx_merger_config.html#a65f1e6db75de6e20f9df99807d14fe19">SacnDmxMergerConfig::levels</a></div><div class="ttdeci">uint8_t * levels</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:85</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_source_html"><div class="ttname"><a href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a></div><div class="ttdef"><b>Definition:</b> dmx_merger.h:149</div></div>
+<div class="ttc" id="astructsacn_1_1_dmx_merger_1_1_settings_html"><div class="ttname"><a href="structsacn_1_1_dmx_merger_1_1_settings.html">sacn::DmxMerger::Settings</a></div><div class="ttdoc">A set of configuration settings that a merger needs to initialize.</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:77</div></div>
+<div class="ttc" id="astructsacn_1_1_dmx_merger_1_1_settings_html_a408c38e2ece7d6a8dda04484f006e8bb"><div class="ttname"><a href="structsacn_1_1_dmx_merger_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">sacn::DmxMerger::Settings::Settings</a></div><div class="ttdeci">Settings()=default</div></div>
+<div class="ttc" id="astructsacn_1_1_dmx_merger_1_1_settings_html_a65f1e6db75de6e20f9df99807d14fe19"><div class="ttname"><a href="structsacn_1_1_dmx_merger_1_1_settings.html#a65f1e6db75de6e20f9df99807d14fe19">sacn::DmxMerger::Settings::levels</a></div><div class="ttdeci">uint8_t * levels</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:83</div></div>
+<div class="ttc" id="astructsacn_1_1_dmx_merger_1_1_settings_html_a6b8790b29687764423319cc2b8f24c30"><div class="ttname"><a href="structsacn_1_1_dmx_merger_1_1_settings.html#a6b8790b29687764423319cc2b8f24c30">sacn::DmxMerger::Settings::per_address_priorities</a></div><div class="ttdeci">uint8_t * per_address_priorities</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:91</div></div>
+<div class="ttc" id="astructsacn_1_1_dmx_merger_1_1_settings_html_aa56795d5b57bff4910ce11baac4003ba"><div class="ttname"><a href="structsacn_1_1_dmx_merger_1_1_settings.html#aa56795d5b57bff4910ce11baac4003ba">sacn::DmxMerger::Settings::source_count_max</a></div><div class="ttdeci">int source_count_max</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:114</div></div>
+<div class="ttc" id="astructsacn_1_1_dmx_merger_1_1_settings_html_aa844a92b4e32e58dee13b77318f8cb8e"><div class="ttname"><a href="structsacn_1_1_dmx_merger_1_1_settings.html#aa844a92b4e32e58dee13b77318f8cb8e">sacn::DmxMerger::Settings::per_address_priorities_active</a></div><div class="ttdeci">bool * per_address_priorities_active</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:97</div></div>
+<div class="ttc" id="astructsacn_1_1_dmx_merger_1_1_settings_html_ac532c4b500b1a85ea22217f2c65a70ed"><div class="ttname"><a href="structsacn_1_1_dmx_merger_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">sacn::DmxMerger::Settings::IsValid</a></div><div class="ttdeci">bool IsValid() const</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:167</div></div>
+<div class="ttc" id="astructsacn_1_1_dmx_merger_1_1_settings_html_ae39fb52602dd51d0696c8973b0d5cd44"><div class="ttname"><a href="structsacn_1_1_dmx_merger_1_1_settings.html#ae39fb52602dd51d0696c8973b0d5cd44">sacn::DmxMerger::Settings::universe_priority</a></div><div class="ttdeci">uint8_t * universe_priority</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:103</div></div>
+<div class="ttc" id="astructsacn_1_1_dmx_merger_1_1_settings_html_aec37c8bd38cd533fbff8d704cef812d9"><div class="ttname"><a href="structsacn_1_1_dmx_merger_1_1_settings.html#aec37c8bd38cd533fbff8d704cef812d9">sacn::DmxMerger::Settings::owners</a></div><div class="ttdeci">sacn_dmx_merger_source_t * owners</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:112</div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_7f5430f5cf82a7d89375d584a50eafca.html">include</a></li><li class="navelem"><a class="el" href="dir_dd367917ca53bf72011d22330758801e.html">sacn</a></li><li class="navelem"><a class="el" href="dir_5fd649b88f3ef07779801b3a3afc3976.html">cpp</a></li><li class="navelem"><a class="el" href="cpp_2dmx__merger_8h.html">dmx_merger.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>

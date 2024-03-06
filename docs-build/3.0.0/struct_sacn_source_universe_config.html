@@ -1,0 +1,347 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: SacnSourceUniverseConfig Struct Reference</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">3.0.0</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('struct_sacn_source_universe_config.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-attribs">Data Fields</a>  </div>
+  <div class="headertitle">
+<div class="title">SacnSourceUniverseConfig Struct Reference<div class="ingroups"><a class="el" href="group__s_a_c_n.html">sACN</a> &raquo; <a class="el" href="group__sacn__source.html">sACN Source</a></div></div>  </div>
+</div><!--header-->
+<div class="contents">
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Data Fields</h2></td></tr>
+<tr class="memitem:a0cf34824f8777f28b50f62b7870d6f8c"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_universe_config.html#a0cf34824f8777f28b50f62b7870d6f8c">universe</a></td></tr>
+<tr class="separator:a0cf34824f8777f28b50f62b7870d6f8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ad043071ccc7a261d79a759dc9c6f0c"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_universe_config.html#a0ad043071ccc7a261d79a759dc9c6f0c">priority</a></td></tr>
+<tr class="separator:a0ad043071ccc7a261d79a759dc9c6f0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c7913b52f7d575e1cedacbd6601b047"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_universe_config.html#a5c7913b52f7d575e1cedacbd6601b047">send_preview</a></td></tr>
+<tr class="separator:a5c7913b52f7d575e1cedacbd6601b047"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcf08448ca5544a8be4518fc2d966ef0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_universe_config.html#adcf08448ca5544a8be4518fc2d966ef0">send_unicast_only</a></td></tr>
+<tr class="separator:adcf08448ca5544a8be4518fc2d966ef0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42ef84da1b2dc4f0e993432d4a7be8a3"><td class="memItemLeft" align="right" valign="top">const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_universe_config.html#a42ef84da1b2dc4f0e993432d4a7be8a3">unicast_destinations</a></td></tr>
+<tr class="separator:a42ef84da1b2dc4f0e993432d4a7be8a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa148fe1bdf89b3e7b900a130d32de29c"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_universe_config.html#aa148fe1bdf89b3e7b900a130d32de29c">num_unicast_destinations</a></td></tr>
+<tr class="separator:aa148fe1bdf89b3e7b900a130d32de29c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c7dff151ba6b32fc343e6aa55147bcc"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sacn_source_universe_config.html#a9c7dff151ba6b32fc343e6aa55147bcc">sync_universe</a></td></tr>
+<tr class="separator:a9c7dff151ba6b32fc343e6aa55147bcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>A set of configuration information for a sACN universe. </p>
+</div><h2 class="groupheader">Field Documentation</h2>
+<a id="aa148fe1bdf89b3e7b900a130d32de29c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa148fe1bdf89b3e7b900a130d32de29c">&#9670;&nbsp;</a></span>num_unicast_destinations</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t num_unicast_destinations</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The size of unicast_destinations. </p>
+
+</div>
+</div>
+<a id="a0ad043071ccc7a261d79a759dc9c6f0c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ad043071ccc7a261d79a759dc9c6f0c">&#9670;&nbsp;</a></span>priority</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t priority</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The sACN universe priority that is sent in each packet. This is only allowed to be from 0 - 200. Defaults to 100. </p>
+
+</div>
+</div>
+<a id="a5c7913b52f7d575e1cedacbd6601b047"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5c7913b52f7d575e1cedacbd6601b047">&#9670;&nbsp;</a></span>send_preview</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool send_preview</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>If true, this sACN source will send preview data. Defaults to false. </p>
+
+</div>
+</div>
+<a id="adcf08448ca5544a8be4518fc2d966ef0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adcf08448ca5544a8be4518fc2d966ef0">&#9670;&nbsp;</a></span>send_unicast_only</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool send_unicast_only</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>If true, this sACN source will only send unicast traffic on this universe. Defaults to false. </p>
+
+</div>
+</div>
+<a id="a9c7dff151ba6b32fc343e6aa55147bcc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9c7dff151ba6b32fc343e6aa55147bcc">&#9670;&nbsp;</a></span>sync_universe</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t sync_universe</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. TODO: At this time, synchronization is not supported by this library. </p>
+
+</div>
+</div>
+<a id="a42ef84da1b2dc4f0e993432d4a7be8a3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42ef84da1b2dc4f0e993432d4a7be8a3">&#9670;&nbsp;</a></span>unicast_destinations</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a>* unicast_destinations</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The initial set of unicast destinations for this universe. This can be changed further by using <a class="el" href="group__sacn__source.html#ga2b7d3fb6a2d252eee7c051acfe97d242" title="Add a unicast destination for a source&#39;s universe.">sacn_source_add_unicast_destination()</a> and <a class="el" href="group__sacn__source.html#ga4ebe5d509af8c963c104f2dd96a3ac76" title="Remove a unicast destination on a source&#39;s universe.">sacn_source_remove_unicast_destination()</a>. </p>
+
+</div>
+</div>
+<a id="a0cf34824f8777f28b50f62b7870d6f8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0cf34824f8777f28b50f62b7870d6f8c">&#9670;&nbsp;</a></span>universe</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t universe</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The universe number. At this time, only values from 1 - 63999 are accepted. You cannot have a source send more than one stream of levels to a single universe. </p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
+<li>include/sacn/<a class="el" href="source_8h_source.html">source.h</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>
