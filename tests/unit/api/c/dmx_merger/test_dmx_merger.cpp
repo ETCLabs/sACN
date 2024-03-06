@@ -858,6 +858,37 @@ TEST_F(TestDmxMerger, GetSourceWorks)
   EXPECT_NE(sacn_dmx_merger_get_source(merger_handle_, source_handle_2), nullptr);
 }
 
+TEST_F(TestDmxMerger, UpdatesPapsIdenticalToUpCorrectly)
+{
+  static constexpr uint8_t kTestValue = 100u;
+
+  EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
+
+  sacn_dmx_merger_source_t source_handle = SACN_DMX_MERGER_SOURCE_INVALID;
+  EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_handle), kEtcPalErrOk);
+
+  MergerState* merger_state = nullptr;
+  SourceState* source_state = nullptr;
+  lookup_state(merger_handle_, source_handle, &merger_state, &source_state);
+  ASSERT_NE(merger_state, nullptr);
+  ASSERT_NE(source_state, nullptr);
+
+  auto source_levels = std::vector<uint8_t>(DMX_ADDRESS_COUNT, kTestValue);
+  auto source_paps = std::vector<uint8_t>(DMX_ADDRESS_COUNT, kTestValue);
+
+  UpdateLevels(source_handle, source_levels);
+  UpdateUniversePriority(source_handle, kTestValue);
+
+  ASSERT_NE(merger_config_.per_address_priorities_active, nullptr);
+  EXPECT_FALSE(*merger_config_.per_address_priorities_active);
+  EXPECT_TRUE(source_state->source.using_universe_priority);
+
+  UpdatePap(source_handle, source_paps);  // These are identical to the universe priority fed in
+
+  EXPECT_TRUE(*merger_config_.per_address_priorities_active);
+  EXPECT_FALSE(source_state->source.using_universe_priority);
+}
+
 TEST_F(TestDmxMergerUpdate, MergesLevels)
 {
   VerifyMerge({.src_1_levels = test_values_ascending_,
