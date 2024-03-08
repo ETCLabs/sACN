@@ -419,5 +419,5 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
   etcpal::Thread::Sleep(11000u);  // Time for source detector to detect sources
 
   for (auto [univ, count] : num_per_universe)
-    printf("UNIVERSE %u COUNT %d", univ, count);
+    EXPECT_TRUE(false) << "UNIVERSE " << univ << " COUNT " << count;
 }
