@@ -373,6 +373,22 @@ protected:
     logger_.Shutdown();
   }
 
+  void ResetNetworking()
+  {
+    // Do this asynchronously to catch any data races between API boundaries
+    etcpal::Thread merge_receiver_reset_thread;
+    etcpal::Thread source_detector_reset_thread;
+    etcpal::Thread source_reset_thread;
+
+    merge_receiver_reset_thread.Start([]() { sacn::MergeReceiver::ResetNetworking(); });
+    source_detector_reset_thread.Start([]() { sacn::SourceDetector::ResetNetworking(); });
+    source_reset_thread.Start([]() { sacn::Source::ResetNetworking(); });
+
+    merge_receiver_reset_thread.Join();
+    source_detector_reset_thread.Join();
+    source_reset_thread.Join();
+  }
+
   etcpal::Logger logger_;
 
   NiceMock<MockLogMessageHandler> mock_log_handler_;
@@ -532,9 +548,7 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
       add_until_this_many_netints_left = 0u;  // Next time add the other half
     }
 
-    sacn::MergeReceiver::ResetNetworking(netints);
-    sacn::SourceDetector::ResetNetworking(netints);
-    sacn::Source::ResetNetworking(netints);
+    ResetNetworking();
 
     netints.clear();  // Try each half individually
   }
@@ -542,9 +556,7 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
   // One last reset, this time with all netints
   etcpal::Thread::Sleep(1000u);
 
-  sacn::MergeReceiver::ResetNetworking();
-  sacn::SourceDetector::ResetNetworking();
-  sacn::Source::ResetNetworking();
+  ResetNetworking();
 
   etcpal::Thread::Sleep(11000u);  // Time for source detector to detect sources
 }
