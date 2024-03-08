@@ -268,6 +268,8 @@ public:
       settings.priority = params.universe_priority;
 
       EXPECT_TRUE(source_->source.AddUniverse(settings, initial_mcast_mode_));
+
+      UniverseTick(source_->source, params.universe, state);  // Initialize values sooner by ticking the universe here
     }
   }
 
