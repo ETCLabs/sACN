@@ -397,7 +397,7 @@ protected:
 
 TEST_F(CoverageTest, ResetNetworkingAtScale)
 {
-  static int std::map<uint16_t, int> num_per_universe;
+  static std::map<uint16_t, int> num_per_universe;
   TestMergeReceiver merge_receiver;
   for (uint16_t universe_id = 1u; universe_id <= 5u; ++universe_id)
   {
