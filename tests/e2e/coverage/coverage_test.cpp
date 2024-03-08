@@ -295,7 +295,7 @@ private:
     StartCodeState(const StartCodeParams& p) : params(p) { buffer.fill(static_cast<uint8_t>(p.value)); }
 
     StartCodeParams params;
-    std::array<uint8_t, DMX_ADDRESS_COUNT> buffer{};
+    std::array<uint8_t, 10> buffer{};
     bool uninitialized{true};
   };
 
