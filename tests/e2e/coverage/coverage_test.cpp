@@ -396,13 +396,17 @@ protected:
 
 TEST_F(CoverageTest, ResetNetworkingAtScale)
 {
-  static constexpr int kNumUniverses = 12;
-
+  static int std::map<uint16_t, int> num_per_universe;
   TestMergeReceiver merge_receiver;
   for (uint16_t universe_id = 1u; universe_id <= 5u; ++universe_id)
   {
     merge_receiver.AddUniverse(universe_id);
     EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleMergedData(_, _)).Times(AtLeast(1));
+
+    ON_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleMergedData(_, _))
+        .WillByDefault(Invoke([&](sacn::MergeReceiver::Handle handle, const SacnRecvMergedData& merged_data) {
+          ++num_per_universe[merged_data.universe_id];
+        }));
   }
 
   merge_receiver.StartAllUniverses();
@@ -412,4 +416,7 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
     source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
 
   etcpal::Thread::Sleep(11000u);  // Time for source detector to detect sources
+
+  for (auto [univ, count] : num_per_universe)
+    printf("UNIVERSE %u COUNT %d", univ, count);
 }
