@@ -45,7 +45,7 @@ static SacnRecvThreadContext sacn_pool_recv_thread_context[SACN_RECEIVER_MAX_THR
 /*********************** Private function prototypes *************************/
 
 // Dynamic memory initialization
-static etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context);
+static etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context, sacn_thread_id_t thread_id);
 
 // Dynamic memory deinitialization
 static void deinit_recv_thread_context_entry(SacnRecvThreadContext* context);
@@ -69,7 +69,7 @@ SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id)
   if (thread_id < sacn_mem_get_num_threads())
   {
     SacnRecvThreadContext* to_return = &sacn_pool_recv_thread_context[thread_id];
-    to_return->thread_id = thread_id;
+    SACN_ASSERT_VERIFY(to_return->thread_id == thread_id);
     return to_return;
   }
   return NULL;
@@ -356,17 +356,19 @@ etcpal_error_t init_recv_thread_context_buf(unsigned int num_threads)
 
   for (unsigned int i = 0; i < num_threads; ++i)
   {
-    etcpal_error_t res = init_recv_thread_context_entry(&sacn_pool_recv_thread_context[i]);
+    etcpal_error_t res = init_recv_thread_context_entry(&sacn_pool_recv_thread_context[i], i);
     if (res != kEtcPalErrOk)
       return res;
   }
   return kEtcPalErrOk;
 }
 
-etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
+etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context, sacn_thread_id_t thread_id)
 {
   if (!SACN_ASSERT_VERIFY(context))
     return kEtcPalErrSys;
+
+  context->thread_id = thread_id;
 
 #if SACN_DYNAMIC_MEM
   context->dead_sockets = calloc(INITIAL_CAPACITY, sizeof(ReceiveSocket));
