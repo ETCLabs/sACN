@@ -1,0 +1,404 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: include/sacn/merge_receiver.h Source File</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">2.0.2</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('merge__receiver_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="headertitle">
+<div class="title">merge_receiver.h</div>  </div>
+</div><!--header-->
+<div class="contents">
+<a href="merge__receiver_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/******************************************************************************</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * Copyright 2022 ETC Inc.</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment"> * you may not use this file except in compliance with the License.</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment"> * You may obtain a copy of the License at</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment"> *    http://www.apache.org/licenses/LICENSE-2.0</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment"> * Unless required by applicable law or agreed to in writing, software</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment"> * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment"> * See the License for the specific language governing permissions and</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment"> * limitations under the License.</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment"> ******************************************************************************</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> * This file is a part of sACN. For more information, go to:</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment"> * https://github.com/ETCLabs/sACN</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment"> *****************************************************************************/</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#ifndef SACN_MERGE_RECEIVER_H_</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#define SACN_MERGE_RECEIVER_H_</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#include &lt;stdbool.h&gt;</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="receiver_8h.html">sacn/receiver.h</a>&quot;</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="dmx__merger_8h.html">sacn/dmx_merger.h</a>&quot;</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">   53</a></span>&#160;<span class="keyword">typedef</span> <span class="keywordtype">int</span> <a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a>;</div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="group__sacn__merge__receiver.html#gae86374c92bace3a7d2bef9656da6048a">   55</a></span>&#160;<span class="preprocessor">#define SACN_MERGE_RECEIVER_INVALID SACN_RECEIVER_INVALID</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
+<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="struct_sacn_recv_merged_data.html">   60</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="struct_sacn_recv_merged_data.html">SacnRecvMergedData</a></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;{</div>
+<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="struct_sacn_recv_merged_data.html#a7e0de4d0f4e4bbd14771257febdf7248">   65</a></span>&#160;  uint16_t <a class="code" href="struct_sacn_recv_merged_data.html#a7e0de4d0f4e4bbd14771257febdf7248">universe_id</a>;</div>
+<div class="line"><a name="l00069"></a><span class="lineno"><a class="line" href="struct_sacn_recv_merged_data.html#ad634e09aa77487d44087c02a9143ee17">   69</a></span>&#160;  <a class="code" href="struct_sacn_recv_universe_subrange.html">SacnRecvUniverseSubrange</a> <a class="code" href="struct_sacn_recv_merged_data.html#ad634e09aa77487d44087c02a9143ee17">slot_range</a>;</div>
+<div class="line"><a name="l00073"></a><span class="lineno"><a class="line" href="struct_sacn_recv_merged_data.html#a538119b446f2e353678608bd05ad4db2">   73</a></span>&#160;  <span class="keyword">const</span> uint8_t* <a class="code" href="struct_sacn_recv_merged_data.html#a538119b446f2e353678608bd05ad4db2">levels</a>;</div>
+<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="struct_sacn_recv_merged_data.html#ade95d8642c07e44ecacc13f358ede54d">   79</a></span>&#160;  <span class="keyword">const</span> <a class="code" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">sacn_remote_source_t</a>* <a class="code" href="struct_sacn_recv_merged_data.html#ade95d8642c07e44ecacc13f358ede54d">owners</a>;</div>
+<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="struct_sacn_recv_merged_data.html#a6f445f896ce37297dbcd575006fdcb6c">   83</a></span>&#160;  <span class="keywordtype">size_t</span> <a class="code" href="struct_sacn_recv_merged_data.html#a6f445f896ce37297dbcd575006fdcb6c">num_active_sources</a>;</div>
+<div class="line"><a name="l00084"></a><span class="lineno"><a class="line" href="group__sacn__merge__receiver.html#gafb05eeea1bbac03fd2058d197e2c5846">   84</a></span>&#160;} <a class="code" href="group__sacn__merge__receiver.html#gafb05eeea1bbac03fd2058d197e2c5846">SacnRecvMergedData</a>;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160; </div>
+<div class="line"><a name="l00106"></a><span class="lineno"><a class="line" href="group__sacn__merge__receiver.html#ga3b87b4a0324b476a926c86a18eab3a1d">  106</a></span>&#160;<span class="keyword">typedef</span> void (*<a class="code" href="group__sacn__merge__receiver.html#ga3b87b4a0324b476a926c86a18eab3a1d">SacnMergeReceiverMergedDataCallback</a>)(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle, <span class="keyword">const</span> <a class="code" href="struct_sacn_recv_merged_data.html">SacnRecvMergedData</a>* merged_data,</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;                                                    <span class="keywordtype">void</span>* context);</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160; </div>
+<div class="line"><a name="l00130"></a><span class="lineno"><a class="line" href="group__sacn__merge__receiver.html#ga274346790ea25827de515b93f6df2c2b">  130</a></span>&#160;<span class="keyword">typedef</span> void (*<a class="code" href="group__sacn__merge__receiver.html#ga274346790ea25827de515b93f6df2c2b">SacnMergeReceiverNonDmxCallback</a>)(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> receiver_handle,</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;                                                <span class="keyword">const</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_sock_addr.html">EtcPalSockAddr</a>* source_addr, <span class="keyword">const</span> <a class="code" href="struct_sacn_remote_source.html">SacnRemoteSource</a>* source_info,</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;                                                <span class="keyword">const</span> <a class="code" href="struct_sacn_recv_universe_data.html">SacnRecvUniverseData</a>* universe_data, <span class="keywordtype">void</span>* context);</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160; </div>
+<div class="line"><a name="l00144"></a><span class="lineno"><a class="line" href="group__sacn__merge__receiver.html#ga47ccc08a4f5812e26ecf694fa0cb0ff0">  144</a></span>&#160;<span class="keyword">typedef</span> void (*<a class="code" href="group__sacn__merge__receiver.html#ga47ccc08a4f5812e26ecf694fa0cb0ff0">SacnMergeReceiverSourceLimitExceededCallback</a>)(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle, uint16_t universe,</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;                                                             <span class="keywordtype">void</span>* context);</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160; </div>
+<div class="line"><a name="l00148"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_callbacks.html">  148</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="struct_sacn_merge_receiver_callbacks.html">SacnMergeReceiverCallbacks</a></div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;{</div>
+<div class="line"><a name="l00150"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_callbacks.html#a1a4295429c025c42d5a54b646f03f62b">  150</a></span>&#160;  <a class="code" href="group__sacn__merge__receiver.html#ga3b87b4a0324b476a926c86a18eab3a1d">SacnMergeReceiverMergedDataCallback</a> <a class="code" href="struct_sacn_merge_receiver_callbacks.html#a1a4295429c025c42d5a54b646f03f62b">universe_data</a>;                  </div>
+<div class="line"><a name="l00151"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_callbacks.html#ace7f60e7140c695d729d045abca2ba73">  151</a></span>&#160;  <a class="code" href="group__sacn__merge__receiver.html#ga274346790ea25827de515b93f6df2c2b">SacnMergeReceiverNonDmxCallback</a> <a class="code" href="struct_sacn_merge_receiver_callbacks.html#ace7f60e7140c695d729d045abca2ba73">universe_non_dmx</a>;                   </div>
+<div class="line"><a name="l00152"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_callbacks.html#a29e01e068c71bd55dd31d6aeb5483992">  152</a></span>&#160;  <a class="code" href="group__sacn__merge__receiver.html#ga47ccc08a4f5812e26ecf694fa0cb0ff0">SacnMergeReceiverSourceLimitExceededCallback</a> <a class="code" href="struct_sacn_merge_receiver_callbacks.html#a29e01e068c71bd55dd31d6aeb5483992">source_limit_exceeded</a>; </div>
+<div class="line"><a name="l00153"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_callbacks.html#a67b5953b36108e04f24abe803bc1fe44">  153</a></span>&#160;  <span class="keywordtype">void</span>* <a class="code" href="struct_sacn_merge_receiver_callbacks.html#a67b5953b36108e04f24abe803bc1fe44">callback_context</a>; </div>
+<div class="line"><a name="l00154"></a><span class="lineno"><a class="line" href="group__sacn__merge__receiver.html#ga92cb80327e80976e7b004bf9819bca0a">  154</a></span>&#160;} <a class="code" href="group__sacn__merge__receiver.html#ga92cb80327e80976e7b004bf9819bca0a">SacnMergeReceiverCallbacks</a>;</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160; </div>
+<div class="line"><a name="l00157"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_config.html">  157</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="struct_sacn_merge_receiver_config.html">SacnMergeReceiverConfig</a></div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;{</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;<span class="comment">  /********* Required values **********/</span></div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160; </div>
+<div class="line"><a name="l00162"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_config.html#a7e0de4d0f4e4bbd14771257febdf7248">  162</a></span>&#160;  uint16_t <a class="code" href="struct_sacn_merge_receiver_config.html#a7e0de4d0f4e4bbd14771257febdf7248">universe_id</a>;</div>
+<div class="line"><a name="l00164"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_config.html#ac1381db71af830c6635c5d2b338217ba">  164</a></span>&#160;  <a class="code" href="struct_sacn_merge_receiver_callbacks.html">SacnMergeReceiverCallbacks</a> <a class="code" href="struct_sacn_merge_receiver_config.html#ac1381db71af830c6635c5d2b338217ba">callbacks</a>;</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;<span class="comment">  /********* Optional values **********/</span></div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160; </div>
+<div class="line"><a name="l00169"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_config.html#a3fa13922bd1ee44412886d8e562582c8">  169</a></span>&#160;  <a class="code" href="struct_sacn_recv_universe_subrange.html">SacnRecvUniverseSubrange</a> <a class="code" href="struct_sacn_merge_receiver_config.html#a3fa13922bd1ee44412886d8e562582c8">footprint</a>;</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160; </div>
+<div class="line"><a name="l00174"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_config.html#aa56795d5b57bff4910ce11baac4003ba">  174</a></span>&#160;  <span class="keywordtype">int</span> <a class="code" href="struct_sacn_merge_receiver_config.html#aa56795d5b57bff4910ce11baac4003ba">source_count_max</a>;</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160; </div>
+<div class="line"><a name="l00179"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_config.html#af4536f740a72ae5788afacd0db91da30">  179</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="struct_sacn_merge_receiver_config.html#af4536f740a72ae5788afacd0db91da30">use_pap</a>;</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160; </div>
+<div class="line"><a name="l00182"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_config.html#ab619351af6b7a5abcb23e38bdc09e984">  182</a></span>&#160;  <a class="code" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a> <a class="code" href="struct_sacn_merge_receiver_config.html#ab619351af6b7a5abcb23e38bdc09e984">ip_supported</a>;</div>
+<div class="line"><a name="l00183"></a><span class="lineno"><a class="line" href="group__sacn__merge__receiver.html#ga05a8525a8ee5280ab3b6e0583ae01ae8">  183</a></span>&#160;} <a class="code" href="group__sacn__merge__receiver.html#ga05a8525a8ee5280ab3b6e0583ae01ae8">SacnMergeReceiverConfig</a>;</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160; </div>
+<div class="line"><a name="l00186"></a><span class="lineno"><a class="line" href="group__sacn__merge__receiver.html#gaeb89255ebd3592d97fe76ed6203913ae">  186</a></span>&#160;<span class="preprocessor">#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                                                 \</span></div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;<span class="preprocessor">  {                                                                                                             \</span></div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="preprocessor">    0, {NULL, NULL, NULL, NULL}, {1, DMX_ADDRESS_COUNT}, SACN_RECEIVER_INFINITE_SOURCES, true, kSacnIpV4AndIpV6 \</span></div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="preprocessor">  }</span></div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160; </div>
+<div class="line"><a name="l00192"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_netint_list.html">  192</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="struct_sacn_merge_receiver_netint_list.html">SacnMergeReceiverNetintList</a></div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;{</div>
+<div class="line"><a name="l00195"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_netint_list.html#aba7e88ef8eda8612d97729978383ba05">  195</a></span>&#160;  <a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> <a class="code" href="struct_sacn_merge_receiver_netint_list.html#aba7e88ef8eda8612d97729978383ba05">handle</a>;</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160; </div>
+<div class="line"><a name="l00199"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_netint_list.html#add0da5313d4b1d06a67bda5508b848e1">  199</a></span>&#160;  <a class="code" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a>* <a class="code" href="struct_sacn_merge_receiver_netint_list.html#add0da5313d4b1d06a67bda5508b848e1">netints</a>;</div>
+<div class="line"><a name="l00201"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_netint_list.html#a6ddc029bb8aba3ead075508554592445">  201</a></span>&#160;  <span class="keywordtype">size_t</span> <a class="code" href="struct_sacn_merge_receiver_netint_list.html#a6ddc029bb8aba3ead075508554592445">num_netints</a>;</div>
+<div class="line"><a name="l00202"></a><span class="lineno"><a class="line" href="group__sacn__merge__receiver.html#ga2003a3a906229f10aaf77ad600ea1ad1">  202</a></span>&#160;} <a class="code" href="group__sacn__merge__receiver.html#ga2003a3a906229f10aaf77ad600ea1ad1">SacnMergeReceiverNetintList</a>;</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160; </div>
+<div class="line"><a name="l00205"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_source.html">  205</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="struct_sacn_merge_receiver_source.html">SacnMergeReceiverSource</a></div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;{</div>
+<div class="line"><a name="l00208"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_source.html#abd2d36f012ca716885c43720824b4a75">  208</a></span>&#160;  <a class="code" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">sacn_remote_source_t</a> <a class="code" href="struct_sacn_merge_receiver_source.html#abd2d36f012ca716885c43720824b4a75">handle</a>;</div>
+<div class="line"><a name="l00210"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_source.html#a4c3f7d9a58af5033f9acd8c942bf81d9">  210</a></span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_uuid.html">EtcPalUuid</a> <a class="code" href="struct_sacn_merge_receiver_source.html#a4c3f7d9a58af5033f9acd8c942bf81d9">cid</a>;</div>
+<div class="line"><a name="l00212"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_source.html#a7e3669a12853b82f7d2b7488bb174956">  212</a></span>&#160;  <span class="keywordtype">char</span> <a class="code" href="struct_sacn_merge_receiver_source.html#a7e3669a12853b82f7d2b7488bb174956">name</a>[<a class="code" href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8">SACN_SOURCE_NAME_MAX_LEN</a>];</div>
+<div class="line"><a name="l00214"></a><span class="lineno"><a class="line" href="struct_sacn_merge_receiver_source.html#a730cebe0970ed6300a5f832363e65852">  214</a></span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_sock_addr.html">EtcPalSockAddr</a> <a class="code" href="struct_sacn_merge_receiver_source.html#a730cebe0970ed6300a5f832363e65852">addr</a>;</div>
+<div class="line"><a name="l00215"></a><span class="lineno"><a class="line" href="group__sacn__merge__receiver.html#gac417e4563acfbf4bdfe8f2490c7e88c9">  215</a></span>&#160;} <a class="code" href="group__sacn__merge__receiver.html#gac417e4563acfbf4bdfe8f2490c7e88c9">SacnMergeReceiverSource</a>;</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160; </div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;<span class="keywordtype">void</span> <a class="code" href="group__sacn__merge__receiver.html#gab0d6a624f1d44008625335112788eb37">sacn_merge_receiver_config_init</a>(<a class="code" href="struct_sacn_merge_receiver_config.html">SacnMergeReceiverConfig</a>* config);</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160; </div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__merge__receiver.html#ga91ca26eea8b78eeb2b25bb003e8aa208">sacn_merge_receiver_create</a>(<span class="keyword">const</span> <a class="code" href="struct_sacn_merge_receiver_config.html">SacnMergeReceiverConfig</a>* config, <a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a>* handle,</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;                                          <span class="keyword">const</span> <a class="code" href="struct_sacn_netint_config.html">SacnNetintConfig</a>* netint_config);</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__merge__receiver.html#ga02c0879618435049e7a9bd25dbe58850">sacn_merge_receiver_destroy</a>(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle);</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__merge__receiver.html#ga7345c390c8b94221b481c3cd1ca37de7">sacn_merge_receiver_get_universe</a>(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle, uint16_t* universe_id);</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__merge__receiver.html#ga32dfa392c47b9f7a443e9bd563e1a974">sacn_merge_receiver_get_footprint</a>(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle, <a class="code" href="struct_sacn_recv_universe_subrange.html">SacnRecvUniverseSubrange</a>* footprint);</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__merge__receiver.html#ga821122037b6cd927facd821c11cce970">sacn_merge_receiver_change_universe</a>(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle, uint16_t new_universe_id);</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__merge__receiver.html#ga05a2a94b9c4346efa7918c7fe3031a80">sacn_merge_receiver_change_footprint</a>(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle,</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;                                                    <span class="keyword">const</span> <a class="code" href="struct_sacn_recv_universe_subrange.html">SacnRecvUniverseSubrange</a>* new_footprint);</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__merge__receiver.html#ga99f34c7a019f2f4f5f62220a505c6e47">sacn_merge_receiver_change_universe_and_footprint</a>(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle, uint16_t new_universe_id,</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;                                                                 <span class="keyword">const</span> <a class="code" href="struct_sacn_recv_universe_subrange.html">SacnRecvUniverseSubrange</a>* new_footprint);</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__merge__receiver.html#ga00e28a2333ce8cd38b0eb3e58ac5f375">sacn_merge_receiver_reset_networking</a>(<span class="keyword">const</span> <a class="code" href="struct_sacn_netint_config.html">SacnNetintConfig</a>* sys_netint_config);</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__merge__receiver.html#ga0db3ceb5a812f02e2e4daa52b5797523">sacn_merge_receiver_reset_networking_per_receiver</a>(</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    <span class="keyword">const</span> <a class="code" href="struct_sacn_netint_config.html">SacnNetintConfig</a>* sys_netint_config, <span class="keyword">const</span> <a class="code" href="struct_sacn_merge_receiver_netint_list.html">SacnMergeReceiverNetintList</a>* per_receiver_netint_lists,</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    <span class="keywordtype">size_t</span> num_per_receiver_netint_lists);</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;<span class="keywordtype">size_t</span> <a class="code" href="group__sacn__merge__receiver.html#ga01cecd351da958dc2fc7b55088559de8">sacn_merge_receiver_get_network_interfaces</a>(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> handle, <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_mcast_netint_id.html">EtcPalMcastNetintId</a>* netints,</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;                                                  <span class="keywordtype">size_t</span> netints_size);</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__merge__receiver.html#ga807515578955a36b0a33de53a1d5bd9c">sacn_merge_receiver_get_source</a>(<a class="code" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a> merge_receiver_handle,</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;                                              <a class="code" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">sacn_remote_source_t</a> source_handle, <a class="code" href="struct_sacn_merge_receiver_source.html">SacnMergeReceiverSource</a>* source_info);</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160; </div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;}</div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160; </div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* SACN_MERGE_RECEIVER_H_ */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="admx__merger_8h_html"><div class="ttname"><a href="dmx__merger_8h.html">dmx_merger.h</a></div><div class="ttdoc">sACN DMX Merger API definitions</div></div>
+<div class="ttc" id="agroup__etcpal__error_html_ga743b0648f0ca798ef29c9f69c6e255af"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a></div><div class="ttdeci">etcpal_error_t</div></div>
+<div class="ttc" id="agroup__s_a_c_n_html_ga02f82b9c734e2d2f70a1106d6480833a"><div class="ttname"><a href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a></div><div class="ttdeci">sacn_ip_support_t</div><div class="ttdef"><b>Definition:</b> common.h:71</div></div>
+<div class="ttc" id="agroup__s_a_c_n_html_ga0a68bef69f737e31072b475521d331c8"><div class="ttname"><a href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8">SACN_SOURCE_NAME_MAX_LEN</a></div><div class="ttdeci">#define SACN_SOURCE_NAME_MAX_LEN</div><div class="ttdoc">The maximum length of an sACN source name, including the null-terminator.</div><div class="ttdef"><b>Definition:</b> common.h:50</div></div>
+<div class="ttc" id="agroup__s_a_c_n_html_ga31b1febd91134668307803d573ed2f2c"><div class="ttname"><a href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">sacn_remote_source_t</a></div><div class="ttdeci">uint16_t sacn_remote_source_t</div><div class="ttdef"><b>Definition:</b> common.h:58</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga00e28a2333ce8cd38b0eb3e58ac5f375"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga00e28a2333ce8cd38b0eb3e58ac5f375">sacn_merge_receiver_reset_networking</a></div><div class="ttdeci">etcpal_error_t sacn_merge_receiver_reset_networking(const SacnNetintConfig *sys_netint_config)</div><div class="ttdoc">Resets underlying network sockets and packet receipt state, determines network interfaces for all mer...</div><div class="ttdef"><b>Definition:</b> merge_receiver.c:376</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga01cecd351da958dc2fc7b55088559de8"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga01cecd351da958dc2fc7b55088559de8">sacn_merge_receiver_get_network_interfaces</a></div><div class="ttdeci">size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, EtcPalMcastNetintId *netints, size_t netints_size)</div><div class="ttdoc">Obtain a list of a merge receiver's network interfaces.</div><div class="ttdef"><b>Definition:</b> merge_receiver.c:472</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga02c0879618435049e7a9bd25dbe58850"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga02c0879618435049e7a9bd25dbe58850">sacn_merge_receiver_destroy</a></div><div class="ttdeci">etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)</div><div class="ttdoc">Destroy a sACN Merge Receiver instance.</div><div class="ttdef"><b>Definition:</b> merge_receiver.c:182</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga05a2a94b9c4346efa7918c7fe3031a80"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga05a2a94b9c4346efa7918c7fe3031a80">sacn_merge_receiver_change_footprint</a></div><div class="ttdeci">etcpal_error_t sacn_merge_receiver_change_footprint(sacn_merge_receiver_t handle, const SacnRecvUniverseSubrange *new_footprint)</div><div class="ttdoc">Change the footprint within the universe on which an sACN receiver is listening. TODO: Not yet implem...</div><div class="ttdef"><b>Definition:</b> merge_receiver.c:322</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga05a8525a8ee5280ab3b6e0583ae01ae8"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga05a8525a8ee5280ab3b6e0583ae01ae8">SacnMergeReceiverConfig</a></div><div class="ttdeci">struct SacnMergeReceiverConfig SacnMergeReceiverConfig</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga0db3ceb5a812f02e2e4daa52b5797523"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga0db3ceb5a812f02e2e4daa52b5797523">sacn_merge_receiver_reset_networking_per_receiver</a></div><div class="ttdeci">etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(const SacnNetintConfig *sys_netint_config, const SacnMergeReceiverNetintList *per_receiver_netint_lists, size_t num_per_receiver_netint_lists)</div><div class="ttdoc">Resets underlying network sockets and packet receipt state, determines network interfaces for each me...</div><div class="ttdef"><b>Definition:</b> merge_receiver.c:413</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga2003a3a906229f10aaf77ad600ea1ad1"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga2003a3a906229f10aaf77ad600ea1ad1">SacnMergeReceiverNetintList</a></div><div class="ttdeci">struct SacnMergeReceiverNetintList SacnMergeReceiverNetintList</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga274346790ea25827de515b93f6df2c2b"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga274346790ea25827de515b93f6df2c2b">SacnMergeReceiverNonDmxCallback</a></div><div class="ttdeci">void(* SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t receiver_handle, const EtcPalSockAddr *source_addr, const SacnRemoteSource *source_info, const SacnRecvUniverseData *universe_data, void *context)</div><div class="ttdoc">Notify that a non-data packet has been received.</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:130</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga32dfa392c47b9f7a443e9bd563e1a974"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga32dfa392c47b9f7a443e9bd563e1a974">sacn_merge_receiver_get_footprint</a></div><div class="ttdeci">etcpal_error_t sacn_merge_receiver_get_footprint(sacn_merge_receiver_t handle, SacnRecvUniverseSubrange *footprint)</div><div class="ttdoc">Get the footprint within the universe on which a sACN Merge Receiver is currently listening.</div><div class="ttdef"><b>Definition:</b> merge_receiver.c:245</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga3b87b4a0324b476a926c86a18eab3a1d"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga3b87b4a0324b476a926c86a18eab3a1d">SacnMergeReceiverMergedDataCallback</a></div><div class="ttdeci">void(* SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle, const SacnRecvMergedData *merged_data, void *context)</div><div class="ttdoc">Notify that a new data packet has been received and merged.</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:106</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga47ccc08a4f5812e26ecf694fa0cb0ff0"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga47ccc08a4f5812e26ecf694fa0cb0ff0">SacnMergeReceiverSourceLimitExceededCallback</a></div><div class="ttdeci">void(* SacnMergeReceiverSourceLimitExceededCallback)(sacn_merge_receiver_t handle, uint16_t universe, void *context)</div><div class="ttdoc">Notify that more than the configured maximum number of sources are currently sending on the universe ...</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:144</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga7345c390c8b94221b481c3cd1ca37de7"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga7345c390c8b94221b481c3cd1ca37de7">sacn_merge_receiver_get_universe</a></div><div class="ttdeci">etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t *universe_id)</div><div class="ttdoc">Get the universe on which a sACN Merge Receiver is currently listening.</div><div class="ttdef"><b>Definition:</b> merge_receiver.c:226</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga807515578955a36b0a33de53a1d5bd9c"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga807515578955a36b0a33de53a1d5bd9c">sacn_merge_receiver_get_source</a></div><div class="ttdeci">etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t merge_receiver_handle, sacn_remote_source_t source_handle, SacnMergeReceiverSource *source_info)</div><div class="ttdoc">Gets a copy of the information for the specified merge receiver source.</div><div class="ttdef"><b>Definition:</b> merge_receiver.c:491</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga821122037b6cd927facd821c11cce970"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga821122037b6cd927facd821c11cce970">sacn_merge_receiver_change_universe</a></div><div class="ttdeci">etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id)</div><div class="ttdoc">Change the universe on which a sACN Merge Receiver is listening.</div><div class="ttdef"><b>Definition:</b> merge_receiver.c:268</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga91ca26eea8b78eeb2b25bb003e8aa208"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga91ca26eea8b78eeb2b25bb003e8aa208">sacn_merge_receiver_create</a></div><div class="ttdeci">etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig *config, sacn_merge_receiver_t *handle, const SacnNetintConfig *netint_config)</div><div class="ttdoc">Create a new sACN Merge Receiver to listen and merge sACN data on a universe.</div><div class="ttdef"><b>Definition:</b> merge_receiver.c:88</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga92cb80327e80976e7b004bf9819bca0a"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga92cb80327e80976e7b004bf9819bca0a">SacnMergeReceiverCallbacks</a></div><div class="ttdeci">struct SacnMergeReceiverCallbacks SacnMergeReceiverCallbacks</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_ga99f34c7a019f2f4f5f62220a505c6e47"><div class="ttname"><a href="group__sacn__merge__receiver.html#ga99f34c7a019f2f4f5f62220a505c6e47">sacn_merge_receiver_change_universe_and_footprint</a></div><div class="ttdeci">etcpal_error_t sacn_merge_receiver_change_universe_and_footprint(sacn_merge_receiver_t handle, uint16_t new_universe_id, const SacnRecvUniverseSubrange *new_footprint)</div><div class="ttdoc">Change the universe and footprint on which an sACN merge receiver is listening. TODO: Not yet impleme...</div><div class="ttdef"><b>Definition:</b> merge_receiver.c:342</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_gab0d6a624f1d44008625335112788eb37"><div class="ttname"><a href="group__sacn__merge__receiver.html#gab0d6a624f1d44008625335112788eb37">sacn_merge_receiver_config_init</a></div><div class="ttdeci">void sacn_merge_receiver_config_init(SacnMergeReceiverConfig *config)</div><div class="ttdoc">Initialize an sACN Merge Receiver Config struct to default values.</div><div class="ttdef"><b>Definition:</b> merge_receiver.c:55</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_gab674497f3bceb2d6ebf4b932b26bfe61"><div class="ttname"><a href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">sacn_merge_receiver_t</a></div><div class="ttdeci">int sacn_merge_receiver_t</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:53</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_gac417e4563acfbf4bdfe8f2490c7e88c9"><div class="ttname"><a href="group__sacn__merge__receiver.html#gac417e4563acfbf4bdfe8f2490c7e88c9">SacnMergeReceiverSource</a></div><div class="ttdeci">struct SacnMergeReceiverSource SacnMergeReceiverSource</div></div>
+<div class="ttc" id="agroup__sacn__merge__receiver_html_gafb05eeea1bbac03fd2058d197e2c5846"><div class="ttname"><a href="group__sacn__merge__receiver.html#gafb05eeea1bbac03fd2058d197e2c5846">SacnRecvMergedData</a></div><div class="ttdeci">struct SacnRecvMergedData SacnRecvMergedData</div></div>
+<div class="ttc" id="areceiver_8h_html"><div class="ttname"><a href="receiver_8h.html">receiver.h</a></div><div class="ttdoc">sACN Receiver API definitions</div></div>
+<div class="ttc" id="astruct_etc_pal_mcast_netint_id_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_mcast_netint_id.html">EtcPalMcastNetintId</a></div></div>
+<div class="ttc" id="astruct_etc_pal_sock_addr_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_sock_addr.html">EtcPalSockAddr</a></div></div>
+<div class="ttc" id="astruct_etc_pal_uuid_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_uuid.html">EtcPalUuid</a></div></div>
+<div class="ttc" id="astruct_sacn_mcast_interface_html"><div class="ttname"><a href="struct_sacn_mcast_interface.html">SacnMcastInterface</a></div><div class="ttdef"><b>Definition:</b> common.h:85</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_callbacks_html"><div class="ttname"><a href="struct_sacn_merge_receiver_callbacks.html">SacnMergeReceiverCallbacks</a></div><div class="ttdef"><b>Definition:</b> merge_receiver.h:149</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_callbacks_html_a1a4295429c025c42d5a54b646f03f62b"><div class="ttname"><a href="struct_sacn_merge_receiver_callbacks.html#a1a4295429c025c42d5a54b646f03f62b">SacnMergeReceiverCallbacks::universe_data</a></div><div class="ttdeci">SacnMergeReceiverMergedDataCallback universe_data</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:150</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_callbacks_html_a29e01e068c71bd55dd31d6aeb5483992"><div class="ttname"><a href="struct_sacn_merge_receiver_callbacks.html#a29e01e068c71bd55dd31d6aeb5483992">SacnMergeReceiverCallbacks::source_limit_exceeded</a></div><div class="ttdeci">SacnMergeReceiverSourceLimitExceededCallback source_limit_exceeded</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:152</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_callbacks_html_a67b5953b36108e04f24abe803bc1fe44"><div class="ttname"><a href="struct_sacn_merge_receiver_callbacks.html#a67b5953b36108e04f24abe803bc1fe44">SacnMergeReceiverCallbacks::callback_context</a></div><div class="ttdeci">void * callback_context</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:153</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_callbacks_html_ace7f60e7140c695d729d045abca2ba73"><div class="ttname"><a href="struct_sacn_merge_receiver_callbacks.html#ace7f60e7140c695d729d045abca2ba73">SacnMergeReceiverCallbacks::universe_non_dmx</a></div><div class="ttdeci">SacnMergeReceiverNonDmxCallback universe_non_dmx</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:151</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_config_html"><div class="ttname"><a href="struct_sacn_merge_receiver_config.html">SacnMergeReceiverConfig</a></div><div class="ttdef"><b>Definition:</b> merge_receiver.h:158</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_config_html_a3fa13922bd1ee44412886d8e562582c8"><div class="ttname"><a href="struct_sacn_merge_receiver_config.html#a3fa13922bd1ee44412886d8e562582c8">SacnMergeReceiverConfig::footprint</a></div><div class="ttdeci">SacnRecvUniverseSubrange footprint</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:169</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_config_html_a7e0de4d0f4e4bbd14771257febdf7248"><div class="ttname"><a href="struct_sacn_merge_receiver_config.html#a7e0de4d0f4e4bbd14771257febdf7248">SacnMergeReceiverConfig::universe_id</a></div><div class="ttdeci">uint16_t universe_id</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:162</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_config_html_aa56795d5b57bff4910ce11baac4003ba"><div class="ttname"><a href="struct_sacn_merge_receiver_config.html#aa56795d5b57bff4910ce11baac4003ba">SacnMergeReceiverConfig::source_count_max</a></div><div class="ttdeci">int source_count_max</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:174</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_config_html_ab619351af6b7a5abcb23e38bdc09e984"><div class="ttname"><a href="struct_sacn_merge_receiver_config.html#ab619351af6b7a5abcb23e38bdc09e984">SacnMergeReceiverConfig::ip_supported</a></div><div class="ttdeci">sacn_ip_support_t ip_supported</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:182</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_config_html_ac1381db71af830c6635c5d2b338217ba"><div class="ttname"><a href="struct_sacn_merge_receiver_config.html#ac1381db71af830c6635c5d2b338217ba">SacnMergeReceiverConfig::callbacks</a></div><div class="ttdeci">SacnMergeReceiverCallbacks callbacks</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:164</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_config_html_af4536f740a72ae5788afacd0db91da30"><div class="ttname"><a href="struct_sacn_merge_receiver_config.html#af4536f740a72ae5788afacd0db91da30">SacnMergeReceiverConfig::use_pap</a></div><div class="ttdeci">bool use_pap</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:179</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_netint_list_html"><div class="ttname"><a href="struct_sacn_merge_receiver_netint_list.html">SacnMergeReceiverNetintList</a></div><div class="ttdef"><b>Definition:</b> merge_receiver.h:193</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_netint_list_html_a6ddc029bb8aba3ead075508554592445"><div class="ttname"><a href="struct_sacn_merge_receiver_netint_list.html#a6ddc029bb8aba3ead075508554592445">SacnMergeReceiverNetintList::num_netints</a></div><div class="ttdeci">size_t num_netints</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:201</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_netint_list_html_aba7e88ef8eda8612d97729978383ba05"><div class="ttname"><a href="struct_sacn_merge_receiver_netint_list.html#aba7e88ef8eda8612d97729978383ba05">SacnMergeReceiverNetintList::handle</a></div><div class="ttdeci">sacn_merge_receiver_t handle</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:195</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_netint_list_html_add0da5313d4b1d06a67bda5508b848e1"><div class="ttname"><a href="struct_sacn_merge_receiver_netint_list.html#add0da5313d4b1d06a67bda5508b848e1">SacnMergeReceiverNetintList::netints</a></div><div class="ttdeci">SacnMcastInterface * netints</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:199</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_source_html"><div class="ttname"><a href="struct_sacn_merge_receiver_source.html">SacnMergeReceiverSource</a></div><div class="ttdef"><b>Definition:</b> merge_receiver.h:206</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_source_html_a4c3f7d9a58af5033f9acd8c942bf81d9"><div class="ttname"><a href="struct_sacn_merge_receiver_source.html#a4c3f7d9a58af5033f9acd8c942bf81d9">SacnMergeReceiverSource::cid</a></div><div class="ttdeci">EtcPalUuid cid</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:210</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_source_html_a730cebe0970ed6300a5f832363e65852"><div class="ttname"><a href="struct_sacn_merge_receiver_source.html#a730cebe0970ed6300a5f832363e65852">SacnMergeReceiverSource::addr</a></div><div class="ttdeci">EtcPalSockAddr addr</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:214</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_source_html_a7e3669a12853b82f7d2b7488bb174956"><div class="ttname"><a href="struct_sacn_merge_receiver_source.html#a7e3669a12853b82f7d2b7488bb174956">SacnMergeReceiverSource::name</a></div><div class="ttdeci">char name[SACN_SOURCE_NAME_MAX_LEN]</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:212</div></div>
+<div class="ttc" id="astruct_sacn_merge_receiver_source_html_abd2d36f012ca716885c43720824b4a75"><div class="ttname"><a href="struct_sacn_merge_receiver_source.html#abd2d36f012ca716885c43720824b4a75">SacnMergeReceiverSource::handle</a></div><div class="ttdeci">sacn_remote_source_t handle</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:208</div></div>
+<div class="ttc" id="astruct_sacn_netint_config_html"><div class="ttname"><a href="struct_sacn_netint_config.html">SacnNetintConfig</a></div><div class="ttdef"><b>Definition:</b> common.h:102</div></div>
+<div class="ttc" id="astruct_sacn_recv_merged_data_html"><div class="ttname"><a href="struct_sacn_recv_merged_data.html">SacnRecvMergedData</a></div><div class="ttdef"><b>Definition:</b> merge_receiver.h:61</div></div>
+<div class="ttc" id="astruct_sacn_recv_merged_data_html_a538119b446f2e353678608bd05ad4db2"><div class="ttname"><a href="struct_sacn_recv_merged_data.html#a538119b446f2e353678608bd05ad4db2">SacnRecvMergedData::levels</a></div><div class="ttdeci">const uint8_t * levels</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:73</div></div>
+<div class="ttc" id="astruct_sacn_recv_merged_data_html_a6f445f896ce37297dbcd575006fdcb6c"><div class="ttname"><a href="struct_sacn_recv_merged_data.html#a6f445f896ce37297dbcd575006fdcb6c">SacnRecvMergedData::num_active_sources</a></div><div class="ttdeci">size_t num_active_sources</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:83</div></div>
+<div class="ttc" id="astruct_sacn_recv_merged_data_html_a7e0de4d0f4e4bbd14771257febdf7248"><div class="ttname"><a href="struct_sacn_recv_merged_data.html#a7e0de4d0f4e4bbd14771257febdf7248">SacnRecvMergedData::universe_id</a></div><div class="ttdeci">uint16_t universe_id</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:65</div></div>
+<div class="ttc" id="astruct_sacn_recv_merged_data_html_ad634e09aa77487d44087c02a9143ee17"><div class="ttname"><a href="struct_sacn_recv_merged_data.html#ad634e09aa77487d44087c02a9143ee17">SacnRecvMergedData::slot_range</a></div><div class="ttdeci">SacnRecvUniverseSubrange slot_range</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:69</div></div>
+<div class="ttc" id="astruct_sacn_recv_merged_data_html_ade95d8642c07e44ecacc13f358ede54d"><div class="ttname"><a href="struct_sacn_recv_merged_data.html#ade95d8642c07e44ecacc13f358ede54d">SacnRecvMergedData::owners</a></div><div class="ttdeci">const sacn_remote_source_t * owners</div><div class="ttdef"><b>Definition:</b> merge_receiver.h:79</div></div>
+<div class="ttc" id="astruct_sacn_recv_universe_data_html"><div class="ttname"><a href="struct_sacn_recv_universe_data.html">SacnRecvUniverseData</a></div><div class="ttdef"><b>Definition:</b> receiver.h:89</div></div>
+<div class="ttc" id="astruct_sacn_recv_universe_subrange_html"><div class="ttname"><a href="struct_sacn_recv_universe_subrange.html">SacnRecvUniverseSubrange</a></div><div class="ttdef"><b>Definition:</b> receiver.h:80</div></div>
+<div class="ttc" id="astruct_sacn_remote_source_html"><div class="ttname"><a href="struct_sacn_remote_source.html">SacnRemoteSource</a></div><div class="ttdef"><b>Definition:</b> receiver.h:124</div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_7f5430f5cf82a7d89375d584a50eafca.html">include</a></li><li class="navelem"><a class="el" href="dir_dd367917ca53bf72011d22330758801e.html">sacn</a></li><li class="navelem"><a class="el" href="merge__receiver_8h.html">merge_receiver.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: include/sacn/dmx_merger.h Source File</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">2.0.2</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('dmx__merger_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="headertitle">
+<div class="title">dmx_merger.h</div>  </div>
+</div><!--header-->
+<div class="contents">
+<a href="dmx__merger_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/******************************************************************************</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * Copyright 2022 ETC Inc.</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment"> * you may not use this file except in compliance with the License.</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment"> * You may obtain a copy of the License at</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment"> *    http://www.apache.org/licenses/LICENSE-2.0</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment"> * Unless required by applicable law or agreed to in writing, software</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment"> * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment"> * See the License for the specific language governing permissions and</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment"> * limitations under the License.</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment"> ******************************************************************************</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> * This file is a part of sACN. For more information, go to:</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment"> * https://github.com/ETCLabs/sACN</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment"> *****************************************************************************/</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#ifndef SACN_DMX_MERGER_H_</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">#define SACN_DMX_MERGER_H_</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#include &lt;stdbool.h&gt;</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#include &quot;etcpal/error.h&quot;</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="common_8h.html">sacn/common.h</a>&quot;</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="receiver_8h.html">sacn/receiver.h</a>&quot;</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
+<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">   65</a></span>&#160;<span class="keyword">typedef</span> <span class="keywordtype">int</span> <a class="code" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a>;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
+<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="group__sacn__dmx__merger.html#ga4578a59809c13ece174e8dcf59fce26d">   68</a></span>&#160;<span class="preprocessor">#define SACN_DMX_MERGER_INVALID -1</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
+<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">   72</a></span>&#160;<span class="keyword">typedef</span> uint16_t <a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a>;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
+<div class="line"><a name="l00075"></a><span class="lineno"><a class="line" href="group__sacn__dmx__merger.html#ga1ca9e023e2091c5a8a4e5e2ba426f055">   75</a></span>&#160;<span class="preprocessor">#define SACN_DMX_MERGER_SOURCE_INVALID ((sacn_dmx_merger_source_t)-1)</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160; </div>
+<div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_config.html">   78</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a></div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;{</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="comment">  /********* Required values **********/</span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
+<div class="line"><a name="l00086"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_config.html#a65f1e6db75de6e20f9df99807d14fe19">   86</a></span>&#160;  uint8_t* <a class="code" href="struct_sacn_dmx_merger_config.html#a65f1e6db75de6e20f9df99807d14fe19">levels</a>;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160; </div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="comment">  /********* Optional values **********/</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160; </div>
+<div class="line"><a name="l00095"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_config.html#a6b8790b29687764423319cc2b8f24c30">   95</a></span>&#160;  uint8_t* <a class="code" href="struct_sacn_dmx_merger_config.html#a6b8790b29687764423319cc2b8f24c30">per_address_priorities</a>;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160; </div>
+<div class="line"><a name="l00100"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_config.html#aa844a92b4e32e58dee13b77318f8cb8e">  100</a></span>&#160;  <span class="keywordtype">bool</span>* <a class="code" href="struct_sacn_dmx_merger_config.html#aa844a92b4e32e58dee13b77318f8cb8e">per_address_priorities_active</a>;</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160; </div>
+<div class="line"><a name="l00104"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_config.html#ae39fb52602dd51d0696c8973b0d5cd44">  104</a></span>&#160;  uint8_t* <a class="code" href="struct_sacn_dmx_merger_config.html#ae39fb52602dd51d0696c8973b0d5cd44">universe_priority</a>;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160; </div>
+<div class="line"><a name="l00112"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_config.html#aec37c8bd38cd533fbff8d704cef812d9">  112</a></span>&#160;  <a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a>* <a class="code" href="struct_sacn_dmx_merger_config.html#aec37c8bd38cd533fbff8d704cef812d9">owners</a>;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160; </div>
+<div class="line"><a name="l00117"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_config.html#aa56795d5b57bff4910ce11baac4003ba">  117</a></span>&#160;  <span class="keywordtype">int</span> <a class="code" href="struct_sacn_dmx_merger_config.html#aa56795d5b57bff4910ce11baac4003ba">source_count_max</a>;</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160; </div>
+<div class="line"><a name="l00119"></a><span class="lineno"><a class="line" href="group__sacn__dmx__merger.html#ga9989e37ba8aa7aeb4ef0108ceb4e156c">  119</a></span>&#160;} <a class="code" href="group__sacn__dmx__merger.html#ga9989e37ba8aa7aeb4ef0108ceb4e156c">SacnDmxMergerConfig</a>;</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160; </div>
+<div class="line"><a name="l00132"></a><span class="lineno"><a class="line" href="group__sacn__dmx__merger.html#ga7431ab2baf3af7e0d1999355c6bcc9d7">  132</a></span>&#160;<span class="preprocessor">#define SACN_DMX_MERGER_CONFIG_INIT                              \</span></div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="preprocessor">  {                                                              \</span></div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="preprocessor">    NULL, NULL, NULL, NULL, NULL, SACN_RECEIVER_INFINITE_SOURCES \</span></div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="preprocessor">  }</span></div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160; </div>
+<div class="line"><a name="l00143"></a><span class="lineno"><a class="line" href="group__sacn__dmx__merger.html#gaec4962a6c5655b357d4c81dc9e7a7b86">  143</a></span>&#160;<span class="preprocessor">#define SACN_DMX_MERGER_SOURCE_IS_VALID(owners_array, slot_index) \</span></div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;<span class="preprocessor">  (owners_array[slot_index] != SACN_DMX_MERGER_SOURCE_INVALID)</span></div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160; </div>
+<div class="line"><a name="l00147"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_source.html">  147</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a></div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;{</div>
+<div class="line"><a name="l00150"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_source.html#a5d30b5a537ddb24760bd71590427ac3e">  150</a></span>&#160;  <a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> <a class="code" href="struct_sacn_dmx_merger_source.html#a5d30b5a537ddb24760bd71590427ac3e">id</a>;</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160; </div>
+<div class="line"><a name="l00153"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_source.html#a82f491441fd8ea7e0b36c867797a9ba5">  153</a></span>&#160;  uint8_t <a class="code" href="struct_sacn_dmx_merger_source.html#a82f491441fd8ea7e0b36c867797a9ba5">levels</a>[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160; </div>
+<div class="line"><a name="l00156"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_source.html#a3695ed7e336fa1e6cf75ee3ccbc4937d">  156</a></span>&#160;  <span class="keywordtype">size_t</span> <a class="code" href="struct_sacn_dmx_merger_source.html#a3695ed7e336fa1e6cf75ee3ccbc4937d">valid_level_count</a>;</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160; </div>
+<div class="line"><a name="l00159"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_source.html#aefc54b6cd291e480d6cb7c9b5b98a3f4">  159</a></span>&#160;  uint8_t <a class="code" href="struct_sacn_dmx_merger_source.html#aefc54b6cd291e480d6cb7c9b5b98a3f4">universe_priority</a>;</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160; </div>
+<div class="line"><a name="l00165"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_source.html#a8e2ad703e06552317b7f47dd0e0ebbea">  165</a></span>&#160;  uint8_t <a class="code" href="struct_sacn_dmx_merger_source.html#a8e2ad703e06552317b7f47dd0e0ebbea">address_priority</a>[<a class="code" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a>];</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
+<div class="line"><a name="l00168"></a><span class="lineno"><a class="line" href="struct_sacn_dmx_merger_source.html#a61802cbe97a2c1aa336df0282b2bb07f">  168</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="struct_sacn_dmx_merger_source.html#a61802cbe97a2c1aa336df0282b2bb07f">using_universe_priority</a>;</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160; </div>
+<div class="line"><a name="l00170"></a><span class="lineno"><a class="line" href="group__sacn__dmx__merger.html#ga5ff553cc00468871978edfe0e675aebd">  170</a></span>&#160;} <a class="code" href="group__sacn__dmx__merger.html#ga5ff553cc00468871978edfe0e675aebd">SacnDmxMergerSource</a>;</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160; </div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__dmx__merger.html#ga8758dad93531c1a5bbf4643157fe2c72">sacn_dmx_merger_create</a>(<span class="keyword">const</span> <a class="code" href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a>* config, <a class="code" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a>* handle);</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__dmx__merger.html#ga539b249ea5d0898efce4ee7371fc91ef">sacn_dmx_merger_destroy</a>(<a class="code" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> handle);</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160; </div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__dmx__merger.html#gadf879eb673c0ffe91ade6bcc5af615c3">sacn_dmx_merger_add_source</a>(<a class="code" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a>* source_id);</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__dmx__merger.html#gac6ebd9581fb8c6170d4acf1c24681ad7">sacn_dmx_merger_remove_source</a>(<a class="code" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source);</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;<span class="keyword">const</span> <a class="code" href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a>* <a class="code" href="group__sacn__dmx__merger.html#ga0811c88edb22c748c8b80bbc49984e67">sacn_dmx_merger_get_source</a>(<a class="code" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source);</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160; </div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__dmx__merger.html#ga6ee5e85689e75879fa1db01db0bad8a6">sacn_dmx_merger_update_levels</a>(<a class="code" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source,</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;                                             <span class="keyword">const</span> uint8_t* new_levels, <span class="keywordtype">size_t</span> new_levels_count);</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__dmx__merger.html#gac28b72fd6849cb6815c0ca58c2d29e65">sacn_dmx_merger_update_pap</a>(<a class="code" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source, <span class="keyword">const</span> uint8_t* pap,</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;                                          <span class="keywordtype">size_t</span> pap_count);</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__dmx__merger.html#gab56b1f0e4fe8d5d1dd23695a1a861b3b">sacn_dmx_merger_update_universe_priority</a>(<a class="code" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source,</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;                                                        uint8_t universe_priority);</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a> <a class="code" href="group__sacn__dmx__merger.html#gada109b5171e78bc858ab18a7c13931ee">sacn_dmx_merger_remove_pap</a>(<a class="code" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a> merger, <a class="code" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a> source);</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160; </div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;}</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160; </div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* SACN_DMX_MERGER_H_ */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="acommon_8h_html"><div class="ttname"><a href="common_8h.html">common.h</a></div><div class="ttdoc">Common definitions for sACN.</div></div>
+<div class="ttc" id="agroup__etcpal__error_html_ga743b0648f0ca798ef29c9f69c6e255af"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#ga743b0648f0ca798ef29c9f69c6e255af">etcpal_error_t</a></div><div class="ttdeci">etcpal_error_t</div></div>
+<div class="ttc" id="agroup__s_a_c_n_html_ga681f92a30c76ae426e2403a328978abb"><div class="ttname"><a href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">DMX_ADDRESS_COUNT</a></div><div class="ttdeci">#define DMX_ADDRESS_COUNT</div><div class="ttdef"><b>Definition:</b> common.h:55</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga0811c88edb22c748c8b80bbc49984e67"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga0811c88edb22c748c8b80bbc49984e67">sacn_dmx_merger_get_source</a></div><div class="ttdeci">const SacnDmxMergerSource * sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)</div><div class="ttdoc">Gets a read-only view of the source data.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:344</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga539b249ea5d0898efce4ee7371fc91ef"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga539b249ea5d0898efce4ee7371fc91ef">sacn_dmx_merger_destroy</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)</div><div class="ttdoc">Destroy a merger instance.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:212</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga5ff553cc00468871978edfe0e675aebd"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga5ff553cc00468871978edfe0e675aebd">SacnDmxMergerSource</a></div><div class="ttdeci">struct SacnDmxMergerSource SacnDmxMergerSource</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga6c4761eedeaaf635ac495265849c07f2"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">sacn_dmx_merger_source_t</a></div><div class="ttdeci">uint16_t sacn_dmx_merger_source_t</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:72</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga6ee5e85689e75879fa1db01db0bad8a6"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga6ee5e85689e75879fa1db01db0bad8a6">sacn_dmx_merger_update_levels</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t *new_levels, size_t new_levels_count)</div><div class="ttdoc">Updates a source's levels and recalculates outputs.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:385</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga8758dad93531c1a5bbf4643157fe2c72"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga8758dad93531c1a5bbf4643157fe2c72">sacn_dmx_merger_create</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig *config, sacn_dmx_merger_t *handle)</div><div class="ttdoc">Create a new merger instance.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:170</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_ga9989e37ba8aa7aeb4ef0108ceb4e156c"><div class="ttname"><a href="group__sacn__dmx__merger.html#ga9989e37ba8aa7aeb4ef0108ceb4e156c">SacnDmxMergerConfig</a></div><div class="ttdeci">struct SacnDmxMergerConfig SacnDmxMergerConfig</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_gab56b1f0e4fe8d5d1dd23695a1a861b3b"><div class="ttname"><a href="group__sacn__dmx__merger.html#gab56b1f0e4fe8d5d1dd23695a1a861b3b">sacn_dmx_merger_update_universe_priority</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, uint8_t universe_priority)</div><div class="ttdoc">Updates a source's universe priority and recalculates outputs.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:500</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_gabee79fb378d5942866adc898cb7da38b"><div class="ttname"><a href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">sacn_dmx_merger_t</a></div><div class="ttdeci">int sacn_dmx_merger_t</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:65</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_gac28b72fd6849cb6815c0ca58c2d29e65"><div class="ttname"><a href="group__sacn__dmx__merger.html#gac28b72fd6849cb6815c0ca58c2d29e65">sacn_dmx_merger_update_pap</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_update_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t *pap, size_t pap_count)</div><div class="ttdoc">Updates a source's per-address priorities (PAP) and recalculates outputs.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:441</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_gac6ebd9581fb8c6170d4acf1c24681ad7"><div class="ttname"><a href="group__sacn__dmx__merger.html#gac6ebd9581fb8c6170d4acf1c24681ad7">sacn_dmx_merger_remove_source</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)</div><div class="ttdoc">Removes a source from the merger.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:302</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_gada109b5171e78bc858ab18a7c13931ee"><div class="ttname"><a href="group__sacn__dmx__merger.html#gada109b5171e78bc858ab18a7c13931ee">sacn_dmx_merger_remove_pap</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_remove_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source)</div><div class="ttdoc">Removes the per-address priority (PAP) data from the source and recalculate outputs.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:544</div></div>
+<div class="ttc" id="agroup__sacn__dmx__merger_html_gadf879eb673c0ffe91ade6bcc5af615c3"><div class="ttname"><a href="group__sacn__dmx__merger.html#gadf879eb673c0ffe91ade6bcc5af615c3">sacn_dmx_merger_add_source</a></div><div class="ttdeci">etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t *source_id)</div><div class="ttdoc">Adds a new source to the merger.</div><div class="ttdef"><b>Definition:</b> dmx_merger.c:260</div></div>
+<div class="ttc" id="areceiver_8h_html"><div class="ttname"><a href="receiver_8h.html">receiver.h</a></div><div class="ttdoc">sACN Receiver API definitions</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_config_html"><div class="ttname"><a href="struct_sacn_dmx_merger_config.html">SacnDmxMergerConfig</a></div><div class="ttdef"><b>Definition:</b> dmx_merger.h:79</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_config_html_a65f1e6db75de6e20f9df99807d14fe19"><div class="ttname"><a href="struct_sacn_dmx_merger_config.html#a65f1e6db75de6e20f9df99807d14fe19">SacnDmxMergerConfig::levels</a></div><div class="ttdeci">uint8_t * levels</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:86</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_config_html_a6b8790b29687764423319cc2b8f24c30"><div class="ttname"><a href="struct_sacn_dmx_merger_config.html#a6b8790b29687764423319cc2b8f24c30">SacnDmxMergerConfig::per_address_priorities</a></div><div class="ttdeci">uint8_t * per_address_priorities</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:95</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_config_html_aa56795d5b57bff4910ce11baac4003ba"><div class="ttname"><a href="struct_sacn_dmx_merger_config.html#aa56795d5b57bff4910ce11baac4003ba">SacnDmxMergerConfig::source_count_max</a></div><div class="ttdeci">int source_count_max</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:117</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_config_html_aa844a92b4e32e58dee13b77318f8cb8e"><div class="ttname"><a href="struct_sacn_dmx_merger_config.html#aa844a92b4e32e58dee13b77318f8cb8e">SacnDmxMergerConfig::per_address_priorities_active</a></div><div class="ttdeci">bool * per_address_priorities_active</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:100</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_config_html_ae39fb52602dd51d0696c8973b0d5cd44"><div class="ttname"><a href="struct_sacn_dmx_merger_config.html#ae39fb52602dd51d0696c8973b0d5cd44">SacnDmxMergerConfig::universe_priority</a></div><div class="ttdeci">uint8_t * universe_priority</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:104</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_config_html_aec37c8bd38cd533fbff8d704cef812d9"><div class="ttname"><a href="struct_sacn_dmx_merger_config.html#aec37c8bd38cd533fbff8d704cef812d9">SacnDmxMergerConfig::owners</a></div><div class="ttdeci">sacn_dmx_merger_source_t * owners</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:112</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_source_html"><div class="ttname"><a href="struct_sacn_dmx_merger_source.html">SacnDmxMergerSource</a></div><div class="ttdef"><b>Definition:</b> dmx_merger.h:148</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_source_html_a3695ed7e336fa1e6cf75ee3ccbc4937d"><div class="ttname"><a href="struct_sacn_dmx_merger_source.html#a3695ed7e336fa1e6cf75ee3ccbc4937d">SacnDmxMergerSource::valid_level_count</a></div><div class="ttdeci">size_t valid_level_count</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:156</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_source_html_a5d30b5a537ddb24760bd71590427ac3e"><div class="ttname"><a href="struct_sacn_dmx_merger_source.html#a5d30b5a537ddb24760bd71590427ac3e">SacnDmxMergerSource::id</a></div><div class="ttdeci">sacn_dmx_merger_source_t id</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:150</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_source_html_a61802cbe97a2c1aa336df0282b2bb07f"><div class="ttname"><a href="struct_sacn_dmx_merger_source.html#a61802cbe97a2c1aa336df0282b2bb07f">SacnDmxMergerSource::using_universe_priority</a></div><div class="ttdeci">bool using_universe_priority</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:168</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_source_html_a82f491441fd8ea7e0b36c867797a9ba5"><div class="ttname"><a href="struct_sacn_dmx_merger_source.html#a82f491441fd8ea7e0b36c867797a9ba5">SacnDmxMergerSource::levels</a></div><div class="ttdeci">uint8_t levels[DMX_ADDRESS_COUNT]</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:153</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_source_html_a8e2ad703e06552317b7f47dd0e0ebbea"><div class="ttname"><a href="struct_sacn_dmx_merger_source.html#a8e2ad703e06552317b7f47dd0e0ebbea">SacnDmxMergerSource::address_priority</a></div><div class="ttdeci">uint8_t address_priority[DMX_ADDRESS_COUNT]</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:165</div></div>
+<div class="ttc" id="astruct_sacn_dmx_merger_source_html_aefc54b6cd291e480d6cb7c9b5b98a3f4"><div class="ttname"><a href="struct_sacn_dmx_merger_source.html#aefc54b6cd291e480d6cb7c9b5b98a3f4">SacnDmxMergerSource::universe_priority</a></div><div class="ttdeci">uint8_t universe_priority</div><div class="ttdef"><b>Definition:</b> dmx_merger.h:159</div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_7f5430f5cf82a7d89375d584a50eafca.html">include</a></li><li class="navelem"><a class="el" href="dir_dd367917ca53bf72011d22330758801e.html">sacn</a></li><li class="navelem"><a class="el" href="dmx__merger_8h.html">dmx_merger.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>

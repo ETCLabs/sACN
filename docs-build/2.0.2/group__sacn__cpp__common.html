@@ -1,0 +1,572 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: Common Definitions</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">2.0.2</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('group__sacn__cpp__common.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#func-members">Functions</a>  </div>
+  <div class="headertitle">
+<div class="title">Common Definitions<div class="ingroups"><a class="el" href="group__sacn__cpp__api.html">sACN C++ Language APIs</a></div></div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>Definitions shared by other APIs in this module.  
+<a href="#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ga65534ea21e4b2adde8d3189b3c4405a3"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__cpp__common.html#ga65534ea21e4b2adde8d3189b3c4405a3">Init</a> (const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_log_params.html">EtcPalLogParams</a> *log_params=nullptr)</td></tr>
+<tr class="memdesc:ga65534ea21e4b2adde8d3189b3c4405a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the sACN library.  <a href="group__sacn__cpp__common.html#ga65534ea21e4b2adde8d3189b3c4405a3">More...</a><br /></td></tr>
+<tr class="separator:ga65534ea21e4b2adde8d3189b3c4405a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga462a83ab46a4fa6a2f642fcacabecc82"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__cpp__common.html#ga462a83ab46a4fa6a2f642fcacabecc82">Init</a> (const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_log_params.html">EtcPalLogParams</a> *log_params, <a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;sys_netints)</td></tr>
+<tr class="memdesc:ga462a83ab46a4fa6a2f642fcacabecc82"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the sACN library.  <a href="group__sacn__cpp__common.html#ga462a83ab46a4fa6a2f642fcacabecc82">More...</a><br /></td></tr>
+<tr class="separator:ga462a83ab46a4fa6a2f642fcacabecc82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga73781de46ab1321166a0dce24094c73d"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__cpp__common.html#ga73781de46ab1321166a0dce24094c73d">Init</a> (<a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;sys_netints)</td></tr>
+<tr class="memdesc:ga73781de46ab1321166a0dce24094c73d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the sACN library.  <a href="group__sacn__cpp__common.html#ga73781de46ab1321166a0dce24094c73d">More...</a><br /></td></tr>
+<tr class="separator:ga73781de46ab1321166a0dce24094c73d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga85e9b6458e49595e817c1c47538c61e5"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__cpp__common.html#ga85e9b6458e49595e817c1c47538c61e5">Init</a> (const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_logger.html">etcpal::Logger</a> &amp;logger)</td></tr>
+<tr class="memdesc:ga85e9b6458e49595e817c1c47538c61e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the sACN library.  <a href="group__sacn__cpp__common.html#ga85e9b6458e49595e817c1c47538c61e5">More...</a><br /></td></tr>
+<tr class="separator:ga85e9b6458e49595e817c1c47538c61e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga414aefdf3a0364b6261374e61a37bd05"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__cpp__common.html#ga414aefdf3a0364b6261374e61a37bd05">Init</a> (const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_logger.html">etcpal::Logger</a> &amp;logger, <a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;sys_netints)</td></tr>
+<tr class="memdesc:ga414aefdf3a0364b6261374e61a37bd05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the sACN library.  <a href="group__sacn__cpp__common.html#ga414aefdf3a0364b6261374e61a37bd05">More...</a><br /></td></tr>
+<tr class="separator:ga414aefdf3a0364b6261374e61a37bd05"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7c27553e8de8ffb78e3627f51fe9eb25"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__cpp__common.html#ga7c27553e8de8ffb78e3627f51fe9eb25">Deinit</a> ()</td></tr>
+<tr class="memdesc:ga7c27553e8de8ffb78e3627f51fe9eb25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deinitialize the sACN library.  <a href="group__sacn__cpp__common.html#ga7c27553e8de8ffb78e3627f51fe9eb25">More...</a><br /></td></tr>
+<tr class="separator:ga7c27553e8de8ffb78e3627f51fe9eb25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa353377fefbbdd6ae634d981944c5619"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacesacn.html#acfd8aea0d62baa7d2f16a969ec5849af">RemoteSourceHandle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__cpp__common.html#gaa353377fefbbdd6ae634d981944c5619">GetRemoteSourceHandle</a> (const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_uuid.html">etcpal::Uuid</a> &amp;source_cid)</td></tr>
+<tr class="memdesc:gaa353377fefbbdd6ae634d981944c5619"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts a remote source CID to the corresponding handle, or <a class="el" href="group__s_a_c_n.html#ga4579b31d1f4e1ecff0ecd8214c551956">SACN_REMOTE_SOURCE_INVALID</a> if not found.  <a href="group__sacn__cpp__common.html#gaa353377fefbbdd6ae634d981944c5619">More...</a><br /></td></tr>
+<tr class="separator:gaa353377fefbbdd6ae634d981944c5619"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab05243a382f6332a3d73dbb3b202bb95"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_expected.html">etcpal::Expected</a>&lt; <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_uuid.html">etcpal::Uuid</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sacn__cpp__common.html#gab05243a382f6332a3d73dbb3b202bb95">GetRemoteSourceCid</a> (<a class="el" href="namespacesacn.html#acfd8aea0d62baa7d2f16a969ec5849af">RemoteSourceHandle</a> source_handle)</td></tr>
+<tr class="memdesc:gab05243a382f6332a3d73dbb3b202bb95"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts a remote source handle to the corresponding source CID.  <a href="group__sacn__cpp__common.html#gab05243a382f6332a3d73dbb3b202bb95">More...</a><br /></td></tr>
+<tr class="separator:gab05243a382f6332a3d73dbb3b202bb95"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<p>Definitions shared by other APIs in this module. </p>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="ga7c27553e8de8ffb78e3627f51fe9eb25"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7c27553e8de8ffb78e3627f51fe9eb25">&#9670;&nbsp;</a></span>Deinit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void sacn::Deinit </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Deinitialize the sACN library. </p>
+<p>Closes all connections, deallocates all resources and joins the background thread. No sACN API functions are usable after this function is called.</p>
+<p>This function is not thread safe with respect to other sACN API functions. Make sure to join your threads that use the APIs before calling this. </p>
+
+</div>
+</div>
+<a id="gab05243a382f6332a3d73dbb3b202bb95"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab05243a382f6332a3d73dbb3b202bb95">&#9670;&nbsp;</a></span>GetRemoteSourceCid()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_expected.html">etcpal::Expected</a>&lt;<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_uuid.html">etcpal::Uuid</a>&gt; sacn::GetRemoteSourceCid </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacesacn.html#acfd8aea0d62baa7d2f16a969ec5849af">RemoteSourceHandle</a>&#160;</td>
+          <td class="paramname"><em>source_handle</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Converts a remote source handle to the corresponding source CID. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">source_handle</td><td>The handle of the remote source.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The UUID of the source CID if there was no error. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afadb17bb2ec24e7755170e8afbd5b10bc2">kEtcPalErrInvalid</a>: Invalid parameter provided. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa62c704cfc2d72f1fa91c04efe508c60f">kEtcPalErrNotFound</a>: The source handle does not match a source that was found by a receiver, merge receiver, or source detector. </dd>
+<dd>
+<a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/group__etcpal__error.html#gga743b0648f0ca798ef29c9f69c6e255afa38404e113508a0e291dbcc6c73743ae8">kEtcPalErrSys</a>: An internal library or system call error occurred. </dd></dl>
+
+</div>
+</div>
+<a id="gaa353377fefbbdd6ae634d981944c5619"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaa353377fefbbdd6ae634d981944c5619">&#9670;&nbsp;</a></span>GetRemoteSourceHandle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacesacn.html#acfd8aea0d62baa7d2f16a969ec5849af">RemoteSourceHandle</a> sacn::GetRemoteSourceHandle </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_uuid.html">etcpal::Uuid</a> &amp;&#160;</td>
+          <td class="paramname"><em>source_cid</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Converts a remote source CID to the corresponding handle, or <a class="el" href="group__s_a_c_n.html#ga4579b31d1f4e1ecff0ecd8214c551956">SACN_REMOTE_SOURCE_INVALID</a> if not found. </p>
+<p>This is a simple conversion from a remote source CID to it's corresponding remote source handle. A handle will be returned only if it is a source that has been discovered by a receiver, merge receiver, or source detector.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">source_cid</td><td>The UUID of the remote source CID. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The remote source handle, or <a class="el" href="group__s_a_c_n.html#ga4579b31d1f4e1ecff0ecd8214c551956">SACN_REMOTE_SOURCE_INVALID</a> if not found. </dd></dl>
+
+</div>
+</div>
+<a id="ga85e9b6458e49595e817c1c47538c61e5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga85e9b6458e49595e817c1c47538c61e5">&#9670;&nbsp;</a></span>Init() <span class="overload">[1/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> sacn::Init </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_logger.html">etcpal::Logger</a> &amp;&#160;</td>
+          <td class="paramname"><em>logger</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Initialize the sACN library. </p>
+<p>Wraps <a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07" title="Initialize the sACN library.">sacn_init()</a>. Does all initialization required before the sACN API modules can be used.</p>
+<p>This is an overload of Init that allows all system network interfaces to be used by the library.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">logger</td><td>Logger instance for the sACN library to use to log messages. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html#acbb5c12c9926c6fc2722da18881b8a49">etcpal::Error::Ok()</a>: Initialization successful. </dd>
+<dd>
+Errors from <a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07" title="Initialize the sACN library.">sacn_init()</a>. </dd></dl>
+
+</div>
+</div>
+<a id="ga414aefdf3a0364b6261374e61a37bd05"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga414aefdf3a0364b6261374e61a37bd05">&#9670;&nbsp;</a></span>Init() <span class="overload">[2/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> sacn::Init </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_logger.html">etcpal::Logger</a> &amp;&#160;</td>
+          <td class="paramname"><em>logger</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>sys_netints</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Initialize the sACN library. </p>
+<p>Wraps <a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07" title="Initialize the sACN library.">sacn_init()</a>. Does all initialization required before the sACN API modules can be used.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">logger</td><td>Logger instance for the sACN library to use to log messages. </td></tr>
+    <tr><td class="paramname">sys_netints</td><td>If !empty, this is the list of system interfaces the library will be limited to, and the status codes are filled in. If empty, the library is allowed to use all available system interfaces. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html#acbb5c12c9926c6fc2722da18881b8a49">etcpal::Error::Ok()</a>: Initialization successful. </dd>
+<dd>
+Errors from <a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07" title="Initialize the sACN library.">sacn_init()</a>. </dd></dl>
+
+</div>
+</div>
+<a id="ga462a83ab46a4fa6a2f642fcacabecc82"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga462a83ab46a4fa6a2f642fcacabecc82">&#9670;&nbsp;</a></span>Init() <span class="overload">[3/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> sacn::Init </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_log_params.html">EtcPalLogParams</a> *&#160;</td>
+          <td class="paramname"><em>log_params</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>sys_netints</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Initialize the sACN library. </p>
+<p>Wraps <a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07" title="Initialize the sACN library.">sacn_init()</a>. Does all initialization required before the sACN API modules can be used.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">log_params</td><td>Log parameters for the sACN library to use to log messages. If not provided, no logging will be performed. </td></tr>
+    <tr><td class="paramname">sys_netints</td><td>If !empty, this is the list of system interfaces the library will be limited to, and the status codes are filled in. If empty, the library is allowed to use all available system interfaces. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html#acbb5c12c9926c6fc2722da18881b8a49">etcpal::Error::Ok()</a>: Initialization successful. </dd>
+<dd>
+Errors from <a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07" title="Initialize the sACN library.">sacn_init()</a>. </dd></dl>
+
+</div>
+</div>
+<a id="ga65534ea21e4b2adde8d3189b3c4405a3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga65534ea21e4b2adde8d3189b3c4405a3">&#9670;&nbsp;</a></span>Init() <span class="overload">[4/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> sacn::Init </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/struct_etc_pal_log_params.html">EtcPalLogParams</a> *&#160;</td>
+          <td class="paramname"><em>log_params</em> = <code>nullptr</code></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Initialize the sACN library. </p>
+<p>Wraps <a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07" title="Initialize the sACN library.">sacn_init()</a>. Does all initialization required before the sACN API modules can be used.</p>
+<p>This is an overload of Init that allows all system network interfaces to be used by the library.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">log_params</td><td>(optional) Log parameters for the sACN library to use to log messages. If not provided, no logging will be performed. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html#acbb5c12c9926c6fc2722da18881b8a49">etcpal::Error::Ok()</a>: Initialization successful. </dd>
+<dd>
+Errors from <a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07" title="Initialize the sACN library.">sacn_init()</a>. </dd></dl>
+
+</div>
+</div>
+<a id="ga73781de46ab1321166a0dce24094c73d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga73781de46ab1321166a0dce24094c73d">&#9670;&nbsp;</a></span>Init() <span class="overload">[5/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html">etcpal::Error</a> sacn::Init </td>
+          <td>(</td>
+          <td class="paramtype"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>sys_netints</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Initialize the sACN library. </p>
+<p>Wraps <a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07" title="Initialize the sACN library.">sacn_init()</a>. Does all initialization required before the sACN API modules can be used.</p>
+<p>This is an overload of Init that does not enable logging.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sys_netints</td><td>If !empty, this is the list of system interfaces the library will be limited to, and the status codes are filled in. If empty, the library is allowed to use all available system interfaces. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="https://etclabs.github.io/EtcPalDocs/head/classetcpal_1_1_error.html#acbb5c12c9926c6fc2722da18881b8a49">etcpal::Error::Ok()</a>: Initialization successful. </dd>
+<dd>
+Errors from <a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07" title="Initialize the sACN library.">sacn_init()</a>. </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>

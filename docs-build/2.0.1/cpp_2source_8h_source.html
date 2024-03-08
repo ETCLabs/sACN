@@ -1,0 +1,790 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: include/sacn/cpp/source.h Source File</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">2.0.1</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('cpp_2source_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="headertitle">
+<div class="title">source.h</div>  </div>
+</div><!--header-->
+<div class="contents">
+<a href="cpp_2source_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/******************************************************************************</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * Copyright 2022 ETC Inc.</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment"> * you may not use this file except in compliance with the License.</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment"> * You may obtain a copy of the License at</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment"> *    http://www.apache.org/licenses/LICENSE-2.0</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment"> * Unless required by applicable law or agreed to in writing, software</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment"> * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment"> * See the License for the specific language governing permissions and</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment"> * limitations under the License.</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment"> ******************************************************************************</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> * This file is a part of sACN. For more information, go to:</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment"> * https://github.com/ETCLabs/sACN</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment"> *****************************************************************************/</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#ifndef SACN_CPP_SOURCE_H_</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#define SACN_CPP_SOURCE_H_</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="cpp_2common_8h.html">sacn/cpp/common.h</a>&quot;</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#include &lt;cstring&gt;</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="source_8h.html">sacn/source.h</a>&quot;</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#include &quot;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/cpp_2uuid_8h.html">etcpal/cpp/uuid.h</a>&quot;</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#include &quot;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/cpp_2inet_8h.html">etcpal/cpp/inet.h</a>&quot;</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#include &quot;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/opaque__id_8h.html">etcpal/cpp/opaque_id.h</a>&quot;</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacesacn.html">sacn</a></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;{</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keyword">namespace </span>detail</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;{</div>
+<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="classsacn_1_1detail_1_1_source_handle_type.html">   47</a></span>&#160;<span class="keyword">class </span><a class="code" href="classsacn_1_1detail_1_1_source_handle_type.html">SourceHandleType</a></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;{</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;};</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;};  <span class="comment">// namespace detail</span></div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
+<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html">   60</a></span>&#160;<span class="keyword">class </span><a class="code" href="classsacn_1_1_source.html">Source</a></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;{</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a3defc9aed71824af85696f0f7e1b9ae4">   64</a></span>&#160;  <span class="keyword">using</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html">Handle</a> = <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html">etcpal::OpaqueId&lt;detail::SourceHandleType, sacn_source_t, SACN_SOURCE_INVALID&gt;</a>;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
+<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_settings.html">   70</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structsacn_1_1_source_1_1_settings.html">Settings</a></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  {</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="comment">    /********* Required values **********/</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
+<div class="line"><a name="l00075"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_settings.html#ab74b3ddda3c95279107d0059dd7ee9f3">   75</a></span>&#160;    <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_uuid.html">etcpal::Uuid</a> <a class="code" href="structsacn_1_1_source_1_1_settings.html#ab74b3ddda3c95279107d0059dd7ee9f3">cid</a>;</div>
+<div class="line"><a name="l00077"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_settings.html#a9b45b3e13bd9167aab02e17e08916231">   77</a></span>&#160;    <a class="codeRef" href="https://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> <a class="code" href="structsacn_1_1_source_1_1_settings.html#a9b45b3e13bd9167aab02e17e08916231">name</a>;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="comment">    /********* Optional values **********/</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
+<div class="line"><a name="l00082"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_settings.html#af4a1d1d970b94a6a07b8c612b8d7ad73">   82</a></span>&#160;    <span class="keywordtype">size_t</span> <a class="code" href="structsacn_1_1_source_1_1_settings.html#af4a1d1d970b94a6a07b8c612b8d7ad73">universe_count_max</a>{<a class="code" href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d">SACN_SOURCE_INFINITE_UNIVERSES</a>};</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160; </div>
+<div class="line"><a name="l00087"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_settings.html#a16ca9a84fb49dbc5b40b8b333a239e2d">   87</a></span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="structsacn_1_1_source_1_1_settings.html#a16ca9a84fb49dbc5b40b8b333a239e2d">manually_process_source</a>{<span class="keyword">false</span>};</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
+<div class="line"><a name="l00090"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_settings.html#ab619351af6b7a5abcb23e38bdc09e984">   90</a></span>&#160;    <a class="code" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a> <a class="code" href="structsacn_1_1_source_1_1_settings.html#ab619351af6b7a5abcb23e38bdc09e984">ip_supported</a>{<a class="code" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2">kSacnIpV4AndIpV6</a>};</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
+<div class="line"><a name="l00094"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_settings.html#a987c78ebef19e1addb7485ce29ef4dd7">   94</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structsacn_1_1_source_1_1_settings.html#a987c78ebef19e1addb7485ce29ef4dd7">keep_alive_interval</a>{<a class="code" href="group__sacn__source.html#gab3c248f42fcdeccba28617fd2612ce71">SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT</a>};</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
+<div class="line"><a name="l00097"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">   97</a></span>&#160;    <a class="code" href="structsacn_1_1_source_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">Settings</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <a class="code" href="structsacn_1_1_source_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">Settings</a>(<span class="keyword">const</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_uuid.html">etcpal::Uuid</a>&amp; new_cid, <span class="keyword">const</span> <a class="codeRef" href="https://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>&amp; new_name);</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160; </div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="structsacn_1_1_source_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">IsValid</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  };</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160; </div>
+<div class="line"><a name="l00107"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_settings.html">  107</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structsacn_1_1_source_1_1_universe_settings.html">UniverseSettings</a></div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  {</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="comment">    /********* Required values **********/</span></div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160; </div>
+<div class="line"><a name="l00113"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_settings.html#a0cf34824f8777f28b50f62b7870d6f8c">  113</a></span>&#160;    uint16_t <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html#a0cf34824f8777f28b50f62b7870d6f8c">universe</a>{0};</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160; </div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="comment">    /********* Optional values **********/</span></div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160; </div>
+<div class="line"><a name="l00119"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_settings.html#a0ad043071ccc7a261d79a759dc9c6f0c">  119</a></span>&#160;    uint8_t <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html#a0ad043071ccc7a261d79a759dc9c6f0c">priority</a>{100};</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160; </div>
+<div class="line"><a name="l00122"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_settings.html#a5c7913b52f7d575e1cedacbd6601b047">  122</a></span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html#a5c7913b52f7d575e1cedacbd6601b047">send_preview</a>{<span class="keyword">false</span>};</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160; </div>
+<div class="line"><a name="l00125"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_settings.html#adcf08448ca5544a8be4518fc2d966ef0">  125</a></span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html#adcf08448ca5544a8be4518fc2d966ef0">send_unicast_only</a>{<span class="keyword">false</span>};</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160; </div>
+<div class="line"><a name="l00129"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_settings.html#a9cf8b7c7691e8c1634ae68b495659650">  129</a></span>&#160;    <span class="keyword">const</span> <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;etcpal::IpAddr&gt;</a> <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html#a9cf8b7c7691e8c1634ae68b495659650">unicast_destinations</a>;</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160; </div>
+<div class="line"><a name="l00133"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_settings.html#a9c7dff151ba6b32fc343e6aa55147bcc">  133</a></span>&#160;    uint16_t <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html#a9c7dff151ba6b32fc343e6aa55147bcc">sync_universe</a>{0};</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160; </div>
+<div class="line"><a name="l00136"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_settings.html#af00507fb4c88058e9363bb4007ddea6f">  136</a></span>&#160;    <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html#af00507fb4c88058e9363bb4007ddea6f">UniverseSettings</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html#af00507fb4c88058e9363bb4007ddea6f">UniverseSettings</a>(uint16_t universe_id);</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160; </div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">IsValid</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;  };</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160; </div>
+<div class="line"><a name="l00146"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_netint_list.html">  146</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a></div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;  {</div>
+<div class="line"><a name="l00149"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_netint_list.html#aee044b8551b82b1058427bbb17e74528">  149</a></span>&#160;    <a class="code" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> <a class="code" href="structsacn_1_1_source_1_1_universe_netint_list.html#aee044b8551b82b1058427bbb17e74528">handle</a>;</div>
+<div class="line"><a name="l00151"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_netint_list.html#a0cf34824f8777f28b50f62b7870d6f8c">  151</a></span>&#160;    uint16_t <a class="code" href="structsacn_1_1_source_1_1_universe_netint_list.html#a0cf34824f8777f28b50f62b7870d6f8c">universe</a>;</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160; </div>
+<div class="line"><a name="l00155"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_netint_list.html#a2a0cd7263bacb4663085d28599867b12">  155</a></span>&#160;    <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;SacnMcastInterface&gt;</a> <a class="code" href="structsacn_1_1_source_1_1_universe_netint_list.html#a2a0cd7263bacb4663085d28599867b12">netints</a>;</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160; </div>
+<div class="line"><a name="l00158"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_netint_list.html#a73644ddd63df91014c177680f2336e47">  158</a></span>&#160;    <a class="code" href="structsacn_1_1_source_1_1_universe_netint_list.html#a73644ddd63df91014c177680f2336e47">UniverseNetintList</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <a class="code" href="structsacn_1_1_source_1_1_universe_netint_list.html#a73644ddd63df91014c177680f2336e47">UniverseNetintList</a>(<a class="code" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> source_handle, uint16_t universe_id);</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <a class="code" href="structsacn_1_1_source_1_1_universe_netint_list.html#a73644ddd63df91014c177680f2336e47">UniverseNetintList</a>(<a class="code" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> source_handle, uint16_t universe_id,</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;                       <span class="keyword">const</span> <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;SacnMcastInterface&gt;</a>&amp; network_interfaces);</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;  };</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160; </div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;  <a class="code" href="classsacn_1_1_source.html">Source</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;  <a class="code" href="classsacn_1_1_source.html">Source</a>(<span class="keyword">const</span> <a class="code" href="classsacn_1_1_source.html">Source</a>&amp; other) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;  <a class="code" href="classsacn_1_1_source.html">Source</a>&amp; operator=(<span class="keyword">const</span> <a class="code" href="classsacn_1_1_source.html">Source</a>&amp; other) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00167"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#ab3745517fb270270e41c41f0938dc278">  167</a></span>&#160;  <a class="code" href="classsacn_1_1_source.html#ab3745517fb270270e41c41f0938dc278">Source</a>(<a class="code" href="classsacn_1_1_source.html">Source</a>&amp;&amp; other) = <span class="keywordflow">default</span>;            </div>
+<div class="line"><a name="l00168"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a70ca8a75288ff8b02f7674f8feea7940">  168</a></span>&#160;  <a class="code" href="classsacn_1_1_source.html">Source</a>&amp; <a class="code" href="classsacn_1_1_source.html#a70ca8a75288ff8b02f7674f8feea7940">operator=</a>(<a class="code" href="classsacn_1_1_source.html">Source</a>&amp;&amp; other) = <span class="keywordflow">default</span>; </div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#ab263565edc9ebf5ffd6e82a18184e4c3">Startup</a>(<span class="keyword">const</span> <a class="code" href="structsacn_1_1_source_1_1_settings.html">Settings</a>&amp; settings);</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">Shutdown</a>();</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160; </div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#aa33e199741640a65c41cc19d18b4b6f0">ChangeName</a>(<span class="keyword">const</span> <a class="codeRef" href="https://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>&amp; new_name);</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160; </div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e">AddUniverse</a>(<span class="keyword">const</span> <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html">UniverseSettings</a>&amp; settings);</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e">AddUniverse</a>(<span class="keyword">const</span> <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html">UniverseSettings</a>&amp; settings, <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;SacnMcastInterface&gt;</a>&amp; netints);</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#aa0293c6689075dd5cb9692f036c8540f">RemoveUniverse</a>(uint16_t universe);</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;uint16_t&gt;</a> <a class="code" href="classsacn_1_1_source.html#adc1d03b3f1516e7f545862b9096d834c">GetUniverses</a>();</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160; </div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a5d7f1f26d1a6f5dbffca60dd08ac0454">AddUnicastDestination</a>(uint16_t universe, <span class="keyword">const</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a>&amp; dest);</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966">RemoveUnicastDestination</a>(uint16_t universe, <span class="keyword">const</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a>&amp; dest);</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;  <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;etcpal::IpAddr&gt;</a> <a class="code" href="classsacn_1_1_source.html#a80e1d17f72cc96da34ed4e2ed7b5a439">GetUnicastDestinations</a>(uint16_t universe);</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160; </div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a250e66ea54b315476f4c201600dd7b5f">ChangePriority</a>(uint16_t universe, uint8_t new_priority);</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a386b243f62f7cc246de825add2af3161">ChangePreviewFlag</a>(uint16_t universe, <span class="keywordtype">bool</span> new_preview_flag);</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a6f73aa9c83e7d7266128cba5d4f70ef2">ChangeSynchronizationUniverse</a>(uint16_t universe, uint16_t new_sync_universe);</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160; </div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a22cf560eca13a3cbc4c8384bad438897">SendNow</a>(uint16_t universe, uint8_t start_code, <span class="keyword">const</span> uint8_t* buffer, <span class="keywordtype">size_t</span> buflen);</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f">SendSynchronization</a>(uint16_t universe);</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160; </div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#acbec36dcb6b7ac017788510763dffef3">UpdateLevels</a>(uint16_t universe, <span class="keyword">const</span> uint8_t* new_levels, <span class="keywordtype">size_t</span> new_levels_size);</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#a2d60e097ae578e5f8683fc10b271b126">UpdateLevelsAndPap</a>(uint16_t universe, <span class="keyword">const</span> uint8_t* new_levels, <span class="keywordtype">size_t</span> new_levels_size,</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;                          <span class="keyword">const</span> uint8_t* new_priorities, <span class="keywordtype">size_t</span> new_priorities_size);</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#ab7249aefa54c1fc4a230439d08fcfddd">UpdateLevelsAndForceSync</a>(uint16_t universe, <span class="keyword">const</span> uint8_t* new_levels, <span class="keywordtype">size_t</span> new_levels_size);</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#ae6ab3c198ab506632e32e186bebe6a56">UpdateLevelsAndPapAndForceSync</a>(uint16_t universe, <span class="keyword">const</span> uint8_t* new_levels, <span class="keywordtype">size_t</span> new_levels_size,</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;                                      <span class="keyword">const</span> uint8_t* new_priorities, <span class="keywordtype">size_t</span> new_priorities_size);</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160; </div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;  <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;EtcPalMcastNetintId&gt;</a> <a class="code" href="classsacn_1_1_source.html#ab862dc0dd665318204b83182f016731c">GetNetworkInterfaces</a>(uint16_t universe);</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160; </div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;  constexpr <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html">Handle</a> <a class="code" href="classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25">handle</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160; </div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">int</span> <a class="code" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126">ProcessManual</a>();</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160; </div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;  <span class="keyword">static</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a164496f7cd6035473d44731924b7e48a">ResetNetworking</a>();</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;  <span class="keyword">static</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a164496f7cd6035473d44731924b7e48a">ResetNetworking</a>(<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;SacnMcastInterface&gt;</a>&amp; netints);</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;  <span class="keyword">static</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a164496f7cd6035473d44731924b7e48a">ResetNetworking</a>(<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;SacnMcastInterface&gt;</a>&amp; sys_netints,</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;                                       <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;UniverseNetintList&gt;</a>&amp; netint_lists);</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160; </div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;  <span class="keyword">class </span>TranslatedUniverseConfig</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;  {</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    <span class="keyword">explicit</span> TranslatedUniverseConfig(<span class="keyword">const</span> <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html">UniverseSettings</a>&amp; settings);</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;    <span class="keyword">const</span> <a class="code" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a>&amp; get() noexcept;</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160; </div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;  private:</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;    <a class="codeRef" href="https://en.cppreference.com/w/namespacestd.html">std</a>::vector&lt;<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a>&gt; unicast_destinations_;</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    <a class="code" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a> config_;</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;  };</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160; </div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;  <a class="code" href="struct_sacn_source_config.html">SacnSourceConfig</a> TranslateConfig(const <a class="code" href="structsacn_1_1_source_1_1_settings.html">Settings</a>&amp; settings);</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160; </div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html">Handle</a> handle_;</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;};</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160; </div>
+<div class="line"><a name="l00231"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_settings.html#a6a01ccea29e11babd7c2ba65931f7dc7">  231</a></span>&#160;inline <a class="code" href="classsacn_1_1_source.html">Source</a>::<a class="code" href="structsacn_1_1_source_1_1_settings.html">Settings</a>::<a class="code" href="structsacn_1_1_source_1_1_settings.html">Settings</a>(const <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_bad_expected_access.html">etcpal</a>::Uuid&amp; new_cid, const <a class="codeRef" href="https://en.cppreference.com/w/namespacestd.html">std</a>::<span class="keywordtype">string</span>&amp; new_name)</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    : cid(new_cid), name(new_name)</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;{</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;}</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160; </div>
+<div class="line"><a name="l00239"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">  239</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">bool</span> <a class="code" href="structsacn_1_1_source_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">Source::Settings::IsValid</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;<span class="keyword"></span>{</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;  <span class="keywordflow">return</span> !cid.IsNull();</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;}</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160; </div>
+<div class="line"><a name="l00249"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_settings.html#aea1e029adb6a6702a0594a0a6fdce16d">  249</a></span>&#160;<span class="keyword">inline</span> <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html#af00507fb4c88058e9363bb4007ddea6f">Source::UniverseSettings::UniverseSettings</a>(uint16_t universe_id) : universe(universe_id)</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;{</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;}</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160; </div>
+<div class="line"><a name="l00256"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">  256</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">bool</span> <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">Source::UniverseSettings::IsValid</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;<span class="keyword"></span>{</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;  <span class="keywordflow">return</span> ((universe != 0) &amp;&amp; (universe &lt; 64000));</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;}</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160; </div>
+<div class="line"><a name="l00266"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_netint_list.html#a830547cfb51426350144edd9c028bc14">  266</a></span>&#160;<span class="keyword">inline</span> <a class="code" href="structsacn_1_1_source_1_1_universe_netint_list.html#a73644ddd63df91014c177680f2336e47">Source::UniverseNetintList::UniverseNetintList</a>(<a class="code" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> source_handle, uint16_t universe_id)</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    : <a class="code" href="classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25">handle</a>(source_handle), universe(universe_id)</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;{</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;}</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160; </div>
+<div class="line"><a name="l00277"></a><span class="lineno"><a class="line" href="structsacn_1_1_source_1_1_universe_netint_list.html#aa0cef0ea55a0e9bc9d8a2c5ecd16ec31">  277</a></span>&#160;<span class="keyword">inline</span> <a class="code" href="structsacn_1_1_source_1_1_universe_netint_list.html#a73644ddd63df91014c177680f2336e47">Source::UniverseNetintList::UniverseNetintList</a>(<a class="code" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> source_handle, uint16_t universe_id,</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;                                                      <span class="keyword">const</span> <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;SacnMcastInterface&gt;</a>&amp; network_interfaces)</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    : <a class="code" href="classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25">handle</a>(source_handle), universe(universe_id), netints(network_interfaces)</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;{</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;}</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160; </div>
+<div class="line"><a name="l00299"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#ab263565edc9ebf5ffd6e82a18184e4c3">  299</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#ab263565edc9ebf5ffd6e82a18184e4c3">Source::Startup</a>(<span class="keyword">const</span> <a class="code" href="structsacn_1_1_source_1_1_settings.html">Settings</a>&amp; settings)</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;{</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;  <a class="code" href="struct_sacn_source_config.html">SacnSourceConfig</a> config = TranslateConfig(settings);</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  <a class="code" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> c_handle = <a class="code" href="group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153">SACN_SOURCE_INVALID</a>;</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;  <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> result = <a class="code" href="group__sacn__source.html#ga37f43cd2ec265e3052eea6d5f1b68233">sacn_source_create</a>(&amp;config, &amp;c_handle);</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#aa3400e764897b9a5a857300f871ea035">SetValue</a>(c_handle);</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  <span class="keywordflow">return</span> result;</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;}</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160; </div>
+<div class="line"><a name="l00315"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">  315</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">Source::Shutdown</a>()</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;{</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;  <a class="code" href="group__sacn__source.html#gaeb8a9797368aabad696c81225b4c8aaa">sacn_source_destroy</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>());</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#a9f59558d3c06e0f35ae8a5801b4e626d">Clear</a>();</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;}</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160; </div>
+<div class="line"><a name="l00339"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#aa33e199741640a65c41cc19d18b4b6f0">  339</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#aa33e199741640a65c41cc19d18b4b6f0">Source::ChangeName</a>(<span class="keyword">const</span> <a class="codeRef" href="https://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>&amp; new_name)</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;{</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#ga0c44cd3dba2627779bfb65ea8349fe1c">sacn_source_change_name</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), new_name.<a class="codeRef" href="https://en.cppreference.com/w/cpp/string/basic_string/c_str.html">c_str</a>());</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;}</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160; </div>
+<div class="line"><a name="l00366"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e">  366</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e">Source::AddUniverse</a>(<span class="keyword">const</span> <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html">UniverseSettings</a>&amp; settings)</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;{</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  TranslatedUniverseConfig config(settings);</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#ga22a80913e48354c6da37a9fa11626261">sacn_source_add_universe</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), &amp;config.get(), <span class="keyword">nullptr</span>);</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;}</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160; </div>
+<div class="line"><a name="l00396"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#acde56409812c209c488836f19cf53662">  396</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e">Source::AddUniverse</a>(<span class="keyword">const</span> <a class="code" href="structsacn_1_1_source_1_1_universe_settings.html">UniverseSettings</a>&amp; settings, <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;SacnMcastInterface&gt;</a>&amp; netints)</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;{</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  TranslatedUniverseConfig config(settings);</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160; </div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  <span class="keywordflow">if</span> (netints.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/empty.html">empty</a>())</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#ga22a80913e48354c6da37a9fa11626261">sacn_source_add_universe</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), &amp;config.get(), <span class="keyword">nullptr</span>);</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160; </div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  <a class="code" href="struct_sacn_netint_config.html">SacnNetintConfig</a> netint_config = {netints.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/data.html">data</a>(), netints.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/size.html">size</a>()};</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#ga22a80913e48354c6da37a9fa11626261">sacn_source_add_universe</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), &amp;config.get(), &amp;netint_config);</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;}</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160; </div>
+<div class="line"><a name="l00418"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#aa0293c6689075dd5cb9692f036c8540f">  418</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#aa0293c6689075dd5cb9692f036c8540f">Source::RemoveUniverse</a>(uint16_t universe)</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;{</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;  <a class="code" href="group__sacn__source.html#ga7f8233fae115142c2e2a9488faa12d5d">sacn_source_remove_universe</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe);</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;}</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160; </div>
+<div class="line"><a name="l00428"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#adc1d03b3f1516e7f545862b9096d834c">  428</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;uint16_t&gt;</a> <a class="code" href="classsacn_1_1_source.html#adc1d03b3f1516e7f545862b9096d834c">Source::GetUniverses</a>()</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;{</div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;  <span class="comment">// This uses a guessing algorithm with a while loop to avoid race conditions.</span></div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;  <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;uint16_t&gt;</a> universes;</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;  <span class="keywordtype">size_t</span> size_guess = 4u;</div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;  <span class="keywordtype">size_t</span> num_universes = 0u;</div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160; </div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;  <span class="keywordflow">do</span></div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;  {</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;    universes.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/resize.html">resize</a>(size_guess);</div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;    num_universes = <a class="code" href="group__sacn__source.html#ga90b2e59fa6709ee72042778a60c93330">sacn_source_get_universes</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universes.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/data.html">data</a>(), universes.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/size.html">size</a>());</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;    size_guess = num_universes + 4u;</div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;  } <span class="keywordflow">while</span> (num_universes &gt; universes.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/size.html">size</a>());</div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160; </div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;  universes.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/resize.html">resize</a>(num_universes);</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;  <span class="keywordflow">return</span> universes;</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;}</div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160; </div>
+<div class="line"><a name="l00461"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a5d7f1f26d1a6f5dbffca60dd08ac0454">  461</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a5d7f1f26d1a6f5dbffca60dd08ac0454">Source::AddUnicastDestination</a>(uint16_t universe, <span class="keyword">const</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a>&amp; dest)</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;{</div>
+<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#ga2b7d3fb6a2d252eee7c051acfe97d242">sacn_source_add_unicast_destination</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe, &amp;dest.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_ip_addr.html#a3e6b24d4d6021ab1a11314af504e91cb">get</a>());</div>
+<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;}</div>
+<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160; </div>
+<div class="line"><a name="l00475"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966">  475</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966">Source::RemoveUnicastDestination</a>(uint16_t universe, <span class="keyword">const</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a>&amp; dest)</div>
+<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;{</div>
+<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;  <a class="code" href="group__sacn__source.html#ga4ebe5d509af8c963c104f2dd96a3ac76">sacn_source_remove_unicast_destination</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe, &amp;dest.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_ip_addr.html#a3e6b24d4d6021ab1a11314af504e91cb">get</a>());</div>
+<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;}</div>
+<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160; </div>
+<div class="line"><a name="l00486"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a80e1d17f72cc96da34ed4e2ed7b5a439">  486</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;etcpal::IpAddr&gt;</a> <a class="code" href="classsacn_1_1_source.html#a80e1d17f72cc96da34ed4e2ed7b5a439">Source::GetUnicastDestinations</a>(uint16_t universe)</div>
+<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;{</div>
+<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;  <span class="comment">// This uses a guessing algorithm with a while loop to avoid race conditions.</span></div>
+<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;  <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;EtcPalIpAddr&gt;</a> destinations;</div>
+<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;  <span class="keywordtype">size_t</span> size_guess = 4u;</div>
+<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;  <span class="keywordtype">size_t</span> num_destinations = 0u;</div>
+<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160; </div>
+<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;  <span class="keywordflow">do</span></div>
+<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;  {</div>
+<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;    destinations.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/resize.html">resize</a>(size_guess);</div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;    num_destinations =</div>
+<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;        <a class="code" href="group__sacn__source.html#ga12f792b85add6af90ba2560f287b630c">sacn_source_get_unicast_destinations</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe, destinations.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/data.html">data</a>(), destinations.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/size.html">size</a>());</div>
+<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;    size_guess = num_destinations + 4u;</div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;  } <span class="keywordflow">while</span> (num_destinations &gt; destinations.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/size.html">size</a>());</div>
+<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160; </div>
+<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;  destinations.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/resize.html">resize</a>(num_destinations);</div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160; </div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;  <span class="comment">// Convert vector&lt;EtcPalIpAddr&gt; to vector&lt;etcpal::IpAddr&gt;.</span></div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;  <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;etcpal::IpAddr&gt;</a> result;</div>
+<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;  <span class="keywordflow">if</span> (!destinations.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/empty.html">empty</a>())</div>
+<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;  {</div>
+<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;    result.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/reserve.html">reserve</a>(destinations.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/size.html">size</a>());</div>
+<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;    <a class="codeRef" href="https://en.cppreference.com/w/cpp/algorithm/transform.html">std::transform</a>(destinations.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/begin.html">begin</a>(), destinations.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/end.html">end</a>(), <a class="codeRef" href="https://en.cppreference.com/w/cpp/iterator/back_inserter.html">std::back_inserter</a>(result),</div>
+<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;                   [](<span class="keyword">const</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a>&amp; dest) { return etcpal::IpAddr(dest); });</div>
+<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;  }</div>
+<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160; </div>
+<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;  <span class="keywordflow">return</span> result;</div>
+<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;}</div>
+<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160; </div>
+<div class="line"><a name="l00530"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a250e66ea54b315476f4c201600dd7b5f">  530</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a250e66ea54b315476f4c201600dd7b5f">Source::ChangePriority</a>(uint16_t universe, uint8_t new_priority)</div>
+<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;{</div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#ga0ee9dd3d8114b4277cb73134d0ae2dc4">sacn_source_change_priority</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe, new_priority);</div>
+<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;}</div>
+<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160; </div>
+<div class="line"><a name="l00553"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a386b243f62f7cc246de825add2af3161">  553</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a386b243f62f7cc246de825add2af3161">Source::ChangePreviewFlag</a>(uint16_t universe, <span class="keywordtype">bool</span> new_preview_flag)</div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;{</div>
+<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#ga99d5fce087ce0b2b7d2caedf65bcce5e">sacn_source_change_preview_flag</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe, new_preview_flag);</div>
+<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;}</div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160; </div>
+<div class="line"><a name="l00577"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a6f73aa9c83e7d7266128cba5d4f70ef2">  577</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a6f73aa9c83e7d7266128cba5d4f70ef2">Source::ChangeSynchronizationUniverse</a>(uint16_t universe, uint16_t new_sync_universe)</div>
+<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;{</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#gac21fab7b1fe15c281e89303ce26d08fd">sacn_source_change_synchronization_universe</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe, new_sync_universe);</div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;}</div>
+<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160; </div>
+<div class="line"><a name="l00600"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a22cf560eca13a3cbc4c8384bad438897">  600</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a22cf560eca13a3cbc4c8384bad438897">Source::SendNow</a>(uint16_t universe, uint8_t start_code, <span class="keyword">const</span> uint8_t* buffer, <span class="keywordtype">size_t</span> buflen)</div>
+<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;{</div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#ga6e7cea16d61ae355bc313452f0b47e48">sacn_source_send_now</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe, start_code, buffer, buflen);</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;}</div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160; </div>
+<div class="line"><a name="l00620"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f">  620</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f">Source::SendSynchronization</a>(uint16_t sync_universe)</div>
+<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;{</div>
+<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#ga0e07a954dab245c7d6f323d9bdeb2df3">sacn_source_send_synchronization</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), sync_universe);</div>
+<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;}</div>
+<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160; </div>
+<div class="line"><a name="l00638"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#acbec36dcb6b7ac017788510763dffef3">  638</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#acbec36dcb6b7ac017788510763dffef3">Source::UpdateLevels</a>(uint16_t universe, <span class="keyword">const</span> uint8_t* new_levels, <span class="keywordtype">size_t</span> new_levels_size)</div>
+<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;{</div>
+<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;  <a class="code" href="group__sacn__source.html#ga23dc503a9f5a46fce7e8448266760341">sacn_source_update_levels</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe, new_levels, new_levels_size);</div>
+<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;}</div>
+<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160; </div>
+<div class="line"><a name="l00665"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a2d60e097ae578e5f8683fc10b271b126">  665</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#a2d60e097ae578e5f8683fc10b271b126">Source::UpdateLevelsAndPap</a>(uint16_t universe, <span class="keyword">const</span> uint8_t* new_levels, <span class="keywordtype">size_t</span> new_levels_size,</div>
+<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;                                       <span class="keyword">const</span> uint8_t* new_priorities, <span class="keywordtype">size_t</span> new_priorities_size)</div>
+<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;{</div>
+<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;  <a class="code" href="group__sacn__source.html#ga6a8835b680485d307f9d2d9c750517ab">sacn_source_update_levels_and_pap</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe, new_levels, new_levels_size, new_priorities,</div>
+<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;                                    new_priorities_size);</div>
+<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;}</div>
+<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160; </div>
+<div class="line"><a name="l00688"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#ab7249aefa54c1fc4a230439d08fcfddd">  688</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#ab7249aefa54c1fc4a230439d08fcfddd">Source::UpdateLevelsAndForceSync</a>(uint16_t universe, <span class="keyword">const</span> uint8_t* new_levels, <span class="keywordtype">size_t</span> new_levels_size)</div>
+<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;{</div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;  <a class="code" href="group__sacn__source.html#ga56ea27101d95616ca53c5c602257311a">sacn_source_update_levels_and_force_sync</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe, new_levels, new_levels_size);</div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;}</div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160; </div>
+<div class="line"><a name="l00719"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#ae6ab3c198ab506632e32e186bebe6a56">  719</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classsacn_1_1_source.html#ae6ab3c198ab506632e32e186bebe6a56">Source::UpdateLevelsAndPapAndForceSync</a>(uint16_t universe, <span class="keyword">const</span> uint8_t* new_levels, <span class="keywordtype">size_t</span> new_levels_size,</div>
+<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;                                                   <span class="keyword">const</span> uint8_t* new_priorities, <span class="keywordtype">size_t</span> new_priorities_size)</div>
+<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;{</div>
+<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;  <a class="code" href="group__sacn__source.html#gabec53e52dbb1808a546832ef3446f009">sacn_source_update_levels_and_pap_and_force_sync</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe, new_levels, new_levels_size,</div>
+<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;                                                   new_priorities, new_priorities_size);</div>
+<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;}</div>
+<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160; </div>
+<div class="line"><a name="l00742"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126">  742</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126">Source::ProcessManual</a>()</div>
+<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;{</div>
+<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#ga05ae91a74132e84439e18364de2b62d4">sacn_source_process_manual</a>();</div>
+<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;}</div>
+<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160; </div>
+<div class="line"><a name="l00771"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a164496f7cd6035473d44731924b7e48a">  771</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a164496f7cd6035473d44731924b7e48a">Source::ResetNetworking</a>()</div>
+<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;{</div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;  <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;SacnMcastInterface&gt;</a> netints;</div>
+<div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="classsacn_1_1_source.html#a164496f7cd6035473d44731924b7e48a">ResetNetworking</a>(netints);</div>
+<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;}</div>
+<div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160; </div>
+<div class="line"><a name="l00801"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a26dd2b3b95dbaac498bfc0ba231f42e6">  801</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a164496f7cd6035473d44731924b7e48a">Source::ResetNetworking</a>(<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;SacnMcastInterface&gt;</a>&amp; sys_netints)</div>
+<div class="line"><a name="l00802"></a><span class="lineno">  802</span>&#160;{</div>
+<div class="line"><a name="l00803"></a><span class="lineno">  803</span>&#160;  <span class="keywordflow">if</span> (sys_netints.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/empty.html">empty</a>())</div>
+<div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#ga348c4a38439a1bf2623253bbc30120c5">sacn_source_reset_networking</a>(<span class="keyword">nullptr</span>);</div>
+<div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160; </div>
+<div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;  <a class="code" href="struct_sacn_netint_config.html">SacnNetintConfig</a> netint_config = {sys_netints.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/data.html">data</a>(), sys_netints.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/size.html">size</a>()};</div>
+<div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#ga348c4a38439a1bf2623253bbc30120c5">sacn_source_reset_networking</a>(&amp;netint_config);</div>
+<div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;}</div>
+<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160; </div>
+<div class="line"><a name="l00839"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#af94950609d80afb351cf8e72a9f174c5">  839</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a> <a class="code" href="classsacn_1_1_source.html#a164496f7cd6035473d44731924b7e48a">Source::ResetNetworking</a>(<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;SacnMcastInterface&gt;</a>&amp; sys_netints,</div>
+<div class="line"><a name="l00840"></a><span class="lineno">  840</span>&#160;                                             <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;UniverseNetintList&gt;</a>&amp; per_universe_netint_lists)</div>
+<div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;{</div>
+<div class="line"><a name="l00842"></a><span class="lineno">  842</span>&#160;  <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;SacnSourceUniverseNetintList&gt;</a> netint_lists_c;</div>
+<div class="line"><a name="l00843"></a><span class="lineno">  843</span>&#160;  netint_lists_c.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/reserve.html">reserve</a>(per_universe_netint_lists.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/size.html">size</a>());</div>
+<div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;  <a class="codeRef" href="https://en.cppreference.com/w/cpp/algorithm/transform.html">std::transform</a>(</div>
+<div class="line"><a name="l00845"></a><span class="lineno">  845</span>&#160;      per_universe_netint_lists.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/begin.html">begin</a>(), per_universe_netint_lists.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/end.html">end</a>(), <a class="codeRef" href="https://en.cppreference.com/w/cpp/iterator/back_inserter.html">std::back_inserter</a>(netint_lists_c),</div>
+<div class="line"><a name="l00846"></a><span class="lineno">  846</span>&#160;      [](<a class="code" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a>&amp; list) {</div>
+<div class="line"><a name="l00847"></a><span class="lineno">  847</span>&#160;        <span class="comment">// clang-format off</span></div>
+<div class="line"><a name="l00848"></a><span class="lineno">  848</span>&#160;        SacnSourceUniverseNetintList c_list = {</div>
+<div class="line"><a name="l00849"></a><span class="lineno">  849</span>&#160;          list.handle,</div>
+<div class="line"><a name="l00850"></a><span class="lineno">  850</span>&#160;          list.universe,</div>
+<div class="line"><a name="l00851"></a><span class="lineno">  851</span>&#160;          list.netints.data(),</div>
+<div class="line"><a name="l00852"></a><span class="lineno">  852</span>&#160;          list.netints.size()</div>
+<div class="line"><a name="l00853"></a><span class="lineno">  853</span>&#160;        };</div>
+<div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;        <span class="comment">// clang-format on</span></div>
+<div class="line"><a name="l00855"></a><span class="lineno">  855</span>&#160; </div>
+<div class="line"><a name="l00856"></a><span class="lineno">  856</span>&#160;        <span class="keywordflow">return</span> c_list;</div>
+<div class="line"><a name="l00857"></a><span class="lineno">  857</span>&#160;      });</div>
+<div class="line"><a name="l00858"></a><span class="lineno">  858</span>&#160; </div>
+<div class="line"><a name="l00859"></a><span class="lineno">  859</span>&#160;  <a class="code" href="struct_sacn_netint_config.html">SacnNetintConfig</a> sys_netint_config = {sys_netints.data(), sys_netints.size()};</div>
+<div class="line"><a name="l00860"></a><span class="lineno">  860</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__sacn__source.html#gac47eb25e0017cf7d62120fb3fa072333">sacn_source_reset_networking_per_universe</a>(&amp;sys_netint_config, netint_lists_c.data(), netint_lists_c.size());</div>
+<div class="line"><a name="l00861"></a><span class="lineno">  861</span>&#160;}</div>
+<div class="line"><a name="l00862"></a><span class="lineno">  862</span>&#160; </div>
+<div class="line"><a name="l00869"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#ab862dc0dd665318204b83182f016731c">  869</a></span>&#160;<span class="keyword">inline</span> <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;EtcPalMcastNetintId&gt;</a> <a class="code" href="classsacn_1_1_source.html#ab862dc0dd665318204b83182f016731c">Source::GetNetworkInterfaces</a>(uint16_t universe)</div>
+<div class="line"><a name="l00870"></a><span class="lineno">  870</span>&#160;{</div>
+<div class="line"><a name="l00871"></a><span class="lineno">  871</span>&#160;  <span class="comment">// This uses a guessing algorithm with a while loop to avoid race conditions.</span></div>
+<div class="line"><a name="l00872"></a><span class="lineno">  872</span>&#160;  <a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;EtcPalMcastNetintId&gt;</a> netints;</div>
+<div class="line"><a name="l00873"></a><span class="lineno">  873</span>&#160;  <span class="keywordtype">size_t</span> size_guess = 4u;</div>
+<div class="line"><a name="l00874"></a><span class="lineno">  874</span>&#160;  <span class="keywordtype">size_t</span> num_netints = 0u;</div>
+<div class="line"><a name="l00875"></a><span class="lineno">  875</span>&#160; </div>
+<div class="line"><a name="l00876"></a><span class="lineno">  876</span>&#160;  <span class="keywordflow">do</span></div>
+<div class="line"><a name="l00877"></a><span class="lineno">  877</span>&#160;  {</div>
+<div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;    netints.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/resize.html">resize</a>(size_guess);</div>
+<div class="line"><a name="l00879"></a><span class="lineno">  879</span>&#160;    num_netints = <a class="code" href="group__sacn__source.html#gae8c8d77375ea48b26fc069c9068aec69">sacn_source_get_network_interfaces</a>(handle_.<a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">value</a>(), universe, netints.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/data.html">data</a>(), netints.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/size.html">size</a>());</div>
+<div class="line"><a name="l00880"></a><span class="lineno">  880</span>&#160;    size_guess = num_netints + 4u;</div>
+<div class="line"><a name="l00881"></a><span class="lineno">  881</span>&#160;  } <span class="keywordflow">while</span> (num_netints &gt; netints.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/size.html">size</a>());</div>
+<div class="line"><a name="l00882"></a><span class="lineno">  882</span>&#160; </div>
+<div class="line"><a name="l00883"></a><span class="lineno">  883</span>&#160;  netints.<a class="codeRef" href="https://en.cppreference.com/w/cpp/container/vector/resize.html">resize</a>(num_netints);</div>
+<div class="line"><a name="l00884"></a><span class="lineno">  884</span>&#160;  <span class="keywordflow">return</span> netints;</div>
+<div class="line"><a name="l00885"></a><span class="lineno">  885</span>&#160;}</div>
+<div class="line"><a name="l00886"></a><span class="lineno">  886</span>&#160; </div>
+<div class="line"><a name="l00892"></a><span class="lineno"><a class="line" href="classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25">  892</a></span>&#160;<span class="keyword">inline</span> constexpr <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html">Source::Handle</a> <a class="code" href="classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25">Source::handle</a>()<span class="keyword"> const</span></div>
+<div class="line"><a name="l00893"></a><span class="lineno">  893</span>&#160;<span class="keyword"></span>{</div>
+<div class="line"><a name="l00894"></a><span class="lineno">  894</span>&#160;  <span class="keywordflow">return</span> handle_;</div>
+<div class="line"><a name="l00895"></a><span class="lineno">  895</span>&#160;}</div>
+<div class="line"><a name="l00896"></a><span class="lineno">  896</span>&#160; </div>
+<div class="line"><a name="l00897"></a><span class="lineno">  897</span>&#160;<span class="keyword">inline</span> <a class="code" href="struct_sacn_source_config.html">SacnSourceConfig</a> Source::TranslateConfig(<span class="keyword">const</span> Settings&amp; settings)</div>
+<div class="line"><a name="l00898"></a><span class="lineno">  898</span>&#160;{</div>
+<div class="line"><a name="l00899"></a><span class="lineno">  899</span>&#160;  <span class="comment">// clang-format off</span></div>
+<div class="line"><a name="l00900"></a><span class="lineno">  900</span>&#160;  <a class="code" href="struct_sacn_source_config.html">SacnSourceConfig</a> config = {</div>
+<div class="line"><a name="l00901"></a><span class="lineno">  901</span>&#160;    settings.<a class="code" href="struct_sacn_source_config.html#a4c3f7d9a58af5033f9acd8c942bf81d9">cid</a>.get(),</div>
+<div class="line"><a name="l00902"></a><span class="lineno">  902</span>&#160;    settings.name.c_str(),</div>
+<div class="line"><a name="l00903"></a><span class="lineno">  903</span>&#160;    settings.universe_count_max,</div>
+<div class="line"><a name="l00904"></a><span class="lineno">  904</span>&#160;    settings.manually_process_source,</div>
+<div class="line"><a name="l00905"></a><span class="lineno">  905</span>&#160;    settings.ip_supported,</div>
+<div class="line"><a name="l00906"></a><span class="lineno">  906</span>&#160;    settings.keep_alive_interval</div>
+<div class="line"><a name="l00907"></a><span class="lineno">  907</span>&#160;  };</div>
+<div class="line"><a name="l00908"></a><span class="lineno">  908</span>&#160;  <span class="comment">// clang-format on</span></div>
+<div class="line"><a name="l00909"></a><span class="lineno">  909</span>&#160; </div>
+<div class="line"><a name="l00910"></a><span class="lineno">  910</span>&#160;  <span class="keywordflow">return</span> config;</div>
+<div class="line"><a name="l00911"></a><span class="lineno">  911</span>&#160;}</div>
+<div class="line"><a name="l00912"></a><span class="lineno">  912</span>&#160; </div>
+<div class="line"><a name="l00913"></a><span class="lineno">  913</span>&#160;<span class="keyword">inline</span> <span class="keyword">const</span> <a class="code" href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a>&amp; Source::TranslatedUniverseConfig::get() noexcept</div>
+<div class="line"><a name="l00914"></a><span class="lineno">  914</span>&#160;{</div>
+<div class="line"><a name="l00915"></a><span class="lineno">  915</span>&#160;  <span class="keywordflow">if</span> (!unicast_destinations_.empty())</div>
+<div class="line"><a name="l00916"></a><span class="lineno">  916</span>&#160;  {</div>
+<div class="line"><a name="l00917"></a><span class="lineno">  917</span>&#160;    config_.<a class="code" href="struct_sacn_source_universe_config.html#a42ef84da1b2dc4f0e993432d4a7be8a3">unicast_destinations</a> = unicast_destinations_.data();</div>
+<div class="line"><a name="l00918"></a><span class="lineno">  918</span>&#160;    config_.num_unicast_destinations = unicast_destinations_.size();</div>
+<div class="line"><a name="l00919"></a><span class="lineno">  919</span>&#160;  }</div>
+<div class="line"><a name="l00920"></a><span class="lineno">  920</span>&#160; </div>
+<div class="line"><a name="l00921"></a><span class="lineno">  921</span>&#160;  <span class="keywordflow">return</span> config_;</div>
+<div class="line"><a name="l00922"></a><span class="lineno">  922</span>&#160;}</div>
+<div class="line"><a name="l00923"></a><span class="lineno">  923</span>&#160; </div>
+<div class="line"><a name="l00924"></a><span class="lineno">  924</span>&#160;<span class="comment">// clang-format off</span></div>
+<div class="line"><a name="l00925"></a><span class="lineno">  925</span>&#160;<span class="keyword">inline</span> Source::TranslatedUniverseConfig::TranslatedUniverseConfig(<span class="keyword">const</span> UniverseSettings&amp; settings)</div>
+<div class="line"><a name="l00926"></a><span class="lineno">  926</span>&#160;    : config_{</div>
+<div class="line"><a name="l00927"></a><span class="lineno">  927</span>&#160;        settings.universe,</div>
+<div class="line"><a name="l00928"></a><span class="lineno">  928</span>&#160;        settings.priority,</div>
+<div class="line"><a name="l00929"></a><span class="lineno">  929</span>&#160;        settings.send_preview,</div>
+<div class="line"><a name="l00930"></a><span class="lineno">  930</span>&#160;        settings.send_unicast_only,</div>
+<div class="line"><a name="l00931"></a><span class="lineno">  931</span>&#160;        nullptr,</div>
+<div class="line"><a name="l00932"></a><span class="lineno">  932</span>&#160;        0,</div>
+<div class="line"><a name="l00933"></a><span class="lineno">  933</span>&#160;        settings.sync_universe</div>
+<div class="line"><a name="l00934"></a><span class="lineno">  934</span>&#160;      }</div>
+<div class="line"><a name="l00935"></a><span class="lineno">  935</span>&#160;{</div>
+<div class="line"><a name="l00936"></a><span class="lineno">  936</span>&#160;  <span class="comment">// clang-format on</span></div>
+<div class="line"><a name="l00937"></a><span class="lineno">  937</span>&#160; </div>
+<div class="line"><a name="l00938"></a><span class="lineno">  938</span>&#160;  <span class="keywordflow">if</span> (!settings.unicast_destinations.empty())</div>
+<div class="line"><a name="l00939"></a><span class="lineno">  939</span>&#160;  {</div>
+<div class="line"><a name="l00940"></a><span class="lineno">  940</span>&#160;    unicast_destinations_.reserve(settings.unicast_destinations.size());</div>
+<div class="line"><a name="l00941"></a><span class="lineno">  941</span>&#160;    <a class="codeRef" href="https://en.cppreference.com/w/cpp/algorithm/transform.html">std::transform</a>(settings.unicast_destinations.begin(), settings.unicast_destinations.end(),</div>
+<div class="line"><a name="l00942"></a><span class="lineno">  942</span>&#160;                   <a class="codeRef" href="https://en.cppreference.com/w/cpp/iterator/back_inserter.html">std::back_inserter</a>(unicast_destinations_), [](<span class="keyword">const</span> <a class="codeRef" href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a>&amp; dest) { return dest.get(); });</div>
+<div class="line"><a name="l00943"></a><span class="lineno">  943</span>&#160;  }</div>
+<div class="line"><a name="l00944"></a><span class="lineno">  944</span>&#160;}</div>
+<div class="line"><a name="l00945"></a><span class="lineno">  945</span>&#160; </div>
+<div class="line"><a name="l00946"></a><span class="lineno">  946</span>&#160;};  <span class="comment">// namespace sacn</span></div>
+<div class="line"><a name="l00947"></a><span class="lineno">  947</span>&#160; </div>
+<div class="line"><a name="l00948"></a><span class="lineno">  948</span>&#160;<span class="preprocessor">#endif  </span><span class="comment">// SACN_CPP_SOURCE_H_</span></div>
+<div class="ttc" id="aback_inserter_html"><div class="ttname"><a href="https://en.cppreference.com/w/cpp/iterator/back_inserter.html">std::back_inserter</a></div><div class="ttdeci">T back_inserter(T... args)</div></div>
+<div class="ttc" id="abasic_string_html"><div class="ttname"><a href="https://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a></div></div>
+<div class="ttc" id="abegin_html"><div class="ttname"><a href="https://en.cppreference.com/w/cpp/container/vector/begin.html">std::vector::begin</a></div><div class="ttdeci">T begin(T... args)</div></div>
+<div class="ttc" id="ac_str_html"><div class="ttname"><a href="https://en.cppreference.com/w/cpp/string/basic_string/c_str.html">std::string::c_str</a></div><div class="ttdeci">T c_str(T... args)</div></div>
+<div class="ttc" id="aclassetcpal_1_1_bad_expected_access_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_bad_expected_access.html">etcpal</a></div></div>
+<div class="ttc" id="aclassetcpal_1_1_error_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_error.html">etcpal::Error</a></div></div>
+<div class="ttc" id="aclassetcpal_1_1_ip_addr_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_ip_addr.html">etcpal::IpAddr</a></div></div>
+<div class="ttc" id="aclassetcpal_1_1_ip_addr_html_a3e6b24d4d6021ab1a11314af504e91cb"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_ip_addr.html#a3e6b24d4d6021ab1a11314af504e91cb">etcpal::IpAddr::get</a></div><div class="ttdeci">constexpr const EtcPalIpAddr &amp; get() const noexcept</div></div>
+<div class="ttc" id="aclassetcpal_1_1_opaque_id_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html">etcpal::OpaqueId&lt; detail::SourceHandleType, sacn_source_t, SACN_SOURCE_INVALID &gt;</a></div></div>
+<div class="ttc" id="aclassetcpal_1_1_opaque_id_html_a9f59558d3c06e0f35ae8a5801b4e626d"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#a9f59558d3c06e0f35ae8a5801b4e626d">etcpal::OpaqueId::Clear</a></div><div class="ttdeci">ETCPAL_CONSTEXPR_14 void Clear()</div></div>
+<div class="ttc" id="aclassetcpal_1_1_opaque_id_html_aa3400e764897b9a5a857300f871ea035"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#aa3400e764897b9a5a857300f871ea035">etcpal::OpaqueId::SetValue</a></div><div class="ttdeci">ETCPAL_CONSTEXPR_14 void SetValue(const ValueType &amp;new_value)</div></div>
+<div class="ttc" id="aclassetcpal_1_1_opaque_id_html_afbeb3ea2eee6f9695aa8328ce7d9bac4"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_opaque_id.html#afbeb3ea2eee6f9695aa8328ce7d9bac4">etcpal::OpaqueId::value</a></div><div class="ttdeci">constexpr ValueType value() const</div></div>
+<div class="ttc" id="aclassetcpal_1_1_uuid_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/classetcpal_1_1_uuid.html">etcpal::Uuid</a></div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html"><div class="ttname"><a href="classsacn_1_1_source.html">sacn::Source</a></div><div class="ttdoc">An instance of sACN Source functionality; see Using the sACN Source API.</div><div class="ttdef"><b>Definition:</b> source.h:61</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_a164496f7cd6035473d44731924b7e48a"><div class="ttname"><a href="classsacn_1_1_source.html#a164496f7cd6035473d44731924b7e48a">sacn::Source::ResetNetworking</a></div><div class="ttdeci">static etcpal::Error ResetNetworking()</div><div class="ttdoc">Resets the underlying network sockets for all universes of all sources.</div><div class="ttdef"><b>Definition:</b> source.h:771</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_a2073e5814e81bf1257c7264a1b984966"><div class="ttname"><a href="classsacn_1_1_source.html#a2073e5814e81bf1257c7264a1b984966">sacn::Source::RemoveUnicastDestination</a></div><div class="ttdeci">void RemoveUnicastDestination(uint16_t universe, const etcpal::IpAddr &amp;dest)</div><div class="ttdoc">Remove a unicast destination on a universe.</div><div class="ttdef"><b>Definition:</b> source.h:475</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_a22cf560eca13a3cbc4c8384bad438897"><div class="ttname"><a href="classsacn_1_1_source.html#a22cf560eca13a3cbc4c8384bad438897">sacn::Source::SendNow</a></div><div class="ttdeci">etcpal::Error SendNow(uint16_t universe, uint8_t start_code, const uint8_t *buffer, size_t buflen)</div><div class="ttdoc">Immediately sends the provided sACN start code &amp; data.</div><div class="ttdef"><b>Definition:</b> source.h:600</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_a250e66ea54b315476f4c201600dd7b5f"><div class="ttname"><a href="classsacn_1_1_source.html#a250e66ea54b315476f4c201600dd7b5f">sacn::Source::ChangePriority</a></div><div class="ttdeci">etcpal::Error ChangePriority(uint16_t universe, uint8_t new_priority)</div><div class="ttdoc">Change the priority of a universe.</div><div class="ttdef"><b>Definition:</b> source.h:530</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_a2d60e097ae578e5f8683fc10b271b126"><div class="ttname"><a href="classsacn_1_1_source.html#a2d60e097ae578e5f8683fc10b271b126">sacn::Source::UpdateLevelsAndPap</a></div><div class="ttdeci">void UpdateLevelsAndPap(uint16_t universe, const uint8_t *new_levels, size_t new_levels_size, const uint8_t *new_priorities, size_t new_priorities_size)</div><div class="ttdoc">Copies the universe's DMX levels and per-address priorities into packets that are sent on the next th...</div><div class="ttdef"><b>Definition:</b> source.h:665</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_a386b243f62f7cc246de825add2af3161"><div class="ttname"><a href="classsacn_1_1_source.html#a386b243f62f7cc246de825add2af3161">sacn::Source::ChangePreviewFlag</a></div><div class="ttdeci">etcpal::Error ChangePreviewFlag(uint16_t universe, bool new_preview_flag)</div><div class="ttdoc">Change the send_preview option on a universe.</div><div class="ttdef"><b>Definition:</b> source.h:553</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_a4f8c06497d45385dbb819d1dd4fc7a25"><div class="ttname"><a href="classsacn_1_1_source.html#a4f8c06497d45385dbb819d1dd4fc7a25">sacn::Source::handle</a></div><div class="ttdeci">constexpr Handle handle() const</div><div class="ttdoc">Get the current handle to the underlying C source.</div><div class="ttdef"><b>Definition:</b> source.h:892</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_a5d7f1f26d1a6f5dbffca60dd08ac0454"><div class="ttname"><a href="classsacn_1_1_source.html#a5d7f1f26d1a6f5dbffca60dd08ac0454">sacn::Source::AddUnicastDestination</a></div><div class="ttdeci">etcpal::Error AddUnicastDestination(uint16_t universe, const etcpal::IpAddr &amp;dest)</div><div class="ttdoc">Add a unicast destination for a universe.</div><div class="ttdef"><b>Definition:</b> source.h:461</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_a6f73aa9c83e7d7266128cba5d4f70ef2"><div class="ttname"><a href="classsacn_1_1_source.html#a6f73aa9c83e7d7266128cba5d4f70ef2">sacn::Source::ChangeSynchronizationUniverse</a></div><div class="ttdeci">etcpal::Error ChangeSynchronizationUniverse(uint16_t universe, uint16_t new_sync_universe)</div><div class="ttdoc">Changes the synchronization universe for a universe.</div><div class="ttdef"><b>Definition:</b> source.h:577</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_a70ca8a75288ff8b02f7674f8feea7940"><div class="ttname"><a href="classsacn_1_1_source.html#a70ca8a75288ff8b02f7674f8feea7940">sacn::Source::operator=</a></div><div class="ttdeci">Source &amp; operator=(Source &amp;&amp;other)=default</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_a80e1d17f72cc96da34ed4e2ed7b5a439"><div class="ttname"><a href="classsacn_1_1_source.html#a80e1d17f72cc96da34ed4e2ed7b5a439">sacn::Source::GetUnicastDestinations</a></div><div class="ttdeci">std::vector&lt; etcpal::IpAddr &gt; GetUnicastDestinations(uint16_t universe)</div><div class="ttdoc">Obtain a vector of a universe's unicast destinations.</div><div class="ttdef"><b>Definition:</b> source.h:486</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_aa0293c6689075dd5cb9692f036c8540f"><div class="ttname"><a href="classsacn_1_1_source.html#aa0293c6689075dd5cb9692f036c8540f">sacn::Source::RemoveUniverse</a></div><div class="ttdeci">void RemoveUniverse(uint16_t universe)</div><div class="ttdoc">Remove a universe from a source.</div><div class="ttdef"><b>Definition:</b> source.h:418</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_aa33e199741640a65c41cc19d18b4b6f0"><div class="ttname"><a href="classsacn_1_1_source.html#aa33e199741640a65c41cc19d18b4b6f0">sacn::Source::ChangeName</a></div><div class="ttdeci">etcpal::Error ChangeName(const std::string &amp;new_name)</div><div class="ttdoc">Change the name of an sACN source.</div><div class="ttdef"><b>Definition:</b> source.h:339</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_ab263565edc9ebf5ffd6e82a18184e4c3"><div class="ttname"><a href="classsacn_1_1_source.html#ab263565edc9ebf5ffd6e82a18184e4c3">sacn::Source::Startup</a></div><div class="ttdeci">etcpal::Error Startup(const Settings &amp;settings)</div><div class="ttdoc">Create a new sACN source to send sACN data.</div><div class="ttdef"><b>Definition:</b> source.h:299</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_ab3745517fb270270e41c41f0938dc278"><div class="ttname"><a href="classsacn_1_1_source.html#ab3745517fb270270e41c41f0938dc278">sacn::Source::Source</a></div><div class="ttdeci">Source(Source &amp;&amp;other)=default</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_ab7249aefa54c1fc4a230439d08fcfddd"><div class="ttname"><a href="classsacn_1_1_source.html#ab7249aefa54c1fc4a230439d08fcfddd">sacn::Source::UpdateLevelsAndForceSync</a></div><div class="ttdeci">void UpdateLevelsAndForceSync(uint16_t universe, const uint8_t *new_levels, size_t new_levels_size)</div><div class="ttdoc">Like UpdateLevels(), but also sets the force_sync flag on the packet.</div><div class="ttdef"><b>Definition:</b> source.h:688</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_ab862dc0dd665318204b83182f016731c"><div class="ttname"><a href="classsacn_1_1_source.html#ab862dc0dd665318204b83182f016731c">sacn::Source::GetNetworkInterfaces</a></div><div class="ttdeci">std::vector&lt; EtcPalMcastNetintId &gt; GetNetworkInterfaces(uint16_t universe)</div><div class="ttdoc">Obtain a vector of a universe's network interfaces.</div><div class="ttdef"><b>Definition:</b> source.h:869</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_ac5f038c2b480cf9ef5e19e3eba8dbaf9"><div class="ttname"><a href="classsacn_1_1_source.html#ac5f038c2b480cf9ef5e19e3eba8dbaf9">sacn::Source::Shutdown</a></div><div class="ttdeci">void Shutdown()</div><div class="ttdoc">Destroy an sACN source instance.</div><div class="ttdef"><b>Definition:</b> source.h:315</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_acbec36dcb6b7ac017788510763dffef3"><div class="ttname"><a href="classsacn_1_1_source.html#acbec36dcb6b7ac017788510763dffef3">sacn::Source::UpdateLevels</a></div><div class="ttdeci">void UpdateLevels(uint16_t universe, const uint8_t *new_levels, size_t new_levels_size)</div><div class="ttdoc">Copies the universe's DMX levels into the packet to be sent on the next threaded or manual update.</div><div class="ttdef"><b>Definition:</b> source.h:638</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_ad0b6181050c6d436a907401688950126"><div class="ttname"><a href="classsacn_1_1_source.html#ad0b6181050c6d436a907401688950126">sacn::Source::ProcessManual</a></div><div class="ttdeci">static int ProcessManual()</div><div class="ttdoc">Trigger the transmission of sACN packets for all universes of sources that were created with manually...</div><div class="ttdef"><b>Definition:</b> source.h:742</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_ad899234878a1c955c1cc66a4f097902e"><div class="ttname"><a href="classsacn_1_1_source.html#ad899234878a1c955c1cc66a4f097902e">sacn::Source::AddUniverse</a></div><div class="ttdeci">etcpal::Error AddUniverse(const UniverseSettings &amp;settings)</div><div class="ttdoc">Add a universe to an sACN source, which will use all network interfaces.</div><div class="ttdef"><b>Definition:</b> source.h:366</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_adc1d03b3f1516e7f545862b9096d834c"><div class="ttname"><a href="classsacn_1_1_source.html#adc1d03b3f1516e7f545862b9096d834c">sacn::Source::GetUniverses</a></div><div class="ttdeci">std::vector&lt; uint16_t &gt; GetUniverses()</div><div class="ttdoc">Obtain a vector of this source's universes.</div><div class="ttdef"><b>Definition:</b> source.h:428</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_ae6ab3c198ab506632e32e186bebe6a56"><div class="ttname"><a href="classsacn_1_1_source.html#ae6ab3c198ab506632e32e186bebe6a56">sacn::Source::UpdateLevelsAndPapAndForceSync</a></div><div class="ttdeci">void UpdateLevelsAndPapAndForceSync(uint16_t universe, const uint8_t *new_levels, size_t new_levels_size, const uint8_t *new_priorities, size_t new_priorities_size)</div><div class="ttdoc">Like UpdateLevelsAndPap(), but also sets the force_sync flag on the packet.</div><div class="ttdef"><b>Definition:</b> source.h:719</div></div>
+<div class="ttc" id="aclasssacn_1_1_source_html_aecaeb4e484f6b34e839b705a1395765f"><div class="ttname"><a href="classsacn_1_1_source.html#aecaeb4e484f6b34e839b705a1395765f">sacn::Source::SendSynchronization</a></div><div class="ttdeci">etcpal::Error SendSynchronization(uint16_t universe)</div><div class="ttdoc">Indicate that a new synchronization packet should be sent on the given synchronization universe.</div><div class="ttdef"><b>Definition:</b> source.h:620</div></div>
+<div class="ttc" id="aclasssacn_1_1detail_1_1_source_handle_type_html"><div class="ttname"><a href="classsacn_1_1detail_1_1_source_handle_type.html">sacn::detail::SourceHandleType</a></div><div class="ttdef"><b>Definition:</b> source.h:48</div></div>
+<div class="ttc" id="acpp_2common_8h_html"><div class="ttname"><a href="cpp_2common_8h.html">common.h</a></div><div class="ttdoc">C++ wrapper for the sACN init/deinit functions.</div></div>
+<div class="ttc" id="acpp_2inet_8h.html_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/cpp_2inet_8h.html">inet.h</a></div></div>
+<div class="ttc" id="acpp_2uuid_8h.html_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/cpp_2uuid_8h.html">uuid.h</a></div></div>
+<div class="ttc" id="adata_html"><div class="ttname"><a href="https://en.cppreference.com/w/cpp/container/vector/data.html">std::vector::data</a></div><div class="ttdeci">T data(T... args)</div></div>
+<div class="ttc" id="aempty_html"><div class="ttname"><a href="https://en.cppreference.com/w/cpp/container/vector/empty.html">std::vector::empty</a></div><div class="ttdeci">T empty(T... args)</div></div>
+<div class="ttc" id="aend_html"><div class="ttname"><a href="https://en.cppreference.com/w/cpp/container/vector/end.html">std::vector::end</a></div><div class="ttdeci">T end(T... args)</div></div>
+<div class="ttc" id="agroup__s_a_c_n_html_ga02f82b9c734e2d2f70a1106d6480833a"><div class="ttname"><a href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">sacn_ip_support_t</a></div><div class="ttdeci">sacn_ip_support_t</div><div class="ttdef"><b>Definition:</b> common.h:71</div></div>
+<div class="ttc" id="agroup__s_a_c_n_html_gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2"><div class="ttname"><a href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2">kSacnIpV4AndIpV6</a></div><div class="ttdeci">@ kSacnIpV4AndIpV6</div><div class="ttdef"><b>Definition:</b> common.h:77</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga05ae91a74132e84439e18364de2b62d4"><div class="ttname"><a href="group__sacn__source.html#ga05ae91a74132e84439e18364de2b62d4">sacn_source_process_manual</a></div><div class="ttdeci">int sacn_source_process_manual(void)</div><div class="ttdoc">Trigger the transmission of sACN packets for all universes of sources that were created with manually...</div><div class="ttdef"><b>Definition:</b> source.c:990</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga0c44cd3dba2627779bfb65ea8349fe1c"><div class="ttname"><a href="group__sacn__source.html#ga0c44cd3dba2627779bfb65ea8349fe1c">sacn_source_change_name</a></div><div class="ttdeci">etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char *new_name)</div><div class="ttdoc">Change the name of an sACN source.</div><div class="ttdef"><b>Definition:</b> source.c:168</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga0e07a954dab245c7d6f323d9bdeb2df3"><div class="ttname"><a href="group__sacn__source.html#ga0e07a954dab245c7d6f323d9bdeb2df3">sacn_source_send_synchronization</a></div><div class="ttdeci">etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t universe)</div><div class="ttdoc">Indicate that a new synchronization packet should be sent on the given synchronization universe.</div><div class="ttdef"><b>Definition:</b> source.c:780</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga0ee9dd3d8114b4277cb73134d0ae2dc4"><div class="ttname"><a href="group__sacn__source.html#ga0ee9dd3d8114b4277cb73134d0ae2dc4">sacn_source_change_priority</a></div><div class="ttdeci">etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t universe, uint8_t new_priority)</div><div class="ttdoc">Change the priority of a universe on a sACN source.</div><div class="ttdef"><b>Definition:</b> source.c:554</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga12f792b85add6af90ba2560f287b630c"><div class="ttname"><a href="group__sacn__source.html#ga12f792b85add6af90ba2560f287b630c">sacn_source_get_unicast_destinations</a></div><div class="ttdeci">size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t universe, EtcPalIpAddr *destinations, size_t destinations_size)</div><div class="ttdoc">Obtain a list of a universe's unicast destinations.</div><div class="ttdef"><b>Definition:</b> source.c:516</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga1ac5056bc752c32ca80c08b9839a142d"><div class="ttname"><a href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d">SACN_SOURCE_INFINITE_UNIVERSES</a></div><div class="ttdeci">#define SACN_SOURCE_INFINITE_UNIVERSES</div><div class="ttdoc">Constant for &quot;infinite&quot; when sending sACN universes.</div><div class="ttdef"><b>Definition:</b> source.h:66</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga22a80913e48354c6da37a9fa11626261"><div class="ttname"><a href="group__sacn__source.html#ga22a80913e48354c6da37a9fa11626261">sacn_source_add_universe</a></div><div class="ttdeci">etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig *config, const SacnNetintConfig *netint_config)</div><div class="ttdoc">Add a universe to an sACN source.</div><div class="ttdef"><b>Definition:</b> source.c:261</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga23dc503a9f5a46fce7e8448266760341"><div class="ttname"><a href="group__sacn__source.html#ga23dc503a9f5a46fce7e8448266760341">sacn_source_update_levels</a></div><div class="ttdeci">void sacn_source_update_levels(sacn_source_t handle, uint16_t universe, const uint8_t *new_levels, size_t new_levels_size)</div><div class="ttdoc">Copies the universe's DMX levels into the packet to be sent on the next threaded or manual update.</div><div class="ttdef"><b>Definition:</b> source.c:804</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga2b7d3fb6a2d252eee7c051acfe97d242"><div class="ttname"><a href="group__sacn__source.html#ga2b7d3fb6a2d252eee7c051acfe97d242">sacn_source_add_unicast_destination</a></div><div class="ttdeci">etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr *dest)</div><div class="ttdoc">Add a unicast destination for a source's universe.</div><div class="ttdef"><b>Definition:</b> source.c:406</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga348c4a38439a1bf2623253bbc30120c5"><div class="ttname"><a href="group__sacn__source.html#ga348c4a38439a1bf2623253bbc30120c5">sacn_source_reset_networking</a></div><div class="ttdeci">etcpal_error_t sacn_source_reset_networking(const SacnNetintConfig *sys_netint_config)</div><div class="ttdoc">Resets the underlying network sockets for all universes of all sources.</div><div class="ttdef"><b>Definition:</b> source.c:1020</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga37f43cd2ec265e3052eea6d5f1b68233"><div class="ttname"><a href="group__sacn__source.html#ga37f43cd2ec265e3052eea6d5f1b68233">sacn_source_create</a></div><div class="ttdeci">etcpal_error_t sacn_source_create(const SacnSourceConfig *config, sacn_source_t *handle)</div><div class="ttdoc">Create a new sACN source to send sACN data.</div><div class="ttdef"><b>Definition:</b> source.c:103</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga446e9e065e08c7a90309a993b2502153"><div class="ttname"><a href="group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153">SACN_SOURCE_INVALID</a></div><div class="ttdeci">#define SACN_SOURCE_INVALID</div><div class="ttdef"><b>Definition:</b> source.h:58</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga4ebe5d509af8c963c104f2dd96a3ac76"><div class="ttname"><a href="group__sacn__source.html#ga4ebe5d509af8c963c104f2dd96a3ac76">sacn_source_remove_unicast_destination</a></div><div class="ttdeci">void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr *dest)</div><div class="ttdoc">Remove a unicast destination on a source's universe.</div><div class="ttdef"><b>Definition:</b> source.c:481</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga56ea27101d95616ca53c5c602257311a"><div class="ttname"><a href="group__sacn__source.html#ga56ea27101d95616ca53c5c602257311a">sacn_source_update_levels_and_force_sync</a></div><div class="ttdeci">void sacn_source_update_levels_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t *new_levels, size_t new_levels_size)</div><div class="ttdoc">Like sacn_source_update_levels(), but also sets the force_sync flag on the packet.</div><div class="ttdef"><b>Definition:</b> source.c:895</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga6a8835b680485d307f9d2d9c750517ab"><div class="ttname"><a href="group__sacn__source.html#ga6a8835b680485d307f9d2d9c750517ab">sacn_source_update_levels_and_pap</a></div><div class="ttdeci">void sacn_source_update_levels_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t *new_levels, size_t new_levels_size, const uint8_t *new_priorities, size_t new_priorities_size)</div><div class="ttdoc">Copies the universe's DMX levels and per-address priorities into packets that are sent on the next th...</div><div class="ttdef"><b>Definition:</b> source.c:852</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga6e7cea16d61ae355bc313452f0b47e48"><div class="ttname"><a href="group__sacn__source.html#ga6e7cea16d61ae355bc313452f0b47e48">sacn_source_send_now</a></div><div class="ttdeci">etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uint8_t start_code, const uint8_t *buffer, size_t buflen)</div><div class="ttdoc">Immediately sends the provided sACN start code &amp; data.</div><div class="ttdef"><b>Definition:</b> source.c:707</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga7f8233fae115142c2e2a9488faa12d5d"><div class="ttname"><a href="group__sacn__source.html#ga7f8233fae115142c2e2a9488faa12d5d">sacn_source_remove_universe</a></div><div class="ttdeci">void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)</div><div class="ttdoc">Remove a universe from a source.</div><div class="ttdef"><b>Definition:</b> source.c:349</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga90b2e59fa6709ee72042778a60c93330"><div class="ttname"><a href="group__sacn__source.html#ga90b2e59fa6709ee72042778a60c93330">sacn_source_get_universes</a></div><div class="ttdeci">size_t sacn_source_get_universes(sacn_source_t handle, uint16_t *universes, size_t universes_size)</div><div class="ttdoc">Obtain a list of a source's universes.</div><div class="ttdef"><b>Definition:</b> source.c:373</div></div>
+<div class="ttc" id="agroup__sacn__source_html_ga99d5fce087ce0b2b7d2caedf65bcce5e"><div class="ttname"><a href="group__sacn__source.html#ga99d5fce087ce0b2b7d2caedf65bcce5e">sacn_source_change_preview_flag</a></div><div class="ttdeci">etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t universe, bool new_preview_flag)</div><div class="ttdoc">Change the send_preview option on a universe of a sACN source.</div><div class="ttdef"><b>Definition:</b> source.c:615</div></div>
+<div class="ttc" id="agroup__sacn__source_html_gab3c248f42fcdeccba28617fd2612ce71"><div class="ttname"><a href="group__sacn__source.html#gab3c248f42fcdeccba28617fd2612ce71">SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT</a></div><div class="ttdeci">#define SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT</div><div class="ttdef"><b>Definition:</b> source.h:69</div></div>
+<div class="ttc" id="agroup__sacn__source_html_gabec53e52dbb1808a546832ef3446f009"><div class="ttname"><a href="group__sacn__source.html#gabec53e52dbb1808a546832ef3446f009">sacn_source_update_levels_and_pap_and_force_sync</a></div><div class="ttdeci">void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t *new_levels, size_t new_levels_size, const uint8_t *new_priorities, size_t new_priorities_size)</div><div class="ttdoc">Like sacn_source_update_levels_and_pap(), but also sets the force_sync flag on the packet.</div><div class="ttdef"><b>Definition:</b> source.c:948</div></div>
+<div class="ttc" id="agroup__sacn__source_html_gac21fab7b1fe15c281e89303ce26d08fd"><div class="ttname"><a href="group__sacn__source.html#gac21fab7b1fe15c281e89303ce26d08fd">sacn_source_change_synchronization_universe</a></div><div class="ttdeci">etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle, uint16_t universe, uint16_t new_sync_universe)</div><div class="ttdoc">Changes the synchronization universe for a universe of a sACN source.</div><div class="ttdef"><b>Definition:</b> source.c:677</div></div>
+<div class="ttc" id="agroup__sacn__source_html_gac47eb25e0017cf7d62120fb3fa072333"><div class="ttname"><a href="group__sacn__source.html#gac47eb25e0017cf7d62120fb3fa072333">sacn_source_reset_networking_per_universe</a></div><div class="ttdeci">etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig *sys_netint_config, const SacnSourceUniverseNetintList *per_universe_netint_lists, size_t num_per_universe_netint_lists)</div><div class="ttdoc">Resets the underlying network sockets and determines network interfaces for each universe of each sou...</div><div class="ttdef"><b>Definition:</b> source.c:1084</div></div>
+<div class="ttc" id="agroup__sacn__source_html_gacc4c9d2c77cf4126e9ac7faf297c3dd8"><div class="ttname"><a href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a></div><div class="ttdeci">int sacn_source_t</div><div class="ttdef"><b>Definition:</b> source.h:56</div></div>
+<div class="ttc" id="agroup__sacn__source_html_gae8c8d77375ea48b26fc069c9068aec69"><div class="ttname"><a href="group__sacn__source.html#gae8c8d77375ea48b26fc069c9068aec69">sacn_source_get_network_interfaces</a></div><div class="ttdeci">size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, EtcPalMcastNetintId *netints, size_t netints_size)</div><div class="ttdoc">Obtain a list of a universe's network interfaces.</div><div class="ttdef"><b>Definition:</b> source.c:1176</div></div>
+<div class="ttc" id="agroup__sacn__source_html_gaeb8a9797368aabad696c81225b4c8aaa"><div class="ttname"><a href="group__sacn__source.html#gaeb8a9797368aabad696c81225b4c8aaa">sacn_source_destroy</a></div><div class="ttdeci">void sacn_source_destroy(sacn_source_t handle)</div><div class="ttdoc">Destroy an sACN source instance.</div><div class="ttdef"><b>Definition:</b> source.c:218</div></div>
+<div class="ttc" id="anamespacesacn_html"><div class="ttname"><a href="namespacesacn.html">sacn</a></div><div class="ttdoc">A namespace which contains all C++ language definitions in the sACN library.</div><div class="ttdef"><b>Definition:</b> common.h:50</div></div>
+<div class="ttc" id="anamespacestd_html"><div class="ttname"><a href="https://en.cppreference.com/w/namespacestd.html">std</a></div></div>
+<div class="ttc" id="aopaque__id_8h.html_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/opaque__id_8h.html">opaque_id.h</a></div></div>
+<div class="ttc" id="areserve_html"><div class="ttname"><a href="https://en.cppreference.com/w/cpp/container/vector/reserve.html">std::vector::reserve</a></div><div class="ttdeci">T reserve(T... args)</div></div>
+<div class="ttc" id="aresize_html"><div class="ttname"><a href="https://en.cppreference.com/w/cpp/container/vector/resize.html">std::vector::resize</a></div><div class="ttdeci">T resize(T... args)</div></div>
+<div class="ttc" id="asize_html"><div class="ttname"><a href="https://en.cppreference.com/w/cpp/container/vector/size.html">std::vector::size</a></div><div class="ttdeci">T size(T... args)</div></div>
+<div class="ttc" id="asource_8h_html"><div class="ttname"><a href="source_8h.html">source.h</a></div><div class="ttdoc">sACN Source API definitions</div></div>
+<div class="ttc" id="astruct_etc_pal_ip_addr_html"><div class="ttname"><a href="https://etclabs.github.io/EtcPalDocs/0.4.1/struct_etc_pal_ip_addr.html">EtcPalIpAddr</a></div></div>
+<div class="ttc" id="astruct_sacn_netint_config_html"><div class="ttname"><a href="struct_sacn_netint_config.html">SacnNetintConfig</a></div><div class="ttdef"><b>Definition:</b> common.h:102</div></div>
+<div class="ttc" id="astruct_sacn_source_config_html"><div class="ttname"><a href="struct_sacn_source_config.html">SacnSourceConfig</a></div><div class="ttdef"><b>Definition:</b> source.h:73</div></div>
+<div class="ttc" id="astruct_sacn_source_config_html_a4c3f7d9a58af5033f9acd8c942bf81d9"><div class="ttname"><a href="struct_sacn_source_config.html#a4c3f7d9a58af5033f9acd8c942bf81d9">SacnSourceConfig::cid</a></div><div class="ttdeci">EtcPalUuid cid</div><div class="ttdef"><b>Definition:</b> source.h:77</div></div>
+<div class="ttc" id="astruct_sacn_source_universe_config_html"><div class="ttname"><a href="struct_sacn_source_universe_config.html">SacnSourceUniverseConfig</a></div><div class="ttdef"><b>Definition:</b> source.h:112</div></div>
+<div class="ttc" id="astruct_sacn_source_universe_config_html_a42ef84da1b2dc4f0e993432d4a7be8a3"><div class="ttname"><a href="struct_sacn_source_universe_config.html#a42ef84da1b2dc4f0e993432d4a7be8a3">SacnSourceUniverseConfig::unicast_destinations</a></div><div class="ttdeci">const EtcPalIpAddr * unicast_destinations</div><div class="ttdef"><b>Definition:</b> source.h:133</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_settings_html"><div class="ttname"><a href="structsacn_1_1_source_1_1_settings.html">sacn::Source::Settings</a></div><div class="ttdoc">A set of configuration settings that a source needs to initialize.</div><div class="ttdef"><b>Definition:</b> source.h:71</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_settings_html_a16ca9a84fb49dbc5b40b8b333a239e2d"><div class="ttname"><a href="structsacn_1_1_source_1_1_settings.html#a16ca9a84fb49dbc5b40b8b333a239e2d">sacn::Source::Settings::manually_process_source</a></div><div class="ttdeci">bool manually_process_source</div><div class="ttdef"><b>Definition:</b> source.h:87</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_settings_html_a408c38e2ece7d6a8dda04484f006e8bb"><div class="ttname"><a href="structsacn_1_1_source_1_1_settings.html#a408c38e2ece7d6a8dda04484f006e8bb">sacn::Source::Settings::Settings</a></div><div class="ttdeci">Settings()=default</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_settings_html_a987c78ebef19e1addb7485ce29ef4dd7"><div class="ttname"><a href="structsacn_1_1_source_1_1_settings.html#a987c78ebef19e1addb7485ce29ef4dd7">sacn::Source::Settings::keep_alive_interval</a></div><div class="ttdeci">int keep_alive_interval</div><div class="ttdef"><b>Definition:</b> source.h:94</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_settings_html_a9b45b3e13bd9167aab02e17e08916231"><div class="ttname"><a href="structsacn_1_1_source_1_1_settings.html#a9b45b3e13bd9167aab02e17e08916231">sacn::Source::Settings::name</a></div><div class="ttdeci">std::string name</div><div class="ttdef"><b>Definition:</b> source.h:77</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_settings_html_ab619351af6b7a5abcb23e38bdc09e984"><div class="ttname"><a href="structsacn_1_1_source_1_1_settings.html#ab619351af6b7a5abcb23e38bdc09e984">sacn::Source::Settings::ip_supported</a></div><div class="ttdeci">sacn_ip_support_t ip_supported</div><div class="ttdef"><b>Definition:</b> source.h:90</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_settings_html_ab74b3ddda3c95279107d0059dd7ee9f3"><div class="ttname"><a href="structsacn_1_1_source_1_1_settings.html#ab74b3ddda3c95279107d0059dd7ee9f3">sacn::Source::Settings::cid</a></div><div class="ttdeci">etcpal::Uuid cid</div><div class="ttdef"><b>Definition:</b> source.h:75</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_settings_html_ac532c4b500b1a85ea22217f2c65a70ed"><div class="ttname"><a href="structsacn_1_1_source_1_1_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">sacn::Source::Settings::IsValid</a></div><div class="ttdeci">bool IsValid() const</div><div class="ttdef"><b>Definition:</b> source.h:239</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_settings_html_af4a1d1d970b94a6a07b8c612b8d7ad73"><div class="ttname"><a href="structsacn_1_1_source_1_1_settings.html#af4a1d1d970b94a6a07b8c612b8d7ad73">sacn::Source::Settings::universe_count_max</a></div><div class="ttdeci">size_t universe_count_max</div><div class="ttdef"><b>Definition:</b> source.h:82</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_netint_list_html"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_netint_list.html">sacn::Source::UniverseNetintList</a></div><div class="ttdoc">A set of network interfaces for a particular universe.</div><div class="ttdef"><b>Definition:</b> source.h:147</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_netint_list_html_a0cf34824f8777f28b50f62b7870d6f8c"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_netint_list.html#a0cf34824f8777f28b50f62b7870d6f8c">sacn::Source::UniverseNetintList::universe</a></div><div class="ttdeci">uint16_t universe</div><div class="ttdef"><b>Definition:</b> source.h:151</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_netint_list_html_a2a0cd7263bacb4663085d28599867b12"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_netint_list.html#a2a0cd7263bacb4663085d28599867b12">sacn::Source::UniverseNetintList::netints</a></div><div class="ttdeci">std::vector&lt; SacnMcastInterface &gt; netints</div><div class="ttdef"><b>Definition:</b> source.h:155</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_netint_list_html_a73644ddd63df91014c177680f2336e47"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_netint_list.html#a73644ddd63df91014c177680f2336e47">sacn::Source::UniverseNetintList::UniverseNetintList</a></div><div class="ttdeci">UniverseNetintList()=default</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_netint_list_html_aee044b8551b82b1058427bbb17e74528"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_netint_list.html#aee044b8551b82b1058427bbb17e74528">sacn::Source::UniverseNetintList::handle</a></div><div class="ttdeci">sacn_source_t handle</div><div class="ttdef"><b>Definition:</b> source.h:149</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_settings_html"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_settings.html">sacn::Source::UniverseSettings</a></div><div class="ttdoc">A set of configuration settings for a new universe on a source.</div><div class="ttdef"><b>Definition:</b> source.h:108</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_settings_html_a0ad043071ccc7a261d79a759dc9c6f0c"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_settings.html#a0ad043071ccc7a261d79a759dc9c6f0c">sacn::Source::UniverseSettings::priority</a></div><div class="ttdeci">uint8_t priority</div><div class="ttdef"><b>Definition:</b> source.h:119</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_settings_html_a0cf34824f8777f28b50f62b7870d6f8c"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_settings.html#a0cf34824f8777f28b50f62b7870d6f8c">sacn::Source::UniverseSettings::universe</a></div><div class="ttdeci">uint16_t universe</div><div class="ttdef"><b>Definition:</b> source.h:113</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_settings_html_a5c7913b52f7d575e1cedacbd6601b047"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_settings.html#a5c7913b52f7d575e1cedacbd6601b047">sacn::Source::UniverseSettings::send_preview</a></div><div class="ttdeci">bool send_preview</div><div class="ttdef"><b>Definition:</b> source.h:122</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_settings_html_a9c7dff151ba6b32fc343e6aa55147bcc"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_settings.html#a9c7dff151ba6b32fc343e6aa55147bcc">sacn::Source::UniverseSettings::sync_universe</a></div><div class="ttdeci">uint16_t sync_universe</div><div class="ttdef"><b>Definition:</b> source.h:133</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_settings_html_a9cf8b7c7691e8c1634ae68b495659650"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_settings.html#a9cf8b7c7691e8c1634ae68b495659650">sacn::Source::UniverseSettings::unicast_destinations</a></div><div class="ttdeci">const std::vector&lt; etcpal::IpAddr &gt; unicast_destinations</div><div class="ttdef"><b>Definition:</b> source.h:129</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_settings_html_ac532c4b500b1a85ea22217f2c65a70ed"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_settings.html#ac532c4b500b1a85ea22217f2c65a70ed">sacn::Source::UniverseSettings::IsValid</a></div><div class="ttdeci">bool IsValid() const</div><div class="ttdef"><b>Definition:</b> source.h:256</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_settings_html_adcf08448ca5544a8be4518fc2d966ef0"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_settings.html#adcf08448ca5544a8be4518fc2d966ef0">sacn::Source::UniverseSettings::send_unicast_only</a></div><div class="ttdeci">bool send_unicast_only</div><div class="ttdef"><b>Definition:</b> source.h:125</div></div>
+<div class="ttc" id="astructsacn_1_1_source_1_1_universe_settings_html_af00507fb4c88058e9363bb4007ddea6f"><div class="ttname"><a href="structsacn_1_1_source_1_1_universe_settings.html#af00507fb4c88058e9363bb4007ddea6f">sacn::Source::UniverseSettings::UniverseSettings</a></div><div class="ttdeci">UniverseSettings()=default</div></div>
+<div class="ttc" id="atransform_html"><div class="ttname"><a href="https://en.cppreference.com/w/cpp/algorithm/transform.html">std::transform</a></div><div class="ttdeci">T transform(T... args)</div></div>
+<div class="ttc" id="avector_html"><div class="ttname"><a href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt; etcpal::IpAddr &gt;</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_7f5430f5cf82a7d89375d584a50eafca.html">include</a></li><li class="navelem"><a class="el" href="dir_dd367917ca53bf72011d22330758801e.html">sacn</a></li><li class="navelem"><a class="el" href="dir_5fd649b88f3ef07779801b3a3afc3976.html">cpp</a></li><li class="navelem"><a class="el" href="cpp_2source_8h.html">source.h</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: Source::UniverseNetintList Struct Reference</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">3.0.0</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('structsacn_1_1_source_1_1_universe_netint_list.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-attribs">Data Fields</a>  </div>
+  <div class="headertitle">
+<div class="title">Source::UniverseNetintList Struct Reference<div class="ingroups"><a class="el" href="group__sacn__cpp__api.html">sACN C++ Language APIs</a> &raquo; <a class="el" href="group__sacn__source__cpp.html">sACN Source API</a></div></div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>A set of network interfaces for a particular universe.  
+ <a href="structsacn_1_1_source_1_1_universe_netint_list.html#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a73644ddd63df91014c177680f2336e47"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#a73644ddd63df91014c177680f2336e47">UniverseNetintList</a> ()=default</td></tr>
+<tr class="separator:a73644ddd63df91014c177680f2336e47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad95505f4cce0aa335224a5680ca309f4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#ad95505f4cce0aa335224a5680ca309f4">UniverseNetintList</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> source_handle, uint16_t universe_id, <a class="el" href="namespacesacn.html#af874a6c4f11432c529c4068e745889b5">McastMode</a> mcast_mode)</td></tr>
+<tr class="memdesc:ad95505f4cce0aa335224a5680ca309f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a Universe Netint List instance by passing the required members explicitly.  <a href="structsacn_1_1_source_1_1_universe_netint_list.html#ad95505f4cce0aa335224a5680ca309f4">More...</a><br /></td></tr>
+<tr class="separator:ad95505f4cce0aa335224a5680ca309f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0cef0ea55a0e9bc9d8a2c5ecd16ec31"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#aa0cef0ea55a0e9bc9d8a2c5ecd16ec31">UniverseNetintList</a> (<a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> source_handle, uint16_t universe_id, const <a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;network_interfaces)</td></tr>
+<tr class="memdesc:aa0cef0ea55a0e9bc9d8a2c5ecd16ec31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a Universe Netint List instance by passing all members explicitly.  <a href="structsacn_1_1_source_1_1_universe_netint_list.html#aa0cef0ea55a0e9bc9d8a2c5ecd16ec31">More...</a><br /></td></tr>
+<tr class="separator:aa0cef0ea55a0e9bc9d8a2c5ecd16ec31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Data Fields</h2></td></tr>
+<tr class="memitem:aee044b8551b82b1058427bbb17e74528"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#aee044b8551b82b1058427bbb17e74528">handle</a> {<a class="el" href="group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153">SACN_SOURCE_INVALID</a>}</td></tr>
+<tr class="separator:aee044b8551b82b1058427bbb17e74528"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0cf34824f8777f28b50f62b7870d6f8c"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#a0cf34824f8777f28b50f62b7870d6f8c">universe</a> {0}</td></tr>
+<tr class="separator:a0cf34824f8777f28b50f62b7870d6f8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a0cd7263bacb4663085d28599867b12"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#a2a0cd7263bacb4663085d28599867b12">netints</a></td></tr>
+<tr class="separator:a2a0cd7263bacb4663085d28599867b12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a45fc59834ac15fd6d3c71454af1d247a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html#a45fc59834ac15fd6d3c71454af1d247a">no_netints</a> {false}</td></tr>
+<tr class="separator:a45fc59834ac15fd6d3c71454af1d247a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>A set of network interfaces for a particular universe. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a73644ddd63df91014c177680f2336e47"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a73644ddd63df91014c177680f2336e47">&#9670;&nbsp;</a></span>UniverseNetintList() <span class="overload">[1/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">default</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Create an empty, invalid data structure by default. </p>
+
+</div>
+</div>
+<a id="ad95505f4cce0aa335224a5680ca309f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad95505f4cce0aa335224a5680ca309f4">&#9670;&nbsp;</a></span>UniverseNetintList() <span class="overload">[2/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a> </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>source_handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacesacn.html#af874a6c4f11432c529c4068e745889b5">McastMode</a>&#160;</td>
+          <td class="paramname"><em>mcast_mode</em> = <code>McastMode::kEnabledOnAllInterfaces</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Create a Universe Netint List instance by passing the required members explicitly. </p>
+<p>Optional members can be modified directly in the struct. </p>
+
+</div>
+</div>
+<a id="aa0cef0ea55a0e9bc9d8a2c5ecd16ec31"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa0cef0ea55a0e9bc9d8a2c5ecd16ec31">&#9670;&nbsp;</a></span>UniverseNetintList() <span class="overload">[3/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a> </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a>&#160;</td>
+          <td class="paramname"><em>source_handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>universe_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>network_interfaces</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Create a Universe Netint List instance by passing all members explicitly. </p>
+<p>This constructor enables the use of list initialization when setting up one or more UniverseNetintLists (such as initializing the vector&lt;UniverseNetintList&gt; that gets passed into <a class="el" href="classsacn_1_1_source.html#aab11585b71f32bd1973f307435ffcd5b" title="Resets the underlying network sockets for all universes of all sources.">Source::ResetNetworking</a>). </p>
+
+</div>
+</div>
+<h2 class="groupheader">Field Documentation</h2>
+<a id="aee044b8551b82b1058427bbb17e74528"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee044b8551b82b1058427bbb17e74528">&#9670;&nbsp;</a></span>handle</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">sacn_source_t</a> handle {<a class="el" href="group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153">SACN_SOURCE_INVALID</a>}</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The source's handle. </p>
+
+</div>
+</div>
+<a id="a2a0cd7263bacb4663085d28599867b12"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a0cd7263bacb4663085d28599867b12">&#9670;&nbsp;</a></span>netints</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="elRef" href="https://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt;<a class="el" href="struct_sacn_mcast_interface.html">SacnMcastInterface</a>&gt; netints</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If empty, all available interfaces are tried. </p>
+
+</div>
+</div>
+<a id="a45fc59834ac15fd6d3c71454af1d247a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a45fc59834ac15fd6d3c71454af1d247a">&#9670;&nbsp;</a></span>no_netints</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool no_netints {false}</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>If this is true, this universe will not use any network interfaces for multicast traffic. </p>
+
+</div>
+</div>
+<a id="a0cf34824f8777f28b50f62b7870d6f8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0cf34824f8777f28b50f62b7870d6f8c">&#9670;&nbsp;</a></span>universe</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t universe {0}</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The ID of the universe. </p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
+<li>include/sacn/cpp/<a class="el" href="cpp_2source_8h_source.html">source.h</a></li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="namespacesacn.html">sacn</a></li><li class="navelem"><a class="el" href="classsacn_1_1_source.html">Source</a></li><li class="navelem"><a class="el" href="structsacn_1_1_source_1_1_universe_netint_list.html">UniverseNetintList</a></li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>

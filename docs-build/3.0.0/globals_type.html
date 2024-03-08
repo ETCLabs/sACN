@@ -1,0 +1,344 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: Globals</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">3.0.0</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('globals_type.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="contents">
+&#160;
+
+<h3><a id="index_s"></a>- s -</h3><ul>
+<li>sacn_dmx_merger_source_t
+: <a class="el" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">dmx_merger.h</a>
+</li>
+<li>sacn_dmx_merger_t
+: <a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">dmx_merger.h</a>
+</li>
+<li>sacn_merge_receiver_t
+: <a class="el" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">merge_receiver.h</a>
+</li>
+<li>sacn_receiver_t
+: <a class="el" href="group__sacn__receiver.html#gafc1e3c92911f567bed81bbd04f3f34f6">receiver.h</a>
+</li>
+<li>sacn_remote_source_t
+: <a class="el" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">common.h</a>
+</li>
+<li>sacn_source_t
+: <a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">source.h</a>
+</li>
+<li>SacnDmxMergerConfig
+: <a class="el" href="group__sacn__dmx__merger.html#ga9989e37ba8aa7aeb4ef0108ceb4e156c">dmx_merger.h</a>
+</li>
+<li>SacnDmxMergerSource
+: <a class="el" href="group__sacn__dmx__merger.html#ga5ff553cc00468871978edfe0e675aebd">dmx_merger.h</a>
+</li>
+<li>SacnLostSource
+: <a class="el" href="group__sacn__receiver.html#ga7fdeb921a4c00c9821019145683bdda4">receiver.h</a>
+</li>
+<li>SacnMcastInterface
+: <a class="el" href="group__s_a_c_n.html#gabf46c3c353abbd956716fecbe24f2ae4">common.h</a>
+</li>
+<li>SacnMergeReceiverCallbacks
+: <a class="el" href="group__sacn__merge__receiver.html#ga92cb80327e80976e7b004bf9819bca0a">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverConfig
+: <a class="el" href="group__sacn__merge__receiver.html#ga05a8525a8ee5280ab3b6e0583ae01ae8">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverMergedDataCallback
+: <a class="el" href="group__sacn__merge__receiver.html#ga3b87b4a0324b476a926c86a18eab3a1d">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverNetintList
+: <a class="el" href="group__sacn__merge__receiver.html#ga2003a3a906229f10aaf77ad600ea1ad1">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverNonDmxCallback
+: <a class="el" href="group__sacn__merge__receiver.html#ga274346790ea25827de515b93f6df2c2b">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverSamplingPeriodEndedCallback
+: <a class="el" href="group__sacn__merge__receiver.html#ga361d2c730abd2b490d99017f6ebb3739">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverSamplingPeriodStartedCallback
+: <a class="el" href="group__sacn__merge__receiver.html#ga6bca38b03e63aa5a2e272449d23662ce">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverSource
+: <a class="el" href="group__sacn__merge__receiver.html#gac417e4563acfbf4bdfe8f2490c7e88c9">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverSourceLimitExceededCallback
+: <a class="el" href="group__sacn__merge__receiver.html#ga47ccc08a4f5812e26ecf694fa0cb0ff0">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverSourcePapLostCallback
+: <a class="el" href="group__sacn__merge__receiver.html#ga3791403f2e07bd8df2364339f22d5b08">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverSourcesLostCallback
+: <a class="el" href="group__sacn__merge__receiver.html#ga28f0d4119155beb794d94ef052ffe0c3">merge_receiver.h</a>
+</li>
+<li>SacnNetintConfig
+: <a class="el" href="group__s_a_c_n.html#ga3cd2196005e33f66518a0f0baba34147">common.h</a>
+</li>
+<li>SacnReceiverCallbacks
+: <a class="el" href="group__sacn__receiver.html#ga114584027956aaaccfb9e74e1c311206">receiver.h</a>
+</li>
+<li>SacnReceiverConfig
+: <a class="el" href="group__sacn__receiver.html#gac54129e22da91ee8f1aaf9b56d771355">receiver.h</a>
+</li>
+<li>SacnReceiverNetintList
+: <a class="el" href="group__sacn__receiver.html#ga494aa6c2efd3b6a12943191c74946cb8">receiver.h</a>
+</li>
+<li>SacnRecvMergedData
+: <a class="el" href="group__sacn__merge__receiver.html#gafb05eeea1bbac03fd2058d197e2c5846">merge_receiver.h</a>
+</li>
+<li>SacnRecvUniverseData
+: <a class="el" href="group__sacn__receiver.html#gac0c35d115d0d13af500b68eca8afda57">receiver.h</a>
+</li>
+<li>SacnRecvUniverseSubrange
+: <a class="el" href="group__sacn__receiver.html#gacd120c5410f4a19fe3faaeacbaaad904">receiver.h</a>
+</li>
+<li>SacnRemoteSource
+: <a class="el" href="group__sacn__receiver.html#ga3fa6cd794c97a1c6c8330ec6b79aad38">receiver.h</a>
+</li>
+<li>SacnSamplingPeriodEndedCallback
+: <a class="el" href="group__sacn__receiver.html#gac9ac2e788bf69c6da712dfcd67269e67">receiver.h</a>
+</li>
+<li>SacnSamplingPeriodStartedCallback
+: <a class="el" href="group__sacn__receiver.html#ga5a47a2560a7aba67637d3a5b7ad22ef5">receiver.h</a>
+</li>
+<li>SacnSourceConfig
+: <a class="el" href="group__sacn__source.html#gaf13f724dda8304930fcda0977088cd6a">source.h</a>
+</li>
+<li>SacnSourceDetectorCallbacks
+: <a class="el" href="group__sacn__source__detector.html#gaa539e91ba47bdb365998472761dcede2">source_detector.h</a>
+</li>
+<li>SacnSourceDetectorConfig
+: <a class="el" href="group__sacn__source__detector.html#gacf1948692a93767d849b6df90f75f6a4">source_detector.h</a>
+</li>
+<li>SacnSourceDetectorLimitExceededCallback
+: <a class="el" href="group__sacn__source__detector.html#gadb2603e053f842705b654047e99c0096">source_detector.h</a>
+</li>
+<li>SacnSourceDetectorSourceExpiredCallback
+: <a class="el" href="group__sacn__source__detector.html#ga18cf47c111cd4d23ee36c8aae4c97158">source_detector.h</a>
+</li>
+<li>SacnSourceDetectorSourceUpdatedCallback
+: <a class="el" href="group__sacn__source__detector.html#ga30a59185e89668385ea425238cab8422">source_detector.h</a>
+</li>
+<li>SacnSourceLimitExceededCallback
+: <a class="el" href="group__sacn__receiver.html#ga64bfe2ecfceca8b4f50f1a3a0a9c9a07">receiver.h</a>
+</li>
+<li>SacnSourcePapLostCallback
+: <a class="el" href="group__sacn__receiver.html#ga7608a394e455465e56c789957f3f3214">receiver.h</a>
+</li>
+<li>SacnSourcesLostCallback
+: <a class="el" href="group__sacn__receiver.html#ga80326cc324898e1faebe2da1339bd0b3">receiver.h</a>
+</li>
+<li>SacnSourceUniverseConfig
+: <a class="el" href="group__sacn__source.html#ga3f72b89ed47da0e268c7735ae8971e89">source.h</a>
+</li>
+<li>SacnSourceUniverseNetintList
+: <a class="el" href="group__sacn__source.html#ga0f30b2db7d3c6686a14bab97c80d73a0">source.h</a>
+</li>
+<li>SacnUniverseDataCallback
+: <a class="el" href="group__sacn__receiver.html#ga1ea1f87c1d1098d6df521cb9d9ccd0b3">receiver.h</a>
+</li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>

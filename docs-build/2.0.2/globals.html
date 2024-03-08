@@ -1,0 +1,736 @@
+<!-- HTML header for doxygen 1.9.1-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>sACN: Globals</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="etcdevtool.css" rel="stylesheet" type="text/css"/>
+<!-- BEGIN CUSTOM SCRIPTS -->
+<!-- BEGIN ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () {
+    $.get('/sACNDocs/versions.txt', function (data) {
+      if (data) {
+        var lines = data.split('\n');
+        if (lines.length > 0) {
+          var version_select = $("#version_select").empty();
+          lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) {
+              return;
+            }
+            line = line.split(':');
+            var option_name = line[0].replace(/^v/, '');
+            if (line.length > 1) {
+              option_name += ' (' + line[1] + ')';
+            }
+            var option_val = '/sACNDocs/' + line[0];
+            var option = $('<option></option>').attr("value", option_val)
+              .text(option_name);
+            if (window.location.pathname.match(line[0])) {
+              option = option.attr("selected", "selected");
+            }
+            version_select.append(option);
+          });
+        }
+      }
+    }, 'text');
+  });
+</script>
+<!-- END ETCDEVTOOL VERSION SELECTOR SCRIPT -->
+<script type="text/javascript">
+  $(function () { selectAllC() });
+</script>
+<script type="text/javascript">
+  function selectAllC() {
+    // Enable all C-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_c")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_c")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectAllCpp() {
+    // Enable all C++-language blocks
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.endsWith("_cpp")) {
+        tabcontent[i].style.display = "block";
+      } else {
+        tabcontent[i].style.display = "none"
+      }
+    }
+    // Enable all C++-language buttons
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.endsWith("_cpp")) {
+        if (!tablinks[i].className.includes("active")) {
+          tablinks[i].className = tablinks[i].className += " active";
+        }
+      } else {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+  }
+  function selectLanguage(evt, block_id, language) {
+    // Get all elements with class="tabcontent" and hide them
+    var tabcontent = document.getElementsByClassName("code-tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      if (tabcontent[i].id.startsWith("div_" + block_id)) {
+        tabcontent[i].style.display = "none";
+      }
+    }
+    // Get all elements with class="tablinks" and remove the class "active"
+    var tablinks = document.getElementsByClassName("code-tab-links");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].id.startsWith("button_" + block_id)) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+    }
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("div_" + block_id + "_" + language).style.display = "block";
+    if (!evt.currentTarget.className.includes("active")) {
+      evt.currentTarget.className += " active";
+    }
+  }
+</script>
+<!-- END CUSTOM SCRIPTS -->
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">sACN
+   &#160;<span id="projectnumber">2.0.2</span>
+   </div>
+   <div id="projectbrief">Implementation of ANSI E1.31 (Streaming ACN)</div>
+  </td>
+  <!-- BEGIN VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+  <td style="text-align: right; padding-right: 0.5em">
+    <div id="otherversions">
+      View other versions:
+      <select id="version_select" onchange="location = this.value">
+      </select>
+    </div>
+  </td>
+  <!-- END VERSION SELECTOR INSERTED BY ETCDEVTOOL -->
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.1 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+var searchBox = new SearchBox("searchBox", "search",false,'Search','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+$(document).ready(function(){initNavTree('globals.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div class="contents">
+<div class="textblock">Here is a list of all documented functions, variables, defines, enums, and typedefs with links to the documentation:</div>
+
+<h3><a id="index_d"></a>- d -</h3><ul>
+<li>DMX_ADDRESS_COUNT
+: <a class="el" href="group__s_a_c_n.html#ga681f92a30c76ae426e2403a328978abb">common.h</a>
+</li>
+</ul>
+
+
+<h3><a id="index_k"></a>- k -</h3><ul>
+<li>kSacnIpV4AndIpV6
+: <a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa946f61a87ca52ca76b687484c5cdced2">common.h</a>
+</li>
+<li>kSacnIpV4Only
+: <a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aa900230541148a1eb50b457dfbf75a3c4">common.h</a>
+</li>
+<li>kSacnIpV6Only
+: <a class="el" href="group__s_a_c_n.html#gga02f82b9c734e2d2f70a1106d6480833aaa7c7cce56d48e45e33bde272cb0be424">common.h</a>
+</li>
+</ul>
+
+
+<h3><a id="index_s"></a>- s -</h3><ul>
+<li>SACN_ASSERT
+: <a class="el" href="group__sacnopts__global.html#gabd4f61db43336221d5947896ef0f2921">opts.h</a>
+</li>
+<li>SACN_DEFAULT_EXPIRED_WAIT_MS
+: <a class="el" href="group__sacn__receiver.html#ga2f4617269e2d64c85b81556e0c3e8fde">receiver.h</a>
+</li>
+<li>sacn_deinit()
+: <a class="el" href="group__s_a_c_n.html#ga7b80ebcafe9eb3240a67785377872f9a">common.h</a>
+</li>
+<li>sacn_dmx_merger_add_source()
+: <a class="el" href="group__sacn__dmx__merger.html#gadf879eb673c0ffe91ade6bcc5af615c3">dmx_merger.h</a>
+</li>
+<li>SACN_DMX_MERGER_CONFIG_INIT
+: <a class="el" href="group__sacn__dmx__merger.html#ga7431ab2baf3af7e0d1999355c6bcc9d7">dmx_merger.h</a>
+</li>
+<li>sacn_dmx_merger_create()
+: <a class="el" href="group__sacn__dmx__merger.html#ga8758dad93531c1a5bbf4643157fe2c72">dmx_merger.h</a>
+</li>
+<li>sacn_dmx_merger_destroy()
+: <a class="el" href="group__sacn__dmx__merger.html#ga539b249ea5d0898efce4ee7371fc91ef">dmx_merger.h</a>
+</li>
+<li>sacn_dmx_merger_get_source()
+: <a class="el" href="group__sacn__dmx__merger.html#ga0811c88edb22c748c8b80bbc49984e67">dmx_merger.h</a>
+</li>
+<li>SACN_DMX_MERGER_INVALID
+: <a class="el" href="group__sacn__dmx__merger.html#ga4578a59809c13ece174e8dcf59fce26d">dmx_merger.h</a>
+</li>
+<li>SACN_DMX_MERGER_MAX_MERGERS
+: <a class="el" href="group__sacnopts__dmx__merger.html#ga7d15f54f43af8434b4967746f1282fb1">opts.h</a>
+</li>
+<li>SACN_DMX_MERGER_MAX_SLOTS
+: <a class="el" href="group__sacnopts__dmx__merger.html#ga01ed1a377484d83e568bd7cf053f392f">opts.h</a>
+</li>
+<li>SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER
+: <a class="el" href="group__sacnopts__dmx__merger.html#gaaeaa9701ec2b290ddfb3b31d8463dca4">opts.h</a>
+</li>
+<li>sacn_dmx_merger_remove_pap()
+: <a class="el" href="group__sacn__dmx__merger.html#gada109b5171e78bc858ab18a7c13931ee">dmx_merger.h</a>
+</li>
+<li>sacn_dmx_merger_remove_source()
+: <a class="el" href="group__sacn__dmx__merger.html#gac6ebd9581fb8c6170d4acf1c24681ad7">dmx_merger.h</a>
+</li>
+<li>SACN_DMX_MERGER_SOURCE_INVALID
+: <a class="el" href="group__sacn__dmx__merger.html#ga1ca9e023e2091c5a8a4e5e2ba426f055">dmx_merger.h</a>
+</li>
+<li>SACN_DMX_MERGER_SOURCE_IS_VALID
+: <a class="el" href="group__sacn__dmx__merger.html#gaec4962a6c5655b357d4c81dc9e7a7b86">dmx_merger.h</a>
+</li>
+<li>sacn_dmx_merger_source_t
+: <a class="el" href="group__sacn__dmx__merger.html#ga6c4761eedeaaf635ac495265849c07f2">dmx_merger.h</a>
+</li>
+<li>sacn_dmx_merger_t
+: <a class="el" href="group__sacn__dmx__merger.html#gabee79fb378d5942866adc898cb7da38b">dmx_merger.h</a>
+</li>
+<li>sacn_dmx_merger_update_levels()
+: <a class="el" href="group__sacn__dmx__merger.html#ga6ee5e85689e75879fa1db01db0bad8a6">dmx_merger.h</a>
+</li>
+<li>sacn_dmx_merger_update_pap()
+: <a class="el" href="group__sacn__dmx__merger.html#gac28b72fd6849cb6815c0ca58c2d29e65">dmx_merger.h</a>
+</li>
+<li>sacn_dmx_merger_update_universe_priority()
+: <a class="el" href="group__sacn__dmx__merger.html#gab56b1f0e4fe8d5d1dd23695a1a861b3b">dmx_merger.h</a>
+</li>
+<li>SACN_DYNAMIC_MEM
+: <a class="el" href="group__sacnopts__global.html#gaf7b1d2fa482d1665683883f80b1f4d87">opts.h</a>
+</li>
+<li>SACN_ETC_PRIORITY_EXTENSION
+: <a class="el" href="group__sacnopts__global.html#ga59ee3abb2f4eb1554d7be219a9c8028b">opts.h</a>
+</li>
+<li>sacn_get_remote_source_cid()
+: <a class="el" href="group__s_a_c_n.html#ga9a71315342a299c22055fe195e6750ef">common.h</a>
+</li>
+<li>sacn_get_remote_source_handle()
+: <a class="el" href="group__s_a_c_n.html#ga65d96208fc89676e2dea18d2ded31872">common.h</a>
+</li>
+<li>sacn_init()
+: <a class="el" href="group__s_a_c_n.html#ga612160fe1d0f1e4f1fae4d72232fee07">common.h</a>
+</li>
+<li>sacn_ip_support_t
+: <a class="el" href="group__s_a_c_n.html#ga02f82b9c734e2d2f70a1106d6480833a">common.h</a>
+</li>
+<li>SACN_LOG_MSG_PREFIX
+: <a class="el" href="group__sacnopts__global.html#ga739093ac67975234540c307629ac8280">opts.h</a>
+</li>
+<li>SACN_LOGGING_ENABLED
+: <a class="el" href="group__sacnopts__global.html#ga5b77f40b283fa0f754576a64ff6f3d4c">opts.h</a>
+</li>
+<li>SACN_LOOPBACK
+: <a class="el" href="group__sacnopts__global.html#ga6ae6b1e22f87a5c2e49aefbc95a97256">opts.h</a>
+</li>
+<li>SACN_MAX_NETINTS
+: <a class="el" href="group__sacnopts__global.html#ga2dd2edc6a9d13618baaf6d02b4d86e81">opts.h</a>
+</li>
+<li>SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE
+: <a class="el" href="group__sacnopts__send.html#ga53a3e7e498368c3311403912d7c01515">opts.h</a>
+</li>
+<li>sacn_merge_receiver_change_footprint()
+: <a class="el" href="group__sacn__merge__receiver.html#ga05a2a94b9c4346efa7918c7fe3031a80">merge_receiver.h</a>
+</li>
+<li>sacn_merge_receiver_change_universe()
+: <a class="el" href="group__sacn__merge__receiver.html#ga821122037b6cd927facd821c11cce970">merge_receiver.h</a>
+</li>
+<li>sacn_merge_receiver_change_universe_and_footprint()
+: <a class="el" href="group__sacn__merge__receiver.html#ga99f34c7a019f2f4f5f62220a505c6e47">merge_receiver.h</a>
+</li>
+<li>SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT
+: <a class="el" href="group__sacn__merge__receiver.html#gaeb89255ebd3592d97fe76ed6203913ae">merge_receiver.h</a>
+</li>
+<li>sacn_merge_receiver_config_init()
+: <a class="el" href="group__sacn__merge__receiver.html#gab0d6a624f1d44008625335112788eb37">merge_receiver.h</a>
+</li>
+<li>sacn_merge_receiver_create()
+: <a class="el" href="group__sacn__merge__receiver.html#ga91ca26eea8b78eeb2b25bb003e8aa208">merge_receiver.h</a>
+</li>
+<li>sacn_merge_receiver_destroy()
+: <a class="el" href="group__sacn__merge__receiver.html#ga02c0879618435049e7a9bd25dbe58850">merge_receiver.h</a>
+</li>
+<li>SACN_MERGE_RECEIVER_ENABLE
+: <a class="el" href="group__sacnopts__merge__receiver.html#gacb8513985c683aac79b8ead43d84b5f0">opts.h</a>
+</li>
+<li>sacn_merge_receiver_get_footprint()
+: <a class="el" href="group__sacn__merge__receiver.html#ga32dfa392c47b9f7a443e9bd563e1a974">merge_receiver.h</a>
+</li>
+<li>sacn_merge_receiver_get_network_interfaces()
+: <a class="el" href="group__sacn__merge__receiver.html#ga01cecd351da958dc2fc7b55088559de8">merge_receiver.h</a>
+</li>
+<li>sacn_merge_receiver_get_source()
+: <a class="el" href="group__sacn__merge__receiver.html#ga807515578955a36b0a33de53a1d5bd9c">merge_receiver.h</a>
+</li>
+<li>sacn_merge_receiver_get_universe()
+: <a class="el" href="group__sacn__merge__receiver.html#ga7345c390c8b94221b481c3cd1ca37de7">merge_receiver.h</a>
+</li>
+<li>SACN_MERGE_RECEIVER_INVALID
+: <a class="el" href="group__sacn__merge__receiver.html#gae86374c92bace3a7d2bef9656da6048a">merge_receiver.h</a>
+</li>
+<li>sacn_merge_receiver_reset_networking()
+: <a class="el" href="group__sacn__merge__receiver.html#ga00e28a2333ce8cd38b0eb3e58ac5f375">merge_receiver.h</a>
+</li>
+<li>sacn_merge_receiver_reset_networking_per_receiver()
+: <a class="el" href="group__sacn__merge__receiver.html#ga0db3ceb5a812f02e2e4daa52b5797523">merge_receiver.h</a>
+</li>
+<li>sacn_merge_receiver_t
+: <a class="el" href="group__sacn__merge__receiver.html#gab674497f3bceb2d6ebf4b932b26bfe61">merge_receiver.h</a>
+</li>
+<li>sacn_receiver_change_footprint()
+: <a class="el" href="group__sacn__receiver.html#gab5be9e77fa2652f71c93d9886ae826b2">receiver.h</a>
+</li>
+<li>sacn_receiver_change_universe()
+: <a class="el" href="group__sacn__receiver.html#gabb5ec7d4459ac694e5fa0ae97572f388">receiver.h</a>
+</li>
+<li>sacn_receiver_change_universe_and_footprint()
+: <a class="el" href="group__sacn__receiver.html#gaf046362e62f8f4a910a00aaee3006247">receiver.h</a>
+</li>
+<li>SACN_RECEIVER_CONFIG_DEFAULT_INIT
+: <a class="el" href="group__sacn__receiver.html#gaaaa17f5e77d094f9348c0efd361cee52">receiver.h</a>
+</li>
+<li>sacn_receiver_config_init()
+: <a class="el" href="group__sacn__receiver.html#ga82f2e3740ce865b7aa3e018aa8a229d9">receiver.h</a>
+</li>
+<li>sacn_receiver_create()
+: <a class="el" href="group__sacn__receiver.html#gacc6321deb0647ac0175993be6083683b">receiver.h</a>
+</li>
+<li>sacn_receiver_destroy()
+: <a class="el" href="group__sacn__receiver.html#ga43f99a2447364832c9ab135ac3d8b6ae">receiver.h</a>
+</li>
+<li>sacn_receiver_get_expired_wait()
+: <a class="el" href="group__sacn__receiver.html#gabd632f80d5da75c47c1f08103a42a391">receiver.h</a>
+</li>
+<li>sacn_receiver_get_footprint()
+: <a class="el" href="group__sacn__receiver.html#ga3dadba0fa169d0bfe82d5884004ecaa8">receiver.h</a>
+</li>
+<li>sacn_receiver_get_network_interfaces()
+: <a class="el" href="group__sacn__receiver.html#ga6ce5c1c8e4fafe2f339c6d3084dacfc4">receiver.h</a>
+</li>
+<li>sacn_receiver_get_universe()
+: <a class="el" href="group__sacn__receiver.html#gae77eea445ebb380fb4d47c63c0f3ba32">receiver.h</a>
+</li>
+<li>SACN_RECEIVER_INFINITE_SOURCES
+: <a class="el" href="group__sacn__receiver.html#gadb2ea19692692ca852423d0a9de749ea">receiver.h</a>
+</li>
+<li>SACN_RECEIVER_INVALID
+: <a class="el" href="group__sacn__receiver.html#ga79dd5d0d62fb4d6120290afeeadb3637">receiver.h</a>
+</li>
+<li>SACN_RECEIVER_LIMIT_BIND
+: <a class="el" href="group__sacnopts__receiver.html#ga6bfc294d941da830fbb9bd562c45f638">opts.h</a>
+</li>
+<li>SACN_RECEIVER_MAX_FOOTPRINT
+: <a class="el" href="group__sacnopts__receiver.html#gaf0e0364237fe1e26c348fdd53bb5976f">opts.h</a>
+</li>
+<li>SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE
+: <a class="el" href="group__sacnopts__receiver.html#ga079b2f51919b9ac76e3b3330040bd20e">opts.h</a>
+</li>
+<li>SACN_RECEIVER_MAX_SUBS_PER_SOCKET
+: <a class="el" href="group__sacnopts__receiver.html#gab20e9727556f9656a506bb85628f7df8">opts.h</a>
+</li>
+<li>SACN_RECEIVER_MAX_THREADS
+: <a class="el" href="group__sacnopts__receiver.html#ga064a427072df41e909b7d78cdb233c64">opts.h</a>
+</li>
+<li>SACN_RECEIVER_MAX_UNIVERSES
+: <a class="el" href="group__sacnopts__receiver.html#ga5d749b5a5b67d89a114aa2409ba6ff62">opts.h</a>
+</li>
+<li>SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA
+: <a class="el" href="group__sacn__receiver.html#ga8613a5c435a6120a1d410bead3949087">receiver.h</a>
+</li>
+<li>SACN_RECEIVER_READ_TIMEOUT_MS
+: <a class="el" href="group__sacnopts__receiver.html#gae7ae8c07912489f40fa77146cdc93d71">opts.h</a>
+</li>
+<li>sacn_receiver_reset_networking()
+: <a class="el" href="group__sacn__receiver.html#ga54fd65585c71e83af35289c3cad0f685">receiver.h</a>
+</li>
+<li>sacn_receiver_reset_networking_per_receiver()
+: <a class="el" href="group__sacn__receiver.html#ga29f330fc880d1c776afb5972514e6ac4">receiver.h</a>
+</li>
+<li>sacn_receiver_set_expired_wait()
+: <a class="el" href="group__sacn__receiver.html#gabea27e71ae23c9176832f883a8ad7f06">receiver.h</a>
+</li>
+<li>sacn_receiver_t
+: <a class="el" href="group__sacn__receiver.html#gafc1e3c92911f567bed81bbd04f3f34f6">receiver.h</a>
+</li>
+<li>SACN_RECEIVER_THREAD_NAME
+: <a class="el" href="group__sacnopts__receiver.html#ga0b3b952f010e515ba69fed3767e905f1">opts.h</a>
+</li>
+<li>SACN_RECEIVER_THREAD_PRIORITY
+: <a class="el" href="group__sacnopts__receiver.html#ga0262024b708fa546807d7b01485c7fcf">opts.h</a>
+</li>
+<li>SACN_RECEIVER_THREAD_STACK
+: <a class="el" href="group__sacnopts__receiver.html#ga3194913a252cb1da68e5bd919f6c1658">opts.h</a>
+</li>
+<li>SACN_RECEIVER_TOTAL_MAX_SOURCES
+: <a class="el" href="group__sacnopts__receiver.html#ga055b24b2c72073823f4c92ed32e7ddb0">opts.h</a>
+</li>
+<li>SACN_REMOTE_SOURCE_INVALID
+: <a class="el" href="group__s_a_c_n.html#ga4579b31d1f4e1ecff0ecd8214c551956">common.h</a>
+</li>
+<li>sacn_remote_source_t
+: <a class="el" href="group__s_a_c_n.html#ga31b1febd91134668307803d573ed2f2c">common.h</a>
+</li>
+<li>sacn_source_add_unicast_destination()
+: <a class="el" href="group__sacn__source.html#ga2b7d3fb6a2d252eee7c051acfe97d242">source.h</a>
+</li>
+<li>sacn_source_add_universe()
+: <a class="el" href="group__sacn__source.html#ga22a80913e48354c6da37a9fa11626261">source.h</a>
+</li>
+<li>sacn_source_change_name()
+: <a class="el" href="group__sacn__source.html#ga0c44cd3dba2627779bfb65ea8349fe1c">source.h</a>
+</li>
+<li>sacn_source_change_preview_flag()
+: <a class="el" href="group__sacn__source.html#ga99d5fce087ce0b2b7d2caedf65bcce5e">source.h</a>
+</li>
+<li>sacn_source_change_priority()
+: <a class="el" href="group__sacn__source.html#ga0ee9dd3d8114b4277cb73134d0ae2dc4">source.h</a>
+</li>
+<li>sacn_source_change_synchronization_universe()
+: <a class="el" href="group__sacn__source.html#gac21fab7b1fe15c281e89303ce26d08fd">source.h</a>
+</li>
+<li>SACN_SOURCE_CONFIG_DEFAULT_INIT
+: <a class="el" href="group__sacn__source.html#ga1fc88ea9a51c4a935ec87630a0b177f1">source.h</a>
+</li>
+<li>sacn_source_config_init()
+: <a class="el" href="group__sacn__source.html#ga4d115a7b828b0f45444ac36f0b946e64">source.h</a>
+</li>
+<li>sacn_source_create()
+: <a class="el" href="group__sacn__source.html#ga37f43cd2ec265e3052eea6d5f1b68233">source.h</a>
+</li>
+<li>sacn_source_destroy()
+: <a class="el" href="group__sacn__source.html#gaeb8a9797368aabad696c81225b4c8aaa">source.h</a>
+</li>
+<li>SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT
+: <a class="el" href="group__sacn__source__detector.html#ga78fbb7639c835e3b08091fc16e31d6fc">source_detector.h</a>
+</li>
+<li>sacn_source_detector_config_init()
+: <a class="el" href="group__sacn__source__detector.html#gaaf2f5a453a68df1ed4dcc80e1a94a49a">source_detector.h</a>
+</li>
+<li>sacn_source_detector_create()
+: <a class="el" href="group__sacn__source__detector.html#gaa662eb1cc3bb937691dcabc56332952f">source_detector.h</a>
+</li>
+<li>sacn_source_detector_destroy()
+: <a class="el" href="group__sacn__source__detector.html#ga42bf1f29fa1a313343b672e33685ba1d">source_detector.h</a>
+</li>
+<li>sacn_source_detector_get_network_interfaces()
+: <a class="el" href="group__sacn__source__detector.html#gae0c2cafc1d5d765f272981fc06f5fdc6">source_detector.h</a>
+</li>
+<li>SACN_SOURCE_DETECTOR_INFINITE
+: <a class="el" href="group__sacn__source__detector.html#ga2a1bee1e4fe7a47ee053c8dbae05fbcb">source_detector.h</a>
+</li>
+<li>SACN_SOURCE_DETECTOR_MAX_SOURCES
+: <a class="el" href="group__sacnopts__source__detector.html#ga872fc4bd419f3cc3d77e7502f0b1ed0e">opts.h</a>
+</li>
+<li>SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE
+: <a class="el" href="group__sacnopts__source__detector.html#ga24e186592053bd29fbffbfc92825268e">opts.h</a>
+</li>
+<li>sacn_source_detector_reset_networking()
+: <a class="el" href="group__sacn__source__detector.html#ga740a10eb54b67decf41794e298258a21">source_detector.h</a>
+</li>
+<li>sacn_source_get_network_interfaces()
+: <a class="el" href="group__sacn__source.html#gae8c8d77375ea48b26fc069c9068aec69">source.h</a>
+</li>
+<li>sacn_source_get_unicast_destinations()
+: <a class="el" href="group__sacn__source.html#ga12f792b85add6af90ba2560f287b630c">source.h</a>
+</li>
+<li>sacn_source_get_universes()
+: <a class="el" href="group__sacn__source.html#ga90b2e59fa6709ee72042778a60c93330">source.h</a>
+</li>
+<li>SACN_SOURCE_INFINITE_UNIVERSES
+: <a class="el" href="group__sacn__source.html#ga1ac5056bc752c32ca80c08b9839a142d">source.h</a>
+</li>
+<li>SACN_SOURCE_INVALID
+: <a class="el" href="group__sacn__source.html#ga446e9e065e08c7a90309a993b2502153">source.h</a>
+</li>
+<li>SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT
+: <a class="el" href="group__sacn__source.html#gab3c248f42fcdeccba28617fd2612ce71">source.h</a>
+</li>
+<li>SACN_SOURCE_MAX_SOURCES
+: <a class="el" href="group__sacnopts__send.html#gaa08afe863ab6922c173055d4239184c4">opts.h</a>
+</li>
+<li>SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE
+: <a class="el" href="group__sacnopts__send.html#gaac75390f2990b299303bfbce89e5f7ef">opts.h</a>
+</li>
+<li>SACN_SOURCE_NAME_MAX_LEN
+: <a class="el" href="group__s_a_c_n.html#ga0a68bef69f737e31072b475521d331c8">common.h</a>
+</li>
+<li>sacn_source_process_manual()
+: <a class="el" href="group__sacn__source.html#ga05ae91a74132e84439e18364de2b62d4">source.h</a>
+</li>
+<li>sacn_source_remove_unicast_destination()
+: <a class="el" href="group__sacn__source.html#ga4ebe5d509af8c963c104f2dd96a3ac76">source.h</a>
+</li>
+<li>sacn_source_remove_universe()
+: <a class="el" href="group__sacn__source.html#ga7f8233fae115142c2e2a9488faa12d5d">source.h</a>
+</li>
+<li>sacn_source_reset_networking()
+: <a class="el" href="group__sacn__source.html#ga348c4a38439a1bf2623253bbc30120c5">source.h</a>
+</li>
+<li>sacn_source_reset_networking_per_universe()
+: <a class="el" href="group__sacn__source.html#gac47eb25e0017cf7d62120fb3fa072333">source.h</a>
+</li>
+<li>sacn_source_send_now()
+: <a class="el" href="group__sacn__source.html#ga6e7cea16d61ae355bc313452f0b47e48">source.h</a>
+</li>
+<li>sacn_source_send_synchronization()
+: <a class="el" href="group__sacn__source.html#ga0e07a954dab245c7d6f323d9bdeb2df3">source.h</a>
+</li>
+<li>sacn_source_t
+: <a class="el" href="group__sacn__source.html#gacc4c9d2c77cf4126e9ac7faf297c3dd8">source.h</a>
+</li>
+<li>SACN_SOURCE_THREAD_NAME
+: <a class="el" href="group__sacnopts__send.html#ga0a2bddcd541aabbd0b4536d6dae4caa2">opts.h</a>
+</li>
+<li>SACN_SOURCE_THREAD_PRIORITY
+: <a class="el" href="group__sacnopts__send.html#gac69e2ffb7e6a156134373d687a7cbed7">opts.h</a>
+</li>
+<li>SACN_SOURCE_THREAD_STACK
+: <a class="el" href="group__sacnopts__send.html#ga197a7ace1de904752a545c799ea9e498">opts.h</a>
+</li>
+<li>SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT
+: <a class="el" href="group__sacn__source.html#ga20483046bfb90da7c9bf089fc0229a6b">source.h</a>
+</li>
+<li>sacn_source_universe_config_init()
+: <a class="el" href="group__sacn__source.html#ga79d292e6589859e52e82834c611311ea">source.h</a>
+</li>
+<li>sacn_source_update_levels()
+: <a class="el" href="group__sacn__source.html#ga23dc503a9f5a46fce7e8448266760341">source.h</a>
+</li>
+<li>sacn_source_update_levels_and_force_sync()
+: <a class="el" href="group__sacn__source.html#ga56ea27101d95616ca53c5c602257311a">source.h</a>
+</li>
+<li>sacn_source_update_levels_and_pap()
+: <a class="el" href="group__sacn__source.html#ga6a8835b680485d307f9d2d9c750517ab">source.h</a>
+</li>
+<li>sacn_source_update_levels_and_pap_and_force_sync()
+: <a class="el" href="group__sacn__source.html#gabec53e52dbb1808a546832ef3446f009">source.h</a>
+</li>
+<li>SACN_STARTCODE_DMX
+: <a class="el" href="group__s_a_c_n.html#ga2dba81c3bf923ae2dbb0aaa6d8d5fa0a">common.h</a>
+</li>
+<li>SACN_STARTCODE_PRIORITY
+: <a class="el" href="group__s_a_c_n.html#ga92ab22221d9dedb5b22978e6c14c6349">common.h</a>
+</li>
+<li>SACN_VERSION_BUILD
+: <a class="el" href="group__s_a_c_n.html#gab22648c510945c218b806ad28e1e9a86">version.h</a>
+</li>
+<li>SACN_VERSION_COPYRIGHT
+: <a class="el" href="group__s_a_c_n.html#ga5fd2e6c86426807d2eb598c67121723b">version.h</a>
+</li>
+<li>SACN_VERSION_DATESTR
+: <a class="el" href="group__s_a_c_n.html#ga99a95e107267c6f80cc2195f86c11586">version.h</a>
+</li>
+<li>SACN_VERSION_MAJOR
+: <a class="el" href="group__s_a_c_n.html#ga3b04b863e88d1bae02133dfb19667e06">version.h</a>
+</li>
+<li>SACN_VERSION_MINOR
+: <a class="el" href="group__s_a_c_n.html#ga234bcbd2198002c6ee8d3caa670ba0ed">version.h</a>
+</li>
+<li>SACN_VERSION_PATCH
+: <a class="el" href="group__s_a_c_n.html#gae1d8849ebfa2d27cec433e54f7f7308d">version.h</a>
+</li>
+<li>SACN_VERSION_PRODUCTNAME
+: <a class="el" href="group__s_a_c_n.html#ga46b3c38236732e08243f8fe79bcf6c06">version.h</a>
+</li>
+<li>SACN_VERSION_STRING
+: <a class="el" href="group__s_a_c_n.html#ga2ff6980847182dc1ac56ee3660e0a360">version.h</a>
+</li>
+<li>SacnDmxMergerConfig
+: <a class="el" href="group__sacn__dmx__merger.html#ga9989e37ba8aa7aeb4ef0108ceb4e156c">dmx_merger.h</a>
+</li>
+<li>SacnDmxMergerSource
+: <a class="el" href="group__sacn__dmx__merger.html#ga5ff553cc00468871978edfe0e675aebd">dmx_merger.h</a>
+</li>
+<li>SacnLostSource
+: <a class="el" href="group__sacn__receiver.html#ga7fdeb921a4c00c9821019145683bdda4">receiver.h</a>
+</li>
+<li>SacnMcastInterface
+: <a class="el" href="group__s_a_c_n.html#gabf46c3c353abbd956716fecbe24f2ae4">common.h</a>
+</li>
+<li>SacnMergeReceiverCallbacks
+: <a class="el" href="group__sacn__merge__receiver.html#ga92cb80327e80976e7b004bf9819bca0a">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverConfig
+: <a class="el" href="group__sacn__merge__receiver.html#ga05a8525a8ee5280ab3b6e0583ae01ae8">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverMergedDataCallback
+: <a class="el" href="group__sacn__merge__receiver.html#ga3b87b4a0324b476a926c86a18eab3a1d">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverNetintList
+: <a class="el" href="group__sacn__merge__receiver.html#ga2003a3a906229f10aaf77ad600ea1ad1">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverNonDmxCallback
+: <a class="el" href="group__sacn__merge__receiver.html#ga274346790ea25827de515b93f6df2c2b">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverSource
+: <a class="el" href="group__sacn__merge__receiver.html#gac417e4563acfbf4bdfe8f2490c7e88c9">merge_receiver.h</a>
+</li>
+<li>SacnMergeReceiverSourceLimitExceededCallback
+: <a class="el" href="group__sacn__merge__receiver.html#ga47ccc08a4f5812e26ecf694fa0cb0ff0">merge_receiver.h</a>
+</li>
+<li>SacnNetintConfig
+: <a class="el" href="group__s_a_c_n.html#ga3cd2196005e33f66518a0f0baba34147">common.h</a>
+</li>
+<li>SacnReceiverCallbacks
+: <a class="el" href="group__sacn__receiver.html#ga114584027956aaaccfb9e74e1c311206">receiver.h</a>
+</li>
+<li>SacnReceiverConfig
+: <a class="el" href="group__sacn__receiver.html#gac54129e22da91ee8f1aaf9b56d771355">receiver.h</a>
+</li>
+<li>SacnReceiverNetintList
+: <a class="el" href="group__sacn__receiver.html#ga494aa6c2efd3b6a12943191c74946cb8">receiver.h</a>
+</li>
+<li>SacnRecvMergedData
+: <a class="el" href="group__sacn__merge__receiver.html#gafb05eeea1bbac03fd2058d197e2c5846">merge_receiver.h</a>
+</li>
+<li>SacnRecvUniverseData
+: <a class="el" href="group__sacn__receiver.html#gac0c35d115d0d13af500b68eca8afda57">receiver.h</a>
+</li>
+<li>SacnRecvUniverseSubrange
+: <a class="el" href="group__sacn__receiver.html#gacd120c5410f4a19fe3faaeacbaaad904">receiver.h</a>
+</li>
+<li>SacnRemoteSource
+: <a class="el" href="group__sacn__receiver.html#ga3fa6cd794c97a1c6c8330ec6b79aad38">receiver.h</a>
+</li>
+<li>SacnSamplingPeriodEndedCallback
+: <a class="el" href="group__sacn__receiver.html#gac9ac2e788bf69c6da712dfcd67269e67">receiver.h</a>
+</li>
+<li>SacnSamplingPeriodStartedCallback
+: <a class="el" href="group__sacn__receiver.html#ga5a47a2560a7aba67637d3a5b7ad22ef5">receiver.h</a>
+</li>
+<li>SacnSourceConfig
+: <a class="el" href="group__sacn__source.html#gaf13f724dda8304930fcda0977088cd6a">source.h</a>
+</li>
+<li>SacnSourceDetectorCallbacks
+: <a class="el" href="group__sacn__source__detector.html#gaa539e91ba47bdb365998472761dcede2">source_detector.h</a>
+</li>
+<li>SacnSourceDetectorConfig
+: <a class="el" href="group__sacn__source__detector.html#gacf1948692a93767d849b6df90f75f6a4">source_detector.h</a>
+</li>
+<li>SacnSourceDetectorLimitExceededCallback
+: <a class="el" href="group__sacn__source__detector.html#gadb2603e053f842705b654047e99c0096">source_detector.h</a>
+</li>
+<li>SacnSourceDetectorSourceExpiredCallback
+: <a class="el" href="group__sacn__source__detector.html#ga18cf47c111cd4d23ee36c8aae4c97158">source_detector.h</a>
+</li>
+<li>SacnSourceDetectorSourceUpdatedCallback
+: <a class="el" href="group__sacn__source__detector.html#ga30a59185e89668385ea425238cab8422">source_detector.h</a>
+</li>
+<li>SacnSourceLimitExceededCallback
+: <a class="el" href="group__sacn__receiver.html#ga64bfe2ecfceca8b4f50f1a3a0a9c9a07">receiver.h</a>
+</li>
+<li>SacnSourcePapLostCallback
+: <a class="el" href="group__sacn__receiver.html#ga7608a394e455465e56c789957f3f3214">receiver.h</a>
+</li>
+<li>SacnSourcesLostCallback
+: <a class="el" href="group__sacn__receiver.html#ga80326cc324898e1faebe2da1339bd0b3">receiver.h</a>
+</li>
+<li>SacnSourceUniverseConfig
+: <a class="el" href="group__sacn__source.html#ga3f72b89ed47da0e268c7735ae8971e89">source.h</a>
+</li>
+<li>SacnSourceUniverseNetintList
+: <a class="el" href="group__sacn__source.html#ga0f30b2db7d3c6686a14bab97c80d73a0">source.h</a>
+</li>
+<li>SacnUniverseDataCallback
+: <a class="el" href="group__sacn__receiver.html#ga1ea1f87c1d1098d6df521cb9d9ccd0b3">receiver.h</a>
+</li>
+</ul>
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
+  </ul>
+</div>
+</body>
+</html>

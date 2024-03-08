@@ -763,17 +763,17 @@ void update_pap(MergerState* merger, SourceState* source, const uint8_t* address
     return;
   }
 
+  SET_PAP_ACTIVE(source);
+
   size_t old_pap_count = source->pap_count;
   source->pap_count = address_priorities_count;
+
+  if (merger->config.per_address_priorities_active != NULL)
+    *(merger->config.per_address_priorities_active) = true;
 
   if ((address_priorities_count != old_pap_count) ||
       (memcmp(address_priorities, source->source.address_priority, address_priorities_count) != 0))
   {
-    SET_PAP_ACTIVE(source);
-
-    if (merger->config.per_address_priorities_active != NULL)
-      *(merger->config.per_address_priorities_active) = true;
-
     // Copy instead of merging if there's only one source.
     if (etcpal_rbtree_size(&merger->source_state_lookup) == 1)
       update_pap_single_source(merger, source, address_priorities, old_pap_count, address_priorities_count);
