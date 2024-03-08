@@ -396,6 +396,7 @@ protected:
 
 TEST_F(CoverageTest, ResetNetworkingAtScale)
 {
+  printf("a\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\na\n");
   static constexpr int kNumUniverses = 15;
 
   TestMergeReceiver merge_receiver;
