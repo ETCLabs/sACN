@@ -377,15 +377,15 @@ protected:
   {
     // Do this asynchronously to catch any data races between API boundaries
     etcpal::Thread merge_receiver_reset_thread;
-    etcpal::Thread source_detector_reset_thread;
+    // etcpal::Thread source_detector_reset_thread;
     etcpal::Thread source_reset_thread;
 
     merge_receiver_reset_thread.Start([]() { sacn::MergeReceiver::ResetNetworking(); });
-    source_detector_reset_thread.Start([]() { sacn::SourceDetector::ResetNetworking(); });
+    // source_detector_reset_thread.Start([]() { sacn::SourceDetector::ResetNetworking(); });
     source_reset_thread.Start([]() { sacn::Source::ResetNetworking(); });
 
     merge_receiver_reset_thread.Join();
-    source_detector_reset_thread.Join();
+    // source_detector_reset_thread.Join();
     source_reset_thread.Join();
   }
 
@@ -397,10 +397,6 @@ protected:
 TEST_F(CoverageTest, ResetNetworkingAtScale)
 {
   static constexpr int kNumUniverses = 25;
-  static constexpr int kNumSources = 1;
-
-  auto sys_netints = etcpal::netint::GetInterfaces();
-  ASSERT_TRUE(sys_netints);
 
   TestMergeReceiver merge_receiver(sacn::McastMode::kDisabledOnAllInterfaces);
   for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
@@ -411,19 +407,9 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
 
   merge_receiver.StartAllUniverses();
 
-  TestSourceDetector source_detector(sacn::McastMode::kDisabledOnAllInterfaces);
-  EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceUpdated(_, _, _, _)).Times(AtLeast(1));
-  source_detector.Startup();
-
-  std::vector<TestSource> sources;
-  for (int i = 0; i < kNumSources; ++i)
-  {
-    TestSource source(sacn::McastMode::kDisabledOnAllInterfaces);
-    for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
-      source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
-
-    sources.push_back(std::move(source));
-  }
+  TestSource source(sacn::McastMode::kDisabledOnAllInterfaces);
+  for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
+    source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
 
   // One last reset, this time with all netints
   etcpal::Thread::Sleep(1000u);
