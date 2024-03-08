@@ -36,7 +36,6 @@
 #include <array>
 #include <cstdlib>
 #include <ctime>
-#include <map>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -62,12 +61,7 @@ static constexpr UniverseId kDefaultUniverse = 1u;
 class MockLogMessageHandler : public etcpal::LogMessageHandler
 {
 public:
-  MockLogMessageHandler()
-  {
-    ON_CALL(*this, HandleLogMessage(_)).WillByDefault(Invoke([&](const EtcPalLogStrings& strings) {
-      EXPECT_TRUE(false) << "LOG: " << strings.human_readable;
-    }));
-  }
+  MockLogMessageHandler() = default;
 
   MOCK_METHOD(void, HandleLogMessage, (const EtcPalLogStrings& strings), (override));
 };
@@ -167,7 +161,7 @@ private:
     NiceMock<MockMergeReceiverNotifyHandler> notify;
   };
 
-  std::map<UniverseId, std::unique_ptr<UniverseState>> universes_;
+  std::unordered_map<UniverseId, std::unique_ptr<UniverseState>> universes_;
   sacn::McastMode initial_mcast_mode_{sacn::McastMode::kEnabledOnAllInterfaces};
 };
 
@@ -301,7 +295,7 @@ private:
     StartCodeState(const StartCodeParams& p) : params(p) { buffer.fill(static_cast<uint8_t>(p.value)); }
 
     StartCodeParams params;
-    std::array<uint8_t, 10> buffer{};
+    std::array<uint8_t, DMX_ADDRESS_COUNT> buffer{};
     bool uninitialized{true};
   };
 
@@ -383,15 +377,15 @@ protected:
   {
     // Do this asynchronously to catch any data races between API boundaries
     etcpal::Thread merge_receiver_reset_thread;
-    // etcpal::Thread source_detector_reset_thread;
+    etcpal::Thread source_detector_reset_thread;
     etcpal::Thread source_reset_thread;
 
     merge_receiver_reset_thread.Start([]() { sacn::MergeReceiver::ResetNetworking(); });
-    // source_detector_reset_thread.Start([]() { sacn::SourceDetector::ResetNetworking(); });
+    source_detector_reset_thread.Start([]() { sacn::SourceDetector::ResetNetworking(); });
     source_reset_thread.Start([]() { sacn::Source::ResetNetworking(); });
 
     merge_receiver_reset_thread.Join();
-    // source_detector_reset_thread.Join();
+    source_detector_reset_thread.Join();
     source_reset_thread.Join();
   }
 
@@ -400,29 +394,169 @@ protected:
   NiceMock<MockLogMessageHandler> mock_log_handler_;
 };
 
-TEST_F(CoverageTest, ResetNetworkingAtScale)
+TEST_F(CoverageTest, SendAndReceiveSimpleUniverse)
 {
-  static std::map<uint16_t, int> num_per_universe;
   TestMergeReceiver merge_receiver;
-  for (uint16_t universe_id = 1u; universe_id <= 25u; ++universe_id)
-  {
-    merge_receiver.AddUniverse(universe_id);
-    EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleMergedData(_, _)).Times(AtLeast(1));
+  merge_receiver.AddUniverse();
 
-    ON_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleMergedData(_, _))
-        .WillByDefault(Invoke([&](sacn::MergeReceiver::Handle handle, const SacnRecvMergedData& merged_data) {
-          ++num_per_universe[merged_data.universe_id];
-        }));
-  }
+  EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(), HandleMergedData(_, _)).Times(AtLeast(1));
+  EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(), HandleSamplingPeriodStarted(_, _)).Times(AtLeast(1));
+  EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(), HandleSamplingPeriodEnded(_, _)).Times(AtLeast(1));
 
   merge_receiver.StartAllUniverses();
 
   TestSource source;
-  for (uint16_t universe_id = 1u; universe_id <= 100u; ++universe_id)
+  source.AddUniverse({.start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
+
+  etcpal::Thread::Sleep(2000u);  // Cover sampling period
+}
+
+TEST_F(CoverageTest, SendReceiveAndMergeAtScale)
+{
+  static constexpr UniverseId kTestUniverses[] = {1u, 2u, 3u, 4u, 5u, 6u, 7u};
+  static constexpr int kNumTestSources = 7u;
+
+  TestMergeReceiver merge_receiver;
+  for (UniverseId universe_id : kTestUniverses)
+  {
+    merge_receiver.AddUniverse(universe_id);
+    EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleMergedData(_, _)).Times(AtLeast(1));
+    EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleSamplingPeriodStarted(_, _))
+        .Times(AtLeast(1));
+    EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleSamplingPeriodEnded(_, _))
+        .Times(AtLeast(1));
+  }
+
+  merge_receiver.StartAllUniverses();
+
+  std::vector<TestSource> sources;
+  for (int i = 0; i < kNumTestSources; ++i)
+  {
+    TestSource source;
+    for (UniverseId universe_id : kTestUniverses)
+    {
+      source.AddUniverse({.universe = universe_id,
+                          .start_codes = {{.code = SACN_STARTCODE_DMX, .min = 0x00, .max = 0xFF},
+                                          {.code = SACN_STARTCODE_PRIORITY, .min = 0x00, .max = 0xFF}}});
+    }
+
+    sources.push_back(std::move(source));
+  }
+
+  etcpal::Thread::Sleep(2000u);  // Cover sampling period
+}
+
+TEST_F(CoverageTest, SwitchThroughUniverses)
+{
+  static constexpr UniverseId kTestUniverses[] = {1u, 2u, 3u};
+  static constexpr int kNumTestUniverses = sizeof(kTestUniverses) / sizeof(UniverseId);
+
+  TestMergeReceiver merge_receiver;
+  merge_receiver.AddUniverse(kTestUniverses[0]);
+  EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(kTestUniverses[0]), HandleMergedData(_, _)).Times(AtLeast(1));
+  EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(kTestUniverses[0]), HandleSamplingPeriodStarted(_, _))
+      .Times(kNumTestUniverses);
+  EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(kTestUniverses[0]), HandleSamplingPeriodEnded(_, _))
+      .Times(kNumTestUniverses);
+
+  merge_receiver.StartAllUniverses();
+
+  TestSource source;
+  for (UniverseId universe_id : kTestUniverses)
     source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
 
-  etcpal::Thread::Sleep(11000u);  // Time for source detector to detect sources
+  for (int i = 0, j = 1; j < kNumTestUniverses; ++i, ++j)
+  {
+    etcpal::Thread::Sleep(2000u);  // Cover sampling period
+    merge_receiver.ChangeUniverse({.from = kTestUniverses[i], .to = kTestUniverses[j]});
+  }
 
-  for (auto [univ, count] : num_per_universe)
-    EXPECT_TRUE(false) << "UNIVERSE " << univ << " COUNT " << count;
+  etcpal::Thread::Sleep(2000u);  // Cover sampling period
+}
+
+TEST_F(CoverageTest, DetectSourcesComingAndGoing)
+{
+  static constexpr UniverseId kTestUniverses[] = {1u, 2u, 3u, 4u, 5u, 6u, 7u};
+  static constexpr int kNumTestSources = 7u;
+
+  TestSourceDetector source_detector;
+  EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceUpdated(_, _, _, _)).Times(AtLeast(1));
+  EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceExpired(_, _, _)).Times(AtLeast(1));
+  source_detector.Startup();
+
+  std::vector<TestSource> sources;
+  for (int i = 0; i < kNumTestSources; ++i)
+  {
+    TestSource source;
+    for (UniverseId universe_id : kTestUniverses)
+      source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
+
+    sources.push_back(std::move(source));
+  }
+
+  etcpal::Thread::Sleep(11000u);  // Some time to detect sources
+
+  for (int i = 0; i < kNumTestSources; ++i)
+    sources.pop_back();
+
+  etcpal::Thread::Sleep(21000u);  // Cover universe discovery expiration
+}
+
+TEST_F(CoverageTest, ResetNetworkingAtScale)
+{
+  static constexpr int kNumUniverses = 25;
+  static constexpr int kNumSources = 2;
+
+  auto sys_netints = etcpal::netint::GetInterfaces();
+  ASSERT_TRUE(sys_netints);
+
+  TestMergeReceiver merge_receiver(sacn::McastMode::kDisabledOnAllInterfaces);
+  for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
+  {
+    merge_receiver.AddUniverse(universe_id);
+    EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleMergedData(_, _)).Times(AtLeast(1));
+  }
+
+  merge_receiver.StartAllUniverses();
+
+  TestSourceDetector source_detector(sacn::McastMode::kDisabledOnAllInterfaces);
+  EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceUpdated(_, _, _, _)).Times(AtLeast(1));
+  source_detector.Startup();
+
+  std::vector<TestSource> sources;
+  for (int i = 0; i < kNumSources; ++i)
+  {
+    TestSource source(sacn::McastMode::kDisabledOnAllInterfaces);
+    for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
+      source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
+
+    sources.push_back(std::move(source));
+  }
+
+  std::vector<SacnMcastInterface> netints = {};
+  size_t add_until_this_many_netints_left = sys_netints->size() / 2;  // First, add half of the netints
+  while (!sys_netints->empty())
+  {
+    etcpal::Thread::Sleep(1000u);  // Allow for some network activity each time
+
+    while (sys_netints->size() > add_until_this_many_netints_left)
+    {
+      netints.push_back(
+          {.iface = {.ip_type = sys_netints->back().addr().get().type, .index = sys_netints->back().index().value()}});
+      sys_netints->pop_back();
+
+      add_until_this_many_netints_left = 0u;  // Next time add the other half
+    }
+
+    ResetNetworking();
+
+    netints.clear();  // Try each half individually
+  }
+
+  // One last reset, this time with all netints
+  etcpal::Thread::Sleep(1000u);
+
+  ResetNetworking();
+
+  etcpal::Thread::Sleep(11000u);  // Time for source detector to detect sources
 }
