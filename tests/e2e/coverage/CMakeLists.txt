@@ -6,4 +6,4 @@ set(COVERAGE_TEST_SOURCES
 )
 
 sacn_add_dynamic_test(coverage_test ${COVERAGE_TEST_SOURCES})
-sacn_add_static_test(coverage_test ${COVERAGE_TEST_SOURCES})
+#sacn_add_static_test(coverage_test ${COVERAGE_TEST_SOURCES})
