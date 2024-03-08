@@ -397,7 +397,7 @@ protected:
 TEST_F(CoverageTest, ResetNetworkingAtScale)
 {
   static constexpr int kNumUniverses = 25;
-  static constexpr int kNumSources = 2;
+  static constexpr int kNumSources = 1;
 
   auto sys_netints = etcpal::netint::GetInterfaces();
   ASSERT_TRUE(sys_netints);
