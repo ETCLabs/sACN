@@ -167,7 +167,7 @@ private:
     NiceMock<MockMergeReceiverNotifyHandler> notify;
   };
 
-  std::unordered_map<UniverseId, std::unique_ptr<UniverseState>> universes_;
+  std::map<UniverseId, std::unique_ptr<UniverseState>> universes_;
   sacn::McastMode initial_mcast_mode_{sacn::McastMode::kEnabledOnAllInterfaces};
 };
 
