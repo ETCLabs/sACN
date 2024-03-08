@@ -404,7 +404,7 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
 {
   static std::map<uint16_t, int> num_per_universe;
   TestMergeReceiver merge_receiver;
-  for (uint16_t universe_id = 1u; universe_id <= 15u; ++universe_id)
+  for (uint16_t universe_id = 1u; universe_id <= 25u; ++universe_id)
   {
     merge_receiver.AddUniverse(universe_id);
     EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleMergedData(_, _)).Times(AtLeast(1));
