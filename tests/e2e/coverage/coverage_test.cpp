@@ -408,7 +408,7 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
   merge_receiver.StartAllUniverses();
 
   TestSource source;
-  for (uint16_t universe_id = 1u; universe_id <= 25u; ++universe_id)
+  for (uint16_t universe_id = 1u; universe_id <= 100u; ++universe_id)
     source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
 
   etcpal::Thread::Sleep(11000u);  // Time for source detector to detect sources
