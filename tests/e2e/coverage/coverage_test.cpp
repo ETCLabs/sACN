@@ -398,7 +398,7 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
 {
   static constexpr int kNumUniverses = 25;
 
-  TestMergeReceiver merge_receiver(sacn::McastMode::kDisabledOnAllInterfaces);
+  TestMergeReceiver merge_receiver;
   for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
   {
     merge_receiver.AddUniverse(universe_id);
@@ -407,14 +407,9 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
 
   merge_receiver.StartAllUniverses();
 
-  TestSource source(sacn::McastMode::kDisabledOnAllInterfaces);
+  TestSource source;
   for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
     source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
-
-  // One last reset, this time with all netints
-  etcpal::Thread::Sleep(1000u);
-
-  ResetNetworking();
 
   etcpal::Thread::Sleep(11000u);  // Time for source detector to detect sources
 }
