@@ -65,7 +65,7 @@ public:
   MockLogMessageHandler()
   {
     ON_CALL(*this, HandleLogMessage(_)).WillByDefault(Invoke([&](const EtcPalLogStrings& strings) {
-      printf("LOG: %s\n", strings.human_readable);
+      EXPECT_TRUE(false) << "LOG: " << strings.human_readable;
     }));
   }
 
