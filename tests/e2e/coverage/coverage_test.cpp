@@ -62,7 +62,12 @@ static constexpr UniverseId kDefaultUniverse = 1u;
 class MockLogMessageHandler : public etcpal::LogMessageHandler
 {
 public:
-  MockLogMessageHandler() = default;
+  MockLogMessageHandler()
+  {
+    ON_CALL(*this, HandleLogMessage(_)).WillByDefault(Invoke([&](const EtcPalLogStrings& strings) {
+      printf("LOG: %s\n", strings.human_readable);
+    }));
+  }
 
   MOCK_METHOD(void, HandleLogMessage, (const EtcPalLogStrings& strings), (override));
 };
