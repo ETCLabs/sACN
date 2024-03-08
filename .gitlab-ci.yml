@@ -94,7 +94,7 @@ docs:
   script:
     - pip install --upgrade etcdevtool
     - etcdevtool docs . 1.9.1
-    - rmdir -rf docs-build/
+    - rm -rf docs-build/
     - mkdir docs-build
     - mv docs/build/* docs-build/
   artifacts:
