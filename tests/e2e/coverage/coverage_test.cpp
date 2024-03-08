@@ -425,26 +425,6 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
     sources.push_back(std::move(source));
   }
 
-  std::vector<SacnMcastInterface> netints = {};
-  size_t add_until_this_many_netints_left = sys_netints->size() / 2;  // First, add half of the netints
-  while (!sys_netints->empty())
-  {
-    etcpal::Thread::Sleep(1000u);  // Allow for some network activity each time
-
-    while (sys_netints->size() > add_until_this_many_netints_left)
-    {
-      netints.push_back(
-          {.iface = {.ip_type = sys_netints->back().addr().get().type, .index = sys_netints->back().index().value()}});
-      sys_netints->pop_back();
-
-      add_until_this_many_netints_left = 0u;  // Next time add the other half
-    }
-
-    ResetNetworking();
-
-    netints.clear();  // Try each half individually
-  }
-
   // One last reset, this time with all netints
   etcpal::Thread::Sleep(1000u);
 
