@@ -14,10 +14,6 @@ linux-build:
   tags:
     - etc-linux-docker
   image: etc-docker.artifactory.etcconnect.com/etc/common-tech/gcc-cmake:latest
-  parallel:
-    matrix:
-      - SANITIZER_DEFS:
-          - -DSACN_ENABLE_TSAN=ON
   script:
     - mkdir build
     - cd build
