@@ -204,8 +204,25 @@ public:
       : initial_mcast_mode_(initial_mcast_mode)
   {
     auto cid = etcpal::Uuid::V4();
-    source_ = std::make_unique<sacn::Source>();
-    EXPECT_TRUE(source_->Startup(sacn::Source::Settings(cid, std::string("Test Source ") + cid.ToString())));
+    source_ = std::make_unique<SourceState>();
+    EXPECT_TRUE(source_);
+    if (source_)
+    {
+      EXPECT_TRUE(source_->source.Startup(sacn::Source::Settings(cid, std::string("Test Source ") + cid.ToString())));
+
+      auto& source = *source_;  // Always track the SourceState object even if the TestSource moves
+      source_->thread.Start([&source]() {
+        while (!source.terminate.TryWait())
+        {
+          {
+            etcpal::MutexGuard guard(source.universes_lock);
+            for (auto& [id, state] : source.universes)
+              UniverseTick(source.source, id, state);
+          }
+          etcpal::Thread::Sleep(kSleepMs);
+        }
+      });
+    }
   }
 
   TestSource(const TestSource& rhs) = delete;
@@ -213,67 +230,62 @@ public:
 
   ~TestSource()
   {
-    for (auto& [universe_id, state] : universes_)
-      state->terminate.Notify();
-
-    for (auto& [universe_id, state] : universes_)
-      state->thread.Join();
-
     if (source_)  // Could be empty if moved
-      source_->Shutdown();
+    {
+      source_->terminate.Notify();
+      source_->thread.Join();
+      source_->source.Shutdown();
+    }
   }
 
   void AddUniverse(const UniverseParams& params)
   {
-    ASSERT_EQ(universes_.find(params.universe), universes_.end());
-
-    universes_[params.universe] = std::make_unique<UniverseState>();
-    ASSERT_TRUE(universes_[params.universe]);
-    auto& state = *universes_[params.universe];
-
-    for (const auto& start_code : params.start_codes)
+    ASSERT_TRUE(source_);
+    if (source_)
     {
-      ASSERT_TRUE((start_code.code == SACN_STARTCODE_DMX) || (start_code.code == SACN_STARTCODE_PRIORITY));
-      switch (start_code.code)
+      etcpal::MutexGuard guard(source_->universes_lock);
+
+      ASSERT_EQ(source_->universes.find(params.universe), source_->universes.end());
+
+      auto& state = source_->universes[params.universe];
+
+      for (const auto& start_code : params.start_codes)
       {
-        case SACN_STARTCODE_DMX:
-          state.null_start_code = StartCodeState(start_code);
-          break;
-        case SACN_STARTCODE_PRIORITY:
-          state.pap_start_code = StartCodeState(start_code);
-          break;
+        ASSERT_TRUE((start_code.code == SACN_STARTCODE_DMX) || (start_code.code == SACN_STARTCODE_PRIORITY));
+        switch (start_code.code)
+        {
+          case SACN_STARTCODE_DMX:
+            state.null_start_code = StartCodeState(start_code);
+            break;
+          case SACN_STARTCODE_PRIORITY:
+            state.pap_start_code = StartCodeState(start_code);
+            break;
+        }
       }
+
+      sacn::Source::UniverseSettings settings;
+      settings.universe = params.universe;
+      settings.priority = params.universe_priority;
+
+      EXPECT_TRUE(source_->source.AddUniverse(settings, initial_mcast_mode_));
     }
-
-    sacn::Source::UniverseSettings settings;
-    settings.universe = params.universe;
-    settings.priority = params.universe_priority;
-    EXPECT_TRUE(source_->AddUniverse(settings, initial_mcast_mode_));
-
-    auto& source = *source_;
-    state.thread.Start([params, &source, &state]() {
-      while (!state.terminate.TryWait())
-      {
-        UniverseTick(source, params.universe, state);
-        etcpal::Thread::Sleep(kUniverseSleepMs);
-      }
-    });
   }
 
   void RemoveUniverse(UniverseId universe_id = kDefaultUniverse)
   {
-    ASSERT_NE(universes_.find(universe_id), universes_.end());
+    ASSERT_TRUE(source_);
+    if (source_)
+    {
+      etcpal::MutexGuard guard(source_->universes_lock);
 
-    universes_[universe_id]->terminate.Notify();
-    universes_[universe_id]->thread.Join();
-
-    universes_.erase(universe_id);
-
-    source_->RemoveUniverse(universe_id);
+      ASSERT_NE(source_->universes.find(universe_id), source_->universes.end());
+      source_->universes.erase(universe_id);
+      source_->source.RemoveUniverse(universe_id);
+    }
   }
 
 private:
-  static constexpr unsigned int kUniverseSleepMs = 500u;
+  static constexpr unsigned int kSleepMs = 500u;
 
   struct StartCodeState
   {
@@ -289,8 +301,16 @@ private:
   {
     StartCodeState null_start_code;
     std::optional<StartCodeState> pap_start_code;
+  };
+
+  struct SourceState
+  {
+    sacn::Source source;
+    std::unordered_map<UniverseId, UniverseState> universes;
+
     etcpal::Thread thread;
     etcpal::Signal terminate;
+    etcpal::Mutex universes_lock;
   };
 
   static void UniverseTick(sacn::Source& source, UniverseId universe_id, UniverseState& state)
@@ -330,8 +350,7 @@ private:
     return false;
   }
 
-  std::unique_ptr<sacn::Source> source_;
-  std::unordered_map<UniverseId, std::unique_ptr<UniverseState>> universes_;
+  std::unique_ptr<SourceState> source_;
   sacn::McastMode initial_mcast_mode_{sacn::McastMode::kEnabledOnAllInterfaces};
 };
 
