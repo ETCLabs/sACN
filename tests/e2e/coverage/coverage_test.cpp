@@ -399,7 +399,7 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
   static constexpr int kNumUniverses = 12;
 
   TestMergeReceiver merge_receiver;
-  for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
+  for (uint16_t universe_id = 20u; universe_id <= 25; ++universe_id)
   {
     merge_receiver.AddUniverse(universe_id);
     EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleMergedData(_, _)).Times(AtLeast(1));
@@ -408,7 +408,7 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
   merge_receiver.StartAllUniverses();
 
   TestSource source;
-  for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
+  for (uint16_t universe_id = 1u; universe_id <= 25; ++universe_id)
     source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
 
   etcpal::Thread::Sleep(11000u);  // Time for source detector to detect sources
