@@ -50,21 +50,21 @@
 #define IS_UNIVERSE_DATA(send_buf)                                                          \
   ((etcpal_unpack_u32b(&send_buf[SACN_ROOT_VECTOR_OFFSET]) == ACN_VECTOR_ROOT_E131_DATA) && \
    (etcpal_unpack_u32b(&send_buf[SACN_FRAMING_VECTOR_OFFSET]) == VECTOR_E131_DATA_PACKET))
-#define VERIFY_LOCKING(function_call)                                  \
-  do                                                                   \
-  {                                                                    \
-    unsigned int previous_lock_count = sacn_lock_fake.call_count;      \
-    function_call;                                                     \
-    EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);         \
-    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count); \
+#define VERIFY_LOCKING(function_call)                                                \
+  do                                                                                 \
+  {                                                                                  \
+    unsigned int previous_lock_count = sacn_source_lock_fake.call_count;             \
+    function_call;                                                                   \
+    EXPECT_NE(sacn_source_lock_fake.call_count, previous_lock_count);                \
+    EXPECT_EQ(sacn_source_lock_fake.call_count, sacn_source_unlock_fake.call_count); \
   } while (0)
-#define VERIFY_LOCKING_AND_RETURN_VALUE(function_call, expected_return_value) \
-  do                                                                          \
-  {                                                                           \
-    unsigned int previous_lock_count = sacn_lock_fake.call_count;             \
-    EXPECT_EQ(function_call, expected_return_value);                          \
-    EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);                \
-    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);        \
+#define VERIFY_LOCKING_AND_RETURN_VALUE(function_call, expected_return_value)        \
+  do                                                                                 \
+  {                                                                                  \
+    unsigned int previous_lock_count = sacn_source_lock_fake.call_count;             \
+    EXPECT_EQ(function_call, expected_return_value);                                 \
+    EXPECT_NE(sacn_source_lock_fake.call_count, previous_lock_count);                \
+    EXPECT_EQ(sacn_source_lock_fake.call_count, sacn_source_unlock_fake.call_count); \
   } while (0)
 
 static const SacnSourceConfig kTestSourceConfig = {

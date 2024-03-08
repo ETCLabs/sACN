@@ -110,7 +110,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       sacn_receiver_t receiver_handle = SACN_RECEIVER_INVALID;
       SacnReceiverConfig receiver_config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
@@ -191,7 +191,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
 #endif
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -229,7 +229,7 @@ etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
   {
     if (merge_receiver_cb_lock())
     {
-      if (sacn_lock())
+      if (sacn_receiver_lock())
       {
         SacnMergeReceiver* merge_receiver = NULL;
         result = lookup_merge_receiver(handle, &merge_receiver);
@@ -244,7 +244,7 @@ etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
           remove_sacn_merge_receiver(handle);
         }
 
-        sacn_unlock();
+        sacn_receiver_unlock();
       }
       else
       {
@@ -326,7 +326,7 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       SacnMergeReceiver* merge_receiver = NULL;
       result = lookup_merge_receiver(handle, &merge_receiver);
@@ -355,7 +355,7 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
       if (result == kEtcPalErrOk)
         clear_sacn_merge_receiver_sources(merge_receiver);
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -558,7 +558,7 @@ etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t merge_receiv
     return kEtcPalErrInvalid;
   }
 
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     SacnMergeReceiver* merge_receiver = NULL;
     SacnMergeReceiverInternalSource* source = NULL;
@@ -585,7 +585,7 @@ etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t merge_receiv
       source_info->universe_priority = source->universe_priority;
     }
 
-    sacn_unlock();
+    sacn_receiver_unlock();
     return res;
   }
 
@@ -618,7 +618,7 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
     SacnMergeReceiverNonDmxCallback non_dmx_callback = NULL;
     void* context = NULL;
 
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       SacnMergeReceiver* merge_receiver = NULL;
       if (lookup_merge_receiver((sacn_merge_receiver_t)receiver_handle, &merge_receiver) == kEtcPalErrOk)
@@ -689,7 +689,7 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
         context = merge_receiver->callbacks.callback_context;
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
 
     if (!merged_data_notification)
@@ -733,7 +733,7 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
     SacnMergeReceiverSourcesLostCallback sources_lost_callback = NULL;
     void* context = NULL;
 
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       SacnMergeReceiver* merge_receiver = NULL;
       if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk)
@@ -786,7 +786,7 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
         context = merge_receiver->callbacks.callback_context;
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
 
     if (!merged_data_notification)
@@ -826,7 +826,7 @@ void merge_receiver_sampling_started(sacn_receiver_t handle, uint16_t universe, 
     SacnMergeReceiverSamplingPeriodStartedCallback sampling_started_callback = NULL;
     void* context = NULL;
 
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       SacnMergeReceiver* merge_receiver = NULL;
       if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk)
@@ -847,7 +847,7 @@ void merge_receiver_sampling_started(sacn_receiver_t handle, uint16_t universe, 
 #endif
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
 
     if (sampling_started_callback)
@@ -868,7 +868,7 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
     SacnMergeReceiverSamplingPeriodEndedCallback sampling_ended_callback = NULL;
     void* context = NULL;
 
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       SacnMergeReceiver* merge_receiver = NULL;
       if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk)
@@ -935,7 +935,7 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
         context = merge_receiver->callbacks.callback_context;
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
 
     if (!merged_data_notification)
@@ -981,7 +981,7 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
 
     void* context = NULL;
 
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       SacnMergeReceiver* merge_receiver = NULL;
       if ((lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk) &&
@@ -1033,7 +1033,7 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
         }
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
 
     if (!merged_data_notification)
@@ -1072,7 +1072,7 @@ void merge_receiver_source_limit_exceeded(sacn_receiver_t handle, uint16_t unive
     SacnMergeReceiverSourceLimitExceededCallback source_limit_callback = NULL;
     void* context = NULL;
 
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       SacnMergeReceiver* merge_receiver = NULL;
       if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk)
@@ -1081,7 +1081,7 @@ void merge_receiver_source_limit_exceeded(sacn_receiver_t handle, uint16_t unive
         context = merge_receiver->callbacks.callback_context;
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
 
     if (source_limit_callback)

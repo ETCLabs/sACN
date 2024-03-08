@@ -48,7 +48,8 @@ static struct SacnState
   EtcPalLogParams log_params;
 } sacn_pool_sacn_state;
 
-static etcpal_mutex_t sacn_mutex;
+static etcpal_mutex_t sacn_receiver_mutex;
+static etcpal_mutex_t sacn_source_mutex;
 
 /*************************** Function definitions ****************************/
 
@@ -85,11 +86,19 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
     if (res == kEtcPalErrOk)
       etcpal_initted = ((res = etcpal_init(SACN_ETCPAL_FEATURES)) == kEtcPalErrOk);
 
-    bool mutex_initted = false;
+    bool receiver_mutex_initted = false;
     if (res == kEtcPalErrOk)
     {
-      mutex_initted = etcpal_mutex_create(&sacn_mutex);
-      if (!mutex_initted)
+      receiver_mutex_initted = etcpal_mutex_create(&sacn_receiver_mutex);
+      if (!receiver_mutex_initted)
+        res = kEtcPalErrSys;
+    }
+
+    bool source_mutex_initted = false;
+    if (res == kEtcPalErrOk)
+    {
+      source_mutex_initted = etcpal_mutex_create(&sacn_source_mutex);
+      if (!source_mutex_initted)
         res = kEtcPalErrSys;
     }
 
@@ -216,8 +225,10 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
       if (receiver_mem_initted)
         sacn_receiver_mem_deinit();
 #endif  // SACN_RECEIVER_ENABLED
-      if (mutex_initted)
-        etcpal_mutex_destroy(&sacn_mutex);
+      if (source_mutex_initted)
+        etcpal_mutex_destroy(&sacn_source_mutex);
+      if (receiver_mutex_initted)
+        etcpal_mutex_destroy(&sacn_receiver_mutex);
       if (etcpal_initted)
         etcpal_deinit(SACN_ETCPAL_FEATURES);
 
@@ -275,7 +286,8 @@ void sacn_deinit(void)
 #if SACN_RECEIVER_ENABLED
     sacn_receiver_mem_deinit();
 #endif  // SACN_RECEIVER_ENABLED
-    etcpal_mutex_destroy(&sacn_mutex);
+    etcpal_mutex_destroy(&sacn_source_mutex);
+    etcpal_mutex_destroy(&sacn_receiver_mutex);
     etcpal_deinit(SACN_ETCPAL_FEATURES);
 
     sacn_log_params = NULL;
@@ -297,10 +309,10 @@ sacn_remote_source_t sacn_get_remote_source_handle(const EtcPalUuid* source_cid)
 {
   sacn_remote_source_t result = SACN_REMOTE_SOURCE_INVALID;
 
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     result = get_remote_source_handle(source_cid);
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 
   return result;
@@ -328,7 +340,7 @@ etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, Et
   }
   else
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       const EtcPalUuid* cid = get_remote_source_cid(source_handle);
 
@@ -337,7 +349,7 @@ etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, Et
       else
         result = kEtcPalErrNotFound;
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -364,14 +376,24 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
   return false;
 }
 
-bool sacn_lock(void)
+bool sacn_receiver_lock(void)
 {
-  return etcpal_mutex_lock(&sacn_mutex);
+  return etcpal_mutex_lock(&sacn_receiver_mutex);
 }
 
-void sacn_unlock(void)
+void sacn_receiver_unlock(void)
 {
-  etcpal_mutex_unlock(&sacn_mutex);
+  etcpal_mutex_unlock(&sacn_receiver_mutex);
+}
+
+bool sacn_source_lock(void)
+{
+  return etcpal_mutex_lock(&sacn_source_mutex);
+}
+
+void sacn_source_unlock(void)
+{
+  etcpal_mutex_unlock(&sacn_source_mutex);
 }
 
 bool sacn_initialized(void)

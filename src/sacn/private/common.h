@@ -868,8 +868,13 @@ typedef enum
 
 extern const EtcPalLogParams* sacn_log_params;
 
-bool sacn_lock(void);
-void sacn_unlock(void);
+// This lock should be used by the sACN Receiver, Merge Receiver, Source Detector, and DMX Merger APIs.
+bool sacn_receiver_lock(void);
+void sacn_receiver_unlock(void);
+
+// This lock should be used by the sACN Source API.
+bool sacn_source_lock(void);
+void sacn_source_unlock(void);
 
 bool sacn_initialized(void);
 

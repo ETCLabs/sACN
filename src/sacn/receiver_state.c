@@ -130,7 +130,7 @@ void sacn_receiver_state_deinit(void)
   int num_threads_to_deinit = 0;
 
   // Stop all receive threads
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     for (unsigned int i = 0; i < sacn_mem_get_num_threads(); ++i)
     {
@@ -144,13 +144,13 @@ void sacn_receiver_state_deinit(void)
       }
     }
 
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 
   for (int i = 0; i < num_threads_to_deinit; ++i)
     etcpal_thread_join(threads_handles_to_deinit[i]);
 
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     for (int i = 0; i < num_threads_to_deinit; ++i)
     {
@@ -161,7 +161,7 @@ void sacn_receiver_state_deinit(void)
 
     remove_all_receiver_sockets(kPerformAllSocketCleanupNow);  // Thread not running, don't queue cleanup.
 
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 
   etcpal_mutex_destroy(&receiver_cb_mutex);
@@ -470,7 +470,7 @@ void read_network_and_process(SacnRecvThreadContext* context)
   if (!SACN_ASSERT_VERIFY(context))
     return;
 
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     // Unsubscribe before subscribing to avoid surpassing the subscription limit for a socket.
     sacn_unsubscribe_sockets(context);
@@ -480,7 +480,7 @@ void read_network_and_process(SacnRecvThreadContext* context)
     sacn_cleanup_dead_sockets(context);
     sacn_add_pending_sockets(context);
 
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 
   SacnReadResult read_result;
@@ -597,13 +597,13 @@ void sacn_receive_thread(void* arg)
 
   // Create the poll context
   etcpal_error_t poll_init_res = kEtcPalErrSys;
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     poll_init_res = etcpal_poll_context_init(&context->poll_context);
     if (poll_init_res == kEtcPalErrOk)
       context->poll_context_initialized = true;
 
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 
   if (poll_init_res != kEtcPalErrOk)
@@ -618,14 +618,14 @@ void sacn_receive_thread(void* arg)
     read_network_and_process(context);
 
   // Destroy the poll context
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     etcpal_poll_context_deinit(&context->poll_context);
     context->poll_context_initialized = false;
 
     context->running = false;
 
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 }
 
@@ -834,13 +834,13 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     }
 #endif
 
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       SacnReceiver* receiver = NULL;
       if (lookup_receiver_by_universe(universe_data->universe_data.universe_id, &receiver) != kEtcPalErrOk)
       {
         // We are not listening to this universe.
-        sacn_unlock();
+        sacn_receiver_unlock();
         receiver_cb_unlock();
         return;
       }
@@ -850,7 +850,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
       // Drop all packets from netints scheduled for a future sampling period
       if (sp_netint && sp_netint->in_future_sampling_period)
       {
-        sacn_unlock();
+        sacn_receiver_unlock();
         receiver_cb_unlock();
         return;
       }
@@ -873,7 +873,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
           }
           else
           {
-            sacn_unlock();
+            sacn_receiver_unlock();
             receiver_cb_unlock();
             return;
           }
@@ -887,7 +887,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
         // but not yet removed.
         if (src->terminated)
         {
-          sacn_unlock();
+          sacn_receiver_unlock();
           receiver_cb_unlock();
           return;
         }
@@ -895,7 +895,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
         if (!check_sequence(seq, src->seq))
         {
           // Drop the packet
-          sacn_unlock();
+          sacn_receiver_unlock();
           receiver_cb_unlock();
           return;
         }
@@ -946,7 +946,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
         }
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
 
     // Deliver callbacks if applicable.
@@ -1301,7 +1301,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
     SourcesLostNotification* sources_lost = NULL;
     size_t num_sources_lost = 0;
 
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       size_t num_receivers = recv_thread_context->num_receivers;
 
@@ -1311,7 +1311,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
       sources_lost = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
       if (!sampling_started || !sampling_ended || !sources_lost)
       {
-        sacn_unlock();
+        sacn_receiver_unlock();
         receiver_cb_unlock();
         SACN_LOG_ERR("Could not allocate memory to track state data for sACN receivers!");
         return;
@@ -1350,7 +1350,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
         process_receiver_sources(recv_thread_context->thread_id, receiver, &sources_lost[num_sources_lost++]);
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
 
     PeriodicCallbacks periodic_callbacks;

@@ -74,10 +74,10 @@ void handle_sacn_universe_discovery_packet(SacnRecvThreadContext* context, const
   {
     SacnSourceDetector* source_detector = NULL;
 
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       source_detector = context->source_detector;
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
 
     if (source_detector)
@@ -128,7 +128,7 @@ void process_source_detector(SacnRecvThreadContext* recv_thread_context)
   {
     SourceDetectorSourceExpiredNotification source_expired = SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT;
 
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       SacnSourceDetector* source_detector = recv_thread_context->source_detector;
       if (source_detector)
@@ -150,7 +150,7 @@ void process_source_detector(SacnRecvThreadContext* recv_thread_context)
           remove_sacn_universe_discovery_source(source_expired.expired_sources[i].handle);
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
 
     if (source_expired.callback)
@@ -187,7 +187,7 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
   SourceDetectorSourceUpdatedNotification source_updated = SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT;
   SourceDetectorLimitExceededNotification limit_exceeded = SRC_DETECTOR_LIMIT_EXCEEDED_DEFAULT_INIT;
 
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     SacnUniverseDiscoverySource* source = NULL;
     sacn_remote_source_t source_handle = get_remote_source_handle(page->sender_cid);
@@ -308,7 +308,7 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
       }
     }
 
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 
   if (source_updated.callback)

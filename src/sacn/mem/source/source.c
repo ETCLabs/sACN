@@ -207,7 +207,7 @@ etcpal_error_t init_sources(void)
 // Takes lock
 void deinit_sources(void)
 {
-  if (sacn_lock())
+  if (sacn_source_lock())
   {
     if (sources_initialized)
     {
@@ -233,7 +233,7 @@ void deinit_sources(void)
       sources_initialized = false;
     }
 
-    sacn_unlock();
+    sacn_source_unlock();
   }
 }
 

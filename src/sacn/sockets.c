@@ -1083,7 +1083,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
 
           // Obtain the network interface the packet came in on using one of two configured methods
 #if SACN_RECEIVER_SOCKET_PER_NIC
-          if (sacn_lock())
+          if (sacn_receiver_lock())
           {
             int index = find_socket_ref_by_handle(recv_thread_context, event.socket);
 
@@ -1098,7 +1098,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
               recv_res = kEtcPalErrNoSockets;
             }
 
-            sacn_unlock();
+            sacn_receiver_unlock();
           }
 #else   // SACN_RECEIVER_SOCKET_PER_NIC
           if ((msg.flags & ETCPAL_MSG_CTRUNC) || !get_netint_id(&msg, &read_result->netint))

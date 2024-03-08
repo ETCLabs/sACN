@@ -28,8 +28,10 @@ extern "C" {
 #endif
 
 DECLARE_FAKE_VALUE_FUNC(bool, sacn_initialized);
-DECLARE_FAKE_VALUE_FUNC(bool, sacn_lock);
-DECLARE_FAKE_VOID_FUNC(sacn_unlock);
+DECLARE_FAKE_VALUE_FUNC(bool, sacn_receiver_lock);
+DECLARE_FAKE_VOID_FUNC(sacn_receiver_unlock);
+DECLARE_FAKE_VALUE_FUNC(bool, sacn_source_lock);
+DECLARE_FAKE_VOID_FUNC(sacn_source_unlock);
 
 void sacn_common_reset_all_fakes(void);
 
