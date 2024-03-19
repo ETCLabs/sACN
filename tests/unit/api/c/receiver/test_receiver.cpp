@@ -112,7 +112,7 @@ protected:
         sacn_receiver_change_universe(handle, CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE);
 
     EXPECT_EQ(change_universe_result, kEtcPalErrOk);
-    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);
+    EXPECT_EQ(sacn_receiver_lock_fake.call_count, sacn_receiver_unlock_fake.call_count);
     EXPECT_EQ(sacn_initialized_fake.call_count, 2u);
     EXPECT_EQ(clear_term_set_list_fake.call_count, 1u);
 
@@ -303,13 +303,13 @@ TEST_F(TestReceiver, ChangeUniverseErrNotFoundWorks)
 
 TEST_F(TestReceiver, ChangeUniverseErrSysWorks)
 {
-  sacn_lock_fake.return_val = false;
+  sacn_receiver_lock_fake.return_val = false;
 
   etcpal_error_t change_universe_err_sys_result =
       sacn_receiver_change_universe(sacn_receiver_t(), CHANGE_UNIVERSE_VALID_UNIVERSE_1);
   EXPECT_EQ(change_universe_err_sys_result, kEtcPalErrSys);
 
-  sacn_lock_fake.return_val = true;
+  sacn_receiver_lock_fake.return_val = true;
 
   etcpal_error_t change_universe_no_err_sys_result =
       sacn_receiver_change_universe(sacn_receiver_t(), CHANGE_UNIVERSE_VALID_UNIVERSE_1);

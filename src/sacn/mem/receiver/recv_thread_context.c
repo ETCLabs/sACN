@@ -32,7 +32,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_RECEIVER_ENABLED
+#if SACN_RECEIVER_ENABLED || DOXYGEN
 
 /**************************** Private variables ******************************/
 
@@ -45,7 +45,7 @@ static SacnRecvThreadContext sacn_pool_recv_thread_context[SACN_RECEIVER_MAX_THR
 /*********************** Private function prototypes *************************/
 
 // Dynamic memory initialization
-static etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context);
+static etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context, sacn_thread_id_t thread_id);
 
 // Dynamic memory deinitialization
 static void deinit_recv_thread_context_entry(SacnRecvThreadContext* context);
@@ -69,7 +69,7 @@ SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id)
   if (thread_id < sacn_mem_get_num_threads())
   {
     SacnRecvThreadContext* to_return = &sacn_pool_recv_thread_context[thread_id];
-    to_return->thread_id = thread_id;
+    SACN_ASSERT_VERIFY(to_return->thread_id == thread_id);
     return to_return;
   }
   return NULL;
@@ -356,17 +356,19 @@ etcpal_error_t init_recv_thread_context_buf(unsigned int num_threads)
 
   for (unsigned int i = 0; i < num_threads; ++i)
   {
-    etcpal_error_t res = init_recv_thread_context_entry(&sacn_pool_recv_thread_context[i]);
+    etcpal_error_t res = init_recv_thread_context_entry(&sacn_pool_recv_thread_context[i], i);
     if (res != kEtcPalErrOk)
       return res;
   }
   return kEtcPalErrOk;
 }
 
-etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
+etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context, sacn_thread_id_t thread_id)
 {
   if (!SACN_ASSERT_VERIFY(context))
     return kEtcPalErrSys;
+
+  context->thread_id = thread_id;
 
 #if SACN_DYNAMIC_MEM
   context->dead_sockets = calloc(INITIAL_CAPACITY, sizeof(ReceiveSocket));
@@ -403,6 +405,7 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context)
 
   context->source_detector = NULL;
 
+  etcpal_signal_create(&context->deinit_signal);
   context->running = false;
   context->poll_context_initialized = false;
   context->periodic_timer_started = false;
@@ -435,6 +438,8 @@ void deinit_recv_thread_context_entry(SacnRecvThreadContext* context)
   CLEAR_BUF(context, socket_refs);
   CLEAR_BUF(context, subscribes);
   CLEAR_BUF(context, unsubscribes);
+
+  etcpal_signal_destroy(&context->deinit_signal);
 }
 
 bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_socket_t sock, const EtcPalGroupReq* group)
@@ -467,4 +472,4 @@ bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_sock
   return found;
 }
 
-#endif  // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED || DOXYGEN

@@ -32,6 +32,7 @@
 #include "etcpal/mutex.h"
 #include "etcpal/log.h"
 #include "etcpal/rbtree.h"
+#include "etcpal/signal.h"
 #include "etcpal/socket.h"
 #include "etcpal/timer.h"
 #include "sacn/receiver.h"
@@ -667,6 +668,7 @@ typedef struct SacnRecvThreadContext
 {
   sacn_thread_id_t thread_id;
   etcpal_thread_t thread_handle;
+  etcpal_signal_t deinit_signal;
   bool running;
 
   SacnReceiver* receivers;
@@ -866,8 +868,13 @@ typedef enum
 
 extern const EtcPalLogParams* sacn_log_params;
 
-bool sacn_lock(void);
-void sacn_unlock(void);
+// This lock should be used by the sACN Receiver, Merge Receiver, Source Detector, and DMX Merger APIs.
+bool sacn_receiver_lock(void);
+void sacn_receiver_unlock(void);
+
+// This lock should be used by the sACN Source API.
+bool sacn_source_lock(void);
+void sacn_source_unlock(void);
 
 bool sacn_initialized(void);
 

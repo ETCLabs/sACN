@@ -29,6 +29,16 @@
 
 #if SACN_MERGE_RECEIVER_ENABLED || DOXYGEN
 
+/**************************** Private variables ******************************/
+
+// Used so that callbacks are never called for a destroyed merge receiver.
+static etcpal_mutex_t merge_receiver_cb_mutex;
+
+/*********************** Private function prototypes *************************/
+
+static bool merge_receiver_cb_lock();
+static void merge_receiver_cb_unlock();
+
 /*************************** Function definitions ****************************/
 
 /**************************************************************************************************
@@ -38,13 +48,13 @@
 /* Initialize the sACN Merge Receiver module. Internal function called from sacn_init(). */
 etcpal_error_t sacn_merge_receiver_init(void)
 {
-  return kEtcPalErrOk;  // Nothing to do here.
+  return etcpal_mutex_create(&merge_receiver_cb_mutex) ? kEtcPalErrOk : kEtcPalErrSys;
 }
 
 /* Deinitialize the sACN Merge Receiver module. Internal function called from sacn_deinit(). */
 void sacn_merge_receiver_deinit(void)
 {
-  // Nothing to do here.
+  etcpal_mutex_destroy(&merge_receiver_cb_mutex);
 }
 
 /**
@@ -100,7 +110,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       sacn_receiver_t receiver_handle = SACN_RECEIVER_INVALID;
       SacnReceiverConfig receiver_config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
@@ -181,7 +191,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
 #endif
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -194,6 +204,10 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
 
 /**
  * @brief Destroy a sACN Merge Receiver instance.
+ *
+ * WARNING: Calling this from a merge receiver callback will deadlock!
+ *
+ * After this function completes, callbacks will no longer be called for this merge receiver.
  *
  * @param[in] handle Handle to the merge receiver to destroy.
  * @return #kEtcPalErrOk: Merge receiver destroyed successfully.
@@ -213,22 +227,31 @@ etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (merge_receiver_cb_lock())
     {
-      SacnMergeReceiver* merge_receiver = NULL;
-      result = lookup_merge_receiver(handle, &merge_receiver);
-
-      if (result == kEtcPalErrOk)
+      if (sacn_receiver_lock())
       {
-        destroy_sacn_receiver((sacn_receiver_t)handle);
-        destroy_sacn_dmx_merger(merge_receiver->merger_handle);
+        SacnMergeReceiver* merge_receiver = NULL;
+        result = lookup_merge_receiver(handle, &merge_receiver);
+
+        if (result == kEtcPalErrOk)
+        {
+          destroy_sacn_receiver((sacn_receiver_t)handle);
+          destroy_sacn_dmx_merger(merge_receiver->merger_handle);
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
-        destroy_sacn_dmx_merger(merge_receiver->sampling_merger_handle);
+          destroy_sacn_dmx_merger(merge_receiver->sampling_merger_handle);
 #endif
-        remove_sacn_merge_receiver(handle);
+          remove_sacn_merge_receiver(handle);
+        }
+
+        sacn_receiver_unlock();
+      }
+      else
+      {
+        result = kEtcPalErrSys;
       }
 
-      sacn_unlock();
+      merge_receiver_cb_unlock();
     }
     else
     {
@@ -303,7 +326,7 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       SacnMergeReceiver* merge_receiver = NULL;
       result = lookup_merge_receiver(handle, &merge_receiver);
@@ -332,7 +355,7 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
       if (result == kEtcPalErrOk)
         clear_sacn_merge_receiver_sources(merge_receiver);
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -535,7 +558,7 @@ etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t merge_receiv
     return kEtcPalErrInvalid;
   }
 
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     SacnMergeReceiver* merge_receiver = NULL;
     SacnMergeReceiverInternalSource* source = NULL;
@@ -562,7 +585,7 @@ etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t merge_receiv
       source_info->universe_priority = source->universe_priority;
     }
 
-    sacn_unlock();
+    sacn_receiver_unlock();
     return res;
   }
 
@@ -584,108 +607,113 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
     return;
   }
 
-  sacn_remote_source_t source_handle = source_info->handle;
-
-  // Reuse source_handle for the DMX merger's source IDs, so it can be used in the merged_data callback.
-  sacn_dmx_merger_source_t merger_source_handle = (sacn_dmx_merger_source_t)source_handle;
-
-  MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
-  SacnMergeReceiverNonDmxCallback non_dmx_callback = NULL;
-  void* context = NULL;
-
-  if (sacn_lock())
+  if (merge_receiver_cb_lock())
   {
-    SacnMergeReceiver* merge_receiver = NULL;
-    if (lookup_merge_receiver((sacn_merge_receiver_t)receiver_handle, &merge_receiver) == kEtcPalErrOk)
+    sacn_remote_source_t source_handle = source_info->handle;
+
+    // Reuse source_handle for the DMX merger's source IDs, so it can be used in the merged_data callback.
+    sacn_dmx_merger_source_t merger_source_handle = (sacn_dmx_merger_source_t)source_handle;
+
+    MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
+    SacnMergeReceiverNonDmxCallback non_dmx_callback = NULL;
+    void* context = NULL;
+
+    if (sacn_receiver_lock())
     {
+      SacnMergeReceiver* merge_receiver = NULL;
+      if (lookup_merge_receiver((sacn_merge_receiver_t)receiver_handle, &merge_receiver) == kEtcPalErrOk)
+      {
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
-      bool sampling = universe_data->is_sampling;
-      sacn_dmx_merger_t merger_handle =
-          sampling ? merge_receiver->sampling_merger_handle : merge_receiver->merger_handle;
+        bool sampling = universe_data->is_sampling;
+        sacn_dmx_merger_t merger_handle =
+            sampling ? merge_receiver->sampling_merger_handle : merge_receiver->merger_handle;
 #else
-      bool sampling = merge_receiver->sampling;
-      sacn_dmx_merger_t merger_handle = merge_receiver->merger_handle;
+        bool sampling = merge_receiver->sampling;
+        sacn_dmx_merger_t merger_handle = merge_receiver->merger_handle;
 #endif
-      SacnMergeReceiverInternalSource* source = NULL;
-      if (lookup_merge_receiver_source(merge_receiver, source_handle, &source) == kEtcPalErrOk)
-      {
-        update_merge_receiver_source_info(source, source_addr, source_info, universe_data);
-      }
-      else
-      {
-        add_sacn_dmx_merger_source_with_handle(merger_handle, merger_source_handle);
-
-        add_sacn_merge_receiver_source(merge_receiver, source_addr, source_info, sampling, universe_data);
-      }
-
-      bool new_merge_occurred = false;
-      if ((universe_data->slot_range.address_count > 0) &&
-          (universe_data->slot_range.address_count <= DMX_ADDRESS_COUNT))
-      {
-        if (universe_data->start_code == SACN_STARTCODE_DMX)
+        SacnMergeReceiverInternalSource* source = NULL;
+        if (lookup_merge_receiver_source(merge_receiver, source_handle, &source) == kEtcPalErrOk)
         {
-          update_sacn_dmx_merger_levels(merger_handle, merger_source_handle, universe_data->values,
-                                        universe_data->slot_range.address_count);
-          update_sacn_dmx_merger_universe_priority(merger_handle, merger_source_handle, universe_data->priority);
-          new_merge_occurred = true;
-        }
-        else if ((universe_data->start_code == SACN_STARTCODE_PRIORITY) && merge_receiver->use_pap)
-        {
-          update_sacn_dmx_merger_pap(merger_handle, merger_source_handle, universe_data->values,
-                                     universe_data->slot_range.address_count);
-          new_merge_occurred = true;
-        }
-      }
-
-      // Notify if needed.
-      if (merged_data_notification && new_merge_occurred && !sampling)
-      {
-        if (add_active_sources(merged_data_notification, merge_receiver))
-        {
-          merged_data_notification->callback = merge_receiver->callbacks.universe_data;
-          merged_data_notification->handle = (sacn_merge_receiver_t)receiver_handle;
-          merged_data_notification->universe = universe_data->universe_id;
-          merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-          merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-          memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
-          memcpy(merged_data_notification->priorities, merge_receiver->priorities, DMX_ADDRESS_COUNT);
-          memcpy(merged_data_notification->owners, merge_receiver->owners,
-                 DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+          update_merge_receiver_source_info(source, source_addr, source_info, universe_data);
         }
         else
         {
-          merged_data_notification = NULL;  // Use NULL to indicate we failed to fully allocate the notification
+          add_sacn_dmx_merger_source_with_handle(merger_handle, merger_source_handle);
+
+          add_sacn_merge_receiver_source(merge_receiver, source_addr, source_info, sampling, universe_data);
         }
+
+        bool new_merge_occurred = false;
+        if ((universe_data->slot_range.address_count > 0) &&
+            (universe_data->slot_range.address_count <= DMX_ADDRESS_COUNT))
+        {
+          if (universe_data->start_code == SACN_STARTCODE_DMX)
+          {
+            update_sacn_dmx_merger_levels(merger_handle, merger_source_handle, universe_data->values,
+                                          universe_data->slot_range.address_count);
+            update_sacn_dmx_merger_universe_priority(merger_handle, merger_source_handle, universe_data->priority);
+            new_merge_occurred = true;
+          }
+          else if ((universe_data->start_code == SACN_STARTCODE_PRIORITY) && merge_receiver->use_pap)
+          {
+            update_sacn_dmx_merger_pap(merger_handle, merger_source_handle, universe_data->values,
+                                       universe_data->slot_range.address_count);
+            new_merge_occurred = true;
+          }
+        }
+
+        // Notify if needed.
+        if (merged_data_notification && new_merge_occurred && !sampling)
+        {
+          if (add_active_sources(merged_data_notification, merge_receiver))
+          {
+            merged_data_notification->callback = merge_receiver->callbacks.universe_data;
+            merged_data_notification->handle = (sacn_merge_receiver_t)receiver_handle;
+            merged_data_notification->universe = universe_data->universe_id;
+            merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
+            merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
+            memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
+            memcpy(merged_data_notification->priorities, merge_receiver->priorities, DMX_ADDRESS_COUNT);
+            memcpy(merged_data_notification->owners, merge_receiver->owners,
+                   DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+          }
+          else
+          {
+            merged_data_notification = NULL;  // Use NULL to indicate we failed to fully allocate the notification
+          }
+        }
+
+        if ((universe_data->start_code != SACN_STARTCODE_DMX) && (universe_data->start_code != SACN_STARTCODE_PRIORITY))
+          non_dmx_callback = merge_receiver->callbacks.universe_non_dmx;
+
+        context = merge_receiver->callbacks.callback_context;
       }
 
-      if ((universe_data->start_code != SACN_STARTCODE_DMX) && (universe_data->start_code != SACN_STARTCODE_PRIORITY))
-        non_dmx_callback = merge_receiver->callbacks.universe_non_dmx;
-
-      context = merge_receiver->callbacks.callback_context;
+      sacn_receiver_unlock();
     }
 
-    sacn_unlock();
+    if (!merged_data_notification)
+      SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
+
+    if (merged_data_notification && merged_data_notification->callback)
+    {
+      SacnRecvMergedData merged_data;
+      merged_data.universe_id = merged_data_notification->universe;
+      merged_data.slot_range = merged_data_notification->slot_range;
+      merged_data.levels = merged_data_notification->levels;
+      merged_data.priorities = merged_data_notification->priorities;
+      merged_data.owners = merged_data_notification->owners;
+      merged_data.active_sources = merged_data_notification->active_sources;
+      merged_data.num_active_sources = merged_data_notification->num_active_sources;
+
+      merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
+    }
+
+    if (non_dmx_callback)
+      non_dmx_callback((sacn_merge_receiver_t)receiver_handle, source_addr, source_info, universe_data, context);
+
+    merge_receiver_cb_unlock();
   }
-
-  if (!merged_data_notification)
-    SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
-
-  if (merged_data_notification && merged_data_notification->callback)
-  {
-    SacnRecvMergedData merged_data;
-    merged_data.universe_id = merged_data_notification->universe;
-    merged_data.slot_range = merged_data_notification->slot_range;
-    merged_data.levels = merged_data_notification->levels;
-    merged_data.priorities = merged_data_notification->priorities;
-    merged_data.owners = merged_data_notification->owners;
-    merged_data.active_sources = merged_data_notification->active_sources;
-    merged_data.num_active_sources = merged_data_notification->num_active_sources;
-
-    merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
-  }
-
-  if (non_dmx_callback)
-    non_dmx_callback((sacn_merge_receiver_t)receiver_handle, source_addr, source_info, universe_data, context);
 }
 
 void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
@@ -699,266 +727,41 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
 
   ETCPAL_UNUSED_ARG(universe);
 
-  MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
-  SacnMergeReceiverSourcesLostCallback sources_lost_callback = NULL;
-  void* context = NULL;
-
-  if (sacn_lock())
+  if (merge_receiver_cb_lock())
   {
-    SacnMergeReceiver* merge_receiver = NULL;
-    if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk)
+    MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
+    SacnMergeReceiverSourcesLostCallback sources_lost_callback = NULL;
+    void* context = NULL;
+
+    if (sacn_receiver_lock())
     {
-      bool non_sampling_merge_occurred = false;
-      for (size_t i = 0; i < num_lost_sources; ++i)
+      SacnMergeReceiver* merge_receiver = NULL;
+      if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk)
       {
-        SacnMergeReceiverInternalSource* source = NULL;
-        lookup_merge_receiver_source(merge_receiver, lost_sources[i].handle, &source);
-        if (SACN_ASSERT_VERIFY(source))
+        bool non_sampling_merge_occurred = false;
+        for (size_t i = 0; i < num_lost_sources; ++i)
         {
-#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
-          sacn_dmx_merger_t merger_handle =
-              source->sampling ? merge_receiver->sampling_merger_handle : merge_receiver->merger_handle;
-#else
-          sacn_dmx_merger_t merger_handle = merge_receiver->merger_handle;
-#endif
-
-          // The receiver handle is interchangable with the DMX Merger source IDs, so use it here via cast.
-          remove_sacn_dmx_merger_source(merger_handle, (sacn_dmx_merger_source_t)source->handle);
-          if (!non_sampling_merge_occurred)
-            non_sampling_merge_occurred = !source->sampling;
-
-          remove_sacn_merge_receiver_source(merge_receiver, source->handle);
-        }
-      }
-
-      if (merged_data_notification && non_sampling_merge_occurred)
-      {
-        if (add_active_sources(merged_data_notification, merge_receiver))
-        {
-          merged_data_notification->callback = merge_receiver->callbacks.universe_data;
-          merged_data_notification->handle = (sacn_merge_receiver_t)handle;
-          merged_data_notification->universe = universe;
-          merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-          merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-          memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
-          memcpy(merged_data_notification->priorities, merge_receiver->priorities, DMX_ADDRESS_COUNT);
-          memcpy(merged_data_notification->owners, merge_receiver->owners,
-                 DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
-        }
-        else
-        {
-          merged_data_notification = NULL;  // Use NULL to indicate we failed to fully allocate the notification
-        }
-      }
-
-      sources_lost_callback = merge_receiver->callbacks.sources_lost;
-
-      context = merge_receiver->callbacks.callback_context;
-    }
-
-    sacn_unlock();
-  }
-
-  if (!merged_data_notification)
-    SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
-
-  if (merged_data_notification && merged_data_notification->callback)
-  {
-    SacnRecvMergedData merged_data;
-    merged_data.universe_id = merged_data_notification->universe;
-    merged_data.slot_range = merged_data_notification->slot_range;
-    merged_data.levels = merged_data_notification->levels;
-    merged_data.priorities = merged_data_notification->priorities;
-    merged_data.owners = merged_data_notification->owners;
-    merged_data.active_sources = merged_data_notification->active_sources;
-    merged_data.num_active_sources = merged_data_notification->num_active_sources;
-
-    merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
-  }
-
-  if (sources_lost_callback)
-    sources_lost_callback((sacn_merge_receiver_t)handle, universe, lost_sources, num_lost_sources, context);
-}
-
-void merge_receiver_sampling_started(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id)
-{
-  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
-    return;
-
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(thread_id);
-
-  SacnMergeReceiverSamplingPeriodStartedCallback sampling_started_callback = NULL;
-  void* context = NULL;
-
-  if (sacn_lock())
-  {
-    SacnMergeReceiver* merge_receiver = NULL;
-    if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk)
-    {
-      sampling_started_callback = merge_receiver->callbacks.sampling_period_started;
-      context = merge_receiver->callbacks.callback_context;
-
-      merge_receiver->sampling = true;
-
-#if !SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
-      EtcPalRbIter iter;
-      etcpal_rbiter_init(&iter);
-      for (SacnMergeReceiverInternalSource* source = etcpal_rbiter_first(&iter, &merge_receiver->sources); source;
-           source = etcpal_rbiter_next(&iter))
-      {
-        source->sampling = true;
-      }
-#endif
-    }
-
-    sacn_unlock();
-  }
-
-  if (sampling_started_callback)
-    sampling_started_callback((sacn_merge_receiver_t)handle, universe, context);
-}
-
-void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id)
-{
-  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
-    return;
-
-  MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
-  SacnMergeReceiverSamplingPeriodEndedCallback sampling_ended_callback = NULL;
-  void* context = NULL;
-
-  if (sacn_lock())
-  {
-    SacnMergeReceiver* merge_receiver = NULL;
-    if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk)
-    {
-      merge_receiver->sampling = false;
-
-      EtcPalRbIter iter;
-      etcpal_rbiter_init(&iter);
-      for (SacnMergeReceiverInternalSource* source = etcpal_rbiter_first(&iter, &merge_receiver->sources); source;
-           source = etcpal_rbiter_next(&iter))
-      {
-#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
-        // End of sampling period reached, so we'll copy the merge data from the sampling merger to the output merger
-        if (source->sampling)
-        {
-          sacn_dmx_merger_source_t merger_source_handle = (sacn_dmx_merger_source_t)source->handle;
-
-          MergerState* merger_state = NULL;
-          SourceState* source_state = NULL;
-          lookup_state(merge_receiver->sampling_merger_handle, merger_source_handle, &merger_state, &source_state);
-          if (SACN_ASSERT_VERIFY(source_state))
+          SacnMergeReceiverInternalSource* source = NULL;
+          lookup_merge_receiver_source(merge_receiver, lost_sources[i].handle, &source);
+          if (SACN_ASSERT_VERIFY(source))
           {
-            add_sacn_dmx_merger_source_with_handle(merge_receiver->merger_handle, merger_source_handle);
-            update_sacn_dmx_merger_levels(merge_receiver->merger_handle, merger_source_handle,
-                                          source_state->source.levels, source_state->source.valid_level_count);
-            update_sacn_dmx_merger_universe_priority(merge_receiver->merger_handle, merger_source_handle,
-                                                     source_state->source.universe_priority);
-            if (!source_state->source.using_universe_priority)
-            {
-              update_sacn_dmx_merger_pap(merge_receiver->merger_handle, merger_source_handle,
-                                         source_state->source.address_priority, source_state->source.valid_level_count);
-            }
+#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+            sacn_dmx_merger_t merger_handle =
+                source->sampling ? merge_receiver->sampling_merger_handle : merge_receiver->merger_handle;
+#else
+            sacn_dmx_merger_t merger_handle = merge_receiver->merger_handle;
+#endif
 
-            remove_sacn_dmx_merger_source(merge_receiver->sampling_merger_handle, merger_source_handle);
+            // The receiver handle is interchangable with the DMX Merger source IDs, so use it here via cast.
+            remove_sacn_dmx_merger_source(merger_handle, (sacn_dmx_merger_source_t)source->handle);
+            if (!non_sampling_merge_occurred)
+              non_sampling_merge_occurred = !source->sampling;
+
+            remove_sacn_merge_receiver_source(merge_receiver, source->handle);
           }
         }
-#endif
-        source->sampling = false;
-      }
 
-      if (merged_data_notification && (etcpal_rbtree_size(&merge_receiver->sources) > 0))
-      {
-        if (add_active_sources(merged_data_notification, merge_receiver))
-        {
-          merged_data_notification->callback = merge_receiver->callbacks.universe_data;
-          merged_data_notification->handle = (sacn_merge_receiver_t)handle;
-          merged_data_notification->universe = universe;
-          merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-          merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-          memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
-          memcpy(merged_data_notification->priorities, merge_receiver->priorities, DMX_ADDRESS_COUNT);
-          memcpy(merged_data_notification->owners, merge_receiver->owners,
-                 DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
-        }
-        else
-        {
-          merged_data_notification = NULL;  // Use NULL to indicate we failed to fully allocate the notification
-        }
-      }
-
-      sampling_ended_callback = merge_receiver->callbacks.sampling_period_ended;
-
-      context = merge_receiver->callbacks.callback_context;
-    }
-
-    sacn_unlock();
-  }
-
-  if (!merged_data_notification)
-    SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
-
-  if (merged_data_notification && merged_data_notification->callback)
-  {
-    SacnRecvMergedData merged_data;
-    merged_data.universe_id = merged_data_notification->universe;
-    merged_data.slot_range = merged_data_notification->slot_range;
-    merged_data.levels = merged_data_notification->levels;
-    merged_data.priorities = merged_data_notification->priorities;
-    merged_data.owners = merged_data_notification->owners;
-    merged_data.active_sources = merged_data_notification->active_sources;
-    merged_data.num_active_sources = merged_data_notification->num_active_sources;
-
-    merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
-  }
-
-  // Call this after merged data
-  if (sampling_ended_callback)
-    sampling_ended_callback((sacn_merge_receiver_t)handle, universe, context);
-}
-
-void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
-                             sacn_thread_id_t thread_id)
-{
-  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(source) ||
-      !SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
-  {
-    return;
-  }
-
-  MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
-
-  SacnMergeReceiverSourcePapLostCallback source_pap_lost_callback = NULL;
-  SacnRemoteSource remote_source;
-
-  void* context = NULL;
-
-  if (sacn_lock())
-  {
-    SacnMergeReceiver* merge_receiver = NULL;
-    if ((lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk) &&
-        merge_receiver->use_pap)
-    {
-      SacnMergeReceiverInternalSource* internal_source = NULL;
-      lookup_merge_receiver_source(merge_receiver, source->handle, &internal_source);
-
-      if (SACN_ASSERT_VERIFY(internal_source))
-      {
-        internal_source->per_address_priorities_active = false;
-
-#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
-        sacn_dmx_merger_t merger_handle =
-            internal_source->sampling ? merge_receiver->sampling_merger_handle : merge_receiver->merger_handle;
-#else
-        sacn_dmx_merger_t merger_handle = merge_receiver->merger_handle;
-#endif
-
-        // The receiver handle is interchangable with the DMX Merger source IDs, so use it here via cast.
-        remove_sacn_dmx_merger_pap(merger_handle, (sacn_dmx_merger_source_t)source->handle);
-
-        if (merged_data_notification && !internal_source->sampling)
+        if (merged_data_notification && non_sampling_merge_occurred)
         {
           if (add_active_sources(merged_data_notification, merge_receiver))
           {
@@ -978,37 +781,283 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
           }
         }
 
-        remote_source.handle = source->handle;
-        memcpy(remote_source.cid.data, source->cid.data, ETCPAL_UUID_BYTES);
-        memcpy(remote_source.name, source->name, SACN_SOURCE_NAME_MAX_LEN);
+        sources_lost_callback = merge_receiver->callbacks.sources_lost;
 
-        source_pap_lost_callback = merge_receiver->callbacks.source_pap_lost;
         context = merge_receiver->callbacks.callback_context;
       }
+
+      sacn_receiver_unlock();
     }
 
-    sacn_unlock();
+    if (!merged_data_notification)
+      SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
+
+    if (merged_data_notification && merged_data_notification->callback)
+    {
+      SacnRecvMergedData merged_data;
+      merged_data.universe_id = merged_data_notification->universe;
+      merged_data.slot_range = merged_data_notification->slot_range;
+      merged_data.levels = merged_data_notification->levels;
+      merged_data.priorities = merged_data_notification->priorities;
+      merged_data.owners = merged_data_notification->owners;
+      merged_data.active_sources = merged_data_notification->active_sources;
+      merged_data.num_active_sources = merged_data_notification->num_active_sources;
+
+      merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
+    }
+
+    if (sources_lost_callback)
+      sources_lost_callback((sacn_merge_receiver_t)handle, universe, lost_sources, num_lost_sources, context);
+
+    merge_receiver_cb_unlock();
   }
+}
 
-  if (!merged_data_notification)
-    SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
+void merge_receiver_sampling_started(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id)
+{
+  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
+    return;
 
-  if (merged_data_notification && merged_data_notification->callback)
+  ETCPAL_UNUSED_ARG(universe);
+  ETCPAL_UNUSED_ARG(thread_id);
+
+  if (merge_receiver_cb_lock())
   {
-    SacnRecvMergedData merged_data;
-    merged_data.universe_id = merged_data_notification->universe;
-    merged_data.slot_range = merged_data_notification->slot_range;
-    merged_data.levels = merged_data_notification->levels;
-    merged_data.priorities = merged_data_notification->priorities;
-    merged_data.owners = merged_data_notification->owners;
-    merged_data.active_sources = merged_data_notification->active_sources;
-    merged_data.num_active_sources = merged_data_notification->num_active_sources;
+    SacnMergeReceiverSamplingPeriodStartedCallback sampling_started_callback = NULL;
+    void* context = NULL;
 
-    merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
+    if (sacn_receiver_lock())
+    {
+      SacnMergeReceiver* merge_receiver = NULL;
+      if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk)
+      {
+        sampling_started_callback = merge_receiver->callbacks.sampling_period_started;
+        context = merge_receiver->callbacks.callback_context;
+
+        merge_receiver->sampling = true;
+
+#if !SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+        EtcPalRbIter iter;
+        etcpal_rbiter_init(&iter);
+        for (SacnMergeReceiverInternalSource* source = etcpal_rbiter_first(&iter, &merge_receiver->sources); source;
+             source = etcpal_rbiter_next(&iter))
+        {
+          source->sampling = true;
+        }
+#endif
+      }
+
+      sacn_receiver_unlock();
+    }
+
+    if (sampling_started_callback)
+      sampling_started_callback((sacn_merge_receiver_t)handle, universe, context);
+
+    merge_receiver_cb_unlock();
+  }
+}
+
+void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id)
+{
+  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+    return;
+
+  if (merge_receiver_cb_lock())
+  {
+    MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
+    SacnMergeReceiverSamplingPeriodEndedCallback sampling_ended_callback = NULL;
+    void* context = NULL;
+
+    if (sacn_receiver_lock())
+    {
+      SacnMergeReceiver* merge_receiver = NULL;
+      if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk)
+      {
+        merge_receiver->sampling = false;
+
+        EtcPalRbIter iter;
+        etcpal_rbiter_init(&iter);
+        for (SacnMergeReceiverInternalSource* source = etcpal_rbiter_first(&iter, &merge_receiver->sources); source;
+             source = etcpal_rbiter_next(&iter))
+        {
+#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+          // End of sampling period reached, so we'll copy the merge data from the sampling merger to the output merger
+          if (source->sampling)
+          {
+            sacn_dmx_merger_source_t merger_source_handle = (sacn_dmx_merger_source_t)source->handle;
+
+            MergerState* merger_state = NULL;
+            SourceState* source_state = NULL;
+            lookup_state(merge_receiver->sampling_merger_handle, merger_source_handle, &merger_state, &source_state);
+            if (SACN_ASSERT_VERIFY(source_state))
+            {
+              add_sacn_dmx_merger_source_with_handle(merge_receiver->merger_handle, merger_source_handle);
+              update_sacn_dmx_merger_levels(merge_receiver->merger_handle, merger_source_handle,
+                                            source_state->source.levels, source_state->source.valid_level_count);
+              update_sacn_dmx_merger_universe_priority(merge_receiver->merger_handle, merger_source_handle,
+                                                       source_state->source.universe_priority);
+              if (!source_state->source.using_universe_priority)
+              {
+                update_sacn_dmx_merger_pap(merge_receiver->merger_handle, merger_source_handle,
+                                           source_state->source.address_priority,
+                                           source_state->source.valid_level_count);
+              }
+
+              remove_sacn_dmx_merger_source(merge_receiver->sampling_merger_handle, merger_source_handle);
+            }
+          }
+#endif
+          source->sampling = false;
+        }
+
+        if (merged_data_notification && (etcpal_rbtree_size(&merge_receiver->sources) > 0))
+        {
+          if (add_active_sources(merged_data_notification, merge_receiver))
+          {
+            merged_data_notification->callback = merge_receiver->callbacks.universe_data;
+            merged_data_notification->handle = (sacn_merge_receiver_t)handle;
+            merged_data_notification->universe = universe;
+            merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
+            merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
+            memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
+            memcpy(merged_data_notification->priorities, merge_receiver->priorities, DMX_ADDRESS_COUNT);
+            memcpy(merged_data_notification->owners, merge_receiver->owners,
+                   DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+          }
+          else
+          {
+            merged_data_notification = NULL;  // Use NULL to indicate we failed to fully allocate the notification
+          }
+        }
+
+        sampling_ended_callback = merge_receiver->callbacks.sampling_period_ended;
+
+        context = merge_receiver->callbacks.callback_context;
+      }
+
+      sacn_receiver_unlock();
+    }
+
+    if (!merged_data_notification)
+      SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
+
+    if (merged_data_notification && merged_data_notification->callback)
+    {
+      SacnRecvMergedData merged_data;
+      merged_data.universe_id = merged_data_notification->universe;
+      merged_data.slot_range = merged_data_notification->slot_range;
+      merged_data.levels = merged_data_notification->levels;
+      merged_data.priorities = merged_data_notification->priorities;
+      merged_data.owners = merged_data_notification->owners;
+      merged_data.active_sources = merged_data_notification->active_sources;
+      merged_data.num_active_sources = merged_data_notification->num_active_sources;
+
+      merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
+    }
+
+    // Call this after merged data
+    if (sampling_ended_callback)
+      sampling_ended_callback((sacn_merge_receiver_t)handle, universe, context);
+
+    merge_receiver_cb_unlock();
+  }
+}
+
+void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
+                             sacn_thread_id_t thread_id)
+{
+  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(source) ||
+      !SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  {
+    return;
   }
 
-  if (source_pap_lost_callback)
-    source_pap_lost_callback((sacn_merge_receiver_t)handle, universe, &remote_source, context);
+  if (merge_receiver_cb_lock())
+  {
+    MergeReceiverMergedDataNotification* merged_data_notification = get_merged_data(thread_id);
+
+    SacnMergeReceiverSourcePapLostCallback source_pap_lost_callback = NULL;
+    SacnRemoteSource remote_source;
+
+    void* context = NULL;
+
+    if (sacn_receiver_lock())
+    {
+      SacnMergeReceiver* merge_receiver = NULL;
+      if ((lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk) &&
+          merge_receiver->use_pap)
+      {
+        SacnMergeReceiverInternalSource* internal_source = NULL;
+        lookup_merge_receiver_source(merge_receiver, source->handle, &internal_source);
+
+        if (SACN_ASSERT_VERIFY(internal_source))
+        {
+          internal_source->per_address_priorities_active = false;
+
+#if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
+          sacn_dmx_merger_t merger_handle =
+              internal_source->sampling ? merge_receiver->sampling_merger_handle : merge_receiver->merger_handle;
+#else
+          sacn_dmx_merger_t merger_handle = merge_receiver->merger_handle;
+#endif
+
+          // The receiver handle is interchangable with the DMX Merger source IDs, so use it here via cast.
+          remove_sacn_dmx_merger_pap(merger_handle, (sacn_dmx_merger_source_t)source->handle);
+
+          if (merged_data_notification && !internal_source->sampling)
+          {
+            if (add_active_sources(merged_data_notification, merge_receiver))
+            {
+              merged_data_notification->callback = merge_receiver->callbacks.universe_data;
+              merged_data_notification->handle = (sacn_merge_receiver_t)handle;
+              merged_data_notification->universe = universe;
+              merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
+              merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
+              memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
+              memcpy(merged_data_notification->priorities, merge_receiver->priorities, DMX_ADDRESS_COUNT);
+              memcpy(merged_data_notification->owners, merge_receiver->owners,
+                     DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+            }
+            else
+            {
+              merged_data_notification = NULL;  // Use NULL to indicate we failed to fully allocate the notification
+            }
+          }
+
+          remote_source.handle = source->handle;
+          memcpy(remote_source.cid.data, source->cid.data, ETCPAL_UUID_BYTES);
+          memcpy(remote_source.name, source->name, SACN_SOURCE_NAME_MAX_LEN);
+
+          source_pap_lost_callback = merge_receiver->callbacks.source_pap_lost;
+          context = merge_receiver->callbacks.callback_context;
+        }
+      }
+
+      sacn_receiver_unlock();
+    }
+
+    if (!merged_data_notification)
+      SACN_LOG_ERR("Could not allocate memory for merge receiver merged data notification!");
+
+    if (merged_data_notification && merged_data_notification->callback)
+    {
+      SacnRecvMergedData merged_data;
+      merged_data.universe_id = merged_data_notification->universe;
+      merged_data.slot_range = merged_data_notification->slot_range;
+      merged_data.levels = merged_data_notification->levels;
+      merged_data.priorities = merged_data_notification->priorities;
+      merged_data.owners = merged_data_notification->owners;
+      merged_data.active_sources = merged_data_notification->active_sources;
+      merged_data.num_active_sources = merged_data_notification->num_active_sources;
+
+      merged_data_notification->callback(merged_data_notification->handle, &merged_data, context);
+    }
+
+    if (source_pap_lost_callback)
+      source_pap_lost_callback((sacn_merge_receiver_t)handle, universe, &remote_source, context);
+
+    merge_receiver_cb_unlock();
+  }
 }
 
 void merge_receiver_source_limit_exceeded(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id)
@@ -1018,23 +1067,38 @@ void merge_receiver_source_limit_exceeded(sacn_receiver_t handle, uint16_t unive
   if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
     return;
 
-  SacnMergeReceiverSourceLimitExceededCallback source_limit_callback = NULL;
-  void* context = NULL;
-
-  if (sacn_lock())
+  if (merge_receiver_cb_lock())
   {
-    SacnMergeReceiver* merge_receiver = NULL;
-    if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk)
+    SacnMergeReceiverSourceLimitExceededCallback source_limit_callback = NULL;
+    void* context = NULL;
+
+    if (sacn_receiver_lock())
     {
-      source_limit_callback = merge_receiver->callbacks.source_limit_exceeded;
-      context = merge_receiver->callbacks.callback_context;
+      SacnMergeReceiver* merge_receiver = NULL;
+      if (lookup_merge_receiver((sacn_merge_receiver_t)handle, &merge_receiver) == kEtcPalErrOk)
+      {
+        source_limit_callback = merge_receiver->callbacks.source_limit_exceeded;
+        context = merge_receiver->callbacks.callback_context;
+      }
+
+      sacn_receiver_unlock();
     }
 
-    sacn_unlock();
-  }
+    if (source_limit_callback)
+      source_limit_callback((sacn_merge_receiver_t)handle, universe, context);
 
-  if (source_limit_callback)
-    source_limit_callback((sacn_merge_receiver_t)handle, universe, context);
+    merge_receiver_cb_unlock();
+  }
+}
+
+bool merge_receiver_cb_lock()
+{
+  return etcpal_mutex_lock(&merge_receiver_cb_mutex);
+}
+
+void merge_receiver_cb_unlock()
+{
+  etcpal_mutex_unlock(&merge_receiver_cb_mutex);
 }
 
 #endif  // SACN_MERGE_RECEIVER_ENABLED || DOXYGEN

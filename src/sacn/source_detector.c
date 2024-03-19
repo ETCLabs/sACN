@@ -94,7 +94,7 @@ etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* confi
 
   if (res == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       SacnSourceDetector* source_detector = NULL;
       res = add_sacn_source_detector(config, netint_config, &source_detector);
@@ -108,7 +108,7 @@ etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* confi
         remove_sacn_source_detector();
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -122,19 +122,30 @@ etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* confi
 /**
  * @brief Destroy the sACN Source Detector.
  *
+ * WARNING: Calling this from a source detector callback will deadlock!
+ *
+ * After this function completes, callbacks will no longer be called for the source detector.
  */
 void sacn_source_detector_destroy()
 {
-  if (sacn_initialized() && sacn_lock())
+  if (sacn_initialized())
   {
-    SacnSourceDetector* detector = get_sacn_source_detector();
-    if (detector)
+    if (source_detector_cb_lock())
     {
-      remove_source_detector_from_thread(detector);
-      remove_sacn_source_detector();
-    }
+      if (sacn_receiver_lock())
+      {
+        SacnSourceDetector* detector = get_sacn_source_detector();
+        if (detector)
+        {
+          remove_source_detector_from_thread(detector);
+          remove_sacn_source_detector();
+        }
 
-    sacn_unlock();
+        sacn_receiver_unlock();
+      }
+
+      source_detector_cb_unlock();
+    }
   }
 }
 
@@ -173,7 +184,7 @@ etcpal_error_t sacn_source_detector_reset_networking(const SacnNetintConfig* sys
 
   if (res == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       res = sacn_sockets_reset_source_detector(sys_netint_config);
 
@@ -191,7 +202,7 @@ etcpal_error_t sacn_source_detector_reset_networking(const SacnNetintConfig* sys
         }
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -215,13 +226,13 @@ size_t sacn_source_detector_get_network_interfaces(EtcPalMcastNetintId* netints,
 {
   size_t total_num_network_interfaces = 0;
 
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     SacnSourceDetector* detector = get_sacn_source_detector();
     if (detector)
       total_num_network_interfaces = get_source_detector_netints(detector, netints, netints_size);
 
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 
   return total_num_network_interfaces;

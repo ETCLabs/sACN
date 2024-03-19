@@ -34,6 +34,9 @@ DECLARE_FAKE_VOID_FUNC(handle_sacn_universe_discovery_packet, SacnRecvThreadCont
                        const EtcPalUuid*, const EtcPalSockAddr*, const char*);
 DECLARE_FAKE_VOID_FUNC(process_source_detector, SacnRecvThreadContext*);
 
+DECLARE_FAKE_VALUE_FUNC(bool, source_detector_cb_lock);
+DECLARE_FAKE_VOID_FUNC(source_detector_cb_unlock);
+
 void sacn_source_detector_state_reset_all_fakes(void);
 
 #ifdef __cplusplus

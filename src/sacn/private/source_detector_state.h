@@ -37,6 +37,9 @@ void handle_sacn_universe_discovery_packet(SacnRecvThreadContext* context, const
                                            const char* source_name);
 void process_source_detector(SacnRecvThreadContext* recv_thread_context);
 
+bool source_detector_cb_lock();
+void source_detector_cb_unlock();
+
 #ifdef __cplusplus
 }
 #endif

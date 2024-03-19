@@ -31,7 +31,7 @@
 #include "etcpal/rbtree.h"
 #include "etcpal/timer.h"
 
-#if SACN_SOURCE_ENABLED
+#if SACN_SOURCE_ENABLED || DOXYGEN
 
 // Suppress strncpy() warning on Windows/MSVC.
 #ifdef _MSC_VER
@@ -102,11 +102,11 @@ void sacn_source_state_deinit(void)
 {
   // Shut down the Tick thread...
   bool thread_initted = false;
-  if (sacn_lock())
+  if (sacn_source_lock())
   {
     thread_initted = thread_initialized;
     thread_initialized = false;
-    sacn_unlock();
+    sacn_source_unlock();
   }
 
   if (thread_initted)
@@ -135,11 +135,11 @@ void stop_tick_thread()
 {
   etcpal_thread_t thread_handle;
 
-  if (sacn_lock())
+  if (sacn_source_lock())
   {
     shutting_down = true;  // Trigger thread-based sources to terminate
     thread_handle = source_thread_handle;
-    sacn_unlock();
+    sacn_source_unlock();
   }
 
   // Wait for thread-based sources to terminate (assuming application already cleaned up manual sources)
@@ -187,10 +187,10 @@ void source_thread_function(void* arg)
     sleep_until_time_elapsed(&interval_timer, SOURCE_THREAD_INTERVAL);
     etcpal_timer_reset(&interval_timer);
 
-    if (sacn_lock())
+    if (sacn_source_lock())
     {
       keep_running_thread = !shutting_down;
-      sacn_unlock();
+      sacn_source_unlock();
     }
   }
 }
@@ -200,10 +200,10 @@ int take_lock_and_process_sources(process_sources_behavior_t behavior, sacn_sour
 {
   int num_sources_tracked = 0;
 
-  if (sacn_lock())
+  if (sacn_source_lock())
   {
     num_sources_tracked = process_sources(behavior, tick_mode);
-    sacn_unlock();
+    sacn_source_unlock();
   }
 
   return num_sources_tracked;
@@ -1159,4 +1159,4 @@ void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* univer
   universe->anything_sent_this_tick = true;
 }
 
-#endif  // SACN_SOURCE_ENABLED
+#endif  // SACN_SOURCE_ENABLED || DOXYGEN

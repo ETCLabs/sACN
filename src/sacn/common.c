@@ -29,6 +29,7 @@
 #include "sacn/private/dmx_merger.h"
 #include "sacn/private/merge_receiver.h"
 #include "sacn/private/source_detector.h"
+#include "sacn/private/source_detector_state.h"
 
 /*************************** Private constants *******************************/
 
@@ -47,7 +48,8 @@ static struct SacnState
   EtcPalLogParams log_params;
 } sacn_pool_sacn_state;
 
-static etcpal_mutex_t sacn_mutex;
+static etcpal_mutex_t sacn_receiver_mutex;
+static etcpal_mutex_t sacn_source_mutex;
 
 /*************************** Function definitions ****************************/
 
@@ -84,11 +86,19 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
     if (res == kEtcPalErrOk)
       etcpal_initted = ((res = etcpal_init(SACN_ETCPAL_FEATURES)) == kEtcPalErrOk);
 
-    bool mutex_initted = false;
+    bool receiver_mutex_initted = false;
     if (res == kEtcPalErrOk)
     {
-      mutex_initted = etcpal_mutex_create(&sacn_mutex);
-      if (!mutex_initted)
+      receiver_mutex_initted = etcpal_mutex_create(&sacn_receiver_mutex);
+      if (!receiver_mutex_initted)
+        res = kEtcPalErrSys;
+    }
+
+    bool source_mutex_initted = false;
+    if (res == kEtcPalErrOk)
+    {
+      source_mutex_initted = etcpal_mutex_create(&sacn_source_mutex);
+      if (!source_mutex_initted)
         res = kEtcPalErrSys;
     }
 
@@ -120,6 +130,21 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
     if (res == kEtcPalErrOk)
       sockets_initted = ((res = sacn_sockets_init(sys_netint_config)) == kEtcPalErrOk);
 
+#if SACN_MERGE_RECEIVER_ENABLED
+    bool merge_receiver_initted = false;
+    if (res == kEtcPalErrOk)
+      merge_receiver_initted = ((res = sacn_merge_receiver_init()) == kEtcPalErrOk);
+#endif  // SACN_MERGE_RECEIVER_ENABLED
+
+#if SACN_SOURCE_DETECTOR_ENABLED
+    bool source_detector_state_initted = false;
+    bool source_detector_initted = false;
+    if (res == kEtcPalErrOk)
+      source_detector_state_initted = ((res = sacn_source_detector_state_init()) == kEtcPalErrOk);
+    if (res == kEtcPalErrOk)
+      source_detector_initted = ((res = sacn_source_detector_init()) == kEtcPalErrOk);
+#endif  // SACN_SOURCE_DETECTOR_ENABLED
+
 #if SACN_RECEIVER_ENABLED
     bool source_loss_initted = false;
     bool receiver_state_initted = false;
@@ -147,18 +172,6 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
       merger_initted = ((res = sacn_dmx_merger_init()) == kEtcPalErrOk);
 #endif  // SACN_DMX_MERGER_ENABLED
 
-#if SACN_MERGE_RECEIVER_ENABLED
-    bool merge_receiver_initted = false;
-    if (res == kEtcPalErrOk)
-      merge_receiver_initted = ((res = sacn_merge_receiver_init()) == kEtcPalErrOk);
-#endif  // SACN_MERGE_RECEIVER_ENABLED
-
-#if SACN_SOURCE_DETECTOR_ENABLED
-    bool source_detector_initted = false;
-    if (res == kEtcPalErrOk)
-      source_detector_initted = ((res = sacn_source_detector_init()) == kEtcPalErrOk);
-#endif  // SACN_SOURCE_DETECTOR_ENABLED
-
     if (res == kEtcPalErrOk)
     {
       sacn_pool_sacn_state.initted = true;
@@ -166,14 +179,6 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
     else
     {
       // Clean up
-#if SACN_SOURCE_DETECTOR_ENABLED
-      if (source_detector_initted)
-        sacn_source_detector_deinit();
-#endif  // SACN_SOURCE_DETECTOR_ENABLED
-#if SACN_MERGE_RECEIVER_ENABLED
-      if (merge_receiver_initted)
-        sacn_merge_receiver_deinit();
-#endif  // SACN_MERGE_RECEIVER_ENABLED
 #if SACN_DMX_MERGER_ENABLED
       if (merger_initted)
         sacn_dmx_merger_deinit();
@@ -192,6 +197,16 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
       if (source_loss_initted)
         sacn_source_loss_deinit();
 #endif  // SACN_RECEIVER_ENABLED
+#if SACN_SOURCE_DETECTOR_ENABLED
+      if (source_detector_initted)
+        sacn_source_detector_deinit();
+      if (source_detector_state_initted)
+        sacn_source_detector_state_deinit();
+#endif  // SACN_SOURCE_DETECTOR_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED
+      if (merge_receiver_initted)
+        sacn_merge_receiver_deinit();
+#endif  // SACN_MERGE_RECEIVER_ENABLED
       if (sockets_initted)
         sacn_sockets_deinit();
 #if SACN_SOURCE_DETECTOR_ENABLED
@@ -210,8 +225,10 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
       if (receiver_mem_initted)
         sacn_receiver_mem_deinit();
 #endif  // SACN_RECEIVER_ENABLED
-      if (mutex_initted)
-        etcpal_mutex_destroy(&sacn_mutex);
+      if (source_mutex_initted)
+        etcpal_mutex_destroy(&sacn_source_mutex);
+      if (receiver_mutex_initted)
+        etcpal_mutex_destroy(&sacn_receiver_mutex);
       if (etcpal_initted)
         etcpal_deinit(SACN_ETCPAL_FEATURES);
 
@@ -237,12 +254,6 @@ void sacn_deinit(void)
   {
     sacn_pool_sacn_state.initted = false;
 
-#if SACN_SOURCE_DETECTOR_ENABLED
-    sacn_source_detector_deinit();
-#endif  // SACN_SOURCE_DETECTOR_ENABLED
-#if SACN_MERGE_RECEIVER_ENABLED
-    sacn_merge_receiver_deinit();
-#endif  // SACN_MERGE_RECEIVER_ENABLED
 #if SACN_DMX_MERGER_ENABLED
     sacn_dmx_merger_deinit();
 #endif  // SACN_DMX_MERGER_ENABLED
@@ -255,6 +266,13 @@ void sacn_deinit(void)
     sacn_receiver_state_deinit();
     sacn_source_loss_deinit();
 #endif  // SACN_RECEIVER_ENABLED
+#if SACN_SOURCE_DETECTOR_ENABLED
+    sacn_source_detector_deinit();
+    sacn_source_detector_state_deinit();
+#endif  // SACN_SOURCE_DETECTOR_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED
+    sacn_merge_receiver_deinit();
+#endif  // SACN_MERGE_RECEIVER_ENABLED
     sacn_sockets_deinit();
 #if SACN_SOURCE_DETECTOR_ENABLED
     sacn_source_detector_mem_deinit();
@@ -268,7 +286,8 @@ void sacn_deinit(void)
 #if SACN_RECEIVER_ENABLED
     sacn_receiver_mem_deinit();
 #endif  // SACN_RECEIVER_ENABLED
-    etcpal_mutex_destroy(&sacn_mutex);
+    etcpal_mutex_destroy(&sacn_source_mutex);
+    etcpal_mutex_destroy(&sacn_receiver_mutex);
     etcpal_deinit(SACN_ETCPAL_FEATURES);
 
     sacn_log_params = NULL;
@@ -290,10 +309,10 @@ sacn_remote_source_t sacn_get_remote_source_handle(const EtcPalUuid* source_cid)
 {
   sacn_remote_source_t result = SACN_REMOTE_SOURCE_INVALID;
 
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     result = get_remote_source_handle(source_cid);
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 
   return result;
@@ -321,7 +340,7 @@ etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, Et
   }
   else
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       const EtcPalUuid* cid = get_remote_source_cid(source_handle);
 
@@ -330,7 +349,7 @@ etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, Et
       else
         result = kEtcPalErrNotFound;
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -357,14 +376,24 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
   return false;
 }
 
-bool sacn_lock(void)
+bool sacn_receiver_lock(void)
 {
-  return etcpal_mutex_lock(&sacn_mutex);
+  return etcpal_mutex_lock(&sacn_receiver_mutex);
 }
 
-void sacn_unlock(void)
+void sacn_receiver_unlock(void)
 {
-  etcpal_mutex_unlock(&sacn_mutex);
+  etcpal_mutex_unlock(&sacn_receiver_mutex);
+}
+
+bool sacn_source_lock(void)
+{
+  return etcpal_mutex_lock(&sacn_source_mutex);
+}
+
+void sacn_source_unlock(void)
+{
+  etcpal_mutex_unlock(&sacn_source_mutex);
 }
 
 bool sacn_initialized(void)

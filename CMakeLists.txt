@@ -22,27 +22,35 @@ option(SACN_BUILD_EXAMPLES "Build the sACN example applications" OFF)
 option(SACN_BUILD_TEST_TOOLS "Build the sACN test tools (typically used in development only)" OFF)
 option(SACN_INSTALL_PDBS "Include PDBs in sACN install target" ON)
 
-################################# Dependencies ################################
+####################### Dependencies & standalone support ######################
 
 include(${SACN_CMAKE}/OssDependencyTools.cmake)
 determine_compile_environment()
+
 if(NOT COMPILING_AS_OSS)
   include(${SACN_CMAKE}/AddCMakeTools.cmake)
+
+  get_directory_property(HAS_PARENT PARENT_DIRECTORY)
+
+  if(NOT HAS_PARENT)  # Only set up quality gates when building standalone
+    include(${CMAKE_TOOLS_MODULES}/QualityGateHelpers.cmake)
+
+    setup_standalone_compile()
+    setup_clang_format()
+
+    # TODO: setup_clang_tidy()
+    setup_address_sanitizer()
+    setup_memory_sanitizer()
+    setup_undefined_behavior_sanitizer()
+    setup_thread_sanitizer()
+  endif()
 endif()
+
 include(${SACN_CMAKE}/ResolveDependencies.cmake)
 
-############################## Standalone support #############################
-
-if(NOT COMPILING_AS_OSS)
-  include(${CMAKE_TOOLS_MODULES}/QualityGateHelpers.cmake)
-
-  setup_standalone_compile()
-  setup_clang_format()
-  # TODO: setup_clang_tidy()
-  setup_address_sanitizer()
-endif()
-
 ################################ Main libraries ###############################
+
+# Get the local source variables
 
 add_subdirectory(src)
 
@@ -55,7 +63,7 @@ if(SACN_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
 
-################################### Examples ################################## 
+################################### Examples ##################################
 
 if(SACN_BUILD_EXAMPLES)
   add_subdirectory(examples)

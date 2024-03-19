@@ -34,7 +34,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_MERGE_RECEIVER_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED || DOXYGEN
 
 /**************************** Private constants ******************************/
 
@@ -216,7 +216,7 @@ etcpal_error_t init_merge_receivers(void)
 
 void deinit_merge_receivers(void)
 {
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     if (merge_receivers_initialized)
     {
@@ -224,8 +224,8 @@ void deinit_merge_receivers(void)
       merge_receivers_initialized = false;
     }
 
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 }
 
-#endif  // SACN_MERGE_RECEIVER_ENABLED
+#endif  // SACN_MERGE_RECEIVER_ENABLED || DOXYGEN

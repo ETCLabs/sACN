@@ -26,6 +26,9 @@ DEFINE_FAKE_VOID_FUNC(handle_sacn_universe_discovery_packet, SacnRecvThreadConte
                       const EtcPalUuid*, const EtcPalSockAddr*, const char*);
 DEFINE_FAKE_VOID_FUNC(process_source_detector, SacnRecvThreadContext*);
 
+DEFINE_FAKE_VALUE_FUNC(bool, source_detector_cb_lock);
+DEFINE_FAKE_VOID_FUNC(source_detector_cb_unlock);
+
 void sacn_source_detector_state_reset_all_fakes(void)
 {
   RESET_FAKE(sacn_source_detector_state_init);
@@ -33,4 +36,8 @@ void sacn_source_detector_state_reset_all_fakes(void)
   RESET_FAKE(get_source_detector_netints);
   RESET_FAKE(handle_sacn_universe_discovery_packet);
   RESET_FAKE(process_source_detector);
+  RESET_FAKE(source_detector_cb_lock);
+  RESET_FAKE(source_detector_cb_unlock);
+
+  source_detector_cb_lock_fake.return_val = true;
 }

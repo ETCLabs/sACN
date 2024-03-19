@@ -23,7 +23,12 @@
 
 #include "sacn/private/source_detector_state.h"
 
-#if SACN_SOURCE_DETECTOR_ENABLED
+#if SACN_SOURCE_DETECTOR_ENABLED || DOXYGEN
+
+/**************************** Private variables ******************************/
+
+// Used so that callbacks are never called once the source detector is destroyed.
+static etcpal_mutex_t source_detector_cb_mutex;
 
 /*********************** Private function prototypes *************************/
 
@@ -33,14 +38,12 @@ static void process_universe_discovery_page(SacnSourceDetector* source_detector,
 
 etcpal_error_t sacn_source_detector_state_init(void)
 {
-  // Nothing to do
-
-  return kEtcPalErrOk;
+  return etcpal_mutex_create(&source_detector_cb_mutex) ? kEtcPalErrOk : kEtcPalErrSys;
 }
 
 void sacn_source_detector_state_deinit(void)
 {
-  // Nothing to do
+  etcpal_mutex_destroy(&source_detector_cb_mutex);
 }
 
 // Needs lock
@@ -56,7 +59,7 @@ size_t get_source_detector_netints(const SacnSourceDetector* detector, EtcPalMca
   return detector->netints.num_netints;
 }
 
-// Takes lock
+// Takes sACN lock & source_detector_cb lock
 void handle_sacn_universe_discovery_packet(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
                                            const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr,
                                            const char* source_name)
@@ -67,95 +70,115 @@ void handle_sacn_universe_discovery_packet(SacnRecvThreadContext* context, const
     return;
   }
 
-  SacnSourceDetector* source_detector = NULL;
-
-  if (sacn_lock())
+  if (source_detector_cb_lock())
   {
-    source_detector = context->source_detector;
-    sacn_unlock();
-  }
+    SacnSourceDetector* source_detector = NULL;
 
-  if (source_detector)
-  {
-    SacnUniverseDiscoveryPage page;
-    page.sender_cid = sender_cid;
-    page.from_addr = from_addr;
-    page.source_name = source_name;
-
-    const uint8_t* universe_buf;
-    if (parse_sacn_universe_discovery_layer(data, datalen, &page.page, &page.last_page, &universe_buf,
-                                            &page.num_universes))
+    if (sacn_receiver_lock())
     {
+      source_detector = context->source_detector;
+      sacn_receiver_unlock();
+    }
+
+    if (source_detector)
+    {
+      SacnUniverseDiscoveryPage page;
+      page.sender_cid = sender_cid;
+      page.from_addr = from_addr;
+      page.source_name = source_name;
+
+      const uint8_t* universe_buf;
+      if (parse_sacn_universe_discovery_layer(data, datalen, &page.page, &page.last_page, &universe_buf,
+                                              &page.num_universes))
+      {
 #if SACN_DYNAMIC_MEM
-      uint16_t* universes = page.num_universes ? calloc(page.num_universes, sizeof(uint16_t)) : NULL;
+        uint16_t* universes = page.num_universes ? calloc(page.num_universes, sizeof(uint16_t)) : NULL;
 #else
-      uint16_t universes[SACN_MAX_UNIVERSES_PER_PAGE] = {0};
+        uint16_t universes[SACN_MAX_UNIVERSES_PER_PAGE] = {0};
 #endif
-      page.universes = universes;
+        page.universes = universes;
 
-      parse_sacn_universe_list(universe_buf, page.num_universes, universes);
-      process_universe_discovery_page(source_detector, &page);
+        parse_sacn_universe_list(universe_buf, page.num_universes, universes);
+        process_universe_discovery_page(source_detector, &page);
 
 #if SACN_DYNAMIC_MEM
-      if (universes)
-        free(universes);
+        if (universes)
+          free(universes);
 #endif
+      }
+      else if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))
+      {
+        char cid_str[ETCPAL_UUID_STRING_BYTES];
+        etcpal_uuid_to_string(sender_cid, cid_str);
+        SACN_LOG_WARNING("Ignoring malformed sACN universe discovery packet from component %s", cid_str);
+      }
     }
-    else if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))
-    {
-      char cid_str[ETCPAL_UUID_STRING_BYTES];
-      etcpal_uuid_to_string(sender_cid, cid_str);
-      SACN_LOG_WARNING("Ignoring malformed sACN universe discovery packet from component %s", cid_str);
-    }
+
+    source_detector_cb_unlock();
   }
 }
 
-// Takes lock
+// Takes sACN lock & source_detector_cb lock
 void process_source_detector(SacnRecvThreadContext* recv_thread_context)
 {
   if (!SACN_ASSERT_VERIFY(recv_thread_context))
     return;
 
-  SourceDetectorSourceExpiredNotification source_expired = SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT;
-
-  if (sacn_lock())
+  if (source_detector_cb_lock())
   {
-    SacnSourceDetector* source_detector = recv_thread_context->source_detector;
-    if (source_detector)
+    SourceDetectorSourceExpiredNotification source_expired = SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT;
+
+    if (sacn_receiver_lock())
     {
-      EtcPalRbIter iter;
-      for (SacnUniverseDiscoverySource* source = get_first_universe_discovery_source(&iter); source;
-           source = get_next_universe_discovery_source(&iter))
+      SacnSourceDetector* source_detector = recv_thread_context->source_detector;
+      if (source_detector)
       {
-        if (etcpal_timer_is_expired(&source->expiration_timer))
+        EtcPalRbIter iter;
+        for (SacnUniverseDiscoverySource* source = get_first_universe_discovery_source(&iter); source;
+             source = get_next_universe_discovery_source(&iter))
         {
-          source_expired.callback = source_detector->callbacks.source_expired;
-          source_expired.context = source_detector->callbacks.context;
-          add_sacn_source_detector_expired_source(&source_expired, source->handle, source->name);
-          source_detector->suppress_source_limit_exceeded_notification = false;
+          if (etcpal_timer_is_expired(&source->expiration_timer))
+          {
+            source_expired.callback = source_detector->callbacks.source_expired;
+            source_expired.context = source_detector->callbacks.context;
+            add_sacn_source_detector_expired_source(&source_expired, source->handle, source->name);
+            source_detector->suppress_source_limit_exceeded_notification = false;
+          }
         }
+
+        for (size_t i = 0; i < source_expired.num_expired_sources; ++i)
+          remove_sacn_universe_discovery_source(source_expired.expired_sources[i].handle);
       }
 
-      for (size_t i = 0; i < source_expired.num_expired_sources; ++i)
-        remove_sacn_universe_discovery_source(source_expired.expired_sources[i].handle);
+      sacn_receiver_unlock();
     }
 
-    sacn_unlock();
-  }
-
-  if (source_expired.callback)
-  {
-    for (size_t i = 0; i < source_expired.num_expired_sources; ++i)
+    if (source_expired.callback)
     {
-      source_expired.callback(source_expired.expired_sources[i].handle, &source_expired.expired_sources[i].cid,
-                              source_expired.expired_sources[i].name, source_expired.context);
+      for (size_t i = 0; i < source_expired.num_expired_sources; ++i)
+      {
+        source_expired.callback(source_expired.expired_sources[i].handle, &source_expired.expired_sources[i].cid,
+                                source_expired.expired_sources[i].name, source_expired.context);
+      }
     }
-  }
 
-  CLEAR_BUF(&source_expired, expired_sources);
+    CLEAR_BUF(&source_expired, expired_sources);
+
+    source_detector_cb_unlock();
+  }
 }
 
-// Takes lock
+bool source_detector_cb_lock()
+{
+  return etcpal_mutex_lock(&source_detector_cb_mutex);
+}
+
+void source_detector_cb_unlock()
+{
+  etcpal_mutex_unlock(&source_detector_cb_mutex);
+}
+
+// Takes sACN lock, needs source_detector_cb lock
 void process_universe_discovery_page(SacnSourceDetector* source_detector, const SacnUniverseDiscoveryPage* page)
 {
   if (!SACN_ASSERT_VERIFY(source_detector) || !SACN_ASSERT_VERIFY(page))
@@ -164,12 +187,13 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
   SourceDetectorSourceUpdatedNotification source_updated = SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT;
   SourceDetectorLimitExceededNotification limit_exceeded = SRC_DETECTOR_LIMIT_EXCEEDED_DEFAULT_INIT;
 
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     SacnUniverseDiscoverySource* source = NULL;
     sacn_remote_source_t source_handle = get_remote_source_handle(page->sender_cid);
-    etcpal_error_t source_result =
-        (source_handle == SACN_REMOTE_SOURCE_INVALID) ? kEtcPalErrNotFound : lookup_universe_discovery_source(source_handle, &source);
+    etcpal_error_t source_result = (source_handle == SACN_REMOTE_SOURCE_INVALID)
+                                       ? kEtcPalErrNotFound
+                                       : lookup_universe_discovery_source(source_handle, &source);
 
     if (source_result == kEtcPalErrNotFound)
     {
@@ -284,7 +308,7 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
       }
     }
 
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 
   if (source_updated.callback)
@@ -300,4 +324,4 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
   CLEAR_BUF(&source_updated, sourced_universes);
 }
 
-#endif  // SACN_SOURCE_DETECTOR_ENABLED
+#endif  // SACN_SOURCE_DETECTOR_ENABLED || DOXYGEN

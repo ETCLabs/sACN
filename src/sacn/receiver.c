@@ -110,10 +110,10 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
 
   if (res == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       res = create_sacn_receiver(config, handle, netint_config, NULL);
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -127,8 +127,12 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_recei
 /**
  * @brief Destroy a sACN receiver instance.
  *
+ * WARNING: Calling this from a receiver callback will deadlock!
+ *
  * Tears down the receiver and any sources currently being tracked on the receiver's universe.
  * Stops listening for sACN on that universe.
+ *
+ * After this function completes, callbacks will no longer be called for this receiver.
  *
  * @param[in] handle Handle to the receiver to destroy.
  * @return #kEtcPalErrOk: Receiver destroyed successfully.
@@ -148,10 +152,19 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 
   if (res == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (receiver_cb_lock())
     {
-      res = destroy_sacn_receiver(handle);
-      sacn_unlock();
+      if (sacn_receiver_lock())
+      {
+        res = destroy_sacn_receiver(handle);
+        sacn_receiver_unlock();
+      }
+      else
+      {
+        res = kEtcPalErrSys;
+      }
+
+      receiver_cb_unlock();
     }
     else
     {
@@ -184,7 +197,7 @@ etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* univ
 
   if (res == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       SacnReceiver* receiver = NULL;
       res = lookup_receiver(handle, &receiver);
@@ -192,7 +205,7 @@ etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* univ
       if (res == kEtcPalErrOk)
         *universe_id = receiver->keys.universe;
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -266,10 +279,10 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
 
   if (res == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       res = change_sacn_receiver_universe(handle, new_universe_id);
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -354,7 +367,7 @@ etcpal_error_t sacn_receiver_reset_networking(const SacnNetintConfig* sys_netint
 
   if (res == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       res = sacn_sockets_reset_receiver(sys_netint_config);
 
@@ -380,7 +393,7 @@ etcpal_error_t sacn_receiver_reset_networking(const SacnNetintConfig* sys_netint
         }
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -435,7 +448,7 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfi
 
   if (res == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_receiver_lock())
     {
       // Validate netint_lists. It must include all receivers and nothing more.
       size_t total_num_receivers = 0;
@@ -499,7 +512,7 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfi
         }
       }
 
-      sacn_unlock();
+      sacn_receiver_unlock();
     }
     else
     {
@@ -523,13 +536,13 @@ size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, EtcPalMcastN
 {
   size_t total_num_network_interfaces = 0;
 
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     SacnReceiver* receiver = NULL;
     if (lookup_receiver(handle, &receiver) == kEtcPalErrOk)
       total_num_network_interfaces = get_receiver_netints(receiver, netints, netints_size);
 
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 
   return total_num_network_interfaces;
@@ -549,10 +562,10 @@ void sacn_receiver_set_expired_wait(uint32_t wait_ms)
   if (!sacn_initialized())
     return;
 
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     set_expired_wait(wait_ms);
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
 }
 
@@ -572,10 +585,10 @@ uint32_t sacn_receiver_get_expired_wait()
   if (!sacn_initialized())
     return res;
 
-  if (sacn_lock())
+  if (sacn_receiver_lock())
   {
     res = get_expired_wait();
-    sacn_unlock();
+    sacn_receiver_unlock();
   }
   return res;
 }
@@ -618,7 +631,7 @@ etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_recei
   return res;
 }
 
-// Needs lock
+// Needs sACN lock (and receiver_cb lock if called from receiver API)
 etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle)
 {
   if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))

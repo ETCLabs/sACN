@@ -40,37 +40,37 @@
 #define TestSource TestSourceStatic
 #endif
 
-#define VERIFY_LOCKING(function_call)                                  \
-  do                                                                   \
-  {                                                                    \
-    unsigned int previous_lock_count = sacn_lock_fake.call_count;      \
-    function_call;                                                     \
-    EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);         \
-    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count); \
+#define VERIFY_LOCKING(function_call)                                                \
+  do                                                                                 \
+  {                                                                                  \
+    unsigned int previous_lock_count = sacn_source_lock_fake.call_count;             \
+    function_call;                                                                   \
+    EXPECT_NE(sacn_source_lock_fake.call_count, previous_lock_count);                \
+    EXPECT_EQ(sacn_source_lock_fake.call_count, sacn_source_unlock_fake.call_count); \
   } while (0)
-#define VERIFY_NO_LOCKING(function_call)                               \
-  do                                                                   \
-  {                                                                    \
-    unsigned int previous_lock_count = sacn_lock_fake.call_count;      \
-    function_call;                                                     \
-    EXPECT_EQ(sacn_lock_fake.call_count, previous_lock_count);         \
-    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count); \
+#define VERIFY_NO_LOCKING(function_call)                                             \
+  do                                                                                 \
+  {                                                                                  \
+    unsigned int previous_lock_count = sacn_source_lock_fake.call_count;             \
+    function_call;                                                                   \
+    EXPECT_EQ(sacn_source_lock_fake.call_count, previous_lock_count);                \
+    EXPECT_EQ(sacn_source_lock_fake.call_count, sacn_source_unlock_fake.call_count); \
   } while (0)
-#define VERIFY_LOCKING_AND_RETURN_VALUE(function_call, expected_return_value) \
-  do                                                                          \
-  {                                                                           \
-    unsigned int previous_lock_count = sacn_lock_fake.call_count;             \
-    EXPECT_EQ(function_call, expected_return_value);                          \
-    EXPECT_NE(sacn_lock_fake.call_count, previous_lock_count);                \
-    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);        \
+#define VERIFY_LOCKING_AND_RETURN_VALUE(function_call, expected_return_value)        \
+  do                                                                                 \
+  {                                                                                  \
+    unsigned int previous_lock_count = sacn_source_lock_fake.call_count;             \
+    EXPECT_EQ(function_call, expected_return_value);                                 \
+    EXPECT_NE(sacn_source_lock_fake.call_count, previous_lock_count);                \
+    EXPECT_EQ(sacn_source_lock_fake.call_count, sacn_source_unlock_fake.call_count); \
   } while (0)
-#define VERIFY_NO_LOCKING_AND_RETURN_VALUE(function_call, expected_return_value) \
-  do                                                                             \
-  {                                                                              \
-    unsigned int previous_lock_count = sacn_lock_fake.call_count;                \
-    EXPECT_EQ(function_call, expected_return_value);                             \
-    EXPECT_EQ(sacn_lock_fake.call_count, previous_lock_count);                   \
-    EXPECT_EQ(sacn_lock_fake.call_count, sacn_unlock_fake.call_count);           \
+#define VERIFY_NO_LOCKING_AND_RETURN_VALUE(function_call, expected_return_value)     \
+  do                                                                                 \
+  {                                                                                  \
+    unsigned int previous_lock_count = sacn_source_lock_fake.call_count;             \
+    EXPECT_EQ(function_call, expected_return_value);                                 \
+    EXPECT_EQ(sacn_source_lock_fake.call_count, previous_lock_count);                \
+    EXPECT_EQ(sacn_source_lock_fake.call_count, sacn_source_unlock_fake.call_count); \
   } while (0)
 
 static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");

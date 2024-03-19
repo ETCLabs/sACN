@@ -25,15 +25,20 @@
 #include "stdio.h"
 
 DEFINE_FAKE_VALUE_FUNC(bool, sacn_initialized);
-DEFINE_FAKE_VALUE_FUNC(bool, sacn_lock);
-DEFINE_FAKE_VOID_FUNC(sacn_unlock);
+DEFINE_FAKE_VALUE_FUNC(bool, sacn_receiver_lock);
+DEFINE_FAKE_VOID_FUNC(sacn_receiver_unlock);
+DEFINE_FAKE_VALUE_FUNC(bool, sacn_source_lock);
+DEFINE_FAKE_VOID_FUNC(sacn_source_unlock);
 
 void sacn_common_reset_all_fakes(void)
 {
   RESET_FAKE(sacn_initialized);
-  RESET_FAKE(sacn_lock);
-  RESET_FAKE(sacn_unlock);
+  RESET_FAKE(sacn_receiver_lock);
+  RESET_FAKE(sacn_receiver_unlock);
+  RESET_FAKE(sacn_source_lock);
+  RESET_FAKE(sacn_source_unlock);
 
   sacn_initialized_fake.return_val = true;
-  sacn_lock_fake.return_val = true;
+  sacn_receiver_lock_fake.return_val = true;
+  sacn_source_lock_fake.return_val = true;
 }

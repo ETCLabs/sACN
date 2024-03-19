@@ -49,6 +49,9 @@ void remove_all_receiver_sockets(socket_cleanup_behavior_t cleanup_behavior);
 void read_network_and_process(SacnRecvThreadContext* context);
 void terminate_sources_on_removed_netints(SacnReceiver* receiver);
 
+bool receiver_cb_lock();
+void receiver_cb_unlock();
+
 #ifdef __cplusplus
 }
 #endif

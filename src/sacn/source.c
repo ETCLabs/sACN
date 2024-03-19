@@ -122,7 +122,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_source_lock())
     {
       // If the Tick thread hasn't been started yet, start it if the config isn't manual.
       if (!config->manually_process_source)
@@ -137,7 +137,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
       if (result == kEtcPalErrOk)
         *handle = source->handle;
 
-      sacn_unlock();
+      sacn_source_unlock();
     }
     else
     {
@@ -184,7 +184,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_source_lock())
     {
       // Look up the source's state.
       SacnSource* source = NULL;
@@ -197,7 +197,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
       if (result == kEtcPalErrOk)
         set_source_name(source, new_name);
 
-      sacn_unlock();
+      sacn_source_unlock();
     }
     else
     {
@@ -220,7 +220,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
 void sacn_source_destroy(sacn_source_t handle)
 {
   // Validate and lock.
-  if (sacn_initialized() && (handle != SACN_SOURCE_INVALID) && sacn_lock())
+  if (sacn_initialized() && (handle != SACN_SOURCE_INVALID) && sacn_source_lock())
   {
     // Try to find the source's state.
     SacnSource* source = NULL;
@@ -230,7 +230,7 @@ void sacn_source_destroy(sacn_source_t handle)
     if (source && !source->terminating)
       set_source_terminating(source);
 
-    sacn_unlock();
+    sacn_source_unlock();
   }
 }
 
@@ -290,7 +290,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_source_lock())
     {
       // Look up the source's state.
       SacnSource* source = NULL;
@@ -325,7 +325,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       for (size_t i = 0; (result == kEtcPalErrOk) && (i < new_universe->netints.num_netints); ++i)
         result = add_sacn_source_netint(source, &new_universe->netints.netints[i]);
 
-      sacn_unlock();
+      sacn_source_unlock();
     }
     else
     {
@@ -350,7 +350,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
  */
 void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 {
-  if (sacn_lock())
+  if (sacn_source_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -359,7 +359,7 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
     if (universe_state && (universe_state->termination_state != kTerminatingAndRemoving))
       set_universe_terminating(universe_state, kTerminateAndRemove);
 
-    sacn_unlock();
+    sacn_source_unlock();
   }
 }
 
@@ -376,14 +376,14 @@ size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size
 {
   size_t total_num_universes = 0;
 
-  if (sacn_lock())
+  if (sacn_source_lock())
   {
     // Look up source state
     SacnSource* source = NULL;
     if ((lookup_source(handle, &source) == kEtcPalErrOk) && source && !source->terminating)
       total_num_universes = get_source_universes(source, universes, universes_size);
 
-    sacn_unlock();
+    sacn_source_unlock();
   }
 
   return total_num_universes;
@@ -422,7 +422,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_source_lock())
     {
       // Look up the state
       SacnSource* source_state = NULL;
@@ -458,7 +458,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
       if (result == kEtcPalErrOk)
         reset_transmission_suppression(source_state, universe_state, kResetLevelAndPap);
 
-      sacn_unlock();
+      sacn_source_unlock();
     }
     else
     {
@@ -483,7 +483,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
 void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest)
 {
   // Validate & lock
-  if (dest && sacn_lock())
+  if (dest && sacn_source_lock())
   {
     // Look up unicast destination
     SacnSource* source_state = NULL;
@@ -500,7 +500,7 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
         set_unicast_dest_terminating(unicast_dest, kTerminateAndRemove);
     }
 
-    sacn_unlock();
+    sacn_source_unlock();
   }
 }
 
@@ -520,7 +520,7 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
 {
   size_t total_num_dests = 0;
 
-  if (sacn_lock())
+  if (sacn_source_lock())
   {
     // Look up universe state
     SacnSource* source_state = NULL;
@@ -531,7 +531,7 @@ size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t unive
         total_num_dests = get_source_unicast_dests(universe_state, destinations, destinations_size);
     }
 
-    sacn_unlock();
+    sacn_source_unlock();
   }
 
   return total_num_dests;
@@ -570,7 +570,7 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_source_lock())
     {
       // Look up the source and universe state.
       SacnSource* source_state = NULL;
@@ -584,7 +584,7 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
       if (result == kEtcPalErrOk)
         set_universe_priority(source_state, universe_state, new_priority);
 
-      sacn_unlock();
+      sacn_source_unlock();
     }
     else
     {
@@ -631,7 +631,7 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_source_lock())
     {
       // Look up the source and universe state.
       SacnSource* source_state = NULL;
@@ -645,7 +645,7 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
       if (result == kEtcPalErrOk)
         set_preview_flag(source_state, universe_state, new_preview_flag);
 
-      sacn_unlock();
+      sacn_source_unlock();
     }
     else
     {
@@ -728,7 +728,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_source_lock())
     {
       // Look up state
       SacnSource* source_state = NULL;
@@ -758,7 +758,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
         increment_sequence_number(universe_state);
       }
 
-      sacn_unlock();
+      sacn_source_unlock();
     }
     else
     {
@@ -812,7 +812,7 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t s
 void sacn_source_update_levels(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
                                size_t new_levels_size)
 {
-  if ((new_levels_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if ((new_levels_size <= DMX_ADDRESS_COUNT) && sacn_source_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -830,7 +830,7 @@ void sacn_source_update_levels(sacn_source_t handle, uint16_t universe, const ui
       update_levels_and_or_pap(source_state, universe_state, new_levels, new_levels_size, NULL, 0, kDisableForceSync);
     }
 
-    sacn_unlock();
+    sacn_source_unlock();
   }
 }
 
@@ -861,7 +861,7 @@ void sacn_source_update_levels_and_pap(sacn_source_t handle, uint16_t universe, 
                                        size_t new_levels_size, const uint8_t* new_priorities,
                                        size_t new_priorities_size)
 {
-  if ((new_levels_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if ((new_levels_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_source_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -879,7 +879,7 @@ void sacn_source_update_levels_and_pap(sacn_source_t handle, uint16_t universe, 
                                new_levels ? new_priorities : NULL, new_priorities_size, kDisableForceSync);
     }
 
-    sacn_unlock();
+    sacn_source_unlock();
   }
 }
 
@@ -903,7 +903,7 @@ void sacn_source_update_levels_and_pap(sacn_source_t handle, uint16_t universe, 
 void sacn_source_update_levels_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
                                               size_t new_levels_size)
 {
-  if ((new_levels_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if ((new_levels_size <= DMX_ADDRESS_COUNT) && sacn_source_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -921,7 +921,7 @@ void sacn_source_update_levels_and_force_sync(sacn_source_t handle, uint16_t uni
       update_levels_and_or_pap(source_state, universe_state, new_levels, new_levels_size, NULL, 0, kEnableForceSync);
     }
 
-    sacn_unlock();
+    sacn_source_unlock();
   }
 }
 
@@ -957,7 +957,7 @@ void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t handle, uint
                                                       const uint8_t* new_levels, size_t new_levels_size,
                                                       const uint8_t* new_priorities, size_t new_priorities_size)
 {
-  if ((new_levels_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_lock())
+  if ((new_levels_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_source_lock())
   {
     SacnSource* source_state = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -975,7 +975,7 @@ void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t handle, uint
                                new_levels ? new_priorities : NULL, new_priorities_size, kEnableForceSync);
     }
 
-    sacn_unlock();
+    sacn_source_unlock();
   }
 }
 
@@ -1035,7 +1035,7 @@ etcpal_error_t sacn_source_reset_networking(const SacnNetintConfig* sys_netint_c
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_source_lock())
     {
       sacn_sockets_reset_source(sys_netint_config);
 
@@ -1055,7 +1055,7 @@ etcpal_error_t sacn_source_reset_networking(const SacnNetintConfig* sys_netint_c
         }
       }
 
-      sacn_unlock();
+      sacn_source_unlock();
     }
     else
     {
@@ -1111,7 +1111,7 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*
 
   if (result == kEtcPalErrOk)
   {
-    if (sacn_lock())
+    if (sacn_source_lock())
     {
       // Validate netint_lists. It must include all universes of all sources and nothing more.
       size_t total_num_universes = 0;
@@ -1184,7 +1184,7 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*
         }
       }
 
-      sacn_unlock();
+      sacn_source_unlock();
     }
     else
     {
@@ -1210,7 +1210,7 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
 {
   size_t total_num_network_interfaces = 0;
 
-  if (sacn_lock())
+  if (sacn_source_lock())
   {
     // Look up universe state
     SacnSource* source_state = NULL;
@@ -1221,7 +1221,7 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
         total_num_network_interfaces = get_source_universe_netints(universe_state, netints, netints_size);
     }
 
-    sacn_unlock();
+    sacn_source_unlock();
   }
 
   return total_num_network_interfaces;

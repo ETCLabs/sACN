@@ -31,7 +31,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_MERGE_RECEIVER_ENABLED
+#if SACN_MERGE_RECEIVER_ENABLED || DOXYGEN
 
 /**************************** Private constants ******************************/
 
@@ -201,4 +201,4 @@ void merge_receiver_sources_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode*
   merge_receiver_source_node_dealloc(node);
 }
 
-#endif  // SACN_MERGE_RECEIVER_ENABLED
+#endif  // SACN_MERGE_RECEIVER_ENABLED || DOXYGEN

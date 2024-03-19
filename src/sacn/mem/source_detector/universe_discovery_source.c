@@ -33,7 +33,7 @@
 #include "etcpal/mempool.h"
 #endif
 
-#if SACN_SOURCE_DETECTOR_ENABLED
+#if SACN_SOURCE_DETECTOR_ENABLED || DOXYGEN
 
 // Suppress strncpy() warning on Windows/MSVC.
 #ifdef _MSC_VER
@@ -289,4 +289,4 @@ void universe_discovery_source_node_dealloc(EtcPalRbNode* node)
 #endif
 }
 
-#endif  // SACN_SOURCE_DETECTOR_ENABLED
+#endif  // SACN_SOURCE_DETECTOR_ENABLED || DOXYGEN

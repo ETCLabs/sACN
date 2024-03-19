@@ -17,26 +17,18 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#ifndef SACN_MOCK_PRIVATE_COMMON_H_
-#define SACN_MOCK_PRIVATE_COMMON_H_
+#include "gtest/gtest.h"
 
-#include "sacn/private/common.h"
-#include "fff.h"
+extern "C" bool SacnTestingAssertHandler(const char* expression, const char* file, const char* func, unsigned int line)
+{
+  ADD_FAILURE() << "Assertion failure from inside sACN library. Expression: " << expression << " File: " << file
+                << " Function: " << func << " Line: " << line;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-DECLARE_FAKE_VALUE_FUNC(bool, sacn_initialized);
-DECLARE_FAKE_VALUE_FUNC(bool, sacn_receiver_lock);
-DECLARE_FAKE_VOID_FUNC(sacn_receiver_unlock);
-DECLARE_FAKE_VALUE_FUNC(bool, sacn_source_lock);
-DECLARE_FAKE_VOID_FUNC(sacn_source_unlock);
-
-void sacn_common_reset_all_fakes(void);
-
-#ifdef __cplusplus
+  return false;
 }
-#endif
 
-#endif /* SACN_MOCK_PRIVATE_COMMON_H_ */
+int main(int argc, char* argv[])
+{
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

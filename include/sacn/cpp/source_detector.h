@@ -271,7 +271,8 @@ extern "C" inline void SourceDetectorCbMemoryLimitExceeded(void* context)
  * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in] notify_handler The callback handler for the sACN Source Detector to be created.
+ * @param[in] notify_handler The callback handler for the sACN Source Detector to be created. This reference must remain
+ * valid until Shutdown() or sacn::Deinit() is called.
  * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this source detector.
  * @return #kEtcPalErrOk: Detector created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
@@ -301,7 +302,8 @@ inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler,
  * Note that the detector is considered as successfully created if it is able to successfully use any of the
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
- * @param[in] notify_handler The callback handler for the sACN Source Detector to be created.
+ * @param[in] notify_handler The callback handler for the sACN Source Detector to be created. This reference must remain
+ * valid until Shutdown() or sacn::Deinit() is called.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Detector created successfully.
@@ -326,7 +328,8 @@ inline etcpal::Error SourceDetector::Startup(NotifyHandler& notify_handler, std:
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] settings Configuration parameters for the sACN Source Detector to be created.
- * @param[in] notify_handler The callback handler for the sACN Source Detector to be created.
+ * @param[in] notify_handler The callback handler for the sACN Source Detector to be created. This reference must remain
+ * valid until Shutdown() or sacn::Deinit() is called.
  * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this source detector.
  * @return #kEtcPalErrOk: Detector created successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
@@ -354,7 +357,8 @@ inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHan
  * network interfaces passed in.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] settings Configuration parameters for the sACN Source Detector to be created.
- * @param[in] notify_handler The callback handler for the sACN Source Detector to be created.
+ * @param[in] notify_handler The callback handler for the sACN Source Detector to be created. This reference must remain
+ * valid until Shutdown() or sacn::Deinit() is called.
  * @param[in, out] netints Optional. If !empty, this is the list of interfaces the application wants to use, and the
  * status codes are filled in.  If empty, all available interfaces are tried and this vector isn't modified.
  * @return #kEtcPalErrOk: Detector created successfully.
@@ -381,6 +385,10 @@ inline etcpal::Error SourceDetector::Startup(const Settings& settings, NotifyHan
 
 /**
  * @brief Destroy the sACN Source Detector.
+ *
+ * WARNING: Calling this from a source detector callback will deadlock!
+ *
+ * After this function completes, callbacks will no longer be called for the source detector.
  *
  * @return #kEtcPalErrOk: Detector destroyed successfully.
  * @return #kEtcPalErrNotInit: Module not initialized.
