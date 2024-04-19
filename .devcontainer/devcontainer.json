@@ -19,7 +19,8 @@
 		"vscode": {
 			"settings": {},
 			"extensions": [
-				"ms-vscode.cpptools-extension-pack"
+				"ms-vscode.cpptools-extension-pack",
+				"ms-azuretools.vscode-docker"
 			]
 		}
 	}
