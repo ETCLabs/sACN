@@ -17,10 +17,13 @@
 	"customizations": {
 		// Configure properties specific to VS Code.
 		"vscode": {
-			"settings": {},
+			"settings": {
+				"lldb.showDisassembly": "never"
+			},
 			"extensions": [
 				"ms-vscode.cpptools-extension-pack",
-				"ms-azuretools.vscode-docker"
+				"ms-azuretools.vscode-docker",
+				"vadimcn.vscode-lldb"
 			]
 		}
 	}
