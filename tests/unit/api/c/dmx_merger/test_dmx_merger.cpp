@@ -129,13 +129,13 @@ public:
   }
 
 protected:
-  uint8_t levels_[DMX_ADDRESS_COUNT];
-  uint8_t per_address_priorities_[DMX_ADDRESS_COUNT];
-  bool per_address_priorities_active_;
-  uint8_t universe_priority_;
-  sacn_dmx_merger_source_t owners_[DMX_ADDRESS_COUNT];
-  sacn_dmx_merger_t merger_handle_;
-  SacnDmxMergerConfig merger_config_;
+  uint8_t levels_[DMX_ADDRESS_COUNT]{};
+  uint8_t per_address_priorities_[DMX_ADDRESS_COUNT]{};
+  bool per_address_priorities_active_{};
+  uint8_t universe_priority_{};
+  sacn_dmx_merger_source_t owners_[DMX_ADDRESS_COUNT]{};
+  sacn_dmx_merger_t merger_handle_{};
+  SacnDmxMergerConfig merger_config_{};
 };
 
 /* This fixture is for testing the update (merging) functions of the merger API. */

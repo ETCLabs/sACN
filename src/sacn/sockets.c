@@ -1049,7 +1049,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
   if (!SACN_ASSERT_VERIFY(recv_thread_context) || !SACN_ASSERT_VERIFY(read_result))
     return kEtcPalErrSys;
 
-  EtcPalPollEvent event;
+  EtcPalPollEvent event = {0};
   etcpal_error_t poll_res = etcpal_poll_wait(&recv_thread_context->poll_context, &event, SACN_RECEIVER_READ_TIMEOUT_MS);
   if (poll_res == kEtcPalErrOk)
   {
@@ -1060,9 +1060,9 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
     }
     else if (event.events & ETCPAL_POLL_IN)
     {
-      uint8_t control_buf[ETCPAL_MAX_CONTROL_SIZE_PKTINFO];  // Ancillary data
+      uint8_t control_buf[ETCPAL_MAX_CONTROL_SIZE_PKTINFO] = {0};  // Ancillary data
 
-      EtcPalMsgHdr msg;
+      EtcPalMsgHdr msg = {{0}};
       msg.buf = recv_thread_context->recv_buf;
       msg.buflen = SACN_MTU;
       msg.control = control_buf;
