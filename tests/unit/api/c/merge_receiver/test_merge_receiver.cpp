@@ -344,9 +344,9 @@ TEST_F(TestMergeReceiver, ChangeUniverseWorks)
   SacnMergeReceiver* merge_receiver = nullptr;
   ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver), kEtcPalErrOk);
 
-  EtcPalSockAddr source_addr;
-  SacnRemoteSource source_info;
-  SacnRecvUniverseData universe_data;
+  EtcPalSockAddr source_addr{};
+  SacnRemoteSource source_info{};
+  SacnRecvUniverseData universe_data{};
   for (size_t i = 0u; i < kNumSources; ++i)
   {
     source_info.handle = static_cast<sacn_remote_source_t>(i);

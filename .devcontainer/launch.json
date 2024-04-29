@@ -1,0 +1,14 @@
+// Copy this into your .vscode directory to use for a debug configuration within a dev container.
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(lldb) Launch",
+            "type": "lldb",
+            "request": "launch",
+            // Resolved by CMake Tools:
+            "program": "${command:cmake.launchTargetPath}",
+            "args": []
+        }
+    ]
+}

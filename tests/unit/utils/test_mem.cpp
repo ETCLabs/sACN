@@ -755,7 +755,7 @@ TEST_F(TestMem, AddReceiverToListWorks)
 #if SACN_DYNAMIC_MEM
   SacnReceiver receiver{};
 #else
-  SacnReceiver receiver{{}, {}, {}, {}};   // Fixes error C3852
+  SacnReceiver receiver{{}, {}, {}, {}};  // Fixes error C3852
 #endif
 
   add_receiver_to_list(&rtc, &receiver);
@@ -783,7 +783,7 @@ TEST_F(TestMem, RemoveReceiverFromListWorks)
   SacnReceiver receiver2{};
   SacnReceiver receiver3{};
 #else
-  SacnReceiver receiver{{}, {}, {}, {}};   // Fixes error C3852
+  SacnReceiver receiver{{}, {}, {}, {}};  // Fixes error C3852
   SacnReceiver receiver2{{}, {}, {}, {}};
   SacnReceiver receiver3{{}, {}, {}, {}};
 #endif
@@ -832,9 +832,9 @@ TEST_F(TestMem, AddSacnMergeReceiverSourceWorks)
   EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &kTestMergeReceiverConfig, &merge_receiver),
             kEtcPalErrOk);
 
-  EtcPalSockAddr source_addr;
-  SacnRemoteSource source_info;
-  SacnRecvUniverseData universe_data;
+  EtcPalSockAddr source_addr{};
+  SacnRemoteSource source_info{};
+  SacnRecvUniverseData universe_data{};
   etcpal::Uuid last_cid;
   for (size_t i = 0u; i < kNumSources; ++i)
   {
@@ -862,9 +862,9 @@ TEST_F(TestMem, RemoveSacnMergeReceiverSourceWorks)
   EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &kTestMergeReceiverConfig, &merge_receiver),
             kEtcPalErrOk);
 
-  EtcPalSockAddr source_addr;
-  SacnRemoteSource source_info;
-  SacnRecvUniverseData universe_data;
+  EtcPalSockAddr source_addr{};
+  SacnRemoteSource source_info{};
+  SacnRecvUniverseData universe_data{};
   for (size_t i = 0u; i < kNumSources; ++i)
   {
     source_info.handle = static_cast<sacn_remote_source_t>(i);
@@ -920,9 +920,9 @@ TEST_F(TestMem, RespectsMaxMergeReceiverSourceLimit)
   SacnMergeReceiver* merge_receiver = NULL;
   EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &config, &merge_receiver), kEtcPalErrOk);
 
-  EtcPalSockAddr source_addr;
-  SacnRemoteSource source_info;
-  SacnRecvUniverseData universe_data;
+  EtcPalSockAddr source_addr{};
+  SacnRemoteSource source_info{};
+  SacnRecvUniverseData universe_data{};
   for (int i = 0; i < SACN_RECEIVER_TOTAL_MAX_SOURCES; ++i)
   {
     source_info.handle = static_cast<sacn_remote_source_t>(i);
