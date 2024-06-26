@@ -486,6 +486,9 @@ struct SacnReceiver
    * #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE -- otherwise #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead. */
   size_t source_count_max;
 
+  /* The footprint within the universe to monitor. TODO: WIP, not 100% implemented yet. */
+  SacnRecvUniverseSubrange footprint;
+
   /* What IP networking the receiver will support. */
   sacn_ip_support_t ip_supported;
 

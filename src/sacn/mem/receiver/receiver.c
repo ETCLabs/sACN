@@ -193,6 +193,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   }
 
   receiver->source_count_max = config->source_count_max;
+  receiver->footprint = config->footprint;
 
   receiver->ip_supported = config->ip_supported;
 

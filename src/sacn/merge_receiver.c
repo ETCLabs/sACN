@@ -115,6 +115,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
       sacn_receiver_t receiver_handle = SACN_RECEIVER_INVALID;
       SacnReceiverConfig receiver_config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
       receiver_config.universe_id = config->universe_id;
+      receiver_config.footprint = config->footprint;
 #if SACN_DYNAMIC_MEM
       receiver_config.source_count_max = config->source_count_max;
 #else
