@@ -24,4 +24,6 @@ bool SacnTestingAssertHandler(const char* expression, const char* file, const ch
 #define SACN_SOURCE_DETECTOR_MAX_SOURCES 10
 #define SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE 3000
 
+#define SACN_DMX_MERGER_MAX_SLOTS 500
+
 #define SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER 0
