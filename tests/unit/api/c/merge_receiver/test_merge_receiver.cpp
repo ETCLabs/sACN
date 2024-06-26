@@ -58,7 +58,7 @@ static constexpr SacnMergeReceiverConfig kTestConfig = {
     kTestUniverse,
     {universe_data, universe_non_dmx, sources_lost, sampling_started, sampling_ended, source_pap_lost,
      source_limit_exceeded, NULL},
-    {1, DMX_ADDRESS_COUNT},
+    {1, SACN_DMX_MERGER_MAX_SLOTS},
     SACN_RECEIVER_INFINITE_SOURCES,
     true,
     kSacnIpV4AndIpV6};
@@ -66,7 +66,7 @@ static const EtcPalSockAddr kTestSourceAddr = {SACN_PORT, etcpal::IpAddr::FromSt
 static const SacnRemoteSource kTestRemoteSource = {0u, etcpal::Uuid::V4().get(), {'\0'}};
 static const std::string kTestSourceName = kTestRemoteSource.name;
 static const SacnRecvUniverseData kTestUniverseData = {kTestUniverse,      kTestPriority,          false,  false,
-                                                       SACN_STARTCODE_DMX, {1, DMX_ADDRESS_COUNT}, nullptr};
+                                                       SACN_STARTCODE_DMX, {1, SACN_DMX_MERGER_MAX_SLOTS}, nullptr};
 
 class TestMergeReceiver : public ::testing::Test
 {

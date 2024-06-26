@@ -40,7 +40,7 @@ static constexpr SacnMergeReceiverConfig kTestMergeReceiverConfig = {
     {[](sacn_merge_receiver_t, const SacnRecvMergedData*, void*) {},
      [](sacn_merge_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*, const SacnRecvUniverseData*, void*) {},
      NULL, NULL},
-    {1, DMX_ADDRESS_COUNT},
+    {1, SACN_DMX_MERGER_MAX_SLOTS},
     SACN_RECEIVER_INFINITE_SOURCES,
     true,
     kSacnIpV4AndIpV6};

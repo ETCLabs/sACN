@@ -273,7 +273,7 @@ typedef struct SacnMergeReceiverConfig
 /** A default-value initializer for an SacnMergeReceiverConfig struct. */
 #define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                                                 \
   {                                                                                                             \
-    0, {NULL, NULL, NULL, NULL}, {1, DMX_ADDRESS_COUNT}, SACN_RECEIVER_INFINITE_SOURCES, true, kSacnIpV4AndIpV6 \
+    0, {NULL, NULL, NULL, NULL}, {1, SACN_DMX_MERGER_MAX_SLOTS}, SACN_RECEIVER_INFINITE_SOURCES, true, kSacnIpV4AndIpV6 \
   }
 
 /** A set of network interfaces for a particular merge receiver. */
