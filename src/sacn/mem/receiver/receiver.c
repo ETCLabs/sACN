@@ -23,7 +23,7 @@
 #include "etcpal/common.h"
 #include "etcpal/rbtree.h"
 #include "sacn/private/common.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn/private/sockets.h"
 #include "sacn/private/source_loss.h"
 #include "sacn/private/mem.h"
@@ -193,6 +193,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   }
 
   receiver->source_count_max = config->source_count_max;
+  receiver->footprint = config->footprint;
 
   receiver->ip_supported = config->ip_supported;
 

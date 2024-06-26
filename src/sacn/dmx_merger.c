@@ -414,7 +414,7 @@ etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_dmx_
   {
     if ((merger == SACN_DMX_MERGER_INVALID) || (source == SACN_DMX_MERGER_SOURCE_INVALID))
       result = kEtcPalErrInvalid;
-    if (new_levels_count > DMX_ADDRESS_COUNT)
+    if (new_levels_count > SACN_DMX_MERGER_MAX_SLOTS)
       result = kEtcPalErrInvalid;
     if (!new_levels || (new_levels_count == 0))
       result = kEtcPalErrInvalid;
@@ -472,7 +472,7 @@ etcpal_error_t sacn_dmx_merger_update_pap(sacn_dmx_merger_t merger, sacn_dmx_mer
   {
     if ((merger == SACN_DMX_MERGER_INVALID) || (source == SACN_DMX_MERGER_SOURCE_INVALID))
       result = kEtcPalErrInvalid;
-    if (pap_count > DMX_ADDRESS_COUNT)
+    if (pap_count > SACN_DMX_MERGER_MAX_SLOTS)
       result = kEtcPalErrInvalid;
     if (!pap || (pap_count == 0))
       result = kEtcPalErrInvalid;
@@ -731,7 +731,7 @@ etcpal_error_t add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t id_
 void update_levels(MergerState* merger, SourceState* source, const uint8_t* new_levels, uint16_t new_levels_count)
 {
   if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(new_levels) ||
-      !SACN_ASSERT_VERIFY(new_levels_count <= DMX_ADDRESS_COUNT))
+      !SACN_ASSERT_VERIFY(new_levels_count <= SACN_DMX_MERGER_MAX_SLOTS))
   {
     return;
   }
@@ -758,7 +758,7 @@ void update_pap(MergerState* merger, SourceState* source, const uint8_t* address
                 uint16_t address_priorities_count)
 {
   if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(address_priorities) ||
-      !SACN_ASSERT_VERIFY(address_priorities_count <= DMX_ADDRESS_COUNT))
+      !SACN_ASSERT_VERIFY(address_priorities_count <= SACN_DMX_MERGER_MAX_SLOTS))
   {
     return;
   }
@@ -811,7 +811,7 @@ void update_universe_priority(MergerState* merger, SourceState* source, uint8_t 
     if (source->source.using_universe_priority)
     {
       // Convert to PAP.
-      source->pap_count = DMX_ADDRESS_COUNT;
+      source->pap_count = SACN_DMX_MERGER_MAX_SLOTS;
       uint8_t pap = (priority == 0) ? 1 : priority;
 
       // Just copy to output if there's only one source, otherwise merge each changed priority.
@@ -843,8 +843,8 @@ void update_levels_single_source(MergerState* merger, SourceState* source, const
                                  size_t old_levels_count, size_t new_levels_count)
 {
   if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(new_levels) ||
-      !SACN_ASSERT_VERIFY(old_levels_count <= DMX_ADDRESS_COUNT) ||
-      !SACN_ASSERT_VERIFY(new_levels_count <= DMX_ADDRESS_COUNT))
+      !SACN_ASSERT_VERIFY(old_levels_count <= SACN_DMX_MERGER_MAX_SLOTS) ||
+      !SACN_ASSERT_VERIFY(new_levels_count <= SACN_DMX_MERGER_MAX_SLOTS))
   {
     return;
   }
@@ -895,8 +895,8 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
                                 size_t old_levels_count, size_t new_levels_count)
 {
   if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(new_levels) ||
-      !SACN_ASSERT_VERIFY(old_levels_count <= DMX_ADDRESS_COUNT) ||
-      !SACN_ASSERT_VERIFY(new_levels_count <= DMX_ADDRESS_COUNT))
+      !SACN_ASSERT_VERIFY(old_levels_count <= SACN_DMX_MERGER_MAX_SLOTS) ||
+      !SACN_ASSERT_VERIFY(new_levels_count <= SACN_DMX_MERGER_MAX_SLOTS))
   {
     return;
   }
@@ -973,8 +973,8 @@ void update_pap_single_source(MergerState* merger, SourceState* source, const ui
                               size_t old_pap_count, size_t new_pap_count)
 {
   if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(address_priorities) ||
-      !SACN_ASSERT_VERIFY(old_pap_count <= DMX_ADDRESS_COUNT) ||
-      !SACN_ASSERT_VERIFY(new_pap_count <= DMX_ADDRESS_COUNT))
+      !SACN_ASSERT_VERIFY(old_pap_count <= SACN_DMX_MERGER_MAX_SLOTS) ||
+      !SACN_ASSERT_VERIFY(new_pap_count <= SACN_DMX_MERGER_MAX_SLOTS))
   {
     return;
   }
@@ -1010,8 +1010,8 @@ void update_pap_multi_source(MergerState* merger, SourceState* source, const uin
                              size_t old_pap_count, size_t new_pap_count)
 {
   if (!SACN_ASSERT_VERIFY(merger) || !SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(address_priorities) ||
-      !SACN_ASSERT_VERIFY(old_pap_count <= DMX_ADDRESS_COUNT) ||
-      !SACN_ASSERT_VERIFY(new_pap_count <= DMX_ADDRESS_COUNT))
+      !SACN_ASSERT_VERIFY(old_pap_count <= SACN_DMX_MERGER_MAX_SLOTS) ||
+      !SACN_ASSERT_VERIFY(new_pap_count <= SACN_DMX_MERGER_MAX_SLOTS))
   {
     return;
   }
@@ -1036,7 +1036,7 @@ void update_universe_priority_single_source(MergerState* merger, SourceState* so
     return;
 
   // Always track PAP per-source, but only merge priorities for levels that have come in.
-  memset(source->source.address_priority, pap, DMX_ADDRESS_COUNT);
+  memset(source->source.address_priority, pap, SACN_DMX_MERGER_MAX_SLOTS);
 
   memset(merger->config.per_address_priorities, pap, source->source.valid_level_count);
   for (size_t i = 0; i < source->source.valid_level_count; ++i)
@@ -1057,7 +1057,7 @@ void update_universe_priority_multi_source(MergerState* merger, SourceState* sou
     return;
 
   // Always track PAP per-source, but only merge priorities for levels that have come in.
-  memset(source->source.address_priority, pap, DMX_ADDRESS_COUNT);
+  memset(source->source.address_priority, pap, SACN_DMX_MERGER_MAX_SLOTS);
   merge_new_priorities(merger, source, 0, source->source.valid_level_count);
 }
 
@@ -1072,7 +1072,7 @@ void merge_new_priorities(MergerState* merger, const SourceState* source, size_t
   // Use regular asserts for performance
   assert(merger);
   assert(source);
-  assert(slot_range_end <= DMX_ADDRESS_COUNT);
+  assert(slot_range_end <= SACN_DMX_MERGER_MAX_SLOTS);
 
   for (size_t slot = slot_range_start; slot < slot_range_end; ++slot)
   {
@@ -1222,11 +1222,11 @@ SourceState* construct_source_state(sacn_dmx_merger_source_t handle)
   {
     source_state->handle = handle;
     source_state->source.id = handle;
-    memset(source_state->source.levels, 0, DMX_ADDRESS_COUNT);
+    memset(source_state->source.levels, 0, SACN_DMX_MERGER_MAX_SLOTS);
     source_state->source.valid_level_count = 0;
     source_state->source.universe_priority = 0;
     source_state->source.using_universe_priority = true;
-    memset(source_state->source.address_priority, 0, DMX_ADDRESS_COUNT);
+    memset(source_state->source.address_priority, 0, SACN_DMX_MERGER_MAX_SLOTS);
     source_state->pap_count = 0;
     source_state->universe_priority_uninitialized = true;
   }
@@ -1266,21 +1266,21 @@ MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMerge
                        dmx_merger_rb_node_alloc_func, dmx_merger_rb_node_dealloc_func);
 
     merger_state->config = *config;
-    memset(merger_state->config.levels, 0, DMX_ADDRESS_COUNT);
+    memset(merger_state->config.levels, 0, SACN_DMX_MERGER_MAX_SLOTS);
 
 #if !SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER
     if (merger_state->config.per_address_priorities == NULL)  // We need to track this - use internal storage.
       merger_state->config.per_address_priorities = merger_state->pap_internal;
 #endif
 
-    memset(merger_state->config.per_address_priorities, 0, DMX_ADDRESS_COUNT);
+    memset(merger_state->config.per_address_priorities, 0, SACN_DMX_MERGER_MAX_SLOTS);
 
 #if !SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER
     if (merger_state->config.owners == NULL)  // We need to track this - use internal storage.
       merger_state->config.owners = merger_state->owners_internal;
 #endif
 
-    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    for (int i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
       merger_state->config.owners[i] = SACN_DMX_MERGER_SOURCE_INVALID;
 
     if (merger_state->config.per_address_priorities_active != NULL)
@@ -1440,8 +1440,8 @@ etcpal_error_t remove_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_dmx_
   if (result == kEtcPalErrOk)
   {
     // Merge the source with unsourced priorities to remove this source from the merge output.
-    memset(source_being_removed->source.address_priority, 0, DMX_ADDRESS_COUNT);
-    merge_new_priorities(merger_state, source_being_removed, 0, DMX_ADDRESS_COUNT);
+    memset(source_being_removed->source.address_priority, 0, SACN_DMX_MERGER_MAX_SLOTS);
+    merge_new_priorities(merger_state, source_being_removed, 0, SACN_DMX_MERGER_MAX_SLOTS);
 
     // Also update universe priority and PAP active outputs if needed.
     if ((merger_state->config.per_address_priorities_active != NULL) &&
@@ -1585,7 +1585,7 @@ etcpal_error_t remove_sacn_dmx_merger_pap(sacn_dmx_merger_t merger, sacn_dmx_mer
     // Merge all the levels again. This time it will use universe priority (converted to PAP).
     memset(source_state->source.address_priority,
            (source_state->source.universe_priority == 0) ? 1 : source_state->source.universe_priority,
-           DMX_ADDRESS_COUNT);
+           SACN_DMX_MERGER_MAX_SLOTS);
 
     // Only merge priorities for levels that have come in.
     merge_new_priorities(merger_state, source_state, 0, source_state->source.valid_level_count);

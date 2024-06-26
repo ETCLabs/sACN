@@ -23,7 +23,7 @@
 #include "etcpal/mempool.h"
 #include "sacn/private/common.h"
 #include "sacn/private/mem.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 
 #if SACN_RECEIVER_ENABLED || DOXYGEN
 

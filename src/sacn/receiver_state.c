@@ -930,9 +930,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
       if (src)
       {
         if (universe_data->universe_data.preview && receiver->filter_preview_data)
-        {
           notify = false;
-        }
 
         if (notify)
         {
@@ -941,6 +939,11 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
           universe_data->receiver_handle = receiver->keys.handle;
           universe_data->universe_data.universe_id = receiver->keys.universe;
           universe_data->universe_data.is_sampling = (sp_netint != NULL);
+
+          // TODO: Finish footprint implementation (factor in start_address)
+          if (universe_data->universe_data.slot_range.address_count > receiver->footprint.address_count)
+            universe_data->universe_data.slot_range.address_count = receiver->footprint.address_count;
+
           universe_data->thread_id = thread_id;
           universe_data->context = receiver->api_callbacks.context;
         }

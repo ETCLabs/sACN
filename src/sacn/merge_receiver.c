@@ -115,6 +115,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
       sacn_receiver_t receiver_handle = SACN_RECEIVER_INVALID;
       SacnReceiverConfig receiver_config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
       receiver_config.universe_id = config->universe_id;
+      receiver_config.footprint = config->footprint;
 #if SACN_DYNAMIC_MEM
       receiver_config.source_count_max = config->source_count_max;
 #else
@@ -645,7 +646,7 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
 
         bool new_merge_occurred = false;
         if ((universe_data->slot_range.address_count > 0) &&
-            (universe_data->slot_range.address_count <= DMX_ADDRESS_COUNT))
+            (universe_data->slot_range.address_count <= SACN_DMX_MERGER_MAX_SLOTS))
         {
           if (universe_data->start_code == SACN_STARTCODE_DMX)
           {
@@ -671,11 +672,11 @@ void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalS
             merged_data_notification->handle = (sacn_merge_receiver_t)receiver_handle;
             merged_data_notification->universe = universe_data->universe_id;
             merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-            merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-            memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
-            memcpy(merged_data_notification->priorities, merge_receiver->priorities, DMX_ADDRESS_COUNT);
+            merged_data_notification->slot_range.address_count = SACN_DMX_MERGER_MAX_SLOTS;
+            memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_DMX_MERGER_MAX_SLOTS);
+            memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_DMX_MERGER_MAX_SLOTS);
             memcpy(merged_data_notification->owners, merge_receiver->owners,
-                   DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+                   SACN_DMX_MERGER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
           }
           else
           {
@@ -769,11 +770,11 @@ void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, cons
             merged_data_notification->handle = (sacn_merge_receiver_t)handle;
             merged_data_notification->universe = universe;
             merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-            merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-            memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
-            memcpy(merged_data_notification->priorities, merge_receiver->priorities, DMX_ADDRESS_COUNT);
+            merged_data_notification->slot_range.address_count = SACN_DMX_MERGER_MAX_SLOTS;
+            memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_DMX_MERGER_MAX_SLOTS);
+            memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_DMX_MERGER_MAX_SLOTS);
             memcpy(merged_data_notification->owners, merge_receiver->owners,
-                   DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+                   SACN_DMX_MERGER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
           }
           else
           {
@@ -918,11 +919,11 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
             merged_data_notification->handle = (sacn_merge_receiver_t)handle;
             merged_data_notification->universe = universe;
             merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-            merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-            memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
-            memcpy(merged_data_notification->priorities, merge_receiver->priorities, DMX_ADDRESS_COUNT);
+            merged_data_notification->slot_range.address_count = SACN_DMX_MERGER_MAX_SLOTS;
+            memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_DMX_MERGER_MAX_SLOTS);
+            memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_DMX_MERGER_MAX_SLOTS);
             memcpy(merged_data_notification->owners, merge_receiver->owners,
-                   DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+                   SACN_DMX_MERGER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
           }
           else
           {
@@ -1012,11 +1013,11 @@ void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const Sa
               merged_data_notification->handle = (sacn_merge_receiver_t)handle;
               merged_data_notification->universe = universe;
               merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-              merged_data_notification->slot_range.address_count = DMX_ADDRESS_COUNT;
-              memcpy(merged_data_notification->levels, merge_receiver->levels, DMX_ADDRESS_COUNT);
-              memcpy(merged_data_notification->priorities, merge_receiver->priorities, DMX_ADDRESS_COUNT);
+              merged_data_notification->slot_range.address_count = SACN_DMX_MERGER_MAX_SLOTS;
+              memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_DMX_MERGER_MAX_SLOTS);
+              memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_DMX_MERGER_MAX_SLOTS);
               memcpy(merged_data_notification->owners, merge_receiver->owners,
-                     DMX_ADDRESS_COUNT * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+                     SACN_DMX_MERGER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
             }
             else
             {

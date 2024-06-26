@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include "sacn/common.h"
 #include "sacn/private/common.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "etcpal/acn_rlp.h"
 #include "etcpal/pack.h"
 

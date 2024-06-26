@@ -24,7 +24,7 @@
 #include "etcpal/common.h"
 #include "etcpal/rbtree.h"
 #include "sacn/private/common.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn/private/pdu.h"
 #include "sacn/private/util.h"
 

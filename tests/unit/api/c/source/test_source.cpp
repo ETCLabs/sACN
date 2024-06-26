@@ -28,7 +28,7 @@
 #include "sacn_mock/private/sockets.h"
 #include "sacn_mock/private/source_state.h"
 #include "sacn/private/mem.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn/private/pdu.h"
 #include "sacn/private/source.h"
 #include "gtest/gtest.h"

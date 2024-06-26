@@ -28,7 +28,7 @@
 #include "sacn_mock/private/source_loss.h"
 #include "sacn_mock/private/sockets.h"
 #include "sacn/private/mem.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn/private/dmx_merger.h"
 #include "gtest/gtest.h"
 #include "fff.h"
@@ -129,11 +129,11 @@ public:
   }
 
 protected:
-  uint8_t levels_[DMX_ADDRESS_COUNT]{};
-  uint8_t per_address_priorities_[DMX_ADDRESS_COUNT]{};
+  uint8_t levels_[SACN_DMX_MERGER_MAX_SLOTS]{};
+  uint8_t per_address_priorities_[SACN_DMX_MERGER_MAX_SLOTS]{};
   bool per_address_priorities_active_{};
   uint8_t universe_priority_{};
-  sacn_dmx_merger_source_t owners_[DMX_ADDRESS_COUNT]{};
+  sacn_dmx_merger_source_t owners_[SACN_DMX_MERGER_MAX_SLOTS]{};
   sacn_dmx_merger_t merger_handle_{};
   SacnDmxMergerConfig merger_config_{};
 };
@@ -210,7 +210,7 @@ public:
   void UpdateExpectedMergeResults(sacn_dmx_merger_source_t source, std::optional<int> priority,
                                   std::optional<std::vector<uint8_t>> levels, std::optional<std::vector<uint8_t>> pap)
   {
-    for (size_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    for (size_t i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
     {
       bool level_sourced = levels && (i < levels->size());
       bool priority_sourced = (!pap && priority) || (pap && (i < pap->size()) && (pap->at(i) != 0));
@@ -245,7 +245,7 @@ public:
 
   bool VerifyMergeResults()
   {
-    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    for (int i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
     {
       uint8_t expected_level = static_cast<uint8_t>(expected_merge_levels_[i]);
       uint8_t expected_pap =
@@ -275,7 +275,7 @@ public:
 
   void ClearExpectedMergeResults()
   {
-    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    for (int i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
     {
       expected_merge_levels_[i] = 0;
       expected_merge_priorities_[i] = 0;
@@ -398,43 +398,43 @@ public:
 protected:
   sacn_dmx_merger_source_t merge_source_1_{SACN_DMX_MERGER_SOURCE_INVALID};
   sacn_dmx_merger_source_t merge_source_2_{SACN_DMX_MERGER_SOURCE_INVALID};
-  int expected_merge_levels_[DMX_ADDRESS_COUNT];
-  int expected_merge_priorities_[DMX_ADDRESS_COUNT];
+  int expected_merge_levels_[SACN_DMX_MERGER_MAX_SLOTS];
+  int expected_merge_priorities_[SACN_DMX_MERGER_MAX_SLOTS];
   bool expected_merge_pap_active_;
   int expected_merge_universe_priority_;
-  sacn_dmx_merger_source_t expected_merge_winners_[DMX_ADDRESS_COUNT];
+  sacn_dmx_merger_source_t expected_merge_winners_[SACN_DMX_MERGER_MAX_SLOTS];
 
   const std::vector<uint8_t> test_values_ascending_ = [&] {
-    std::vector<uint8_t> vect(DMX_ADDRESS_COUNT);
-    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    std::vector<uint8_t> vect(SACN_DMX_MERGER_MAX_SLOTS);
+    for (int i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
       vect[i] = i % 256;
     return vect;
   }();
 
   const std::vector<uint8_t> test_values_partial_ascending_ = [&] {
-    std::vector<uint8_t> vect(DMX_ADDRESS_COUNT);
-    for (int i = 0; i < (DMX_ADDRESS_COUNT / 2); ++i)
+    std::vector<uint8_t> vect(SACN_DMX_MERGER_MAX_SLOTS);
+    for (int i = 0; i < (SACN_DMX_MERGER_MAX_SLOTS / 2); ++i)
       vect[i] = i % 256;
     return vect;
   }();
 
   const std::vector<uint8_t> test_values_descending_ = [&] {
-    std::vector<uint8_t> vect(DMX_ADDRESS_COUNT);
-    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    std::vector<uint8_t> vect(SACN_DMX_MERGER_MAX_SLOTS);
+    for (int i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
       vect[i] = 255 - (i % 256);
     return vect;
   }();
 
   const std::vector<uint8_t> test_values_partial_descending_ = [&] {
-    std::vector<uint8_t> vect(DMX_ADDRESS_COUNT);
-    for (int i = 0; i < (DMX_ADDRESS_COUNT / 2); ++i)
+    std::vector<uint8_t> vect(SACN_DMX_MERGER_MAX_SLOTS);
+    for (int i = 0; i < (SACN_DMX_MERGER_MAX_SLOTS / 2); ++i)
       vect[i] = 255 - (i % 256);
     return vect;
   }();
 
   const std::vector<uint8_t> test_values_zero_ = [&] {
-    std::vector<uint8_t> vect(DMX_ADDRESS_COUNT);
-    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    std::vector<uint8_t> vect(SACN_DMX_MERGER_MAX_SLOTS);
+    for (int i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
       vect[i] = 0;
     return vect;
   }();
@@ -458,10 +458,10 @@ TEST_F(TestDmxMerger, DeinitClearsMergers)
 TEST_F(TestDmxMerger, MergerCreateWorks)
 {
   // Initialize the initial values, and what we expect them to be after sacn_dmx_merger_create.
-  uint8_t expected_levels_priorities[DMX_ADDRESS_COUNT];
-  sacn_dmx_merger_source_t expected_owners[DMX_ADDRESS_COUNT];
+  uint8_t expected_levels_priorities[SACN_DMX_MERGER_MAX_SLOTS];
+  sacn_dmx_merger_source_t expected_owners[SACN_DMX_MERGER_MAX_SLOTS];
 
-  for (uint16_t i = 0; i < DMX_ADDRESS_COUNT; ++i)
+  for (uint16_t i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
   {
     levels_[i] = i % 0xff;
     owners_[i] = i;
@@ -481,9 +481,9 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
 
   // Make sure the values changed as expected.
   EXPECT_NE(merger_handle_, initial_handle);
-  EXPECT_EQ(memcmp(levels_, expected_levels_priorities, DMX_ADDRESS_COUNT), 0);
-  EXPECT_EQ(memcmp(per_address_priorities_, expected_levels_priorities, DMX_ADDRESS_COUNT), 0);
-  EXPECT_EQ(memcmp(owners_, expected_owners, sizeof(sacn_dmx_merger_source_t) * DMX_ADDRESS_COUNT), 0);
+  EXPECT_EQ(memcmp(levels_, expected_levels_priorities, SACN_DMX_MERGER_MAX_SLOTS), 0);
+  EXPECT_EQ(memcmp(per_address_priorities_, expected_levels_priorities, SACN_DMX_MERGER_MAX_SLOTS), 0);
+  EXPECT_EQ(memcmp(owners_, expected_owners, sizeof(sacn_dmx_merger_source_t) * SACN_DMX_MERGER_MAX_SLOTS), 0);
 
   // Make sure the correct merger state was created.
   EXPECT_EQ(get_number_of_mergers(), 1u);
@@ -497,7 +497,7 @@ TEST_F(TestDmxMerger, MergerCreateWorks)
   EXPECT_EQ(merger_state->config.levels, merger_config_.levels);
   EXPECT_EQ(merger_state->config.per_address_priorities, merger_config_.per_address_priorities);
   EXPECT_EQ(merger_state->config.owners, merger_config_.owners);
-  EXPECT_EQ(memcmp(merger_state->config.per_address_priorities, expected_levels_priorities, DMX_ADDRESS_COUNT), 0);
+  EXPECT_EQ(memcmp(merger_state->config.per_address_priorities, expected_levels_priorities, SACN_DMX_MERGER_MAX_SLOTS), 0);
   EXPECT_EQ(etcpal_rbtree_size(&merger_state->source_state_lookup), 0u);
 }
 
@@ -629,11 +629,11 @@ TEST_F(TestDmxMerger, AddSourceWorks)
   EXPECT_EQ(source_state->source.universe_priority, 0u);
   EXPECT_EQ(source_state->source.using_universe_priority, true);
 
-  uint8_t expected_levels_priorities[DMX_ADDRESS_COUNT];
-  memset(expected_levels_priorities, 0, DMX_ADDRESS_COUNT);
+  uint8_t expected_levels_priorities[SACN_DMX_MERGER_MAX_SLOTS];
+  memset(expected_levels_priorities, 0, SACN_DMX_MERGER_MAX_SLOTS);
 
-  EXPECT_EQ(memcmp(source_state->source.levels, expected_levels_priorities, DMX_ADDRESS_COUNT), 0);
-  EXPECT_EQ(memcmp(source_state->source.address_priority, expected_levels_priorities, DMX_ADDRESS_COUNT), 0);
+  EXPECT_EQ(memcmp(source_state->source.levels, expected_levels_priorities, SACN_DMX_MERGER_MAX_SLOTS), 0);
+  EXPECT_EQ(memcmp(source_state->source.address_priority, expected_levels_priorities, SACN_DMX_MERGER_MAX_SLOTS), 0);
 }
 
 TEST_F(TestDmxMerger, AddSourceErrInvalidWorks)
@@ -701,15 +701,15 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
 
   // Feed in data from source 1 with a universe priority.
   uint8_t priority = source_1_priority;
-  auto source_1_values = std::vector<uint8_t>(DMX_ADDRESS_COUNT, source_1_value);
+  auto source_1_values = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS, source_1_value);
 
   UpdateLevels(source_1_handle, source_1_values);
   UpdateUniversePriority(source_1_handle, priority);
 
   // Feed in data from source 2 with per-address-priorities, one half lower and one half higher.
-  auto source_2_values = std::vector<uint8_t>(DMX_ADDRESS_COUNT, source_2_value);
-  auto source_2_priorities = std::vector<uint8_t>(DMX_ADDRESS_COUNT / 2, source_2_priority_1);
-  auto source_2_priorities_pt2 = std::vector<uint8_t>(DMX_ADDRESS_COUNT / 2, source_2_priority_2);
+  auto source_2_values = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS, source_2_value);
+  auto source_2_priorities = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS / 2, source_2_priority_1);
+  auto source_2_priorities_pt2 = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS / 2, source_2_priority_2);
   source_2_priorities.insert(source_2_priorities.end(), source_2_priorities_pt2.begin(), source_2_priorities_pt2.end());
 
   UpdateLevels(source_2_handle, source_2_values);
@@ -717,9 +717,9 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
   UpdateUniversePriority(source_2_handle, source_2_priority_2);
 
   // Before removing a source, check the output.
-  for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+  for (int i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
   {
-    if (i < (DMX_ADDRESS_COUNT / 2))
+    if (i < (SACN_DMX_MERGER_MAX_SLOTS / 2))
     {
       EXPECT_EQ(merger_config_.levels[i], source_1_value);
       EXPECT_EQ(merger_config_.per_address_priorities[i], source_1_priority);
@@ -740,7 +740,7 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
   EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_2_handle), kEtcPalErrOk);
 
   // The output should be just source 1 now.
-  for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+  for (int i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
   {
     EXPECT_EQ(merger_config_.levels[i], source_1_value);
     EXPECT_EQ(merger_config_.per_address_priorities[i], source_1_priority);
@@ -754,7 +754,7 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
   EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_1_handle), kEtcPalErrOk);
 
   // The output should indicate that no levels are being sourced.
-  for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+  for (int i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
   {
     EXPECT_EQ(merger_config_.levels[i], 0u);
     EXPECT_EQ(merger_config_.per_address_priorities[i], 0u);
@@ -873,8 +873,8 @@ TEST_F(TestDmxMerger, UpdatesPapsIdenticalToUpCorrectly)
   ASSERT_NE(merger_state, nullptr);
   ASSERT_NE(source_state, nullptr);
 
-  auto source_levels = std::vector<uint8_t>(DMX_ADDRESS_COUNT, kTestValue);
-  auto source_paps = std::vector<uint8_t>(DMX_ADDRESS_COUNT, kTestValue);
+  auto source_levels = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS, kTestValue);
+  auto source_paps = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS, kTestValue);
 
   UpdateLevels(source_handle, source_levels);
   UpdateUniversePriority(source_handle, kTestValue);
@@ -1196,7 +1196,7 @@ TEST_F(TestDmxMerger, UpdateLevelsErrInvalidWorks)
   etcpal_error_t invalid_new_levels_result_1 = sacn_dmx_merger_update_levels(0, 0, nullptr, 0);
   etcpal_error_t invalid_new_levels_result_2 = sacn_dmx_merger_update_levels(0, 0, &foo, 0);
   etcpal_error_t invalid_new_levels_result_3 = sacn_dmx_merger_update_levels(0, 0, nullptr, 1);
-  etcpal_error_t invalid_new_levels_result_4 = sacn_dmx_merger_update_levels(0, 0, &foo, DMX_ADDRESS_COUNT + 1);
+  etcpal_error_t invalid_new_levels_result_4 = sacn_dmx_merger_update_levels(0, 0, &foo, SACN_DMX_MERGER_MAX_SLOTS + 1);
 
   etcpal_error_t valid_result = sacn_dmx_merger_update_levels(0, 0, &foo, 1);
 
@@ -1252,7 +1252,7 @@ TEST_F(TestDmxMerger, UpdatePapErrInvalidWorks)
   etcpal_error_t invalid_pap_result_1 = sacn_dmx_merger_update_pap(0, 0, nullptr, 0);
   etcpal_error_t invalid_pap_result_2 = sacn_dmx_merger_update_pap(0, 0, &foo, 0);
   etcpal_error_t invalid_pap_result_3 = sacn_dmx_merger_update_pap(0, 0, nullptr, 1);
-  etcpal_error_t invalid_pap_result_4 = sacn_dmx_merger_update_pap(0, 0, &foo, DMX_ADDRESS_COUNT + 1);
+  etcpal_error_t invalid_pap_result_4 = sacn_dmx_merger_update_pap(0, 0, &foo, SACN_DMX_MERGER_MAX_SLOTS + 1);
 
   etcpal_error_t valid_result = sacn_dmx_merger_update_pap(0, 0, &foo, 1);
 
@@ -1409,8 +1409,8 @@ TEST_F(TestDmxMerger, StopSourcePapErrNotInitWorks)
 
 TEST_F(TestDmxMerger, SourceIsValidWorks)
 {
-  sacn_dmx_merger_source_t owners_array[DMX_ADDRESS_COUNT];
-  memset(owners_array, 1u, DMX_ADDRESS_COUNT * sizeof(sacn_dmx_merger_source_t));  // Fill with non-zero values.
+  sacn_dmx_merger_source_t owners_array[SACN_DMX_MERGER_MAX_SLOTS];
+  memset(owners_array, 1u, SACN_DMX_MERGER_MAX_SLOTS * sizeof(sacn_dmx_merger_source_t));  // Fill with non-zero values.
   owners_array[1] = SACN_DMX_MERGER_SOURCE_INVALID;                                // Set one of them to invalid.
 
   EXPECT_EQ(SACN_DMX_MERGER_SOURCE_IS_VALID(owners_array, 0), true);

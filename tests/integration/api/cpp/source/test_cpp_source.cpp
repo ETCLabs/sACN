@@ -24,7 +24,7 @@
 #include "etcpal_mock/common.h"
 #include "etcpal_mock/netint.h"
 #include "etcpal_mock/socket.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn/private/sockets.h"
 #include "sacn/private/source_state.h"
 #include "gtest/gtest.h"

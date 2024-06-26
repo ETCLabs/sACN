@@ -253,7 +253,7 @@ typedef struct SacnMergeReceiverConfig
 
   /********* Optional values **********/
 
-  /** The footprint within the universe to monitor. TODO: Currently unimplemented and thus ignored. */
+  /** The footprint within the universe to monitor. TODO: WIP, not 100% implemented yet. */
   SacnRecvUniverseSubrange footprint;
 
   /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
@@ -273,7 +273,7 @@ typedef struct SacnMergeReceiverConfig
 /** A default-value initializer for an SacnMergeReceiverConfig struct. */
 #define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                                                 \
   {                                                                                                             \
-    0, {NULL, NULL, NULL, NULL}, {1, DMX_ADDRESS_COUNT}, SACN_RECEIVER_INFINITE_SOURCES, true, kSacnIpV4AndIpV6 \
+    0, {NULL, NULL, NULL, NULL}, {1, SACN_DMX_MERGER_MAX_SLOTS}, SACN_RECEIVER_INFINITE_SOURCES, true, kSacnIpV4AndIpV6 \
   }
 
 /** A set of network interfaces for a particular merge receiver. */

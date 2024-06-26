@@ -12,4 +12,6 @@ bool SacnTestingAssertHandler(const char* expression, const char* file, const ch
 #define SACN_LOGGING_ENABLED 0
 #define SACN_DYNAMIC_MEM 1
 
+#define SACN_DMX_MERGER_MAX_SLOTS 500
+
 #define SACN_ETC_PRIORITY_EXTENSION 0
