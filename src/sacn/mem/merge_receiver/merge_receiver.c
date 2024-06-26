@@ -23,7 +23,7 @@
 #include "etcpal/common.h"
 #include "etcpal/rbtree.h"
 #include "sacn/private/common.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn/private/mem/common.h"
 #include "sacn/private/mem/receiver/remote_source.h"
 #include "sacn/private/mem/merge_receiver/merge_receiver_source.h"

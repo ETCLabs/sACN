@@ -26,7 +26,7 @@
 #include "etcpal/cpp/inet.h"
 #include "etcpal/acn_rlp.h"
 #include "sacn/private/mem.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn_mock/private/common.h"
 #include "gtest/gtest.h"
 #include "fff.h"

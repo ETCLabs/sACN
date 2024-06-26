@@ -8,6 +8,7 @@ set(SACN_PUBLIC_HEADERS
   ${SACN_INCLUDE}/sacn/version.h
   ${SACN_INCLUDE}/sacn/dmx_merger.h
   ${SACN_INCLUDE}/sacn/source_detector.h
+  ${SACN_INCLUDE}/sacn/opts.h
   ${SACN_INCLUDE}/sacn/cpp/common.h
   ${SACN_INCLUDE}/sacn/cpp/dmx_merger.h
   ${SACN_INCLUDE}/sacn/cpp/merge_receiver.h
@@ -47,7 +48,6 @@ set(SACN_PRIVATE_HEADERS
   ${SACN_SRC}/sacn/private/common.h
   ${SACN_SRC}/sacn/private/source_loss.h
   ${SACN_SRC}/sacn/private/dmx_merger.h
-  ${SACN_SRC}/sacn/private/opts.h
   ${SACN_SRC}/sacn/private/pdu.h
   ${SACN_SRC}/sacn/private/receiver.h
   ${SACN_SRC}/sacn/private/merge_receiver.h

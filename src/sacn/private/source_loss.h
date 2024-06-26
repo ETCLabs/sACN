@@ -27,7 +27,7 @@
 #include "etcpal/uuid.h"
 #include "sacn/receiver.h"
 #include "sacn/private/common.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 
 #ifdef __cplusplus
 extern "C" {

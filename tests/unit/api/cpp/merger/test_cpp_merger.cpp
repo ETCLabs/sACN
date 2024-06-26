@@ -26,7 +26,7 @@
 #include "sacn_mock/private/sockets.h"
 #include "sacn_mock/private/dmx_merger.h"
 #include "sacn/private/mem.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "gtest/gtest.h"
 
 #if SACN_DYNAMIC_MEM

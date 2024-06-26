@@ -27,7 +27,7 @@
           "include/sacn",
           "include/sacn/cpp",
           "src/sacn",
-          "src/sacn/private/opts.h"
+          "include/sacn/opts.h"
         ],
         "processed": [
           "docs/pages"

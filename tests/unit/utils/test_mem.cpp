@@ -23,7 +23,7 @@
 #include "etcpal/cpp/uuid.h"
 #include "etcpal_mock/common.h"
 #include "sacn/private/common.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn_mock/private/common.h"
 #include "gtest/gtest.h"
 #include "fff.h"

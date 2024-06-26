@@ -35,7 +35,7 @@
 #include "etcpal/common.h"
 #include "etcpal/netint.h"
 #include "sacn/private/mem.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn/private/pdu.h"
 
 #if SACN_DYNAMIC_MEM

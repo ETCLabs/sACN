@@ -18,7 +18,7 @@
  *****************************************************************************/
 
 /**
- * @file sacn/private/opts.h
+ * @file sacn/opts.h
  * @brief sACN configuration options.
  *
  * Default values for all of sACN's @ref sacnopts "compile-time configuration options".

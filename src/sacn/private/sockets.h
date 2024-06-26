@@ -25,7 +25,7 @@
 #include "etcpal/socket.h"
 #include "sacn/common.h"
 #include "sacn/private/common.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 
 #ifdef __cplusplus
 extern "C" {

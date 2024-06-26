@@ -23,7 +23,7 @@ function(sacn_add_core_library_target target_name)
 
   if(DEFINED config_dir)
     target_include_directories(${target_name} PRIVATE ${config_dir})
-    target_compile_definitions(${target_name} PRIVATE SACN_HAVE_CONFIG_H)
+    target_compile_definitions(${target_name} PUBLIC SACN_HAVE_CONFIG_H)
   endif()
 
   target_link_libraries(${target_name} PUBLIC EtcPal)

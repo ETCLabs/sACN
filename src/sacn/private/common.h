@@ -40,7 +40,7 @@
 #include "sacn/source.h"
 #include "sacn/source_detector.h"
 #include "sacn/dmx_merger.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 
 #ifdef __cplusplus
 extern "C" {

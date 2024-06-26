@@ -29,7 +29,7 @@
 #include "sacn_mock/private/dmx_merger.h"
 #include "sacn_mock/private/receiver.h"
 #include "sacn/private/mem.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn/private/merge_receiver.h"
 #include "gtest/gtest.h"
 #include "fff.h"

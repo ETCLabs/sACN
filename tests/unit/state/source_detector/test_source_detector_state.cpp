@@ -26,7 +26,7 @@
 #include "etcpal/cpp/uuid.h"
 #include "sacn_mock/private/common.h"
 #include "sacn/private/mem.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn/private/pdu.h"
 #include "gtest/gtest.h"
 #include "fff.h"
