@@ -477,10 +477,15 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #endif
 
 /**
- * @brief Currently unconfigurable; will be configurable in the future.
+ * @brief Configures the maximum number of slots supported for merging by the DMX merger.
  */
-#undef SACN_DMX_MERGER_MAX_SLOTS
+#ifdef SACN_DMX_MERGER_MAX_SLOTS
+#if (SACN_DMX_MERGER_MAX_SLOTS < 1) || (SACN_DMX_MERGER_MAX_SLOTS > 512)
+#error "Error: SACN_DMX_MERGER_MAX_SLOTS must be within the range 1-512."
+#endif
+#else
 #define SACN_DMX_MERGER_MAX_SLOTS 512
+#endif
 
 /**
  * @brief Disables internal DMX merger PAP buffer for merge results.

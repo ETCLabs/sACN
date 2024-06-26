@@ -33,6 +33,7 @@
 #include "etcpal/error.h"
 #include "sacn/common.h"
 #include "sacn/receiver.h"
+#include "sacn/opts.h"
 
 /**
  * @defgroup sacn_dmx_merger sACN DMX Merger
