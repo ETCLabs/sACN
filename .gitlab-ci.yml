@@ -13,11 +13,11 @@ variables:
 include:
 # Versioned build automation
 - project: "etc/common-tech/tools/gitlab-ci-util"
-  ref: v2.2.0
+  ref: v2.2.1
   file: "/ci-yml/deploy-versioned-build.yml"
 # Klocwork static analysis
 - project: "etc/common-tech/tools/gitlab-ci-util"
-  ref: test2
+  ref: v2.2.1
   file: "/ci-yml/linux-klocwork.yml"
 
 windows-build:
