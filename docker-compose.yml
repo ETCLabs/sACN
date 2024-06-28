@@ -1,0 +1,22 @@
+version: '3'
+services:
+  clang-cmake-msan:
+    image: etc-docker.artifactory.etcconnect.com/etc/common-tech/clang-cmake-msan:latest
+    volumes:
+      # Mount the root folder that contains .git
+      - .:/workspace:cached
+    command: sleep infinity
+
+  gcc-cmake:
+    image: etc-docker.artifactory.etcconnect.com/etc/common-tech/gcc-cmake:llvm13
+    volumes:
+      # Mount the root folder that contains .git
+      - .:/workspace:cached
+    command: sleep infinity
+
+  klocwork:
+    image: etc-docker.artifactory.etcconnect.com/etc/common-tech/klocwork:latest
+    volumes:
+      # Mount the root folder that contains .git
+      - .:/workspace:cached
+    command: sleep infinity

@@ -8,6 +8,17 @@ variables:
   GIT_STRATEGY: clone
   GIT_SUBMODULE_STRATEGY: normal
   GLOBAL_CMAKE_OPTIONS: -DSACN_BUILD_TESTS=ON -DSACN_BUILD_EXAMPLES=ON -DSACN_WARN_AS_ERROR=ON
+  KLOCWORK_PROJECT: "sACN"
+
+include:
+# Versioned build automation
+- project: "etc/common-tech/tools/gitlab-ci-util"
+  ref: v2.2.0
+  file: "/ci-yml/deploy-versioned-build.yml"
+# Klocwork static analysis
+- project: "etc/common-tech/tools/gitlab-ci-util"
+  ref: v2.2.0
+  file: "/ci-yml/linux-klocwork.yml"
 
 windows-build:
   stage: build
@@ -136,8 +147,3 @@ deploy-docs:
     - pip install --upgrade etcdevtool
     - chmod +x tools/ci/publish_docs.sh
     - tools/ci/publish_docs.sh
-
-include:
-  - project: 'etc/common-tech/tools/gitlab-ci-util'
-    ref: v2.0.1
-    file: '/ci-yml/deploy-versioned-build.yml'
