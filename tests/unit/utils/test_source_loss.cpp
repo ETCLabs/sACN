@@ -27,7 +27,7 @@
 #include "etcpal_mock/common.h"
 #include "etcpal_mock/timer.h"
 #include "sacn/private/mem.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn_mock/private/common.h"
 #include "gtest/gtest.h"
 #include "fff.h"

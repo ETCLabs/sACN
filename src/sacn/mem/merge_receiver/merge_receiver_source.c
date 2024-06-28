@@ -23,7 +23,7 @@
 #include "etcpal/common.h"
 #include "etcpal/rbtree.h"
 #include "sacn/private/common.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 
 #if SACN_DYNAMIC_MEM
 #include <stdlib.h>

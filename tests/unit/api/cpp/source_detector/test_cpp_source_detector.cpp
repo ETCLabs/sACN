@@ -25,7 +25,7 @@
 #include "sacn_mock/private/source_loss.h"
 #include "sacn_mock/private/sockets.h"
 #include "sacn/private/mem.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "sacn/private/source_detector.h"
 #include "gtest/gtest.h"
 

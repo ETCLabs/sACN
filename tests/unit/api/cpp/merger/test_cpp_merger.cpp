@@ -26,7 +26,7 @@
 #include "sacn_mock/private/sockets.h"
 #include "sacn_mock/private/dmx_merger.h"
 #include "sacn/private/mem.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 #include "gtest/gtest.h"
 
 #if SACN_DYNAMIC_MEM
@@ -67,13 +67,13 @@ protected:
   static constexpr size_t kTestAddressPrioritiesCount = 456;
 
   static const SacnDmxMergerSource kTestSource;
-  static const uint8_t kTestNewValues[DMX_ADDRESS_COUNT];
-  static const uint8_t kTestAddressPriorities[DMX_ADDRESS_COUNT];
-  static const uint8_t kTestPdata[DMX_ADDRESS_COUNT];
+  static const uint8_t kTestNewValues[SACN_DMX_MERGER_MAX_SLOTS];
+  static const uint8_t kTestAddressPriorities[SACN_DMX_MERGER_MAX_SLOTS];
+  static const uint8_t kTestPdata[SACN_DMX_MERGER_MAX_SLOTS];
 
-  static uint8_t levels_[DMX_ADDRESS_COUNT];
-  static uint8_t pap_[DMX_ADDRESS_COUNT];
-  static sacn_dmx_merger_source_t owners_[DMX_ADDRESS_COUNT];
+  static uint8_t levels_[SACN_DMX_MERGER_MAX_SLOTS];
+  static uint8_t pap_[SACN_DMX_MERGER_MAX_SLOTS];
+  static sacn_dmx_merger_source_t owners_[SACN_DMX_MERGER_MAX_SLOTS];
 
   static etcpal_error_t test_return_value_;
   static sacn_dmx_merger_source_t test_source_handle_;

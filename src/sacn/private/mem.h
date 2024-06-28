@@ -31,7 +31,7 @@
 #include "sacn/source_detector.h"
 #include "sacn/private/common.h"
 #include "sacn/private/sockets.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 
 #include "sacn/private/mem/merge_receiver/merge_receiver.h"
 #include "sacn/private/mem/merge_receiver/merge_receiver_source.h"

@@ -295,7 +295,7 @@ typedef struct SacnReceiverConfig
 
   /********* Optional values **********/
 
-  /** The footprint within the universe to monitor. TODO: Currently unimplemented and thus ignored. */
+  /** The footprint within the universe to monitor. TODO: WIP, not 100% implemented yet. */
   SacnRecvUniverseSubrange footprint;
 
   /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.

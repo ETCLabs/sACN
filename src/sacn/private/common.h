@@ -40,7 +40,7 @@
 #include "sacn/source.h"
 #include "sacn/source_detector.h"
 #include "sacn/dmx_merger.h"
-#include "sacn/private/opts.h"
+#include "sacn/opts.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -486,6 +486,9 @@ struct SacnReceiver
    * #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE -- otherwise #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead. */
   size_t source_count_max;
 
+  /* The footprint within the universe to monitor. TODO: WIP, not 100% implemented yet. */
+  SacnRecvUniverseSubrange footprint;
+
   /* What IP networking the receiver will support. */
   sacn_ip_support_t ip_supported;
 
@@ -727,15 +730,15 @@ typedef struct SacnMergeReceiver
   bool use_pap;
 
   sacn_dmx_merger_t merger_handle;
-  uint8_t levels[DMX_ADDRESS_COUNT];
-  uint8_t priorities[DMX_ADDRESS_COUNT];
-  sacn_dmx_merger_source_t owners[DMX_ADDRESS_COUNT];
+  uint8_t levels[SACN_DMX_MERGER_MAX_SLOTS];
+  uint8_t priorities[SACN_DMX_MERGER_MAX_SLOTS];
+  sacn_dmx_merger_source_t owners[SACN_DMX_MERGER_MAX_SLOTS];
 
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
   sacn_dmx_merger_t sampling_merger_handle;
-  uint8_t sampling_levels[DMX_ADDRESS_COUNT];
-  uint8_t sampling_priorities[DMX_ADDRESS_COUNT];
-  sacn_dmx_merger_source_t sampling_owners[DMX_ADDRESS_COUNT];
+  uint8_t sampling_levels[SACN_DMX_MERGER_MAX_SLOTS];
+  uint8_t sampling_priorities[SACN_DMX_MERGER_MAX_SLOTS];
+  sacn_dmx_merger_source_t sampling_owners[SACN_DMX_MERGER_MAX_SLOTS];
 #endif
 
   EtcPalRbTree sources;
@@ -753,9 +756,9 @@ typedef struct MergeReceiverMergedDataNotification
   sacn_merge_receiver_t handle;
   uint16_t universe;
   SacnRecvUniverseSubrange slot_range;
-  uint8_t levels[DMX_ADDRESS_COUNT];
-  uint8_t priorities[DMX_ADDRESS_COUNT];
-  sacn_remote_source_t owners[DMX_ADDRESS_COUNT];
+  uint8_t levels[SACN_DMX_MERGER_MAX_SLOTS];
+  uint8_t priorities[SACN_DMX_MERGER_MAX_SLOTS];
+  sacn_remote_source_t owners[SACN_DMX_MERGER_MAX_SLOTS];
   SACN_DECLARE_MERGE_RECEIVER_BUF(sacn_remote_source_t, active_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_active_sources;
 } MergeReceiverMergedDataNotification;
