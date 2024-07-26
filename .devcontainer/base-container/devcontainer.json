@@ -2,11 +2,11 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node
 {
-	"name": "Base Dev Container",
+	"name": "Base",
 	"dockerComposeFile": ["../../docker-compose.yml"],
   	"service": "gcc-cmake",
 	"shutdownAction": "none",
-	"workspaceFolder": "/workspace",
+	"workspaceFolder": "/sacn",
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
