@@ -6,6 +6,7 @@
 # This file applies to C and C++.
 # Revision 1: 2019-07-01 Initial Creation
 # Revision 2: 2019-11-08 Updated BraceWrapping directive for ClangFormat 9.0.0 - added "AfterCaseLabel"
+# Revision 3: 2024-07-26 Updated to latest ETC format file
 
 Language: Cpp
 BasedOnStyle: Google
@@ -13,7 +14,6 @@ BasedOnStyle: Google
 # Brace wrapping: Allman style, except for extern "C" blocks.
 BreakBeforeBraces: Custom
 BraceWrapping:
-  AfterCaseLabel: true
   AfterClass: true
   AfterControlStatement: true
   AfterEnum: true
@@ -32,7 +32,10 @@ BraceWrapping:
 # Misc other options
 AccessModifierOffset: -2
 AlignAfterOpenBracket: Align
-AlignConsecutiveDeclarations: false
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveDeclarations: true
+AlignConsecutiveMacros: Consecutive
+BinPackParameters: false
 AlignOperands: true
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: false
