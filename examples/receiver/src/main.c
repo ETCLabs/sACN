@@ -40,9 +40,9 @@
  * Constants
  *************************************************************************************************/
 
-#define MAX_LISTENERS 10
+#define MAX_LISTENERS            10
 #define NUM_SOURCES_PER_LISTENER 4
-#define NUM_SLOTS_DISPLAYED 10
+#define NUM_SLOTS_DISPLAYED      10
 #define BEGIN_BORDER_STRING \
   ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
 #define END_BORDER_STRING \
@@ -55,21 +55,21 @@
 /* We use these static structs to track data about up to 4 sources for each listening universe. */
 typedef struct SourceData
 {
-  bool valid;
+  bool       valid;
   EtcPalUuid cid;
-  char name[SACN_SOURCE_NAME_MAX_LEN];
-  uint8_t priority;
-  int num_updates;
-  uint32_t update_start_time_ms;
-  uint8_t last_update[NUM_SLOTS_DISPLAYED];
+  char       name[SACN_SOURCE_NAME_MAX_LEN];
+  uint8_t    priority;
+  int        num_updates;
+  uint32_t   update_start_time_ms;
+  uint8_t    last_update[NUM_SLOTS_DISPLAYED];
 } SourceData;
 
 typedef struct ListeningUniverse
 {
   sacn_receiver_t receiver_handle;
-  uint16_t universe;
-  SourceData sources[NUM_SOURCES_PER_LISTENER];
-  size_t num_sources;
+  uint16_t        universe;
+  SourceData      sources[NUM_SOURCES_PER_LISTENER];
+  size_t          num_sources;
 } ListeningUniverse;
 
 ListeningUniverse listeners[MAX_LISTENERS];
@@ -148,22 +148,23 @@ static ListeningUniverse* find_listener_on_universe(uint16_t universe)
   return NULL;
 }
 
-static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t universe,
+static etcpal_error_t create_listener(ListeningUniverse*           listener,
+                                      uint16_t                     universe,
                                       const SacnReceiverCallbacks* callbacks)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
   SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks = *callbacks;
-  config.callbacks.context = listener;
-  config.universe_id = universe;
+  config.callbacks          = *callbacks;
+  config.callbacks.context  = listener;
+  config.universe_id        = universe;
 
   printf("Creating a new sACN receiver on universe %u.\n", universe);
 
   // Even though reset_networking is never called in this example, a loop is used to demonstrate the case where it could
   // be called at any time on another thread.
-  size_t num_sys_netints = 4;  // Start with estimate which eventually has the actual number written to it
-  EtcPalNetintInfo* netint_list = calloc(num_sys_netints, sizeof(EtcPalNetintInfo));
+  size_t            num_sys_netints = 4;  // Start with estimate which eventually has the actual number written to it
+  EtcPalNetintInfo* netint_list     = calloc(num_sys_netints, sizeof(EtcPalNetintInfo));
   if (!netint_list)
     result = kEtcPalErrNoMem;
 
@@ -190,20 +191,20 @@ static etcpal_error_t create_listener(ListeningUniverse* listener, uint16_t univ
 
     for (size_t i = 0; (i < num_sys_netints) && (i < MAX_LISTENER_NETINTS); ++i)
     {
-      netints[i].iface.index = netint_list[i].index;
+      netints[i].iface.index   = netint_list[i].index;
       netints[i].iface.ip_type = netint_list[i].addr.type;
     }
 
     SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-    netint_config.netints = netints;
-    netint_config.num_netints = (num_sys_netints < MAX_LISTENER_NETINTS) ? num_sys_netints : MAX_LISTENER_NETINTS;
+    netint_config.netints          = netints;
+    netint_config.num_netints      = (num_sys_netints < MAX_LISTENER_NETINTS) ? num_sys_netints : MAX_LISTENER_NETINTS;
 
     result = sacn_receiver_create(&config, &listener->receiver_handle, &netint_config);
   }
 
   if (result == kEtcPalErrOk)
   {
-    listener->universe = universe;
+    listener->universe    = universe;
     listener->num_sources = 0;
   }
 
@@ -233,7 +234,8 @@ static etcpal_error_t destroy_listener(ListeningUniverse* listener)
   return destroy_res;
 }
 
-static etcpal_error_t recreate_listener(ListeningUniverse* listener, uint16_t universe,
+static etcpal_error_t recreate_listener(ListeningUniverse*           listener,
+                                        uint16_t                     universe,
                                         const SacnReceiverCallbacks* callbacks)
 {
   etcpal_error_t recreate_result = destroy_listener(listener);
@@ -245,7 +247,8 @@ static etcpal_error_t recreate_listener(ListeningUniverse* listener, uint16_t un
   return recreate_result;
 }
 
-static etcpal_error_t update_listener_universe(ListeningUniverse* listener, uint16_t new_universe,
+static etcpal_error_t update_listener_universe(ListeningUniverse*           listener,
+                                               uint16_t                     new_universe,
                                                const SacnReceiverCallbacks* callbacks)
 {
   etcpal_error_t result_to_return = kEtcPalErrOk;
@@ -310,7 +313,7 @@ static void console_print_universe_updates()
             char cid_str[ETCPAL_UUID_STRING_BYTES];
             etcpal_uuid_to_string(&source->cid, cid_str);
             uint32_t interval_ms = etcpal_getms() - source->update_start_time_ms;
-            int update_rate = source->num_updates * 1000 / interval_ms;
+            int      update_rate = source->num_updates * 1000 / interval_ms;
             printf("  Source %s\tPriority: %u\tUpdates per second: %d\tLast update: ", cid_str, source->priority,
                    update_rate);
             for (size_t i = 0; i < NUM_SLOTS_DISPLAYED; ++i)
@@ -318,7 +321,7 @@ static void console_print_universe_updates()
               printf("%02x ", source->last_update[i]);
             }
             printf("Name: '%s'\n", source->name);
-            source->num_updates = 0;
+            source->num_updates          = 0;
             source->update_start_time_ms = etcpal_getms();
           }
         }
@@ -331,7 +334,7 @@ static void console_print_universe_updates()
 
 static etcpal_error_t console_add_listening_universe(const SacnReceiverCallbacks* callbacks)
 {
-  etcpal_error_t result = kEtcPalErrOk;
+  etcpal_error_t     result       = kEtcPalErrOk;
   ListeningUniverse* new_listener = find_listener_hole();
 
   printf(BEGIN_BORDER_STRING);
@@ -416,9 +419,11 @@ static etcpal_error_t console_change_listening_universe(const SacnReceiverCallba
  * this data would be acted upon somehow. We just update some stats about the source of the data,
  * and store the first few slots.
  */
-static void handle_universe_data(sacn_receiver_t receiver_handle, const EtcPalSockAddr* source_addr,
-                                 const SacnRemoteSource* source_info, const SacnRecvUniverseData* universe_data,
-                                 void* context)
+static void handle_universe_data(sacn_receiver_t             receiver_handle,
+                                 const EtcPalSockAddr*       source_addr,
+                                 const SacnRemoteSource*     source_info,
+                                 const SacnRecvUniverseData* universe_data,
+                                 void*                       context)
 {
   ETCPAL_UNUSED_ARG(receiver_handle);
   ETCPAL_UNUSED_ARG(source_addr);
@@ -438,9 +443,9 @@ static void handle_universe_data(sacn_receiver_t receiver_handle, const EtcPalSo
       {
         source->cid = source_info->cid;
         strcpy(source->name, source_info->name);
-        source->num_updates = 0;
+        source->num_updates          = 0;
         source->update_start_time_ms = etcpal_getms();
-        source->valid = true;
+        source->valid                = true;
         ++listener->num_sources;
       }
       else
@@ -452,7 +457,7 @@ static void handle_universe_data(sacn_receiver_t receiver_handle, const EtcPalSo
     if (source)
     {
       ++source->num_updates;
-      source->priority = universe_data->priority;
+      source->priority  = universe_data->priority;
       size_t values_len = (universe_data->slot_range.address_count < NUM_SLOTS_DISPLAYED)
                               ? universe_data->slot_range.address_count
                               : NUM_SLOTS_DISPLAYED;
@@ -469,8 +474,11 @@ static void handle_universe_data(sacn_receiver_t receiver_handle, const EtcPalSo
  * tracking. In a real application this would be where any hold-last-look, etc. logic is
  * triggered for a universe.
  */
-static void handle_sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
-                                size_t num_lost_sources, void* context)
+static void handle_sources_lost(sacn_receiver_t       handle,
+                                uint16_t              universe,
+                                const SacnLostSource* lost_sources,
+                                size_t                num_lost_sources,
+                                void*                 context)
 {
   ETCPAL_UNUSED_ARG(handle);
 
@@ -524,8 +532,10 @@ void handle_sampling_period_started(sacn_receiver_t handle, uint16_t universe, v
  * sending per-channel priority packets and stopped sending them, but is still sending NULL start
  * code data.
  */
-static void handle_source_pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
-                                   void* context)
+static void handle_source_pap_lost(sacn_receiver_t         handle,
+                                   uint16_t                universe,
+                                   const SacnRemoteSource* source,
+                                   void*                   context)
 {
   ETCPAL_UNUSED_ARG(handle);
   ETCPAL_UNUSED_ARG(universe);
@@ -585,9 +595,9 @@ int main(void)
 
   // Initialize the sACN library, allowing it to log messages through our callback
   EtcPalLogParams log_params;
-  log_params.action = ETCPAL_LOG_CREATE_HUMAN_READABLE;
-  log_params.log_fn = log_callback;
-  log_params.time_fn = NULL;
+  log_params.action   = ETCPAL_LOG_CREATE_HUMAN_READABLE;
+  log_params.log_fn   = log_callback;
+  log_params.time_fn  = NULL;
   log_params.log_mask = ETCPAL_LOG_UPTO(ETCPAL_LOG_DEBUG);
 
   etcpal_error_t sacn_init_result = sacn_init(&log_params, NULL);

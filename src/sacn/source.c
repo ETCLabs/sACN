@@ -28,9 +28,11 @@
 
 /**************************** Private function declarations ******************************/
 
-static size_t get_per_universe_netint_lists_index(sacn_source_t source, uint16_t universe,
+static size_t get_per_universe_netint_lists_index(sacn_source_t                       source,
+                                                  uint16_t                            universe,
                                                   const SacnSourceUniverseNetintList* per_universe_netint_lists,
-                                                  size_t num_per_universe_netint_lists, bool* found);
+                                                  size_t                              num_per_universe_netint_lists,
+                                                  bool*                               found);
 
 /*************************** Function definitions ****************************/
 
@@ -54,12 +56,12 @@ void sacn_source_config_init(SacnSourceConfig* config)
 {
   if (config)
   {
-    config->cid = kEtcPalNullUuid;
-    config->name = NULL;
-    config->universe_count_max = SACN_SOURCE_INFINITE_UNIVERSES;
+    config->cid                     = kEtcPalNullUuid;
+    config->name                    = NULL;
+    config->universe_count_max      = SACN_SOURCE_INFINITE_UNIVERSES;
     config->manually_process_source = false;
-    config->ip_supported = kSacnIpV4AndIpV6;
-    config->keep_alive_interval = SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT;
+    config->ip_supported            = kSacnIpV4AndIpV6;
+    config->keep_alive_interval     = SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT;
     config->pap_keep_alive_interval = SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT;
   }
 }
@@ -73,13 +75,13 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
 {
   if (config)
   {
-    config->universe = 0;
-    config->priority = 100;
-    config->send_preview = false;
-    config->send_unicast_only = false;
-    config->unicast_destinations = NULL;
+    config->universe                 = 0;
+    config->priority                 = 100;
+    config->send_preview             = false;
+    config->send_unicast_only        = false;
+    config->unicast_destinations     = NULL;
     config->num_unicast_destinations = 0;
-    config->sync_universe = 0;
+    config->sync_universe            = 0;
   }
 }
 
@@ -188,7 +190,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
     {
       // Look up the source's state.
       SacnSource* source = NULL;
-      result = lookup_source(handle, &source);
+      result             = lookup_source(handle, &source);
 
       if ((result == kEtcPalErrOk) && source && source->terminating)
         result = kEtcPalErrNotFound;
@@ -260,8 +262,9 @@ void sacn_source_destroy(sacn_source_t handle)
  * @return #kEtcPalErrNoMem: No room to allocate additional universe.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config,
-                                        const SacnNetintConfig* netint_config)
+etcpal_error_t sacn_source_add_universe(sacn_source_t                   handle,
+                                        const SacnSourceUniverseConfig* config,
+                                        const SacnNetintConfig*         netint_config)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
@@ -294,7 +297,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
     {
       // Look up the source's state.
       SacnSource* source = NULL;
-      result = lookup_source(handle, &source);
+      result             = lookup_source(handle, &source);
 
       if ((result == kEtcPalErrOk) && source->terminating)
         result = kEtcPalErrNotFound;
@@ -302,7 +305,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUn
       // Handle the existing universe if there is one.
       if (result == kEtcPalErrOk)
       {
-        bool found = false;
+        bool   found = false;
         size_t index = get_source_universe_index(source, config->universe, &found);
 
         if (found)
@@ -352,7 +355,7 @@ void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe)
 {
   if (sacn_source_lock())
   {
-    SacnSource* source_state = NULL;
+    SacnSource*         source_state   = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
@@ -425,9 +428,9 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
     if (sacn_source_lock())
     {
       // Look up the state
-      SacnSource* source_state = NULL;
+      SacnSource*         source_state   = NULL;
       SacnSourceUniverse* universe_state = NULL;
-      result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
+      result                             = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
       if ((result == kEtcPalErrOk) && (universe_state->termination_state == kTerminatingAndRemoving))
         result = kEtcPalErrNotFound;
@@ -435,7 +438,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
       // Handle the existing unicast destination if there is one.
       if (result == kEtcPalErrOk)
       {
-        bool found = false;
+        bool   found = false;
         size_t index = get_unicast_dest_index(universe_state, dest, &found);
 
         if (found)
@@ -486,7 +489,7 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
   if (dest && sacn_source_lock())
   {
     // Look up unicast destination
-    SacnSource* source_state = NULL;
+    SacnSource*         source_state   = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
@@ -515,15 +518,17 @@ void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t unive
  * then only destinations_size addresses were written to the destinations array. If the source was not found, 0 is
  * returned.
  */
-size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t universe, EtcPalIpAddr* destinations,
-                                            size_t destinations_size)
+size_t sacn_source_get_unicast_destinations(sacn_source_t handle,
+                                            uint16_t      universe,
+                                            EtcPalIpAddr* destinations,
+                                            size_t        destinations_size)
 {
   size_t total_num_dests = 0;
 
   if (sacn_source_lock())
   {
     // Look up universe state
-    SacnSource* source_state = NULL;
+    SacnSource*         source_state   = NULL;
     SacnSourceUniverse* universe_state = NULL;
     if (lookup_source_and_universe(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
     {
@@ -573,9 +578,9 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
     if (sacn_source_lock())
     {
       // Look up the source and universe state.
-      SacnSource* source_state = NULL;
+      SacnSource*         source_state   = NULL;
       SacnSourceUniverse* universe_state = NULL;
-      result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
+      result                             = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
       if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
         result = kEtcPalErrNotFound;
@@ -634,9 +639,9 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
     if (sacn_source_lock())
     {
       // Look up the source and universe state.
-      SacnSource* source_state = NULL;
+      SacnSource*         source_state   = NULL;
       SacnSourceUniverse* universe_state = NULL;
-      result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
+      result                             = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
       if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
         result = kEtcPalErrNotFound;
@@ -676,8 +681,9 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or the universe is not on that source.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle, uint16_t universe,
-                                                           uint16_t new_sync_universe)
+etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
+                                                           uint16_t      universe,
+                                                           uint16_t      new_sync_universe)
 {
   // TODO
 
@@ -707,8 +713,11 @@ etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  * @return The last error returned by etcpal_sendto() if all sends failed.
  */
-etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uint8_t start_code, const uint8_t* buffer,
-                                    size_t buflen)
+etcpal_error_t sacn_source_send_now(sacn_source_t  handle,
+                                    uint16_t       universe,
+                                    uint8_t        start_code,
+                                    const uint8_t* buffer,
+                                    size_t         buflen)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
@@ -731,9 +740,9 @@ etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uin
     if (sacn_source_lock())
     {
       // Look up state
-      SacnSource* source_state = NULL;
+      SacnSource*         source_state   = NULL;
       SacnSourceUniverse* universe_state = NULL;
-      result = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
+      result                             = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
       if (!universe_state || (universe_state->termination_state == kTerminatingAndRemoving))
         result = kEtcPalErrNotFound;
@@ -809,12 +818,14 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t s
  * transmission without removing the universe.
  * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-void sacn_source_update_levels(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
-                               size_t new_levels_size)
+void sacn_source_update_levels(sacn_source_t  handle,
+                               uint16_t       universe,
+                               const uint8_t* new_levels,
+                               size_t         new_levels_size)
 {
   if ((new_levels_size <= DMX_ADDRESS_COUNT) && sacn_source_lock())
   {
-    SacnSource* source_state = NULL;
+    SacnSource*         source_state   = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
@@ -857,13 +868,16 @@ void sacn_source_update_levels(sacn_source_t handle, uint16_t universe, const ui
  * revert to the universe priority after PAP times out.
  * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-void sacn_source_update_levels_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
-                                       size_t new_levels_size, const uint8_t* new_priorities,
-                                       size_t new_priorities_size)
+void sacn_source_update_levels_and_pap(sacn_source_t  handle,
+                                       uint16_t       universe,
+                                       const uint8_t* new_levels,
+                                       size_t         new_levels_size,
+                                       const uint8_t* new_priorities,
+                                       size_t         new_priorities_size)
 {
   if ((new_levels_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_source_lock())
   {
-    SacnSource* source_state = NULL;
+    SacnSource*         source_state   = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
@@ -900,12 +914,14 @@ void sacn_source_update_levels_and_pap(sacn_source_t handle, uint16_t universe, 
  * transmission without removing the universe.
  * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-void sacn_source_update_levels_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
-                                              size_t new_levels_size)
+void sacn_source_update_levels_and_force_sync(sacn_source_t  handle,
+                                              uint16_t       universe,
+                                              const uint8_t* new_levels,
+                                              size_t         new_levels_size)
 {
   if ((new_levels_size <= DMX_ADDRESS_COUNT) && sacn_source_lock())
   {
-    SacnSource* source_state = NULL;
+    SacnSource*         source_state   = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
@@ -953,13 +969,16 @@ void sacn_source_update_levels_and_force_sync(sacn_source_t handle, uint16_t uni
  * revert to the universe priority after PAP times out.
  * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe,
-                                                      const uint8_t* new_levels, size_t new_levels_size,
-                                                      const uint8_t* new_priorities, size_t new_priorities_size)
+void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t  handle,
+                                                      uint16_t       universe,
+                                                      const uint8_t* new_levels,
+                                                      size_t         new_levels_size,
+                                                      const uint8_t* new_priorities,
+                                                      size_t         new_priorities_size)
 {
   if ((new_levels_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_source_lock())
   {
-    SacnSource* source_state = NULL;
+    SacnSource*         source_state   = NULL;
     SacnSourceUniverse* universe_state = NULL;
     lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
@@ -1097,7 +1116,7 @@ etcpal_error_t sacn_source_reset_networking(const SacnNetintConfig* sys_netint_c
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig* sys_netint_config,
+etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*             sys_netint_config,
                                                          const SacnSourceUniverseNetintList* per_universe_netint_lists,
                                                          size_t num_per_universe_netint_lists)
 {
@@ -1171,9 +1190,9 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*
                                                       per_universe_netint_lists, num_per_universe_netint_lists, NULL);
 
               SacnNetintConfig universe_netint_config;
-              universe_netint_config.netints = per_universe_netint_lists[list_index].netints;
+              universe_netint_config.netints     = per_universe_netint_lists[list_index].netints;
               universe_netint_config.num_netints = per_universe_netint_lists[list_index].num_netints;
-              universe_netint_config.no_netints = per_universe_netint_lists[list_index].no_netints;
+              universe_netint_config.no_netints  = per_universe_netint_lists[list_index].no_netints;
               result = reset_source_universe_networking(source, &source->universes[j], &universe_netint_config);
             }
           }
@@ -1205,15 +1224,17 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*
  * @return The total number of network interfaces for the universe. If this is greater than netints_size, then only
  * netints_size entries were written to the netints array. If the source or universe were not found, 0 is returned.
  */
-size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, EtcPalMcastNetintId* netints,
-                                          size_t netints_size)
+size_t sacn_source_get_network_interfaces(sacn_source_t        handle,
+                                          uint16_t             universe,
+                                          EtcPalMcastNetintId* netints,
+                                          size_t               netints_size)
 {
   size_t total_num_network_interfaces = 0;
 
   if (sacn_source_lock())
   {
     // Look up universe state
-    SacnSource* source_state = NULL;
+    SacnSource*         source_state   = NULL;
     SacnSourceUniverse* universe_state = NULL;
     if (lookup_source_and_universe(handle, universe, &source_state, &universe_state) == kEtcPalErrOk)
     {
@@ -1229,9 +1250,11 @@ size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t univers
 
 #endif  // SACN_SOURCE_ENABLED || DOXYGEN
 
-size_t get_per_universe_netint_lists_index(sacn_source_t source, uint16_t universe,
+size_t get_per_universe_netint_lists_index(sacn_source_t                       source,
+                                           uint16_t                            universe,
                                            const SacnSourceUniverseNetintList* per_universe_netint_lists,
-                                           size_t num_per_universe_netint_lists, bool* found)
+                                           size_t                              num_per_universe_netint_lists,
+                                           bool*                               found)
 {
   if (!SACN_ASSERT_VERIFY(source != SACN_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(per_universe_netint_lists))
     return 0;

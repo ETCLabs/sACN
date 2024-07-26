@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 etcpal_error_t init_to_erase_bufs(unsigned int num_threads);
-void deinit_to_erase_bufs(void);
+void           deinit_to_erase_bufs(void);
 
 SacnTrackedSource** get_to_erase_buffer(sacn_thread_id_t thread_id, size_t size);
 

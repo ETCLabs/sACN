@@ -185,49 +185,68 @@ typedef struct SacnSourceUniverseNetintList
 } SacnSourceUniverseNetintList;
 
 etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t* handle);
-void sacn_source_destroy(sacn_source_t handle);
+void           sacn_source_destroy(sacn_source_t handle);
 
 etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_name);
 
-etcpal_error_t sacn_source_add_universe(sacn_source_t handle, const SacnSourceUniverseConfig* config,
-                                        const SacnNetintConfig* netint_config);
-void sacn_source_remove_universe(sacn_source_t handle, uint16_t universe);
-size_t sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size_t universes_size);
+etcpal_error_t sacn_source_add_universe(sacn_source_t                   handle,
+                                        const SacnSourceUniverseConfig* config,
+                                        const SacnNetintConfig*         netint_config);
+void           sacn_source_remove_universe(sacn_source_t handle, uint16_t universe);
+size_t         sacn_source_get_universes(sacn_source_t handle, uint16_t* universes, size_t universes_size);
 
 etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest);
-void sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest);
-size_t sacn_source_get_unicast_destinations(sacn_source_t handle, uint16_t universe, EtcPalIpAddr* destinations,
-                                            size_t destinations_size);
+void   sacn_source_remove_unicast_destination(sacn_source_t handle, uint16_t universe, const EtcPalIpAddr* dest);
+size_t sacn_source_get_unicast_destinations(sacn_source_t handle,
+                                            uint16_t      universe,
+                                            EtcPalIpAddr* destinations,
+                                            size_t        destinations_size);
 
 etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t universe, uint8_t new_priority);
 etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t universe, bool new_preview_flag);
-etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle, uint16_t universe,
-                                                           uint16_t new_sync_universe);
+etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
+                                                           uint16_t      universe,
+                                                           uint16_t      new_sync_universe);
 
-etcpal_error_t sacn_source_send_now(sacn_source_t handle, uint16_t universe, uint8_t start_code, const uint8_t* buffer,
-                                    size_t buflen);
+etcpal_error_t sacn_source_send_now(sacn_source_t  handle,
+                                    uint16_t       universe,
+                                    uint8_t        start_code,
+                                    const uint8_t* buffer,
+                                    size_t         buflen);
 etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t universe);
 
-void sacn_source_update_levels(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
-                               size_t new_levels_size);
-void sacn_source_update_levels_and_pap(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
-                                       size_t new_levels_size, const uint8_t* new_priorities,
-                                       size_t new_priorities_size);
-void sacn_source_update_levels_and_force_sync(sacn_source_t handle, uint16_t universe, const uint8_t* new_levels,
-                                              size_t new_levels_size);
-void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t handle, uint16_t universe,
-                                                      const uint8_t* new_levels, size_t new_levels_size,
-                                                      const uint8_t* new_priorities, size_t new_priorities_size);
+void sacn_source_update_levels(sacn_source_t  handle,
+                               uint16_t       universe,
+                               const uint8_t* new_levels,
+                               size_t         new_levels_size);
+void sacn_source_update_levels_and_pap(sacn_source_t  handle,
+                                       uint16_t       universe,
+                                       const uint8_t* new_levels,
+                                       size_t         new_levels_size,
+                                       const uint8_t* new_priorities,
+                                       size_t         new_priorities_size);
+void sacn_source_update_levels_and_force_sync(sacn_source_t  handle,
+                                              uint16_t       universe,
+                                              const uint8_t* new_levels,
+                                              size_t         new_levels_size);
+void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t  handle,
+                                                      uint16_t       universe,
+                                                      const uint8_t* new_levels,
+                                                      size_t         new_levels_size,
+                                                      const uint8_t* new_priorities,
+                                                      size_t         new_priorities_size);
 
 int sacn_source_process_manual(sacn_source_tick_mode_t tick_mode);
 
 etcpal_error_t sacn_source_reset_networking(const SacnNetintConfig* sys_netint_config);
-etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig* sys_netint_config,
+etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*             sys_netint_config,
                                                          const SacnSourceUniverseNetintList* per_universe_netint_lists,
                                                          size_t num_per_universe_netint_lists);
 
-size_t sacn_source_get_network_interfaces(sacn_source_t handle, uint16_t universe, EtcPalMcastNetintId* netints,
-                                          size_t netints_size);
+size_t sacn_source_get_network_interfaces(sacn_source_t        handle,
+                                          uint16_t             universe,
+                                          EtcPalMcastNetintId* netints,
+                                          size_t               netints_size);
 
 #ifdef __cplusplus
 }

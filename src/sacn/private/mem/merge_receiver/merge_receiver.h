@@ -30,13 +30,14 @@ extern "C" {
 #endif
 
 etcpal_error_t init_merge_receivers(void);
-void deinit_merge_receivers(void);
+void           deinit_merge_receivers(void);
 
-etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnMergeReceiverConfig* config,
-                                       SacnMergeReceiver** state);
+etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t          handle,
+                                       const SacnMergeReceiverConfig* config,
+                                       SacnMergeReceiver**            state);
 etcpal_error_t lookup_merge_receiver(sacn_merge_receiver_t handle, SacnMergeReceiver** state);
-size_t get_num_merge_receivers();
-void remove_sacn_merge_receiver(sacn_merge_receiver_t handle);
+size_t         get_num_merge_receivers();
+void           remove_sacn_merge_receiver(sacn_merge_receiver_t handle);
 
 #ifdef __cplusplus
 }

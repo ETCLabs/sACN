@@ -59,7 +59,7 @@ SourceLimitExceededNotification* get_source_limit_exceeded(sacn_thread_id_t thre
   {
     SourceLimitExceededNotification* to_return = &source_limit_exceeded[thread_id];
     memset(to_return, 0, sizeof(SourceLimitExceededNotification));
-    to_return->handle = SACN_RECEIVER_INVALID;
+    to_return->handle    = SACN_RECEIVER_INVALID;
     to_return->thread_id = SACN_THREAD_ID_INVALID;
     return to_return;
   }

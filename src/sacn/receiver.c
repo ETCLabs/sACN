@@ -59,7 +59,7 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
     memset(config, 0, sizeof(SacnReceiverConfig));
     config->footprint.start_address = 1;
     config->footprint.address_count = SACN_RECEIVER_MAX_FOOTPRINT;
-    config->source_count_max = SACN_RECEIVER_INFINITE_SOURCES;
+    config->source_count_max        = SACN_RECEIVER_INFINITE_SOURCES;
   }
 }
 
@@ -89,8 +89,9 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
  * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle,
-                                    const SacnNetintConfig* netint_config)
+etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config,
+                                    sacn_receiver_t*          handle,
+                                    const SacnNetintConfig*   netint_config)
 {
   etcpal_error_t res = kEtcPalErrOk;
 
@@ -200,7 +201,7 @@ etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* univ
     if (sacn_receiver_lock())
     {
       SacnReceiver* receiver = NULL;
-      res = lookup_receiver(handle, &receiver);
+      res                    = lookup_receiver(handle, &receiver);
 
       if (res == kEtcPalErrOk)
         *universe_id = receiver->keys.universe;
@@ -239,7 +240,7 @@ etcpal_error_t sacn_receiver_get_footprint(sacn_receiver_t handle, SacnRecvUnive
   if (result == kEtcPalErrOk)
   {
     uint16_t tmp = 0;
-    result = sacn_receiver_get_universe(handle, &tmp);
+    result       = sacn_receiver_get_universe(handle, &tmp);
   }
 
   if (result == kEtcPalErrOk)
@@ -324,7 +325,8 @@ etcpal_error_t sacn_receiver_change_footprint(sacn_receiver_t handle, const Sacn
  * @param[in] new_footprint New footprint within the universe.
  * @return #kEtcPalErrNotImpl: Not yet implemented.
  */
-etcpal_error_t sacn_receiver_change_universe_and_footprint(sacn_receiver_t handle, uint16_t new_universe_id,
+etcpal_error_t sacn_receiver_change_universe_and_footprint(sacn_receiver_t                 handle,
+                                                           uint16_t                        new_universe_id,
                                                            const SacnRecvUniverseSubrange* new_footprint)
 {
   ETCPAL_UNUSED_ARG(handle);
@@ -378,7 +380,7 @@ etcpal_error_t sacn_receiver_reset_networking(const SacnNetintConfig* sys_netint
 
         EtcPalRbIter iter;
         for (SacnReceiver* receiver = get_first_receiver(&iter); (res == kEtcPalErrOk) && receiver;
-             receiver = get_next_receiver(&iter))
+             receiver               = get_next_receiver(&iter))
         {
           res = sacn_initialize_receiver_netints(&receiver->netints, receiver->sampling,
                                                  &receiver->sampling_period_netints, NULL);
@@ -434,9 +436,9 @@ etcpal_error_t sacn_receiver_reset_networking(const SacnNetintConfig* sys_netint
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfig* sys_netint_config,
+etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfig*       sys_netint_config,
                                                            const SacnReceiverNetintList* per_receiver_netint_lists,
-                                                           size_t num_per_receiver_netint_lists)
+                                                           size_t                        num_per_receiver_netint_lists)
 {
   etcpal_error_t res = kEtcPalErrOk;
 
@@ -455,7 +457,7 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfi
 
       EtcPalRbIter iter;
       for (SacnReceiver* receiver = get_first_receiver(&iter); (res == kEtcPalErrOk) && receiver;
-           receiver = get_next_receiver(&iter))
+           receiver               = get_next_receiver(&iter))
       {
         ++total_num_receivers;
 
@@ -493,9 +495,9 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfi
           if (res == kEtcPalErrOk)
           {
             SacnNetintConfig receiver_netint_config;
-            receiver_netint_config.netints = per_receiver_netint_lists[i].netints;
+            receiver_netint_config.netints     = per_receiver_netint_lists[i].netints;
             receiver_netint_config.num_netints = per_receiver_netint_lists[i].num_netints;
-            receiver_netint_config.no_netints = per_receiver_netint_lists[i].no_netints;
+            receiver_netint_config.no_netints  = per_receiver_netint_lists[i].no_netints;
 
             res = sacn_initialize_receiver_netints(&receiver->netints, receiver->sampling,
                                                    &receiver->sampling_period_netints, &receiver_netint_config);
@@ -598,14 +600,15 @@ uint32_t sacn_receiver_get_expired_wait()
  *************************************************************************************************/
 
 // Needs lock
-etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_receiver_t* handle,
-                                    const SacnNetintConfig* netint_config,
+etcpal_error_t create_sacn_receiver(const SacnReceiverConfig*            config,
+                                    sacn_receiver_t*                     handle,
+                                    const SacnNetintConfig*              netint_config,
                                     const SacnReceiverInternalCallbacks* internal_callbacks)
 {
   if (!SACN_ASSERT_VERIFY(config) || !SACN_ASSERT_VERIFY(handle))
     return kEtcPalErrSys;
 
-  SacnReceiver* receiver = NULL;
+  SacnReceiver*  receiver = NULL;
   etcpal_error_t res =
       add_sacn_receiver(get_next_receiver_handle(), config, netint_config, internal_callbacks, &receiver);
 
@@ -637,8 +640,8 @@ etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle)
   if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
     return kEtcPalErrSys;
 
-  SacnReceiver* receiver = NULL;
-  etcpal_error_t res = lookup_receiver(handle, &receiver);
+  SacnReceiver*  receiver = NULL;
+  etcpal_error_t res      = lookup_receiver(handle, &receiver);
 
   if (res == kEtcPalErrOk)
   {

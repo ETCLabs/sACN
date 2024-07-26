@@ -74,7 +74,7 @@
 #else  // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
-#define ALLOC_RECEIVER() etcpal_mempool_alloc(sacn_pool_recv_receivers)
+#define ALLOC_RECEIVER()   etcpal_mempool_alloc(sacn_pool_recv_receivers)
 #define FREE_RECEIVER(ptr) etcpal_mempool_free(sacn_pool_recv_receivers, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
@@ -93,14 +93,14 @@ static EtcPalRbTree receivers_by_universe;
 
 // Receiver memory management
 static etcpal_error_t insert_receiver_into_maps(SacnReceiver* receiver);
-static void remove_receiver_from_maps(SacnReceiver* receiver);
+static void           remove_receiver_from_maps(SacnReceiver* receiver);
 
 // Receiver tree node management
-static int receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
-static int receiver_compare_by_universe(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+static int           receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+static int           receiver_compare_by_universe(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static EtcPalRbNode* receiver_node_alloc(void);
-static void receiver_node_dealloc(EtcPalRbNode* node);
-static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+static void          receiver_node_dealloc(EtcPalRbNode* node);
+static void          universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 
 /*************************** Function definitions ****************************/
 
@@ -117,9 +117,11 @@ static void universe_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
  * [out] receiver_state The new initialized receiver instance, or NULL if out of memory.
  * Returns an error or kEtcPalErrOk.
  */
-etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfig* config,
-                                 const SacnNetintConfig* netint_config,
-                                 const SacnReceiverInternalCallbacks* internal_callbacks, SacnReceiver** receiver_state)
+etcpal_error_t add_sacn_receiver(sacn_receiver_t                      handle,
+                                 const SacnReceiverConfig*            config,
+                                 const SacnNetintConfig*              netint_config,
+                                 const SacnReceiverInternalCallbacks* internal_callbacks,
+                                 SacnReceiver**                       receiver_state)
 {
   if (!SACN_ASSERT_VERIFY(config) || !SACN_ASSERT_VERIFY(receiver_state))
     return kEtcPalErrSys;
@@ -136,9 +138,9 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   if (!receiver)
     return kEtcPalErrNoMem;
 
-  receiver->keys.handle = handle;
+  receiver->keys.handle   = handle;
   receiver->keys.universe = config->universe_id;
-  receiver->thread_id = SACN_THREAD_ID_INVALID;
+  receiver->thread_id     = SACN_THREAD_ID_INVALID;
 
 #if SACN_RECEIVER_SOCKET_PER_NIC
 #if SACN_DYNAMIC_MEM
@@ -154,7 +156,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
 #endif  // SACN_RECEIVER_SOCKET_PER_NIC
 
 #if SACN_DYNAMIC_MEM
-  receiver->netints.netints = NULL;
+  receiver->netints.netints          = NULL;
   receiver->netints.netints_capacity = 0;
 #endif
   receiver->netints.num_netints = 0;
@@ -170,7 +172,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
     return res;
   }
 
-  receiver->sampling = false;
+  receiver->sampling                  = false;
   receiver->notified_sampling_started = false;
 
   receiver->suppress_limit_exceeded_notification = false;
@@ -187,16 +189,16 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfi
   }
   else
   {
-    receiver->internal_callbacks.universe_data = NULL;
-    receiver->internal_callbacks.sources_lost = NULL;
+    receiver->internal_callbacks.universe_data           = NULL;
+    receiver->internal_callbacks.sources_lost            = NULL;
     receiver->internal_callbacks.sampling_period_started = NULL;
-    receiver->internal_callbacks.sampling_period_ended = NULL;
-    receiver->internal_callbacks.source_pap_lost = NULL;
-    receiver->internal_callbacks.source_limit_exceeded = NULL;
+    receiver->internal_callbacks.sampling_period_ended   = NULL;
+    receiver->internal_callbacks.source_pap_lost         = NULL;
+    receiver->internal_callbacks.source_limit_exceeded   = NULL;
   }
 
   receiver->source_count_max = config->source_count_max;
-  receiver->footprint = config->footprint;
+  receiver->footprint        = config->footprint;
 
   receiver->ip_supported = config->ip_supported;
 
@@ -224,7 +226,7 @@ etcpal_error_t lookup_receiver_by_universe(uint16_t universe, SacnReceiver** rec
 
   SacnReceiverKeys lookup_keys;
   lookup_keys.universe = universe;
-  *receiver_state = (SacnReceiver*)etcpal_rbtree_find(&receivers_by_universe, &lookup_keys);
+  *receiver_state      = (SacnReceiver*)etcpal_rbtree_find(&receivers_by_universe, &lookup_keys);
 
   return (*receiver_state) ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
@@ -256,7 +258,7 @@ etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_uni
   if (res == kEtcPalErrOk)
   {
     receiver->keys.universe = new_universe;
-    res = etcpal_rbtree_insert(&receivers_by_universe, receiver);
+    res                     = etcpal_rbtree_insert(&receivers_by_universe, receiver);
   }
 
   return res;
@@ -280,13 +282,13 @@ etcpal_error_t initialize_receiver_sockets(SacnInternalSocketState* sockets)
 #if SACN_DYNAMIC_MEM
   if (!sockets->ipv4_sockets)
   {
-    sockets->ipv4_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
+    sockets->ipv4_sockets          = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
     sockets->ipv4_sockets_capacity = INITIAL_CAPACITY;
   }
 
   if (!sockets->ipv6_sockets)
   {
-    sockets->ipv6_sockets = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
+    sockets->ipv6_sockets          = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
     sockets->ipv6_sockets_capacity = INITIAL_CAPACITY;
   }
 

@@ -31,15 +31,16 @@ extern "C" {
 
 etcpal_error_t init_sampling_period_netints(void);
 
-etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id,
-                                               bool in_future_sampling_period);
-void remove_current_sampling_period_netints(EtcPalRbTree* tree);
+etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree*              tree,
+                                               const EtcPalMcastNetintId* id,
+                                               bool                       in_future_sampling_period);
+void           remove_current_sampling_period_netints(EtcPalRbTree* tree);
 etcpal_error_t remove_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id);
-int sampling_period_netint_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+int            sampling_period_netint_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 
 void sampling_period_netint_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 
-void sampling_period_netint_node_dealloc(EtcPalRbNode* node);
+void          sampling_period_netint_node_dealloc(EtcPalRbNode* node);
 EtcPalRbNode* sampling_period_netint_node_alloc(void);
 
 #ifdef __cplusplus

@@ -76,10 +76,10 @@ public:
   struct Settings
   {
     /** This is always required to be non-NULL.
-        Buffer of #SACN_DMX_MERGER_MAX_SLOTS levels that this library keeps up to date as it merges.  Slots that are not sourced
-        are set to 0.
-        Memory is owned by the application and must remain allocated until the merger is destroyed. While this merger
-        exists, the application must not modify this buffer directly!  Doing so would affect the results of the merge.*/
+        Buffer of #SACN_DMX_MERGER_MAX_SLOTS levels that this library keeps up to date as it merges.  Slots that are not
+       sourced are set to 0. Memory is owned by the application and must remain allocated until the merger is destroyed.
+       While this merger exists, the application must not modify this buffer directly!  Doing so would affect the
+       results of the merge.*/
     uint8_t* levels{nullptr};
 
     /** This is only allowed to be NULL if and only if #SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER is 0.
@@ -126,18 +126,18 @@ public:
     bool IsValid() const;
   };
 
-  DmxMerger() = default;
-  DmxMerger(const DmxMerger& other) = delete;
+  DmxMerger()                                  = default;
+  DmxMerger(const DmxMerger& other)            = delete;
   DmxMerger& operator=(const DmxMerger& other) = delete;
-  DmxMerger(DmxMerger&& other) = default;            /**< Move a dmx merger instance. */
-  DmxMerger& operator=(DmxMerger&& other) = default; /**< Move a dmx merger instance. */
+  DmxMerger(DmxMerger&& other)                 = default; /**< Move a dmx merger instance. */
+  DmxMerger& operator=(DmxMerger&& other)      = default; /**< Move a dmx merger instance. */
 
   etcpal::Error Startup(const Settings& settings);
-  void Shutdown();
+  void          Shutdown();
 
   etcpal::Expected<sacn_dmx_merger_source_t> AddSource();
-  etcpal::Error RemoveSource(sacn_dmx_merger_source_t source);
-  const SacnDmxMergerSource* GetSourceInfo(sacn_dmx_merger_source_t source) const;
+  etcpal::Error                              RemoveSource(sacn_dmx_merger_source_t source);
+  const SacnDmxMergerSource*                 GetSourceInfo(sacn_dmx_merger_source_t source) const;
 
   etcpal::Error UpdateLevels(sacn_dmx_merger_source_t source, const uint8_t* new_levels, size_t new_levels_count);
   etcpal::Error UpdatePap(sacn_dmx_merger_source_t source, const uint8_t* pap, size_t pap_count);
@@ -187,7 +187,7 @@ inline etcpal::Error DmxMerger::Startup(const Settings& settings)
   SacnDmxMergerConfig config = TranslateConfig(settings);
 
   sacn_dmx_merger_t c_handle = SACN_DMX_MERGER_INVALID;
-  etcpal::Error result = sacn_dmx_merger_create(&config, &c_handle);
+  etcpal::Error     result   = sacn_dmx_merger_create(&config, &c_handle);
 
   handle_.SetValue(c_handle);
 
@@ -228,7 +228,7 @@ inline void DmxMerger::Shutdown()
 inline etcpal::Expected<sacn_dmx_merger_source_t> DmxMerger::AddSource()
 {
   sacn_dmx_merger_source_t result = SACN_DMX_MERGER_SOURCE_INVALID;
-  etcpal_error_t err = sacn_dmx_merger_add_source(handle_.value(), &result);
+  etcpal_error_t           err    = sacn_dmx_merger_add_source(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
   else
@@ -286,8 +286,9 @@ inline const SacnDmxMergerSource* DmxMerger::GetSourceInfo(sacn_dmx_merger_sourc
  * @return #kEtcPalErrNotFound: Handle does not correspond to a valid source or merger.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source, const uint8_t* new_levels,
-                                             size_t new_levels_count)
+inline etcpal::Error DmxMerger::UpdateLevels(sacn_dmx_merger_source_t source,
+                                             const uint8_t*           new_levels,
+                                             size_t                   new_levels_count)
 {
   return sacn_dmx_merger_update_levels(handle_.value(), source, new_levels, new_levels_count);
 }

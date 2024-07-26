@@ -29,11 +29,13 @@
 extern "C" {
 #endif
 
-etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
+etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse*      universe,
+                                     const EtcPalIpAddr*      addr,
                                      SacnUnicastDestination** dest_state);
-etcpal_error_t lookup_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
+etcpal_error_t lookup_unicast_dest(SacnSourceUniverse*      universe,
+                                   const EtcPalIpAddr*      addr,
                                    SacnUnicastDestination** unicast_dest);
-void remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index);
+void           remove_sacn_unicast_dest(SacnSourceUniverse* universe, size_t index);
 
 size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* addr, bool* found);
 

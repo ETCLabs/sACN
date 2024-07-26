@@ -22,8 +22,13 @@
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_source_detector_state_init);
 DEFINE_FAKE_VOID_FUNC(sacn_source_detector_state_deinit);
 DEFINE_FAKE_VALUE_FUNC(size_t, get_source_detector_netints, const SacnSourceDetector*, EtcPalMcastNetintId*, size_t);
-DEFINE_FAKE_VOID_FUNC(handle_sacn_universe_discovery_packet, SacnRecvThreadContext*, const uint8_t*, size_t,
-                      const EtcPalUuid*, const EtcPalSockAddr*, const char*);
+DEFINE_FAKE_VOID_FUNC(handle_sacn_universe_discovery_packet,
+                      SacnRecvThreadContext*,
+                      const uint8_t*,
+                      size_t,
+                      const EtcPalUuid*,
+                      const EtcPalSockAddr*,
+                      const char*);
 DEFINE_FAKE_VOID_FUNC(process_source_detector, SacnRecvThreadContext*);
 
 DEFINE_FAKE_VALUE_FUNC(bool, source_detector_cb_lock);

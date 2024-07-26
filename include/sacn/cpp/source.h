@@ -175,28 +175,29 @@ public:
     /** Create an empty, invalid data structure by default. */
     UniverseNetintList() = default;
     UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id, McastMode mcast_mode);
-    UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id,
+    UniverseNetintList(sacn_source_t                          source_handle,
+                       uint16_t                               universe_id,
                        const std::vector<SacnMcastInterface>& network_interfaces);
   };
 
-  Source() = default;
-  Source(const Source& other) = delete;
+  Source()                               = default;
+  Source(const Source& other)            = delete;
   Source& operator=(const Source& other) = delete;
-  Source(Source&& other) = default;            /**< Move a source instance. */
-  Source& operator=(Source&& other) = default; /**< Move a source instance. */
+  Source(Source&& other)                 = default; /**< Move a source instance. */
+  Source& operator=(Source&& other)      = default; /**< Move a source instance. */
 
   etcpal::Error Startup(const Settings& settings);
-  void Shutdown();
+  void          Shutdown();
 
   etcpal::Error ChangeName(const std::string& new_name);
 
-  etcpal::Error AddUniverse(const UniverseSettings& settings, McastMode mcast_mode);
-  etcpal::Error AddUniverse(const UniverseSettings& settings, std::vector<SacnMcastInterface>& netints);
-  void RemoveUniverse(uint16_t universe);
+  etcpal::Error         AddUniverse(const UniverseSettings& settings, McastMode mcast_mode);
+  etcpal::Error         AddUniverse(const UniverseSettings& settings, std::vector<SacnMcastInterface>& netints);
+  void                  RemoveUniverse(uint16_t universe);
   std::vector<uint16_t> GetUniverses();
 
-  etcpal::Error AddUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest);
-  void RemoveUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest);
+  etcpal::Error               AddUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest);
+  void                        RemoveUnicastDestination(uint16_t universe, const etcpal::IpAddr& dest);
   std::vector<etcpal::IpAddr> GetUnicastDestinations(uint16_t universe);
 
   etcpal::Error ChangePriority(uint16_t universe, uint8_t new_priority);
@@ -207,11 +208,17 @@ public:
   etcpal::Error SendSynchronization(uint16_t universe);
 
   void UpdateLevels(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size);
-  void UpdateLevelsAndPap(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size,
-                          const uint8_t* new_priorities, size_t new_priorities_size);
+  void UpdateLevelsAndPap(uint16_t       universe,
+                          const uint8_t* new_levels,
+                          size_t         new_levels_size,
+                          const uint8_t* new_priorities,
+                          size_t         new_priorities_size);
   void UpdateLevelsAndForceSync(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size);
-  void UpdateLevelsAndPapAndForceSync(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size,
-                                      const uint8_t* new_priorities, size_t new_priorities_size);
+  void UpdateLevelsAndPapAndForceSync(uint16_t       universe,
+                                      const uint8_t* new_levels,
+                                      size_t         new_levels_size,
+                                      const uint8_t* new_priorities,
+                                      size_t         new_priorities_size);
 
   std::vector<EtcPalMcastNetintId> GetNetworkInterfaces(uint16_t universe);
 
@@ -233,7 +240,7 @@ private:
 
   private:
     std::vector<EtcPalIpAddr> unicast_destinations_;
-    SacnSourceUniverseConfig config_;
+    SacnSourceUniverseConfig  config_;
   };
 
   SacnSourceConfig TranslateConfig(const Settings& settings);
@@ -281,8 +288,9 @@ inline bool Source::UniverseSettings::IsValid() const
  *
  * Optional members can be modified directly in the struct.
  */
-inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id,
-                                                      McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
+inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handle,
+                                                      uint16_t      universe_id,
+                                                      McastMode     mcast_mode = McastMode::kEnabledOnAllInterfaces)
     : handle(source_handle), universe(universe_id), no_netints(mcast_mode == McastMode::kDisabledOnAllInterfaces)
 {
 }
@@ -293,7 +301,8 @@ inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handl
  * This constructor enables the use of list initialization when setting up one or more UniverseNetintLists (such as
  * initializing the vector<UniverseNetintList> that gets passed into Source::ResetNetworking).
  */
-inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handle, uint16_t universe_id,
+inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t                          source_handle,
+                                                      uint16_t                               universe_id,
                                                       const std::vector<SacnMcastInterface>& network_interfaces)
     : handle(source_handle), universe(universe_id), netints(network_interfaces)
 {
@@ -317,9 +326,9 @@ inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t source_handl
  */
 inline etcpal::Error Source::Startup(const Settings& settings)
 {
-  SacnSourceConfig config = TranslateConfig(settings);
-  sacn_source_t c_handle = SACN_SOURCE_INVALID;
-  etcpal::Error result = sacn_source_create(&config, &c_handle);
+  SacnSourceConfig config   = TranslateConfig(settings);
+  sacn_source_t    c_handle = SACN_SOURCE_INVALID;
+  etcpal::Error    result   = sacn_source_create(&config, &c_handle);
   handle_.SetValue(c_handle);
   return result;
 }
@@ -386,7 +395,7 @@ inline etcpal::Error Source::ChangeName(const std::string& new_name)
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings,
-                                         McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
+                                         McastMode               mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
   TranslatedUniverseConfig config(settings);
 
@@ -430,8 +439,8 @@ inline etcpal::Error Source::AddUniverse(const UniverseSettings& settings, std::
     return sacn_source_add_universe(handle_.value(), &config.get(), nullptr);
 
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints = netints.data();
-  netint_config.num_netints = netints.size();
+  netint_config.netints          = netints.data();
+  netint_config.num_netints      = netints.size();
 
   return sacn_source_add_universe(handle_.value(), &config.get(), &netint_config);
 }
@@ -461,14 +470,14 @@ inline std::vector<uint16_t> Source::GetUniverses()
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
   std::vector<uint16_t> universes;
-  size_t size_guess = 4u;
-  size_t num_universes = 0u;
+  size_t                size_guess    = 4u;
+  size_t                num_universes = 0u;
 
   do
   {
     universes.resize(size_guess);
     num_universes = sacn_source_get_universes(handle_.value(), universes.data(), universes.size());
-    size_guess = num_universes + 4u;
+    size_guess    = num_universes + 4u;
   } while (num_universes > universes.size());
 
   universes.resize(num_universes);
@@ -519,8 +528,8 @@ inline std::vector<etcpal::IpAddr> Source::GetUnicastDestinations(uint16_t unive
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
   std::vector<EtcPalIpAddr> destinations;
-  size_t size_guess = 4u;
-  size_t num_destinations = 0u;
+  size_t                    size_guess       = 4u;
+  size_t                    num_destinations = 0u;
 
   do
   {
@@ -695,8 +704,11 @@ inline void Source::UpdateLevels(uint16_t universe, const uint8_t* new_levels, s
  * priorities.
  * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-inline void Source::UpdateLevelsAndPap(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size,
-                                       const uint8_t* new_priorities, size_t new_priorities_size)
+inline void Source::UpdateLevelsAndPap(uint16_t       universe,
+                                       const uint8_t* new_levels,
+                                       size_t         new_levels_size,
+                                       const uint8_t* new_priorities,
+                                       size_t         new_priorities_size)
 {
   sacn_source_update_levels_and_pap(handle_.value(), universe, new_levels, new_levels_size, new_priorities,
                                     new_priorities_size);
@@ -749,8 +761,11 @@ inline void Source::UpdateLevelsAndForceSync(uint16_t universe, const uint8_t* n
  * priorities.
  * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
  */
-inline void Source::UpdateLevelsAndPapAndForceSync(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size,
-                                                   const uint8_t* new_priorities, size_t new_priorities_size)
+inline void Source::UpdateLevelsAndPapAndForceSync(uint16_t       universe,
+                                                   const uint8_t* new_levels,
+                                                   size_t         new_levels_size,
+                                                   const uint8_t* new_priorities,
+                                                   size_t         new_priorities_size)
 {
   sacn_source_update_levels_and_pap_and_force_sync(handle_.value(), universe, new_levels, new_levels_size,
                                                    new_priorities, new_priorities_size);
@@ -842,8 +857,8 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sy
     return sacn_source_reset_networking(nullptr);
 
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints = sys_netints.data();
-  netint_config.num_netints = sys_netints.size();
+  netint_config.netints          = sys_netints.data();
+  netint_config.num_netints      = sys_netints.size();
 
   return sacn_source_reset_networking(&netint_config);
 }
@@ -898,8 +913,8 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sy
                  });
 
   SacnNetintConfig sys_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  sys_netint_config.netints = sys_netints.data();
-  sys_netint_config.num_netints = sys_netints.size();
+  sys_netint_config.netints          = sys_netints.data();
+  sys_netint_config.num_netints      = sys_netints.size();
 
   return sacn_source_reset_networking_per_universe(&sys_netint_config, netint_lists_c.data(), netint_lists_c.size());
 }
@@ -914,14 +929,14 @@ inline std::vector<EtcPalMcastNetintId> Source::GetNetworkInterfaces(uint16_t un
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
   std::vector<EtcPalMcastNetintId> netints;
-  size_t size_guess = 4u;
-  size_t num_netints = 0u;
+  size_t                           size_guess  = 4u;
+  size_t                           num_netints = 0u;
 
   do
   {
     netints.resize(size_guess);
     num_netints = sacn_source_get_network_interfaces(handle_.value(), universe, netints.data(), netints.size());
-    size_guess = num_netints + 4u;
+    size_guess  = num_netints + 4u;
   } while (num_netints > netints.size());
 
   netints.resize(num_netints);
@@ -959,7 +974,7 @@ inline const SacnSourceUniverseConfig& Source::TranslatedUniverseConfig::get() n
 {
   if (!unicast_destinations_.empty())
   {
-    config_.unicast_destinations = unicast_destinations_.data();
+    config_.unicast_destinations     = unicast_destinations_.data();
     config_.num_unicast_destinations = unicast_destinations_.size();
   }
 

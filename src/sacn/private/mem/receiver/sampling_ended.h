@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 etcpal_error_t init_sampling_ended_bufs(unsigned int num_threads);
-void deinit_sampling_ended_bufs(void);
+void           deinit_sampling_ended_bufs(void);
 
 // This is processed in the periodic timeout processing, so there are multiple per thread.
 SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id, size_t size);

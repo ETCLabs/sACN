@@ -40,45 +40,53 @@
 
 /****************************** Private macros *******************************/
 
-#define SOURCE_THREAD_INTERVAL 23
-#define NUM_PRE_SUPPRESSION_PACKETS 4
+#define SOURCE_THREAD_INTERVAL                  23
+#define NUM_PRE_SUPPRESSION_PACKETS             4
 #define IS_PART_OF_UNIVERSE_DISCOVERY(universe) (universe->has_level_data && !universe->send_unicast_only)
 
 /**************************** Private variables ******************************/
 
 static IntHandleManager source_handle_mgr;
-static bool shutting_down = false;
-static etcpal_thread_t source_thread_handle;
-static bool thread_initialized = false;
+static bool             shutting_down = false;
+static etcpal_thread_t  source_thread_handle;
+static bool             thread_initialized = false;
 
 /*********************** Private function prototypes *************************/
 
 static bool source_handle_in_use(int handle_val, void* cookie);
 
 static etcpal_error_t start_tick_thread();
-static void stop_tick_thread();
+static void           stop_tick_thread();
 
 static void sleep_until_time_elapsed(const EtcPalTimer* timer, uint32_t target_elapsed_ms);
 static void source_thread_function(void* arg);
 
-static int process_sources(process_sources_behavior_t behavior, sacn_source_tick_mode_t tick_mode);
+static int  process_sources(process_sources_behavior_t behavior, sacn_source_tick_mode_t tick_mode);
 static bool process_universe_discovery(SacnSource* source);
 static bool process_universes(SacnSource* source, sacn_source_tick_mode_t tick_mode);
 static void process_stats_log(SacnSource* source, bool all_sends_succeeded);
 static bool process_unicast_termination(SacnSource* source, SacnSourceUniverse* universe, bool* terminating);
 static bool process_multicast_termination(SacnSource* source, size_t index, bool unicast_terminating);
-static bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe,
+static bool transmit_levels_and_pap_when_needed(SacnSource*             source,
+                                                SacnSourceUniverse*     universe,
                                                 sacn_source_tick_mode_t tick_mode);
 static bool send_termination_multicast(const SacnSource* source, SacnSourceUniverse* universe);
-static bool send_termination_unicast(const SacnSource* source, SacnSourceUniverse* universe,
+static bool send_termination_unicast(const SacnSource*       source,
+                                     SacnSourceUniverse*     universe,
                                      SacnUnicastDestination* dest);
 static bool send_universe_discovery(SacnSource* source);
-static int pack_universe_discovery_page(SacnSource* source, size_t* total_universes_processed, uint8_t page_number);
-static void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_levels,
-                          size_t new_levels_size, force_sync_behavior_t force_sync);
+static int  pack_universe_discovery_page(SacnSource* source, size_t* total_universes_processed, uint8_t page_number);
+static void update_levels(SacnSource*           source_state,
+                          SacnSourceUniverse*   universe_state,
+                          const uint8_t*        new_levels,
+                          size_t                new_levels_size,
+                          force_sync_behavior_t force_sync);
 #if SACN_ETC_PRIORITY_EXTENSION
-static void update_pap(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_priorities,
-                       size_t new_priorities_size, force_sync_behavior_t force_sync);
+static void update_pap(SacnSource*           source_state,
+                       SacnSourceUniverse*   universe_state,
+                       const uint8_t*        new_priorities,
+                       size_t                new_priorities_size,
+                       force_sync_behavior_t force_sync);
 static void zero_levels_where_pap_is_zero(SacnSourceUniverse* universe_state);
 #endif
 static void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id);
@@ -104,7 +112,7 @@ void sacn_source_state_deinit(void)
   bool thread_initted = false;
   if (sacn_source_lock())
   {
-    thread_initted = thread_initialized;
+    thread_initted     = thread_initialized;
     thread_initialized = false;
     sacn_source_unlock();
   }
@@ -124,7 +132,7 @@ bool source_handle_in_use(int handle_val, void* cookie)
 // Needs lock
 etcpal_error_t start_tick_thread()
 {
-  shutting_down = false;
+  shutting_down             = false;
   EtcPalThreadParams params = {SACN_SOURCE_THREAD_PRIORITY, SACN_SOURCE_THREAD_STACK, SACN_SOURCE_THREAD_NAME, NULL};
 
   return etcpal_thread_create(&source_thread_handle, &params, source_thread_function, NULL);
@@ -161,8 +169,8 @@ void source_thread_function(void* arg)
 {
   ETCPAL_UNUSED_ARG(arg);
 
-  bool keep_running_thread = true;
-  int num_thread_based_sources = 0;
+  bool keep_running_thread      = true;
+  int  num_thread_based_sources = 0;
 
   EtcPalTimer interval_timer;
   etcpal_timer_start(&interval_timer, SOURCE_THREAD_INTERVAL);
@@ -347,7 +355,7 @@ void process_stats_log(SacnSource* source, bool all_sends_succeeded)
 #endif  // SACN_LOGGING_ENABLED
 
     etcpal_timer_reset(&source->stats_log_timer);
-    source->total_tick_count = 0;
+    source->total_tick_count  = 0;
     source->failed_tick_count = 0;
   }
 }
@@ -403,7 +411,8 @@ bool process_multicast_termination(SacnSource* source, size_t index, bool unicas
 }
 
 // Needs lock
-bool transmit_levels_and_pap_when_needed(SacnSource* source, SacnSourceUniverse* universe,
+bool transmit_levels_and_pap_when_needed(SacnSource*             source,
+                                         SacnSourceUniverse*     universe,
                                          sacn_source_tick_mode_t tick_mode)
 {
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
@@ -564,8 +573,8 @@ bool send_universe_discovery(SacnSource* source)
   if (source->num_netints > 0)
   {
     // Initialize universe & page counters
-    size_t total_universes_processed = 0;
-    uint8_t page_number = 0;
+    size_t  total_universes_processed = 0;
+    uint8_t page_number               = 0;
 
     // Pack the next page & loop while there's a page to send
     while (pack_universe_discovery_page(source, &total_universes_processed, page_number) > 0)
@@ -601,7 +610,7 @@ bool send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf))
     return false;
 
-  bool at_least_one_sent = false;
+  bool at_least_one_sent   = false;
   bool all_sends_succeeded = true;
   if (!universe->send_unicast_only)
   {
@@ -615,7 +624,7 @@ bool send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
       }
       else
       {
-        all_sends_succeeded = false;
+        all_sends_succeeded       = false;
         universe->last_send_error = send_res;
       }
     }
@@ -633,7 +642,7 @@ bool send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf))
     return false;
 
-  bool at_least_one_sent = false;
+  bool at_least_one_sent   = false;
   bool all_sends_succeeded = true;
   for (size_t i = 0; i < universe->num_unicast_dests; ++i)
   {
@@ -647,7 +656,7 @@ bool send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
       }
       else
       {
-        all_sends_succeeded = false;
+        all_sends_succeeded       = false;
         universe->last_send_error = send_res;
       }
     }
@@ -666,15 +675,15 @@ int pack_universe_discovery_page(SacnSource* source, size_t* total_universes_pro
     return 0;
 
   // Initialize packing pointer and universe counter
-  uint8_t* pcur = &source->universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE];
-  int num_universes_packed = 0;
+  uint8_t* pcur                 = &source->universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE];
+  int      num_universes_packed = 0;
 
   // Iterate up to 512 universes
   while ((*total_universes_processed < source->num_universes) &&
          (num_universes_packed < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE))
   {
     // Iterate universes array in reverse to pack universes lowest to highest
-    size_t index = (source->num_universes - 1) - (*total_universes_processed);
+    size_t                    index    = (source->num_universes - 1) - (*total_universes_processed);
     const SacnSourceUniverse* universe = &source->universes[index];
 
     // If this universe has level data at a bare minimum & is not unicast-only
@@ -709,8 +718,11 @@ int pack_universe_discovery_page(SacnSource* source, size_t* total_universes_pro
 }
 
 // Needs lock
-void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_levels,
-                   size_t new_levels_size, force_sync_behavior_t force_sync)
+void update_levels(SacnSource*           source_state,
+                   SacnSourceUniverse*   universe_state,
+                   const uint8_t*        new_levels,
+                   size_t                new_levels_size,
+                   force_sync_behavior_t force_sync)
 {
   if (!SACN_ASSERT_VERIFY(source_state) || !SACN_ASSERT_VERIFY(universe_state) || !SACN_ASSERT_VERIFY(new_levels) ||
       !SACN_ASSERT_VERIFY(new_levels_size > 0))
@@ -737,8 +749,11 @@ void update_levels(SacnSource* source_state, SacnSourceUniverse* universe_state,
 
 #if SACN_ETC_PRIORITY_EXTENSION
 // Needs lock
-void update_pap(SacnSource* source_state, SacnSourceUniverse* universe_state, const uint8_t* new_priorities,
-                size_t new_priorities_size, force_sync_behavior_t force_sync)
+void update_pap(SacnSource*           source_state,
+                SacnSourceUniverse*   universe_state,
+                const uint8_t*        new_priorities,
+                size_t                new_priorities_size,
+                force_sync_behavior_t force_sync)
 {
   if (!SACN_ASSERT_VERIFY(source_state) || !SACN_ASSERT_VERIFY(universe_state) || !SACN_ASSERT_VERIFY(new_priorities) ||
       !SACN_ASSERT_VERIFY(new_priorities_size > 0))
@@ -758,7 +773,7 @@ void zero_levels_where_pap_is_zero(SacnSourceUniverse* universe_state)
     return;
 
   uint16_t level_count = etcpal_unpack_u16b(&universe_state->level_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET]) - 1;
-  uint16_t pap_count = etcpal_unpack_u16b(&universe_state->pap_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET]) - 1;
+  uint16_t pap_count   = etcpal_unpack_u16b(&universe_state->pap_send_buf[SACN_PROPERTY_VALUE_COUNT_OFFSET]) - 1;
   for (uint16_t i = 0; i < level_count; ++i)
   {
     if ((i >= pap_count) || (universe_state->pap_send_buf[SACN_DATA_HEADER_SIZE + i] == 0))
@@ -768,8 +783,12 @@ void zero_levels_where_pap_is_zero(SacnSourceUniverse* universe_state)
 #endif
 
 // Needs lock
-void update_levels_and_or_pap(SacnSource* source, SacnSourceUniverse* universe, const uint8_t* new_levels,
-                              size_t new_levels_size, const uint8_t* new_priorities, size_t new_priorities_size,
+void update_levels_and_or_pap(SacnSource*           source,
+                              SacnSourceUniverse*   universe,
+                              const uint8_t*        new_levels,
+                              size_t                new_levels_size,
+                              const uint8_t*        new_priorities,
+                              size_t                new_priorities_size,
                               force_sync_behavior_t force_sync)
 {
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
@@ -851,7 +870,8 @@ void set_unicast_dest_terminating(SacnUnicastDestination* dest, set_terminating_
 }
 
 // Needs lock
-void reset_transmission_suppression(const SacnSource* source, SacnSourceUniverse* universe,
+void reset_transmission_suppression(const SacnSource*                         source,
+                                    SacnSourceUniverse*                       universe,
                                     reset_transmission_suppression_behavior_t behavior)
 {
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
@@ -921,8 +941,9 @@ size_t get_source_universes(const SacnSource* source, uint16_t* universes, size_
 }
 
 // Needs lock
-size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr* destinations,
-                                size_t destinations_size)
+size_t get_source_unicast_dests(const SacnSourceUniverse* universe,
+                                EtcPalIpAddr*             destinations,
+                                size_t                    destinations_size)
 {
   if (!SACN_ASSERT_VERIFY(universe))
     return 0;
@@ -943,8 +964,9 @@ size_t get_source_unicast_dests(const SacnSourceUniverse* universe, EtcPalIpAddr
 }
 
 // Needs lock
-size_t get_source_universe_netints(const SacnSourceUniverse* universe, EtcPalMcastNetintId* netints,
-                                   size_t netints_size)
+size_t get_source_universe_netints(const SacnSourceUniverse* universe,
+                                   EtcPalMcastNetintId*      netints,
+                                   size_t                    netints_size)
 {
   if (!SACN_ASSERT_VERIFY(universe))
     return 0;
@@ -974,7 +996,8 @@ void clear_source_netints(SacnSource* source)
 }
 
 // Needs lock
-etcpal_error_t reset_source_universe_networking(SacnSource* source, SacnSourceUniverse* universe,
+etcpal_error_t reset_source_universe_networking(SacnSource*             source,
+                                                SacnSourceUniverse*     universe,
                                                 const SacnNetintConfig* netint_config)
 {
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
@@ -1042,9 +1065,9 @@ void set_universe_priority(const SacnSource* source, SacnSourceUniverse* univers
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe))
     return;
 
-  universe->priority = priority;
+  universe->priority                        = priority;
   universe->level_send_buf[SACN_PRI_OFFSET] = priority;
-  universe->pap_send_buf[SACN_PRI_OFFSET] = priority;
+  universe->pap_send_buf[SACN_PRI_OFFSET]   = priority;
   reset_transmission_suppression(source, universe, kResetLevelAndPap);
 }
 
@@ -1065,7 +1088,7 @@ void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* i
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(id))
     return;
 
-  size_t netint_index = 0;
+  size_t            netint_index = 0;
   SacnSourceNetint* netint_state = lookup_source_netint_and_index(source, id, &netint_index);
 
   if (netint_state)
@@ -1084,7 +1107,7 @@ void reset_unicast_dest(SacnUnicastDestination* dest)
   if (!SACN_ASSERT_VERIFY(dest))
     return;
 
-  dest->termination_state = kNotTerminating;
+  dest->termination_state     = kNotTerminating;
   dest->num_terminations_sent = 0;
 }
 
@@ -1094,10 +1117,10 @@ void reset_universe(SacnSourceUniverse* universe)
   if (!SACN_ASSERT_VERIFY(universe))
     return;
 
-  universe->termination_state = kNotTerminating;
+  universe->termination_state     = kNotTerminating;
   universe->num_terminations_sent = 0;
-  universe->has_level_data = false;
-  universe->has_pap_data = false;
+  universe->has_level_data        = false;
+  universe->has_pap_data          = false;
 }
 
 // Needs lock
@@ -1108,7 +1131,7 @@ void cancel_termination_if_not_removing(SacnSourceUniverse* universe)
 
   if (universe->termination_state == kTerminatingWithoutRemoving)
   {
-    universe->termination_state = kNotTerminating;
+    universe->termination_state     = kNotTerminating;
     universe->num_terminations_sent = 0;
 
     for (size_t i = 0; i < universe->num_unicast_dests; ++i)
@@ -1117,7 +1140,7 @@ void cancel_termination_if_not_removing(SacnSourceUniverse* universe)
 
       if (dest->termination_state == kTerminatingWithoutRemoving)
       {
-        dest->termination_state = kNotTerminating;
+        dest->termination_state     = kNotTerminating;
         dest->num_terminations_sent = 0;
       }
     }

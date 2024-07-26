@@ -37,7 +37,8 @@
 /*************************** Function definitions ****************************/
 
 // Needs lock
-etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
+etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse*      universe,
+                                     const EtcPalIpAddr*      addr,
                                      SacnUnicastDestination** dest_state)
 {
   if (!SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(dest_state))
@@ -47,10 +48,10 @@ etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalI
                           kEtcPalErrNoMem);
 
   SacnUnicastDestination* dest = &universe->unicast_dests[universe->num_unicast_dests++];
-  dest->dest_addr = *addr;
-  dest->termination_state = kNotTerminating;
-  dest->num_terminations_sent = 0;
-  dest->last_send_error = kEtcPalErrOk;
+  dest->dest_addr              = *addr;
+  dest->termination_state      = kNotTerminating;
+  dest->num_terminations_sent  = 0;
+  dest->last_send_error        = kEtcPalErrOk;
 
   *dest_state = dest;
 
@@ -58,14 +59,15 @@ etcpal_error_t add_sacn_unicast_dest(SacnSourceUniverse* universe, const EtcPalI
 }
 
 // Needs lock
-etcpal_error_t lookup_unicast_dest(SacnSourceUniverse* universe, const EtcPalIpAddr* addr,
+etcpal_error_t lookup_unicast_dest(SacnSourceUniverse*      universe,
+                                   const EtcPalIpAddr*      addr,
                                    SacnUnicastDestination** unicast_dest)
 {
   if (!SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(unicast_dest))
     return kEtcPalErrSys;
 
-  bool found = false;
-  size_t index = get_unicast_dest_index(universe, addr, &found);
+  bool   found  = false;
+  size_t index  = get_unicast_dest_index(universe, addr, &found);
   *unicast_dest = found ? &universe->unicast_dests[index] : NULL;
   return found ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
@@ -85,7 +87,7 @@ size_t get_unicast_dest_index(SacnSourceUniverse* universe, const EtcPalIpAddr* 
   if (!SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(found))
     return 0;
 
-  *found = false;
+  *found       = false;
   size_t index = 0;
 
   while (!(*found) && (index < universe->num_unicast_dests))

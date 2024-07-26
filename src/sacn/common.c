@@ -44,7 +44,7 @@ const EtcPalLogParams* sacn_log_params;
 
 static struct SacnState
 {
-  bool initted;
+  bool            initted;
   EtcPalLogParams log_params;
 } sacn_pool_sacn_state;
 
@@ -79,7 +79,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
     if (log_params)
     {
       sacn_pool_sacn_state.log_params = *log_params;
-      sacn_log_params = &sacn_pool_sacn_state.log_params;
+      sacn_log_params                 = &sacn_pool_sacn_state.log_params;
     }
 
     bool etcpal_initted = false;
@@ -138,7 +138,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
 
 #if SACN_SOURCE_DETECTOR_ENABLED
     bool source_detector_state_initted = false;
-    bool source_detector_initted = false;
+    bool source_detector_initted       = false;
     if (res == kEtcPalErrOk)
       source_detector_state_initted = ((res = sacn_source_detector_state_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
@@ -146,9 +146,9 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
 #endif  // SACN_SOURCE_DETECTOR_ENABLED
 
 #if SACN_RECEIVER_ENABLED
-    bool source_loss_initted = false;
+    bool source_loss_initted    = false;
     bool receiver_state_initted = false;
-    bool receiver_initted = false;
+    bool receiver_initted       = false;
     if (res == kEtcPalErrOk)
       source_loss_initted = ((res = sacn_source_loss_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)
@@ -159,7 +159,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
 
 #if SACN_SOURCE_ENABLED
     bool source_state_initted = false;
-    bool source_initted = false;
+    bool source_initted       = false;
     if (res == kEtcPalErrOk)
       source_state_initted = ((res = sacn_source_state_init()) == kEtcPalErrOk);
     if (res == kEtcPalErrOk)

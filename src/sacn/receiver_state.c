@@ -47,12 +47,12 @@ static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PR
 
 typedef struct PeriodicCallbacks
 {
-  const SourcesLostNotification* sources_lost_arr;
-  size_t num_sources_lost;
+  const SourcesLostNotification*     sources_lost_arr;
+  size_t                             num_sources_lost;
   const SamplingStartedNotification* sampling_started_arr;
-  size_t num_sampling_started;
-  const SamplingEndedNotification* sampling_ended_arr;
-  size_t num_sampling_ended;
+  size_t                             num_sampling_started;
+  const SamplingEndedNotification*   sampling_ended_arr;
+  size_t                             num_sampling_ended;
 } PeriodicCallbacks;
 
 /**************************** Private variables ******************************/
@@ -73,40 +73,64 @@ static etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_c
 
 static void sacn_receive_thread(void* arg);
 
-static etcpal_error_t add_sockets(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
-                                  const EtcPalMcastNetintId* netints, size_t num_netints,
-                                  SacnInternalSocketState* sockets);
-static void remove_sockets(sacn_thread_id_t thread_id, SacnInternalSocketState* sockets, uint16_t universe,
-                           const EtcPalMcastNetintId* netints, size_t num_netints,
-                           socket_cleanup_behavior_t cleanup_behavior);
+static etcpal_error_t add_sockets(sacn_thread_id_t           thread_id,
+                                  etcpal_iptype_t            ip_type,
+                                  uint16_t                   universe,
+                                  const EtcPalMcastNetintId* netints,
+                                  size_t                     num_netints,
+                                  SacnInternalSocketState*   sockets);
+static void           remove_sockets(sacn_thread_id_t           thread_id,
+                                     SacnInternalSocketState*   sockets,
+                                     uint16_t                   universe,
+                                     const EtcPalMcastNetintId* netints,
+                                     size_t                     num_netints,
+                                     socket_cleanup_behavior_t  cleanup_behavior);
 
 // Receiving incoming data
-static void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
-                            const EtcPalSockAddr* from_addr, const EtcPalMcastNetintId* netint);
-static void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
-                                    const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr,
+static void handle_incoming(SacnRecvThreadContext*     context,
+                            const uint8_t*             data,
+                            size_t                     datalen,
+                            const EtcPalSockAddr*      from_addr,
+                            const EtcPalMcastNetintId* netint);
+static void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
+                                    const uint8_t*             data,
+                                    size_t                     datalen,
+                                    const EtcPalUuid*          sender_cid,
+                                    const EtcPalSockAddr*      from_addr,
                                     const EtcPalMcastNetintId* netint);
-static void handle_sacn_extended_packet(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
-                                        const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr);
+static void handle_sacn_extended_packet(SacnRecvThreadContext* context,
+                                        const uint8_t*         data,
+                                        size_t                 datalen,
+                                        const EtcPalUuid*      sender_cid,
+                                        const EtcPalSockAddr*  from_addr);
 static void mark_source_terminated(SacnTrackedSource* src);
-static void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
-                                    SourcePapLostNotification* source_pap_lost, bool* notify);
+static void process_null_start_code(const SacnReceiver*        receiver,
+                                    SacnTrackedSource*         src,
+                                    SourcePapLostNotification* source_pap_lost,
+                                    bool*                      notify);
 #if SACN_ETC_PRIORITY_EXTENSION
 static void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* notify);
 #endif
-static void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* source_info,
-                                    const EtcPalMcastNetintId* netint, const SacnRecvUniverseData* universe_data,
-                                    uint8_t seq, SacnTrackedSource** new_source,
-                                    SourceLimitExceededNotification* source_limit_exceeded, bool* notify);
+static void process_new_source_data(SacnReceiver*                    receiver,
+                                    const SacnRemoteSource*          source_info,
+                                    const EtcPalMcastNetintId*       netint,
+                                    const SacnRecvUniverseData*      universe_data,
+                                    uint8_t                          seq,
+                                    SacnTrackedSource**              new_source,
+                                    SourceLimitExceededNotification* source_limit_exceeded,
+                                    bool*                            notify);
 static bool check_sequence(int8_t new_seq, int8_t old_seq);
-static void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const SacnRemoteSource* source_info,
-                                      uint16_t universe_id, SourceLimitExceededNotification* source_limit_exceeded,
-                                      SourcePapLostNotification* source_pap_lost,
-                                      UniverseDataNotification* universe_data);
+static void deliver_receive_callbacks(const EtcPalSockAddr*            from_addr,
+                                      const SacnRemoteSource*          source_info,
+                                      uint16_t                         universe_id,
+                                      SourceLimitExceededNotification* source_limit_exceeded,
+                                      SourcePapLostNotification*       source_pap_lost,
+                                      UniverseDataNotification*        universe_data);
 
 // Process periodic timeout functionality
 static void process_receivers(SacnRecvThreadContext* recv_thread_context);
-static void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver,
+static void process_receiver_sources(sacn_thread_id_t         thread_id,
+                                     SacnReceiver*            receiver,
                                      SourcesLostNotification* sources_lost);
 static bool check_source_timeouts(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
 static void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* status_lists);
@@ -127,7 +151,7 @@ void sacn_receiver_state_deinit(void)
 {
   sacn_thread_id_t threads_ids_to_deinit[SACN_RECEIVER_MAX_THREADS];
   etcpal_thread_t* threads_handles_to_deinit[SACN_RECEIVER_MAX_THREADS];
-  int num_threads_to_deinit = 0;
+  int              num_threads_to_deinit = 0;
 
   // Stop all receive threads
   if (sacn_receiver_lock())
@@ -138,7 +162,7 @@ void sacn_receiver_state_deinit(void)
       if (thread_context && thread_context->running)
       {
         etcpal_signal_post(&thread_context->deinit_signal);
-        threads_ids_to_deinit[num_threads_to_deinit] = thread_context->thread_id;
+        threads_ids_to_deinit[num_threads_to_deinit]     = thread_context->thread_id;
         threads_handles_to_deinit[num_threads_to_deinit] = &thread_context->thread_handle;
         ++num_threads_to_deinit;
       }
@@ -226,7 +250,7 @@ etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver)
       if (!assigned_thread || (context->num_receivers < assigned_thread->num_receivers))
       {
         receiver->thread_id = i;
-        assigned_thread = context;
+        assigned_thread     = context;
       }
     }
   }
@@ -412,7 +436,7 @@ void begin_sampling_period(SacnReceiver* receiver)
 
   if (!receiver->sampling)
   {
-    receiver->sampling = true;
+    receiver->sampling                  = true;
     receiver->notified_sampling_started = false;
     etcpal_timer_start(&receiver->sample_timer, SACN_SAMPLE_TIME);
   }
@@ -573,7 +597,7 @@ etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
   if (!SACN_ASSERT_VERIFY(recv_thread_context))
     return kEtcPalErrSys;
 
-  recv_thread_context->running = true;
+  recv_thread_context->running                = true;
   recv_thread_context->periodic_timer_started = false;
   etcpal_error_t create_res = etcpal_thread_create(&recv_thread_context->thread_handle, &kReceiverThreadParams,
                                                    sacn_receive_thread, recv_thread_context);
@@ -629,8 +653,12 @@ void sacn_receive_thread(void* arg)
   }
 }
 
-etcpal_error_t add_sockets(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, uint16_t universe,
-                           const EtcPalMcastNetintId* netints, size_t num_netints, SacnInternalSocketState* sockets)
+etcpal_error_t add_sockets(sacn_thread_id_t           thread_id,
+                           etcpal_iptype_t            ip_type,
+                           uint16_t                   universe,
+                           const EtcPalMcastNetintId* netints,
+                           size_t                     num_netints,
+                           SacnInternalSocketState*   sockets)
 {
   if (!SACN_ASSERT_VERIFY(ip_type == kEtcPalIpTypeV4 || ip_type == kEtcPalIpTypeV6) ||
       !SACN_ASSERT_VERIFY(universe >= 1 && ((universe <= 63999) || (universe == SACN_DISCOVERY_UNIVERSE))) ||
@@ -681,8 +709,12 @@ etcpal_error_t add_sockets(sacn_thread_id_t thread_id, etcpal_iptype_t ip_type, 
   return res;
 }
 
-void remove_sockets(sacn_thread_id_t thread_id, SacnInternalSocketState* sockets, uint16_t universe,
-                    const EtcPalMcastNetintId* netints, size_t num_netints, socket_cleanup_behavior_t cleanup_behavior)
+void remove_sockets(sacn_thread_id_t           thread_id,
+                    SacnInternalSocketState*   sockets,
+                    uint16_t                   universe,
+                    const EtcPalMcastNetintId* netints,
+                    size_t                     num_netints,
+                    socket_cleanup_behavior_t  cleanup_behavior)
 {
 #if SACN_RECEIVER_SOCKET_PER_NIC
   ETCPAL_UNUSED_ARG(netints);
@@ -702,7 +734,7 @@ void remove_sockets(sacn_thread_id_t thread_id, SacnInternalSocketState* sockets
         {
           EtcPalMcastNetintId netint;
           netint.ip_type = kEtcPalIpTypeV4;
-          netint.index = context->socket_refs[index].socket.ifindex;
+          netint.index   = context->socket_refs[index].socket.ifindex;
 
           sacn_remove_receiver_socket(thread_id, ipv4_socket, universe, &netint, 1, cleanup_behavior);
         }
@@ -716,7 +748,7 @@ void remove_sockets(sacn_thread_id_t thread_id, SacnInternalSocketState* sockets
         {
           EtcPalMcastNetintId netint;
           netint.ip_type = kEtcPalIpTypeV6;
-          netint.index = context->socket_refs[index].socket.ifindex;
+          netint.index   = context->socket_refs[index].socket.ifindex;
 
           sacn_remove_receiver_socket(thread_id, ipv6_socket, universe, &netint, 1, cleanup_behavior);
         }
@@ -747,8 +779,11 @@ void remove_sockets(sacn_thread_id_t thread_id, SacnInternalSocketState* sockets
  * [in] from_addr Network address from which the data was received.
  * [in] netint ID of network interface on which the data was received.
  */
-void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
-                     const EtcPalSockAddr* from_addr, const EtcPalMcastNetintId* netint)
+void handle_incoming(SacnRecvThreadContext*     context,
+                     const uint8_t*             data,
+                     size_t                     datalen,
+                     const EtcPalSockAddr*      from_addr,
+                     const EtcPalMcastNetintId* netint)
 {
   if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(data) || !SACN_ASSERT_VERIFY(from_addr) ||
       !SACN_ASSERT_VERIFY(netint))
@@ -761,7 +796,7 @@ void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t
     return;
 
   AcnRootLayerPdu rlp;
-  AcnPdu lpdu = ACN_PDU_INIT;
+  AcnPdu          lpdu = ACN_PDU_INIT;
   while (acn_parse_root_layer_pdu(preamble.rlp_block, preamble.rlp_block_len, &rlp, &lpdu))
   {
     if (rlp.vector == ACN_VECTOR_ROOT_E131_DATA)
@@ -781,8 +816,11 @@ void handle_incoming(SacnRecvThreadContext* context, const uint8_t* data, size_t
  * [in] from_addr Network address from which the data was received.
  * [in] netint ID of network interface on which the data was received.
  */
-void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, size_t datalen,
-                             const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr,
+void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
+                             const uint8_t*             data,
+                             size_t                     datalen,
+                             const EtcPalUuid*          sender_cid,
+                             const EtcPalSockAddr*      from_addr,
                              const EtcPalMcastNetintId* netint)
 {
   if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) || !SACN_ASSERT_VERIFY(data) ||
@@ -793,9 +831,9 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 
   if (receiver_cb_lock())
   {
-    UniverseDataNotification* universe_data = get_universe_data(thread_id);
+    UniverseDataNotification*        universe_data         = get_universe_data(thread_id);
     SourceLimitExceededNotification* source_limit_exceeded = get_source_limit_exceeded(thread_id);
-    SourcePapLostNotification* source_pap_lost = get_source_pap_lost(thread_id);
+    SourcePapLostNotification*       source_pap_lost       = get_source_pap_lost(thread_id);
     if (!universe_data || !source_limit_exceeded || !source_pap_lost)
     {
       SACN_LOG_ERR("Could not allocate memory for incoming sACN data packet!");
@@ -804,8 +842,8 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
     }
 
     uint8_t seq;
-    bool is_termination_packet;
-    bool parse_res = false;
+    bool    is_termination_packet;
+    bool    parse_res = false;
 
     universe_data->source_info.cid = *sender_cid;
 
@@ -855,7 +893,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
         return;
       }
 
-      bool notify = false;
+      bool notify                       = false;
       universe_data->source_info.handle = get_remote_source_handle(sender_cid);
       SacnTrackedSource* src =
           (SacnTrackedSource*)etcpal_rbtree_find(&receiver->sources, &universe_data->source_info.handle);
@@ -934,9 +972,9 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
 
         if (notify)
         {
-          universe_data->api_callback = receiver->api_callbacks.universe_data;
-          universe_data->internal_callback = receiver->internal_callbacks.universe_data;
-          universe_data->receiver_handle = receiver->keys.handle;
+          universe_data->api_callback              = receiver->api_callbacks.universe_data;
+          universe_data->internal_callback         = receiver->internal_callbacks.universe_data;
+          universe_data->receiver_handle           = receiver->keys.handle;
           universe_data->universe_data.universe_id = receiver->keys.universe;
           universe_data->universe_data.is_sampling = (sp_netint != NULL);
 
@@ -945,7 +983,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
             universe_data->universe_data.slot_range.address_count = receiver->footprint.address_count;
 
           universe_data->thread_id = thread_id;
-          universe_data->context = receiver->api_callbacks.context;
+          universe_data->context   = receiver->api_callbacks.context;
         }
       }
 
@@ -969,8 +1007,11 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const uint8_t* data, si
  * [in] sender_cid CID from which the data was received.
  * [in] from_addr Network address from which the data was received.
  */
-void handle_sacn_extended_packet(SacnRecvThreadContext* context, const uint8_t* data, size_t datalen,
-                                 const EtcPalUuid* sender_cid, const EtcPalSockAddr* from_addr)
+void handle_sacn_extended_packet(SacnRecvThreadContext* context,
+                                 const uint8_t*         data,
+                                 size_t                 datalen,
+                                 const EtcPalUuid*      sender_cid,
+                                 const EtcPalSockAddr*  from_addr)
 {
   if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(data) || !SACN_ASSERT_VERIFY(sender_cid) ||
       !SACN_ASSERT_VERIFY(from_addr))
@@ -988,7 +1029,7 @@ void handle_sacn_extended_packet(SacnRecvThreadContext* context, const uint8_t* 
       if (discovery_offset < datalen)
       {
         size_t discovery_len = (datalen - discovery_offset);
-        size_t name_offset = (SACN_SOURCE_NAME_OFFSET - SACN_FRAMING_OFFSET);
+        size_t name_offset   = (SACN_SOURCE_NAME_OFFSET - SACN_FRAMING_OFFSET);
         handle_sacn_universe_discovery_packet(context, &data[discovery_offset], discovery_len, sender_cid, from_addr,
                                               (char*)(&data[name_offset]));
       }
@@ -1021,8 +1062,10 @@ void mark_source_terminated(SacnTrackedSource* src)
  *                       to the app.
  * [out] notify Whether or not to forward the data to the user in a notification.
  */
-void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* src,
-                             SourcePapLostNotification* source_pap_lost, bool* notify)
+void process_null_start_code(const SacnReceiver*        receiver,
+                             SacnTrackedSource*         src,
+                             SourcePapLostNotification* source_pap_lost,
+                             bool*                      notify)
 {
   if (!SACN_ASSERT_VERIFY(receiver) || !SACN_ASSERT_VERIFY(src) || !SACN_ASSERT_VERIFY(source_pap_lost) ||
       !SACN_ASSERT_VERIFY(notify))
@@ -1072,15 +1115,15 @@ void process_null_start_code(const SacnReceiver* receiver, SacnTrackedSource* sr
         const EtcPalUuid* cid = get_remote_source_cid(src->handle);
         if (SACN_ASSERT_VERIFY(cid))
         {
-          source_pap_lost->api_callback = receiver->api_callbacks.source_pap_lost;
+          source_pap_lost->api_callback      = receiver->api_callbacks.source_pap_lost;
           source_pap_lost->internal_callback = receiver->internal_callbacks.source_pap_lost;
-          source_pap_lost->source.handle = src->handle;
-          source_pap_lost->source.cid = *cid;
+          source_pap_lost->source.handle     = src->handle;
+          source_pap_lost->source.cid        = *cid;
           ETCPAL_MSVC_NO_DEP_WRN strcpy(source_pap_lost->source.name, src->name);
-          source_pap_lost->handle = receiver->keys.handle;
-          source_pap_lost->universe = receiver->keys.universe;
+          source_pap_lost->handle    = receiver->keys.handle;
+          source_pap_lost->universe  = receiver->keys.universe;
           source_pap_lost->thread_id = receiver->thread_id;
-          source_pap_lost->context = receiver->api_callbacks.context;
+          source_pap_lost->context   = receiver->api_callbacks.context;
         }
 
         src->recv_state = kRecvStateHaveDmxOnly;
@@ -1139,10 +1182,14 @@ void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* not
  * condition should be forwarded to the app.
  * [out] notify Whether or not to forward the data to the user in a notification.
  */
-void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* source_info,
-                             const EtcPalMcastNetintId* netint, const SacnRecvUniverseData* universe_data, uint8_t seq,
-                             SacnTrackedSource** new_source, SourceLimitExceededNotification* source_limit_exceeded,
-                             bool* notify)
+void process_new_source_data(SacnReceiver*                    receiver,
+                             const SacnRemoteSource*          source_info,
+                             const EtcPalMcastNetintId*       netint,
+                             const SacnRecvUniverseData*      universe_data,
+                             uint8_t                          seq,
+                             SacnTrackedSource**              new_source,
+                             SourceLimitExceededNotification* source_limit_exceeded,
+                             bool*                            notify)
 {
   if (!SACN_ASSERT_VERIFY(receiver) || !SACN_ASSERT_VERIFY(source_info) || !SACN_ASSERT_VERIFY(netint) ||
       !SACN_ASSERT_VERIFY(universe_data) || !SACN_ASSERT_VERIFY(new_source) ||
@@ -1186,12 +1233,12 @@ void process_new_source_data(SacnReceiver* receiver, const SacnRemoteSource* sou
     if (!receiver->suppress_limit_exceeded_notification)
     {
       receiver->suppress_limit_exceeded_notification = true;
-      source_limit_exceeded->api_callback = receiver->api_callbacks.source_limit_exceeded;
-      source_limit_exceeded->internal_callback = receiver->internal_callbacks.source_limit_exceeded;
-      source_limit_exceeded->handle = receiver->keys.handle;
-      source_limit_exceeded->universe = receiver->keys.universe;
-      source_limit_exceeded->thread_id = receiver->thread_id;
-      source_limit_exceeded->context = receiver->api_callbacks.context;
+      source_limit_exceeded->api_callback            = receiver->api_callbacks.source_limit_exceeded;
+      source_limit_exceeded->internal_callback       = receiver->internal_callbacks.source_limit_exceeded;
+      source_limit_exceeded->handle                  = receiver->keys.handle;
+      source_limit_exceeded->universe                = receiver->keys.universe;
+      source_limit_exceeded->thread_id               = receiver->thread_id;
+      source_limit_exceeded->context                 = receiver->api_callbacks.context;
     }
   }
 }
@@ -1210,9 +1257,12 @@ bool check_sequence(int8_t new_seq, int8_t old_seq)
 }
 
 // Needs receiver_cb lock
-void deliver_receive_callbacks(const EtcPalSockAddr* from_addr, const SacnRemoteSource* source_info,
-                               uint16_t universe_id, SourceLimitExceededNotification* source_limit_exceeded,
-                               SourcePapLostNotification* source_pap_lost, UniverseDataNotification* universe_data)
+void deliver_receive_callbacks(const EtcPalSockAddr*            from_addr,
+                               const SacnRemoteSource*          source_info,
+                               uint16_t                         universe_id,
+                               SourceLimitExceededNotification* source_limit_exceeded,
+                               SourcePapLostNotification*       source_pap_lost,
+                               UniverseDataNotification*        universe_data)
 {
   if (!SACN_ASSERT_VERIFY(from_addr) || !SACN_ASSERT_VERIFY(source_info) ||
       !SACN_ASSERT_VERIFY(source_limit_exceeded) || !SACN_ASSERT_VERIFY(source_pap_lost) ||
@@ -1297,12 +1347,12 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
 
   if (receiver_cb_lock())
   {
-    SamplingStartedNotification* sampling_started = NULL;
-    size_t num_sampling_started = 0;
-    SamplingEndedNotification* sampling_ended = NULL;
-    size_t num_sampling_ended = 0;
-    SourcesLostNotification* sources_lost = NULL;
-    size_t num_sources_lost = 0;
+    SamplingStartedNotification* sampling_started     = NULL;
+    size_t                       num_sampling_started = 0;
+    SamplingEndedNotification*   sampling_ended       = NULL;
+    size_t                       num_sampling_ended   = 0;
+    SourcesLostNotification*     sources_lost         = NULL;
+    size_t                       num_sources_lost     = 0;
 
     if (sacn_receiver_lock())
     {
@@ -1310,8 +1360,8 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
 
       // Get the notification structs (they are zeroed/reset when we get them here)
       sampling_started = get_sampling_started_buffer(recv_thread_context->thread_id, num_receivers);
-      sampling_ended = get_sampling_ended_buffer(recv_thread_context->thread_id, num_receivers);
-      sources_lost = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
+      sampling_ended   = get_sampling_ended_buffer(recv_thread_context->thread_id, num_receivers);
+      sources_lost     = get_sources_lost_buffer(recv_thread_context->thread_id, num_receivers);
       if (!sampling_started || !sampling_ended || !sources_lost)
       {
         sacn_receiver_unlock();
@@ -1326,26 +1376,26 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
         if (receiver->sampling && etcpal_timer_is_expired(&receiver->sample_timer))
         {
           end_current_sampling_period(receiver);
-          sampling_ended[num_sampling_ended].api_callback = receiver->api_callbacks.sampling_period_ended;
+          sampling_ended[num_sampling_ended].api_callback      = receiver->api_callbacks.sampling_period_ended;
           sampling_ended[num_sampling_ended].internal_callback = receiver->internal_callbacks.sampling_period_ended;
-          sampling_ended[num_sampling_ended].handle = receiver->keys.handle;
-          sampling_ended[num_sampling_ended].universe = receiver->keys.universe;
-          sampling_ended[num_sampling_ended].thread_id = receiver->thread_id;
-          sampling_ended[num_sampling_ended].context = receiver->api_callbacks.context;
+          sampling_ended[num_sampling_ended].handle            = receiver->keys.handle;
+          sampling_ended[num_sampling_ended].universe          = receiver->keys.universe;
+          sampling_ended[num_sampling_ended].thread_id         = receiver->thread_id;
+          sampling_ended[num_sampling_ended].context           = receiver->api_callbacks.context;
 
           ++num_sampling_ended;
         }
 
         if (!receiver->notified_sampling_started)
         {
-          receiver->notified_sampling_started = true;
+          receiver->notified_sampling_started                 = true;
           sampling_started[num_sampling_started].api_callback = receiver->api_callbacks.sampling_period_started;
           sampling_started[num_sampling_started].internal_callback =
               receiver->internal_callbacks.sampling_period_started;
-          sampling_started[num_sampling_started].handle = receiver->keys.handle;
-          sampling_started[num_sampling_started].universe = receiver->keys.universe;
+          sampling_started[num_sampling_started].handle    = receiver->keys.handle;
+          sampling_started[num_sampling_started].universe  = receiver->keys.universe;
           sampling_started[num_sampling_started].thread_id = receiver->thread_id;
-          sampling_started[num_sampling_started].context = receiver->api_callbacks.context;
+          sampling_started[num_sampling_started].context   = receiver->api_callbacks.context;
 
           ++num_sampling_started;
         }
@@ -1357,12 +1407,12 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
     }
 
     PeriodicCallbacks periodic_callbacks;
-    periodic_callbacks.sources_lost_arr = sources_lost;
-    periodic_callbacks.num_sources_lost = num_sources_lost;
+    periodic_callbacks.sources_lost_arr     = sources_lost;
+    periodic_callbacks.num_sources_lost     = num_sources_lost;
     periodic_callbacks.sampling_started_arr = sampling_started;
     periodic_callbacks.num_sampling_started = num_sampling_started;
-    periodic_callbacks.sampling_ended_arr = sampling_ended;
-    periodic_callbacks.num_sampling_ended = num_sampling_ended;
+    periodic_callbacks.sampling_ended_arr   = sampling_ended;
+    periodic_callbacks.num_sampling_ended   = num_sampling_ended;
 
     deliver_periodic_callbacks(&periodic_callbacks);
 
@@ -1379,7 +1429,7 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
   }
 
   SacnSourceStatusLists* status_lists = get_status_lists(thread_id);
-  SacnTrackedSource** to_erase = get_to_erase_buffer(thread_id, etcpal_rbtree_size(&receiver->sources));
+  SacnTrackedSource**    to_erase     = get_to_erase_buffer(thread_id, etcpal_rbtree_size(&receiver->sources));
 
   if (!status_lists || !to_erase)
   {
@@ -1425,12 +1475,12 @@ void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver
 
   if (sources_lost->num_lost_sources > 0)
   {
-    sources_lost->api_callback = receiver->api_callbacks.sources_lost;
+    sources_lost->api_callback      = receiver->api_callbacks.sources_lost;
     sources_lost->internal_callback = receiver->internal_callbacks.sources_lost;
-    sources_lost->handle = receiver->keys.handle;
-    sources_lost->universe = receiver->keys.universe;
-    sources_lost->thread_id = receiver->thread_id;
-    sources_lost->context = receiver->api_callbacks.context;
+    sources_lost->handle            = receiver->keys.handle;
+    sources_lost->universe          = receiver->keys.universe;
+    sources_lost->thread_id         = receiver->thread_id;
+    sources_lost->context           = receiver->api_callbacks.context;
 
     for (size_t i = 0; i < sources_lost->num_lost_sources; ++i)
       remove_receiver_source(receiver, sources_lost->lost_sources[i].handle);
@@ -1575,7 +1625,7 @@ void end_current_sampling_period(SacnReceiver* receiver)
   {
     EtcPalRbIter iter;
     for (SacnSamplingPeriodNetint* sp_netint = etcpal_rbiter_first(&iter, &receiver->sampling_period_netints);
-         sp_netint; sp_netint = etcpal_rbiter_next(&iter))
+         sp_netint; sp_netint                = etcpal_rbiter_next(&iter))
     {
       SACN_ASSERT_VERIFY(sp_netint->in_future_sampling_period);
       sp_netint->in_future_sampling_period = false;

@@ -35,18 +35,25 @@ extern "C" {
 #endif
 
 etcpal_error_t sacn_merge_receiver_init(void);
-void sacn_merge_receiver_deinit(void);
+void           sacn_merge_receiver_deinit(void);
 
 // Receiver callbacks
-void merge_receiver_universe_data(sacn_receiver_t receiver_handle, const EtcPalSockAddr* source_addr,
-                                  const SacnRemoteSource* source_info, const SacnRecvUniverseData* universe_data,
-                                  sacn_thread_id_t thread_id);
-void merge_receiver_sources_lost(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
-                                 size_t num_lost_sources, sacn_thread_id_t thread_id);
+void merge_receiver_universe_data(sacn_receiver_t             receiver_handle,
+                                  const EtcPalSockAddr*       source_addr,
+                                  const SacnRemoteSource*     source_info,
+                                  const SacnRecvUniverseData* universe_data,
+                                  sacn_thread_id_t            thread_id);
+void merge_receiver_sources_lost(sacn_receiver_t       handle,
+                                 uint16_t              universe,
+                                 const SacnLostSource* lost_sources,
+                                 size_t                num_lost_sources,
+                                 sacn_thread_id_t      thread_id);
 void merge_receiver_sampling_started(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id);
 void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id);
-void merge_receiver_pap_lost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
-                             sacn_thread_id_t thread_id);
+void merge_receiver_pap_lost(sacn_receiver_t         handle,
+                             uint16_t                universe,
+                             const SacnRemoteSource* source,
+                             sacn_thread_id_t        thread_id);
 void merge_receiver_source_limit_exceeded(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id);
 
 #ifdef __cplusplus

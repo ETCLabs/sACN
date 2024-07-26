@@ -96,8 +96,8 @@ bool add_offline_source(SacnSourceStatusLists* lists, sacn_remote_source_t handl
 
   CHECK_ROOM_FOR_ONE_MORE(lists, offline, SacnLostSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
-  lists->offline[lists->num_offline].handle = handle;
-  lists->offline[lists->num_offline].name = name;
+  lists->offline[lists->num_offline].handle     = handle;
+  lists->offline[lists->num_offline].name       = name;
   lists->offline[lists->num_offline].terminated = terminated;
   ++lists->num_offline;
   return true;
@@ -123,7 +123,7 @@ bool add_online_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle
   CHECK_ROOM_FOR_ONE_MORE(lists, online, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
   lists->online[lists->num_online].handle = handle;
-  lists->online[lists->num_online].name = name;
+  lists->online[lists->num_online].name   = name;
   ++lists->num_online;
   return true;
 }
@@ -148,7 +148,7 @@ bool add_unknown_source(SacnSourceStatusLists* lists, sacn_remote_source_t handl
   CHECK_ROOM_FOR_ONE_MORE(lists, unknown, SacnRemoteSourceInternal, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
   lists->unknown[lists->num_unknown].handle = handle;
-  lists->unknown[lists->num_unknown].name = name;
+  lists->unknown[lists->num_unknown].name   = name;
   ++lists->num_unknown;
   return true;
 }
@@ -158,7 +158,7 @@ void zero_status_lists(SacnSourceStatusLists* lists)
   if (!SACN_ASSERT_VERIFY(lists))
     return;
 
-  lists->num_online = 0;
+  lists->num_online  = 0;
   lists->num_offline = 0;
   lists->num_unknown = 0;
 }

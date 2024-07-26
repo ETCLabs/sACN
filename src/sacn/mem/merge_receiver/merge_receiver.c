@@ -51,13 +51,13 @@
 #if SACN_DYNAMIC_MEM
 
 /* Macros for dynamic allocation. */
-#define ALLOC_MERGE_RECEIVER() malloc(sizeof(SacnMergeReceiver))
+#define ALLOC_MERGE_RECEIVER()   malloc(sizeof(SacnMergeReceiver))
 #define FREE_MERGE_RECEIVER(ptr) free(ptr)
 
 #else  // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
-#define ALLOC_MERGE_RECEIVER() etcpal_mempool_alloc(sacn_pool_mergerecv_receivers)
+#define ALLOC_MERGE_RECEIVER()   etcpal_mempool_alloc(sacn_pool_mergerecv_receivers)
 #define FREE_MERGE_RECEIVER(ptr) etcpal_mempool_free(sacn_pool_mergerecv_receivers, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
@@ -79,14 +79,15 @@ int merge_receiver_compare(const EtcPalRbTree* tree, const void* value_a, const 
 
 // Merge receiver tree node management
 EtcPalRbNode* merge_receiver_node_alloc(void);
-void merge_receiver_node_dealloc(EtcPalRbNode* node);
-void merge_receiver_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+void          merge_receiver_node_dealloc(EtcPalRbNode* node);
+void          merge_receiver_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 
 /*************************** Function definitions ****************************/
 
 // Needs lock
-etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnMergeReceiverConfig* config,
-                                       SacnMergeReceiver** state)
+etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t          handle,
+                                       const SacnMergeReceiverConfig* config,
+                                       SacnMergeReceiver**            state)
 {
   if (!SACN_ASSERT_VERIFY(handle != SACN_MERGE_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(config) ||
       !SACN_ASSERT_VERIFY(state))
@@ -110,9 +111,9 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
   if (result == kEtcPalErrOk)
   {
     merge_receiver->merge_receiver_handle = handle;
-    merge_receiver->merger_handle = SACN_DMX_MERGER_INVALID;
-    merge_receiver->callbacks = config->callbacks;
-    merge_receiver->use_pap = config->use_pap;
+    merge_receiver->merger_handle         = SACN_DMX_MERGER_INVALID;
+    merge_receiver->callbacks             = config->callbacks;
+    merge_receiver->use_pap               = config->use_pap;
 
     memset(merge_receiver->levels, 0, SACN_DMX_MERGER_MAX_SLOTS);
     memset(merge_receiver->owners, 0, SACN_DMX_MERGER_MAX_SLOTS * sizeof(sacn_dmx_merger_source_t));

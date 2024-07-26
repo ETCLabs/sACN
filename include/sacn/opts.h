@@ -461,7 +461,7 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #ifdef SACN_DMX_MERGER_MAX_MERGERS
 #define SACN_DMX_MERGER_DEFAULT_MAX_MERGERS 0
 #else
-#define SACN_DMX_MERGER_MAX_MERGERS SACN_RECEIVER_MAX_UNIVERSES
+#define SACN_DMX_MERGER_MAX_MERGERS         SACN_RECEIVER_MAX_UNIVERSES
 #define SACN_DMX_MERGER_DEFAULT_MAX_MERGERS 1
 #endif
 

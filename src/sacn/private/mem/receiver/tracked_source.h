@@ -31,15 +31,19 @@ extern "C" {
 
 etcpal_error_t init_tracked_sources(void);
 
-etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid* sender_cid, const char* name,
-                                       const EtcPalMcastNetintId* netint, uint8_t seq_num, uint8_t first_start_code,
-                                       SacnTrackedSource** tracked_source_state);
+etcpal_error_t add_sacn_tracked_source(SacnReceiver*              receiver,
+                                       const EtcPalUuid*          sender_cid,
+                                       const char*                name,
+                                       const EtcPalMcastNetintId* netint,
+                                       uint8_t                    seq_num,
+                                       uint8_t                    first_start_code,
+                                       SacnTrackedSource**        tracked_source_state);
 etcpal_error_t clear_receiver_sources(SacnReceiver* receiver);
 etcpal_error_t remove_receiver_source(SacnReceiver* receiver, sacn_remote_source_t handle);
 
 void tracked_source_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 
-void tracked_source_node_dealloc(EtcPalRbNode* node);
+void          tracked_source_node_dealloc(EtcPalRbNode* node);
 EtcPalRbNode* tracked_source_node_alloc(void);
 
 #ifdef __cplusplus

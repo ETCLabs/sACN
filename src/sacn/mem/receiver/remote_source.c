@@ -44,27 +44,29 @@
 #if SACN_DYNAMIC_MEM
 
 /* Macros for dynamic allocation. */
-#define ALLOC_REMOTE_SOURCE_HANDLE() malloc(sizeof(SacnRemoteSourceHandle))
-#define ALLOC_REMOTE_SOURCE_CID() malloc(sizeof(SacnRemoteSourceCid))
+#define ALLOC_REMOTE_SOURCE_HANDLE()   malloc(sizeof(SacnRemoteSourceHandle))
+#define ALLOC_REMOTE_SOURCE_CID()      malloc(sizeof(SacnRemoteSourceCid))
 #define FREE_REMOTE_SOURCE_HANDLE(ptr) free(ptr)
-#define FREE_REMOTE_SOURCE_CID(ptr) free(ptr)
+#define FREE_REMOTE_SOURCE_CID(ptr)    free(ptr)
 
 #else  // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
-#define ALLOC_REMOTE_SOURCE_HANDLE() etcpal_mempool_alloc(sacn_pool_recv_remote_source_handles)
-#define ALLOC_REMOTE_SOURCE_CID() etcpal_mempool_alloc(sacn_pool_recv_remote_source_cids)
+#define ALLOC_REMOTE_SOURCE_HANDLE()   etcpal_mempool_alloc(sacn_pool_recv_remote_source_handles)
+#define ALLOC_REMOTE_SOURCE_CID()      etcpal_mempool_alloc(sacn_pool_recv_remote_source_cids)
 #define FREE_REMOTE_SOURCE_HANDLE(ptr) etcpal_mempool_free(sacn_pool_recv_remote_source_handles, ptr)
-#define FREE_REMOTE_SOURCE_CID(ptr) etcpal_mempool_free(sacn_pool_recv_remote_source_cids, ptr)
+#define FREE_REMOTE_SOURCE_CID(ptr)    etcpal_mempool_free(sacn_pool_recv_remote_source_cids, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
 
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM
-ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_remote_source_handles, SacnRemoteSourceHandle,
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_remote_source_handles,
+                      SacnRemoteSourceHandle,
                       SACN_RECEIVER_TOTAL_MAX_SOURCES + SACN_SOURCE_DETECTOR_MAX_SOURCES);
-ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_remote_source_cids, SacnRemoteSourceCid,
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_remote_source_cids,
+                      SacnRemoteSourceCid,
                       SACN_RECEIVER_TOTAL_MAX_SOURCES + SACN_SOURCE_DETECTOR_MAX_SOURCES);
 ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_remote_source_rb_nodes, EtcPalRbNode, SACN_REMOTE_SOURCES_MAX_RB_NODES);
 #endif  // !SACN_DYNAMIC_MEM
@@ -76,13 +78,13 @@ static IntHandleManager remote_source_handle_manager;
 
 /*********************** Private function prototypes *************************/
 
-static int uuid_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
+static int  uuid_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 static bool remote_source_handle_in_use(int handle_val, void* cookie);
 
-static void remote_source_handle_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
-static void remote_source_cid_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+static void          remote_source_handle_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
+static void          remote_source_cid_tree_dealloc(const EtcPalRbTree* self, EtcPalRbNode* node);
 static EtcPalRbNode* remote_source_node_alloc(void);
-static void remote_source_node_dealloc(EtcPalRbNode* node);
+static void          remote_source_node_dealloc(EtcPalRbNode* node);
 
 /*************************** Function definitions ****************************/
 
@@ -138,15 +140,15 @@ etcpal_error_t add_remote_source_handle(const EtcPalUuid* cid, sacn_remote_sourc
   else
   {
     SacnRemoteSourceHandle* new_handle = ALLOC_REMOTE_SOURCE_HANDLE();
-    SacnRemoteSourceCid* new_cid = ALLOC_REMOTE_SOURCE_CID();
+    SacnRemoteSourceCid*    new_cid    = ALLOC_REMOTE_SOURCE_CID();
 
     if (new_handle && new_cid)
     {
-      new_handle->cid = *cid;
+      new_handle->cid    = *cid;
       new_handle->handle = (sacn_remote_source_t)get_next_int_handle(&remote_source_handle_manager);
-      new_cid->handle = new_handle->handle;
-      new_cid->cid = new_handle->cid;
-      new_cid->refcount = 1;
+      new_cid->handle    = new_handle->handle;
+      new_cid->cid       = new_handle->cid;
+      new_cid->refcount  = 1;
 
       result = etcpal_rbtree_insert(&remote_source_handles, new_handle);
 
@@ -213,7 +215,7 @@ etcpal_error_t remove_remote_source_handle(sacn_remote_source_t handle)
     return kEtcPalErrSys;
 
   etcpal_error_t handle_result = kEtcPalErrOk;
-  etcpal_error_t cid_result = kEtcPalErrOk;
+  etcpal_error_t cid_result    = kEtcPalErrOk;
 
   SacnRemoteSourceCid* existing_cid = (SacnRemoteSourceCid*)etcpal_rbtree_find(&remote_source_cids, &handle);
 

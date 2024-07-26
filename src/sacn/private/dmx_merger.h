@@ -40,16 +40,16 @@ extern "C" {
 typedef struct SourceState
 {
   sacn_dmx_merger_source_t handle;  // This must be the first struct member.
-  SacnDmxMergerSource source;
-  size_t pap_count;
-  bool universe_priority_uninitialized;
+  SacnDmxMergerSource      source;
+  size_t                   pap_count;
+  bool                     universe_priority_uninitialized;
 } SourceState;
 
 typedef struct MergerState
 {
-  sacn_dmx_merger_t handle;  // This must be the first struct member.
-  IntHandleManager source_handle_mgr;
-  EtcPalRbTree source_state_lookup;
+  sacn_dmx_merger_t   handle;  // This must be the first struct member.
+  IntHandleManager    source_handle_mgr;
+  EtcPalRbTree        source_state_lookup;
   SacnDmxMergerConfig config;
 
 #if !SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER
@@ -66,11 +66,13 @@ typedef struct MergerState
 } MergerState;
 
 etcpal_error_t sacn_dmx_merger_init();
-void sacn_dmx_merger_deinit(void);
+void           sacn_dmx_merger_deinit(void);
 
-etcpal_error_t lookup_state(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, MergerState** merger_state,
-                            SourceState** source_state);
-size_t get_number_of_mergers();
+etcpal_error_t lookup_state(sacn_dmx_merger_t        merger,
+                            sacn_dmx_merger_source_t source,
+                            MergerState**            merger_state,
+                            SourceState**            source_state);
+size_t         get_number_of_mergers();
 
 etcpal_error_t create_sacn_dmx_merger(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle);
 etcpal_error_t destroy_sacn_dmx_merger(sacn_dmx_merger_t handle);
@@ -78,12 +80,17 @@ etcpal_error_t remove_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_dmx_
 etcpal_error_t add_sacn_dmx_merger_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t* handle);
 etcpal_error_t add_sacn_dmx_merger_source_with_handle(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t handle_to_use);
 
-etcpal_error_t update_sacn_dmx_merger_levels(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
-                                             const uint8_t* new_levels, size_t new_levels_count);
-etcpal_error_t update_sacn_dmx_merger_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t* pap,
-                                          size_t pap_count);
-etcpal_error_t update_sacn_dmx_merger_universe_priority(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
-                                                        uint8_t universe_priority);
+etcpal_error_t update_sacn_dmx_merger_levels(sacn_dmx_merger_t        merger,
+                                             sacn_dmx_merger_source_t source,
+                                             const uint8_t*           new_levels,
+                                             size_t                   new_levels_count);
+etcpal_error_t update_sacn_dmx_merger_pap(sacn_dmx_merger_t        merger,
+                                          sacn_dmx_merger_source_t source,
+                                          const uint8_t*           pap,
+                                          size_t                   pap_count);
+etcpal_error_t update_sacn_dmx_merger_universe_priority(sacn_dmx_merger_t        merger,
+                                                        sacn_dmx_merger_source_t source,
+                                                        uint8_t                  universe_priority);
 etcpal_error_t remove_sacn_dmx_merger_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source);
 
 #ifdef __cplusplus

@@ -87,13 +87,13 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
 #if SACN_DYNAMIC_MEM
     if (size > notifications->buf_capacity)
     {
-      size_t new_capacity = sacn_mem_grow_capacity(notifications->buf_capacity, size);
+      size_t                   new_capacity = sacn_mem_grow_capacity(notifications->buf_capacity, size);
       SourcesLostNotification* new_buf =
           (SourcesLostNotification*)realloc(notifications->buf, new_capacity * sizeof(SourcesLostNotification));
       if (new_buf && init_sources_lost_array(&new_buf[notifications->buf_capacity],
                                              new_capacity - notifications->buf_capacity) == kEtcPalErrOk)
       {
-        notifications->buf = new_buf;
+        notifications->buf          = new_buf;
         notifications->buf_capacity = new_capacity;
       }
       else
@@ -125,8 +125,11 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
  * [in] terminated Whether the source was lost because its Stream_Terminated bit was set.
  * Returns true if the source was successfully added, false if memory could not be allocated.
  */
-bool add_lost_source(SourcesLostNotification* notification, sacn_remote_source_t handle, const EtcPalUuid* cid,
-                     const char* name, bool terminated)
+bool add_lost_source(SourcesLostNotification* notification,
+                     sacn_remote_source_t     handle,
+                     const EtcPalUuid*        cid,
+                     const char*              name,
+                     bool                     terminated)
 {
   if (!SACN_ASSERT_VERIFY(notification) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) ||
       !SACN_ASSERT_VERIFY(cid) || !SACN_ASSERT_VERIFY(name))
@@ -137,7 +140,7 @@ bool add_lost_source(SourcesLostNotification* notification, sacn_remote_source_t
   CHECK_ROOM_FOR_ONE_MORE(notification, lost_sources, SacnLostSource, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, false);
 
   notification->lost_sources[notification->num_lost_sources].handle = handle;
-  notification->lost_sources[notification->num_lost_sources].cid = *cid;
+  notification->lost_sources[notification->num_lost_sources].cid    = *cid;
   ETCPAL_MSVC_NO_DEP_WRN strcpy(notification->lost_sources[notification->num_lost_sources].name, name);
   notification->lost_sources[notification->num_lost_sources].terminated = terminated;
   ++notification->num_lost_sources;
@@ -152,12 +155,12 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
 
   for (SourcesLostNotification* notification = sources_lost_arr; notification < sources_lost_arr + size; ++notification)
   {
-    notification->api_callback = NULL;
+    notification->api_callback      = NULL;
     notification->internal_callback = NULL;
-    notification->handle = SACN_RECEIVER_INVALID;
-    notification->num_lost_sources = 0;
-    notification->thread_id = SACN_THREAD_ID_INVALID;
-    notification->context = NULL;
+    notification->handle            = SACN_RECEIVER_INVALID;
+    notification->num_lost_sources  = 0;
+    notification->thread_id         = SACN_THREAD_ID_INVALID;
+    notification->context           = NULL;
   }
 }
 

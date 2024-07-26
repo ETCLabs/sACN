@@ -30,7 +30,8 @@ extern "C" {
 #endif
 
 etcpal_error_t add_sacn_source_detector_expired_source(SourceDetectorSourceExpiredNotification* source_expired,
-                                                       sacn_remote_source_t handle, const char* name);
+                                                       sacn_remote_source_t                     handle,
+                                                       const char*                              name);
 
 #ifdef __cplusplus
 }

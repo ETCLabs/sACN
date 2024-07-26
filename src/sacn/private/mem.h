@@ -63,13 +63,13 @@ extern "C" {
 #endif
 
 etcpal_error_t sacn_receiver_mem_init(unsigned int number_of_threads);
-void sacn_receiver_mem_deinit(void);
+void           sacn_receiver_mem_deinit(void);
 etcpal_error_t sacn_source_mem_init(void);
-void sacn_source_mem_deinit(void);
+void           sacn_source_mem_deinit(void);
 etcpal_error_t sacn_source_detector_mem_init(void);
-void sacn_source_detector_mem_deinit(void);
+void           sacn_source_detector_mem_deinit(void);
 etcpal_error_t sacn_merge_receiver_mem_init(unsigned int number_of_threads);
-void sacn_merge_receiver_mem_deinit(void);
+void           sacn_merge_receiver_mem_deinit(void);
 
 #ifdef __cplusplus
 }

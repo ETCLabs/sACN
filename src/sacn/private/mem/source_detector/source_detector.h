@@ -30,12 +30,13 @@ extern "C" {
 #endif
 
 etcpal_error_t init_source_detector(void);
-void deinit_source_detector(void);
+void           deinit_source_detector(void);
 
-etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, const SacnNetintConfig* netint_config,
-                                        SacnSourceDetector** detector_state);
+etcpal_error_t      add_sacn_source_detector(const SacnSourceDetectorConfig* config,
+                                             const SacnNetintConfig*         netint_config,
+                                             SacnSourceDetector**            detector_state);
 SacnSourceDetector* get_sacn_source_detector();
-void remove_sacn_source_detector();
+void                remove_sacn_source_detector();
 
 #ifdef __cplusplus
 }

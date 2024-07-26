@@ -62,7 +62,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
   }
 
   etcpal_error_t result = kEtcPalErrOk;
-  SacnSource* source = NULL;
+  SacnSource*    source = NULL;
   if (lookup_source(handle, &source) == kEtcPalErrOk)
     result = kEtcPalErrExists;
 
@@ -91,26 +91,26 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->cid = config->cid;
     memset(source->name, 0, SACN_SOURCE_NAME_MAX_LEN);
     memcpy(source->name, config->name, strlen(config->name));
-    source->terminating = false;
+    source->terminating          = false;
     source->num_active_universes = 0;
     etcpal_timer_start(&source->universe_discovery_timer, SACN_UNIVERSE_DISCOVERY_INTERVAL);
-    source->process_manually = config->manually_process_source;
-    source->ip_supported = config->ip_supported;
-    source->keep_alive_interval = config->keep_alive_interval;
+    source->process_manually        = config->manually_process_source;
+    source->ip_supported            = config->ip_supported;
+    source->keep_alive_interval     = config->keep_alive_interval;
     source->pap_keep_alive_interval = config->pap_keep_alive_interval;
-    source->universe_count_max = config->universe_count_max;
+    source->universe_count_max      = config->universe_count_max;
 
     etcpal_timer_start(&source->stats_log_timer, SACN_STATS_LOG_INTERVAL);
-    source->total_tick_count = 0;
+    source->total_tick_count  = 0;
     source->failed_tick_count = 0;
 
     source->num_universes = 0;
-    source->num_netints = 0;
+    source->num_netints   = 0;
 #if SACN_DYNAMIC_MEM
-    source->universes = calloc(INITIAL_CAPACITY, sizeof(SacnSourceUniverse));
+    source->universes          = calloc(INITIAL_CAPACITY, sizeof(SacnSourceUniverse));
     source->universes_capacity = source->universes ? INITIAL_CAPACITY : 0;
-    source->netints = calloc(INITIAL_CAPACITY, sizeof(SacnSourceNetint));
-    source->netints_capacity = source->netints ? INITIAL_CAPACITY : 0;
+    source->netints            = calloc(INITIAL_CAPACITY, sizeof(SacnSourceNetint));
+    source->netints_capacity   = source->netints ? INITIAL_CAPACITY : 0;
 
     if (!source->universes || !source->netints)
       result = kEtcPalErrNoMem;
@@ -141,8 +141,8 @@ etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state)
   if (!SACN_ASSERT_VERIFY(handle != SACN_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(source_state))
     return kEtcPalErrSys;
 
-  bool found = false;
-  size_t index = get_source_index(handle, &found);
+  bool   found  = false;
+  size_t index  = get_source_index(handle, &found);
   *source_state = found ? &sacn_pool_source_mem.sources[index] : NULL;
   return found ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
@@ -171,7 +171,7 @@ size_t get_source_index(sacn_source_t handle, bool* found)
   if (!SACN_ASSERT_VERIFY(found))
     return 0;
 
-  *found = false;
+  *found       = false;
   size_t index = 0;
 
   while (!(*found) && (index < sacn_pool_source_mem.num_sources))
@@ -189,7 +189,7 @@ etcpal_error_t init_sources(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
 #if SACN_DYNAMIC_MEM
-  sacn_pool_source_mem.sources = calloc(INITIAL_CAPACITY, sizeof(SacnSource));
+  sacn_pool_source_mem.sources          = calloc(INITIAL_CAPACITY, sizeof(SacnSource));
   sacn_pool_source_mem.sources_capacity = sacn_pool_source_mem.sources ? INITIAL_CAPACITY : 0;
   if (!sacn_pool_source_mem.sources)
     res = kEtcPalErrNoMem;

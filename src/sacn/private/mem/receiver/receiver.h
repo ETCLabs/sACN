@@ -30,18 +30,19 @@ extern "C" {
 #endif
 
 etcpal_error_t init_receivers(void);
-void deinit_receivers(void);
+void           deinit_receivers(void);
 
-etcpal_error_t add_sacn_receiver(sacn_receiver_t handle, const SacnReceiverConfig* config,
-                                 const SacnNetintConfig* netint_config,
+etcpal_error_t add_sacn_receiver(sacn_receiver_t                      handle,
+                                 const SacnReceiverConfig*            config,
+                                 const SacnNetintConfig*              netint_config,
                                  const SacnReceiverInternalCallbacks* internal_callbacks,
-                                 SacnReceiver** receiver_state);
+                                 SacnReceiver**                       receiver_state);
 etcpal_error_t lookup_receiver(sacn_receiver_t handle, SacnReceiver** receiver_state);
 etcpal_error_t lookup_receiver_by_universe(uint16_t universe, SacnReceiver** receiver_state);
-SacnReceiver* get_first_receiver(EtcPalRbIter* iterator);
-SacnReceiver* get_next_receiver(EtcPalRbIter* iterator);
+SacnReceiver*  get_first_receiver(EtcPalRbIter* iterator);
+SacnReceiver*  get_next_receiver(EtcPalRbIter* iterator);
 etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_universe);
-void remove_sacn_receiver(SacnReceiver* receiver);
+void           remove_sacn_receiver(SacnReceiver* receiver);
 etcpal_error_t initialize_receiver_sockets(SacnInternalSocketState* sockets);
 
 #ifdef __cplusplus

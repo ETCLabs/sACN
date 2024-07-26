@@ -41,7 +41,7 @@ extern "C" {
 #define SOURCE_DETECTOR_SOURCE_TIMEOUT_MS 20000
 
 etcpal_error_t sacn_source_detector_init(void);
-void sacn_source_detector_deinit(void);
+void           sacn_source_detector_deinit(void);
 
 #ifdef __cplusplus
 }

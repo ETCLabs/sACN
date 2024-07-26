@@ -85,7 +85,7 @@ SamplingStartedNotification* get_sampling_started_buffer(sacn_thread_id_t thread
   memset(notifications->buf, 0, size * sizeof(SamplingStartedNotification));
   for (size_t i = 0; i < size; ++i)
   {
-    notifications->buf[i].handle = SACN_RECEIVER_INVALID;
+    notifications->buf[i].handle    = SACN_RECEIVER_INVALID;
     notifications->buf[i].thread_id = SACN_THREAD_ID_INVALID;
   }
 

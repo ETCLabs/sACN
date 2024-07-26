@@ -98,8 +98,10 @@ public:
      * @param universe_data The universe data (and relevant information about that data), starting from the first slot
      * of the currently configured footprint.
      */
-    virtual void HandleUniverseData(Handle receiver_handle, const etcpal::SockAddr& source_addr,
-                                    const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data) = 0;
+    virtual void HandleUniverseData(Handle                      receiver_handle,
+                                    const etcpal::SockAddr&     source_addr,
+                                    const SacnRemoteSource&     source_info,
+                                    const SacnRecvUniverseData& universe_data) = 0;
 
     /**
      * @brief Notify that one or more sources have entered a source loss state.
@@ -107,7 +109,8 @@ public:
      * @param universe The universe this receiver is monitoring.
      * @param lost_sources Vector of structs describing the source or sources that have been lost.
      */
-    virtual void HandleSourcesLost(Handle handle, uint16_t universe,
+    virtual void HandleSourcesLost(Handle                             handle,
+                                   uint16_t                           universe,
                                    const std::vector<SacnLostSource>& lost_sources) = 0;
 
     /**
@@ -185,7 +188,7 @@ public:
     /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
         When configured to use static memory, this parameter is only used if it's less than
         #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE -- otherwise #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.*/
-    int source_count_max{SACN_RECEIVER_INFINITE_SOURCES};
+    int          source_count_max{SACN_RECEIVER_INFINITE_SOURCES};
     unsigned int flags{0}; /**< A set of option flags. See the C API's "sACN receiver flags". */
 
     sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6}; /**< What IP networking the receiver will support. */
@@ -223,31 +226,32 @@ public:
     NetintList(sacn_receiver_t receiver_handle, const std::vector<SacnMcastInterface>& network_interfaces);
   };
 
-  Receiver() = default;
-  Receiver(const Receiver& other) = delete;
+  Receiver()                                 = default;
+  Receiver(const Receiver& other)            = delete;
   Receiver& operator=(const Receiver& other) = delete;
-  Receiver(Receiver&& other) = default;            /**< Move a device instance. */
-  Receiver& operator=(Receiver&& other) = default; /**< Move a device instance. */
+  Receiver(Receiver&& other)                 = default; /**< Move a device instance. */
+  Receiver& operator=(Receiver&& other)      = default; /**< Move a device instance. */
 
-  etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler, McastMode mcast_mode);
-  etcpal::Error Startup(const Settings& settings, NotifyHandler& notify_handler,
-                        std::vector<SacnMcastInterface>& netints);
-  void Shutdown();
+  etcpal::Error              Startup(const Settings& settings, NotifyHandler& notify_handler, McastMode mcast_mode);
+  etcpal::Error              Startup(const Settings&                  settings,
+                                     NotifyHandler&                   notify_handler,
+                                     std::vector<SacnMcastInterface>& netints);
+  void                       Shutdown();
   etcpal::Expected<uint16_t> GetUniverse() const;
   etcpal::Expected<SacnRecvUniverseSubrange> GetFootprint() const;
-  etcpal::Error ChangeUniverse(uint16_t new_universe_id);
-  etcpal::Error ChangeFootprint(const SacnRecvUniverseSubrange& new_footprint);
+  etcpal::Error                              ChangeUniverse(uint16_t new_universe_id);
+  etcpal::Error                              ChangeFootprint(const SacnRecvUniverseSubrange& new_footprint);
   etcpal::Error ChangeUniverseAndFootprint(uint16_t new_universe_id, const SacnRecvUniverseSubrange& new_footprint);
   std::vector<EtcPalMcastNetintId> GetNetworkInterfaces();
 
   // Lesser used functions.  These apply to all instances of this class.
-  static void SetExpiredWait(uint32_t wait_ms);
+  static void     SetExpiredWait(uint32_t wait_ms);
   static uint32_t GetExpiredWait();
 
   static etcpal::Error ResetNetworking(McastMode mcast_mode);
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& sys_netints,
-                                       std::vector<NetintList>& netint_lists);
+                                       std::vector<NetintList>&         netint_lists);
 
   constexpr Handle handle() const;
 
@@ -263,9 +267,11 @@ private:
  */
 namespace internal
 {
-extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t receiver_handle, const EtcPalSockAddr* source_addr,
-                                              const SacnRemoteSource* source_info,
-                                              const SacnRecvUniverseData* universe_data, void* context)
+extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t             receiver_handle,
+                                              const EtcPalSockAddr*       source_addr,
+                                              const SacnRemoteSource*     source_info,
+                                              const SacnRecvUniverseData* universe_data,
+                                              void*                       context)
 {
   if (source_addr && source_info && universe_data && context)
   {
@@ -274,8 +280,11 @@ extern "C" inline void ReceiverCbUniverseData(sacn_receiver_t receiver_handle, c
   }
 }
 
-extern "C" inline void ReceiverCbSourcesLost(sacn_receiver_t handle, uint16_t universe,
-                                             const SacnLostSource* lost_sources, size_t num_lost_sources, void* context)
+extern "C" inline void ReceiverCbSourcesLost(sacn_receiver_t       handle,
+                                             uint16_t              universe,
+                                             const SacnLostSource* lost_sources,
+                                             size_t                num_lost_sources,
+                                             void*                 context)
 {
   if (context && lost_sources && (num_lost_sources > 0))
   {
@@ -300,8 +309,10 @@ extern "C" inline void ReceiverCbSamplingPeriodEnded(sacn_receiver_t handle, uin
   }
 }
 
-extern "C" inline void ReceiverCbPapLost(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
-                                         void* context)
+extern "C" inline void ReceiverCbPapLost(sacn_receiver_t         handle,
+                                         uint16_t                universe,
+                                         const SacnRemoteSource* source,
+                                         void*                   context)
 {
   if (context && source)
   {
@@ -348,7 +359,7 @@ inline bool Receiver::Settings::IsValid() const
  * Optional members can be modified directly in the struct.
  */
 inline Receiver::NetintList::NetintList(sacn_receiver_t receiver_handle,
-                                        McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
+                                        McastMode       mcast_mode = McastMode::kEnabledOnAllInterfaces)
     : handle(receiver_handle), no_netints(mcast_mode == McastMode::kDisabledOnAllInterfaces)
 {
 }
@@ -359,7 +370,7 @@ inline Receiver::NetintList::NetintList(sacn_receiver_t receiver_handle,
  * This constructor enables the use of list initialization when setting up one or more NetintLists (such as
  * initializing the vector<NetintList> that gets passed into MergeReceiver::ResetNetworking).
  */
-inline Receiver::NetintList::NetintList(sacn_receiver_t receiver_handle,
+inline Receiver::NetintList::NetintList(sacn_receiver_t                        receiver_handle,
                                         const std::vector<SacnMcastInterface>& network_interfaces)
     : handle(receiver_handle), netints(network_interfaces)
 {
@@ -390,8 +401,9 @@ inline Receiver::NetintList::NetintList(sacn_receiver_t receiver_handle,
  * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& notify_handler,
-                                       McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
+inline etcpal::Error Receiver::Startup(const Settings& settings,
+                                       NotifyHandler&  notify_handler,
+                                       McastMode       mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
   SacnReceiverConfig config = TranslateConfig(settings, notify_handler);
 
@@ -400,7 +412,7 @@ inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& 
     netint_config.no_netints = true;
 
   sacn_receiver_t c_handle = SACN_RECEIVER_INVALID;
-  etcpal::Error result = sacn_receiver_create(&config, &c_handle, &netint_config);
+  etcpal::Error   result   = sacn_receiver_create(&config, &c_handle, &netint_config);
 
   handle_.SetValue(c_handle);
 
@@ -434,13 +446,14 @@ inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& 
  * @return #kEtcPalErrNotFound: A network interface ID given was not found on the system.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& notify_handler,
+inline etcpal::Error Receiver::Startup(const Settings&                  settings,
+                                       NotifyHandler&                   notify_handler,
                                        std::vector<SacnMcastInterface>& netints)
 {
   SacnReceiverConfig config = TranslateConfig(settings, notify_handler);
 
   sacn_receiver_t c_handle = SACN_RECEIVER_INVALID;
-  etcpal::Error result = kEtcPalErrOk;
+  etcpal::Error   result   = kEtcPalErrOk;
 
   if (netints.empty())
   {
@@ -449,8 +462,8 @@ inline etcpal::Error Receiver::Startup(const Settings& settings, NotifyHandler& 
   else
   {
     SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-    netint_config.netints = netints.data();
-    netint_config.num_netints = netints.size();
+    netint_config.netints          = netints.data();
+    netint_config.num_netints      = netints.size();
 
     result = sacn_receiver_create(&config, &c_handle, &netint_config);
   }
@@ -483,8 +496,8 @@ inline void Receiver::Shutdown()
  */
 inline etcpal::Expected<uint16_t> Receiver::GetUniverse() const
 {
-  uint16_t result = 0;
-  etcpal_error_t err = sacn_receiver_get_universe(handle_.value(), &result);
+  uint16_t       result = 0;
+  etcpal_error_t err    = sacn_receiver_get_universe(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
   else
@@ -501,7 +514,7 @@ inline etcpal::Expected<uint16_t> Receiver::GetUniverse() const
 inline etcpal::Expected<SacnRecvUniverseSubrange> Receiver::GetFootprint() const
 {
   SacnRecvUniverseSubrange result;
-  etcpal_error_t err = sacn_receiver_get_footprint(handle_.value(), &result);
+  etcpal_error_t           err = sacn_receiver_get_footprint(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
   else
@@ -556,7 +569,7 @@ inline etcpal::Error Receiver::ChangeFootprint(const SacnRecvUniverseSubrange& n
  * @param[in] new_footprint New footprint within the universe.
  * @return #kEtcPalErrNotImpl: Not yet implemented.
  */
-inline etcpal::Error Receiver::ChangeUniverseAndFootprint(uint16_t new_universe_id,
+inline etcpal::Error Receiver::ChangeUniverseAndFootprint(uint16_t                        new_universe_id,
                                                           const SacnRecvUniverseSubrange& new_footprint)
 {
   return sacn_receiver_change_universe_and_footprint(handle_.value(), new_universe_id, &new_footprint);
@@ -571,14 +584,14 @@ inline std::vector<EtcPalMcastNetintId> Receiver::GetNetworkInterfaces()
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
   std::vector<EtcPalMcastNetintId> netints;
-  size_t size_guess = 4u;
-  size_t num_netints = 0u;
+  size_t                           size_guess  = 4u;
+  size_t                           num_netints = 0u;
 
   do
   {
     netints.resize(size_guess);
     num_netints = sacn_receiver_get_network_interfaces(handle_.value(), netints.data(), netints.size());
-    size_guess = num_netints + 4u;
+    size_guess  = num_netints + 4u;
   } while (num_netints > netints.size());
 
   netints.resize(num_netints);
@@ -675,8 +688,8 @@ inline etcpal::Error Receiver::ResetNetworking(std::vector<SacnMcastInterface>& 
     return sacn_receiver_reset_networking(nullptr);
 
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints = sys_netints.data();
-  netint_config.num_netints = sys_netints.size();
+  netint_config.netints          = sys_netints.data();
+  netint_config.num_netints      = sys_netints.size();
 
   return sacn_receiver_reset_networking(&netint_config);
 }
@@ -710,28 +723,27 @@ inline etcpal::Error Receiver::ResetNetworking(std::vector<SacnMcastInterface>& 
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error Receiver::ResetNetworking(std::vector<SacnMcastInterface>& sys_netints,
-                                               std::vector<NetintList>& per_receiver_netint_lists)
+                                               std::vector<NetintList>&         per_receiver_netint_lists)
 {
   std::vector<SacnReceiverNetintList> netint_lists_c;
   netint_lists_c.reserve(per_receiver_netint_lists.size());
-  std::transform(
-      per_receiver_netint_lists.begin(), per_receiver_netint_lists.end(), std::back_inserter(netint_lists_c),
-      [](NetintList& list) {
-        // clang-format off
+  std::transform(per_receiver_netint_lists.begin(), per_receiver_netint_lists.end(), std::back_inserter(netint_lists_c),
+                 [](NetintList& list) {
+                   // clang-format off
                    SacnReceiverNetintList c_list = {
                      list.handle,
                      list.netints.data(),
                      list.netints.size(),
                      list.no_netints
                    };
-        // clang-format on
+                   // clang-format on
 
-        return c_list;
-      });
+                   return c_list;
+                 });
 
   SacnNetintConfig sys_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  sys_netint_config.netints = sys_netints.data();
-  sys_netint_config.num_netints = sys_netints.size();
+  sys_netint_config.netints          = sys_netints.data();
+  sys_netint_config.num_netints      = sys_netints.size();
 
   return sacn_receiver_reset_networking_per_receiver(&sys_netint_config, netint_lists_c.data(), netint_lists_c.size());
 }

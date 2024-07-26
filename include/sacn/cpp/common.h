@@ -77,7 +77,7 @@ constexpr RemoteSourceHandle kInvalidRemoteSourceHandle = SACN_REMOTE_SOURCE_INV
  * @return Errors from sacn_init().
  */
 inline etcpal::Error Init(const EtcPalLogParams* log_params = nullptr,
-                          McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
+                          McastMode              mcast_mode = McastMode::kEnabledOnAllInterfaces)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
@@ -103,8 +103,8 @@ inline etcpal::Error Init(const EtcPalLogParams* log_params = nullptr,
 inline etcpal::Error Init(const EtcPalLogParams* log_params, std::vector<SacnMcastInterface>& sys_netints)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints = sys_netints.data();
-  netint_config.num_netints = sys_netints.size();
+  netint_config.netints          = sys_netints.data();
+  netint_config.num_netints      = sys_netints.size();
 
   return sacn_init(log_params, &netint_config);
 }
@@ -126,8 +126,8 @@ inline etcpal::Error Init(const EtcPalLogParams* log_params, std::vector<SacnMca
 inline etcpal::Error Init(std::vector<SacnMcastInterface>& sys_netints)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints = sys_netints.data();
-  netint_config.num_netints = sys_netints.size();
+  netint_config.netints          = sys_netints.data();
+  netint_config.num_netints      = sys_netints.size();
 
   return sacn_init(nullptr, &netint_config);
 }
@@ -172,8 +172,8 @@ inline etcpal::Error Init(const etcpal::Logger& logger, McastMode mcast_mode = M
 inline etcpal::Error Init(const etcpal::Logger& logger, std::vector<SacnMcastInterface>& sys_netints)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints = sys_netints.data();
-  netint_config.num_netints = sys_netints.size();
+  netint_config.netints          = sys_netints.data();
+  netint_config.num_netints      = sys_netints.size();
 
   return sacn_init(&logger.log_params(), &netint_config);
 }
@@ -222,9 +222,9 @@ inline RemoteSourceHandle GetRemoteSourceHandle(const etcpal::Uuid& source_cid)
  */
 inline etcpal::Expected<etcpal::Uuid> GetRemoteSourceCid(RemoteSourceHandle source_handle)
 {
-  EtcPalUuid cid;
-  etcpal_error_t error = sacn_get_remote_source_cid(source_handle, &cid);
-  etcpal::Uuid cid_to_return = cid;
+  EtcPalUuid     cid;
+  etcpal_error_t error         = sacn_get_remote_source_cid(source_handle, &cid);
+  etcpal::Uuid   cid_to_return = cid;
 
   if (error == kEtcPalErrOk)
     return cid_to_return;

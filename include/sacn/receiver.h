@@ -185,9 +185,11 @@ typedef struct SacnLostSource
  * of the currently configured footprint.
  * @param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnUniverseDataCallback)(sacn_receiver_t receiver_handle, const EtcPalSockAddr* source_addr,
-                                         const SacnRemoteSource* source_info, const SacnRecvUniverseData* universe_data,
-                                         void* context);
+typedef void (*SacnUniverseDataCallback)(sacn_receiver_t             receiver_handle,
+                                         const EtcPalSockAddr*       source_addr,
+                                         const SacnRemoteSource*     source_info,
+                                         const SacnRecvUniverseData* universe_data,
+                                         void*                       context);
 
 /**
  * @brief Notify that one or more sources have entered a source loss state.
@@ -204,8 +206,11 @@ typedef void (*SacnUniverseDataCallback)(sacn_receiver_t receiver_handle, const 
  * @param[in] num_lost_sources Size of the lost_sources array.
  * @param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnSourcesLostCallback)(sacn_receiver_t handle, uint16_t universe, const SacnLostSource* lost_sources,
-                                        size_t num_lost_sources, void* context);
+typedef void (*SacnSourcesLostCallback)(sacn_receiver_t       handle,
+                                        uint16_t              universe,
+                                        const SacnLostSource* lost_sources,
+                                        size_t                num_lost_sources,
+                                        void*                 context);
 
 /**
  * @brief Notify that a receiver's sampling period has begun.
@@ -247,8 +252,10 @@ typedef void (*SacnSamplingPeriodEndedCallback)(sacn_receiver_t handle, uint16_t
  *                   priority.
  * @param[in] context Context pointer that was given at the creation of the receiver instance.
  */
-typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t handle, uint16_t universe, const SacnRemoteSource* source,
-                                          void* context);
+typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t         handle,
+                                          uint16_t                universe,
+                                          const SacnRemoteSource* source,
+                                          void*                   context);
 
 /**
  * @brief Notify that more than the configured maximum number of sources are currently sending on
@@ -274,13 +281,13 @@ typedef void (*SacnSourceLimitExceededCallback)(sacn_receiver_t handle, uint16_t
 /** A set of callback functions that the library uses to notify the application about sACN events. */
 typedef struct SacnReceiverCallbacks
 {
-  SacnUniverseDataCallback universe_data;                    /**< Required */
-  SacnSourcesLostCallback sources_lost;                      /**< Required */
+  SacnUniverseDataCallback          universe_data;           /**< Required */
+  SacnSourcesLostCallback           sources_lost;            /**< Required */
   SacnSamplingPeriodStartedCallback sampling_period_started; /**< Optional */
-  SacnSamplingPeriodEndedCallback sampling_period_ended;     /**< Optional */
-  SacnSourcePapLostCallback source_pap_lost;                 /**< Optional */
-  SacnSourceLimitExceededCallback source_limit_exceeded;     /**< Optional */
-  void* context; /**< (optional) Pointer to opaque data passed back with each callback. */
+  SacnSamplingPeriodEndedCallback   sampling_period_ended;   /**< Optional */
+  SacnSourcePapLostCallback         source_pap_lost;         /**< Optional */
+  SacnSourceLimitExceededCallback   source_limit_exceeded;   /**< Optional */
+  void*                             context; /**< (optional) Pointer to opaque data passed back with each callback. */
 } SacnReceiverCallbacks;
 
 /** A set of configuration information for an sACN receiver. */
@@ -333,22 +340,24 @@ typedef struct SacnReceiverNetintList
 
 void sacn_receiver_config_init(SacnReceiverConfig* config);
 
-etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config, sacn_receiver_t* handle,
-                                    const SacnNetintConfig* netint_config);
+etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config,
+                                    sacn_receiver_t*          handle,
+                                    const SacnNetintConfig*   netint_config);
 etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle);
 etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_receiver_get_footprint(sacn_receiver_t handle, SacnRecvUniverseSubrange* footprint);
 etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t new_universe_id);
 etcpal_error_t sacn_receiver_change_footprint(sacn_receiver_t handle, const SacnRecvUniverseSubrange* new_footprint);
-etcpal_error_t sacn_receiver_change_universe_and_footprint(sacn_receiver_t handle, uint16_t new_universe_id,
+etcpal_error_t sacn_receiver_change_universe_and_footprint(sacn_receiver_t                 handle,
+                                                           uint16_t                        new_universe_id,
                                                            const SacnRecvUniverseSubrange* new_footprint);
 etcpal_error_t sacn_receiver_reset_networking(const SacnNetintConfig* sys_netint_config);
-etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfig* sys_netint_config,
+etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfig*       sys_netint_config,
                                                            const SacnReceiverNetintList* per_receiver_netint_lists,
-                                                           size_t num_per_receiver_netint_lists);
+                                                           size_t                        num_per_receiver_netint_lists);
 size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, EtcPalMcastNetintId* netints, size_t netints_size);
 
-void sacn_receiver_set_expired_wait(uint32_t wait_ms);
+void     sacn_receiver_set_expired_wait(uint32_t wait_ms);
 uint32_t sacn_receiver_get_expired_wait();
 
 #ifdef __cplusplus

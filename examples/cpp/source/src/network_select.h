@@ -32,24 +32,23 @@
 #include "etcpal/netint.h"
 #include "sacn/cpp/common.h"
 
-
 class NetworkSelect
 {
 public:
   NetworkSelect();
-  void InitializeNics(void);
-  void SelectNics(void);
+  void                            InitializeNics(void);
+  void                            SelectNics(void);
   std::vector<SacnMcastInterface> GetMcastInterfaces(void) const;
 
 private:
   struct EtcPalNetintInfoSelect
   {
-    bool selected;
-    char ui_index;
+    bool                selected;
+    char                ui_index;
     etcpal::NetintIndex os_index;
-    etcpal::IpAddr addr;
-    std::string name;
-    std::string addr_string;
+    etcpal::IpAddr      addr;
+    std::string         name;
+    std::string         addr_string;
   };
 
   void PrintNics(void) const;

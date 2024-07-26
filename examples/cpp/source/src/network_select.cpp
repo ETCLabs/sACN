@@ -25,7 +25,7 @@
 NetworkSelect::NetworkSelect()
 {
 }
-  
+
 void NetworkSelect::InitializeNics(void)
 {
   auto netints = etcpal::netint::GetInterfaces();
@@ -37,17 +37,17 @@ void NetworkSelect::InitializeNics(void)
       if (!netint.friendly_name().empty() && netint.addr().IsValid())
       {
         std::unique_ptr<EtcPalNetintInfoSelect> network_interface = std::make_unique<EtcPalNetintInfoSelect>();
-        network_interface->selected = false;
-        network_interface->ui_index = char_index++;
-        network_interface->os_index = netint.index();
-        network_interface->addr = netint.addr();
-        network_interface->addr_string = netint.addr().ToString();
-        network_interface->name = netint.friendly_name();
+        network_interface->selected                               = false;
+        network_interface->ui_index                               = char_index++;
+        network_interface->os_index                               = netint.index();
+        network_interface->addr                                   = netint.addr();
+        network_interface->addr_string                            = netint.addr().ToString();
+        network_interface->name                                   = netint.friendly_name();
         all_network_interfaces_.push_back(std::move(network_interface));
       }
     }
   }
-} // InitializeNics
+}  // InitializeNics
 
 void NetworkSelect::PrintNics(void) const
 {
@@ -66,7 +66,7 @@ void NetworkSelect::PrintNics(void) const
     std::cout << "   " << network_interface->ui_index << "   " << network_interface->name << " ("
               << network_interface->addr_string << ")\n";
   }
-} // PrintNics
+}  // PrintNics
 
 bool NetworkSelect::IsAnyNicSelected() const
 {
@@ -78,7 +78,7 @@ bool NetworkSelect::IsAnyNicSelected() const
     }
   }
   return false;
-} // IsAnyNicSelected
+}  // IsAnyNicSelected
 
 void NetworkSelect::SelectNics(void)
 {
@@ -107,7 +107,7 @@ void NetworkSelect::SelectNics(void)
       {
         if (ch == network_interface->ui_index)
         {
-          found = true;
+          found                       = true;
           network_interface->selected = !network_interface->selected;
         }
       }
@@ -133,4 +133,4 @@ std::vector<SacnMcastInterface> NetworkSelect::GetMcastInterfaces(void) const
     }
   }
   return interfaces;
-} // GetMcastInterfaces
+}  // GetMcastInterfaces

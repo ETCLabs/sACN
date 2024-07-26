@@ -30,13 +30,13 @@ extern "C" {
 #endif
 
 #if SACN_DYNAMIC_MEM
-#define CLEAR_BUF(ptr, buf_name) \
-  do                             \
-  {                              \
-    if ((ptr)->buf_name)         \
-      free((ptr)->buf_name);     \
-    (ptr)->buf_name = NULL;      \
-    (ptr)->num_##buf_name = 0;   \
+#define CLEAR_BUF(ptr, buf_name)  \
+  do                              \
+  {                               \
+    if ((ptr)->buf_name)          \
+      free((ptr)->buf_name);      \
+    (ptr)->buf_name       = NULL; \
+    (ptr)->num_##buf_name = 0;    \
   } while (0)
 
 #define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static, failure_return_value)        \
@@ -44,11 +44,11 @@ extern "C" {
   {                                                                                                             \
     if (size_requested > container->buffer##_capacity)                                                          \
     {                                                                                                           \
-      size_t new_capacity = sacn_mem_grow_capacity(container->buffer##_capacity, size_requested);               \
+      size_t       new_capacity = sacn_mem_grow_capacity(container->buffer##_capacity, size_requested);         \
       buffer_type* new_##buffer = (buffer_type*)realloc(container->buffer, new_capacity * sizeof(buffer_type)); \
       if (new_##buffer)                                                                                         \
       {                                                                                                         \
-        container->buffer = new_##buffer;                                                                       \
+        container->buffer            = new_##buffer;                                                            \
         container->buffer##_capacity = new_capacity;                                                            \
       }                                                                                                         \
       else                                                                                                      \
@@ -98,7 +98,7 @@ extern "C" {
 size_t sacn_mem_grow_capacity(size_t old_capacity, size_t capacity_requested);
 
 unsigned int sacn_mem_get_num_threads(void);
-void sacn_mem_set_num_threads(unsigned int number_of_threads);
+void         sacn_mem_set_num_threads(unsigned int number_of_threads);
 
 #ifdef __cplusplus
 }

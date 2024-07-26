@@ -41,8 +41,10 @@
 /*************************** Function definitions ****************************/
 
 // Needs lock
-etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniverseConfig* config,
-                                        const SacnNetintConfig* netint_config, SacnSourceUniverse** universe_state)
+etcpal_error_t add_sacn_source_universe(SacnSource*                     source,
+                                        const SacnSourceUniverseConfig* config,
+                                        const SacnNetintConfig*         netint_config,
+                                        SacnSourceUniverse**            universe_state)
 {
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(config) || !SACN_ASSERT_VERIFY(universe_state))
     return kEtcPalErrSys;
@@ -58,8 +60,8 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
   }
 #endif
 
-  SacnSourceUniverse* universe = NULL;
-  size_t insert_index = 0;
+  SacnSourceUniverse* universe     = NULL;
+  size_t              insert_index = 0;
   if (result == kEtcPalErrOk)
   {
     CHECK_ROOM_FOR_ONE_MORE(source, universes, SacnSourceUniverse, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE,
@@ -82,36 +84,36 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 
     universe->universe_id = config->universe;
 
-    universe->termination_state = kNotTerminating;
+    universe->termination_state     = kNotTerminating;
     universe->num_terminations_sent = 0;
 
-    universe->priority = config->priority;
+    universe->priority      = config->priority;
     universe->sync_universe = config->sync_universe;
-    universe->send_preview = config->send_preview;
-    universe->next_seq_num = 0;
+    universe->send_preview  = config->send_preview;
+    universe->next_seq_num  = 0;
 
     universe->level_packets_sent_before_suppression = 0;
     init_sacn_data_send_buf(universe->level_send_buf, SACN_STARTCODE_DMX, &source->cid, source->name, config->priority,
                             config->universe, config->sync_universe, config->send_preview);
-    universe->has_level_data = false;
+    universe->has_level_data        = false;
     universe->levels_sent_this_tick = false;
 
 #if SACN_ETC_PRIORITY_EXTENSION
     universe->pap_packets_sent_before_suppression = 0;
     init_sacn_data_send_buf(universe->pap_send_buf, SACN_STARTCODE_PRIORITY, &source->cid, source->name,
                             config->priority, config->universe, config->sync_universe, config->send_preview);
-    universe->has_pap_data = false;
+    universe->has_pap_data       = false;
     universe->pap_sent_this_tick = false;
 #endif
 
-    universe->other_sent_this_tick = false;
+    universe->other_sent_this_tick    = false;
     universe->anything_sent_this_tick = false;
 
     universe->send_unicast_only = config->send_unicast_only;
 
     universe->num_unicast_dests = 0;
 #if SACN_DYNAMIC_MEM
-    universe->unicast_dests = calloc(INITIAL_CAPACITY, sizeof(SacnUnicastDestination));
+    universe->unicast_dests          = calloc(INITIAL_CAPACITY, sizeof(SacnUnicastDestination));
     universe->unicast_dests_capacity = universe->unicast_dests ? INITIAL_CAPACITY : 0;
 
     if (!universe->unicast_dests)
@@ -119,7 +121,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 
     universe->last_send_error = kEtcPalErrOk;
 
-    universe->netints.netints = NULL;
+    universe->netints.netints          = NULL;
     universe->netints.netints_capacity = 0;
 #else
     memset(universe->unicast_dests, 0, sizeof(universe->unicast_dests));
@@ -130,7 +132,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
   for (size_t i = 0; (result == kEtcPalErrOk) && (i < config->num_unicast_destinations); ++i)
   {
     SacnUnicastDestination* dest = NULL;
-    result = add_sacn_unicast_dest(universe, &config->unicast_destinations[i], &dest);
+    result                       = add_sacn_unicast_dest(universe, &config->unicast_destinations[i], &dest);
 
     if (result == kEtcPalErrExists)
       result = kEtcPalErrOk;  // Duplicates are automatically filtered and not a failure condition.
@@ -162,7 +164,9 @@ etcpal_error_t add_sacn_source_universe(SacnSource* source, const SacnSourceUniv
 }
 
 // Needs lock
-etcpal_error_t lookup_source_and_universe(sacn_source_t source, uint16_t universe, SacnSource** source_state,
+etcpal_error_t lookup_source_and_universe(sacn_source_t        source,
+                                          uint16_t             universe,
+                                          SacnSource**         source_state,
                                           SacnSourceUniverse** universe_state)
 {
   if (!SACN_ASSERT_VERIFY(source != SACN_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(source_state) ||
@@ -185,8 +189,8 @@ etcpal_error_t lookup_universe(SacnSource* source, uint16_t universe, SacnSource
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe_state))
     return kEtcPalErrSys;
 
-  bool found = false;
-  size_t index = get_source_universe_index(source, universe, &found);
+  bool   found    = false;
+  size_t index    = get_source_universe_index(source, universe, &found);
   *universe_state = found ? &source->universes[index] : NULL;
   return found ? kEtcPalErrOk : kEtcPalErrNotFound;
 }
@@ -208,7 +212,7 @@ size_t get_source_universe_index(SacnSource* source, uint16_t universe, bool* fo
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(found))
     return 0;
 
-  *found = false;
+  *found       = false;
   size_t index = 0;
 
   while (!(*found) && (index < source->num_universes))
