@@ -130,6 +130,8 @@ protected:
 #if SACN_DYNAMIC_MEM
         source_netints->netints =
             (EtcPalMcastNetintId*)calloc(app_netint_config->num_netints, sizeof(EtcPalMcastNetintId));
+        if (!source_netints->netints)
+          return kEtcPalErrNoMem;
 #endif
         source_netints->num_netints = app_netint_config->num_netints;
 

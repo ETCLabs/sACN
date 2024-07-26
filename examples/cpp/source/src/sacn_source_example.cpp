@@ -127,7 +127,6 @@ SACNSourceExample::SACNSourceExample()
   {
     network_select_.InitializeNics();
     network_select_.SelectNics();
-    continue_ramping_ = true;
     if (InitSACNLibrary() && InitSACNSource() && StartRampThread())
     {
       RunSourceExample();

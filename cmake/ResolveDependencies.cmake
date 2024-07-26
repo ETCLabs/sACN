@@ -9,6 +9,7 @@ if(COMPILING_AS_OSS)
 
   if(SACN_BUILD_TESTS)
     add_oss_dependency(googletest GIT_REPOSITORY https://github.com/google/googletest.git)
+    add_oss_dependency(GSL GIT_REPOSITORY https://github.com/microsoft/gsl.git)
   endif()
 else()
   include(${CMAKE_TOOLS_MODULES}/DependencyManagement.cmake)
@@ -16,6 +17,7 @@ else()
 
   if(SACN_BUILD_TESTS)
     add_project_dependency(googletest)
+    add_project_dependency(GSL)
   endif()
 endif()
 

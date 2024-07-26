@@ -152,6 +152,9 @@ protected:
                                                          const SacnNetintConfig* app_netint_config) {
 #if SACN_DYNAMIC_MEM
       source_netints->netints = (EtcPalMcastNetintId*)calloc(kTestNetints.size(), sizeof(EtcPalMcastNetintId));
+      if (!source_netints->netints)
+        return kEtcPalErrNoMem;
+
       source_netints->netints_capacity = kTestNetints.size();
 #endif
       source_netints->num_netints = kTestNetints.size();

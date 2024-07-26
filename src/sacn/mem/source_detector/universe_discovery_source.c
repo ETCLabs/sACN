@@ -119,6 +119,10 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const c
     result = kEtcPalErrExists;
   }
 
+  sacn_remote_source_t handle = SACN_REMOTE_SOURCE_INVALID;
+  if (result == kEtcPalErrOk)
+    result = add_remote_source_handle(cid, &handle);
+
   if (result == kEtcPalErrOk)
   {
     src = ALLOC_UNIVERSE_DISCOVERY_SOURCE();
@@ -126,10 +130,6 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const c
     if (!src)
       result = kEtcPalErrNoMem;
   }
-
-  sacn_remote_source_t handle = SACN_REMOTE_SOURCE_INVALID;
-  if (result == kEtcPalErrOk)
-    result = add_remote_source_handle(cid, &handle);
 
   if (result == kEtcPalErrOk)
   {

@@ -125,7 +125,10 @@ etcpal_error_t add_sacn_merge_receiver(sacn_merge_receiver_t handle, const SacnM
     result = etcpal_rbtree_insert(&merge_receivers, merge_receiver);
 
     if (result != kEtcPalErrOk)
+    {
       FREE_MERGE_RECEIVER(merge_receiver);
+      merge_receiver = NULL;
+    }
   }
 
   *state = merge_receiver;

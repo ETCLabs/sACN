@@ -98,6 +98,9 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
       }
       else
       {
+        if (new_buf)
+          free(new_buf);
+
         return NULL;
       }
     }

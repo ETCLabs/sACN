@@ -46,7 +46,7 @@ private:
   {
     bool selected;
     char ui_index;
-    unsigned int os_index;
+    etcpal::NetintIndex os_index;
     etcpal::IpAddr addr;
     std::string name;
     std::string addr_string;

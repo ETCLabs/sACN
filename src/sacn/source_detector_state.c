@@ -298,8 +298,11 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
             source_updated.sourced_universes =
                 source->num_universes ? calloc(source->num_universes, sizeof(uint16_t)) : NULL;
 #endif
-            for (size_t i = 0; i < source->num_universes; ++i)
-              source_updated.sourced_universes[i] = source->universes[i];
+            if (source_updated.sourced_universes)
+            {
+              for (size_t i = 0; i < source->num_universes; ++i)
+                source_updated.sourced_universes[i] = source->universes[i];
+            }
 
             source_updated.num_sourced_universes = source->num_universes;
             source_updated.context = source_detector->callbacks.context;

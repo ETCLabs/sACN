@@ -99,7 +99,7 @@ private:
   sacn::Source sacn_source_;
   etcpal::Mutex universe_infos_mutex_;
   std::unordered_map < uint16_t, std::unique_ptr<UniverseInfo>> universe_infos_;
-  bool continue_ramping_;
+  bool continue_ramping_{true};
   etcpal::Thread ramp_thread_;
 };
 
