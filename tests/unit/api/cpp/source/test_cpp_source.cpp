@@ -35,17 +35,17 @@
 #define TestSource TestCppSourceStatic
 #endif
 
-static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
-static const std::string kTestLocalName = "Test Source";
-static const std::string kTestLocalName2 = "Test Source 2";
-static constexpr uint16_t kTestUniverse = 123u;
-static constexpr uint16_t kTestUniverse2 = 456u;
-static constexpr uint16_t kTestSyncUniverse = 789u;
-static constexpr sacn_source_t kTestHandle = 456;
-static constexpr sacn_source_t kTestHandle2 = 654;
-static constexpr uint8_t kTestPriority = 77u;
-static constexpr bool kTestPreviewFlag = true;
-static constexpr uint8_t kTestStartCode = 12u;
+static const etcpal::Uuid      kTestLocalCid     = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
+static const std::string       kTestLocalName    = "Test Source";
+static const std::string       kTestLocalName2   = "Test Source 2";
+static constexpr uint16_t      kTestUniverse     = 123u;
+static constexpr uint16_t      kTestUniverse2    = 456u;
+static constexpr uint16_t      kTestSyncUniverse = 789u;
+static constexpr sacn_source_t kTestHandle       = 456;
+static constexpr sacn_source_t kTestHandle2      = 654;
+static constexpr uint8_t       kTestPriority     = 77u;
+static constexpr bool          kTestPreviewFlag  = true;
+static constexpr uint8_t       kTestStartCode    = 12u;
 
 static std::vector<SacnMcastInterface> kTestNetints = {
     {{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},  {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
@@ -82,8 +82,8 @@ static const std::vector<uint8_t> kTestBuffer2 = {
     0x0Du, 0x0Eu, 0x0Fu, 0x10u, 0x11u, 0x12u, 0x13u, 0x14u, 0x15u, 0x16u, 0x17u, 0x18u, 0x19u, 0x1Au,
 };
 
-static std::vector<uint16_t> current_universes;
-static std::vector<EtcPalIpAddr> current_dests;
+static std::vector<uint16_t>           current_universes;
+static std::vector<EtcPalIpAddr>       current_dests;
 static std::vector<SacnMcastInterface> current_netints;
 
 class TestSource : public ::testing::Test
@@ -178,7 +178,7 @@ TEST_F(TestSource, StartupWorks)
     return kEtcPalErrOk;
   };
 
-  sacn::Source source;
+  sacn::Source  source;
   etcpal::Error result = source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
   EXPECT_EQ(sacn_source_create_fake.call_count, 1u);

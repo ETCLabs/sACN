@@ -82,27 +82,26 @@ protected:
     sacn_receiver_mem_deinit();
   }
 
-  void VerifySourcesMatch(const SacnLostSource* lost_sources, size_t num_lost_sources,
+  void VerifySourcesMatch(const SacnLostSource*                        lost_sources,
+                          size_t                                       num_lost_sources,
                           const std::vector<SacnRemoteSourceInternal>& sources)
   {
     std::vector<SacnRemoteSourceInternal> expired_sources;
     expired_sources.reserve(num_lost_sources);
     std::transform(lost_sources, lost_sources + num_lost_sources, std::back_inserter(expired_sources),
-                   [](const SacnLostSource& src) {
-                     return SacnRemoteSourceInternal{src.handle, src.name};
-                   });
+                   [](const SacnLostSource& src) { return SacnRemoteSourceInternal{src.handle, src.name}; });
 
     std::sort(expired_sources.begin(), expired_sources.end());
 
     EXPECT_EQ(expired_sources, sources);
   }
 
-  static constexpr uint32_t kTestExpiredWait = 1000u;
+  static constexpr uint32_t kTestExpiredWait     = 1000u;
   static constexpr uint16_t kTestDefaultUniverse = 1u;
 
-  std::vector<std::string> test_names_;
+  std::vector<std::string>              test_names_;
   std::vector<SacnRemoteSourceInternal> sources_;  // The same source set is used in multiple universes
-  TerminationSet* term_set_lists_[SACN_RECEIVER_MAX_UNIVERSES]{nullptr};  // Separate list per universe
+  TerminationSet*          term_set_lists_[SACN_RECEIVER_MAX_UNIVERSES]{nullptr};  // Separate list per universe
   SourcesLostNotification* expired_sources_{nullptr};
 };
 
@@ -112,10 +111,9 @@ TEST_F(TestSourceLoss, AllSourcesOfflineAtOnce)
 {
   std::vector<SacnLostSourceInternal> offline_sources;
   offline_sources.reserve(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
-  std::transform(sources_.begin(), sources_.end(), std::back_inserter(offline_sources),
-                 [](const SacnRemoteSourceInternal& source) {
-                   return SacnLostSourceInternal{source.handle, source.name, true};
-                 });
+  std::transform(
+      sources_.begin(), sources_.end(), std::back_inserter(offline_sources),
+      [](const SacnRemoteSourceInternal& source) { return SacnLostSourceInternal{source.handle, source.name, true}; });
   mark_sources_offline(kTestDefaultUniverse, offline_sources.data(), offline_sources.size(), nullptr, 0u,
                        &term_set_lists_[0], kTestExpiredWait);
 
@@ -145,8 +143,8 @@ TEST_F(TestSourceLoss, AllSourcesOfflineOneByOne)
   for (size_t i = 0; i < sources_.size() - 1; ++i)
   {
     SacnLostSourceInternal offline;
-    offline.handle = sources_[i].handle;
-    offline.name = sources_[i].name;
+    offline.handle     = sources_[i].handle;
+    offline.name       = sources_[i].name;
     offline.terminated = false;
     mark_sources_offline(kTestDefaultUniverse, &offline, 1, &sources_[i + 1], sources_.size() - i - 1,
                          &term_set_lists_[0], kTestExpiredWait);
@@ -157,8 +155,8 @@ TEST_F(TestSourceLoss, AllSourcesOfflineOneByOne)
   }
 
   SacnLostSourceInternal offline;
-  offline.handle = sources_[sources_.size() - 1].handle;
-  offline.name = sources_[sources_.size() - 1].name;
+  offline.handle     = sources_[sources_.size() - 1].handle;
+  offline.name       = sources_[sources_.size() - 1].name;
   offline.terminated = false;
   mark_sources_offline(kTestDefaultUniverse, &offline, 1, nullptr, 0, &term_set_lists_[0], kTestExpiredWait);
 
@@ -317,8 +315,8 @@ TEST_F(TestSourceLoss, AllowsOneTermSetForEachSourceUpToMax)
       for (const auto& source : sources_)
       {
         SacnLostSourceInternal offline;
-        offline.handle = source.handle;
-        offline.name = source.name;
+        offline.handle     = source.handle;
+        offline.name       = source.name;
         offline.terminated = false;
 
         uint16_t universe = kTestDefaultUniverse + static_cast<uint16_t>(j);
@@ -341,8 +339,8 @@ TEST_F(TestSourceLoss, AlternatingOnlineOfflineDoesNotBreakMaxLimits)
   static constexpr int kNumTestIterations = 3;
 
   SacnLostSourceInternal offline;
-  offline.handle = sources_[0].handle;
-  offline.name = sources_[0].name;
+  offline.handle     = sources_[0].handle;
+  offline.name       = sources_[0].name;
   offline.terminated = false;
 
   for (int i = 0; i < kNumTestIterations; ++i)
@@ -371,10 +369,9 @@ TEST_F(TestSourceLoss, EachExpiredSourceNotifiesOnlyOnce)
 {
   std::vector<SacnLostSourceInternal> offline_sources;
   offline_sources.reserve(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
-  std::transform(sources_.begin(), sources_.end(), std::back_inserter(offline_sources),
-                 [](const SacnRemoteSourceInternal& source) {
-                   return SacnLostSourceInternal{source.handle, source.name, true};
-                 });
+  std::transform(
+      sources_.begin(), sources_.end(), std::back_inserter(offline_sources),
+      [](const SacnRemoteSourceInternal& source) { return SacnLostSourceInternal{source.handle, source.name, true}; });
 
   // Create two termination sets - one which includes all sources besides the offline source that originated it, and
   // another that includes the remaining source when it goes back offline once again. The same sources are fed in as

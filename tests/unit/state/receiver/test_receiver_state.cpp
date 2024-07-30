@@ -36,15 +36,19 @@
 #include "fff.h"
 
 #if SACN_DYNAMIC_MEM
-#define TestReceiverState TestReceiverStateDynamic
+#define TestReceiverState  TestReceiverStateDynamic
 #define TestReceiverThread TestReceiverThreadDynamic
 #else
-#define TestReceiverState TestReceiverStateStatic
+#define TestReceiverState  TestReceiverStateStatic
 #define TestReceiverThread TestReceiverThreadStatic
 #endif
 
-FAKE_VOID_FUNC(universe_data, sacn_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
-               const SacnRecvUniverseData*, void*);
+FAKE_VOID_FUNC(universe_data,
+               sacn_receiver_t,
+               const EtcPalSockAddr*,
+               const SacnRemoteSource*,
+               const SacnRecvUniverseData*,
+               void*);
 FAKE_VOID_FUNC(sources_lost, sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*);
 FAKE_VOID_FUNC(sampling_period_started, sacn_receiver_t, uint16_t, void*);
 FAKE_VOID_FUNC(sampling_period_ended, sacn_receiver_t, uint16_t, void*);
@@ -52,7 +56,7 @@ FAKE_VOID_FUNC(source_pap_lost, sacn_receiver_t, uint16_t, const SacnRemoteSourc
 FAKE_VOID_FUNC(source_limit_exceeded, sacn_receiver_t, uint16_t, void*);
 
 static constexpr uint16_t kTestUniverse = 123u;
-static int kTestContext = 1234567;
+static int                kTestContext  = 1234567;
 
 #if SACN_DYNAMIC_MEM
 static const size_t kNumTestUniverses = 30u;
@@ -72,8 +76,8 @@ static constexpr SacnSourceDetectorConfig kTestSourceDetectorConfig = {
     SACN_SOURCE_DETECTOR_INFINITE,
     kSacnIpV4AndIpV6};
 
-static const EtcPalUuid kTestCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22").get();
-static constexpr char kTestName[] = "Test Name";
+static const EtcPalUuid     kTestCid      = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22").get();
+static constexpr char       kTestName[]   = "Test Name";
 static const EtcPalSockAddr kTestSockAddr = {SACN_PORT, etcpal::IpAddr::FromString("10.101.1.1").get()};
 
 static const std::vector<uint8_t> kTestBuffer = {
@@ -87,11 +91,11 @@ static std::vector<SacnMcastInterface> kTestNetints = {
     {{kEtcPalIpTypeV6, 5u}, kEtcPalErrOk}, {{kEtcPalIpTypeV6, 6u}, kEtcPalErrOk}};
 
 static constexpr sacn_receiver_t kFirstReceiverHandle = 0;
-static constexpr uint8_t kTestPriority = 77u;
-static constexpr bool kTestPreview = false;
+static constexpr uint8_t         kTestPriority        = 77u;
+static constexpr bool            kTestPreview         = false;
 
-static constexpr etcpal_socket_t kTestSocket = static_cast<etcpal_socket_t>(7);
-static TerminationSet kTestTermSet = {{0u, 0u}, {nullptr, nullptr, 0u, nullptr, nullptr, nullptr}, nullptr};
+static constexpr etcpal_socket_t kTestSocket  = static_cast<etcpal_socket_t>(7);
+static TerminationSet            kTestTermSet = {{0u, 0u}, {nullptr, nullptr, 0u, nullptr, nullptr, nullptr}, nullptr};
 
 static const EtcPalUuid& GetCid(const SacnRemoteSourceInternal& src)
 {
@@ -142,8 +146,8 @@ protected:
     sacn_source_loss_reset_all_fakes();
 
     sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* receiver_netints, bool,
-                                                           EtcPalRbTree* sampling_period_netints,
-                                                           const SacnNetintConfig* app_netint_config) {
+                                                           EtcPalRbTree*            sampling_period_netints,
+                                                           const SacnNetintConfig*  app_netint_config) {
       EXPECT_NE(app_netint_config, nullptr);
 
       if (app_netint_config)
@@ -158,7 +162,7 @@ protected:
 
         for (size_t i = 0; i < app_netint_config->num_netints; ++i)
         {
-          receiver_netints->netints[i] = app_netint_config->netints[i].iface;
+          receiver_netints->netints[i]         = app_netint_config->netints[i].iface;
           app_netint_config->netints[i].status = kEtcPalErrOk;
 
           EXPECT_EQ(add_sacn_sampling_period_netint(sampling_period_netints, &receiver_netints->netints[i], false),
@@ -169,7 +173,7 @@ protected:
       return kEtcPalErrOk;
     };
 
-    next_socket_ = kTestSocket;
+    next_socket_                              = kTestSocket;
     sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t,
                                                    const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
       WriteNextSocket(socket);
@@ -182,7 +186,7 @@ protected:
     auto& context = *get_recv_thread_context(0);
     for (int i = 0; i < kTestNetints.size(); ++i)
     {
-      context.socket_refs[i].socket.handle = kTestSocket + i;
+      context.socket_refs[i].socket.handle  = kTestSocket + i;
       context.socket_refs[i].socket.ip_type = kTestNetints[i].iface.ip_type;
 #if SACN_RECEIVER_SOCKET_PER_NIC
       context.socket_refs[i].socket.ifindex = kTestNetints[i].iface.index;
@@ -201,15 +205,15 @@ protected:
     sacn_receiver_mem_deinit();
   }
 
-  SacnReceiver* AddReceiver(uint16_t universe_id = kTestUniverse,
-                            const SacnReceiverCallbacks& callbacks = kTestCallbacks,
-                            sacn_ip_support_t ip_supported = kSacnIpV4AndIpV6,
-                            ReceiverAddMode add_mode = ReceiverAddMode::kComplete)
+  SacnReceiver* AddReceiver(uint16_t                     universe_id  = kTestUniverse,
+                            const SacnReceiverCallbacks& callbacks    = kTestCallbacks,
+                            sacn_ip_support_t            ip_supported = kSacnIpV4AndIpV6,
+                            ReceiverAddMode              add_mode     = ReceiverAddMode::kComplete)
   {
     SacnReceiverConfig config = kTestReceiverConfig;
-    config.universe_id = universe_id;
-    config.callbacks = callbacks;
-    config.ip_supported = ip_supported;
+    config.universe_id        = universe_id;
+    config.callbacks          = callbacks;
+    config.ip_supported       = ip_supported;
 
     return AddReceiver(config, add_mode);
   }
@@ -219,8 +223,8 @@ protected:
     SacnReceiver* receiver = nullptr;
 
     SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-    netint_config.netints = kTestNetints.data();
-    netint_config.num_netints = kTestNetints.size();
+    netint_config.netints          = kTestNetints.data();
+    netint_config.num_netints      = kTestNetints.size();
 
     next_socket_ = kTestSocket;
     EXPECT_EQ(add_sacn_receiver(next_receiver_handle_++, &config, &netint_config, NULL, &receiver), kEtcPalErrOk);
@@ -241,8 +245,8 @@ protected:
     SacnSourceDetector* detector = nullptr;
 
     SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-    netint_config.netints = kTestNetints.data();
-    netint_config.num_netints = kTestNetints.size();
+    netint_config.netints          = kTestNetints.data();
+    netint_config.num_netints      = kTestNetints.size();
 
     EXPECT_EQ(add_sacn_source_detector(&config, &netint_config, &detector), kEtcPalErrOk);
 
@@ -263,7 +267,7 @@ protected:
   static etcpal_socket_t next_socket_;
 
   sacn_receiver_t next_receiver_handle_ = kFirstReceiverHandle;
-  EtcPalUuid next_source_cid_ = kTestCid;
+  EtcPalUuid      next_source_cid_      = kTestCid;
 };
 
 etcpal_socket_t TestReceiverState::next_socket_;
@@ -306,9 +310,14 @@ protected:
     TestReceiverState::TearDown();
   }
 
-  void InitTestData(uint8_t start_code, uint16_t universe, const uint8_t* data = nullptr, size_t data_len = 0u,
-                    uint8_t flags = 0u, const EtcPalUuid& source_cid = kTestCid, uint8_t sequence_number = seq_num_,
-                    const EtcPalMcastNetintId& netint = kTestNetints[0].iface)
+  void InitTestData(uint8_t                    start_code,
+                    uint16_t                   universe,
+                    const uint8_t*             data            = nullptr,
+                    size_t                     data_len        = 0u,
+                    uint8_t                    flags           = 0u,
+                    const EtcPalUuid&          source_cid      = kTestCid,
+                    uint8_t                    sequence_number = seq_num_,
+                    const EtcPalMcastNetintId& netint          = kTestNetints[0].iface)
   {
     init_sacn_data_send_buf(test_data_, start_code, &source_cid, kTestName, kTestPriority, universe, 0u, kTestPreview);
 
@@ -317,13 +326,13 @@ protected:
 
     test_data_[SACN_OPTS_OFFSET] |= flags;
     test_data_[SACN_SEQ_OFFSET] = sequence_number;
-    test_data_netint_ = netint;
+    test_data_netint_           = netint;
 
     sacn_read_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadResult* read_result) {
       read_result->from_addr = kTestSockAddr;
-      read_result->data = test_data_;
-      read_result->data_len = SACN_MTU;
-      read_result->netint = test_data_netint_;
+      read_result->data      = test_data_;
+      read_result->data_len  = SACN_MTU;
+      read_result->netint    = test_data_netint_;
       return kEtcPalErrOk;
     };
   }
@@ -353,7 +362,7 @@ protected:
   void TestSourceLimitExceeded(int configured_max, int expected_max)
   {
     SacnReceiverConfig config_with_limit = kTestReceiverConfig;
-    config_with_limit.source_count_max = configured_max;
+    config_with_limit.source_count_max   = configured_max;
     UpdateTestReceiverConfig(config_with_limit);
 
     source_limit_exceeded_fake.custom_fake = [](sacn_receiver_t, uint16_t universe, void* context) {
@@ -404,15 +413,15 @@ protected:
     EXPECT_EQ(source_limit_exceeded_fake.call_count, 2u);
   }
 
-  SacnReceiver* test_receiver_;
-  static uint8_t seq_num_;
-  static uint8_t test_data_[SACN_MTU];
+  SacnReceiver*              test_receiver_;
+  static uint8_t             seq_num_;
+  static uint8_t             test_data_[SACN_MTU];
   static EtcPalMcastNetintId test_data_netint_;
 };
 
-uint8_t TestReceiverThread::seq_num_ = 0u;
-uint8_t TestReceiverThread::test_data_[SACN_MTU] = {0};
-EtcPalMcastNetintId TestReceiverThread::test_data_netint_ = kTestNetints[0].iface;
+uint8_t             TestReceiverThread::seq_num_             = 0u;
+uint8_t             TestReceiverThread::test_data_[SACN_MTU] = {0};
+EtcPalMcastNetintId TestReceiverThread::test_data_netint_    = kTestNetints[0].iface;
 
 TEST_F(TestReceiverState, RespectsMaxReceiverLimit)
 {
@@ -508,7 +517,7 @@ TEST_F(TestReceiverState, GetReceiverNetintsWorks)
   std::vector<EtcPalMcastNetintId> netints(kTestNetints.size() * 2u);
   for (size_t i = 0u; i < (kTestNetints.size() * 2u); ++i)
   {
-    netints[i].index = 0u;
+    netints[i].index   = 0u;
     netints[i].ip_type = kEtcPalIpTypeInvalid;
   }
 
@@ -574,14 +583,14 @@ TEST_F(TestReceiverState, ClearTermSetsAndSourcesWorks)
 
 TEST_F(TestReceiverState, AssignReceiverToThreadWorks)
 {
-  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t universe,
+  sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t, uint16_t          universe,
                                                  const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
     EXPECT_EQ(universe, kTestUniverse);
     WriteNextSocket(socket);
     return kEtcPalErrOk;
   };
   etcpal_thread_create_fake.custom_fake = [](etcpal_thread_t* id, const EtcPalThreadParams* params,
-                                             void (*thread_fn)(void*), void* thread_arg) {
+                                             void (*thread_fn)(void*), void*                thread_arg) {
     ETCPAL_UNUSED_ARG(thread_fn);
     EXPECT_EQ(id, &get_recv_thread_context(0)->thread_handle);
     EXPECT_EQ(params->priority, static_cast<unsigned int>(SACN_RECEIVER_THREAD_PRIORITY));
@@ -977,7 +986,7 @@ TEST_F(TestReceiverState, TerminateSourcesOnRemovedNetintsWorks)
   std::vector<SacnTrackedSource*> sources;
   for (const auto& netint : kTestNetints)
   {
-    EtcPalUuid cid = etcpal::Uuid::V4().get();
+    EtcPalUuid         cid    = etcpal::Uuid::V4().get();
     SacnTrackedSource* source = nullptr;
     EXPECT_EQ(add_sacn_tracked_source(receiver, &cid, "name", &netint.iface, 0u, 0u, &source), kEtcPalErrOk);
     sources.push_back(source);
@@ -1151,8 +1160,8 @@ TEST_F(TestReceiverThread, UniverseDataFiltersFutureSamplingPeriodNetints)
 {
   std::vector<SacnMcastInterface> current_netints = {kTestNetints.begin(),
                                                      kTestNetints.begin() + (kTestNetints.size() / 2)};
-  std::vector<SacnMcastInterface> future_netints = {kTestNetints.begin() + (kTestNetints.size() / 2),
-                                                    kTestNetints.end()};
+  std::vector<SacnMcastInterface> future_netints  = {kTestNetints.begin() + (kTestNetints.size() / 2),
+                                                     kTestNetints.end()};
 
   etcpal_rbtree_clear_with_cb(&test_receiver_->sampling_period_netints, sampling_period_netint_tree_dealloc);
   for (const auto& netint : current_netints)
@@ -1181,8 +1190,8 @@ TEST_F(TestReceiverThread, UniverseDataFiltersFutureSamplingPeriodNetints)
 
 TEST_F(TestReceiverThread, UniverseDataFiltersSubsequentSourceNetints)
 {
-  static constexpr size_t kNumTestIterations = 3;
-  static constexpr size_t kNumSources = 3;
+  static constexpr size_t kNumTestIterations     = 3;
+  static constexpr size_t kNumSources            = 3;
   static constexpr size_t kNumDataCallsPerSource = 3;
 
   EXPECT_EQ(universe_data_fake.call_count, 0u);
@@ -1624,8 +1633,8 @@ TEST_F(TestReceiverThread, TerminatedSourceGoesOfflineCorrectly)
 
 TEST_F(TestReceiverThread, StatusListsTrackMultipleSources)
 {
-  static EtcPalUuid online_cid_1 = etcpal::Uuid::V4().get();
-  static EtcPalUuid online_cid_2 = etcpal::Uuid::V4().get();
+  static EtcPalUuid online_cid_1  = etcpal::Uuid::V4().get();
+  static EtcPalUuid online_cid_2  = etcpal::Uuid::V4().get();
   static EtcPalUuid unknown_cid_1 = etcpal::Uuid::V4().get();
   static EtcPalUuid unknown_cid_2 = etcpal::Uuid::V4().get();
   static EtcPalUuid offline_cid_1 = etcpal::Uuid::V4().get();
@@ -1683,7 +1692,7 @@ TEST_F(TestReceiverThread, StatusListsTrackMultipleSources)
   };
 
   unsigned int expected_mark_sources_offline_count = mark_sources_offline_fake.call_count + 1u;
-  unsigned int expected_mark_sources_online_count = mark_sources_online_fake.call_count + 1u;
+  unsigned int expected_mark_sources_online_count  = mark_sources_online_fake.call_count + 1u;
 
   etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
   RunThreadCycle();
@@ -1695,7 +1704,7 @@ TEST_F(TestReceiverThread, StatusListsTrackMultipleSources)
 TEST_F(TestReceiverThread, SourcesLostWorks)
 {
   static constexpr size_t kNumLostSources = 7u;
-  static EtcPalUuid lost_source_cids[kNumLostSources];
+  static EtcPalUuid       lost_source_cids[kNumLostSources];
 
   for (size_t i = 0u; i < kNumLostSources; ++i)
   {
@@ -1776,8 +1785,8 @@ TEST_F(TestReceiverThread, SamplingPeriodTransitionWorks)
 {
   std::vector<SacnMcastInterface> initial_netints = {kTestNetints.begin(),
                                                      kTestNetints.begin() + (kTestNetints.size() / 2)};
-  std::vector<SacnMcastInterface> future_netints = {kTestNetints.begin() + (kTestNetints.size() / 2),
-                                                    kTestNetints.end()};
+  std::vector<SacnMcastInterface> future_netints  = {kTestNetints.begin() + (kTestNetints.size() / 2),
+                                                     kTestNetints.end()};
 
   etcpal_rbtree_clear_with_cb(&test_receiver_->sampling_period_netints, sampling_period_netint_tree_dealloc);
   for (const auto& netint : initial_netints)
@@ -1800,7 +1809,7 @@ TEST_F(TestReceiverThread, SamplingPeriodTransitionWorks)
   EXPECT_EQ(sampling_period_ended_fake.call_count, 1u);
   EXPECT_EQ(sampling_period_started_fake.call_count, 1u);
 
-  sampling_period_ended_fake.custom_fake = [](sacn_receiver_t, uint16_t, void*) {};
+  sampling_period_ended_fake.custom_fake   = [](sacn_receiver_t, uint16_t, void*) {};
   sampling_period_started_fake.custom_fake = [](sacn_receiver_t, uint16_t, void*) {};
 
   for (const auto& netint : initial_netints)
@@ -1863,28 +1872,28 @@ TEST_F(TestReceiverThread, SourcePapLostWorks)
 TEST_F(TestReceiverThread, SourceLimitExceededWorks)
 {
   int configured_max = 10;
-  int expected_max = 10;
+  int expected_max   = 10;
   TestSourceLimitExceeded(configured_max, expected_max);
 }
 #else   // SACN_DYNAMIC_MEM
 TEST_F(TestReceiverThread, SourceLimitExceededWorksWithLowerSourceCountMax)
 {
   int configured_max = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE - 1;
-  int expected_max = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE - 1;
+  int expected_max   = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE - 1;
   TestSourceLimitExceeded(configured_max, expected_max);
 }
 
 TEST_F(TestReceiverThread, SourceLimitExceededWorksWithHigherSourceCountMax)
 {
   int configured_max = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE + 1;
-  int expected_max = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE;
+  int expected_max   = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE;
   TestSourceLimitExceeded(configured_max, expected_max);
 }
 
 TEST_F(TestReceiverThread, SourceLimitExceededWorksWithInfiniteSourceCountMax)
 {
   int configured_max = SACN_RECEIVER_INFINITE_SOURCES;
-  int expected_max = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE;
+  int expected_max   = SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE;
   TestSourceLimitExceeded(configured_max, expected_max);
 }
 #endif  // SACN_DYNAMIC_MEM

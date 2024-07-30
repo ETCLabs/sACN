@@ -37,16 +37,16 @@
 #define TestReceiver TestReceiverStatic
 #endif
 
-constexpr uint16_t CHANGE_UNIVERSE_WORKS_FIRST_IPV4_SOCKET = 4u;
-constexpr uint16_t CHANGE_UNIVERSE_WORKS_FIRST_IPV6_SOCKET = 6u;
-constexpr uint16_t CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE = 1u;
-constexpr uint16_t CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE = 2u;
-constexpr uint16_t CHANGE_UNIVERSE_INVALID_UNIVERSE_1 = 0u;
-constexpr uint16_t CHANGE_UNIVERSE_INVALID_UNIVERSE_2 = 64001u;
-constexpr uint16_t CHANGE_UNIVERSE_VALID_UNIVERSE_1 = 1u;
-constexpr uint16_t CHANGE_UNIVERSE_VALID_UNIVERSE_2 = 1u;
-constexpr uint16_t CHANGE_UNIVERSE_NO_RECEIVER_UNIVERSE_1 = 1u;
-constexpr uint16_t CHANGE_UNIVERSE_NO_RECEIVER_UNIVERSE_2 = 2u;
+constexpr uint16_t CHANGE_UNIVERSE_WORKS_FIRST_IPV4_SOCKET  = 4u;
+constexpr uint16_t CHANGE_UNIVERSE_WORKS_FIRST_IPV6_SOCKET  = 6u;
+constexpr uint16_t CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE     = 1u;
+constexpr uint16_t CHANGE_UNIVERSE_WORKS_SECOND_UNIVERSE    = 2u;
+constexpr uint16_t CHANGE_UNIVERSE_INVALID_UNIVERSE_1       = 0u;
+constexpr uint16_t CHANGE_UNIVERSE_INVALID_UNIVERSE_2       = 64001u;
+constexpr uint16_t CHANGE_UNIVERSE_VALID_UNIVERSE_1         = 1u;
+constexpr uint16_t CHANGE_UNIVERSE_VALID_UNIVERSE_2         = 1u;
+constexpr uint16_t CHANGE_UNIVERSE_NO_RECEIVER_UNIVERSE_1   = 1u;
+constexpr uint16_t CHANGE_UNIVERSE_NO_RECEIVER_UNIVERSE_2   = 2u;
 constexpr uint16_t CHANGE_UNIVERSE_RECEIVER_EXISTS_UNIVERSE = 7u;
 
 class TestReceiver : public ::testing::Test
@@ -62,7 +62,7 @@ protected:
     sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* internal_netints, bool,
                                                            EtcPalRbTree*, const SacnNetintConfig*) {
 #if SACN_DYNAMIC_MEM
-      internal_netints->netints = NULL;
+      internal_netints->netints          = NULL;
       internal_netints->netints_capacity = 0;
 #endif
       internal_netints->num_netints = 0;
@@ -81,13 +81,13 @@ protected:
 
   sacn_receiver_t SetupUniverseChangeTest(sacn_ip_support_t ip_supported)
   {
-    SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-    config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
+    SacnReceiverConfig config              = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
+    config.callbacks.universe_data         = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
                                         const SacnRecvUniverseData*, void*) {};
-    config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
+    config.callbacks.sources_lost          = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
     config.callbacks.sampling_period_ended = [](sacn_receiver_t, uint16_t, void*) {};
-    config.universe_id = CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE;
-    config.ip_supported = ip_supported;
+    config.universe_id                     = CHANGE_UNIVERSE_WORKS_FIRST_UNIVERSE;
+    config.ip_supported                    = ip_supported;
 
     sacn_add_receiver_socket_fake.custom_fake = [](sacn_thread_id_t, etcpal_iptype_t ip_type, uint16_t,
                                                    const EtcPalMcastNetintId*, size_t, etcpal_socket_t* socket) {
@@ -255,10 +255,10 @@ TEST_F(TestReceiver, ChangeUniverseErrNotInitWorks)
 
 TEST_F(TestReceiver, ChangeUniverseErrExistsWorks)
 {
-  SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
+  SacnReceiverConfig config              = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
+  config.callbacks.universe_data         = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
                                       const SacnRecvUniverseData*, void*) {};
-  config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sources_lost          = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
   config.callbacks.sampling_period_ended = [](sacn_receiver_t, uint16_t, void*) {};
 
   config.universe_id = CHANGE_UNIVERSE_RECEIVER_EXISTS_UNIVERSE;
@@ -287,12 +287,12 @@ TEST_F(TestReceiver, ChangeUniverseErrNotFoundWorks)
       sacn_receiver_change_universe(sacn_receiver_t(), CHANGE_UNIVERSE_VALID_UNIVERSE_2);
   EXPECT_EQ(change_universe_not_found_result, kEtcPalErrNotFound);
 
-  SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
+  SacnReceiverConfig config              = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
+  config.callbacks.universe_data         = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
                                       const SacnRecvUniverseData*, void*) {};
-  config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sources_lost          = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
   config.callbacks.sampling_period_ended = [](sacn_receiver_t, uint16_t, void*) {};
-  config.universe_id = CHANGE_UNIVERSE_VALID_UNIVERSE_1;
+  config.universe_id                     = CHANGE_UNIVERSE_VALID_UNIVERSE_1;
 
   sacn_receiver_t handle;
   sacn_receiver_create(&config, &handle, nullptr);
@@ -318,10 +318,10 @@ TEST_F(TestReceiver, ChangeUniverseErrSysWorks)
 
 TEST_F(TestReceiver, ResetNetworkingTerminatesSourcesOnLostNetints)
 {
-  SacnReceiverConfig config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
-  config.callbacks.universe_data = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
+  SacnReceiverConfig config              = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
+  config.callbacks.universe_data         = [](sacn_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*,
                                       const SacnRecvUniverseData*, void*) {};
-  config.callbacks.sources_lost = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
+  config.callbacks.sources_lost          = [](sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*) {};
   config.callbacks.sampling_period_ended = [](sacn_receiver_t, uint16_t, void*) {};
 
   config.universe_id = CHANGE_UNIVERSE_RECEIVER_EXISTS_UNIVERSE;
