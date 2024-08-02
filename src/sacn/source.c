@@ -744,8 +744,11 @@ etcpal_error_t sacn_source_send_now(sacn_source_t  handle,
       SacnSourceUniverse* universe_state = NULL;
       result                             = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-      if (!SACN_ASSERT_VERIFY(universe_state || (result != kEtcPalErrOk)))
-        result = kEtcPalErrNotFound;
+      if (result == kEtcPalErrOk)
+      {
+        if (!universe_state || (universe_state->termination_state == kTerminatingAndRemoving))
+          result = kEtcPalErrNotFound;
+      }
 
       if (result == kEtcPalErrOk)
       {
