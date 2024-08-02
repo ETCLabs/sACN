@@ -355,10 +355,10 @@ void init_sacn_data_send_buf(uint8_t*          send_buf,
   written += pack_sacn_dmp_layer_header(&send_buf[written], start_code, 0);
 }
 
-void update_send_buf_data(uint8_t*              send_buf,
-                          const uint8_t*        new_data,
-                          uint16_t              new_data_size,
-                          force_sync_behavior_t force_sync)
+void update_send_buf_data(uint8_t*                   send_buf,
+                          const uint8_t*             new_data,
+                          uint16_t                   new_data_size,
+                          sacn_force_sync_behavior_t force_sync)
 {
   ETCPAL_UNUSED_ARG(force_sync);  // TODO sacn_sync
 

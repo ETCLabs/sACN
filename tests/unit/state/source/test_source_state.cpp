@@ -164,7 +164,7 @@ protected:
     sacn_source_mem_deinit();
   }
 
-  int RunThreadCycle(process_sources_behavior_t behavior = kProcessThreadedSources)
+  int RunThreadCycle(sacn_process_sources_behavior_t behavior = kProcessThreadedSources)
   {
     take_lock_and_process_sources(behavior, kSacnSourceTickModeProcessLevelsOnly);
     return take_lock_and_process_sources(behavior, kSacnSourceTickModeProcessPapOnly);

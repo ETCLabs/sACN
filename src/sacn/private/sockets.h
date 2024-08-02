@@ -50,7 +50,7 @@ typedef enum
   kReceiver,
   kSourceDetector,
   kSource
-} networking_type_t;
+} sacn_networking_type_t;
 
 etcpal_error_t sacn_sockets_init(const SacnNetintConfig* netint_config);
 void           sacn_sockets_deinit(void);
@@ -91,12 +91,12 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t           thread_id,
                                         const EtcPalMcastNetintId* netints,
                                         size_t                     num_netints,
                                         etcpal_socket_t*           socket);
-void           sacn_remove_receiver_socket(sacn_thread_id_t           thread_id,
-                                           etcpal_socket_t*           socket,
-                                           uint16_t                   universe,
-                                           const EtcPalMcastNetintId* netints,
-                                           size_t                     num_netints,
-                                           socket_cleanup_behavior_t  cleanup_behavior);
+void           sacn_remove_receiver_socket(sacn_thread_id_t               thread_id,
+                                           etcpal_socket_t*               socket,
+                                           uint16_t                       universe,
+                                           const EtcPalMcastNetintId*     netints,
+                                           size_t                         num_netints,
+                                           sacn_socket_cleanup_behavior_t cleanup_behavior);
 
 // Functions to be called from the receive thread
 void           sacn_add_pending_sockets(SacnRecvThreadContext* recv_thread_context);
@@ -116,7 +116,7 @@ etcpal_error_t sacn_send_unicast(sacn_ip_support_t   ip_supported,
                                  etcpal_error_t*     last_send_error);
 
 // Sys netints getter, exposed here for unit testing
-SacnSocketsSysNetints* sacn_sockets_get_sys_netints(networking_type_t type);
+SacnSocketsSysNetints* sacn_sockets_get_sys_netints(sacn_networking_type_t type);
 
 #ifdef __cplusplus
 }

@@ -250,7 +250,7 @@ protected:
                              std::vector<etcpal_socket_t>&           sockets,
                              uint16_t                                universe,
                              const std::vector<EtcPalMcastNetintId>& netints,
-                             socket_cleanup_behavior_t               cleanup_behavior)
+                             sacn_socket_cleanup_behavior_t          cleanup_behavior)
   {
 #if SACN_RECEIVER_SOCKET_PER_NIC
     ETCPAL_UNUSED_ARG(netints);

@@ -77,11 +77,14 @@ CheckOptions:
   - { key: readability-identifier-naming.MemberCase,              value: lower_case          }
   - { key: readability-identifier-naming.MemberConstantCase,      value: CamelCase           }
   - { key: readability-identifier-naming.MemberConstantPrefix,    value: k                   }
+  - { key: readability-identifier-naming.ConstantCase,            value: CamelCase           }
+  - { key: readability-identifier-naming.ConstantPrefix,          value: k                   }
   - { key: readability-identifier-naming.MethodCase,              value: aNy_CasE            }
   - { key: readability-identifier-naming.NamespaceCase,           value: lower_case          }
   - { key: readability-identifier-naming.ParameterCase,           value: lower_case          }
   - { key: readability-identifier-naming.PrivateMemberSuffix,     value: _                   }
   - { key: readability-identifier-naming.ProtectedMemberSuffix,   value: _                   }
+  - { key: readability-identifier-naming.ClassMemberSuffix,       value: _                   }
   - { key: readability-identifier-naming.StaticConstantCase,      value: CamelCase           }
   - { key: readability-identifier-naming.StaticConstantPrefix,    value: k                   }
   - { key: readability-identifier-naming.StructCase,              value: CamelCase           }

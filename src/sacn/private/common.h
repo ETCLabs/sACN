@@ -567,7 +567,7 @@ typedef enum
 {
   kPerformAllSocketCleanupNow,
   kQueueSocketCleanup
-} socket_cleanup_behavior_t;
+} sacn_socket_cleanup_behavior_t;
 
 typedef struct SacnSamplingPeriodNetint
 {
@@ -787,7 +787,7 @@ typedef enum
   kTerminatingAndRemoving,
   kTerminatingWithoutRemoving,
   kNotTerminating
-} termination_state_t;
+} sacn_termination_state_t;
 
 typedef struct SacnSourceNetint
 {
@@ -797,18 +797,18 @@ typedef struct SacnSourceNetint
 
 typedef struct SacnUnicastDestination
 {
-  EtcPalIpAddr        dest_addr;  // This must be the first struct member.
-  termination_state_t termination_state;
-  int                 num_terminations_sent;
-  etcpal_error_t      last_send_error;
+  EtcPalIpAddr             dest_addr;  // This must be the first struct member.
+  sacn_termination_state_t termination_state;
+  int                      num_terminations_sent;
+  etcpal_error_t           last_send_error;
 } SacnUnicastDestination;
 
 typedef struct SacnSourceUniverse
 {
   uint16_t universe_id;  // This must be the first struct member.
 
-  termination_state_t termination_state;
-  int                 num_terminations_sent;
+  sacn_termination_state_t termination_state;
+  int                      num_terminations_sent;
 
   uint8_t  priority;
   uint16_t sync_universe;
@@ -878,7 +878,7 @@ typedef enum
 {
   kEnableForceSync,
   kDisableForceSync
-} force_sync_behavior_t;
+} sacn_force_sync_behavior_t;
 
 /******************************************************************************
  * Global variables, functions, and state tracking

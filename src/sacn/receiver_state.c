@@ -79,12 +79,12 @@ static etcpal_error_t add_sockets(sacn_thread_id_t           thread_id,
                                   const EtcPalMcastNetintId* netints,
                                   size_t                     num_netints,
                                   SacnInternalSocketState*   sockets);
-static void           remove_sockets(sacn_thread_id_t           thread_id,
-                                     SacnInternalSocketState*   sockets,
-                                     uint16_t                   universe,
-                                     const EtcPalMcastNetintId* netints,
-                                     size_t                     num_netints,
-                                     socket_cleanup_behavior_t  cleanup_behavior);
+static void           remove_sockets(sacn_thread_id_t               thread_id,
+                                     SacnInternalSocketState*       sockets,
+                                     uint16_t                       universe,
+                                     const EtcPalMcastNetintId*     netints,
+                                     size_t                         num_netints,
+                                     sacn_socket_cleanup_behavior_t cleanup_behavior);
 
 // Receiving incoming data
 static void handle_incoming(SacnRecvThreadContext*     context,
@@ -448,7 +448,7 @@ void begin_sampling_period(SacnReceiver* receiver)
  * [in/out] receiver Receiver whose sockets to remove. Socket handles are set to invalid.
  * [in] cleanup_behavior Whether to close the sockets now or wait until the next thread cycle.
  */
-void remove_receiver_sockets(SacnReceiver* receiver, socket_cleanup_behavior_t cleanup_behavior)
+void remove_receiver_sockets(SacnReceiver* receiver, sacn_socket_cleanup_behavior_t cleanup_behavior)
 {
   if (!SACN_ASSERT_VERIFY(receiver))
     return;
@@ -463,7 +463,7 @@ void remove_receiver_sockets(SacnReceiver* receiver, socket_cleanup_behavior_t c
  * [in/out] detector Source detector whose sockets to remove. Socket handles are set to invalid.
  * [in] cleanup_behavior Whether to close the sockets now or wait until the next thread cycle.
  */
-void remove_source_detector_sockets(SacnSourceDetector* detector, socket_cleanup_behavior_t cleanup_behavior)
+void remove_source_detector_sockets(SacnSourceDetector* detector, sacn_socket_cleanup_behavior_t cleanup_behavior)
 {
   if (!SACN_ASSERT_VERIFY(detector))
     return;
@@ -479,7 +479,7 @@ void remove_source_detector_sockets(SacnSourceDetector* detector, socket_cleanup
  *
  * [in] cleanup_behavior Whether to close the sockets now or wait until the next thread cycle.
  */
-void remove_all_receiver_sockets(socket_cleanup_behavior_t cleanup_behavior)
+void remove_all_receiver_sockets(sacn_socket_cleanup_behavior_t cleanup_behavior)
 {
   EtcPalRbIter iter;
   for (SacnReceiver* receiver = get_first_receiver(&iter); receiver; receiver = get_next_receiver(&iter))
@@ -709,12 +709,12 @@ etcpal_error_t add_sockets(sacn_thread_id_t           thread_id,
   return res;
 }
 
-void remove_sockets(sacn_thread_id_t           thread_id,
-                    SacnInternalSocketState*   sockets,
-                    uint16_t                   universe,
-                    const EtcPalMcastNetintId* netints,
-                    size_t                     num_netints,
-                    socket_cleanup_behavior_t  cleanup_behavior)
+void remove_sockets(sacn_thread_id_t               thread_id,
+                    SacnInternalSocketState*       sockets,
+                    uint16_t                       universe,
+                    const EtcPalMcastNetintId*     netints,
+                    size_t                         num_netints,
+                    sacn_socket_cleanup_behavior_t cleanup_behavior)
 {
 #if SACN_RECEIVER_SOCKET_PER_NIC
   ETCPAL_UNUSED_ARG(netints);

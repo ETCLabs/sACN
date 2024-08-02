@@ -41,9 +41,9 @@ DECLARE_FAKE_VOID_FUNC(remove_source_detector_from_thread, SacnSourceDetector*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, add_receiver_sockets, SacnReceiver*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, add_source_detector_sockets, SacnSourceDetector*);
 DECLARE_FAKE_VOID_FUNC(begin_sampling_period, SacnReceiver*);
-DECLARE_FAKE_VOID_FUNC(remove_receiver_sockets, SacnReceiver*, socket_cleanup_behavior_t);
-DECLARE_FAKE_VOID_FUNC(remove_source_detector_sockets, SacnSourceDetector*, socket_cleanup_behavior_t);
-DECLARE_FAKE_VOID_FUNC(remove_all_receiver_sockets, socket_cleanup_behavior_t);
+DECLARE_FAKE_VOID_FUNC(remove_receiver_sockets, SacnReceiver*, sacn_socket_cleanup_behavior_t);
+DECLARE_FAKE_VOID_FUNC(remove_source_detector_sockets, SacnSourceDetector*, sacn_socket_cleanup_behavior_t);
+DECLARE_FAKE_VOID_FUNC(remove_all_receiver_sockets, sacn_socket_cleanup_behavior_t);
 DECLARE_FAKE_VOID_FUNC(read_network_and_process, SacnRecvThreadContext*);
 DECLARE_FAKE_VOID_FUNC(terminate_sources_on_removed_netints, SacnReceiver*);
 
