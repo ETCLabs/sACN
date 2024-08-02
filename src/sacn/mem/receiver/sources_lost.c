@@ -204,7 +204,7 @@ etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr
     {
       for (SourcesLostNotification* notif_to_clean = sources_lost_arr; notif_to_clean < notification; ++notif_to_clean)
         deinit_sources_lost_entry(notif_to_clean);
-        
+
       return kEtcPalErrNoMem;
     }
     notification->lost_sources_capacity = INITIAL_CAPACITY;
