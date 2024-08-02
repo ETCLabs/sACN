@@ -349,7 +349,7 @@ void process_stats_log(SacnSource* source, bool all_sends_succeeded)
       double failed_tick_ratio = (double)source->failed_tick_count / (double)source->total_tick_count;
 
       SACN_LOG_INFO("In the last %d seconds, source %s had %d out of %d ticks (%f%%) fail at least one send.",
-                    SACN_STATS_LOG_INTERVAL / 1000, cid_str, source->failed_tick_count, source->total_tick_count,
+                    kSacnStatsLogInterval / 1000, cid_str, source->failed_tick_count, source->total_tick_count,
                     failed_tick_ratio * 100.0);
     }
 #endif  // SACN_LOGGING_ENABLED
@@ -583,7 +583,7 @@ bool send_universe_discovery(SacnSource* source)
       bool at_least_one_send_worked = false;
       for (size_t i = 0; i < source->num_netints; ++i)
       {
-        if (sacn_send_multicast(SACN_DISCOVERY_UNIVERSE, source->ip_supported, source->universe_discovery_send_buf,
+        if (sacn_send_multicast(kSacnDiscoveryUniverse, source->ip_supported, source->universe_discovery_send_buf,
                                 &source->netints[i].id) == kEtcPalErrOk)
         {
           at_least_one_send_worked = true;
@@ -680,7 +680,7 @@ int pack_universe_discovery_page(SacnSource* source, size_t* total_universes_pro
 
   // Iterate up to 512 universes
   while ((*total_universes_processed < source->num_universes) &&
-         (num_universes_packed < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE))
+         (num_universes_packed < kSacnUniverseDiscoveryMaxUniversesPerPage))
   {
     // Iterate universes array in reverse to pack universes lowest to highest
     size_t                    index    = (source->num_universes - 1) - (*total_universes_processed);
@@ -706,7 +706,7 @@ int pack_universe_discovery_page(SacnSource* source, size_t* total_universes_pro
   if (source->num_active_universes > 0)
   {
     SET_LAST_PAGE(source->universe_discovery_send_buf,
-                  (uint8_t)((source->num_active_universes - 1) / SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE));
+                  (uint8_t)((source->num_active_universes - 1) / kSacnUniverseDiscoveryMaxUniversesPerPage));
   }
   else
   {

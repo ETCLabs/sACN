@@ -66,7 +66,7 @@ static constexpr SacnMergeReceiverConfig kTestConfig          = {
     SACN_RECEIVER_INFINITE_SOURCES,
     true,
     kSacnIpV4AndIpV6};
-static const EtcPalSockAddr       kTestSourceAddr   = {SACN_PORT, etcpal::IpAddr::FromString("10.101.1.1").get()};
+static const EtcPalSockAddr       kTestSourceAddr   = {kSacnPort, etcpal::IpAddr::FromString("10.101.1.1").get()};
 static const SacnRemoteSource     kTestRemoteSource = {0u, etcpal::Uuid::V4().get(), {'\0'}};
 static const std::string          kTestSourceName   = kTestRemoteSource.name;
 static const SacnRecvUniverseData kTestUniverseData = {

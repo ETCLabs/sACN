@@ -347,7 +347,7 @@ void init_sacn_data_send_buf(uint8_t*          send_buf,
   if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(source_cid) || !SACN_ASSERT_VERIFY(source_name))
     return;
 
-  memset(send_buf, 0, SACN_DATA_PACKET_MTU);
+  memset(send_buf, 0, kSacnDataPacketMtu);
   int written = 0;
   written += pack_sacn_root_layer(send_buf, SACN_DATA_HEADER_SIZE, false, source_cid);
   written += pack_sacn_data_framing_layer(&send_buf[written], 0, VECTOR_E131_DATA_PACKET, source_name, priority,

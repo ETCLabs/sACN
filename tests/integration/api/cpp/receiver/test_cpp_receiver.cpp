@@ -564,10 +564,10 @@ TEST_F(TestReceiver, SamplingPeriod)
   };
   is_sampling = false;
   RunThreadCycle(true);
-  etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+  etcpal_getms_fake.return_val += (kSacnPeriodicInterval + 1u);
   RunThreadCycle(true);
   EXPECT_TRUE(is_sampling);
-  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  etcpal_getms_fake.return_val += (kSacnSampleTime + 1u);
   RunThreadCycle(true);
   EXPECT_FALSE(is_sampling);
 }
@@ -646,7 +646,7 @@ TEST_F(TestMergeReceiver, HandlesSameSourceReappearing)
 
   // Elapse sampling period
   RunThreadCycle(false);
-  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  etcpal_getms_fake.return_val += (kSacnSampleTime + 1u);
   RunThreadCycle(false);
 
   // New source
@@ -666,7 +666,7 @@ TEST_F(TestMergeReceiver, HandlesSameSourceReappearing)
       return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg, source_cid,
                          FakeReceiveFlags::kTerminate);
     };
-    etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+    etcpal_getms_fake.return_val += (kSacnPeriodicInterval + 1u);
     RunThreadCycle(true);
   }
 }
@@ -678,7 +678,7 @@ TEST_F(TestMergeReceiver, HandlesManySourcesAppearing)
 
   // Elapse sampling period
   RunThreadCycle(false);
-  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  etcpal_getms_fake.return_val += (kSacnSampleTime + 1u);
   RunThreadCycle(false);
 
   for (int i = 0; i < kNumIterations; ++i)
@@ -698,7 +698,7 @@ TEST_F(TestMergeReceiver, HandlesManySourcesAppearing)
       return FakeReceive(FakeReceiveMode::kMulticast, 0, test_levels_data, msg, source_cid,
                          FakeReceiveFlags::kTerminate);
     };
-    etcpal_getms_fake.return_val += (SACN_PERIODIC_INTERVAL + 1u);
+    etcpal_getms_fake.return_val += (kSacnPeriodicInterval + 1u);
     RunThreadCycle(true);
   }
 }
@@ -728,7 +728,7 @@ TEST_F(TestMergeReceiver, MergesInitialPapPacketDuringSampling)
   etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr*, int) {
     return static_cast<int>(kEtcPalErrTimedOut);
   };
-  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  etcpal_getms_fake.return_val += (kSacnSampleTime + 1u);
   RunThreadCycle(false);
 
   // PAP comes in again, firing merged data callback once more
@@ -764,7 +764,7 @@ TEST_F(TestMergeReceiver, MergesInitialLevelsPacketDuringSampling)
   etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr*, int) {
     return static_cast<int>(kEtcPalErrTimedOut);
   };
-  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  etcpal_getms_fake.return_val += (kSacnSampleTime + 1u);
   RunThreadCycle(false);
 
   // Levels come in again, firing merged data callback once more
@@ -788,7 +788,7 @@ TEST_F(TestMergeReceiver, InitialPapDoesNotMergeUntilLevelsArrive)
 
   // Elapse sampling period
   RunThreadCycle(false);
-  etcpal_getms_fake.return_val += (SACN_SAMPLE_TIME + 1u);
+  etcpal_getms_fake.return_val += (kSacnSampleTime + 1u);
   RunThreadCycle(false);
 
   // Source 1 0xDD received - expect empty merge results

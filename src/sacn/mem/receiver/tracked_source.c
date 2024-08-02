@@ -129,7 +129,7 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver*              receiver,
     ETCPAL_MSVC_NO_DEP_WRN strcpy(src->name, name);
     src->netint = *netint;
 
-    etcpal_timer_start(&src->packet_timer, SACN_SOURCE_LOSS_TIMEOUT);
+    etcpal_timer_start(&src->packet_timer, kSacnSourceLossTimeout);
     src->seq                          = seq_num;
     src->terminated                   = false;
     src->dmx_received_since_last_tick = true;
@@ -141,7 +141,7 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver*              receiver,
       if (first_start_code == SACN_STARTCODE_PRIORITY)
       {
         src->recv_state = kRecvStateHavePapOnly;
-        etcpal_timer_start(&src->pap_timer, SACN_SOURCE_LOSS_TIMEOUT);
+        etcpal_timer_start(&src->pap_timer, kSacnSourceLossTimeout);
       }
       else
       {
@@ -154,7 +154,7 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver*              receiver,
         src->recv_state = kRecvStateHavePapOnly;  // Always allow 0xDD packets to notify
       else
         src->recv_state = kRecvStateWaitingForPap;  // 0x00 packets should always notify after 0xDD
-      etcpal_timer_start(&src->pap_timer, SACN_WAIT_FOR_PRIORITY);
+      etcpal_timer_start(&src->pap_timer, kSacnWaitForPriority);
     }
 #endif
 

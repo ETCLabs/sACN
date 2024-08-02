@@ -22,7 +22,10 @@
 
 #include "sacn/private/common.h"
 
-#define SACN_PERIODIC_INTERVAL 120
+enum
+{
+  kSacnPeriodicInterval = 120
+};
 
 #ifdef __cplusplus
 extern "C" {

@@ -405,13 +405,13 @@ etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector)
 
   if (supports_ipv4(detector->ip_supported))
   {
-    ipv4_res = add_sockets(detector->thread_id, kEtcPalIpTypeV4, SACN_DISCOVERY_UNIVERSE, detector->netints.netints,
+    ipv4_res = add_sockets(detector->thread_id, kEtcPalIpTypeV4, kSacnDiscoveryUniverse, detector->netints.netints,
                            detector->netints.num_netints, &detector->sockets);
   }
 
   if (((ipv4_res == kEtcPalErrOk) || (ipv4_res == kEtcPalErrNoNetints)) && supports_ipv6(detector->ip_supported))
   {
-    ipv6_res = add_sockets(detector->thread_id, kEtcPalIpTypeV6, SACN_DISCOVERY_UNIVERSE, detector->netints.netints,
+    ipv6_res = add_sockets(detector->thread_id, kEtcPalIpTypeV6, kSacnDiscoveryUniverse, detector->netints.netints,
                            detector->netints.num_netints, &detector->sockets);
   }
 
@@ -422,7 +422,7 @@ etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector)
 
   if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
   {
-    remove_sockets(detector->thread_id, &detector->sockets, SACN_DISCOVERY_UNIVERSE, detector->netints.netints,
+    remove_sockets(detector->thread_id, &detector->sockets, kSacnDiscoveryUniverse, detector->netints.netints,
                    detector->netints.num_netints, kQueueSocketCleanup);
   }
 
@@ -438,7 +438,7 @@ void begin_sampling_period(SacnReceiver* receiver)
   {
     receiver->sampling                  = true;
     receiver->notified_sampling_started = false;
-    etcpal_timer_start(&receiver->sample_timer, SACN_SAMPLE_TIME);
+    etcpal_timer_start(&receiver->sample_timer, kSacnSampleTime);
   }
 }
 
@@ -468,7 +468,7 @@ void remove_source_detector_sockets(SacnSourceDetector* detector, socket_cleanup
   if (!SACN_ASSERT_VERIFY(detector))
     return;
 
-  remove_sockets(detector->thread_id, &detector->sockets, SACN_DISCOVERY_UNIVERSE, detector->netints.netints,
+  remove_sockets(detector->thread_id, &detector->sockets, kSacnDiscoveryUniverse, detector->netints.netints,
                  detector->netints.num_netints, cleanup_behavior);
 }
 
@@ -524,7 +524,7 @@ void read_network_and_process(SacnRecvThreadContext* context)
 
   if (!context->periodic_timer_started)
   {
-    etcpal_timer_start(&context->periodic_timer, SACN_PERIODIC_INTERVAL);
+    etcpal_timer_start(&context->periodic_timer, kSacnPeriodicInterval);
     context->periodic_timer_started = true;
   }
 
@@ -661,7 +661,7 @@ etcpal_error_t add_sockets(sacn_thread_id_t           thread_id,
                            SacnInternalSocketState*   sockets)
 {
   if (!SACN_ASSERT_VERIFY(ip_type == kEtcPalIpTypeV4 || ip_type == kEtcPalIpTypeV6) ||
-      !SACN_ASSERT_VERIFY(universe >= 1 && ((universe <= 63999) || (universe == SACN_DISCOVERY_UNIVERSE))) ||
+      !SACN_ASSERT_VERIFY(universe >= 1 && ((universe <= 63999) || (universe == kSacnDiscoveryUniverse))) ||
       !SACN_ASSERT_VERIFY(sockets))
   {
     return kEtcPalErrSys;
@@ -1082,7 +1082,7 @@ void process_null_start_code(const SacnReceiver*        receiver,
 
   // No matter how valid, we got something.
   src->dmx_received_since_last_tick = true;
-  etcpal_timer_start(&src->packet_timer, SACN_SOURCE_LOSS_TIMEOUT);
+  etcpal_timer_start(&src->packet_timer, kSacnSourceLossTimeout);
 
 #if SACN_ETC_PRIORITY_EXTENSION
   switch (src->recv_state)
@@ -1096,7 +1096,7 @@ void process_null_start_code(const SacnReceiver*        receiver,
         // Our per-address-priority waiting period has expired. Keep the timer going in case the
         // source starts sending PAP later.
         src->recv_state = kRecvStateHaveDmxOnly;
-        etcpal_timer_start(&src->pap_timer, SACN_SOURCE_LOSS_TIMEOUT);
+        etcpal_timer_start(&src->pap_timer, kSacnSourceLossTimeout);
       }
       else
       {
@@ -1157,7 +1157,7 @@ void process_pap(const SacnReceiver* receiver, SacnTrackedSource* src, bool* not
     case kRecvStateWaitingForPap:
     case kRecvStateHaveDmxOnly:
       src->recv_state = kRecvStateHaveDmxAndPap;
-      etcpal_timer_start(&src->pap_timer, SACN_SOURCE_LOSS_TIMEOUT);
+      etcpal_timer_start(&src->pap_timer, kSacnSourceLossTimeout);
       break;
     case kRecvStateHaveDmxAndPap:
     case kRecvStateHavePapOnly:

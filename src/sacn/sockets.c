@@ -301,7 +301,7 @@ etcpal_error_t send_multicast(uint16_t universe_id, const uint8_t* send_buf, con
   // Determine the multicast destination
   EtcPalSockAddr dest;
   sacn_get_mcast_addr(netint->ip_type, universe_id, &dest.ip);
-  dest.port = SACN_PORT;
+  dest.port = kSacnPort;
 
   // Determine the socket to use
   etcpal_socket_t sock            = ETCPAL_SOCKET_INVALID;
@@ -359,7 +359,7 @@ etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_ad
   // Convert destination to SockAddr
   EtcPalSockAddr sockaddr_dest;
   sockaddr_dest.ip   = *dest_addr;
-  sockaddr_dest.port = SACN_PORT;
+  sockaddr_dest.port = kSacnPort;
 
   // Try to send the data (ignore errors)
   const size_t send_buf_length =
@@ -388,7 +388,7 @@ EtcPalSockAddr get_bind_address(etcpal_iptype_t ip_type)
 {
   EtcPalSockAddr recv_any;
   etcpal_ip_set_wildcard(ip_type, &recv_any.ip);
-  recv_any.port = SACN_PORT;
+  recv_any.port = kSacnPort;
   return recv_any;
 }
 
@@ -719,7 +719,7 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t           thread_id,
                                         etcpal_socket_t*           socket)
 {
   if (!SACN_ASSERT_VERIFY(ip_type == kEtcPalIpTypeV4 || ip_type == kEtcPalIpTypeV6) ||
-      !SACN_ASSERT_VERIFY(universe >= 1 && ((universe <= 63999) || (universe == SACN_DISCOVERY_UNIVERSE))) ||
+      !SACN_ASSERT_VERIFY(universe >= 1 && ((universe <= 63999) || (universe == kSacnDiscoveryUniverse))) ||
       !SACN_ASSERT_VERIFY(netints) || !SACN_ASSERT_VERIFY(num_netints > 0) || !SACN_ASSERT_VERIFY(socket))
   {
     return kEtcPalErrSys;
@@ -738,7 +738,7 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t           thread_id,
 
   EtcPalSockAddr universe_mcast_addr;
   sacn_get_mcast_addr(ip_type, universe, &universe_mcast_addr.ip);
-  universe_mcast_addr.port = SACN_PORT;
+  universe_mcast_addr.port = kSacnPort;
 
   // Find or create a shared socket.
   SocketRef* ref = NULL;
@@ -1103,7 +1103,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
 
       EtcPalMsgHdr msg = {{0}};
       msg.buf          = recv_thread_context->recv_buf;
-      msg.buflen       = SACN_MTU;
+      msg.buflen       = kSacnMtu;
       msg.control      = control_buf;
       msg.controllen   = ETCPAL_MAX_CONTROL_SIZE_PKTINFO;
 
@@ -1112,7 +1112,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
       {
         if (msg.flags & ETCPAL_MSG_TRUNC)
         {
-          recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than SACN_MTU.
+          recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than kSacnMtu.
         }
         else
         {

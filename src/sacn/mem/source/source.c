@@ -78,7 +78,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->handle = handle;
 
     // Initialize the universe discovery send buffer.
-    memset(source->universe_discovery_send_buf, 0, SACN_UNIVERSE_DISCOVERY_PACKET_MTU);
+    memset(source->universe_discovery_send_buf, 0, kSacnUniverseDiscoveryPacketMtu);
 
     int written = 0;
     written += pack_sacn_root_layer(source->universe_discovery_send_buf, SACN_UNIVERSE_DISCOVERY_HEADER_SIZE, true,
@@ -93,14 +93,14 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     memcpy(source->name, config->name, strlen(config->name));
     source->terminating          = false;
     source->num_active_universes = 0;
-    etcpal_timer_start(&source->universe_discovery_timer, SACN_UNIVERSE_DISCOVERY_INTERVAL);
+    etcpal_timer_start(&source->universe_discovery_timer, kSacnUniverseDiscoveryInterval);
     source->process_manually        = config->manually_process_source;
     source->ip_supported            = config->ip_supported;
     source->keep_alive_interval     = config->keep_alive_interval;
     source->pap_keep_alive_interval = config->pap_keep_alive_interval;
     source->universe_count_max      = config->universe_count_max;
 
-    etcpal_timer_start(&source->stats_log_timer, SACN_STATS_LOG_INTERVAL);
+    etcpal_timer_start(&source->stats_log_timer, kSacnStatsLogInterval);
     source->total_tick_count  = 0;
     source->failed_tick_count = 0;
 
