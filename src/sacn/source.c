@@ -752,12 +752,6 @@ etcpal_error_t sacn_source_send_now(sacn_source_t  handle,
 
       if (result == kEtcPalErrOk)
       {
-        if (universe_state->termination_state == kTerminatingAndRemoving)
-          result = kEtcPalErrNotFound;
-      }
-
-      if (result == kEtcPalErrOk)
-      {
         // Initialize send buffer
         uint8_t send_buf[SACN_DATA_PACKET_MTU];
         init_sacn_data_send_buf(send_buf, start_code, &source_state->cid, source_state->name, universe_state->priority,
