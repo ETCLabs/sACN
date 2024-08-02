@@ -96,7 +96,7 @@
 #endif
 
 /* Assertion failure handler */
-bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, const int line);
+bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, int line);
 
 /**
  * @brief The assertion handler used by the sACN library.
