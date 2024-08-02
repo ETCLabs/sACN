@@ -34,10 +34,8 @@ if(NOT COMPILING_AS_OSS)
 
   if(NOT HAS_PARENT)  # Only set up quality gates when building standalone
     include(${CMAKE_TOOLS_MODULES}/QualityGateHelpers.cmake)
-
     setup_standalone_compile()
-    setup_clang_format()
-
+    setup_clang_format(${SACN_ROOT})
     # TODO: setup_clang_tidy()
     setup_address_sanitizer()
     setup_memory_sanitizer()

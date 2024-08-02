@@ -119,8 +119,9 @@ typedef struct SacnRecvMergedData
  * merged result.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle, const SacnRecvMergedData* merged_data,
-                                                    void* context);
+typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t     handle,
+                                                    const SacnRecvMergedData* merged_data,
+                                                    void*                     context);
 
 /**
  * @brief Notify that a non-data packet has been received.
@@ -143,9 +144,11 @@ typedef void (*SacnMergeReceiverMergedDataCallback)(sacn_merge_receiver_t handle
  * of the currently configured footprint.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t receiver_handle,
-                                                const EtcPalSockAddr* source_addr, const SacnRemoteSource* source_info,
-                                                const SacnRecvUniverseData* universe_data, void* context);
+typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t       receiver_handle,
+                                                const EtcPalSockAddr*       source_addr,
+                                                const SacnRemoteSource*     source_info,
+                                                const SacnRecvUniverseData* universe_data,
+                                                void*                       context);
 
 /**
  * @brief Notify that one or more sources have entered a source loss state.
@@ -162,9 +165,11 @@ typedef void (*SacnMergeReceiverNonDmxCallback)(sacn_merge_receiver_t receiver_h
  * @param[in] num_lost_sources Size of the lost_sources array.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverSourcesLostCallback)(sacn_merge_receiver_t handle, uint16_t universe,
-                                                     const SacnLostSource* lost_sources, size_t num_lost_sources,
-                                                     void* context);
+typedef void (*SacnMergeReceiverSourcesLostCallback)(sacn_merge_receiver_t handle,
+                                                     uint16_t              universe,
+                                                     const SacnLostSource* lost_sources,
+                                                     size_t                num_lost_sources,
+                                                     void*                 context);
 
 /**
  * @brief Notify that a merge receiver's sampling period has begun.
@@ -176,8 +181,9 @@ typedef void (*SacnMergeReceiverSourcesLostCallback)(sacn_merge_receiver_t handl
  * @param[in] universe The universe this merge receiver is monitoring.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverSamplingPeriodStartedCallback)(sacn_merge_receiver_t handle, uint16_t universe,
-                                                               void* context);
+typedef void (*SacnMergeReceiverSamplingPeriodStartedCallback)(sacn_merge_receiver_t handle,
+                                                               uint16_t              universe,
+                                                               void*                 context);
 
 /**
  * @brief Notify that a merge receiver's sampling period has ended.
@@ -194,8 +200,9 @@ typedef void (*SacnMergeReceiverSamplingPeriodStartedCallback)(sacn_merge_receiv
  * @param[in] universe The universe this merge receiver is monitoring.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverSamplingPeriodEndedCallback)(sacn_merge_receiver_t handle, uint16_t universe,
-                                                             void* context);
+typedef void (*SacnMergeReceiverSamplingPeriodEndedCallback)(sacn_merge_receiver_t handle,
+                                                             uint16_t              universe,
+                                                             void*                 context);
 
 /**
  * @brief Notify that a source has stopped transmission of per-address priority packets.
@@ -212,8 +219,10 @@ typedef void (*SacnMergeReceiverSamplingPeriodEndedCallback)(sacn_merge_receiver
  *                   priority.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverSourcePapLostCallback)(sacn_merge_receiver_t handle, uint16_t universe,
-                                                       const SacnRemoteSource* source, void* context);
+typedef void (*SacnMergeReceiverSourcePapLostCallback)(sacn_merge_receiver_t   handle,
+                                                       uint16_t                universe,
+                                                       const SacnRemoteSource* source,
+                                                       void*                   context);
 
 /**
  * @brief Notify that more than the configured maximum number of sources are currently sending on
@@ -225,19 +234,20 @@ typedef void (*SacnMergeReceiverSourcePapLostCallback)(sacn_merge_receiver_t han
  * @param[in] universe The universe this merge receiver is monitoring.
  * @param[in] context Context pointer that was given at the creation of the merge receiver instance.
  */
-typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(sacn_merge_receiver_t handle, uint16_t universe,
-                                                             void* context);
+typedef void (*SacnMergeReceiverSourceLimitExceededCallback)(sacn_merge_receiver_t handle,
+                                                             uint16_t              universe,
+                                                             void*                 context);
 
 /** A set of callback functions that the library uses to notify the application about sACN events. */
 typedef struct SacnMergeReceiverCallbacks
 {
-  SacnMergeReceiverMergedDataCallback universe_data;                      /**< Required */
-  SacnMergeReceiverNonDmxCallback universe_non_dmx;                       /**< Optional */
-  SacnMergeReceiverSourcesLostCallback sources_lost;                      /**< Optional */
+  SacnMergeReceiverMergedDataCallback            universe_data;           /**< Required */
+  SacnMergeReceiverNonDmxCallback                universe_non_dmx;        /**< Optional */
+  SacnMergeReceiverSourcesLostCallback           sources_lost;            /**< Optional */
   SacnMergeReceiverSamplingPeriodStartedCallback sampling_period_started; /**< Optional */
-  SacnMergeReceiverSamplingPeriodEndedCallback sampling_period_ended;     /**< Optional */
-  SacnMergeReceiverSourcePapLostCallback source_pap_lost;                 /**< Optional */
-  SacnMergeReceiverSourceLimitExceededCallback source_limit_exceeded;     /**< Optional */
+  SacnMergeReceiverSamplingPeriodEndedCallback   sampling_period_ended;   /**< Optional */
+  SacnMergeReceiverSourcePapLostCallback         source_pap_lost;         /**< Optional */
+  SacnMergeReceiverSourceLimitExceededCallback   source_limit_exceeded;   /**< Optional */
   void* callback_context; /**< (optional) Pointer to opaque data passed back with each callback. */
 } SacnMergeReceiverCallbacks;
 
@@ -271,9 +281,10 @@ typedef struct SacnMergeReceiverConfig
 } SacnMergeReceiverConfig;
 
 /** A default-value initializer for an SacnMergeReceiverConfig struct. */
-#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                                                 \
-  {                                                                                                             \
-    0, {NULL, NULL, NULL, NULL}, {1, SACN_DMX_MERGER_MAX_SLOTS}, SACN_RECEIVER_INFINITE_SOURCES, true, kSacnIpV4AndIpV6 \
+#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                                        \
+  {                                                                                                    \
+    0, {NULL, NULL, NULL, NULL}, {1, SACN_DMX_MERGER_MAX_SLOTS}, SACN_RECEIVER_INFINITE_SOURCES, true, \
+        kSacnIpV4AndIpV6                                                                               \
   }
 
 /** A set of network interfaces for a particular merge receiver. */
@@ -310,24 +321,29 @@ typedef struct SacnMergeReceiverSource
 
 void sacn_merge_receiver_config_init(SacnMergeReceiverConfig* config);
 
-etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config, sacn_merge_receiver_t* handle,
-                                          const SacnNetintConfig* netint_config);
+etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
+                                          sacn_merge_receiver_t*         handle,
+                                          const SacnNetintConfig*        netint_config);
 etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle);
 etcpal_error_t sacn_merge_receiver_get_universe(sacn_merge_receiver_t handle, uint16_t* universe_id);
 etcpal_error_t sacn_merge_receiver_get_footprint(sacn_merge_receiver_t handle, SacnRecvUniverseSubrange* footprint);
 etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle, uint16_t new_universe_id);
-etcpal_error_t sacn_merge_receiver_change_footprint(sacn_merge_receiver_t handle,
+etcpal_error_t sacn_merge_receiver_change_footprint(sacn_merge_receiver_t           handle,
                                                     const SacnRecvUniverseSubrange* new_footprint);
-etcpal_error_t sacn_merge_receiver_change_universe_and_footprint(sacn_merge_receiver_t handle, uint16_t new_universe_id,
+etcpal_error_t sacn_merge_receiver_change_universe_and_footprint(sacn_merge_receiver_t           handle,
+                                                                 uint16_t                        new_universe_id,
                                                                  const SacnRecvUniverseSubrange* new_footprint);
 etcpal_error_t sacn_merge_receiver_reset_networking(const SacnNetintConfig* sys_netint_config);
 etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(
-    const SacnNetintConfig* sys_netint_config, const SacnMergeReceiverNetintList* per_receiver_netint_lists,
-    size_t num_per_receiver_netint_lists);
-size_t sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle, EtcPalMcastNetintId* netints,
-                                                  size_t netints_size);
-etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t merge_receiver_handle,
-                                              sacn_remote_source_t source_handle, SacnMergeReceiverSource* source_info);
+    const SacnNetintConfig*            sys_netint_config,
+    const SacnMergeReceiverNetintList* per_receiver_netint_lists,
+    size_t                             num_per_receiver_netint_lists);
+size_t         sacn_merge_receiver_get_network_interfaces(sacn_merge_receiver_t handle,
+                                                          EtcPalMcastNetintId*  netints,
+                                                          size_t                netints_size);
+etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t    merge_receiver_handle,
+                                              sacn_remote_source_t     source_handle,
+                                              SacnMergeReceiverSource* source_info);
 
 #ifdef __cplusplus
 }

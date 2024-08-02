@@ -42,13 +42,13 @@
 #if SACN_DYNAMIC_MEM
 
 /* Macros for dynamic allocation. */
-#define ALLOC_MERGE_RECEIVER_SOURCE() malloc(sizeof(SacnMergeReceiverInternalSource))
+#define ALLOC_MERGE_RECEIVER_SOURCE()   malloc(sizeof(SacnMergeReceiverInternalSource))
 #define FREE_MERGE_RECEIVER_SOURCE(ptr) free(ptr)
 
 #else  // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
-#define ALLOC_MERGE_RECEIVER_SOURCE() etcpal_mempool_alloc(sacn_pool_mergerecv_sources)
+#define ALLOC_MERGE_RECEIVER_SOURCE()   etcpal_mempool_alloc(sacn_pool_mergerecv_sources)
 #define FREE_MERGE_RECEIVER_SOURCE(ptr) etcpal_mempool_free(sacn_pool_mergerecv_sources, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
@@ -80,8 +80,10 @@ etcpal_error_t init_merge_receiver_sources(void)
 }
 
 // Needs lock
-etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, const EtcPalSockAddr* addr,
-                                              const SacnRemoteSource* remote_source, bool sampling,
+etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver*          merge_receiver,
+                                              const EtcPalSockAddr*       addr,
+                                              const SacnRemoteSource*     remote_source,
+                                              bool                        sampling,
                                               const SacnRecvUniverseData* universe_data)
 {
   if (!SACN_ASSERT_VERIFY(merge_receiver) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(remote_source) ||
@@ -95,12 +97,12 @@ etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver,
   SacnMergeReceiverInternalSource* src = ALLOC_MERGE_RECEIVER_SOURCE();
   if (src)
   {
-    src->handle = remote_source->handle;
+    src->handle   = remote_source->handle;
     src->sampling = sampling;
 
     // The call below will set these to true if their respective start code is detected
     src->per_address_priorities_active = false;
-    src->levels_active = false;
+    src->levels_active                 = false;
 
     update_merge_receiver_source_info(src, addr, remote_source, universe_data);
 
@@ -114,7 +116,8 @@ etcpal_error_t add_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver,
 }
 
 // Needs lock
-etcpal_error_t lookup_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_remote_source_t source_handle,
+etcpal_error_t lookup_merge_receiver_source(SacnMergeReceiver*                merge_receiver,
+                                            sacn_remote_source_t              source_handle,
                                             SacnMergeReceiverInternalSource** source)
 {
   if (!SACN_ASSERT_VERIFY(merge_receiver) || !SACN_ASSERT_VERIFY(source_handle != SACN_REMOTE_SOURCE_INVALID) ||
@@ -149,8 +152,10 @@ void clear_sacn_merge_receiver_sources(SacnMergeReceiver* merge_receiver)
 
 // Needs lock
 // This function is called when a source is added and when a packet is received.
-void update_merge_receiver_source_info(SacnMergeReceiverInternalSource* info, const EtcPalSockAddr* addr,
-                                       const SacnRemoteSource* remote_source, const SacnRecvUniverseData* universe_data)
+void update_merge_receiver_source_info(SacnMergeReceiverInternalSource* info,
+                                       const EtcPalSockAddr*            addr,
+                                       const SacnRemoteSource*          remote_source,
+                                       const SacnRecvUniverseData*      universe_data)
 {
   if (!SACN_ASSERT_VERIFY(info) || !SACN_ASSERT_VERIFY(addr) || !SACN_ASSERT_VERIFY(remote_source) ||
       !SACN_ASSERT_VERIFY(universe_data))

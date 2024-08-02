@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 etcpal_error_t init_source_limit_exceeded_buf(unsigned int num_threads);
-void deinit_source_limit_exceeded_buf(void);
+void           deinit_source_limit_exceeded_buf(void);
 
 // This is processed from the context of receiving data, so there is only one per thread.
 SourceLimitExceededNotification* get_source_limit_exceeded(sacn_thread_id_t thread_id);

@@ -58,11 +58,11 @@ MergeReceiverMergedDataNotification* get_merged_data(sacn_thread_id_t thread_id)
   if (thread_id < sacn_mem_get_num_threads())
   {
     MergeReceiverMergedDataNotification* to_return = &sacn_pool_merged_data[thread_id];
-    to_return->callback = NULL;
-    to_return->handle = SACN_MERGE_RECEIVER_INVALID;
-    to_return->universe = 0;
-    to_return->slot_range.start_address = 1;
-    to_return->slot_range.address_count = SACN_DMX_MERGER_MAX_SLOTS;
+    to_return->callback                            = NULL;
+    to_return->handle                              = SACN_MERGE_RECEIVER_INVALID;
+    to_return->universe                            = 0;
+    to_return->slot_range.start_address            = 1;
+    to_return->slot_range.address_count            = SACN_DMX_MERGER_MAX_SLOTS;
     memset(to_return->levels, 0, SACN_DMX_MERGER_MAX_SLOTS);
     memset(to_return->priorities, 0, SACN_DMX_MERGER_MAX_SLOTS);
     memset(to_return->owners, 0, SACN_DMX_MERGER_MAX_SLOTS * sizeof(sacn_remote_source_t));
@@ -89,7 +89,7 @@ bool add_active_sources(MergeReceiverMergedDataNotification* notification, SacnM
   EtcPalRbIter iter;
   etcpal_rbiter_init(&iter);
   for (SacnMergeReceiverInternalSource* source = etcpal_rbiter_first(&iter, &merge_receiver->sources); source;
-       source = etcpal_rbiter_next(&iter))
+       source                                  = etcpal_rbiter_next(&iter))
   {
     if (!source->sampling && source->levels_active)
     {

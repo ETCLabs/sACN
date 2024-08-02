@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 etcpal_error_t init_status_lists_buf(unsigned int num_threads);
-void deinit_status_lists_buf(void);
+void           deinit_status_lists_buf(void);
 
 SacnSourceStatusLists* get_status_lists(sacn_thread_id_t thread_id);
 

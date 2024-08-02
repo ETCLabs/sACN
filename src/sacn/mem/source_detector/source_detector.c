@@ -42,8 +42,9 @@ static SacnSourceDetector source_detector;
 
 /*************************** Function definitions ****************************/
 
-etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, const SacnNetintConfig* netint_config,
-                                        SacnSourceDetector** detector_state)
+etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config,
+                                        const SacnNetintConfig*         netint_config,
+                                        SacnSourceDetector**            detector_state)
 {
   if (!SACN_ASSERT_VERIFY(config) || !SACN_ASSERT_VERIFY(detector_state))
     return kEtcPalErrSys;
@@ -80,10 +81,10 @@ etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config, 
   {
     source_detector.suppress_source_limit_exceeded_notification = false;
 
-    source_detector.callbacks = config->callbacks;
-    source_detector.source_count_max = config->source_count_max;
+    source_detector.callbacks                = config->callbacks;
+    source_detector.source_count_max         = config->source_count_max;
     source_detector.universes_per_source_max = config->universes_per_source_max;
-    source_detector.ip_supported = config->ip_supported;
+    source_detector.ip_supported             = config->ip_supported;
 
     source_detector.created = true;
 
@@ -119,7 +120,7 @@ etcpal_error_t init_source_detector(void)
   source_detector.created = false;
 
 #if SACN_DYNAMIC_MEM
-  source_detector.netints.netints = NULL;
+  source_detector.netints.netints          = NULL;
   source_detector.netints.netints_capacity = 0;
 #endif  // SACN_DYNAMIC_MEM
   source_detector.netints.num_netints = 0;

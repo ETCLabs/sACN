@@ -21,6 +21,6 @@
 
 int main(void)
 {
-  SACNSourceExample sac_source_example;   // this class does all of the work
+  SACNSourceExample sac_source_example;  // this class does all of the work
   return 0;
 }

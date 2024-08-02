@@ -33,7 +33,7 @@ extern "C" {
 #endif
 
 etcpal_error_t sacn_source_init(void);
-void sacn_source_deinit(void);
+void           sacn_source_deinit(void);
 
 #ifdef __cplusplus
 }

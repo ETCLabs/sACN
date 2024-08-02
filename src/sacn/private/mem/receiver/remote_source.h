@@ -30,12 +30,12 @@ extern "C" {
 #endif
 
 etcpal_error_t init_remote_sources(void);
-void deinit_remote_sources(void);
+void           deinit_remote_sources(void);
 
-etcpal_error_t add_remote_source_handle(const EtcPalUuid* cid, sacn_remote_source_t* handle);
+etcpal_error_t       add_remote_source_handle(const EtcPalUuid* cid, sacn_remote_source_t* handle);
 sacn_remote_source_t get_remote_source_handle(const EtcPalUuid* source_cid);
-const EtcPalUuid* get_remote_source_cid(sacn_remote_source_t handle);
-etcpal_error_t remove_remote_source_handle(sacn_remote_source_t handle);
+const EtcPalUuid*    get_remote_source_cid(sacn_remote_source_t handle);
+etcpal_error_t       remove_remote_source_handle(sacn_remote_source_t handle);
 
 int remote_source_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b);
 

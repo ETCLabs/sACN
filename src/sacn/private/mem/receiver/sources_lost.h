@@ -30,13 +30,16 @@ extern "C" {
 #endif
 
 etcpal_error_t init_sources_lost_bufs(unsigned int num_threads);
-void deinit_sources_lost_bufs(void);
+void           deinit_sources_lost_bufs(void);
 
 // This is processed in the periodic timeout processing, so there are multiple per thread.
 SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, size_t size);
 
-bool add_lost_source(SourcesLostNotification* notification, sacn_remote_source_t handle, const EtcPalUuid* cid,
-                     const char* name, bool terminated);
+bool add_lost_source(SourcesLostNotification* notification,
+                     sacn_remote_source_t     handle,
+                     const EtcPalUuid*        cid,
+                     const char*              name,
+                     bool                     terminated);
 
 #ifdef __cplusplus
 }

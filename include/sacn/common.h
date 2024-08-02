@@ -57,7 +57,7 @@ extern "C" {
 /** A source discovered on an sACN network that has a CID - used by Receiver and Merge Receiver. */
 typedef uint16_t sacn_remote_source_t;
 /** An invalid remote source handle value. */
-#define SACN_REMOTE_SOURCE_INVALID ((sacn_remote_source_t)-1)
+#define SACN_REMOTE_SOURCE_INVALID ((sacn_remote_source_t) - 1)
 
 /** The DMX start code. */
 #define SACN_STARTCODE_DMX 0x00u
@@ -116,10 +116,10 @@ typedef struct SacnNetintConfig
   }
 
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConfig* sys_netint_config);
-void sacn_deinit(void);
+void           sacn_deinit(void);
 
 sacn_remote_source_t sacn_get_remote_source_handle(const EtcPalUuid* source_cid);
-etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, EtcPalUuid* source_cid);
+etcpal_error_t       sacn_get_remote_source_cid(sacn_remote_source_t source_handle, EtcPalUuid* source_cid);
 
 #ifdef __cplusplus
 }

@@ -73,24 +73,24 @@ typedef int sacn_dmx_merger_t;
 typedef uint16_t sacn_dmx_merger_source_t;
 
 /** An invalid DMX merger source handle value. */
-#define SACN_DMX_MERGER_SOURCE_INVALID ((sacn_dmx_merger_source_t)-1)
+#define SACN_DMX_MERGER_SOURCE_INVALID ((sacn_dmx_merger_source_t) - 1)
 
 /** A set of configuration information for a merger instance. */
 typedef struct SacnDmxMergerConfig
 {
   /** This is always required to be non-NULL.
-      Buffer of #SACN_DMX_MERGER_MAX_SLOTS levels that this library keeps up to date as it merges.  Slots that are not sourced
-      are set to 0.
-      Memory is owned by the application and must remain allocated until the merger is destroyed. While this merger
-      exists, the application must not modify this buffer directly!  Doing so would affect the results of the merge.*/
+      Buffer of #SACN_DMX_MERGER_MAX_SLOTS levels that this library keeps up to date as it merges.  Slots that are not
+     sourced are set to 0. Memory is owned by the application and must remain allocated until the merger is destroyed.
+     While this merger exists, the application must not modify this buffer directly!  Doing so would affect the results
+     of the merge.*/
   uint8_t* levels;
 
   /** This is only allowed to be NULL if and only if #SACN_DMX_MERGER_DISABLE_INTERNAL_PAP_BUFFER is 0.
-      Buffer of #SACN_DMX_MERGER_MAX_SLOTS per-address priorities for each winning slot. This is used if the merge results need
-      to be sent over sACN. Otherwise this can just be set to NULL. If a source with a universe priority of 0 wins, that
-      priority is converted to 1. If there is no winner for a slot, then a per-address priority of 0 is used to show
-      that there is no source for that slot.
-      Memory is owned by the application and must remain allocated until the merger is destroyed.*/
+      Buffer of #SACN_DMX_MERGER_MAX_SLOTS per-address priorities for each winning slot. This is used if the merge
+     results need to be sent over sACN. Otherwise this can just be set to NULL. If a source with a universe priority of
+     0 wins, that priority is converted to 1. If there is no winner for a slot, then a per-address priority of 0 is used
+     to show that there is no source for that slot. Memory is owned by the application and must remain allocated until
+     the merger is destroyed.*/
   uint8_t* per_address_priorities;
 
   /** This is allowed to be NULL.
@@ -174,16 +174,21 @@ typedef struct SacnDmxMergerSource
 etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dmx_merger_t* handle);
 etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle);
 
-etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t* source_id);
-etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source);
+etcpal_error_t             sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t* source_id);
+etcpal_error_t             sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source);
 const SacnDmxMergerSource* sacn_dmx_merger_get_source(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source);
 
-etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
-                                             const uint8_t* new_levels, size_t new_levels_count);
-etcpal_error_t sacn_dmx_merger_update_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source, const uint8_t* pap,
-                                          size_t pap_count);
-etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source,
-                                                        uint8_t universe_priority);
+etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t        merger,
+                                             sacn_dmx_merger_source_t source,
+                                             const uint8_t*           new_levels,
+                                             size_t                   new_levels_count);
+etcpal_error_t sacn_dmx_merger_update_pap(sacn_dmx_merger_t        merger,
+                                          sacn_dmx_merger_source_t source,
+                                          const uint8_t*           pap,
+                                          size_t                   pap_count);
+etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t        merger,
+                                                        sacn_dmx_merger_source_t source,
+                                                        uint8_t                  universe_priority);
 etcpal_error_t sacn_dmx_merger_remove_pap(sacn_dmx_merger_t merger, sacn_dmx_merger_source_t source);
 
 #ifdef __cplusplus

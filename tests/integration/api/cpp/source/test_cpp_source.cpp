@@ -53,23 +53,23 @@ static const std::deque<SacnMcastInterface> kTestV4Netints = {{{kEtcPalIpTypeV4,
                                                               {{kEtcPalIpTypeV4, 6u}, kEtcPalErrOk},
                                                               {{kEtcPalIpTypeV4, 7u}, kEtcPalErrOk}};
 
-static constexpr uint16_t kTestUniverse = 123u;
-static const std::string kTestUniverseIPv4Multicast = "239.255.0.123";  // can't use 'constexpr' with std::string
-static const std::string kTestUniverseIPv6Multicast = "ff18::8300:7b";
-static constexpr uint16_t kTestUniverse2 = 456u;
+static constexpr uint16_t kTestUniverse              = 123u;
+static const std::string  kTestUniverseIPv4Multicast = "239.255.0.123";  // can't use 'constexpr' with std::string
+static const std::string  kTestUniverseIPv6Multicast = "ff18::8300:7b";
+static constexpr uint16_t kTestUniverse2             = 456u;
 
 static etcpal_socket_t next_socket = (etcpal_socket_t)0;
 
 typedef struct FakeNetworkInfo
 {
-  unsigned int index;
+  unsigned int    index;
   etcpal_iptype_t type;
-  std::string addr;
-  std::string mask_v4;
-  unsigned int mask_v6;
-  std::string mac;
-  std::string name;
-  bool is_default;
+  std::string     addr;
+  std::string     mask_v4;
+  unsigned int    mask_v6;
+  std::string     mac;
+  std::string     name;
+  bool            is_default;
 } FakeNetworkInfo;
 
 static const std::vector<FakeNetworkInfo> kFakeNetworksInfo = {
@@ -85,7 +85,7 @@ static const std::vector<FakeNetworkInfo> kFakeNetworksInfo = {
 typedef struct UnicastInfo
 {
   std::string addr_string;
-  bool found;
+  bool        found;
 } UnicastInfo;
 
 class TestSourceBase : public ::testing::Test
@@ -150,7 +150,7 @@ protected:
     for (auto fake_network_info : kFakeNetworksInfo)
     {
       fake_netint.index = fake_network_info.index;
-      fake_netint.addr = etcpal::IpAddr::FromString(fake_network_info.addr).get();
+      fake_netint.addr  = etcpal::IpAddr::FromString(fake_network_info.addr).get();
       if (fake_network_info.type == kEtcPalIpTypeV4)
       {
         fake_netint.mask = etcpal::IpAddr::FromString(fake_network_info.mask_v4).get();
@@ -173,10 +173,7 @@ protected:
     ipv6_multicast_packet_sent_ = false;
   }
 
-  void Start()
-  {
-    EXPECT_EQ(source_.Startup(settings_).code(), kEtcPalErrOk);
-  }
+  void Start() { EXPECT_EQ(source_.Startup(settings_).code(), kEtcPalErrOk); }
 
   void StartAndAddUniverse()
   {
@@ -208,22 +205,22 @@ protected:
   }
 
   static std::vector<EtcPalNetintInfo> fake_netints_;
-  static std::vector<UnicastInfo> fake_unicasts_info_;
-  static Source source_;
-  static Source::Settings settings_;
-  static bool ipv4_multicast_packet_sent_;
-  static bool ipv6_multicast_packet_sent_;
+  static std::vector<UnicastInfo>      fake_unicasts_info_;
+  static Source                        source_;
+  static Source::Settings              settings_;
+  static bool                          ipv4_multicast_packet_sent_;
+  static bool                          ipv6_multicast_packet_sent_;
 };
 
 std::vector<EtcPalNetintInfo> TestSourceBase::fake_netints_;
-std::vector<UnicastInfo> TestSourceBase::fake_unicasts_info_ = {
+std::vector<UnicastInfo>      TestSourceBase::fake_unicasts_info_ = {
     {"10.101.20.1", false},
     {"10.101.20.2", false},
 };
-Source TestSourceBase::source_;
+Source           TestSourceBase::source_;
 Source::Settings TestSourceBase::settings_(etcpal::Uuid::V4(), "Test Source");
-bool TestSourceBase::ipv4_multicast_packet_sent_;
-bool TestSourceBase::ipv6_multicast_packet_sent_;
+bool             TestSourceBase::ipv4_multicast_packet_sent_;
+bool             TestSourceBase::ipv6_multicast_packet_sent_;
 
 /*===========================================================================*/
 
@@ -243,7 +240,8 @@ protected:
     EXPECT_TRUE(source.ResetNetworking(vect).IsOk());
   }
 
-  void ResetNetworkingPerUniverse(Source& source, const std::deque<SacnMcastInterface>& sys_netints,
+  void ResetNetworkingPerUniverse(Source&                                  source,
+                                  const std::deque<SacnMcastInterface>&    sys_netints,
                                   std::vector<Source::UniverseNetintList>& netint_lists)
   {
     std::vector<SacnMcastInterface> vect(sys_netints.begin(), sys_netints.end());
@@ -312,7 +310,7 @@ TEST_F(TestSource, UniverseRemovalUsesOldNetintsAsAllowedByPerUniverseReset)
 
   // Track number of terminations on multicast.
   static int num_terminations_sent = 0;
-  etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void*, size_t, int, const EtcPalSockAddr* dest_addr) {
+  etcpal_sendto_fake.custom_fake   = [](etcpal_socket_t, const void*, size_t, int, const EtcPalSockAddr* dest_addr) {
     EtcPalIpAddr ip;
     sacn_get_mcast_addr(kEtcPalIpTypeV4, kTestUniverse, &ip);
 
@@ -372,7 +370,7 @@ protected:
 
     ASSERT_EQ(Init().code(), kEtcPalErrOk);
   }
-  
+
   void StartAndRunSource(const sacn_ip_support_t ip_supported)
   {
     settings_.ip_supported = ip_supported;
@@ -507,8 +505,7 @@ protected:
 
     ResetFoundInfo();
 
-    etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void* message, size_t, int,
-                                        const EtcPalSockAddr*) {
+    etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void* message, size_t, int, const EtcPalSockAddr*) {
       etcpal::Uuid dest_cid(&((uint8_t*)message)[kDmxCidOffset]);
       if (settings_.cid != dest_cid)
       {
@@ -521,10 +518,7 @@ protected:
     ASSERT_EQ(Init().code(), kEtcPalErrOk);
   }
 
-  void ResetFoundInfo()
-  {
-    cid_found_always_ = true;
-  }
+  void ResetFoundInfo() { cid_found_always_ = true; }
 
   void StartAndRunSource()
   {

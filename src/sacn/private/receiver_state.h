@@ -29,21 +29,21 @@ extern "C" {
 #endif
 
 etcpal_error_t sacn_receiver_state_init(void);
-void sacn_receiver_state_deinit(void);
+void           sacn_receiver_state_deinit(void);
 
 sacn_receiver_t get_next_receiver_handle();
-size_t get_receiver_netints(const SacnReceiver* receiver, EtcPalMcastNetintId* netints, size_t netints_size);
-void set_expired_wait(uint32_t wait_ms);
-uint32_t get_expired_wait();
-etcpal_error_t clear_term_sets_and_sources(SacnReceiver* receiver);
-etcpal_error_t assign_receiver_to_thread(SacnReceiver* receiver);
-etcpal_error_t assign_source_detector_to_thread(SacnSourceDetector* detector);
-void remove_receiver_from_thread(SacnReceiver* receiver);
-void remove_source_detector_from_thread(SacnSourceDetector* detector);
-etcpal_error_t add_receiver_sockets(SacnReceiver* receiver);
-etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector);
-void begin_sampling_period(SacnReceiver* receiver);
-void remove_receiver_sockets(SacnReceiver* receiver, socket_cleanup_behavior_t cleanup_behavior);
+size_t          get_receiver_netints(const SacnReceiver* receiver, EtcPalMcastNetintId* netints, size_t netints_size);
+void            set_expired_wait(uint32_t wait_ms);
+uint32_t        get_expired_wait();
+etcpal_error_t  clear_term_sets_and_sources(SacnReceiver* receiver);
+etcpal_error_t  assign_receiver_to_thread(SacnReceiver* receiver);
+etcpal_error_t  assign_source_detector_to_thread(SacnSourceDetector* detector);
+void            remove_receiver_from_thread(SacnReceiver* receiver);
+void            remove_source_detector_from_thread(SacnSourceDetector* detector);
+etcpal_error_t  add_receiver_sockets(SacnReceiver* receiver);
+etcpal_error_t  add_source_detector_sockets(SacnSourceDetector* detector);
+void            begin_sampling_period(SacnReceiver* receiver);
+void            remove_receiver_sockets(SacnReceiver* receiver, socket_cleanup_behavior_t cleanup_behavior);
 void remove_source_detector_sockets(SacnSourceDetector* detector, socket_cleanup_behavior_t cleanup_behavior);
 void remove_all_receiver_sockets(socket_cleanup_behavior_t cleanup_behavior);
 void read_network_and_process(SacnRecvThreadContext* context);

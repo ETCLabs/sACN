@@ -39,19 +39,25 @@ extern "C" {
 // - Each source also ends up in only one termination set. Therefore, MAX_TERM_SET_SOURCES = TOTAL_MAX_SOURCES.
 // - There can be up to a termination set for each source. Therefore, MAX_TERM_SETS = MAX_TERM_SET_SOURCES.
 // - Each source goes into two rbtrees. Nothing else needs rbtrees. Therefore, MAX_RB_NODES = MAX_TERM_SET_SOURCES * 2.
-#define SACN_MAX_TERM_SET_SOURCES (SACN_RECEIVER_TOTAL_MAX_SOURCES)
-#define SACN_MAX_TERM_SETS SACN_MAX_TERM_SET_SOURCES
+#define SACN_MAX_TERM_SET_SOURCES     (SACN_RECEIVER_TOTAL_MAX_SOURCES)
+#define SACN_MAX_TERM_SETS            SACN_MAX_TERM_SET_SOURCES
 #define SACN_SOURCE_LOSS_MAX_RB_NODES (SACN_MAX_TERM_SET_SOURCES * 2)
 
 etcpal_error_t sacn_source_loss_init(void);
-void sacn_source_loss_deinit(void);
+void           sacn_source_loss_deinit(void);
 
-void mark_sources_online(uint16_t universe, const SacnRemoteSourceInternal* online_sources, size_t num_online_sources,
-                         TerminationSet** term_set_list);
-etcpal_error_t mark_sources_offline(uint16_t universe, const SacnLostSourceInternal* offline_sources,
-                                    size_t num_offline_sources, const SacnRemoteSourceInternal* unknown_sources,
-                                    size_t num_unknown_sources, TerminationSet** term_set_list, uint32_t expired_wait);
-void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification* sources_lost);
+void           mark_sources_online(uint16_t                        universe,
+                                   const SacnRemoteSourceInternal* online_sources,
+                                   size_t                          num_online_sources,
+                                   TerminationSet**                term_set_list);
+etcpal_error_t mark_sources_offline(uint16_t                        universe,
+                                    const SacnLostSourceInternal*   offline_sources,
+                                    size_t                          num_offline_sources,
+                                    const SacnRemoteSourceInternal* unknown_sources,
+                                    size_t                          num_unknown_sources,
+                                    TerminationSet**                term_set_list,
+                                    uint32_t                        expired_wait);
+void           get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification* sources_lost);
 
 void clear_term_set_list(TerminationSet* list);
 

@@ -44,13 +44,13 @@
 #if SACN_DYNAMIC_MEM
 
 /* Macros for dynamic allocation. */
-#define ALLOC_TRACKED_SOURCE() malloc(sizeof(SacnTrackedSource))
+#define ALLOC_TRACKED_SOURCE()   malloc(sizeof(SacnTrackedSource))
 #define FREE_TRACKED_SOURCE(ptr) free(ptr)
 
 #else  // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
-#define ALLOC_TRACKED_SOURCE() etcpal_mempool_alloc(sacn_pool_recv_tracked_sources)
+#define ALLOC_TRACKED_SOURCE()   etcpal_mempool_alloc(sacn_pool_recv_tracked_sources)
 #define FREE_TRACKED_SOURCE(ptr) etcpal_mempool_free(sacn_pool_recv_tracked_sources, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
@@ -80,9 +80,13 @@ etcpal_error_t init_tracked_sources(void)
   return res;
 }
 
-etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid* sender_cid, const char* name,
-                                       const EtcPalMcastNetintId* netint, uint8_t seq_num, uint8_t first_start_code,
-                                       SacnTrackedSource** tracked_source_state)
+etcpal_error_t add_sacn_tracked_source(SacnReceiver*              receiver,
+                                       const EtcPalUuid*          sender_cid,
+                                       const char*                name,
+                                       const EtcPalMcastNetintId* netint,
+                                       uint8_t                    seq_num,
+                                       uint8_t                    first_start_code,
+                                       SacnTrackedSource**        tracked_source_state)
 {
   if (!SACN_ASSERT_VERIFY(receiver) || !SACN_ASSERT_VERIFY(sender_cid) || !SACN_ASSERT_VERIFY(name) ||
       !SACN_ASSERT_VERIFY(netint) || !SACN_ASSERT_VERIFY(tracked_source_state))
@@ -94,19 +98,19 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid*
   ETCPAL_UNUSED_ARG(first_start_code);
 #endif
 
-  etcpal_error_t result = kEtcPalErrOk;
-  SacnTrackedSource* src = NULL;
+  etcpal_error_t     result = kEtcPalErrOk;
+  SacnTrackedSource* src    = NULL;
 
   size_t current_number_of_sources = etcpal_rbtree_size(&receiver->sources);
 #if SACN_DYNAMIC_MEM
   size_t max_number_of_sources = receiver->source_count_max;
-  bool infinite_sources = (max_number_of_sources == SACN_RECEIVER_INFINITE_SOURCES);
+  bool   infinite_sources      = (max_number_of_sources == SACN_RECEIVER_INFINITE_SOURCES);
 #else
   size_t max_number_of_sources = ((receiver->source_count_max > SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE) ||
                                   (receiver->source_count_max == SACN_RECEIVER_INFINITE_SOURCES))
                                      ? SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE
                                      : receiver->source_count_max;
-  bool infinite_sources = false;
+  bool   infinite_sources      = false;
 #endif
 
   if (infinite_sources || (current_number_of_sources < max_number_of_sources))
@@ -126,8 +130,8 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver* receiver, const EtcPalUuid*
     src->netint = *netint;
 
     etcpal_timer_start(&src->packet_timer, SACN_SOURCE_LOSS_TIMEOUT);
-    src->seq = seq_num;
-    src->terminated = false;
+    src->seq                          = seq_num;
+    src->terminated                   = false;
     src->dmx_received_since_last_tick = true;
 
 #if SACN_ETC_PRIORITY_EXTENSION

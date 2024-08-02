@@ -38,12 +38,12 @@ using testing::NiceMock;
 using testing::Return;
 
 #if SACN_DYNAMIC_MEM
-#define TestReceiverBase TestCppReceiverBaseDynamic
-#define TestReceiver TestCppReceiverDynamic
+#define TestReceiverBase  TestCppReceiverBaseDynamic
+#define TestReceiver      TestCppReceiverDynamic
 #define TestMergeReceiver TestCppMergeReceiverDynamic
 #else
-#define TestReceiverBase TestCppReceiverBaseStatic
-#define TestReceiver TestCppReceiverStatic
+#define TestReceiverBase  TestCppReceiverBaseStatic
+#define TestReceiver      TestCppReceiverStatic
 #define TestMergeReceiver TestCppMergeReceiverStatic
 #endif
 
@@ -54,24 +54,24 @@ using testing::Return;
 
 using namespace sacn;
 
-static constexpr uint16_t kTestUniverse = 1u;
-static constexpr size_t kCidOffset = 22u;
-static constexpr size_t kOptionsOffset = 112u;
-static constexpr size_t kSlotsOffset = 126u;
+static constexpr uint16_t kTestUniverse  = 1u;
+static constexpr size_t   kCidOffset     = 22u;
+static constexpr size_t   kOptionsOffset = 112u;
+static constexpr size_t   kSlotsOffset   = 126u;
 
 static etcpal_socket_t next_socket = (etcpal_socket_t)0;
 
 typedef struct FakeNetworkInfo
 {
-  unsigned int index;
+  unsigned int    index;
   etcpal_iptype_t type;
-  std::string addr;
-  std::string mask_v4;
-  unsigned int mask_v6;
-  std::string mac;
-  std::string name;
-  bool is_default;
-  bool got_universe_data;
+  std::string     addr;
+  std::string     mask_v4;
+  unsigned int    mask_v6;
+  std::string     mac;
+  std::string     name;
+  bool            is_default;
+  bool            got_universe_data;
 } FakeNetworkInfo;
 
 static std::vector<FakeNetworkInfo> fake_networks_info = {
@@ -82,8 +82,8 @@ static std::vector<FakeNetworkInfo> fake_networks_info = {
 typedef struct UnicastInfo
 {
   etcpal_iptype_t type;
-  std::string addr_string;
-  bool got_universe_data;
+  std::string     addr_string;
+  bool            got_universe_data;
 } UnicastInfo;
 
 std::vector<UnicastInfo> fake_unicasts_info = {
@@ -214,14 +214,16 @@ std::vector<uint8_t> test_pap_data =
 // clang-format on
 
 static bool received_levels_data = false;
-static bool received_pap_data = false;
-static bool is_sampling = false;
+static bool received_pap_data    = false;
+static bool is_sampling          = false;
 
 class TestReceiverNotifyHandler : public Receiver::NotifyHandler
 {
 public:
-  void HandleUniverseData(Receiver::Handle receiver_handle, const etcpal::SockAddr& source_addr,
-                          const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data) override
+  void HandleUniverseData(Receiver::Handle            receiver_handle,
+                          const etcpal::SockAddr&     source_addr,
+                          const SacnRemoteSource&     source_info,
+                          const SacnRecvUniverseData& universe_data) override
   {
     ETCPAL_UNUSED_ARG(receiver_handle);
     ETCPAL_UNUSED_ARG(source_info);
@@ -255,7 +257,8 @@ public:
     }
   }
 
-  void HandleSourcesLost(Receiver::Handle handle, uint16_t universe,
+  void HandleSourcesLost(Receiver::Handle                   handle,
+                         uint16_t                           universe,
                          const std::vector<SacnLostSource>& lost_sources) override
   {
     ETCPAL_UNUSED_ARG(handle);
@@ -283,7 +286,9 @@ class MockMergeReceiverNotifyHandler : public MergeReceiver::NotifyHandler
 public:
   MockMergeReceiverNotifyHandler() = default;
 
-  MOCK_METHOD(void, HandleMergedData, (MergeReceiver::Handle handle, const SacnRecvMergedData& merged_data),
+  MOCK_METHOD(void,
+              HandleMergedData,
+              (MergeReceiver::Handle handle, const SacnRecvMergedData& merged_data),
               (override));
 };
 
@@ -372,13 +377,16 @@ protected:
     is_sampling = false;
   }
 
-  static int FakeReceive(FakeReceiveMode mode, uint8_t index, const std::vector<uint8_t>& data, EtcPalMsgHdr* msg,
-                         const etcpal::Uuid& source_cid = etcpal::Uuid(),
-                         FakeReceiveFlags flags = FakeReceiveFlags::kNoTermination)
+  static int FakeReceive(FakeReceiveMode             mode,
+                         uint8_t                     index,
+                         const std::vector<uint8_t>& data,
+                         EtcPalMsgHdr*               msg,
+                         const etcpal::Uuid&         source_cid = etcpal::Uuid(),
+                         FakeReceiveFlags            flags      = FakeReceiveFlags::kNoTermination)
   {
     EXPECT_NE(msg, nullptr);
     EtcPalSockAddr etcpal_sock_addr;
-    EtcPalIpAddr ip;
+    EtcPalIpAddr   ip;
     if (mode == FakeReceiveMode::kMulticast)
     {
       auto& fake_network_info = fake_networks_info[index];
@@ -389,10 +397,10 @@ protected:
       auto& fake_unicast_info = fake_unicasts_info[index];
       etcpal_string_to_ip(fake_unicast_info.type, fake_unicast_info.addr_string.c_str(), &ip);
     }
-    etcpal_sock_addr.ip = ip;
+    etcpal_sock_addr.ip   = ip;
     etcpal_sock_addr.port = 0;
-    msg->flags = 0;
-    msg->name = etcpal_sock_addr;
+    msg->flags            = 0;
+    msg->name             = etcpal_sock_addr;
 
     char* msg_buf = reinterpret_cast<char*>(msg->buf);
     memcpy(msg_buf, data.data(), data.size());
@@ -429,7 +437,7 @@ protected:
     for (auto fake_network_info : fake_networks_info)
     {
       fake_netint.index = fake_network_info.index;
-      fake_netint.addr = etcpal::IpAddr::FromString(fake_network_info.addr).get();
+      fake_netint.addr  = etcpal::IpAddr::FromString(fake_network_info.addr).get();
       if (fake_network_info.type == kEtcPalIpTypeV4)
       {
         fake_netint.mask = etcpal::IpAddr::FromString(fake_network_info.mask_v4).get();
@@ -449,7 +457,7 @@ protected:
   void ResetNotifyVariables()
   {
     received_levels_data = false;
-    received_pap_data = false;
+    received_pap_data    = false;
     for (auto& fake_network_info : fake_networks_info)
     {
       fake_network_info.got_universe_data = false;
@@ -462,7 +470,7 @@ protected:
 
   void RunThreadCycle(bool increment_sequence_num)
   {
-    sacn_thread_id_t thread_id = 0;
+    sacn_thread_id_t       thread_id           = 0;
     SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread_id);
     read_network_and_process(recv_thread_context);
 
@@ -470,18 +478,18 @@ protected:
     {
       ++seq_num_;
       test_levels_data[SACN_SEQ_OFFSET] = seq_num_;
-      test_pap_data[SACN_SEQ_OFFSET] = seq_num_;
+      test_pap_data[SACN_SEQ_OFFSET]    = seq_num_;
     }
   }
 
   void TearDown() override { Deinit(); }
 
   static std::vector<EtcPalNetintInfo> fake_sys_netints_;
-  static uint8_t seq_num_;
+  static uint8_t                       seq_num_;
 };
 
 std::vector<EtcPalNetintInfo> TestReceiverBase::fake_sys_netints_;
-uint8_t TestReceiverBase::seq_num_ = 0u;
+uint8_t                       TestReceiverBase::seq_num_ = 0u;
 
 class TestReceiver : public TestReceiverBase
 {
@@ -500,8 +508,8 @@ protected:
     TestReceiverBase::TearDown();
   }
 
-  Receiver receiver_;
-  Receiver::Settings receiver_settings_{kTestUniverse};
+  Receiver                  receiver_;
+  Receiver::Settings        receiver_settings_{kTestUniverse};
   TestReceiverNotifyHandler notify_handler_;
 };
 
@@ -522,8 +530,8 @@ protected:
     TestReceiverBase::TearDown();
   }
 
-  MergeReceiver merge_receiver_;
-  MergeReceiver::Settings merge_receiver_settings_{kTestUniverse};
+  MergeReceiver                            merge_receiver_;
+  MergeReceiver::Settings                  merge_receiver_settings_{kTestUniverse};
   NiceMock<MockMergeReceiverNotifyHandler> mock_notify_handler_;
 };
 
@@ -577,7 +585,7 @@ TEST_F(TestReceiver, ReceivePap)
     return FakeReceive(FakeReceiveMode::kMulticast, 0, test_pap_data, msg);
   };
   received_levels_data = false;
-  received_pap_data = false;
+  received_pap_data    = false;
   RunThreadCycle(true);
   EXPECT_FALSE(received_levels_data);
   EXPECT_TRUE(received_pap_data);
@@ -634,7 +642,7 @@ TEST_F(TestReceiver, MulticastAndUnicast)
 TEST_F(TestMergeReceiver, HandlesSameSourceReappearing)
 {
   static constexpr int kNumIterations = 0x10000;  // Cause 16-bit source handles to wrap around
-  static etcpal::Uuid source_cid;
+  static etcpal::Uuid  source_cid;
 
   // Elapse sampling period
   RunThreadCycle(false);
@@ -666,7 +674,7 @@ TEST_F(TestMergeReceiver, HandlesSameSourceReappearing)
 TEST_F(TestMergeReceiver, HandlesManySourcesAppearing)
 {
   static constexpr int kNumIterations = 0x10000;  // Cause 16-bit source handles to wrap around
-  static etcpal::Uuid source_cid;
+  static etcpal::Uuid  source_cid;
 
   // Elapse sampling period
   RunThreadCycle(false);
@@ -698,7 +706,7 @@ TEST_F(TestMergeReceiver, HandlesManySourcesAppearing)
 TEST_F(TestMergeReceiver, MergesInitialPapPacketDuringSampling)
 {
   static const std::vector<uint8_t> kTestLevelData = {255u, 255u, 255u, 255u, 255u, 255u};
-  static const std::vector<uint8_t> kTestPapData = {100u, 100u, 100u, 100u, 100u, 100u};
+  static const std::vector<uint8_t> kTestPapData   = {100u, 100u, 100u, 100u, 100u, 100u};
 
   // Begin sampling period
   RunThreadCycle(false);
@@ -734,7 +742,7 @@ TEST_F(TestMergeReceiver, MergesInitialPapPacketDuringSampling)
 TEST_F(TestMergeReceiver, MergesInitialLevelsPacketDuringSampling)
 {
   static const std::vector<uint8_t> kTestLevelData = {255u, 255u, 255u, 255u, 255u, 255u};
-  static const std::vector<uint8_t> kTestPapData = {100u, 100u, 100u, 100u, 100u, 100u};
+  static const std::vector<uint8_t> kTestPapData   = {100u, 100u, 100u, 100u, 100u, 100u};
 
   // Begin sampling period
   RunThreadCycle(false);
@@ -770,10 +778,10 @@ TEST_F(TestMergeReceiver, MergesInitialLevelsPacketDuringSampling)
 TEST_F(TestMergeReceiver, InitialPapDoesNotMergeUntilLevelsArrive)
 {
   static const std::vector<uint8_t> kEmptyLevelData = {};
-  static const std::vector<uint8_t> kSrc1LevelData = {255u, 255u, 255u, 255u, 255u, 255u};
-  static const std::vector<uint8_t> kSrc1PapData = {100u, 100u, 100u, 100u, 100u, 100u};
-  static const std::vector<uint8_t> kSrc2LevelData = {0u, 0u, 0u, 0u, 0u, 0u};
-  static const std::vector<uint8_t> kSrc2PapData = {200u, 200u, 200u, 200u, 200u, 200u};
+  static const std::vector<uint8_t> kSrc1LevelData  = {255u, 255u, 255u, 255u, 255u, 255u};
+  static const std::vector<uint8_t> kSrc1PapData    = {100u, 100u, 100u, 100u, 100u, 100u};
+  static const std::vector<uint8_t> kSrc2LevelData  = {0u, 0u, 0u, 0u, 0u, 0u};
+  static const std::vector<uint8_t> kSrc2PapData    = {200u, 200u, 200u, 200u, 200u, 200u};
 
   static etcpal::Uuid source_1_cid = etcpal::Uuid::V4();
   static etcpal::Uuid source_2_cid = etcpal::Uuid::V4();

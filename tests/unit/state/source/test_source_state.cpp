@@ -92,23 +92,23 @@ static const std::vector<EtcPalIpAddr> kTestRemoteAddrs = {
     etcpal::IpAddr::FromString("10.101.1.1").get(), etcpal::IpAddr::FromString("10.101.1.2").get(),
     etcpal::IpAddr::FromString("10.101.1.3").get(), etcpal::IpAddr::FromString("10.101.1.4").get()};
 
-static constexpr uint32_t kTestGetMsValue = 1234567u;
+static constexpr uint32_t kTestGetMsValue  = 1234567u;
 static constexpr uint32_t kTestGetMsValue2 = 2345678u;
-static constexpr uint8_t kTestPriority = 123u;
-static const std::string kTestName = "Test Name";
+static constexpr uint8_t  kTestPriority    = 123u;
+static const std::string  kTestName        = "Test Name";
 
 // Some of the tests use these variables to communicate with their custom_fake lambdas.
 static unsigned int num_universe_discovery_sends = 0u;
-static unsigned int num_universe_data_sends = 0u;
-static unsigned int num_level_multicast_sends = 0u;
-static unsigned int num_pap_multicast_sends = 0u;
-static unsigned int num_level_unicast_sends = 0u;
-static unsigned int num_pap_unicast_sends = 0u;
-static unsigned int num_invalid_sends = 0u;
-static int current_test_iteration = 0;
-static int current_remote_addr_index = 0;
-static int current_universe = 0;
-static int current_netint_index = 0;
+static unsigned int num_universe_data_sends      = 0u;
+static unsigned int num_level_multicast_sends    = 0u;
+static unsigned int num_pap_multicast_sends      = 0u;
+static unsigned int num_level_unicast_sends      = 0u;
+static unsigned int num_pap_unicast_sends        = 0u;
+static unsigned int num_invalid_sends            = 0u;
+static int          current_test_iteration       = 0;
+static int          current_remote_addr_index    = 0;
+static int          current_universe             = 0;
+static int          current_netint_index         = 0;
 
 class TestSourceState : public ::testing::Test
 {
@@ -122,7 +122,7 @@ protected:
     sacn_sockets_reset_all_fakes();
 
     sacn_initialize_source_netints_fake.custom_fake = [](SacnInternalNetintArray* source_netints,
-                                                         const SacnNetintConfig* app_netint_config) {
+                                                         const SacnNetintConfig*  app_netint_config) {
       EXPECT_NE(app_netint_config, nullptr);
 
       if (app_netint_config)
@@ -137,7 +137,7 @@ protected:
 
         for (size_t i = 0; i < app_netint_config->num_netints; ++i)
         {
-          source_netints->netints[i] = app_netint_config->netints[i].iface;
+          source_netints->netints[i]           = app_netint_config->netints[i].iface;
           app_netint_config->netints[i].status = kEtcPalErrOk;
         }
       }
@@ -148,13 +148,13 @@ protected:
     ASSERT_EQ(sacn_source_mem_init(), kEtcPalErrOk);
     ASSERT_EQ(sacn_source_state_init(), kEtcPalErrOk);
 
-    num_universe_data_sends = 0u;
+    num_universe_data_sends      = 0u;
     num_universe_discovery_sends = 0u;
-    num_level_multicast_sends = 0u;
-    num_pap_multicast_sends = 0u;
-    num_level_unicast_sends = 0u;
-    num_pap_unicast_sends = 0u;
-    num_invalid_sends = 0u;
+    num_level_multicast_sends    = 0u;
+    num_pap_multicast_sends      = 0u;
+    num_level_unicast_sends      = 0u;
+    num_pap_unicast_sends        = 0u;
+    num_invalid_sends            = 0u;
   }
 
   void TearDown() override
@@ -184,14 +184,15 @@ protected:
     return state;
   }
 
-  uint16_t AddUniverse(sacn_source_t source, const SacnSourceUniverseConfig& config,
+  uint16_t AddUniverse(sacn_source_t                    source,
+                       const SacnSourceUniverseConfig&  config,
                        std::vector<SacnMcastInterface>& netints = kTestNetints)
   {
     SacnSourceUniverse* tmp = nullptr;
 
     SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-    netint_config.netints = netints.data();
-    netint_config.num_netints = netints.size();
+    netint_config.netints          = netints.data();
+    netint_config.num_netints      = netints.size();
 
     EXPECT_EQ(add_sacn_source_universe(GetSource(source), &config, &netint_config, &tmp), kEtcPalErrOk);
 
@@ -206,8 +207,8 @@ protected:
     SacnSourceUniverse* tmp = nullptr;
 
     SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-    netint_config.netints = &netint;
-    netint_config.num_netints = 1u;
+    netint_config.netints          = &netint;
+    netint_config.num_netints      = 1u;
 
     EXPECT_EQ(add_sacn_source_universe(GetSource(source), &config, &netint_config, &tmp), kEtcPalErrOk);
     EXPECT_EQ(add_sacn_source_netint(GetSource(source), &netint.iface), kEtcPalErrOk);
@@ -217,20 +218,23 @@ protected:
 
   SacnSourceUniverse* GetUniverse(sacn_source_t source, uint16_t universe)
   {
-    SacnSource* source_state = nullptr;
+    SacnSource*         source_state   = nullptr;
     SacnSourceUniverse* universe_state = nullptr;
     lookup_source_and_universe(source, universe, &source_state, &universe_state);
     return universe_state;
   }
 
-  void InitTestData(sacn_source_t source, uint16_t universe, const std::vector<uint8_t>& levels,
+  void InitTestData(sacn_source_t               source,
+                    uint16_t                    universe,
+                    const std::vector<uint8_t>& levels,
                     const std::vector<uint8_t>& pap = std::vector<uint8_t>())
   {
     update_levels_and_or_pap(GetSource(source), GetUniverse(source, universe), levels.empty() ? nullptr : levels.data(),
                              levels.size(), pap.empty() ? nullptr : pap.data(), pap.size(), kDisableForceSync);
   }
 
-  void AddUniverseForUniverseDiscovery(sacn_source_t source_handle, SacnSourceUniverseConfig& universe_config,
+  void AddUniverseForUniverseDiscovery(sacn_source_t                    source_handle,
+                                       SacnSourceUniverseConfig&        universe_config,
                                        std::vector<SacnMcastInterface>& netints = kTestNetints)
   {
     AddUniverse(source_handle, universe_config, netints);
@@ -238,8 +242,9 @@ protected:
     ++universe_config.universe;
   }
 
-  void AddUniverseForUniverseDiscovery(sacn_source_t source_handle, SacnSourceUniverseConfig& universe_config,
-                                       SacnMcastInterface& netint)
+  void AddUniverseForUniverseDiscovery(sacn_source_t             source_handle,
+                                       SacnSourceUniverseConfig& universe_config,
+                                       SacnMcastInterface&       netint)
   {
     AddUniverse(source_handle, universe_config, netint);
     InitTestData(source_handle, universe_config.universe, kTestBuffer);
@@ -255,16 +260,16 @@ protected:
 
   void TestLevelPapTransmission(int keep_alive_interval)
   {
-    SacnSourceConfig source_config = kTestSourceConfig;
-    source_config.keep_alive_interval = keep_alive_interval;
+    SacnSourceConfig source_config        = kTestSourceConfig;
+    source_config.keep_alive_interval     = keep_alive_interval;
     source_config.pap_keep_alive_interval = keep_alive_interval;
-    sacn_source_t source = AddSource(source_config);
-    uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+    sacn_source_t source                  = AddSource(source_config);
+    uint16_t      universe                = AddUniverse(source, kTestUniverseConfig);
     AddTestUnicastDests(source, universe);
     InitTestData(source, universe, kTestBuffer, kTestBuffer2);
 
     static SacnSourceUniverse* test_universe = nullptr;
-    test_universe = GetUniverse(source, universe);
+    test_universe                            = GetUniverse(source, universe);
 
     etcpal_getms_fake.return_val = 0u;
 
@@ -338,7 +343,7 @@ protected:
       return kEtcPalErrOk;
     };
 
-    current_netint_index = 0;
+    current_netint_index      = 0;
     current_remote_addr_index = 0;
 
     ASSERT_TRUE(test_universe != nullptr);
@@ -443,13 +448,13 @@ TEST_F(TestSourceState, ProcessSourcesCountsSources)
 
 TEST_F(TestSourceState, ProcessSourcesMarksTerminatingOnDeinit)
 {
-  SacnSourceConfig source_config = kTestSourceConfig;
+  SacnSourceConfig source_config        = kTestSourceConfig;
   source_config.manually_process_source = true;
-  sacn_source_t manual_source_1 = AddSource(source_config);
-  sacn_source_t manual_source_2 = AddSource(source_config);
+  sacn_source_t manual_source_1         = AddSource(source_config);
+  sacn_source_t manual_source_2         = AddSource(source_config);
   source_config.manually_process_source = false;
-  sacn_source_t threaded_source_1 = AddSource(source_config);
-  sacn_source_t threaded_source_2 = AddSource(source_config);
+  sacn_source_t threaded_source_1       = AddSource(source_config);
+  sacn_source_t threaded_source_2       = AddSource(source_config);
 
   // Add universes with levels so sources don't get deleted right away, so terminating flag can be verified.
   AddUniverse(threaded_source_1, kTestUniverseConfig);
@@ -584,8 +589,8 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
                                             const EtcPalMcastNetintId*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
     {
-      int page = send_buf[SACN_UNIVERSE_DISCOVERY_PAGE_OFFSET];
-      int last_page = send_buf[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET];
+      int page                   = send_buf[SACN_UNIVERSE_DISCOVERY_PAGE_OFFSET];
+      int last_page              = send_buf[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET];
       int max_universes_per_page = SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE;
       int expected_num_universes =
           (page < last_page)
@@ -601,7 +606,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
       {
         // Verify the universes remain in order even though each adjacent range was "shuffled" when added.
         int expected_universe = i + 1 + (page * max_universes_per_page);
-        int actual_universe = etcpal_unpack_u16b(&send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (i * 2)]);
+        int actual_universe   = etcpal_unpack_u16b(&send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (i * 2)]);
         EXPECT_EQ(actual_universe, expected_universe);
       }
     }
@@ -613,8 +618,8 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
 
   sacn_source_t source_handle = AddSource(kTestSourceConfig);
 
-  static constexpr int kNumUniversesPerIteration = SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE / 4;
-  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
+  static constexpr int     kNumUniversesPerIteration = SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE / 4;
+  SacnSourceUniverseConfig universe_config           = kTestUniverseConfig;
   for (int i = 0; i < 10; ++i)
   {
     current_test_iteration = (i + 1);
@@ -840,7 +845,7 @@ TEST_F(TestSourceState, RemovingUniversesUpdatesUniverseDiscovery)
     if (IS_UNIVERSE_DISCOVERY(send_buf))
     {
       int expected_num_universes = (10 - current_test_iteration);
-      int actual_num_universes = (ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE])) + ACN_UDP_PREAMBLE_SIZE -
+      int actual_num_universes   = (ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE])) + ACN_UDP_PREAMBLE_SIZE -
                                   SACN_UNIVERSE_DISCOVERY_HEADER_SIZE) /
                                  2;
 
@@ -849,7 +854,7 @@ TEST_F(TestSourceState, RemovingUniversesUpdatesUniverseDiscovery)
       for (int i = 0; i < expected_num_universes; ++i)
       {
         int expected_universe = i + 1;
-        int actual_universe = etcpal_unpack_u16b(&send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (i * 2)]);
+        int actual_universe   = etcpal_unpack_u16b(&send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (i * 2)]);
         EXPECT_EQ(actual_universe, expected_universe);
       }
 
@@ -925,8 +930,8 @@ TEST_F(TestSourceState, UnicastDestsWithDataTerminateAndRemove)
 
 TEST_F(TestSourceState, UnicastDestsWithDataTerminateWithoutRemoving)
 {
-  static int iteration = 0;
-  static bool terminations_all_sent = false;
+  static int  iteration              = 0;
+  static bool terminations_all_sent  = false;
   sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
                                           const EtcPalIpAddr* dest_addr, etcpal_error_t*) {
     EXPECT_EQ(ip_supported, kTestSourceConfig.ip_supported);
@@ -1076,7 +1081,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
     return kEtcPalErrOk;
   };
 
-  sacn_source_t source = AddSource(kTestSourceConfig);
+  sacn_source_t            source          = AddSource(kTestSourceConfig);
   SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
   for (universe_config.universe = 1; universe_config.universe <= 10u; ++universe_config.universe)
   {
@@ -1092,7 +1097,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateAndRemove)
     for (uint16_t j = 0; j < 10u; ++j)
       old_seq_num[j] = GetUniverse(source, j + 1u)->next_seq_num;
 
-    current_universe = 1;
+    current_universe     = 1;
     current_netint_index = 0;
     VERIFY_LOCKING(RunThreadCycle());
 
@@ -1141,7 +1146,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
     return kEtcPalErrOk;
   };
 
-  sacn_source_t source = AddSource(kTestSourceConfig);
+  sacn_source_t            source          = AddSource(kTestSourceConfig);
   SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
   for (universe_config.universe = 1; universe_config.universe <= 10u; ++universe_config.universe)
   {
@@ -1157,7 +1162,7 @@ TEST_F(TestSourceState, UniversesWithDataTerminateWithoutRemoving)
     for (uint16_t j = 0; j < 10u; ++j)
       old_seq_num[j] = GetUniverse(source, j + 1u)->next_seq_num;
 
-    current_universe = 1;
+    current_universe     = 1;
     current_netint_index = 0;
     VERIFY_LOCKING(RunThreadCycle());
 
@@ -1189,7 +1194,7 @@ TEST_F(TestSourceState, UniversesWithoutDataTerminateAndRemove)
     return kEtcPalErrOk;
   };
 
-  sacn_source_t source = AddSource(kTestSourceConfig);
+  sacn_source_t            source          = AddSource(kTestSourceConfig);
   SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
   for (universe_config.universe = 1; universe_config.universe <= 10u; ++universe_config.universe)
   {
@@ -1216,7 +1221,7 @@ TEST_F(TestSourceState, UniversesWithoutDataTerminateWithoutRemoving)
     return kEtcPalErrOk;
   };
 
-  sacn_source_t source = AddSource(kTestSourceConfig);
+  sacn_source_t            source          = AddSource(kTestSourceConfig);
   SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
   for (universe_config.universe = 1; universe_config.universe <= 10u; ++universe_config.universe)
   {
@@ -1315,15 +1320,15 @@ TEST_F(TestSourceState, OnlyActiveUniverseRemovalsUpdateCounter)
 {
   // Active universes are universes that should be included in universe discovery. Inactive universes should not. The
   // active universes counter should only decrement when an active universe is removed.
-  sacn_source_t source = AddSource(kTestSourceConfig);
+  sacn_source_t            source          = AddSource(kTestSourceConfig);
   SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
-  uint16_t active_universe = AddUniverse(source, universe_config);
+  uint16_t                 active_universe = AddUniverse(source, universe_config);
   InitTestData(source, active_universe, kTestBuffer);
   ++universe_config.universe;
   uint16_t inactive_universe_1 = AddUniverse(source, universe_config);
   ++universe_config.universe;
   universe_config.send_unicast_only = true;
-  uint16_t inactive_universe_2 = AddUniverse(source, universe_config);
+  uint16_t inactive_universe_2      = AddUniverse(source, universe_config);
   InitTestData(source, active_universe, kTestBuffer);
   ++universe_config.universe;
   uint16_t inactive_universe_3 = AddUniverse(source, universe_config);
@@ -1365,8 +1370,8 @@ TEST_F(TestSourceState, UniverseRemovalUpdatesSourceNetints)
     SacnSourceUniverse* tmp = nullptr;
 
     SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-    netint_config.netints = &kTestNetints[kTestNetints.size() - num_netints];
-    netint_config.num_netints = num_netints;
+    netint_config.netints          = &kTestNetints[kTestNetints.size() - num_netints];
+    netint_config.num_netints      = num_netints;
 
     EXPECT_EQ(add_sacn_source_universe(GetSource(source), &universe_config, &netint_config, &tmp), kEtcPalErrOk);
 
@@ -1420,10 +1425,10 @@ TEST_F(TestSourceState, SendUnicastOnlyWorks)
     return kEtcPalErrOk;
   };
 
-  sacn_source_t source = AddSource(kTestSourceConfig);
+  sacn_source_t            source          = AddSource(kTestSourceConfig);
   SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
-  universe_config.send_unicast_only = true;
-  uint16_t universe = AddUniverse(source, universe_config);
+  universe_config.send_unicast_only        = true;
+  uint16_t universe                        = AddUniverse(source, universe_config);
   AddTestUnicastDests(source, universe);
   InitTestData(source, universe, kTestBuffer, kTestBuffer2);
 
@@ -1494,7 +1499,7 @@ TEST_F(TestSourceState, PapNotTransmittedIfNotAdded)
 
 TEST_F(TestSourceState, SourcesTerminateCorrectly)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
+  sacn_source_t            source          = AddSource(kTestSourceConfig);
   SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
   for (universe_config.universe = 1; universe_config.universe <= 10u; ++universe_config.universe)
   {
@@ -1517,7 +1522,7 @@ TEST_F(TestSourceState, SourcesTerminateCorrectly)
 TEST_F(TestSourceState, InitializeSourceThreadWorks)
 {
   etcpal_thread_create_fake.custom_fake = [](etcpal_thread_t* id, const EtcPalThreadParams* params,
-                                             void (*thread_fn)(void*), void* thread_arg) {
+                                             void (*thread_fn)(void*), void*                thread_arg) {
     EXPECT_NE(id, nullptr);
     EXPECT_EQ(params->priority, (unsigned int)ETCPAL_THREAD_DEFAULT_PRIORITY);
     EXPECT_EQ(params->stack_size, (unsigned int)ETCPAL_THREAD_DEFAULT_STACK);
@@ -1540,17 +1545,17 @@ TEST_F(TestSourceState, GetNextSourceHandleWorks)
   for (int i = 0; i < 10; ++i)
   {
     sacn_source_t prev_handle = handle;
-    handle = get_next_source_handle();
+    handle                    = get_next_source_handle();
     EXPECT_EQ(handle, prev_handle + 1);
   }
 }
 
 TEST_F(TestSourceState, UpdateLevelsAndPapWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
 
-  SacnSource* source_state = nullptr;
+  SacnSource*         source_state   = nullptr;
   SacnSourceUniverse* universe_state = nullptr;
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
@@ -1569,10 +1574,10 @@ TEST_F(TestSourceState, UpdateLevelsAndPapWorks)
 
 TEST_F(TestSourceState, UpdateOnlyLevelsWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
 
-  SacnSource* source_state = nullptr;
+  SacnSource*         source_state   = nullptr;
   SacnSourceUniverse* universe_state = nullptr;
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
@@ -1590,10 +1595,10 @@ TEST_F(TestSourceState, UpdateOnlyLevelsWorks)
 
 TEST_F(TestSourceState, UpdateOnlyPapWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
 
-  SacnSource* source_state = nullptr;
+  SacnSource*         source_state   = nullptr;
   SacnSourceUniverse* universe_state = nullptr;
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
@@ -1611,10 +1616,10 @@ TEST_F(TestSourceState, UpdateOnlyPapWorks)
 
 TEST_F(TestSourceState, UpdateOnlyLevelsSavesPap)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
 
-  SacnSource* source_state = nullptr;
+  SacnSource*         source_state   = nullptr;
   SacnSourceUniverse* universe_state = nullptr;
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
@@ -1634,10 +1639,10 @@ TEST_F(TestSourceState, UpdateOnlyLevelsSavesPap)
 
 TEST_F(TestSourceState, UpdateOnlyPapSavesLevels)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
 
-  SacnSource* source_state = nullptr;
+  SacnSource*         source_state   = nullptr;
   SacnSourceUniverse* universe_state = nullptr;
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
@@ -1657,10 +1662,10 @@ TEST_F(TestSourceState, UpdateOnlyPapSavesLevels)
 
 TEST_F(TestSourceState, LevelsZeroWhereverPapAreZeroed)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
 
-  SacnSource* source_state = nullptr;
+  SacnSource*         source_state   = nullptr;
   SacnSourceUniverse* universe_state = nullptr;
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
@@ -1717,10 +1722,10 @@ TEST_F(TestSourceState, LevelsZeroWhereverPapAreZeroed)
 
 TEST_F(TestSourceState, UpdateLevelsIncrementsActiveUniversesCorrectly)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
 
-  SacnSource* source_state = nullptr;
+  SacnSource*         source_state   = nullptr;
   SacnSourceUniverse* universe_state = nullptr;
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
@@ -1734,8 +1739,8 @@ TEST_F(TestSourceState, UpdateLevelsIncrementsActiveUniversesCorrectly)
 
   SacnSourceUniverseConfig unicast_only_config = kTestUniverseConfig;
   ++unicast_only_config.universe;
-  unicast_only_config.send_unicast_only = true;
-  uint16_t unicast_only_universe = AddUniverse(source, unicast_only_config);
+  unicast_only_config.send_unicast_only           = true;
+  uint16_t            unicast_only_universe       = AddUniverse(source, unicast_only_config);
   SacnSourceUniverse* unicast_only_universe_state = nullptr;
   lookup_source_and_universe(source, unicast_only_universe, &source_state, &unicast_only_universe_state);
 
@@ -1746,10 +1751,10 @@ TEST_F(TestSourceState, UpdateLevelsIncrementsActiveUniversesCorrectly)
 
 TEST_F(TestSourceState, IncrementSequenceNumberWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
 
-  SacnSource* source_state = nullptr;
+  SacnSource*         source_state   = nullptr;
   SacnSourceUniverse* universe_state = nullptr;
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
@@ -1796,8 +1801,8 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
     return kEtcPalErrOk;
   };
 
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
   AddTestUnicastDests(source, universe);
 
   current_remote_addr_index = 0;
@@ -1844,9 +1849,9 @@ TEST_F(TestSourceState, SendUniverseMulticastWorks)
 
   sacn_source_t source = AddSource(kTestSourceConfig);
 
-  SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
-  uint16_t multicast_universe = AddUniverse(source, universe_config);
-  universe_config.send_unicast_only = true;
+  SacnSourceUniverseConfig universe_config    = kTestUniverseConfig;
+  uint16_t                 multicast_universe = AddUniverse(source, universe_config);
+  universe_config.send_unicast_only           = true;
   ++universe_config.universe;
   uint16_t unicast_only_universe = AddUniverse(source, universe_config);
 
@@ -1861,8 +1866,8 @@ TEST_F(TestSourceState, SendUniverseMulticastWorks)
 
 TEST_F(TestSourceState, SetPreviewFlagWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
   InitTestData(source, universe, kTestBuffer, kTestBuffer2);
 
   etcpal_getms_fake.return_val = kTestGetMsValue;
@@ -1888,8 +1893,8 @@ TEST_F(TestSourceState, SetPreviewFlagWorks)
 
 TEST_F(TestSourceState, SetUniversePriorityWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
   InitTestData(source, universe, kTestBuffer, kTestBuffer2);
 
   etcpal_getms_fake.return_val = kTestGetMsValue;
@@ -1909,8 +1914,8 @@ TEST_F(TestSourceState, SetUniversePriorityWorks)
 
 TEST_F(TestSourceState, SetUnicastDestTerminatingWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
   AddTestUnicastDests(source, universe);
 
   for (size_t i = 0u; i < kTestRemoteAddrs.size(); ++i)
@@ -1935,16 +1940,16 @@ TEST_F(TestSourceState, SetUnicastDestTerminatingWorks)
 
 TEST_F(TestSourceState, ResetLevelAndPapTransmissionSuppressionWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
   InitTestData(source, universe, kTestBuffer, kTestBuffer2);
 
   GetUniverse(source, universe)->level_packets_sent_before_suppression = 4;
-  GetUniverse(source, universe)->pap_packets_sent_before_suppression = 4;
-  GetUniverse(source, universe)->level_keep_alive_timer.reset_time = 0u;
-  GetUniverse(source, universe)->level_keep_alive_timer.interval = 0u;
-  GetUniverse(source, universe)->pap_keep_alive_timer.reset_time = 0u;
-  GetUniverse(source, universe)->pap_keep_alive_timer.interval = 0u;
+  GetUniverse(source, universe)->pap_packets_sent_before_suppression   = 4;
+  GetUniverse(source, universe)->level_keep_alive_timer.reset_time     = 0u;
+  GetUniverse(source, universe)->level_keep_alive_timer.interval       = 0u;
+  GetUniverse(source, universe)->pap_keep_alive_timer.reset_time       = 0u;
+  GetUniverse(source, universe)->pap_keep_alive_timer.interval         = 0u;
 
   etcpal_getms_fake.return_val = kTestGetMsValue;
   reset_transmission_suppression(GetSource(source), GetUniverse(source, universe), kResetLevelAndPap);
@@ -1961,16 +1966,16 @@ TEST_F(TestSourceState, ResetLevelAndPapTransmissionSuppressionWorks)
 
 TEST_F(TestSourceState, ResetLevelTransmissionSuppressionWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
   InitTestData(source, universe, kTestBuffer, kTestBuffer2);
 
   GetUniverse(source, universe)->level_packets_sent_before_suppression = 4;
-  GetUniverse(source, universe)->pap_packets_sent_before_suppression = 4;
-  GetUniverse(source, universe)->level_keep_alive_timer.reset_time = 0u;
-  GetUniverse(source, universe)->level_keep_alive_timer.interval = 0u;
-  GetUniverse(source, universe)->pap_keep_alive_timer.reset_time = 0u;
-  GetUniverse(source, universe)->pap_keep_alive_timer.interval = 0u;
+  GetUniverse(source, universe)->pap_packets_sent_before_suppression   = 4;
+  GetUniverse(source, universe)->level_keep_alive_timer.reset_time     = 0u;
+  GetUniverse(source, universe)->level_keep_alive_timer.interval       = 0u;
+  GetUniverse(source, universe)->pap_keep_alive_timer.reset_time       = 0u;
+  GetUniverse(source, universe)->pap_keep_alive_timer.interval         = 0u;
 
   etcpal_getms_fake.return_val = kTestGetMsValue;
   reset_transmission_suppression(GetSource(source), GetUniverse(source, universe), kResetLevel);
@@ -1986,16 +1991,16 @@ TEST_F(TestSourceState, ResetLevelTransmissionSuppressionWorks)
 
 TEST_F(TestSourceState, ResetPapTransmissionSuppressionWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
   InitTestData(source, universe, kTestBuffer, kTestBuffer2);
 
   GetUniverse(source, universe)->level_packets_sent_before_suppression = 4;
-  GetUniverse(source, universe)->pap_packets_sent_before_suppression = 4;
-  GetUniverse(source, universe)->level_keep_alive_timer.reset_time = 0u;
-  GetUniverse(source, universe)->level_keep_alive_timer.interval = 0u;
-  GetUniverse(source, universe)->pap_keep_alive_timer.reset_time = 0u;
-  GetUniverse(source, universe)->pap_keep_alive_timer.interval = 0u;
+  GetUniverse(source, universe)->pap_packets_sent_before_suppression   = 4;
+  GetUniverse(source, universe)->level_keep_alive_timer.reset_time     = 0u;
+  GetUniverse(source, universe)->level_keep_alive_timer.interval       = 0u;
+  GetUniverse(source, universe)->pap_keep_alive_timer.reset_time       = 0u;
+  GetUniverse(source, universe)->pap_keep_alive_timer.interval         = 0u;
 
   etcpal_getms_fake.return_val = kTestGetMsValue;
   reset_transmission_suppression(GetSource(source), GetUniverse(source, universe), kResetPap);
@@ -2011,8 +2016,8 @@ TEST_F(TestSourceState, ResetPapTransmissionSuppressionWorks)
 
 TEST_F(TestSourceState, SetUniverseTerminatingWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
   AddTestUnicastDests(source, universe);
 
   set_universe_terminating(GetUniverse(source, universe), kTerminateAndRemove);
@@ -2121,7 +2126,7 @@ TEST_F(TestSourceState, SetSourceNameWorks)
   for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + 3u); ++universe)
   {
     char* name_in_level_buffer = (char*)(&GetUniverse(source, universe)->level_send_buf[SACN_SOURCE_NAME_OFFSET]);
-    char* name_in_pap_buffer = (char*)(&GetUniverse(source, universe)->pap_send_buf[SACN_SOURCE_NAME_OFFSET]);
+    char* name_in_pap_buffer   = (char*)(&GetUniverse(source, universe)->pap_send_buf[SACN_SOURCE_NAME_OFFSET]);
     EXPECT_EQ(strncmp(name_in_level_buffer, kTestName.c_str(), kTestName.length()), 0);
     EXPECT_EQ(strncmp(name_in_pap_buffer, kTestName.c_str(), kTestName.length()), 0);
 
@@ -2138,7 +2143,7 @@ TEST_F(TestSourceState, SetSourceNameWorks)
 
 TEST_F(TestSourceState, GetSourceUniversesWorks)
 {
-  const size_t kNumUniverses = 7u;
+  const size_t kNumUniverses  = 7u;
   const size_t kContainerSize = kNumUniverses * 2u;
 
   sacn_source_t source = AddSource(kTestSourceConfig);
@@ -2184,11 +2189,11 @@ TEST_F(TestSourceState, GetSourceUniversesWorks)
 
 TEST_F(TestSourceState, GetSourceUnicastDestsWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
   AddTestUnicastDests(source, universe);
 
-  EtcPalIpAddr invalid_addr = ETCPAL_IP_INVALID_INIT;
+  EtcPalIpAddr              invalid_addr = ETCPAL_IP_INVALID_INIT;
   std::vector<EtcPalIpAddr> destinations(kTestRemoteAddrs.size() * 2u);
   for (size_t i = 0u; i < (kTestRemoteAddrs.size() * 2u); ++i)
     destinations[i] = invalid_addr;
@@ -2224,13 +2229,13 @@ TEST_F(TestSourceState, GetSourceUnicastDestsWorks)
 
 TEST_F(TestSourceState, GetSourceUniverseNetintsWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
 
   std::vector<EtcPalMcastNetintId> netints(kTestNetints.size() * 2u);
   for (size_t i = 0u; i < (kTestNetints.size() * 2u); ++i)
   {
-    netints[i].index = 0u;
+    netints[i].index   = 0u;
     netints[i].ip_type = kEtcPalIpTypeInvalid;
   }
 
@@ -2263,8 +2268,8 @@ TEST_F(TestSourceState, GetSourceUniverseNetintsWorks)
 
 TEST_F(TestSourceState, DisablePapDataWorks)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
   InitTestData(source, universe, kTestBuffer, kTestBuffer2);
 
   EXPECT_EQ(GetUniverse(source, universe)->has_pap_data, true);
@@ -2289,8 +2294,8 @@ TEST_F(TestSourceState, ResetSourceUniverseNetworkingWorks)
   SacnSourceUniverse* universe_state = nullptr;
 
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints = kTestNetints.data();
-  netint_config.num_netints = kTestNetints.size();
+  netint_config.netints          = kTestNetints.data();
+  netint_config.num_netints      = kTestNetints.size();
 
   EXPECT_EQ(add_sacn_source_universe(GetSource(source), &kTestUniverseConfig, &netint_config, &universe_state),
             kEtcPalErrOk);
@@ -2321,10 +2326,10 @@ TEST_F(TestSourceState, ResetSourceUniverseNetworkingWorks)
 
 TEST_F(TestSourceState, UpdateLevelsAndPapWorksWithLargestBuffers)
 {
-  sacn_source_t source = AddSource(kTestSourceConfig);
-  uint16_t universe = AddUniverse(source, kTestUniverseConfig);
+  sacn_source_t source   = AddSource(kTestSourceConfig);
+  uint16_t      universe = AddUniverse(source, kTestUniverseConfig);
 
-  SacnSource* source_state = nullptr;
+  SacnSource*         source_state   = nullptr;
   SacnSourceUniverse* universe_state = nullptr;
   lookup_source_and_universe(source, universe, &source_state, &universe_state);
 
@@ -2346,10 +2351,10 @@ TEST_F(TestSourceState, AddUniverseCleansUpOnFailure)
   SacnSourceUniverse* universe_state = nullptr;
 
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints = kTestNetints.data();
-  netint_config.num_netints = kTestNetints.size();
+  netint_config.netints          = kTestNetints.data();
+  netint_config.num_netints      = kTestNetints.size();
 
-  auto lesser_universe_config = kTestUniverseConfig;
+  auto lesser_universe_config  = kTestUniverseConfig;
   auto greater_universe_config = kTestUniverseConfig;
   ++greater_universe_config.universe;
 

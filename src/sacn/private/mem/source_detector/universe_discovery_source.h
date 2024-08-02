@@ -30,19 +30,22 @@ extern "C" {
 #endif
 
 etcpal_error_t init_universe_discovery_sources(void);
-void deinit_universe_discovery_sources(void);
+void           deinit_universe_discovery_sources(void);
 
-etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const char* name,
-                                                  SacnUniverseDiscoverySource** source_state);
-size_t replace_universe_discovery_universes(SacnUniverseDiscoverySource* source, size_t replace_start_index,
-                                            const uint16_t* replacement_universes, size_t num_replacement_universes,
-                                            size_t dynamic_universe_limit);
-etcpal_error_t lookup_universe_discovery_source(sacn_remote_source_t handle,
-                                                SacnUniverseDiscoverySource** source_state);
+etcpal_error_t               add_sacn_universe_discovery_source(const EtcPalUuid*             cid,
+                                                                const char*                   name,
+                                                                SacnUniverseDiscoverySource** source_state);
+size_t                       replace_universe_discovery_universes(SacnUniverseDiscoverySource* source,
+                                                                  size_t                       replace_start_index,
+                                                                  const uint16_t*              replacement_universes,
+                                                                  size_t                       num_replacement_universes,
+                                                                  size_t                       dynamic_universe_limit);
+etcpal_error_t               lookup_universe_discovery_source(sacn_remote_source_t          handle,
+                                                              SacnUniverseDiscoverySource** source_state);
 SacnUniverseDiscoverySource* get_first_universe_discovery_source(EtcPalRbIter* iterator);
 SacnUniverseDiscoverySource* get_next_universe_discovery_source(EtcPalRbIter* iterator);
-size_t get_num_universe_discovery_sources();
-etcpal_error_t remove_sacn_universe_discovery_source(sacn_remote_source_t handle);
+size_t                       get_num_universe_discovery_sources();
+etcpal_error_t               remove_sacn_universe_discovery_source(sacn_remote_source_t handle);
 
 #ifdef __cplusplus
 }

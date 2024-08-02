@@ -28,12 +28,16 @@
 #pragma warning(disable : 4996)
 #endif
 
-#define SACN_DATA_PACKET_MIN_SIZE 88
+#define SACN_DATA_PACKET_MIN_SIZE              88
 #define SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE 8
-#define SACN_DMPVECT_SET_PROPERTY 0x02
+#define SACN_DMPVECT_SET_PROPERTY              0x02
 
-bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnRemoteSource* source_info, uint8_t* seq,
-                            bool* terminated, SacnRecvUniverseData* universe_data)
+bool parse_sacn_data_packet(const uint8_t*        buf,
+                            size_t                buflen,
+                            SacnRemoteSource*     source_info,
+                            uint8_t*              seq,
+                            bool*                 terminated,
+                            SacnRecvUniverseData* universe_data)
 {
   if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(source_info) || !SACN_ASSERT_VERIFY(seq) ||
       !SACN_ASSERT_VERIFY(terminated) || !SACN_ASSERT_VERIFY(universe_data))
@@ -60,20 +64,20 @@ bool parse_sacn_data_packet(const uint8_t* buf, size_t buflen, SacnRemoteSource*
   // data buffer. Slot count value on the wire includes the start code, so subtract 1.
   universe_data->slot_range.start_address = 1;
   universe_data->slot_range.address_count = etcpal_unpack_u16b(&buf[85]) - 1;
-  universe_data->values = &buf[88];
+  universe_data->values                   = &buf[88];
   if (universe_data->values + universe_data->slot_range.address_count > buf + buflen)
     return false;
 
   strncpy(source_info->name, (char*)&buf[6], SACN_SOURCE_NAME_MAX_LEN);
   // Just in case the string is not null terminated even though it is required to be
   source_info->name[SACN_SOURCE_NAME_MAX_LEN - 1] = '\0';
-  universe_data->priority = buf[70];
+  universe_data->priority                         = buf[70];
   // TODO universe_data->sync_address = etcpal_unpack_u16b(&buf[71]);
-  *seq = buf[73];
-  universe_data->preview = (bool)(buf[74] & SACN_OPTVAL_PREVIEW);
-  *terminated = (bool)(buf[74] & SACN_OPTVAL_TERMINATED);
+  *seq                       = buf[73];
+  universe_data->preview     = (bool)(buf[74] & SACN_OPTVAL_PREVIEW);
+  *terminated                = (bool)(buf[74] & SACN_OPTVAL_TERMINATED);
   universe_data->universe_id = etcpal_unpack_u16b(&buf[75]);
-  universe_data->start_code = buf[87];
+  universe_data->start_code  = buf[87];
   return true;
 }
 
@@ -90,8 +94,12 @@ bool parse_framing_layer_vector(const uint8_t* buf, size_t buflen, uint32_t* vec
   return true;
 }
 
-bool parse_sacn_universe_discovery_layer(const uint8_t* buf, size_t buflen, int* page, int* last_page,
-                                         const uint8_t** universes, size_t* num_universes)
+bool parse_sacn_universe_discovery_layer(const uint8_t*  buf,
+                                         size_t          buflen,
+                                         int*            page,
+                                         int*            last_page,
+                                         const uint8_t** universes,
+                                         size_t*         num_universes)
 {
   if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(page) || !SACN_ASSERT_VERIFY(last_page) ||
       !SACN_ASSERT_VERIFY(universes) || !SACN_ASSERT_VERIFY(num_universes))
@@ -112,9 +120,9 @@ bool parse_sacn_universe_discovery_layer(const uint8_t* buf, size_t buflen, int*
   if (etcpal_unpack_u32b(&buf[2]) != VECTOR_UNIVERSE_DISCOVERY_UNIVERSE_LIST)
     return false;
 
-  *page = buf[6];
-  *last_page = buf[7];
-  *universes = (buflen > SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE) ? &buf[8] : NULL;
+  *page          = buf[6];
+  *last_page     = buf[7];
+  *universes     = (buflen > SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE) ? &buf[8] : NULL;
   *num_universes = (pdu_length - 8) / 2;
 
   return true;
@@ -158,9 +166,17 @@ int pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const
   return (int)(pcur - buf);
 }
 
-int pack_sacn_data_framing_layer(uint8_t* buf, uint16_t slot_count, uint32_t vector, const char* source_name,
-                                 uint8_t priority, uint16_t sync_address, uint8_t seq_num, bool preview,
-                                 bool terminated, bool force_sync, uint16_t universe_id)
+int pack_sacn_data_framing_layer(uint8_t*    buf,
+                                 uint16_t    slot_count,
+                                 uint32_t    vector,
+                                 const char* source_name,
+                                 uint8_t     priority,
+                                 uint16_t    sync_address,
+                                 uint8_t     seq_num,
+                                 bool        preview,
+                                 bool        terminated,
+                                 bool        force_sync,
+                                 uint16_t    universe_id)
 {
   if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(source_name))
     return 0;
@@ -318,9 +334,14 @@ int pack_sacn_universe_discovery_layer_header(uint8_t* buf, uint16_t universe_co
   return (int)(pcur - buf);
 }
 
-void init_sacn_data_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPalUuid* source_cid,
-                             const char* source_name, uint8_t priority, uint16_t universe, uint16_t sync_universe,
-                             bool send_preview)
+void init_sacn_data_send_buf(uint8_t*          send_buf,
+                             uint8_t           start_code,
+                             const EtcPalUuid* source_cid,
+                             const char*       source_name,
+                             uint8_t           priority,
+                             uint16_t          universe,
+                             uint16_t          sync_universe,
+                             bool              send_preview)
 
 {
   if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(source_cid) || !SACN_ASSERT_VERIFY(source_name))
@@ -334,7 +355,9 @@ void init_sacn_data_send_buf(uint8_t* send_buf, uint8_t start_code, const EtcPal
   written += pack_sacn_dmp_layer_header(&send_buf[written], start_code, 0);
 }
 
-void update_send_buf_data(uint8_t* send_buf, const uint8_t* new_data, uint16_t new_data_size,
+void update_send_buf_data(uint8_t*              send_buf,
+                          const uint8_t*        new_data,
+                          uint16_t              new_data_size,
                           force_sync_behavior_t force_sync)
 {
   ETCPAL_UNUSED_ARG(force_sync);  // TODO sacn_sync

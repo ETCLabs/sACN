@@ -30,12 +30,12 @@ extern "C" {
 #endif
 
 etcpal_error_t init_recv_thread_context_buf(unsigned int num_threads);
-void deinit_recv_thread_context_buf(void);
+void           deinit_recv_thread_context_buf(void);
 
 SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id);
 
 bool add_dead_socket(SacnRecvThreadContext* context, const ReceiveSocket* socket);
-int add_socket_ref(SacnRecvThreadContext* context, const ReceiveSocket* socket);
+int  add_socket_ref(SacnRecvThreadContext* context, const ReceiveSocket* socket);
 bool add_subscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group);
 bool add_unsubscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group);
 #if SACN_RECEIVER_SOCKET_PER_NIC
@@ -43,8 +43,8 @@ int find_socket_ref_with_room(SacnRecvThreadContext* context, etcpal_iptype_t ip
 #else
 int find_socket_ref_with_room(SacnRecvThreadContext* context, etcpal_iptype_t ip_type);
 #endif
-int find_socket_ref_by_type(SacnRecvThreadContext* context, etcpal_iptype_t ip_type);
-int find_socket_ref_by_handle(SacnRecvThreadContext* context, etcpal_socket_t handle);
+int  find_socket_ref_by_type(SacnRecvThreadContext* context, etcpal_iptype_t ip_type);
+int  find_socket_ref_by_handle(SacnRecvThreadContext* context, etcpal_socket_t handle);
 void mark_socket_ref_bound(SacnRecvThreadContext* context, int index);
 bool remove_socket_ref(SacnRecvThreadContext* context, int index);
 bool remove_subscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const EtcPalGroupReq* group);

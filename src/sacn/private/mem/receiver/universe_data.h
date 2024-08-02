@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 etcpal_error_t init_universe_data_buf(unsigned int num_threads);
-void deinit_universe_data_buf(void);
+void           deinit_universe_data_buf(void);
 
 // This is processed from the context of receiving data, so there is only one per thread.
 UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id);

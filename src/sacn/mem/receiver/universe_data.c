@@ -60,7 +60,7 @@ UniverseDataNotification* get_universe_data(sacn_thread_id_t thread_id)
     UniverseDataNotification* to_return = &sacn_pool_universe_data[thread_id];
     memset(to_return, 0, sizeof(UniverseDataNotification));
     to_return->receiver_handle = SACN_RECEIVER_INVALID;
-    to_return->thread_id = SACN_THREAD_ID_INVALID;
+    to_return->thread_id       = SACN_THREAD_ID_INVALID;
     return to_return;
   }
   return NULL;

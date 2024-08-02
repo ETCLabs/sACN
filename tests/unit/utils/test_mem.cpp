@@ -34,7 +34,7 @@
 #define TestMem TestMemStatic
 #endif
 
-static constexpr sacn_merge_receiver_t kTestMergeReceiverHandle = 1;
+static constexpr sacn_merge_receiver_t   kTestMergeReceiverHandle = 1;
 static constexpr SacnMergeReceiverConfig kTestMergeReceiverConfig = {
     1u,
     {[](sacn_merge_receiver_t, const SacnRecvMergedData*, void*) {},
@@ -49,7 +49,7 @@ class TestMem : public ::testing::Test
 {
 protected:
   static constexpr unsigned int kTestNumThreads = 1;  // TODO: Set back to 4 if/when SACN_RECEIVER_MAX_THREADS increases
-  static constexpr intptr_t kMagicPointerValue = 0xdeadbeef;
+  static constexpr intptr_t     kMagicPointerValue = 0xdeadbeef;
 
   void SetUp() override
   {
@@ -102,7 +102,7 @@ TEST_F(TestMem, StatusListsAreReZeroedWithEachGet)
   ASSERT_NE(status_lists, nullptr);
 
   // Modify some elements
-  status_lists->num_online = 20;
+  status_lists->num_online  = 20;
   status_lists->num_offline = 40;
   status_lists->num_unknown = 60;
 
@@ -361,9 +361,9 @@ TEST_F(TestMem, RemoveSocketRefWorks)
     SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread);
     ASSERT_NE(recv_thread_context, nullptr);
 
-    recv_thread_context->socket_refs[0] = SocketRef{{(etcpal_socket_t)0}, 1, true};
-    recv_thread_context->socket_refs[1] = SocketRef{{(etcpal_socket_t)1}, 20, false};
-    recv_thread_context->socket_refs[2] = SocketRef{{(etcpal_socket_t)2}, 3, false};
+    recv_thread_context->socket_refs[0]  = SocketRef{{(etcpal_socket_t)0}, 1, true};
+    recv_thread_context->socket_refs[1]  = SocketRef{{(etcpal_socket_t)1}, 20, false};
+    recv_thread_context->socket_refs[2]  = SocketRef{{(etcpal_socket_t)2}, 3, false};
     recv_thread_context->num_socket_refs = 3;
     recv_thread_context->new_socket_refs = 1;
 
@@ -424,11 +424,11 @@ TEST_F(TestMem, UniverseDataIsReZeroedWithEachGet)
   ASSERT_NE(universe_data, nullptr);
 
   // Modify some elements
-  universe_data->receiver_handle = 2;
-  universe_data->api_callback = reinterpret_cast<SacnUniverseDataCallback>(kMagicPointerValue);
+  universe_data->receiver_handle   = 2;
+  universe_data->api_callback      = reinterpret_cast<SacnUniverseDataCallback>(kMagicPointerValue);
   universe_data->internal_callback = reinterpret_cast<SacnUniverseDataInternalCallback>(kMagicPointerValue);
-  universe_data->thread_id = (kTestNumThreads - 1u);
-  universe_data->context = reinterpret_cast<void*>(kMagicPointerValue);
+  universe_data->thread_id         = (kTestNumThreads - 1u);
+  universe_data->context           = reinterpret_cast<void*>(kMagicPointerValue);
 
   // Now get again and make sure they are re-zeroed
   universe_data = get_universe_data(0);
@@ -494,8 +494,8 @@ TEST_F(TestMem, AddLostSourceWorks)
     // Just test some arbitrary number
     for (; i < 20; ++i)
     {
-      auto cid_to_add = etcpal::Uuid::V4();
-      std::string test_name = "test name " + std::to_string(i);
+      auto        cid_to_add = etcpal::Uuid::V4();
+      std::string test_name  = "test name " + std::to_string(i);
       ASSERT_TRUE(add_lost_source(sources_lost, static_cast<sacn_remote_source_t>(i), &cid_to_add.get(),
                                   test_name.c_str(), true));
       EXPECT_EQ(sources_lost->num_lost_sources, i + 1);
@@ -507,8 +507,8 @@ TEST_F(TestMem, AddLostSourceWorks)
     // Test up to the maximum capacity
     for (; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
-      auto cid_to_add = etcpal::Uuid::V4();
-      std::string test_name = "test name " + std::to_string(i);
+      auto        cid_to_add = etcpal::Uuid::V4();
+      std::string test_name  = "test name " + std::to_string(i);
       ASSERT_TRUE(add_lost_source(sources_lost, static_cast<sacn_remote_source_t>(i), &cid_to_add.get(),
                                   test_name.c_str(), true));
       EXPECT_EQ(sources_lost->num_lost_sources, i + 1);
@@ -530,12 +530,12 @@ TEST_F(TestMem, SourcesLostIsReZeroedWithEachGet)
   ASSERT_NE(sources_lost, nullptr);
 
   // Modify some elements
-  sources_lost->handle = 2;
-  sources_lost->api_callback = reinterpret_cast<SacnSourcesLostCallback>(kMagicPointerValue);
+  sources_lost->handle            = 2;
+  sources_lost->api_callback      = reinterpret_cast<SacnSourcesLostCallback>(kMagicPointerValue);
   sources_lost->internal_callback = reinterpret_cast<SacnSourcesLostInternalCallback>(kMagicPointerValue);
-  sources_lost->num_lost_sources = 10;
-  sources_lost->thread_id = (kTestNumThreads - 1u);
-  sources_lost->context = reinterpret_cast<void*>(kMagicPointerValue);
+  sources_lost->num_lost_sources  = 10;
+  sources_lost->thread_id         = (kTestNumThreads - 1u);
+  sources_lost->context           = reinterpret_cast<void*>(kMagicPointerValue);
 
   // Now get again and make sure they are re-zeroed
   sources_lost = get_sources_lost_buffer(0, 1);
@@ -569,11 +569,11 @@ TEST_F(TestMem, SourcePapLostIsReZeroedWithEachGet)
   ASSERT_NE(source_pap_lost, nullptr);
 
   // Modify some elements
-  source_pap_lost->handle = 2;
-  source_pap_lost->api_callback = reinterpret_cast<SacnSourcePapLostCallback>(kMagicPointerValue);
+  source_pap_lost->handle            = 2;
+  source_pap_lost->api_callback      = reinterpret_cast<SacnSourcePapLostCallback>(kMagicPointerValue);
   source_pap_lost->internal_callback = reinterpret_cast<SacnSourcePapLostInternalCallback>(kMagicPointerValue);
-  source_pap_lost->thread_id = (kTestNumThreads - 1u);
-  source_pap_lost->context = reinterpret_cast<void*>(kMagicPointerValue);
+  source_pap_lost->thread_id         = (kTestNumThreads - 1u);
+  source_pap_lost->context           = reinterpret_cast<void*>(kMagicPointerValue);
 
   // Now get again and make sure they are re-zeroed
   source_pap_lost = get_source_pap_lost(0);
@@ -632,11 +632,11 @@ TEST_F(TestMem, SamplingStartedIsReZeroedWithEachGet)
   ASSERT_NE(sampling_started, nullptr);
 
   // Modify some elements
-  sampling_started->handle = 2;
-  sampling_started->api_callback = reinterpret_cast<SacnSamplingPeriodStartedCallback>(kMagicPointerValue);
+  sampling_started->handle            = 2;
+  sampling_started->api_callback      = reinterpret_cast<SacnSamplingPeriodStartedCallback>(kMagicPointerValue);
   sampling_started->internal_callback = reinterpret_cast<SacnSamplingPeriodStartedInternalCallback>(kMagicPointerValue);
-  sampling_started->thread_id = (kTestNumThreads - 1u);
-  sampling_started->context = reinterpret_cast<void*>(kMagicPointerValue);
+  sampling_started->thread_id         = (kTestNumThreads - 1u);
+  sampling_started->context           = reinterpret_cast<void*>(kMagicPointerValue);
 
   // Now get again and make sure they are re-zeroed
   sampling_started = get_sampling_started_buffer(0, 1);
@@ -694,11 +694,11 @@ TEST_F(TestMem, SamplingEndedIsReZeroedWithEachGet)
   ASSERT_NE(sampling_ended, nullptr);
 
   // Modify some elements
-  sampling_ended->handle = 2;
-  sampling_ended->api_callback = reinterpret_cast<SacnSamplingPeriodEndedCallback>(kMagicPointerValue);
+  sampling_ended->handle            = 2;
+  sampling_ended->api_callback      = reinterpret_cast<SacnSamplingPeriodEndedCallback>(kMagicPointerValue);
   sampling_ended->internal_callback = reinterpret_cast<SacnSamplingPeriodEndedInternalCallback>(kMagicPointerValue);
-  sampling_ended->thread_id = (kTestNumThreads - 1u);
-  sampling_ended->context = reinterpret_cast<void*>(kMagicPointerValue);
+  sampling_ended->thread_id         = (kTestNumThreads - 1u);
+  sampling_ended->context           = reinterpret_cast<void*>(kMagicPointerValue);
 
   // Now get again and make sure they are re-zeroed
   sampling_ended = get_sampling_ended_buffer(0, 1);
@@ -731,12 +731,12 @@ TEST_F(TestMem, SourceLimitExceededIsReZeroedWithEachGet)
   ASSERT_NE(source_limit_exceeded, nullptr);
 
   // Modify some elements
-  source_limit_exceeded->handle = 2;
+  source_limit_exceeded->handle       = 2;
   source_limit_exceeded->api_callback = reinterpret_cast<SacnSourceLimitExceededCallback>(kMagicPointerValue);
   source_limit_exceeded->internal_callback =
       reinterpret_cast<SacnSourceLimitExceededInternalCallback>(kMagicPointerValue);
   source_limit_exceeded->thread_id = (kTestNumThreads - 1u);
-  source_limit_exceeded->context = reinterpret_cast<void*>(kMagicPointerValue);
+  source_limit_exceeded->context   = reinterpret_cast<void*>(kMagicPointerValue);
 
   // Now get again and make sure they are re-zeroed
   source_limit_exceeded = get_source_limit_exceeded(0);
@@ -788,8 +788,8 @@ TEST_F(TestMem, RemoveReceiverFromListWorks)
   SacnReceiver receiver3{{}, {}, {}, {}};
 #endif
 
-  rtc.receivers = &receiver;
-  receiver.next = &receiver2;
+  rtc.receivers  = &receiver;
+  receiver.next  = &receiver2;
   receiver2.next = &receiver3;
 
   rtc.num_receivers = 3;
@@ -832,14 +832,14 @@ TEST_F(TestMem, AddSacnMergeReceiverSourceWorks)
   EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &kTestMergeReceiverConfig, &merge_receiver),
             kEtcPalErrOk);
 
-  EtcPalSockAddr source_addr{};
-  SacnRemoteSource source_info{};
+  EtcPalSockAddr       source_addr{};
+  SacnRemoteSource     source_info{};
   SacnRecvUniverseData universe_data{};
-  etcpal::Uuid last_cid;
+  etcpal::Uuid         last_cid;
   for (size_t i = 0u; i < kNumSources; ++i)
   {
     EXPECT_EQ(etcpal_rbtree_size(&merge_receiver->sources), i);
-    last_cid = etcpal::Uuid::V4();
+    last_cid           = etcpal::Uuid::V4();
     source_info.handle = static_cast<sacn_remote_source_t>(i);
     EXPECT_EQ(add_sacn_merge_receiver_source(merge_receiver, &source_addr, &source_info, false, &universe_data),
               kEtcPalErrOk);
@@ -862,8 +862,8 @@ TEST_F(TestMem, RemoveSacnMergeReceiverSourceWorks)
   EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &kTestMergeReceiverConfig, &merge_receiver),
             kEtcPalErrOk);
 
-  EtcPalSockAddr source_addr{};
-  SacnRemoteSource source_info{};
+  EtcPalSockAddr       source_addr{};
+  SacnRemoteSource     source_info{};
   SacnRecvUniverseData universe_data{};
   for (size_t i = 0u; i < kNumSources; ++i)
   {
@@ -884,11 +884,11 @@ TEST_F(TestMem, RemoveSacnMergeReceiverSourceWorks)
 
 TEST_F(TestMem, InitCleansUpRecvThreadContext)
 {
-  SacnRecvThreadContext* context = get_recv_thread_context(0);
-  context->running = true;
-  context->num_dead_sockets = 3u;
-  context->num_socket_refs = 3u;
-  context->new_socket_refs = 3u;
+  SacnRecvThreadContext* context  = get_recv_thread_context(0);
+  context->running                = true;
+  context->num_dead_sockets       = 3u;
+  context->num_socket_refs        = 3u;
+  context->new_socket_refs        = 3u;
   context->periodic_timer_started = true;
 
   sacn_receiver_mem_deinit();
@@ -904,8 +904,8 @@ TEST_F(TestMem, InitCleansUpRecvThreadContext)
 
 TEST_F(TestMem, RespectsMaxMergeReceiverLimit)
 {
-  SacnMergeReceiverConfig config = SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT;
-  SacnMergeReceiver* merge_receiver = NULL;
+  SacnMergeReceiverConfig config         = SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT;
+  SacnMergeReceiver*      merge_receiver = NULL;
   for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
   {
     config.universe_id = static_cast<uint16_t>(i + 1);
@@ -920,8 +920,8 @@ TEST_F(TestMem, RespectsMaxMergeReceiverSourceLimit)
   SacnMergeReceiver* merge_receiver = NULL;
   EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &config, &merge_receiver), kEtcPalErrOk);
 
-  EtcPalSockAddr source_addr{};
-  SacnRemoteSource source_info{};
+  EtcPalSockAddr       source_addr{};
+  SacnRemoteSource     source_info{};
   SacnRecvUniverseData universe_data{};
   for (int i = 0; i < SACN_RECEIVER_TOTAL_MAX_SOURCES; ++i)
   {

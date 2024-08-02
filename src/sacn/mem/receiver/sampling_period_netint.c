@@ -45,13 +45,13 @@
 #if SACN_DYNAMIC_MEM
 
 /* Macros for dynamic allocation. */
-#define ALLOC_SAMPLING_PERIOD_NETINT() malloc(sizeof(SacnSamplingPeriodNetint))
+#define ALLOC_SAMPLING_PERIOD_NETINT()   malloc(sizeof(SacnSamplingPeriodNetint))
 #define FREE_SAMPLING_PERIOD_NETINT(ptr) free(ptr)
 
 #else  // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
-#define ALLOC_SAMPLING_PERIOD_NETINT() etcpal_mempool_alloc(sacn_pool_recv_sampling_period_netints)
+#define ALLOC_SAMPLING_PERIOD_NETINT()   etcpal_mempool_alloc(sacn_pool_recv_sampling_period_netints)
 #define FREE_SAMPLING_PERIOD_NETINT(ptr) etcpal_mempool_free(sacn_pool_recv_sampling_period_netints, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
@@ -59,9 +59,11 @@
 /**************************** Private variables ******************************/
 
 #if !SACN_DYNAMIC_MEM
-ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_sampling_period_netints, SacnSamplingPeriodNetint,
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_sampling_period_netints,
+                      SacnSamplingPeriodNetint,
                       SACN_MAX_SAMPLING_PERIOD_NETINTS);
-ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_sampling_period_netint_rb_nodes, EtcPalRbNode,
+ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_sampling_period_netint_rb_nodes,
+                      EtcPalRbNode,
                       SACN_MAX_SAMPLING_PERIOD_NETINT_RB_NODES);
 #endif  // !SACN_DYNAMIC_MEM
 
@@ -79,8 +81,9 @@ etcpal_error_t init_sampling_period_netints(void)
   return res;
 }
 
-etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id,
-                                               bool in_future_sampling_period)
+etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree*              tree,
+                                               const EtcPalMcastNetintId* id,
+                                               bool                       in_future_sampling_period)
 {
   if (!SACN_ASSERT_VERIFY(tree) || !SACN_ASSERT_VERIFY(id))
     return kEtcPalErrSys;
@@ -93,7 +96,7 @@ etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree* tree, const EtcPalM
 
   if (result == kEtcPalErrOk)
   {
-    netint->id = *id;
+    netint->id                        = *id;
     netint->in_future_sampling_period = in_future_sampling_period;
 
     result = etcpal_rbtree_insert(tree, netint);
@@ -124,7 +127,7 @@ void remove_current_sampling_period_netints(EtcPalRbTree* tree)
     EtcPalRbIter iter;
     etcpal_rbiter_init(&iter);
     for (SacnSamplingPeriodNetint* sp_netint = etcpal_rbiter_first(&iter, tree); sp_netint;
-         sp_netint = etcpal_rbiter_next(&iter))
+         sp_netint                           = etcpal_rbiter_next(&iter))
     {
       if (!sp_netint->in_future_sampling_period)
       {

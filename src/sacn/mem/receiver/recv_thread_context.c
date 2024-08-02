@@ -103,9 +103,9 @@ int add_socket_ref(SacnRecvThreadContext* context, const ReceiveSocket* socket)
 
   int index = (int)context->num_socket_refs;
 
-  context->socket_refs[index].socket = *socket;
+  context->socket_refs[index].socket   = *socket;
   context->socket_refs[index].refcount = 1;
-  context->socket_refs[index].pending = true;
+  context->socket_refs[index].pending  = true;
 
   ++context->num_socket_refs;
   ++context->new_socket_refs;
@@ -132,8 +132,8 @@ bool add_subscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const E
   CHECK_ROOM_FOR_ONE_MORE(context, subscribes, SocketGroupReq, (SACN_MAX_NETINTS * SACN_MAX_SUBSCRIPTIONS), false);
 
   SocketGroupReq subscribe;
-  subscribe.socket = sock;
-  subscribe.group = *group;
+  subscribe.socket                               = sock;
+  subscribe.group                                = *group;
   context->subscribes[context->num_subscribes++] = subscribe;
   return true;
 }
@@ -154,8 +154,8 @@ bool add_unsubscribe(SacnRecvThreadContext* context, etcpal_socket_t sock, const
   CHECK_ROOM_FOR_ONE_MORE(context, unsubscribes, SocketGroupReq, (SACN_MAX_NETINTS * SACN_MAX_SUBSCRIPTIONS), false);
 
   SocketGroupReq unsubscribe;
-  unsubscribe.socket = sock;
-  unsubscribe.group = *group;
+  unsubscribe.socket                                 = sock;
+  unsubscribe.group                                  = *group;
   context->unsubscribes[context->num_unsubscribes++] = unsubscribe;
   return true;
 }
@@ -228,7 +228,7 @@ void mark_socket_ref_bound(SacnRecvThreadContext* context, int index)
   if (!SACN_ASSERT_VERIFY(context))
     return;
 
-  SocketRef* ref = &context->socket_refs[index];
+  SocketRef* ref    = &context->socket_refs[index];
   ref->socket.bound = true;
 
 #if SACN_RECEIVER_LIMIT_BIND
@@ -248,8 +248,8 @@ bool remove_socket_ref(SacnRecvThreadContext* context, int index)
   if (--ref->refcount == 0)
   {
 #if SACN_RECEIVER_LIMIT_BIND
-    etcpal_iptype_t ip_type = ref->socket.ip_type;
-    bool was_bound = ref->socket.bound;
+    etcpal_iptype_t ip_type   = ref->socket.ip_type;
+    bool            was_bound = ref->socket.bound;
 #endif
     bool was_pending = ref->pending;
 
@@ -312,7 +312,7 @@ void remove_receiver_from_list(SacnRecvThreadContext* context, SacnReceiver* rec
   if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(receiver))
     return;
 
-  SacnReceiver* last = NULL;
+  SacnReceiver* last  = NULL;
   SacnReceiver* entry = context->receivers;
   while (entry)
   {
@@ -334,7 +334,7 @@ void remove_receiver_from_list(SacnRecvThreadContext* context, SacnReceiver* rec
       receiver->next = NULL;
       break;
     }
-    last = entry;
+    last  = entry;
     entry = entry->next;
   }
 }
@@ -393,9 +393,9 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context, sa
 #endif
 
   context->num_dead_sockets = 0;
-  context->num_socket_refs = 0;
-  context->new_socket_refs = 0;
-  context->num_subscribes = 0;
+  context->num_socket_refs  = 0;
+  context->new_socket_refs  = 0;
+  context->num_subscribes   = 0;
   context->num_unsubscribes = 0;
 
 #if SACN_RECEIVER_LIMIT_BIND
@@ -406,9 +406,9 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context, sa
   context->source_detector = NULL;
 
   etcpal_signal_create(&context->deinit_signal);
-  context->running = false;
+  context->running                  = false;
   context->poll_context_initialized = false;
-  context->periodic_timer_started = false;
+  context->periodic_timer_started   = false;
 
   return kEtcPalErrOk;
 }
@@ -447,9 +447,9 @@ bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_sock
   if (!SACN_ASSERT_VERIFY(reqs) || !SACN_ASSERT_VERIFY(num_reqs) || !SACN_ASSERT_VERIFY(group))
     return false;
 
-  size_t index = 0;
-  SocketGroupReq* req = NULL;
-  bool found = false;
+  size_t          index = 0;
+  SocketGroupReq* req   = NULL;
+  bool            found = false;
   for (size_t i = 0; !found && (i < *num_reqs); ++i)
   {
     req = &reqs[i];

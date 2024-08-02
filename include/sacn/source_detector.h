@@ -163,9 +163,12 @@ extern "C" {
  * transmitting any universes.
  * @param[in] context Context pointer that was given at the creation of the source detector instance.
  */
-typedef void (*SacnSourceDetectorSourceUpdatedCallback)(sacn_remote_source_t handle, const EtcPalUuid* cid,
-                                                        const char* name, const uint16_t* sourced_universes,
-                                                        size_t num_sourced_universes, void* context);
+typedef void (*SacnSourceDetectorSourceUpdatedCallback)(sacn_remote_source_t handle,
+                                                        const EtcPalUuid*    cid,
+                                                        const char*          name,
+                                                        const uint16_t*      sourced_universes,
+                                                        size_t               num_sourced_universes,
+                                                        void*                context);
 
 /**
  * @brief Notify that a source is no longer transmitting Universe Discovery messages.
@@ -175,8 +178,10 @@ typedef void (*SacnSourceDetectorSourceUpdatedCallback)(sacn_remote_source_t han
  * @param[in] name The null-terminated UTF-8 string.
  * @param[in] context Context pointer that was given at the creation of the source detector instance.
  */
-typedef void (*SacnSourceDetectorSourceExpiredCallback)(sacn_remote_source_t handle, const EtcPalUuid* cid,
-                                                        const char* name, void* context);
+typedef void (*SacnSourceDetectorSourceExpiredCallback)(sacn_remote_source_t handle,
+                                                        const EtcPalUuid*    cid,
+                                                        const char*          name,
+                                                        void*                context);
 
 /**
  * @brief Notify that the module has run out of memory to track universes or sources.
@@ -236,8 +241,8 @@ typedef struct SacnSourceDetectorConfig
 void sacn_source_detector_config_init(SacnSourceDetectorConfig* config);
 
 etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* config,
-                                           const SacnNetintConfig* netint_config);
-void sacn_source_detector_destroy();
+                                           const SacnNetintConfig*         netint_config);
+void           sacn_source_detector_destroy();
 
 etcpal_error_t sacn_source_detector_reset_networking(const SacnNetintConfig* sys_netint_config);
 

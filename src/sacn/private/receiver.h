@@ -37,10 +37,11 @@ extern "C" {
 #endif
 
 etcpal_error_t sacn_receiver_init(void);
-void sacn_receiver_deinit(void);
+void           sacn_receiver_deinit(void);
 
-etcpal_error_t create_sacn_receiver(const SacnReceiverConfig* config, sacn_receiver_t* handle,
-                                    const SacnNetintConfig* netint_config,
+etcpal_error_t create_sacn_receiver(const SacnReceiverConfig*            config,
+                                    sacn_receiver_t*                     handle,
+                                    const SacnNetintConfig*              netint_config,
                                     const SacnReceiverInternalCallbacks* internal_callbacks);
 etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle);
 etcpal_error_t change_sacn_receiver_universe(sacn_receiver_t handle, uint16_t new_universe_id);

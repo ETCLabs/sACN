@@ -71,19 +71,27 @@ class MockMergeReceiverNotifyHandler : public sacn::MergeReceiver::NotifyHandler
 public:
   MockMergeReceiverNotifyHandler() = default;
 
-  MOCK_METHOD(void, HandleMergedData, (sacn::MergeReceiver::Handle handle, const SacnRecvMergedData& merged_data),
+  MOCK_METHOD(void,
+              HandleMergedData,
+              (sacn::MergeReceiver::Handle handle, const SacnRecvMergedData& merged_data),
               (override));
-  MOCK_METHOD(void, HandleNonDmxData,
-              (sacn::MergeReceiver::Handle receiver_handle, const etcpal::SockAddr& source_addr,
-               const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data),
+  MOCK_METHOD(void,
+              HandleNonDmxData,
+              (sacn::MergeReceiver::Handle receiver_handle,
+               const etcpal::SockAddr&     source_addr,
+               const SacnRemoteSource&     source_info,
+               const SacnRecvUniverseData& universe_data),
               (override));
-  MOCK_METHOD(void, HandleSourcesLost,
+  MOCK_METHOD(void,
+              HandleSourcesLost,
               (sacn::MergeReceiver::Handle handle, uint16_t universe, const std::vector<SacnLostSource>& lost_sources),
               (override));
   MOCK_METHOD(void, HandleSamplingPeriodStarted, (sacn::MergeReceiver::Handle handle, uint16_t universe), (override));
   MOCK_METHOD(void, HandleSamplingPeriodEnded, (sacn::MergeReceiver::Handle handle, uint16_t universe), (override));
-  MOCK_METHOD(void, HandleSourcePapLost,
-              (sacn::MergeReceiver::Handle handle, uint16_t universe, const SacnRemoteSource& source), (override));
+  MOCK_METHOD(void,
+              HandleSourcePapLost,
+              (sacn::MergeReceiver::Handle handle, uint16_t universe, const SacnRemoteSource& source),
+              (override));
   MOCK_METHOD(void, HandleSourceLimitExceeded, (sacn::MergeReceiver::Handle handle, uint16_t universe), (override));
 };
 
@@ -92,12 +100,17 @@ class MockSourceDetectorNotifyHandler : public sacn::SourceDetector::NotifyHandl
 public:
   MockSourceDetectorNotifyHandler() = default;
 
-  MOCK_METHOD(void, HandleSourceUpdated,
-              (sacn::RemoteSourceHandle handle, const etcpal::Uuid& cid, const std::string& name,
+  MOCK_METHOD(void,
+              HandleSourceUpdated,
+              (sacn::RemoteSourceHandle     handle,
+               const etcpal::Uuid&          cid,
+               const std::string&           name,
                const std::vector<uint16_t>& sourced_universes),
               (override));
-  MOCK_METHOD(void, HandleSourceExpired,
-              (sacn::RemoteSourceHandle handle, const etcpal::Uuid& cid, const std::string& name), (override));
+  MOCK_METHOD(void,
+              HandleSourceExpired,
+              (sacn::RemoteSourceHandle handle, const etcpal::Uuid& cid, const std::string& name),
+              (override));
   MOCK_METHOD(void, HandleMemoryLimitExceeded, (), (override));
 };
 
@@ -142,7 +155,7 @@ public:
     ASSERT_EQ(universes_.find(change.to), universes_.end());
 
     auto& state = universes_[change.to];
-    state = std::move(universes_[change.from]);
+    state       = std::move(universes_[change.from]);
     universes_.erase(change.from);
 
     EXPECT_TRUE(state->merge_receiver.ChangeUniverse(change.to));
@@ -157,7 +170,7 @@ public:
 private:
   struct UniverseState
   {
-    sacn::MergeReceiver merge_receiver;
+    sacn::MergeReceiver                      merge_receiver;
     NiceMock<MockMergeReceiverNotifyHandler> notify;
   };
 
@@ -179,7 +192,7 @@ public:
 
 private:
   NiceMock<MockSourceDetectorNotifyHandler> notify_;
-  sacn::McastMode initial_mcast_mode_{sacn::McastMode::kEnabledOnAllInterfaces};
+  sacn::McastMode                           initial_mcast_mode_{sacn::McastMode::kEnabledOnAllInterfaces};
 };
 
 class TestSource
@@ -187,16 +200,16 @@ class TestSource
 public:
   struct StartCodeParams
   {
-    int code;
-    int value;
+    int                code;
+    int                value;
     std::optional<int> min;
     std::optional<int> max;
   };
 
   struct UniverseParams
   {
-    uint16_t universe{kDefaultUniverse};
-    uint8_t universe_priority{100u};
+    uint16_t                     universe{kDefaultUniverse};
+    uint8_t                      universe_priority{100u};
     std::vector<StartCodeParams> start_codes;
   };
 
@@ -204,7 +217,7 @@ public:
       : initial_mcast_mode_(initial_mcast_mode)
   {
     auto cid = etcpal::Uuid::V4();
-    source_ = std::make_unique<SourceState>();
+    source_  = std::make_unique<SourceState>();
     EXPECT_TRUE(source_);
     if (source_)
     {
@@ -225,7 +238,7 @@ public:
     }
   }
 
-  TestSource(const TestSource& rhs) = delete;
+  TestSource(const TestSource& rhs)     = delete;
   TestSource(TestSource&& rhs) noexcept = default;
 
   ~TestSource()
@@ -294,31 +307,31 @@ private:
     StartCodeState() = default;
     StartCodeState(const StartCodeParams& p) : params(p) { buffer.fill(static_cast<uint8_t>(p.value)); }
 
-    StartCodeParams params;
+    StartCodeParams                        params;
     std::array<uint8_t, DMX_ADDRESS_COUNT> buffer{};
-    bool uninitialized{true};
+    bool                                   uninitialized{true};
   };
 
   struct UniverseState
   {
-    StartCodeState null_start_code;
+    StartCodeState                null_start_code;
     std::optional<StartCodeState> pap_start_code;
   };
 
   struct SourceState
   {
-    sacn::Source source;
+    sacn::Source                                  source;
     std::unordered_map<UniverseId, UniverseState> universes;
 
     etcpal::Thread thread;
     etcpal::Signal terminate;
-    etcpal::Mutex universes_lock;
+    etcpal::Mutex  universes_lock;
   };
 
   static void UniverseTick(sacn::Source& source, UniverseId universe_id, UniverseState& state)
   {
     bool updated_null = UpdateStartCodeData(state.null_start_code);
-    bool updated_pap = state.pap_start_code && UpdateStartCodeData(*state.pap_start_code);
+    bool updated_pap  = state.pap_start_code && UpdateStartCodeData(*state.pap_start_code);
     if (updated_null || updated_pap)
     {
       if (state.pap_start_code)
@@ -353,7 +366,7 @@ private:
   }
 
   std::unique_ptr<SourceState> source_;
-  sacn::McastMode initial_mcast_mode_{sacn::McastMode::kEnabledOnAllInterfaces};
+  sacn::McastMode              initial_mcast_mode_{sacn::McastMode::kEnabledOnAllInterfaces};
 };
 
 class CoverageTest : public ::testing::Test
@@ -414,7 +427,7 @@ TEST_F(CoverageTest, SendAndReceiveSimpleUniverse)
 TEST_F(CoverageTest, SendReceiveAndMergeAtScale)
 {
   static constexpr UniverseId kTestUniverses[] = {1u, 2u, 3u, 4u, 5u, 6u, 7u};
-  static constexpr int kNumTestSources = 7u;
+  static constexpr int        kNumTestSources  = 7u;
 
   TestMergeReceiver merge_receiver;
   for (UniverseId universe_id : kTestUniverses)
@@ -435,7 +448,7 @@ TEST_F(CoverageTest, SendReceiveAndMergeAtScale)
     TestSource source;
     for (UniverseId universe_id : kTestUniverses)
     {
-      source.AddUniverse({.universe = universe_id,
+      source.AddUniverse({.universe    = universe_id,
                           .start_codes = {{.code = SACN_STARTCODE_DMX, .min = 0x00, .max = 0xFF},
                                           {.code = SACN_STARTCODE_PRIORITY, .min = 0x00, .max = 0xFF}}});
     }
@@ -448,8 +461,8 @@ TEST_F(CoverageTest, SendReceiveAndMergeAtScale)
 
 TEST_F(CoverageTest, SwitchThroughUniverses)
 {
-  static constexpr UniverseId kTestUniverses[] = {1u, 2u, 3u};
-  static constexpr int kNumTestUniverses = sizeof(kTestUniverses) / sizeof(UniverseId);
+  static constexpr UniverseId kTestUniverses[]  = {1u, 2u, 3u};
+  static constexpr int        kNumTestUniverses = sizeof(kTestUniverses) / sizeof(UniverseId);
 
   TestMergeReceiver merge_receiver;
   merge_receiver.AddUniverse(kTestUniverses[0]);
@@ -477,7 +490,7 @@ TEST_F(CoverageTest, SwitchThroughUniverses)
 TEST_F(CoverageTest, DetectSourcesComingAndGoing)
 {
   static constexpr UniverseId kTestUniverses[] = {1u, 2u, 3u, 4u, 5u, 6u, 7u};
-  static constexpr int kNumTestSources = 7u;
+  static constexpr int        kNumTestSources  = 7u;
 
   TestSourceDetector source_detector;
   EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceUpdated(_, _, _, _)).Times(AtLeast(1));
@@ -505,7 +518,7 @@ TEST_F(CoverageTest, DetectSourcesComingAndGoing)
 TEST_F(CoverageTest, ResetNetworkingAtScale)
 {
   static constexpr int kNumUniverses = 25;
-  static constexpr int kNumSources = 2;
+  static constexpr int kNumSources   = 2;
 
   auto sys_netints = etcpal::netint::GetInterfaces();
   ASSERT_TRUE(sys_netints);

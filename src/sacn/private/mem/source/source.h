@@ -30,13 +30,13 @@ extern "C" {
 #endif
 
 etcpal_error_t init_sources(void);
-void deinit_sources(void);
+void           deinit_sources(void);
 
 etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state);
 etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state);
-SacnSource* get_source(size_t index);
-size_t get_num_sources();
-void remove_sacn_source(size_t index);
+SacnSource*    get_source(size_t index);
+size_t         get_num_sources();
+void           remove_sacn_source(size_t index);
 
 #ifdef __cplusplus
 }

@@ -51,8 +51,11 @@ protected:
 
   void TearDown() override {}
 
-  void InitDataPacket(uint8_t* output, const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data,
-                      uint8_t seq, bool terminated)
+  void InitDataPacket(uint8_t*                    output,
+                      const SacnRemoteSource&     source_info,
+                      const SacnRecvUniverseData& universe_data,
+                      uint8_t                     seq,
+                      bool                        terminated)
   {
     memset(output, 0, SACN_MTU);
     uint8_t* pcur = output;
@@ -62,7 +65,8 @@ protected:
     InitDmpLayer(pcur, universe_data);
   }
 
-  uint8_t* InitRootLayer(uint8_t* output, const SacnRemoteSource& source_info,
+  uint8_t* InitRootLayer(uint8_t*                    output,
+                         const SacnRemoteSource&     source_info,
                          const SacnRecvUniverseData& universe_data)
   {
     return InitRootLayer(output, SACN_DATA_HEADER_SIZE + universe_data.slot_range.address_count, false,
@@ -85,15 +89,25 @@ protected:
     return pcur;
   }
 
-  uint8_t* InitFramingLayer(uint8_t* output, const SacnRemoteSource& source_info,
-                            const SacnRecvUniverseData& universe_data, uint8_t seq, bool terminated)
+  uint8_t* InitFramingLayer(uint8_t*                    output,
+                            const SacnRemoteSource&     source_info,
+                            const SacnRecvUniverseData& universe_data,
+                            uint8_t                     seq,
+                            bool                        terminated)
   {
     return InitFramingLayer(output, universe_data.slot_range.address_count, VECTOR_E131_DATA_PACKET, source_info.name,
                             universe_data.priority, seq, universe_data.preview, terminated, universe_data.universe_id);
   }
 
-  uint8_t* InitFramingLayer(uint8_t* output, int slot_count, uint32_t vector, const char* source_name, uint8_t priority,
-                            uint8_t seq_num, bool preview, bool terminated, uint16_t universe_id)
+  uint8_t* InitFramingLayer(uint8_t*    output,
+                            int         slot_count,
+                            uint32_t    vector,
+                            const char* source_name,
+                            uint8_t     priority,
+                            uint8_t     seq_num,
+                            bool        preview,
+                            bool        terminated,
+                            uint16_t    universe_id)
   {
     uint8_t* pcur = output;
 
@@ -159,15 +173,17 @@ protected:
     return pcur;
   }
 
-  void TestParseDataPacket(const SacnRemoteSource& source_info, const SacnRecvUniverseData& universe_data, uint8_t seq,
-                           bool terminated)
+  void TestParseDataPacket(const SacnRemoteSource&     source_info,
+                           const SacnRecvUniverseData& universe_data,
+                           uint8_t                     seq,
+                           bool                        terminated)
   {
     InitDataPacket(test_buffer_, source_info, universe_data, seq, terminated);
 
-    SacnRemoteSource source_info_out;
+    SacnRemoteSource     source_info_out;
     SacnRecvUniverseData universe_data_out;
-    uint8_t seq_out;
-    bool terminated_out;
+    uint8_t              seq_out;
+    bool                 terminated_out;
     EXPECT_TRUE(parse_sacn_data_packet(&test_buffer_[SACN_FRAMING_OFFSET], SACN_MTU - SACN_FRAMING_OFFSET,
                                        &source_info_out, &seq_out, &terminated_out, &universe_data_out));
 
@@ -184,23 +200,30 @@ protected:
 
   void TestPackRootLayer(uint16_t pdu_length, bool extended, const EtcPalUuid& source_cid)
   {
-    uint8_t result[SACN_MTU] = {0};
+    uint8_t result[SACN_MTU]   = {0};
     uint8_t expected[SACN_MTU] = {0};
-    int result_length = pack_sacn_root_layer(result, pdu_length, extended, &source_cid);
-    int expected_length = (int)(InitRootLayer(expected, pdu_length, extended, source_cid) - expected);
+    int     result_length      = pack_sacn_root_layer(result, pdu_length, extended, &source_cid);
+    int     expected_length    = (int)(InitRootLayer(expected, pdu_length, extended, source_cid) - expected);
 
     EXPECT_EQ(result_length, expected_length);
     EXPECT_EQ(memcmp(result, expected, result_length), 0);
   }
 
-  void TestPackDataFramingLayer(uint16_t slot_count, uint32_t vector, const char* source_name, uint8_t priority,
-                                uint16_t sync_address, uint8_t seq_num, bool preview, bool terminated, bool force_sync,
-                                uint16_t universe_id)
+  void TestPackDataFramingLayer(uint16_t    slot_count,
+                                uint32_t    vector,
+                                const char* source_name,
+                                uint8_t     priority,
+                                uint16_t    sync_address,
+                                uint8_t     seq_num,
+                                bool        preview,
+                                bool        terminated,
+                                bool        force_sync,
+                                uint16_t    universe_id)
   {
-    uint8_t result[SACN_MTU] = {0};
+    uint8_t result[SACN_MTU]   = {0};
     uint8_t expected[SACN_MTU] = {0};
-    int result_length = pack_sacn_data_framing_layer(result, slot_count, vector, source_name, priority, sync_address,
-                                                     seq_num, preview, terminated, force_sync, universe_id);
+    int result_length   = pack_sacn_data_framing_layer(result, slot_count, vector, source_name, priority, sync_address,
+                                                       seq_num, preview, terminated, force_sync, universe_id);
     int expected_length = (int)(InitFramingLayer(expected, slot_count, vector, source_name, priority, seq_num, preview,
                                                  terminated, universe_id) -
                                 expected);
@@ -211,10 +234,10 @@ protected:
 
   void TestPackDmpLayerHeader(uint8_t start_code, uint16_t slot_count)
   {
-    uint8_t result[SACN_MTU] = {0};
+    uint8_t result[SACN_MTU]   = {0};
     uint8_t expected[SACN_MTU] = {0};
-    int result_length = pack_sacn_dmp_layer_header(result, start_code, slot_count);
-    int expected_length = (int)(InitDmpLayer(expected, start_code, slot_count, nullptr) - expected);
+    int     result_length      = pack_sacn_dmp_layer_header(result, start_code, slot_count);
+    int     expected_length    = (int)(InitDmpLayer(expected, start_code, slot_count, nullptr) - expected);
 
     EXPECT_EQ(result_length, expected_length);
     EXPECT_EQ(memcmp(result, expected, result_length), 0);
@@ -351,28 +374,28 @@ TEST_F(TestPdu, SetLastPageWorks)
 TEST_F(TestPdu, ParseSacnDataPacketWorks)
 {
   std::vector<uint8_t> data1 = {1u, 2u, 3u};
-  SacnRemoteSource source_info;
+  SacnRemoteSource     source_info;
   SacnRecvUniverseData universe_data;
   source_info.cid = kEtcPalNullUuid;
   strcpy(source_info.name, "Test Name");
-  universe_data.universe_id = 1u;
-  universe_data.priority = 100u;
-  universe_data.preview = true;
-  universe_data.start_code = SACN_STARTCODE_DMX;
+  universe_data.universe_id              = 1u;
+  universe_data.priority                 = 100u;
+  universe_data.preview                  = true;
+  universe_data.start_code               = SACN_STARTCODE_DMX;
   universe_data.slot_range.address_count = static_cast<uint16_t>(data1.size());
-  universe_data.values = data1.data();
+  universe_data.values                   = data1.data();
 
   TestParseDataPacket(source_info, universe_data, 1u, false);
 
   std::vector<uint8_t> data2 = {7u, 6u, 5u, 4u, 3u};
-  source_info.cid = kEtcPalNullUuid;
+  source_info.cid            = kEtcPalNullUuid;
   strcpy(source_info.name, "Name Test");
-  universe_data.universe_id = 123u;
-  universe_data.priority = 64;
-  universe_data.preview = false;
-  universe_data.start_code = SACN_STARTCODE_PRIORITY;
+  universe_data.universe_id              = 123u;
+  universe_data.priority                 = 64;
+  universe_data.preview                  = false;
+  universe_data.start_code               = SACN_STARTCODE_PRIORITY;
   universe_data.slot_range.address_count = static_cast<uint16_t>(data2.size());
-  universe_data.values = data2.data();
+  universe_data.values                   = data2.data();
   TestParseDataPacket(source_info, universe_data, 10u, true);
 
   std::vector<uint8_t> max_data;
@@ -380,33 +403,33 @@ TEST_F(TestPdu, ParseSacnDataPacketWorks)
     max_data.push_back(static_cast<uint8_t>(i));
   source_info.cid = kEtcPalNullUuid;
   strcpy(source_info.name, "012345678901234567890123456789012345678901234567890123456789012");
-  universe_data.universe_id = 0xFFFFu;
-  universe_data.priority = 0xFF;
-  universe_data.preview = true;
-  universe_data.start_code = 0xFF;
+  universe_data.universe_id              = 0xFFFFu;
+  universe_data.priority                 = 0xFF;
+  universe_data.preview                  = true;
+  universe_data.start_code               = 0xFF;
   universe_data.slot_range.address_count = DMX_ADDRESS_COUNT;
-  universe_data.values = max_data.data();
+  universe_data.values                   = max_data.data();
   TestParseDataPacket(source_info, universe_data, 0xFFu, true);
 }
 
 TEST_F(TestPdu, ParseSacnDataPacketHandlesInvalid)
 {
-  static const std::vector<uint8_t> kValidData = {1u, 2u, 3u};
-  static const SacnRemoteSource kValidSourceInfo = {1u, kEtcPalNullUuid, "Test Name"};
+  static const std::vector<uint8_t> kValidData         = {1u, 2u, 3u};
+  static const SacnRemoteSource     kValidSourceInfo   = {1u, kEtcPalNullUuid, "Test Name"};
   static const SacnRecvUniverseData kValidUniverseData = {
       1u, 100u, true, false, SACN_STARTCODE_DMX, {1, 3}, kValidData.data()};
-  static constexpr size_t kBufLenTooShort = 87u;
-  static constexpr uint32_t kNonDataVector = (VECTOR_E131_DATA_PACKET + 123u);
-  static constexpr uint8_t kInvalidDmpVector = 0x04;
-  static constexpr uint8_t kInvalidAddressDataType = 0x12;
+  static constexpr size_t   kBufLenTooShort           = 87u;
+  static constexpr uint32_t kNonDataVector            = (VECTOR_E131_DATA_PACKET + 123u);
+  static constexpr uint8_t  kInvalidDmpVector         = 0x04;
+  static constexpr uint8_t  kInvalidAddressDataType   = 0x12;
   static constexpr uint16_t kInvalidFirstPropertyAddr = 0x9876;
-  static constexpr uint16_t kInvalidAddrIncrement = 0x1234;
-  static const size_t kValidBufferLength = (SACN_DATA_HEADER_SIZE + kValidData.size() - SACN_FRAMING_OFFSET);
+  static constexpr uint16_t kInvalidAddrIncrement     = 0x1234;
+  static const size_t       kValidBufferLength = (SACN_DATA_HEADER_SIZE + kValidData.size() - SACN_FRAMING_OFFSET);
 
-  SacnRemoteSource source_info_out;
+  SacnRemoteSource     source_info_out;
   SacnRecvUniverseData universe_data_out;
-  uint8_t seq_out;
-  bool terminated_out;
+  uint8_t              seq_out;
+  bool                 terminated_out;
 
   uint8_t valid_data[SACN_MTU];
   InitDataPacket(valid_data, kValidSourceInfo, kValidUniverseData, 1u, false);

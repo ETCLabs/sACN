@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 etcpal_error_t init_source_pap_lost_buf(unsigned int num_threads);
-void deinit_source_pap_lost_buf(void);
+void           deinit_source_pap_lost_buf(void);
 
 // This is processed from the context of receiving data, so there is only one per thread.
 SourcePapLostNotification* get_source_pap_lost(sacn_thread_id_t thread_id);

@@ -83,7 +83,7 @@ void sacn_source_detector_config_init(SacnSourceDetectorConfig* config)
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* config,
-                                           const SacnNetintConfig* netint_config)
+                                           const SacnNetintConfig*         netint_config)
 {
   etcpal_error_t res = kEtcPalErrOk;
 
@@ -97,7 +97,7 @@ etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* confi
     if (sacn_receiver_lock())
     {
       SacnSourceDetector* source_detector = NULL;
-      res = add_sacn_source_detector(config, netint_config, &source_detector);
+      res                                 = add_sacn_source_detector(config, netint_config, &source_detector);
 
       if (res == kEtcPalErrOk)
         res = assign_source_detector_to_thread(source_detector);

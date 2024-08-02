@@ -50,14 +50,14 @@ extern "C" {
  * Global constants, macros, types, etc.
  *****************************************************************************/
 
-#define SACN_DATA_PACKET_MTU 638
+#define SACN_DATA_PACKET_MTU               638
 #define SACN_UNIVERSE_DISCOVERY_PACKET_MTU 1144
-#define SACN_MTU SACN_UNIVERSE_DISCOVERY_PACKET_MTU
-#define SACN_PORT 5568
+#define SACN_MTU                           SACN_UNIVERSE_DISCOVERY_PACKET_MTU
+#define SACN_PORT                          5568
 
 #define SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE 512
-#define SACN_DISCOVERY_UNIVERSE 64214
-#define SACN_UNIVERSE_DISCOVERY_INTERVAL 10000
+#define SACN_DISCOVERY_UNIVERSE                        64214
+#define SACN_UNIVERSE_DISCOVERY_INTERVAL               10000
 
 #define SACN_STATS_LOG_INTERVAL 10000
 
@@ -139,7 +139,7 @@ typedef unsigned int sacn_thread_id_t;
  */
 #if SACN_DYNAMIC_MEM
 #define SACN_DECLARE_BUF(type, name, max_static_size) \
-  type* name;                                         \
+  type*  name;                                        \
   size_t name##_capacity
 #else
 #define SACN_DECLARE_BUF(type, name, max_static_size) type name[max_static_size]
@@ -174,15 +174,15 @@ typedef unsigned int sacn_thread_id_t;
  *****************************************************************************/
 
 #if SACN_LOGGING_ENABLED
-#define SACN_LOG(pri, ...) etcpal_log(sacn_log_params, (pri), SACN_LOG_MSG_PREFIX __VA_ARGS__)
-#define SACN_LOG_EMERG(...) SACN_LOG(ETCPAL_LOG_EMERG, __VA_ARGS__)
-#define SACN_LOG_ALERT(...) SACN_LOG(ETCPAL_LOG_ALERT, __VA_ARGS__)
-#define SACN_LOG_CRIT(...) SACN_LOG(ETCPAL_LOG_CRIT, __VA_ARGS__)
-#define SACN_LOG_ERR(...) SACN_LOG(ETCPAL_LOG_ERR, __VA_ARGS__)
+#define SACN_LOG(pri, ...)    etcpal_log(sacn_log_params, (pri), SACN_LOG_MSG_PREFIX __VA_ARGS__)
+#define SACN_LOG_EMERG(...)   SACN_LOG(ETCPAL_LOG_EMERG, __VA_ARGS__)
+#define SACN_LOG_ALERT(...)   SACN_LOG(ETCPAL_LOG_ALERT, __VA_ARGS__)
+#define SACN_LOG_CRIT(...)    SACN_LOG(ETCPAL_LOG_CRIT, __VA_ARGS__)
+#define SACN_LOG_ERR(...)     SACN_LOG(ETCPAL_LOG_ERR, __VA_ARGS__)
 #define SACN_LOG_WARNING(...) SACN_LOG(ETCPAL_LOG_WARNING, __VA_ARGS__)
-#define SACN_LOG_NOTICE(...) SACN_LOG(ETCPAL_LOG_NOTICE, __VA_ARGS__)
-#define SACN_LOG_INFO(...) SACN_LOG(ETCPAL_LOG_INFO, __VA_ARGS__)
-#define SACN_LOG_DEBUG(...) SACN_LOG(ETCPAL_LOG_DEBUG, __VA_ARGS__)
+#define SACN_LOG_NOTICE(...)  SACN_LOG(ETCPAL_LOG_NOTICE, __VA_ARGS__)
+#define SACN_LOG_INFO(...)    SACN_LOG(ETCPAL_LOG_INFO, __VA_ARGS__)
+#define SACN_LOG_DEBUG(...)   SACN_LOG(ETCPAL_LOG_DEBUG, __VA_ARGS__)
 
 #define SACN_CAN_LOG(pri) etcpal_can_log(sacn_log_params, (pri))
 #else
@@ -229,14 +229,14 @@ typedef struct SacnInternalSocketState
 typedef struct SacnRemoteSourceInternal
 {
   sacn_remote_source_t handle;
-  const char* name;
+  const char*          name;
 } SacnRemoteSourceInternal;
 
 typedef struct SacnLostSourceInternal
 {
   sacn_remote_source_t handle;
-  const char* name;
-  bool terminated;
+  const char*          name;
+  bool                 terminated;
 } SacnLostSourceInternal;
 
 /* A set of sources that is created when a source goes offline. If additional sources go offline in
@@ -244,8 +244,8 @@ typedef struct SacnLostSourceInternal
 typedef struct TerminationSet TerminationSet;
 struct TerminationSet
 {
-  EtcPalTimer wait_period;
-  EtcPalRbTree sources;
+  EtcPalTimer     wait_period;
+  EtcPalRbTree    sources;
   TerminationSet* next;
 };
 
@@ -253,7 +253,7 @@ struct TerminationSet
 typedef struct TerminationSetSourceKey
 {
   sacn_remote_source_t handle;
-  uint16_t universe;
+  uint16_t             universe;
 } TerminationSetSourceKey;
 
 /* A source in a termination set. Sources are removed from the termination set as they are
@@ -261,9 +261,9 @@ typedef struct TerminationSetSourceKey
 typedef struct TerminationSetSource
 {
   TerminationSetSourceKey key;  // Must remain the first element in the struct for red-black tree lookup.
-  const char* name;
-  bool offline;
-  bool terminated;
+  const char*             name;
+  bool                    offline;
+  bool                    terminated;
 } TerminationSetSource;
 
 /******************************************************************************
@@ -304,28 +304,28 @@ typedef struct SacnSourceDetector
 typedef struct SacnUniverseDiscoverySource
 {
   sacn_remote_source_t handle;  // This must be the first member.
-  char name[SACN_SOURCE_NAME_MAX_LEN];
+  char                 name[SACN_SOURCE_NAME_MAX_LEN];
 
   SACN_DECLARE_SOURCE_DETECTOR_BUF(uint16_t, universes, SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE);
   size_t num_universes;
-  bool universes_dirty;  // The universe list has un-notified changes.
+  bool   universes_dirty;  // The universe list has un-notified changes.
   size_t last_notified_universe_count;
-  bool suppress_universe_limit_exceeded_notification;
+  bool   suppress_universe_limit_exceeded_notification;
 
   EtcPalTimer expiration_timer;
-  size_t next_universe_index;
-  int next_page;
+  size_t      next_universe_index;
+  int         next_page;
 } SacnUniverseDiscoverySource;
 
 typedef struct SacnUniverseDiscoveryPage
 {
-  const EtcPalUuid* sender_cid;
+  const EtcPalUuid*     sender_cid;
   const EtcPalSockAddr* from_addr;
-  const char* source_name;
-  int page;
-  int last_page;
-  const uint16_t* universes;
-  size_t num_universes;
+  const char*           source_name;
+  int                   page;
+  int                   last_page;
+  const uint16_t*       universes;
+  size_t                num_universes;
 } SacnUniverseDiscoveryPage;
 
 /******************************************************************************
@@ -335,9 +335,9 @@ typedef struct SacnUniverseDiscoveryPage
 typedef struct SourceDetectorSourceUpdatedNotification
 {
   SacnSourceDetectorSourceUpdatedCallback callback;
-  sacn_remote_source_t handle;
-  const EtcPalUuid* cid;
-  const char* name;
+  sacn_remote_source_t                    handle;
+  const EtcPalUuid*                       cid;
+  const char*                             name;
 #if SACN_DYNAMIC_MEM
   uint16_t* sourced_universes;
 #elif SACN_SOURCE_DETECTOR_ENABLED
@@ -346,7 +346,7 @@ typedef struct SourceDetectorSourceUpdatedNotification
   uint16_t* sourced_universes;  // This is only here so things compile.
 #endif
   size_t num_sourced_universes;
-  void* context;
+  void*  context;
 } SourceDetectorSourceUpdatedNotification;
 
 #if SACN_DYNAMIC_MEM
@@ -369,13 +369,16 @@ typedef struct SourceDetectorSourceUpdatedNotification
 typedef struct SourceDetectorExpiredSource
 {
   sacn_remote_source_t handle;
-  EtcPalUuid cid;
-  char name[SACN_SOURCE_NAME_MAX_LEN];
+  EtcPalUuid           cid;
+  char                 name[SACN_SOURCE_NAME_MAX_LEN];
 } SourceDetectorExpiredSource;
 
 #define SRC_DETECTOR_EXPIRED_SOURCE_DEFAULT_INIT \
   {                                              \
-    SACN_REMOTE_SOURCE_INVALID, {{0}}, { 0 }     \
+    SACN_REMOTE_SOURCE_INVALID, {{0}},           \
+    {                                            \
+      0                                          \
+    }                                            \
   }
 
 typedef struct SourceDetectorSourceExpiredNotification
@@ -383,7 +386,7 @@ typedef struct SourceDetectorSourceExpiredNotification
   SacnSourceDetectorSourceExpiredCallback callback;
   SACN_DECLARE_SOURCE_DETECTOR_BUF(SourceDetectorExpiredSource, expired_sources, SACN_SOURCE_DETECTOR_MAX_SOURCES);
   size_t num_expired_sources;
-  void* context;
+  void*  context;
 } SourceDetectorSourceExpiredNotification;
 
 #if SACN_DYNAMIC_MEM
@@ -406,7 +409,7 @@ typedef struct SourceDetectorSourceExpiredNotification
 typedef struct SourceDetectorLimitExceededNotification
 {
   SacnSourceDetectorLimitExceededCallback callback;
-  void* context;
+  void*                                   context;
 } SourceDetectorLimitExceededNotification;
 
 #define SRC_DETECTOR_LIMIT_EXCEEDED_DEFAULT_INIT \
@@ -418,37 +421,46 @@ typedef struct SourceDetectorLimitExceededNotification
  * Types used by the sACN Receive module
  *****************************************************************************/
 
-typedef void (*SacnUniverseDataInternalCallback)(sacn_receiver_t receiver_handle, const EtcPalSockAddr* source_addr,
-                                                 const SacnRemoteSource* source_info,
-                                                 const SacnRecvUniverseData* universe_data, sacn_thread_id_t thread_id);
-typedef void (*SacnSourcesLostInternalCallback)(sacn_receiver_t handle, uint16_t universe,
-                                                const SacnLostSource* lost_sources, size_t num_lost_sources,
-                                                sacn_thread_id_t thread_id);
-typedef void (*SacnSamplingPeriodStartedInternalCallback)(sacn_receiver_t handle, uint16_t universe,
+typedef void (*SacnUniverseDataInternalCallback)(sacn_receiver_t             receiver_handle,
+                                                 const EtcPalSockAddr*       source_addr,
+                                                 const SacnRemoteSource*     source_info,
+                                                 const SacnRecvUniverseData* universe_data,
+                                                 sacn_thread_id_t            thread_id);
+typedef void (*SacnSourcesLostInternalCallback)(sacn_receiver_t       handle,
+                                                uint16_t              universe,
+                                                const SacnLostSource* lost_sources,
+                                                size_t                num_lost_sources,
+                                                sacn_thread_id_t      thread_id);
+typedef void (*SacnSamplingPeriodStartedInternalCallback)(sacn_receiver_t  handle,
+                                                          uint16_t         universe,
                                                           sacn_thread_id_t thread_id);
-typedef void (*SacnSamplingPeriodEndedInternalCallback)(sacn_receiver_t handle, uint16_t universe,
+typedef void (*SacnSamplingPeriodEndedInternalCallback)(sacn_receiver_t  handle,
+                                                        uint16_t         universe,
                                                         sacn_thread_id_t thread_id);
-typedef void (*SacnSourcePapLostInternalCallback)(sacn_receiver_t handle, uint16_t universe,
-                                                  const SacnRemoteSource* source, sacn_thread_id_t thread_id);
-typedef void (*SacnSourceLimitExceededInternalCallback)(sacn_receiver_t handle, uint16_t universe,
+typedef void (*SacnSourcePapLostInternalCallback)(sacn_receiver_t         handle,
+                                                  uint16_t                universe,
+                                                  const SacnRemoteSource* source,
+                                                  sacn_thread_id_t        thread_id);
+typedef void (*SacnSourceLimitExceededInternalCallback)(sacn_receiver_t  handle,
+                                                        uint16_t         universe,
                                                         sacn_thread_id_t thread_id);
 
 /* Custom versions of receiver callbacks that include the thread ID (for the merge receiver). */
 typedef struct SacnReceiverInternalCallbacks
 {
-  SacnUniverseDataInternalCallback universe_data;
-  SacnSourcesLostInternalCallback sources_lost;
+  SacnUniverseDataInternalCallback          universe_data;
+  SacnSourcesLostInternalCallback           sources_lost;
   SacnSamplingPeriodStartedInternalCallback sampling_period_started;
-  SacnSamplingPeriodEndedInternalCallback sampling_period_ended;
-  SacnSourcePapLostInternalCallback source_pap_lost;
-  SacnSourceLimitExceededInternalCallback source_limit_exceeded;
+  SacnSamplingPeriodEndedInternalCallback   sampling_period_ended;
+  SacnSourcePapLostInternalCallback         source_pap_lost;
+  SacnSourceLimitExceededInternalCallback   source_limit_exceeded;
 } SacnReceiverInternalCallbacks;
 
 /* The keys that are used to look up receivers in the binary trees, for ease of comparison */
 typedef struct SacnReceiverKeys
 {
   sacn_receiver_t handle;
-  uint16_t universe;
+  uint16_t        universe;
 } SacnReceiverKeys;
 
 /* An sACN universe to which we are currently listening. */
@@ -465,20 +477,20 @@ struct SacnReceiver
   SacnInternalNetintArray netints;
 
   // State tracking
-  bool sampling;
-  bool notified_sampling_started;
-  EtcPalTimer sample_timer;
+  bool         sampling;
+  bool         notified_sampling_started;
+  EtcPalTimer  sample_timer;
   EtcPalRbTree sampling_period_netints;
 
-  bool suppress_limit_exceeded_notification;
-  EtcPalRbTree sources;       // The sources being tracked on this universe.
+  bool            suppress_limit_exceeded_notification;
+  EtcPalRbTree    sources;    // The sources being tracked on this universe.
   TerminationSet* term_sets;  // Source loss tracking
 
   // Option flags
   bool filter_preview_data;
 
   // Configured callbacks
-  SacnReceiverCallbacks api_callbacks;
+  SacnReceiverCallbacks         api_callbacks;
   SacnReceiverInternalCallbacks internal_callbacks;
 
   /* The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
@@ -520,13 +532,13 @@ typedef enum
 typedef struct SacnTrackedSource
 {
   sacn_remote_source_t handle;  // This must be the first member of this struct.
-  char name[SACN_SOURCE_NAME_MAX_LEN];
-  EtcPalMcastNetintId netint;
+  char                 name[SACN_SOURCE_NAME_MAX_LEN];
+  EtcPalMcastNetintId  netint;
 
   EtcPalTimer packet_timer;
-  uint8_t seq;
-  bool terminated;
-  bool dmx_received_since_last_tick;
+  uint8_t     seq;
+  bool        terminated;
+  bool        dmx_received_since_last_tick;
 
 #if SACN_ETC_PRIORITY_EXTENSION
   sacn_recv_state_t recv_state;
@@ -537,15 +549,15 @@ typedef struct SacnTrackedSource
 
 typedef struct SacnRemoteSourceHandle
 {
-  EtcPalUuid cid;  // This must be the first member of this struct.
+  EtcPalUuid           cid;  // This must be the first member of this struct.
   sacn_remote_source_t handle;
 } SacnRemoteSourceHandle;
 
 typedef struct SacnRemoteSourceCid
 {
   sacn_remote_source_t handle;  // This must be the first member of this struct.
-  EtcPalUuid cid;
-  size_t refcount;
+  EtcPalUuid           cid;
+  size_t               refcount;
 } SacnRemoteSourceCid;
 
 typedef enum
@@ -567,71 +579,71 @@ typedef struct SacnSamplingPeriodNetint
 /* Data for the universe_data() callback */
 typedef struct UniverseDataNotification
 {
-  SacnUniverseDataCallback api_callback;
+  SacnUniverseDataCallback         api_callback;
   SacnUniverseDataInternalCallback internal_callback;
-  sacn_receiver_t receiver_handle;
-  SacnRemoteSource source_info;
-  SacnRecvUniverseData universe_data;
-  sacn_thread_id_t thread_id;
-  void* context;
+  sacn_receiver_t                  receiver_handle;
+  SacnRemoteSource                 source_info;
+  SacnRecvUniverseData             universe_data;
+  sacn_thread_id_t                 thread_id;
+  void*                            context;
 } UniverseDataNotification;
 
 /* Data for the sources_lost() callback */
 typedef struct SourcesLostNotification
 {
-  SacnSourcesLostCallback api_callback;
+  SacnSourcesLostCallback         api_callback;
   SacnSourcesLostInternalCallback internal_callback;
-  sacn_receiver_t handle;
-  uint16_t universe;
+  sacn_receiver_t                 handle;
+  uint16_t                        universe;
   SACN_DECLARE_RECEIVER_BUF(SacnLostSource, lost_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
-  size_t num_lost_sources;
+  size_t           num_lost_sources;
   sacn_thread_id_t thread_id;
-  void* context;
+  void*            context;
 } SourcesLostNotification;
 
 /* Data for the sampling_period_started() callback */
 typedef struct SamplingStartedNotification
 {
-  SacnSamplingPeriodStartedCallback api_callback;
+  SacnSamplingPeriodStartedCallback         api_callback;
   SacnSamplingPeriodStartedInternalCallback internal_callback;
-  sacn_receiver_t handle;
-  uint16_t universe;
-  sacn_thread_id_t thread_id;
-  void* context;
+  sacn_receiver_t                           handle;
+  uint16_t                                  universe;
+  sacn_thread_id_t                          thread_id;
+  void*                                     context;
 } SamplingStartedNotification;
 
 /* Data for the sampling_period_ended() callback */
 typedef struct SamplingEndedNotification
 {
-  SacnSamplingPeriodEndedCallback api_callback;
+  SacnSamplingPeriodEndedCallback         api_callback;
   SacnSamplingPeriodEndedInternalCallback internal_callback;
-  sacn_receiver_t handle;
-  uint16_t universe;
-  sacn_thread_id_t thread_id;
-  void* context;
+  sacn_receiver_t                         handle;
+  uint16_t                                universe;
+  sacn_thread_id_t                        thread_id;
+  void*                                   context;
 } SamplingEndedNotification;
 
 /* Data for the source_pap_lost() callback */
 typedef struct SourcePapLostNotification
 {
-  SacnSourcePapLostCallback api_callback;
+  SacnSourcePapLostCallback         api_callback;
   SacnSourcePapLostInternalCallback internal_callback;
-  SacnRemoteSource source;
-  sacn_receiver_t handle;
-  uint16_t universe;
-  sacn_thread_id_t thread_id;
-  void* context;
+  SacnRemoteSource                  source;
+  sacn_receiver_t                   handle;
+  uint16_t                          universe;
+  sacn_thread_id_t                  thread_id;
+  void*                             context;
 } SourcePapLostNotification;
 
 /* Data for the source_limit_exceeded() callback */
 typedef struct SourceLimitExceededNotification
 {
-  SacnSourceLimitExceededCallback api_callback;
+  SacnSourceLimitExceededCallback         api_callback;
   SacnSourceLimitExceededInternalCallback internal_callback;
-  sacn_receiver_t handle;
-  uint16_t universe;
-  sacn_thread_id_t thread_id;
-  void* context;
+  sacn_receiver_t                         handle;
+  uint16_t                                universe;
+  sacn_thread_id_t                        thread_id;
+  void*                                   context;
 } SourceLimitExceededNotification;
 
 /* Contains commonly used information about a sACN socket used for receiving. */
@@ -639,8 +651,8 @@ typedef struct ReceiveSocket
 {
   etcpal_socket_t handle;  /* The socket descriptor. */
   etcpal_iptype_t ip_type; /* The IP type used in multicast subscriptions and the bind address. */
-  bool bound;              /* True if bind was called on this socket, false otherwise. */
-  bool polling;            /* True if this socket was added to a poll context, false otherwise. */
+  bool            bound;   /* True if bind was called on this socket, false otherwise. */
+  bool            polling; /* True if this socket was added to a poll context, false otherwise. */
 #if SACN_RECEIVER_SOCKET_PER_NIC
   unsigned int ifindex; /* Index of network interface on which this socket is subscribed. */
 #endif
@@ -654,28 +666,28 @@ typedef struct ReceiveSocket
 /* For the shared-socket model, this represents a shared socket. */
 typedef struct SocketRef
 {
-  ReceiveSocket socket; /* The socket handle, IP type, and state. */
-  size_t refcount;      /* How many addresses the socket is subscribed to. */
-  bool pending;         /* Whether or not this SocketRef is pending queued operations on the thread. */
+  ReceiveSocket socket;   /* The socket handle, IP type, and state. */
+  size_t        refcount; /* How many addresses the socket is subscribed to. */
+  bool          pending;  /* Whether or not this SocketRef is pending queued operations on the thread. */
 } SocketRef;
 
 /* Queued information for joining and leaving multicast groups. */
 typedef struct SocketGroupReq
 {
   etcpal_socket_t socket; /* The socket descriptor. */
-  EtcPalGroupReq group;   /* The interface and group address to join or leave. */
+  EtcPalGroupReq  group;  /* The interface and group address to join or leave. */
 } SocketGroupReq;
 
 /* Holds the discrete data used by each receiver thread. */
 typedef struct SacnRecvThreadContext
 {
   sacn_thread_id_t thread_id;
-  etcpal_thread_t thread_handle;
-  etcpal_signal_t deinit_signal;
-  bool running;
+  etcpal_thread_t  thread_handle;
+  etcpal_signal_t  deinit_signal;
+  bool             running;
 
   SacnReceiver* receivers;
-  size_t num_receivers;
+  size_t        num_receivers;
 
   // Only one thread will ever have a source detector, because the library can only create one source detector instance.
   SacnSourceDetector* source_detector;
@@ -703,10 +715,10 @@ typedef struct SacnRecvThreadContext
 
   // This section is only touched from the thread, outside the lock.
   EtcPalPollContext poll_context;
-  bool poll_context_initialized;
-  uint8_t recv_buf[SACN_MTU];
-  EtcPalTimer periodic_timer;
-  bool periodic_timer_started;
+  bool              poll_context_initialized;
+  uint8_t           recv_buf[SACN_MTU];
+  EtcPalTimer       periodic_timer;
+  bool              periodic_timer_started;
 } SacnRecvThreadContext;
 
 /******************************************************************************
@@ -715,29 +727,29 @@ typedef struct SacnRecvThreadContext
 typedef struct SacnMergeReceiverInternalSource
 {
   sacn_remote_source_t handle;  // This must be the first struct member.
-  char name[SACN_SOURCE_NAME_MAX_LEN];
-  EtcPalSockAddr addr;
-  bool sampling;
-  bool per_address_priorities_active;
-  bool levels_active;
-  uint8_t universe_priority;
+  char                 name[SACN_SOURCE_NAME_MAX_LEN];
+  EtcPalSockAddr       addr;
+  bool                 sampling;
+  bool                 per_address_priorities_active;
+  bool                 levels_active;
+  uint8_t              universe_priority;
 } SacnMergeReceiverInternalSource;
 
 typedef struct SacnMergeReceiver
 {
-  sacn_merge_receiver_t merge_receiver_handle;  // This must be the first struct member.
+  sacn_merge_receiver_t      merge_receiver_handle;  // This must be the first struct member.
   SacnMergeReceiverCallbacks callbacks;
-  bool use_pap;
+  bool                       use_pap;
 
-  sacn_dmx_merger_t merger_handle;
-  uint8_t levels[SACN_DMX_MERGER_MAX_SLOTS];
-  uint8_t priorities[SACN_DMX_MERGER_MAX_SLOTS];
+  sacn_dmx_merger_t        merger_handle;
+  uint8_t                  levels[SACN_DMX_MERGER_MAX_SLOTS];
+  uint8_t                  priorities[SACN_DMX_MERGER_MAX_SLOTS];
   sacn_dmx_merger_source_t owners[SACN_DMX_MERGER_MAX_SLOTS];
 
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
-  sacn_dmx_merger_t sampling_merger_handle;
-  uint8_t sampling_levels[SACN_DMX_MERGER_MAX_SLOTS];
-  uint8_t sampling_priorities[SACN_DMX_MERGER_MAX_SLOTS];
+  sacn_dmx_merger_t        sampling_merger_handle;
+  uint8_t                  sampling_levels[SACN_DMX_MERGER_MAX_SLOTS];
+  uint8_t                  sampling_priorities[SACN_DMX_MERGER_MAX_SLOTS];
   sacn_dmx_merger_source_t sampling_owners[SACN_DMX_MERGER_MAX_SLOTS];
 #endif
 
@@ -753,12 +765,12 @@ typedef struct SacnMergeReceiver
 typedef struct MergeReceiverMergedDataNotification
 {
   SacnMergeReceiverMergedDataCallback callback;
-  sacn_merge_receiver_t handle;
-  uint16_t universe;
-  SacnRecvUniverseSubrange slot_range;
-  uint8_t levels[SACN_DMX_MERGER_MAX_SLOTS];
-  uint8_t priorities[SACN_DMX_MERGER_MAX_SLOTS];
-  sacn_remote_source_t owners[SACN_DMX_MERGER_MAX_SLOTS];
+  sacn_merge_receiver_t               handle;
+  uint16_t                            universe;
+  SacnRecvUniverseSubrange            slot_range;
+  uint8_t                             levels[SACN_DMX_MERGER_MAX_SLOTS];
+  uint8_t                             priorities[SACN_DMX_MERGER_MAX_SLOTS];
+  sacn_remote_source_t                owners[SACN_DMX_MERGER_MAX_SLOTS];
   SACN_DECLARE_MERGE_RECEIVER_BUF(sacn_remote_source_t, active_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_active_sources;
 } MergeReceiverMergedDataNotification;
@@ -776,16 +788,16 @@ typedef enum
 
 typedef struct SacnSourceNetint
 {
-  EtcPalMcastNetintId id;  // This must be the first struct member.
-  size_t num_refs;         // Number of universes using this netint.
+  EtcPalMcastNetintId id;        // This must be the first struct member.
+  size_t              num_refs;  // Number of universes using this netint.
 } SacnSourceNetint;
 
 typedef struct SacnUnicastDestination
 {
-  EtcPalIpAddr dest_addr;  // This must be the first struct member.
+  EtcPalIpAddr        dest_addr;  // This must be the first struct member.
   termination_state_t termination_state;
-  int num_terminations_sent;
-  etcpal_error_t last_send_error;
+  int                 num_terminations_sent;
+  etcpal_error_t      last_send_error;
 } SacnUnicastDestination;
 
 typedef struct SacnSourceUniverse
@@ -793,27 +805,27 @@ typedef struct SacnSourceUniverse
   uint16_t universe_id;  // This must be the first struct member.
 
   termination_state_t termination_state;
-  int num_terminations_sent;
+  int                 num_terminations_sent;
 
-  uint8_t priority;
+  uint8_t  priority;
   uint16_t sync_universe;
-  bool send_preview;
-  uint8_t next_seq_num;
+  bool     send_preview;
+  uint8_t  next_seq_num;
 
   // Start code 0x00 state
-  int level_packets_sent_before_suppression;
+  int         level_packets_sent_before_suppression;
   EtcPalTimer level_keep_alive_timer;
-  uint8_t level_send_buf[SACN_DATA_PACKET_MTU];
-  bool has_level_data;
-  bool levels_sent_this_tick;
+  uint8_t     level_send_buf[SACN_DATA_PACKET_MTU];
+  bool        has_level_data;
+  bool        levels_sent_this_tick;
 
 #if SACN_ETC_PRIORITY_EXTENSION
   // Start code 0xDD state
-  int pap_packets_sent_before_suppression;
+  int         pap_packets_sent_before_suppression;
   EtcPalTimer pap_keep_alive_timer;
-  uint8_t pap_send_buf[SACN_DATA_PACKET_MTU];
-  bool has_pap_data;
-  bool pap_sent_this_tick;
+  uint8_t     pap_send_buf[SACN_DATA_PACKET_MTU];
+  bool        has_pap_data;
+  bool        pap_sent_this_tick;
 #endif
 
   bool other_sent_this_tick;
@@ -821,7 +833,7 @@ typedef struct SacnSourceUniverse
 
   SACN_DECLARE_BUF(SacnUnicastDestination, unicast_dests, SACN_MAX_UNICAST_DESTINATIONS_PER_UNIVERSE);
   size_t num_unicast_dests;
-  bool send_unicast_only;
+  bool   send_unicast_only;
 
   etcpal_error_t last_send_error;
 
@@ -833,23 +845,23 @@ typedef struct SacnSource
   sacn_source_t handle;  // This must be the first struct member.
 
   EtcPalUuid cid;
-  char name[SACN_SOURCE_NAME_MAX_LEN];
+  char       name[SACN_SOURCE_NAME_MAX_LEN];
 
   bool terminating;  // If in the process of terminating all universes and removing this source.
 
   SACN_DECLARE_SOURCE_BUF(SacnSourceUniverse, universes, SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE);
-  size_t num_universes;
-  size_t num_active_universes;  // Number of universes to include in universe discovery packets.
-  EtcPalTimer universe_discovery_timer;
-  bool process_manually;
+  size_t            num_universes;
+  size_t            num_active_universes;  // Number of universes to include in universe discovery packets.
+  EtcPalTimer       universe_discovery_timer;
+  bool              process_manually;
   sacn_ip_support_t ip_supported;
-  int keep_alive_interval;
-  int pap_keep_alive_interval;
-  size_t universe_count_max;
+  int               keep_alive_interval;
+  int               pap_keep_alive_interval;
+  size_t            universe_count_max;
 
-  EtcPalTimer stats_log_timer;  // Maintains a repeating interval, at the end of which statistics are logged
-  int total_tick_count;         // The total number of ticks this interval
-  int failed_tick_count;        // The number of ticks this interval that failed at least one send
+  EtcPalTimer stats_log_timer;    // Maintains a repeating interval, at the end of which statistics are logged
+  int         total_tick_count;   // The total number of ticks this interval
+  int         failed_tick_count;  // The number of ticks this interval that failed at least one send
 
   // This is the set of unique netints used by all universes of this source, to be used when transmitting universe
   // discovery packets.

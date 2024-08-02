@@ -49,13 +49,13 @@
 #if SACN_DYNAMIC_MEM
 
 /* Macros for dynamic allocation. */
-#define ALLOC_UNIVERSE_DISCOVERY_SOURCE() malloc(sizeof(SacnUniverseDiscoverySource))
+#define ALLOC_UNIVERSE_DISCOVERY_SOURCE()   malloc(sizeof(SacnUniverseDiscoverySource))
 #define FREE_UNIVERSE_DISCOVERY_SOURCE(ptr) free(ptr)
 
 #else  // SACN_DYNAMIC_MEM
 
 /* Macros for static allocation, which is done using etcpal_mempool. */
-#define ALLOC_UNIVERSE_DISCOVERY_SOURCE() etcpal_mempool_alloc(sacn_pool_srcdetect_sources)
+#define ALLOC_UNIVERSE_DISCOVERY_SOURCE()   etcpal_mempool_alloc(sacn_pool_srcdetect_sources)
 #define FREE_UNIVERSE_DISCOVERY_SOURCE(ptr) etcpal_mempool_free(sacn_pool_srcdetect_sources, ptr)
 
 #endif  // SACN_DYNAMIC_MEM
@@ -76,7 +76,7 @@ static void universe_discovery_sources_tree_dealloc(const EtcPalRbTree* self, Et
 
 // Universe discovery source tree node management
 static EtcPalRbNode* universe_discovery_source_node_alloc(void);
-static void universe_discovery_source_node_dealloc(EtcPalRbNode* node);
+static void          universe_discovery_source_node_dealloc(EtcPalRbNode* node);
 
 /*************************** Function definitions ****************************/
 
@@ -103,14 +103,15 @@ void deinit_universe_discovery_sources(void)
   etcpal_rbtree_clear_with_cb(&universe_discovery_sources, universe_discovery_sources_tree_dealloc);
 }
 
-etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const char* name,
+etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid*             cid,
+                                                  const char*                   name,
                                                   SacnUniverseDiscoverySource** source_state)
 {
   if (!SACN_ASSERT_VERIFY(cid) || !SACN_ASSERT_VERIFY(name))
     return kEtcPalErrSys;
 
-  etcpal_error_t result = kEtcPalErrOk;
-  SacnUniverseDiscoverySource* src = NULL;
+  etcpal_error_t               result = kEtcPalErrOk;
+  SacnUniverseDiscoverySource* src    = NULL;
 
   sacn_remote_source_t existing_handle = get_remote_source_handle(cid);
   if ((existing_handle != SACN_REMOTE_SOURCE_INVALID) &&
@@ -136,12 +137,12 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const c
     src->handle = handle;
     strncpy(src->name, name, SACN_SOURCE_NAME_MAX_LEN);
 
-    src->universes_dirty = true;
-    src->num_universes = 0;
-    src->last_notified_universe_count = 0;
+    src->universes_dirty                               = true;
+    src->num_universes                                 = 0;
+    src->last_notified_universe_count                  = 0;
     src->suppress_universe_limit_exceeded_notification = false;
 #if SACN_DYNAMIC_MEM
-    src->universes = calloc(INITIAL_CAPACITY, sizeof(uint16_t));
+    src->universes          = calloc(INITIAL_CAPACITY, sizeof(uint16_t));
     src->universes_capacity = src->universes ? INITIAL_CAPACITY : 0;
 
     if (!src->universes)
@@ -155,7 +156,7 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const c
   {
     etcpal_timer_start(&src->expiration_timer, SACN_UNIVERSE_DISCOVERY_INTERVAL * 2);
     src->next_universe_index = 0;
-    src->next_page = 0;
+    src->next_page           = 0;
 
     result = etcpal_rbtree_insert(&universe_discovery_sources, src);
   }
@@ -184,9 +185,11 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid* cid, const c
  * If num_replacement_universes is too big, no replacement will occur, and this will return the maximum number for
  * num_replacement_universes that will fit. Otherwise, this will return num_replacement_universes.
  */
-size_t replace_universe_discovery_universes(SacnUniverseDiscoverySource* source, size_t replace_start_index,
-                                            const uint16_t* replacement_universes, size_t num_replacement_universes,
-                                            size_t dynamic_universe_limit)
+size_t replace_universe_discovery_universes(SacnUniverseDiscoverySource* source,
+                                            size_t                       replace_start_index,
+                                            const uint16_t*              replacement_universes,
+                                            size_t                       num_replacement_universes,
+                                            size_t                       dynamic_universe_limit)
 {
   if (!SACN_ASSERT_VERIFY(source))
     return 0;

@@ -53,7 +53,7 @@ protected:
       return kEtcPalErrOk;
     };
 
-    test_return_value_ = kEtcPalErrSys;
+    test_return_value_  = kEtcPalErrSys;
     test_source_handle_ = 456;
 
     ASSERT_EQ(sacn_dmx_merger_init(), kEtcPalErrOk);
@@ -61,35 +61,35 @@ protected:
 
   void TearDown() override { sacn_dmx_merger_deinit(); }
 
-  static constexpr sacn_dmx_merger_t kTestMergerHandle = 123;
-  static constexpr uint8_t kTestPriority = 123;
-  static constexpr size_t kTestNewValuesCount = 123;
-  static constexpr size_t kTestAddressPrioritiesCount = 456;
+  static constexpr sacn_dmx_merger_t kTestMergerHandle           = 123;
+  static constexpr uint8_t           kTestPriority               = 123;
+  static constexpr size_t            kTestNewValuesCount         = 123;
+  static constexpr size_t            kTestAddressPrioritiesCount = 456;
 
   static const SacnDmxMergerSource kTestSource;
-  static const uint8_t kTestNewValues[SACN_DMX_MERGER_MAX_SLOTS];
-  static const uint8_t kTestAddressPriorities[SACN_DMX_MERGER_MAX_SLOTS];
-  static const uint8_t kTestPdata[SACN_DMX_MERGER_MAX_SLOTS];
+  static const uint8_t             kTestNewValues[SACN_DMX_MERGER_MAX_SLOTS];
+  static const uint8_t             kTestAddressPriorities[SACN_DMX_MERGER_MAX_SLOTS];
+  static const uint8_t             kTestPdata[SACN_DMX_MERGER_MAX_SLOTS];
 
-  static uint8_t levels_[SACN_DMX_MERGER_MAX_SLOTS];
-  static uint8_t pap_[SACN_DMX_MERGER_MAX_SLOTS];
+  static uint8_t                  levels_[SACN_DMX_MERGER_MAX_SLOTS];
+  static uint8_t                  pap_[SACN_DMX_MERGER_MAX_SLOTS];
   static sacn_dmx_merger_source_t owners_[SACN_DMX_MERGER_MAX_SLOTS];
 
-  static etcpal_error_t test_return_value_;
-  static sacn_dmx_merger_source_t test_source_handle_;
+  static etcpal_error_t            test_return_value_;
+  static sacn_dmx_merger_source_t  test_source_handle_;
   static sacn::DmxMerger::Settings settings_default_;
 };
 
-const SacnDmxMergerSource TestMerger::kTestSource = {0};
-const uint8_t TestMerger::kTestNewValues[] = {};
-const uint8_t TestMerger::kTestAddressPriorities[] = {};
-const uint8_t TestMerger::kTestPdata[] = {};
+const SacnDmxMergerSource TestMerger::kTestSource              = {0};
+const uint8_t             TestMerger::kTestNewValues[]         = {};
+const uint8_t             TestMerger::kTestAddressPriorities[] = {};
+const uint8_t             TestMerger::kTestPdata[]             = {};
 
-etcpal_error_t TestMerger::test_return_value_;
-sacn_dmx_merger_source_t TestMerger::test_source_handle_;
-uint8_t TestMerger::levels_[] = {};
-uint8_t TestMerger::pap_[] = {};
-sacn_dmx_merger_source_t TestMerger::owners_[] = {};
+etcpal_error_t            TestMerger::test_return_value_;
+sacn_dmx_merger_source_t  TestMerger::test_source_handle_;
+uint8_t                   TestMerger::levels_[] = {};
+uint8_t                   TestMerger::pap_[]    = {};
+sacn_dmx_merger_source_t  TestMerger::owners_[] = {};
 sacn::DmxMerger::Settings TestMerger::settings_default_(nullptr);
 
 TEST_F(TestMerger, SettingsConstructorWorks)
@@ -133,7 +133,7 @@ TEST_F(TestMerger, StartupWorks)
 
   sacn::DmxMerger::Settings settings(levels_);
   settings.per_address_priorities = pap_;
-  settings.owners = owners_;
+  settings.owners                 = owners_;
 
   etcpal::Error result = merger.Startup(settings);
 
@@ -176,14 +176,14 @@ TEST_F(TestMerger, AddSourceWorks)
   merger.Startup(settings_default_);
 
   test_return_value_ = kEtcPalErrOk;
-  auto result_ok = merger.AddSource();
+  auto result_ok     = merger.AddSource();
 
   EXPECT_EQ(sacn_dmx_merger_add_source_fake.call_count, 1u);
   ASSERT_EQ(result_ok.has_value(), true);
   EXPECT_EQ(result_ok.value(), test_source_handle_);
 
   test_return_value_ = kEtcPalErrSys;
-  auto result_error = merger.AddSource();
+  auto result_error  = merger.AddSource();
 
   EXPECT_EQ(sacn_dmx_merger_add_source_fake.call_count, 2u);
   ASSERT_EQ(result_error.has_value(), false);
