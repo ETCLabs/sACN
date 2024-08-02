@@ -12,5 +12,6 @@ else()
 endif()
 
 target_link_libraries(sacn_cpp_source_example PRIVATE sACN)
+target_clang_tidy(sacn_cpp_source_example)
 set_target_properties(sacn_cpp_source_example PROPERTIES FOLDER examples)
 set_target_properties(sacn_cpp_source_example PROPERTIES CXX_STANDARD 14 FOLDER examples)

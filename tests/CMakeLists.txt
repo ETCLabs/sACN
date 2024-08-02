@@ -12,6 +12,7 @@ function(sacn_test_setup target_name config_dir)
     ${SACN_INCLUDE}
     ${SACN_SRC}
   )
+  target_clang_tidy(${target_name})
   set_target_properties(${target_name} PROPERTIES CXX_STANDARD 20 FOLDER tests)
   gtest_discover_tests(${target_name} EXTRA_ARGS "--gtest_output=xml:${TEST_BIN_DIR}/test-results/")
 endfunction()

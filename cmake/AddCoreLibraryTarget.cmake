@@ -27,6 +27,7 @@ function(sacn_add_core_library_target target_name)
   endif()
 
   target_link_libraries(${target_name} PUBLIC EtcPal)
+  target_clang_tidy(${target_name})
 
   # Organize sources in IDEs
   source_group(TREE ${SACN_SRC}/sacn PREFIX src FILES

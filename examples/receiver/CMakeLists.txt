@@ -11,4 +11,5 @@ else()
 endif()
 
 target_link_libraries(sacn_receiver_example PRIVATE sACN)
+target_clang_tidy(sacn_receiver_example)
 set_target_properties(sacn_receiver_example PROPERTIES FOLDER examples)
