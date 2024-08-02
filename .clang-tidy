@@ -54,8 +54,9 @@ HeaderFilterRegex: '.*(src|include)[\/\\]sacn[\/\\].+\.h'
 FormatStyle:     file
 CheckOptions:
 # cppcoreguidelines
-  - { key: cppcoreguidelines-explicit-virtual-functions.IgnoreDestructors,                                           value: '1' }
-  - { key: cppcoreguidelines-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic, value: '1' }
+  - { key: cppcoreguidelines-explicit-virtual-functions.IgnoreDestructors,                                           value: '1'  }
+  - { key: cppcoreguidelines-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic, value: '1'  }
+  - { key: cppcoreguidelines-avoid-do-while.IgnoreMacros,                                                            value: true }
 # readability
   - { key: readability-braces-around-statements.ShortStatementLines,    value: '4'           }
   - { key: readability-function-size.StatementThreshold,                value: '800'         }

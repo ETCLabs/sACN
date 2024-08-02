@@ -583,16 +583,16 @@ inline etcpal::Error Receiver::ChangeUniverseAndFootprint(uint16_t              
 inline std::vector<EtcPalMcastNetintId> Receiver::GetNetworkInterfaces()
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<EtcPalMcastNetintId> netints;
-  size_t                           size_guess  = 4u;
-  size_t                           num_netints = 0u;
+  size_t                           size_guess = 4u;
+  std::vector<EtcPalMcastNetintId> netints(size_guess);
+  size_t num_netints = sacn_receiver_get_network_interfaces(handle_.value(), netints.data(), netints.size());
 
-  do
+  while (num_netints > netints.size())
   {
+    size_guess = num_netints + 4u;
     netints.resize(size_guess);
     num_netints = sacn_receiver_get_network_interfaces(handle_.value(), netints.data(), netints.size());
-    size_guess  = num_netints + 4u;
-  } while (num_netints > netints.size());
+  }
 
   netints.resize(num_netints);
   return netints;

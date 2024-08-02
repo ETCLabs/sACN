@@ -469,16 +469,16 @@ inline void Source::RemoveUniverse(uint16_t universe)
 inline std::vector<uint16_t> Source::GetUniverses()
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<uint16_t> universes;
-  size_t                size_guess    = 4u;
-  size_t                num_universes = 0u;
+  size_t                size_guess = 4u;
+  std::vector<uint16_t> universes(size_guess);
+  size_t                num_universes = sacn_source_get_universes(handle_.value(), universes.data(), universes.size());
 
-  do
+  while (num_universes > universes.size())
   {
+    size_guess = num_universes + 4u;
     universes.resize(size_guess);
     num_universes = sacn_source_get_universes(handle_.value(), universes.data(), universes.size());
-    size_guess    = num_universes + 4u;
-  } while (num_universes > universes.size());
+  }
 
   universes.resize(num_universes);
   return universes;
@@ -527,17 +527,18 @@ inline void Source::RemoveUnicastDestination(uint16_t universe, const etcpal::Ip
 inline std::vector<etcpal::IpAddr> Source::GetUnicastDestinations(uint16_t universe)
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<EtcPalIpAddr> destinations;
-  size_t                    size_guess       = 4u;
-  size_t                    num_destinations = 0u;
+  size_t                    size_guess = 4u;
+  std::vector<EtcPalIpAddr> destinations(size_guess);
+  size_t                    num_destinations =
+      sacn_source_get_unicast_destinations(handle_.value(), universe, destinations.data(), destinations.size());
 
-  do
+  while (num_destinations > destinations.size())
   {
+    size_guess = num_destinations + 4u;
     destinations.resize(size_guess);
     num_destinations =
         sacn_source_get_unicast_destinations(handle_.value(), universe, destinations.data(), destinations.size());
-    size_guess = num_destinations + 4u;
-  } while (num_destinations > destinations.size());
+  }
 
   destinations.resize(num_destinations);
 
@@ -928,16 +929,16 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sy
 inline std::vector<EtcPalMcastNetintId> Source::GetNetworkInterfaces(uint16_t universe)
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<EtcPalMcastNetintId> netints;
-  size_t                           size_guess  = 4u;
-  size_t                           num_netints = 0u;
+  size_t                           size_guess = 4u;
+  std::vector<EtcPalMcastNetintId> netints(size_guess);
+  size_t num_netints = sacn_source_get_network_interfaces(handle_.value(), universe, netints.data(), netints.size());
 
-  do
+  while (num_netints > netints.size())
   {
+    size_guess = num_netints + 4u;
     netints.resize(size_guess);
     num_netints = sacn_source_get_network_interfaces(handle_.value(), universe, netints.data(), netints.size());
-    size_guess  = num_netints + 4u;
-  } while (num_netints > netints.size());
+  }
 
   netints.resize(num_netints);
   return netints;

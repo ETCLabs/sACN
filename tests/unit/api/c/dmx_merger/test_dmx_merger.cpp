@@ -295,7 +295,7 @@ public:
 
     int  permutation_num = 1;
     bool time_to_refresh = true;
-    do
+    while ((permutation_num == 1) || std::next_permutation(current_permutation.begin(), current_permutation.end()))
     {
       if (time_to_refresh)
         RefreshMerger();
@@ -333,7 +333,7 @@ public:
         time_to_refresh = false;  // Only refresh the first time for initialization.
 
       ++permutation_num;
-    } while (std::next_permutation(current_permutation.begin(), current_permutation.end()));
+    }
 
     return true;
   }
