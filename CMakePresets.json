@@ -1,0 +1,80 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 15,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-ninja-msvc",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "SACN_BUILD_TESTS": true,
+        "SACN_BUILD_EXAMPLES": true,
+        "SACN_ENABLE_CLANG_TIDY": true,
+        "FETCHCONTENT_UPDATES_DISCONNECTED": true,
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/install"
+      },
+      "binaryDir": "${sourceDir}/build",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "toolset": {
+        "value": "host=x64",
+        "strategy": "external"
+      }
+    },
+    {
+      "name": "windows-ninja-msvc-debug",
+      "displayName": "Windows Native Debug x64 with Ninja, MSVC, Clang-Tidy",
+      "inherits": "windows-ninja-msvc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "binaryDir": "${sourceDir}/build/debug"
+    },
+    {
+      "name": "windows-ninja-msvc-release",
+      "displayName": "Windows Native Release x64 with Ninja, MSVC, Clang-Tidy",
+      "inherits": "windows-ninja-msvc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      },
+      "binaryDir": "${sourceDir}/build/release"
+    },
+    {
+      "name": "unix-makefiles-native",
+      "hidden": true,
+      "generator": "Unix Makefiles",
+      "cacheVariables": {
+        "SACN_BUILD_TESTS": true,
+        "SACN_BUILD_EXAMPLES": true,
+        "SACN_ENABLE_CLANG_TIDY": true
+      },
+      "binaryDir": "${sourceDir}/build"
+    },
+    {
+      "name": "unix-makefiles-native-debug",
+      "displayName": "Native Makefile Generator Debug Build with Clang-Tidy",
+      "inherits": "unix-makefiles-native",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "binaryDir": "${sourceDir}/build/debug"
+    },
+    {
+      "name": "unix-makefiles-native-release",
+      "displayName": "Native Makefile Generator Release Build with Clang-Tidy",
+      "inherits": "unix-makefiles-native",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      },
+      "binaryDir": "${sourceDir}/build/release"
+    }
+  ]
+}
