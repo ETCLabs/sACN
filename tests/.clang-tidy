@@ -1,0 +1,11 @@
+---
+InheritParentConfig: true
+# For all disabled checks, please provide a rationale here.
+#
+# - cppcoreguidelines-pro-type-reinterpret-cast: This is unavoidable due to red-black tree usage.
+#
+Checks: >
+  -cppcoreguidelines-pro-type-reinterpret-cast
+CheckOptions:
+  - { key: readability-identifier-naming.FunctionCase, value: CamelCase  }
+...

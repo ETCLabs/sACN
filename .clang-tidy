@@ -20,6 +20,8 @@
 # - modernize-deprecated-headers: False positives in C-only headers.
 # - modernize-use-trailing-return-type: False positives in C-only headers.
 # - modernize-use-using: False positives in C-only headers.
+# - modernize-use-nodiscard: This library needs to support C++14 for now. Add this back in when we no
+#   longer need to support C++14.
 # - readability-magic-numbers: See cppcoreguidelines-avoid-magic-numbers
 #
 Checks: >
@@ -38,6 +40,7 @@ Checks: >
   -modernize-deprecated-headers,
   -modernize-use-trailing-return-type,
   -modernize-use-using,
+  -modernize-use-nodiscard,
   readability-*,
   -readability-magic-numbers
 
