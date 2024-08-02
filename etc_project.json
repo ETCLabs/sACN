@@ -3,7 +3,13 @@
     {
       "name": "EtcPal",
       "gitlabPath": "etc/common-tech/general/etcpal",
-      "version": "1.0.0.14"
+      "version": "1.0.0.17"
+    },
+    {
+      "name": "GSL",
+      "gitlabPath": "mirrors/thirdparty/microsoft/gsl",
+      "gitTag": "c31a9ad5e8e99da8567237a7ba51a7d8f419e5bf",
+      "devOnly": true
     },
     {
       "name": "googletest",

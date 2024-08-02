@@ -297,9 +297,13 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
 #if SACN_DYNAMIC_MEM
             source_updated.sourced_universes =
                 source->num_universes ? calloc(source->num_universes, sizeof(uint16_t)) : NULL;
+
+            if (source_updated.sourced_universes)
 #endif
-            for (size_t i = 0; i < source->num_universes; ++i)
-              source_updated.sourced_universes[i] = source->universes[i];
+            {
+              for (size_t i = 0; i < source->num_universes; ++i)
+                source_updated.sourced_universes[i] = source->universes[i];
+            }
 
             source_updated.num_sourced_universes = source->num_universes;
             source_updated.context = source_detector->callbacks.context;

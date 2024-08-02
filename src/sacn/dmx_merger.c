@@ -936,7 +936,7 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
                         // is safe because this function requires that sacn_receiver_lock be taken beforehand.
         etcpal_rbiter_init(&tree_iter);
         const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
-        do
+        while (candidate)
         {
           if (candidate->handle != source->handle)
           {
@@ -951,7 +951,9 @@ void update_levels_multi_source(MergerState* merger, SourceState* source, const 
               merger->config.owners[slot] = candidate->handle;
             }
           }
-        } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
+
+          candidate = etcpal_rbiter_next(&tree_iter);
+        }
       }
     }
   }
@@ -1116,7 +1118,7 @@ void merge_new_priorities(MergerState* merger, const SourceState* source, size_t
                       // is safe because this function requires that sacn_receiver_lock be taken beforehand.
       etcpal_rbiter_init(&tree_iter);
       const SourceState* candidate = etcpal_rbiter_first(&tree_iter, &merger->source_state_lookup);
-      do
+      while (candidate)
       {
         uint8_t candidate_pap = CALC_SRC_PAP(candidate, slot);
 
@@ -1130,7 +1132,9 @@ void merge_new_priorities(MergerState* merger, const SourceState* source, size_t
           merger->config.owners[slot] = candidate->handle;
           merger->config.per_address_priorities[slot] = candidate_pap;
         }
-      } while ((candidate = etcpal_rbiter_next(&tree_iter)) != NULL);
+
+        candidate = etcpal_rbiter_next(&tree_iter);
+      }
     }
   }
 }
@@ -1150,11 +1154,13 @@ void recalculate_pap_active(MergerState* merger)
   EtcPalRbIter iter;
   etcpal_rbiter_init(&iter);
   SourceState* source = etcpal_rbiter_first(&iter, &merger->source_state_lookup);
-  do
+  while (!pap_active && source)
   {
     if (PAP_ACTIVE(source))
       pap_active = true;
-  } while (!pap_active && ((source = etcpal_rbiter_next(&iter)) != NULL));
+
+    source = etcpal_rbiter_next(&iter);
+  }
 
   *(merger->config.per_address_priorities_active) = pap_active;
 }
@@ -1174,11 +1180,13 @@ void recalculate_universe_priority(MergerState* merger)
   EtcPalRbIter iter;
   etcpal_rbiter_init(&iter);
   SourceState* source = etcpal_rbiter_first(&iter, &merger->source_state_lookup);
-  do
+  while (source)
   {
     if (source->source.universe_priority > max_universe_priority)
       max_universe_priority = source->source.universe_priority;
-  } while ((source = etcpal_rbiter_next(&iter)) != NULL);
+
+    source = etcpal_rbiter_next(&iter);
+  }
 
   *(merger->config.universe_priority) = max_universe_priority;
 }

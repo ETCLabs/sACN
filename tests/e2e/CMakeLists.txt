@@ -4,7 +4,7 @@ set(E2E_TEST_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR})
 function(sacn_add_e2e_test test_name config_dir)
   set(target_name ${test_name})
   sacn_test_setup(${target_name} ${config_dir} ${ARGN})
-  target_link_libraries(${target_name} PRIVATE gtest gmock)
+  target_link_libraries(${target_name} PRIVATE gtest gmock GSL)
 endfunction()
 
 include(${SACN_CMAKE}/AddCoreLibraryTarget.cmake)

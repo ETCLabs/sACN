@@ -82,28 +82,21 @@ SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, siz
   {
     SourcesLostNotificationBuf* notifications = &sacn_pool_sources_lost[thread_id];
 
-    // This one cannot use CHECK_CAPACITY() because of a special case in the initialization of the
-    // reallocated buffer
 #if SACN_DYNAMIC_MEM
-    if (size > notifications->buf_capacity)
+    size_t old_capacity = notifications->buf_capacity;
+#endif  // SACN_DYNAMIC_MEM
+
+    CHECK_CAPACITY(notifications, size, buf, SourcesLostNotification, SACN_RECEIVER_MAX_UNIVERSES, NULL);
+
+#if SACN_DYNAMIC_MEM
+    if ((notifications->buf_capacity > old_capacity) &&
+        (init_sources_lost_array(&notifications->buf[old_capacity], notifications->buf_capacity - old_capacity) !=
+         kEtcPalErrOk))
     {
-      size_t new_capacity = sacn_mem_grow_capacity(notifications->buf_capacity, size);
-      SourcesLostNotification* new_buf =
-          (SourcesLostNotification*)realloc(notifications->buf, new_capacity * sizeof(SourcesLostNotification));
-      if (new_buf && init_sources_lost_array(&new_buf[notifications->buf_capacity],
-                                             new_capacity - notifications->buf_capacity) == kEtcPalErrOk)
-      {
-        notifications->buf = new_buf;
-        notifications->buf_capacity = new_capacity;
-      }
-      else
-      {
-        return NULL;
-      }
-    }
-#else   // SACN_DYNAMIC_MEM
-    if (size > SACN_RECEIVER_MAX_UNIVERSES)
+      // The buf memory is still valid, as well as the entries up to old_capacity.
+      notifications->buf_capacity = old_capacity;
       return NULL;
+    }
 #endif  // SACN_DYNAMIC_MEM
 
     zero_sources_lost_array(notifications->buf, size);
@@ -205,7 +198,12 @@ etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr
   {
     notification->lost_sources = calloc(INITIAL_CAPACITY, sizeof(SacnLostSource));
     if (!notification->lost_sources)
+    {
+      for (SourcesLostNotification* notif_to_clean = sources_lost_arr; notif_to_clean < notification; ++notif_to_clean)
+        deinit_sources_lost_entry(notif_to_clean);
+        
       return kEtcPalErrNoMem;
+    }
     notification->lost_sources_capacity = INITIAL_CAPACITY;
   }
   return kEtcPalErrOk;

@@ -2,13 +2,12 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node
 {
-	"name": "sACN Development",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	// "image": "etc-docker.artifactory.etcconnect.com/etc/common-tech/clang-cmake-msan:latest",
-	"build": {
-        // Path is relative to the devcontainer.json file.
-        "dockerfile": "Dockerfile"
-    },
+	"name": "Klocwork Dev Container",
+	"dockerComposeFile": ["../../docker-compose.yml"],
+  	"service": "klocwork",
+	"shutdownAction": "none",
+	"workspaceFolder": "/workspace",
+	"mounts": ["source=${localEnv:HOME}${localEnv:USERPROFILE}/.klocwork,target=/home/kwuser/.klocwork,type=bind"],
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -18,12 +17,15 @@
 		// Configure properties specific to VS Code.
 		"vscode": {
 			"settings": {
-				"lldb.showDisassembly": "never"
+				"lldb.showDisassembly": "never",
+				"perforceStaticAnalysis.activeToolSelection": "Klocwork",
+				"klocworkSystemProperties.logging.level": "verbose"
 			},
 			"extensions": [
 				"ms-vscode.cpptools-extension-pack",
 				"ms-azuretools.vscode-docker",
-				"vadimcn.vscode-lldb"
+				"vadimcn.vscode-lldb",
+				"/klocwork/p4savscodeextension.vsix"
 			]
 		}
 	}

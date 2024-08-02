@@ -1306,7 +1306,7 @@ etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_ty
   if (res == kEtcPalErrOk)
   {
     size_t num_valid_sys_netints = apply_netint_config(netint_config, &netint_list, sys_netints, net_type);
-    if ((num_valid_sys_netints == 0) && !netint_config->no_netints)
+    if ((num_valid_sys_netints == 0) && (!netint_config || !netint_config->no_netints))
     {
       SACN_LOG_CRIT("None of the network interfaces were usable for the sACN API.");
       res = kEtcPalErrNoNetints;

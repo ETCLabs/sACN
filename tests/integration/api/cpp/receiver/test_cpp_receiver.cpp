@@ -20,6 +20,7 @@
 #include "sacn/cpp/receiver.h"
 #include "sacn/cpp/merge_receiver.h"
 
+#include <gsl/span>
 #include "etcpal_mock/common.h"
 #include "etcpal_mock/netint.h"
 #include "etcpal_mock/socket.h"
@@ -315,21 +316,24 @@ protected:
       return kEtcPalErrOk;
     };
 
-    static auto copy_out_interfaces = [](const EtcPalNetintInfo* copy_src, size_t copy_size, EtcPalNetintInfo* netints,
-                                         size_t* num_netints) {
+    static auto copy_out_interfaces = [](const std::vector<EtcPalNetintInfo>& copy_src,
+                                         gsl::span<EtcPalNetintInfo> copy_dest, size_t* num_netints) {
       etcpal_error_t result = kEtcPalErrOk;
 
-      size_t space_available = *num_netints;
-      *num_netints = copy_size;
+      *num_netints = copy_src.size();
 
-      if (copy_size > space_available)
-      {
+      if (copy_src.size() > copy_dest.size())
         result = kEtcPalErrBufSize;
-        copy_size = space_available;
-      }
 
-      if (netints)
-        memcpy(netints, copy_src, copy_size * sizeof(EtcPalNetintInfo));
+      size_t write_idx = 0u;
+      for (const auto& to_copy : copy_src)
+      {
+        if (write_idx >= copy_dest.size())
+          break;
+
+        copy_dest[write_idx] = to_copy;
+        ++write_idx;
+      }
 
       return result;
     };
@@ -349,7 +353,7 @@ protected:
       if (result != kEtcPalErrOk)
         return result;
 
-      return copy_out_interfaces(fake_sys_netints_.data(), fake_sys_netints_.size(), netints, num_netints);
+      return copy_out_interfaces(fake_sys_netints_, {netints, *num_netints}, num_netints);
     };
 
     etcpal_socket_fake.custom_fake = [](unsigned int, unsigned int, etcpal_socket_t* new_sock) {
