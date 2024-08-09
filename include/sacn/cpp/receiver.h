@@ -761,7 +761,7 @@ inline etcpal::Error Receiver::ResetNetworking(std::vector<SacnMcastInterface>& 
  *
  * @return The handle, which will only be valid if the receiver has been successfully created using Startup().
  */
-inline constexpr Receiver::Handle Receiver::handle() const
+constexpr Receiver::Handle Receiver::handle() const
 {
   return handle_;
 }

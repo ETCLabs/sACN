@@ -372,7 +372,7 @@ inline etcpal::Error DmxMerger::RemovePap(sacn_dmx_merger_source_t source)
  *
  * @return The handle, which will only be valid if the DMX merger has been successfully created using Startup().
  */
-inline constexpr DmxMerger::Handle DmxMerger::handle() const
+constexpr DmxMerger::Handle DmxMerger::handle() const
 {
   return handle_;
 }

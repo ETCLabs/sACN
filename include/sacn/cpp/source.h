@@ -951,7 +951,7 @@ inline std::vector<EtcPalMcastNetintId> Source::GetNetworkInterfaces(uint16_t un
  *
  * @return The handle, which will only be valid if the source has been successfully created using Startup().
  */
-inline constexpr Source::Handle Source::handle() const
+constexpr Source::Handle Source::handle() const
 {
   return handle_;
 }

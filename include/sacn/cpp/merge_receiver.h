@@ -831,7 +831,7 @@ inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterfa
  *
  * @return The handle, which will only be valid if the merge receiver has been successfully created using Startup().
  */
-inline constexpr MergeReceiver::Handle MergeReceiver::handle() const
+constexpr MergeReceiver::Handle MergeReceiver::handle() const
 {
   return handle_;
 }
