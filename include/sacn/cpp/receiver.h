@@ -508,8 +508,8 @@ inline etcpal::Expected<uint16_t> Receiver::GetUniverse() const
   etcpal_error_t err    = sacn_receiver_get_universe(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
-  else
-    return err;
+  
+  return err;
 }
 
 /**
@@ -525,8 +525,8 @@ inline etcpal::Expected<SacnRecvUniverseSubrange> Receiver::GetFootprint() const
   etcpal_error_t           err = sacn_receiver_get_footprint(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
-  else
-    return err;
+  
+  return err;
 }
 
 /**

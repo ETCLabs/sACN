@@ -233,8 +233,8 @@ inline etcpal::Expected<sacn_dmx_merger_source_t> DmxMerger::AddSource()
   etcpal_error_t           err    = sacn_dmx_merger_add_source(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
-  else
-    return err;
+  
+  return err;
 }
 
 /**

@@ -579,8 +579,8 @@ inline etcpal::Expected<uint16_t> MergeReceiver::GetUniverse() const
   etcpal_error_t err    = sacn_merge_receiver_get_universe(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
-  else
-    return err;
+  
+  return err;
 }
 
 /**
@@ -596,8 +596,8 @@ inline etcpal::Expected<SacnRecvUniverseSubrange> MergeReceiver::GetFootprint() 
   etcpal_error_t           err = sacn_merge_receiver_get_footprint(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
-  else
-    return err;
+  
+  return err;
 }
 
 /**
