@@ -190,7 +190,7 @@ inline etcpal::Error Init(const etcpal::Logger& logger, std::vector<SacnMcastInt
  */
 inline void Deinit()
 {
-  return sacn_deinit();
+  sacn_deinit();
 }
 
 /**
