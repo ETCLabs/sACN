@@ -70,7 +70,13 @@ public:
   class NotifyHandler
   {
   public:
+    NotifyHandler()          = default;
     virtual ~NotifyHandler() = default;
+
+    NotifyHandler(const NotifyHandler& other)            = default;
+    NotifyHandler& operator=(const NotifyHandler& other) = default;
+    NotifyHandler(NotifyHandler&& other)                 = default;
+    NotifyHandler& operator=(NotifyHandler&& other)      = default;
 
     /**
      * @brief Notify that a new data packet has been received and merged.
@@ -285,7 +291,9 @@ public:
     uint8_t universe_priority;
   };
 
-  MergeReceiver()                                      = default;
+  MergeReceiver()          = default;
+  virtual ~MergeReceiver() = default;
+
   MergeReceiver(const MergeReceiver& other)            = delete;
   MergeReceiver& operator=(const MergeReceiver& other) = delete;
   MergeReceiver(MergeReceiver&& other)                 = default; /**< Move a merge receiver instance. */

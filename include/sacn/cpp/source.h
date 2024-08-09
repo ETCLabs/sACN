@@ -180,7 +180,9 @@ public:
                        const std::vector<SacnMcastInterface>& network_interfaces);
   };
 
-  Source()                               = default;
+  Source()          = default;
+  virtual ~Source() = default;
+
   Source(const Source& other)            = delete;
   Source& operator=(const Source& other) = delete;
   Source(Source&& other)                 = default; /**< Move a source instance. */

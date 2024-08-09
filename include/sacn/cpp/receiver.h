@@ -71,7 +71,13 @@ public:
   class NotifyHandler
   {
   public:
+    NotifyHandler()          = default;
     virtual ~NotifyHandler() = default;
+
+    NotifyHandler(const NotifyHandler& other)            = default;
+    NotifyHandler& operator=(const NotifyHandler& other) = default;
+    NotifyHandler(NotifyHandler&& other)                 = default;
+    NotifyHandler& operator=(NotifyHandler&& other)      = default;
 
     /**
      * @brief Notify that new universe data within the configured footprint has been received.
@@ -226,11 +232,13 @@ public:
     NetintList(sacn_receiver_t receiver_handle, const std::vector<SacnMcastInterface>& network_interfaces);
   };
 
-  Receiver()                                 = default;
+  Receiver()          = default;
+  virtual ~Receiver() = default;
+
   Receiver(const Receiver& other)            = delete;
   Receiver& operator=(const Receiver& other) = delete;
-  Receiver(Receiver&& other)                 = default; /**< Move a device instance. */
-  Receiver& operator=(Receiver&& other)      = default; /**< Move a device instance. */
+  Receiver(Receiver&& other)                 = default; /**< Move a receiver instance. */
+  Receiver& operator=(Receiver&& other)      = default; /**< Move a receiver instance. */
 
   etcpal::Error              Startup(const Settings& settings, NotifyHandler& notify_handler, McastMode mcast_mode);
   etcpal::Error              Startup(const Settings&                  settings,

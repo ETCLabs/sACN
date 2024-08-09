@@ -126,7 +126,9 @@ public:
     bool IsValid() const;
   };
 
-  DmxMerger()                                  = default;
+  DmxMerger()          = default;
+  virtual ~DmxMerger() = default;
+
   DmxMerger(const DmxMerger& other)            = delete;
   DmxMerger& operator=(const DmxMerger& other) = delete;
   DmxMerger(DmxMerger&& other)                 = default; /**< Move a dmx merger instance. */
