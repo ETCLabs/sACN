@@ -9,9 +9,13 @@ function(sacn_test_setup target_name config_dir)
   target_compile_definitions(${target_name} PRIVATE SACN_HAVE_CONFIG_H)
   target_include_directories(${target_name} PRIVATE
     ${config_dir}
+    ${SACN_TEST}/configs
     ${SACN_INCLUDE}
     ${SACN_SRC}
   )
+  if(NOT COMPILING_AS_OSS)
+    target_clang_tidy(${target_name})
+  endif()
   set_target_properties(${target_name} PROPERTIES CXX_STANDARD 20 FOLDER tests)
   gtest_discover_tests(${target_name} EXTRA_ARGS "--gtest_output=xml:${TEST_BIN_DIR}/test-results/")
 endfunction()

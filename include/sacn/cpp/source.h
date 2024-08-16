@@ -110,7 +110,7 @@ public:
 
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
-    Settings(const etcpal::Uuid& new_cid, const std::string& new_name);
+    Settings(etcpal::Uuid new_cid, std::string new_name);
 
     bool IsValid() const;
   };
@@ -180,7 +180,9 @@ public:
                        const std::vector<SacnMcastInterface>& network_interfaces);
   };
 
-  Source()                               = default;
+  Source()          = default;
+  virtual ~Source() = default;
+
   Source(const Source& other)            = delete;
   Source& operator=(const Source& other) = delete;
   Source(Source&& other)                 = default; /**< Move a source instance. */
@@ -243,7 +245,7 @@ private:
     SacnSourceUniverseConfig  config_;
   };
 
-  SacnSourceConfig TranslateConfig(const Settings& settings);
+  static SacnSourceConfig TranslateConfig(const Settings& settings);
 
   Handle handle_;
 };
@@ -253,8 +255,8 @@ private:
  *
  * Optional members can be modified directly in the struct.
  */
-inline Source::Settings::Settings(const etcpal::Uuid& new_cid, const std::string& new_name)
-    : cid(new_cid), name(new_name)
+inline Source::Settings::Settings(etcpal::Uuid new_cid, std::string new_name)
+    : cid(std::move(new_cid)), name(std::move(new_name))
 {
 }
 
@@ -280,7 +282,7 @@ inline Source::UniverseSettings::UniverseSettings(uint16_t universe_id) : univer
  */
 inline bool Source::UniverseSettings::IsValid() const
 {
-  return ((universe != 0) && (universe < 64000));
+  return ((universe >= sacn::kMinimumUniverse) && (universe <= sacn::kMaximumUniverse));
 }
 
 /**
@@ -469,16 +471,16 @@ inline void Source::RemoveUniverse(uint16_t universe)
 inline std::vector<uint16_t> Source::GetUniverses()
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<uint16_t> universes;
-  size_t                size_guess    = 4u;
-  size_t                num_universes = 0u;
+  size_t                size_guess = 4u;
+  std::vector<uint16_t> universes(size_guess);
+  size_t                num_universes = sacn_source_get_universes(handle_.value(), universes.data(), universes.size());
 
-  do
+  while (num_universes > universes.size())
   {
+    size_guess = num_universes + 4u;
     universes.resize(size_guess);
     num_universes = sacn_source_get_universes(handle_.value(), universes.data(), universes.size());
-    size_guess    = num_universes + 4u;
-  } while (num_universes > universes.size());
+  }
 
   universes.resize(num_universes);
   return universes;
@@ -527,17 +529,18 @@ inline void Source::RemoveUnicastDestination(uint16_t universe, const etcpal::Ip
 inline std::vector<etcpal::IpAddr> Source::GetUnicastDestinations(uint16_t universe)
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<EtcPalIpAddr> destinations;
-  size_t                    size_guess       = 4u;
-  size_t                    num_destinations = 0u;
+  size_t                    size_guess = 4u;
+  std::vector<EtcPalIpAddr> destinations(size_guess);
+  size_t                    num_destinations =
+      sacn_source_get_unicast_destinations(handle_.value(), universe, destinations.data(), destinations.size());
 
-  do
+  while (num_destinations > destinations.size())
   {
+    size_guess = num_destinations + 4u;
     destinations.resize(size_guess);
     num_destinations =
         sacn_source_get_unicast_destinations(handle_.value(), universe, destinations.data(), destinations.size());
-    size_guess = num_destinations + 4u;
-  } while (num_destinations > destinations.size());
+  }
 
   destinations.resize(num_destinations);
 
@@ -928,16 +931,16 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sy
 inline std::vector<EtcPalMcastNetintId> Source::GetNetworkInterfaces(uint16_t universe)
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<EtcPalMcastNetintId> netints;
-  size_t                           size_guess  = 4u;
-  size_t                           num_netints = 0u;
+  size_t                           size_guess = 4u;
+  std::vector<EtcPalMcastNetintId> netints(size_guess);
+  size_t num_netints = sacn_source_get_network_interfaces(handle_.value(), universe, netints.data(), netints.size());
 
-  do
+  while (num_netints > netints.size())
   {
+    size_guess = num_netints + 4u;
     netints.resize(size_guess);
     num_netints = sacn_source_get_network_interfaces(handle_.value(), universe, netints.data(), netints.size());
-    size_guess  = num_netints + 4u;
-  } while (num_netints > netints.size());
+  }
 
   netints.resize(num_netints);
   return netints;
@@ -948,7 +951,7 @@ inline std::vector<EtcPalMcastNetintId> Source::GetNetworkInterfaces(uint16_t un
  *
  * @return The handle, which will only be valid if the source has been successfully created using Startup().
  */
-inline constexpr Source::Handle Source::handle() const
+constexpr Source::Handle Source::handle() const
 {
   return handle_;
 }

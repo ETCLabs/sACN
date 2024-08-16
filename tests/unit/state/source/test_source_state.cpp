@@ -164,7 +164,7 @@ protected:
     sacn_source_mem_deinit();
   }
 
-  int RunThreadCycle(process_sources_behavior_t behavior = kProcessThreadedSources)
+  int RunThreadCycle(sacn_process_sources_behavior_t behavior = kProcessThreadedSources)
   {
     take_lock_and_process_sources(behavior, kSacnSourceTickModeProcessLevelsOnly);
     return take_lock_and_process_sources(behavior, kSacnSourceTickModeProcessPapOnly);
@@ -511,7 +511,7 @@ TEST_F(TestSourceState, UniverseDiscoveryTimingIsCorrect)
     VERIFY_LOCKING(RunThreadCycle());
     EXPECT_EQ(num_universe_discovery_sends, kTestNetints.size() * i);
 
-    etcpal_getms_fake.return_val += SACN_UNIVERSE_DISCOVERY_INTERVAL;
+    etcpal_getms_fake.return_val += kSacnUniverseDiscoveryInterval;
 
     VERIFY_LOCKING(RunThreadCycle());
     EXPECT_EQ(num_universe_discovery_sends, kTestNetints.size() * i);
@@ -539,13 +539,13 @@ TEST_F(TestSourceState, SourceTerminatingStopsUniverseDiscovery)
   VERIFY_LOCKING(RunThreadCycle());
   EXPECT_EQ(num_universe_discovery_sends, 0u);
 
-  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+  etcpal_getms_fake.return_val += (kSacnUniverseDiscoveryInterval + 1u);
 
   VERIFY_LOCKING(RunThreadCycle());
   EXPECT_EQ(num_universe_discovery_sends, kTestNetints.size());
 
   set_source_terminating(GetSource(source_handle));
-  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+  etcpal_getms_fake.return_val += (kSacnUniverseDiscoveryInterval + 1u);
 
   VERIFY_LOCKING(RunThreadCycle());
   EXPECT_EQ(num_universe_discovery_sends, kTestNetints.size());
@@ -569,10 +569,10 @@ TEST_F(TestSourceState, UniverseDiscoverySendsForEachPage)
   SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
   for (int num_pages = 1; num_pages <= 4; ++num_pages)
   {
-    for (int i = 0; i < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE; ++i)
+    for (int i = 0; i < kSacnUniverseDiscoveryMaxUniversesPerPage; ++i)
       AddUniverseForUniverseDiscovery(source_handle, universe_config);
 
-    etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+    etcpal_getms_fake.return_val += (kSacnUniverseDiscoveryInterval + 1u);
 
     VERIFY_LOCKING(RunThreadCycle());
     EXPECT_EQ(num_universe_discovery_sends, num_pages * kTestNetints.size());
@@ -583,19 +583,19 @@ TEST_F(TestSourceState, UniverseDiscoverySendsForEachPage)
 
 TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
 {
-  ASSERT_EQ(SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE % 4, 0);
+  ASSERT_EQ(kSacnUniverseDiscoveryMaxUniversesPerPage % 4, 0);
 
   sacn_send_multicast_fake.custom_fake = [](uint16_t, sacn_ip_support_t, const uint8_t* send_buf,
                                             const EtcPalMcastNetintId*) {
     if (IS_UNIVERSE_DISCOVERY(send_buf))
     {
-      int page                   = send_buf[SACN_UNIVERSE_DISCOVERY_PAGE_OFFSET];
-      int last_page              = send_buf[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET];
-      int max_universes_per_page = SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE;
+      int page      = send_buf[SACN_UNIVERSE_DISCOVERY_PAGE_OFFSET];
+      int last_page = send_buf[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET];
       int expected_num_universes =
-          (page < last_page)
-              ? max_universes_per_page
-              : ((((current_test_iteration * (max_universes_per_page / 4)) - 1) % max_universes_per_page) + 1);
+          (page < last_page) ? kSacnUniverseDiscoveryMaxUniversesPerPage
+                             : ((((current_test_iteration * (kSacnUniverseDiscoveryMaxUniversesPerPage / 4)) - 1) %
+                                 kSacnUniverseDiscoveryMaxUniversesPerPage) +
+                                1);
       int actual_num_universes = (ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE])) + ACN_UDP_PREAMBLE_SIZE -
                                   SACN_UNIVERSE_DISCOVERY_HEADER_SIZE) /
                                  2;
@@ -605,7 +605,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
       for (int i = 0; i < expected_num_universes; ++i)
       {
         // Verify the universes remain in order even though each adjacent range was "shuffled" when added.
-        int expected_universe = i + 1 + (page * max_universes_per_page);
+        int expected_universe = i + 1 + (page * kSacnUniverseDiscoveryMaxUniversesPerPage);
         int actual_universe   = etcpal_unpack_u16b(&send_buf[SACN_UNIVERSE_DISCOVERY_HEADER_SIZE + (i * 2)]);
         EXPECT_EQ(actual_universe, expected_universe);
       }
@@ -618,7 +618,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
 
   sacn_source_t source_handle = AddSource(kTestSourceConfig);
 
-  static constexpr int     kNumUniversesPerIteration = SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE / 4;
+  static constexpr int     kNumUniversesPerIteration = kSacnUniverseDiscoveryMaxUniversesPerPage / 4;
   SacnSourceUniverseConfig universe_config           = kTestUniverseConfig;
   for (int i = 0; i < 10; ++i)
   {
@@ -645,7 +645,7 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectUniverseLists)
       InitTestData(source_handle, universe_config.universe, kTestBuffer);
     }
 
-    etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+    etcpal_getms_fake.return_val += (kSacnUniverseDiscoveryInterval + 1u);
     VERIFY_LOCKING(RunThreadCycle());
   }
 }
@@ -668,10 +668,10 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectPageNumbers)
   sacn_source_t source_handle = AddSource(kTestSourceConfig);
 
   SacnSourceUniverseConfig universe_config = kTestUniverseConfig;
-  for (int i = 0; i < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE * 4; ++i)
+  for (int i = 0; i < kSacnUniverseDiscoveryMaxUniversesPerPage * 4; ++i)
     AddUniverseForUniverseDiscovery(source_handle, universe_config);
 
-  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+  etcpal_getms_fake.return_val += (kSacnUniverseDiscoveryInterval + 1u);
   VERIFY_LOCKING(RunThreadCycle());
 }
 
@@ -697,10 +697,10 @@ TEST_F(TestSourceState, UniverseDiscoverySendsCorrectLastPage)
       return kEtcPalErrOk;
     };
 
-    for (int j = 0; j < SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE; ++j)
+    for (int j = 0; j < kSacnUniverseDiscoveryMaxUniversesPerPage; ++j)
       AddUniverseForUniverseDiscovery(source_handle, universe_config);
 
-    etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+    etcpal_getms_fake.return_val += (kSacnUniverseDiscoveryInterval + 1u);
     VERIFY_LOCKING(RunThreadCycle());
   }
 }
@@ -731,7 +731,7 @@ TEST_F(TestSourceState, UniverseDiscoveryZeroesReservedBytes)
     for (int j = 0; j < 100; ++j)
       AddUniverseForUniverseDiscovery(source_handle, universe_config);
 
-    etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+    etcpal_getms_fake.return_val += (kSacnUniverseDiscoveryInterval + 1u);
     VERIFY_LOCKING(RunThreadCycle());
   }
 }
@@ -758,7 +758,7 @@ TEST_F(TestSourceState, UniverseDiscoveryUsesCorrectNetints)
   for (size_t i = 0u; i < kTestNetints.size(); ++i)
     AddUniverseForUniverseDiscovery(source_handle, universe_config, kTestNetints[i]);
 
-  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+  etcpal_getms_fake.return_val += (kSacnUniverseDiscoveryInterval + 1u);
   VERIFY_LOCKING(RunThreadCycle());
 
   EXPECT_EQ(num_universe_discovery_sends, kTestNetints.size());
@@ -799,7 +799,7 @@ TEST_F(TestSourceState, UniverseDiscoveryExcludesUniversesWithoutData)
     ++universe_config.universe;
   }
 
-  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+  etcpal_getms_fake.return_val += (kSacnUniverseDiscoveryInterval + 1u);
   VERIFY_LOCKING(RunThreadCycle());
 }
 
@@ -834,7 +834,7 @@ TEST_F(TestSourceState, UniverseDiscoveryExcludesUnicastOnlyUniverses)
     AddUniverseForUniverseDiscovery(source_handle, universe_config);
   }
 
-  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+  etcpal_getms_fake.return_val += (kSacnUniverseDiscoveryInterval + 1u);
   VERIFY_LOCKING(RunThreadCycle());
 }
 
@@ -879,7 +879,7 @@ TEST_F(TestSourceState, RemovingUniversesUpdatesUniverseDiscovery)
 
     for (int i = 0; i < 3; ++i)
     {
-      etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL + 1u);
+      etcpal_getms_fake.return_val += (kSacnUniverseDiscoveryInterval + 1u);
       VERIFY_LOCKING(RunThreadCycle());
     }
 
@@ -1790,7 +1790,7 @@ TEST_F(TestSourceState, IncrementSequenceNumberWorks)
 TEST_F(TestSourceState, SendUniverseUnicastWorks)
 {
   static std::vector<uint8_t> test_send_buf = kTestBuffer;
-  test_send_buf.resize(SACN_DATA_PACKET_MTU);
+  test_send_buf.resize(kSacnDataPacketMtu);
 
   sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
                                           const EtcPalIpAddr* dest_addr, etcpal_error_t*) {
@@ -1833,7 +1833,7 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
 TEST_F(TestSourceState, SendUniverseMulticastWorks)
 {
   static std::vector<uint8_t> test_send_buf = kTestBuffer;
-  test_send_buf.resize(SACN_DATA_PACKET_MTU);
+  test_send_buf.resize(kSacnDataPacketMtu);
 
   sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
                                             const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {

@@ -362,7 +362,7 @@ etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, Et
 
 #endif  // SACN_RECEIVER_ENABLED
 
-bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, const int line)
+bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, int line)
 {
 #if !SACN_LOGGING_ENABLED
   ETCPAL_UNUSED_ARG(exp);

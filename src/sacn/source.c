@@ -753,7 +753,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t  handle,
       if (result == kEtcPalErrOk)
       {
         // Initialize send buffer
-        uint8_t send_buf[SACN_DATA_PACKET_MTU];
+        uint8_t send_buf[kSacnDataPacketMtu];
         init_sacn_data_send_buf(send_buf, start_code, &source_state->cid, source_state->name, universe_state->priority,
                                 universe_state->universe_id, universe_state->sync_universe,
                                 universe_state->send_preview);

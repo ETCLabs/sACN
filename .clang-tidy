@@ -1,0 +1,107 @@
+---
+# For all disabled checks, please provide a rationale here.
+#
+# - clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling: Due to sACN's
+#   portability requirements we cannot use any replacements for memcpy(), sprintf(), etc. This risk
+#   has been accepted.
+# - clang-analyzer-security.insecureAPI.strcpy: Due to sACN's portability requirements we cannot
+#   use any replacements for strcpy(). This risk has been accepted.
+# - clang-analyzer-optin.performance.Padding: Certain structs need to have members in a certain
+#   order (i.e. the key must be first) for proper use with red-black trees.
+# - cppcoreguidelines-macro-usage: This is primarily a C library and thus makes use of macros;
+#   their use cannot be avoided.
+# - cppcoreguidelines-avoid-magic-numbers: Too many false positives.
+# - cppcoreguidelines-avoid-non-const-global-variables: sACN's design constraints do not allow
+#   this.
+# - cppcoreguidelines-pro-bounds-array-to-pointer-decay: sACN's portability requirements do not
+#   yet allow for the use of span.
+# - cppcoreguidelines-pro-bounds-pointer-arithmetic: sACN's portability requirements do not yet
+#   allow for the use of span.
+# - cppcoreguidelines-pro-type-vararg: Our log interface intentionally replicates printf() syntax.
+#   This design tradeoff is being made consciously.
+# - modernize-deprecated-headers: False positives in C-only headers.
+# - modernize-use-trailing-return-type: False positives in C-only headers.
+# - modernize-use-using: False positives in C-only headers.
+# - modernize-use-nodiscard: This library needs to support C++14 for now. Add this back in when we no
+#   longer need to support C++14.
+# - readability-magic-numbers: See cppcoreguidelines-avoid-magic-numbers
+#
+Checks: >
+  clang-diagnostic-*,
+  clang-analyzer-*,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  -clang-analyzer-security.insecureAPI.strcpy,
+  -clang-analyzer-optin.performance.Padding,
+  cppcoreguidelines-*,
+  -cppcoreguidelines-macro-usage,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-vararg,
+  modernize-*,
+  -modernize-deprecated-headers,
+  -modernize-use-trailing-return-type,
+  -modernize-use-using,
+  -modernize-use-nodiscard,
+  readability-*,
+  -readability-magic-numbers
+
+WarningsAsErrors: ''
+
+# Include:
+# - src/sacn/**/*.h
+# - include/sacn/**/*.h
+HeaderFilterRegex: '.*(src|include)[\/\\]sacn[\/\\].+\.h'
+
+FormatStyle:     file
+CheckOptions:
+# cppcoreguidelines
+  - { key: cppcoreguidelines-explicit-virtual-functions.IgnoreDestructors,                                           value: '1'  }
+  - { key: cppcoreguidelines-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic, value: '1'  }
+  - { key: cppcoreguidelines-avoid-do-while.IgnoreMacros,                                                            value: true }
+# readability
+  - { key: readability-braces-around-statements.ShortStatementLines,    value: '4'           }
+  - { key: readability-function-size.StatementThreshold,                value: '800'         }
+  - { key: readability-uppercase-literal-suffix.NewSuffixes,            value: 'L;LL;LU;LLU' }
+  - { key: readability-function-cognitive-complexity.Threshold,         value: '100'         }
+  - { key: readability-implicit-bool-conversion.AllowPointerConditions, value: true          }
+# readability-identifier-naming 
+  - { key: readability-identifier-naming.ClassCase,               value: CamelCase           }
+  - { key: readability-identifier-naming.ConstexprVariableCase,   value: CamelCase           }
+  - { key: readability-identifier-naming.ConstexprVariablePrefix, value: k                   }
+  - { key: readability-identifier-naming.EnumCase,                value: CamelCase           }
+  - { key: readability-identifier-naming.EnumConstantCase,        value: CamelCase           }
+  - { key: readability-identifier-naming.EnumConstantPrefix,      value: k                   }
+  # Note: override the below line with CamelCase for C++ files
+  - { key: readability-identifier-naming.FunctionCase,            value: lower_case          }
+  - { key: readability-identifier-naming.GlobalConstantCase,      value: CamelCase           }
+  - { key: readability-identifier-naming.GlobalConstantPrefix,    value: k                   }
+  - { key: readability-identifier-naming.IgnoreMainLikeFunctions, value: true                }
+  - { key: readability-identifier-naming.MemberCase,              value: lower_case          }
+  - { key: readability-identifier-naming.MemberConstantCase,      value: CamelCase           }
+  - { key: readability-identifier-naming.MemberConstantPrefix,    value: k                   }
+  - { key: readability-identifier-naming.ConstantCase,            value: CamelCase           }
+  - { key: readability-identifier-naming.ConstantPrefix,          value: k                   }
+  - { key: readability-identifier-naming.MethodCase,              value: aNy_CasE            }
+  - { key: readability-identifier-naming.NamespaceCase,           value: lower_case          }
+  - { key: readability-identifier-naming.ParameterCase,           value: lower_case          }
+  - { key: readability-identifier-naming.PrivateMemberSuffix,     value: _                   }
+  - { key: readability-identifier-naming.ProtectedMemberSuffix,   value: _                   }
+  - { key: readability-identifier-naming.ClassMemberSuffix,       value: _                   }
+  - { key: readability-identifier-naming.StaticConstantCase,      value: CamelCase           }
+  - { key: readability-identifier-naming.StaticConstantPrefix,    value: k                   }
+  - { key: readability-identifier-naming.StructCase,              value: CamelCase           }
+  - { key: readability-identifier-naming.TypedefCase,             value: CamelCase           }
+  - { key: readability-identifier-naming.TypedefIgnoredRegexp,    value: '(sacn)_.+_t'       }
+  - { key: readability-identifier-naming.TypeAliasCase,           value: CamelCase           }
+  - { key: readability-identifier-naming.TypeAliasIgnoredRegexp,  value: 'sacn_.+_t'         }
+  - { key: readability-identifier-naming.VariableCase,            value: lower_case          }
+# modernize
+  - { key: modernize-loop-convert.MinConfidence,    value: reasonable }
+  - { key: modernize-loop-convert.NamingStyle,      value: lower_case }
+  - { key: modernize-pass-by-value.IncludeStyle,    value: google     }
+  - { key: modernize-replace-auto-ptr.IncludeStyle, value: google     }
+  - { key: modernize-use-nullptr.NullMacros,        value: 'NULL'     }
+...
+

@@ -66,7 +66,7 @@ static constexpr SacnMergeReceiverConfig kTestConfig          = {
     SACN_RECEIVER_INFINITE_SOURCES,
     true,
     kSacnIpV4AndIpV6};
-static const EtcPalSockAddr       kTestSourceAddr   = {SACN_PORT, etcpal::IpAddr::FromString("10.101.1.1").get()};
+static const EtcPalSockAddr       kTestSourceAddr   = {kSacnPort, etcpal::IpAddr::FromString("10.101.1.1").get()};
 static const SacnRemoteSource     kTestRemoteSource = {0u, etcpal::Uuid::V4().get(), {'\0'}};
 static const std::string          kTestSourceName   = kTestRemoteSource.name;
 static const SacnRecvUniverseData kTestUniverseData = {
@@ -146,12 +146,12 @@ protected:
     sacn_receiver_mem_deinit();
   }
 
-  SacnMergeReceiverSource ConstructSource(sacn_remote_source_t    source_handle,
-                                          const etcpal::SockAddr& source_addr,
-                                          const etcpal::Uuid&     source_cid,
-                                          const std::string&      source_name,
-                                          uint8_t                 universe_priority = kTestPriority,
-                                          bool                    pap_active        = false)
+  static SacnMergeReceiverSource ConstructSource(sacn_remote_source_t    source_handle,
+                                                 const etcpal::SockAddr& source_addr,
+                                                 const etcpal::Uuid&     source_cid,
+                                                 const std::string&      source_name,
+                                                 uint8_t                 universe_priority = kTestPriority,
+                                                 bool                    pap_active        = false)
   {
     SacnMergeReceiverSource res;
     res.handle = source_handle;
@@ -164,11 +164,11 @@ protected:
     return res;
   }
 
-  void RunUniverseData(const SacnMergeReceiverSource& source,
-                       uint8_t                        start_code,
-                       const std::vector<uint8_t>&    pdata,
-                       sacn_receiver_t                receiver_handle = kTestHandle,
-                       bool                           sampling        = false)
+  static void RunUniverseData(const SacnMergeReceiverSource& source,
+                              uint8_t                        start_code,
+                              const std::vector<uint8_t>&    pdata,
+                              sacn_receiver_t                receiver_handle = kTestHandle,
+                              bool                           sampling        = false)
   {
     SacnRemoteSource     remote_source = kTestRemoteSource;
     SacnRecvUniverseData universe_data = kTestUniverseData;
@@ -183,39 +183,39 @@ protected:
     merge_receiver_universe_data(receiver_handle, &source.addr, &remote_source, &universe_data, 0u);
   }
 
-  void RunUniverseData(sacn_remote_source_t        source_handle,
-                       const etcpal::Uuid&         source_cid,
-                       uint8_t                     start_code,
-                       const std::vector<uint8_t>& pdata,
-                       uint8_t                     priority        = kTestPriority,
-                       sacn_receiver_t             receiver_handle = kTestHandle,
-                       bool                        sampling        = false)
+  static void RunUniverseData(sacn_remote_source_t        source_handle,
+                              const etcpal::Uuid&         source_cid,
+                              uint8_t                     start_code,
+                              const std::vector<uint8_t>& pdata,
+                              uint8_t                     priority        = kTestPriority,
+                              sacn_receiver_t             receiver_handle = kTestHandle,
+                              bool                        sampling        = false)
   {
     RunUniverseData(ConstructSource(source_handle, kTestSourceAddr, source_cid, kTestSourceName, priority), start_code,
                     pdata, receiver_handle, sampling);
   }
 
-  void RunSamplingUniverseData(sacn_remote_source_t        source_handle,
-                               const etcpal::Uuid&         source_cid,
-                               uint8_t                     start_code,
-                               const std::vector<uint8_t>& pdata,
-                               uint8_t                     priority        = kTestPriority,
-                               sacn_receiver_t             receiver_handle = kTestHandle)
+  static void RunSamplingUniverseData(sacn_remote_source_t        source_handle,
+                                      const etcpal::Uuid&         source_cid,
+                                      uint8_t                     start_code,
+                                      const std::vector<uint8_t>& pdata,
+                                      uint8_t                     priority        = kTestPriority,
+                                      sacn_receiver_t             receiver_handle = kTestHandle)
   {
     RunUniverseData(source_handle, source_cid, start_code, pdata, priority, receiver_handle, true);
   }
 
-  void RunSamplingStarted(sacn_receiver_t receiver_handle = kTestHandle)
+  static void RunSamplingStarted(sacn_receiver_t receiver_handle = kTestHandle)
   {
     merge_receiver_sampling_started(receiver_handle, kTestUniverse, 0u);
   }
 
-  void RunSamplingEnded(sacn_receiver_t receiver_handle = kTestHandle)
+  static void RunSamplingEnded(sacn_receiver_t receiver_handle = kTestHandle)
   {
     merge_receiver_sampling_ended(receiver_handle, kTestUniverse, 0u);
   }
 
-  void RunSourcesLost(const std::vector<std::pair<sacn_remote_source_t, etcpal::Uuid>>& handles_cids)
+  static void RunSourcesLost(const std::vector<std::pair<sacn_remote_source_t, etcpal::Uuid>>& handles_cids)
   {
     std::vector<SacnLostSource> lost_sources;
     lost_sources.reserve(handles_cids.size());
@@ -241,9 +241,9 @@ protected:
     kPapLostCbCalled,
     kPapLostCbNotCalled
   };
-  void RunPapLost(sacn_remote_source_t  handle,
-                  const etcpal::Uuid&   cid,
-                  RunPapLostExpectation expectation = RunPapLostExpectation::kPapLostCbCalled)
+  static void RunPapLost(sacn_remote_source_t  handle,
+                         const etcpal::Uuid&   cid,
+                         RunPapLostExpectation expectation = RunPapLostExpectation::kPapLostCbCalled)
   {
     auto old_call_count = source_pap_lost_fake.call_count;
 
@@ -256,16 +256,16 @@ protected:
       EXPECT_EQ(source_pap_lost_fake.call_count, old_call_count);
   }
 
-  void RunSourceLimitExceeded() { merge_receiver_source_limit_exceeded(kTestHandle, kTestUniverse, 0u); }
+  static void RunSourceLimitExceeded() { merge_receiver_source_limit_exceeded(kTestHandle, kTestUniverse, 0u); }
 
-  void VerifySourceDataIsEqual(const SacnMergeReceiverSource& s1, const SacnMergeReceiverSource& s2)
+  static void VerifySourceDataIsEqual(const SacnMergeReceiverSource& src_1, const SacnMergeReceiverSource& src_2)
   {
-    EXPECT_EQ(s1.handle, s2.handle);
-    EXPECT_EQ(memcmp(s1.cid.data, s2.cid.data, ETCPAL_UUID_BYTES), 0);
-    EXPECT_EQ(memcmp(s1.name, s2.name, SACN_SOURCE_NAME_MAX_LEN), 0);
-    EXPECT_TRUE(etcpal_ip_and_port_equal(&s1.addr, &s2.addr));
-    EXPECT_EQ(s1.per_address_priorities_active, s2.per_address_priorities_active);
-    EXPECT_EQ(s1.universe_priority, s2.universe_priority);
+    EXPECT_EQ(src_1.handle, src_2.handle);
+    EXPECT_EQ(memcmp(src_1.cid.data, src_2.cid.data, ETCPAL_UUID_BYTES), 0);
+    EXPECT_EQ(memcmp(src_1.name, src_2.name, SACN_SOURCE_NAME_MAX_LEN), 0);
+    EXPECT_TRUE(etcpal_ip_and_port_equal(&src_1.addr, &src_2.addr));
+    EXPECT_EQ(src_1.per_address_priorities_active, src_2.per_address_priorities_active);
+    EXPECT_EQ(src_1.universe_priority, src_2.universe_priority);
   }
 
   static std::optional<std::unordered_set<sacn_remote_source_t>> active_sources_to_expect_;
@@ -279,15 +279,15 @@ SourceState                                             TestMergeReceiver::dummy
 std::map<sacn_dmx_merger_t, SacnDmxMergerConfig>        TestMergeReceiver::merger_configs_;
 sacn_dmx_merger_t                                       TestMergeReceiver::next_merger_handle_;
 
-bool operator==(const SacnMergeReceiverSource& s1, const SacnMergeReceiverSource& s2)
+bool operator==(const SacnMergeReceiverSource& src_1, const SacnMergeReceiverSource& src_2)
 {
-  if (s1.handle != s2.handle)
+  if (src_1.handle != src_2.handle)
     return false;
-  if (memcmp(s1.cid.data, s2.cid.data, ETCPAL_UUID_BYTES) != 0)
+  if (memcmp(src_1.cid.data, src_2.cid.data, ETCPAL_UUID_BYTES) != 0)
     return false;
-  if (memcmp(s1.name, s2.name, SACN_SOURCE_NAME_MAX_LEN) != 0)
+  if (memcmp(src_1.name, src_2.name, SACN_SOURCE_NAME_MAX_LEN) != 0)
     return false;
-  return etcpal_ip_and_port_equal(&s1.addr, &s2.addr);
+  return etcpal_ip_and_port_equal(&src_1.addr, &src_2.addr);
 }
 
 TEST_F(TestMergeReceiver, CreateWorks)

@@ -250,9 +250,9 @@ int remote_source_compare(const EtcPalRbTree* tree, const void* value_a, const v
   if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
     return 0;
 
-  sacn_remote_source_t* a = (sacn_remote_source_t*)value_a;
-  sacn_remote_source_t* b = (sacn_remote_source_t*)value_b;
-  return (*a > *b) - (*a < *b);
+  sacn_remote_source_t* lhs = (sacn_remote_source_t*)value_a;
+  sacn_remote_source_t* rhs = (sacn_remote_source_t*)value_b;
+  return (*lhs > *rhs) - (*lhs < *rhs);
 }
 
 int uuid_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
@@ -262,9 +262,9 @@ int uuid_compare(const EtcPalRbTree* tree, const void* value_a, const void* valu
   if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
     return 0;
 
-  const EtcPalUuid* a = (const EtcPalUuid*)value_a;
-  const EtcPalUuid* b = (const EtcPalUuid*)value_b;
-  return ETCPAL_UUID_CMP(a, b);
+  const EtcPalUuid* lhs = (const EtcPalUuid*)value_a;
+  const EtcPalUuid* rhs = (const EtcPalUuid*)value_b;
+  return ETCPAL_UUID_CMP(lhs, rhs);
 }
 
 bool remote_source_handle_in_use(int handle_val, void* cookie)

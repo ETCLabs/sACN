@@ -64,6 +64,14 @@ typedef uint16_t sacn_remote_source_t;
 /** The per-address priority start code. */
 #define SACN_STARTCODE_PRIORITY 0xddu
 
+enum
+{
+  /** The lowest sACN universe number supported. */
+  kSacnMinimumUniverse = 1,
+  /** The highest sACN universe number supported. */
+  kSacnMaximumUniverse = 63999
+};
+
 /**
  * This enum defines how the API module will use IPv4 and IPv6 networking.
  */

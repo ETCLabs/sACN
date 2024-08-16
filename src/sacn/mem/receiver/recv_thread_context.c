@@ -180,8 +180,8 @@ int find_socket_ref_with_room(SacnRecvThreadContext* context, etcpal_iptype_t ip
 
     if (matches && (entry->refcount < SACN_RECEIVER_MAX_SUBS_PER_SOCKET))
       return index;
-    else
-      ++index;
+
+    ++index;
   }
 
   return -1;
@@ -198,8 +198,8 @@ int find_socket_ref_by_type(SacnRecvThreadContext* context, etcpal_iptype_t ip_t
   {
     if (entry->socket.ip_type == ip_type)
       return index;
-    else
-      ++index;
+
+    ++index;
   }
 
   return -1;
@@ -216,8 +216,8 @@ int find_socket_ref_by_handle(SacnRecvThreadContext* context, etcpal_socket_t ha
   {
     if (entry->socket.handle == handle)
       return index;
-    else
-      ++index;
+
+    ++index;
   }
 
   return -1;

@@ -65,7 +65,7 @@ DECLARE_FAKE_VOID_FUNC(sacn_remove_receiver_socket,
                        uint16_t,
                        const EtcPalMcastNetintId*,
                        size_t,
-                       socket_cleanup_behavior_t);
+                       sacn_socket_cleanup_behavior_t);
 DECLARE_FAKE_VOID_FUNC(sacn_add_pending_sockets, SacnRecvThreadContext*);
 DECLARE_FAKE_VOID_FUNC(sacn_cleanup_dead_sockets, SacnRecvThreadContext*);
 DECLARE_FAKE_VOID_FUNC(sacn_subscribe_sockets, SacnRecvThreadContext*);

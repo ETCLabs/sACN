@@ -70,7 +70,13 @@ public:
   class NotifyHandler
   {
   public:
+    NotifyHandler()          = default;
     virtual ~NotifyHandler() = default;
+
+    NotifyHandler(const NotifyHandler& other)            = default;
+    NotifyHandler& operator=(const NotifyHandler& other) = default;
+    NotifyHandler(NotifyHandler&& other)                 = default;
+    NotifyHandler& operator=(NotifyHandler&& other)      = default;
 
     /**
      * @brief Notify that a new data packet has been received and merged.
@@ -272,7 +278,7 @@ public:
   struct Source
   {
     /** The handle of the source. */
-    sacn_remote_source_t handle;
+    sacn_remote_source_t handle{SACN_REMOTE_SOURCE_INVALID};
     /** The Component Identifier (CID) of the source. */
     etcpal::Uuid cid;
     /** The name of the source. */
@@ -280,12 +286,14 @@ public:
     /** The network address from which the most recent sACN packet originated. */
     etcpal::SockAddr addr;
     /** Whether the source is sending per-address priority packets, or only per-universe. */
-    bool per_address_priorities_active;
+    bool per_address_priorities_active{false};
     /** The source's current per-universe priority. */
-    uint8_t universe_priority;
+    uint8_t universe_priority{0u};
   };
 
-  MergeReceiver()                                      = default;
+  MergeReceiver()          = default;
+  virtual ~MergeReceiver() = default;
+
   MergeReceiver(const MergeReceiver& other)            = delete;
   MergeReceiver& operator=(const MergeReceiver& other) = delete;
   MergeReceiver(MergeReceiver&& other)                 = default; /**< Move a merge receiver instance. */
@@ -312,7 +320,7 @@ public:
   constexpr Handle handle() const;
 
 private:
-  SacnMergeReceiverConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
+  static SacnMergeReceiverConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
 
   Handle handle_;
 };
@@ -528,7 +536,7 @@ inline etcpal::Error MergeReceiver::Startup(const Settings&                  set
 
   if (netints.empty())
   {
-    result = sacn_merge_receiver_create(&config, &c_handle, NULL);
+    result = sacn_merge_receiver_create(&config, &c_handle, nullptr);
   }
   else
   {
@@ -571,8 +579,8 @@ inline etcpal::Expected<uint16_t> MergeReceiver::GetUniverse() const
   etcpal_error_t err    = sacn_merge_receiver_get_universe(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
-  else
-    return err;
+
+  return err;
 }
 
 /**
@@ -588,8 +596,8 @@ inline etcpal::Expected<SacnRecvUniverseSubrange> MergeReceiver::GetFootprint() 
   etcpal_error_t           err = sacn_merge_receiver_get_footprint(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
-  else
-    return err;
+
+  return err;
 }
 
 /**
@@ -650,16 +658,16 @@ inline etcpal::Error MergeReceiver::ChangeUniverseAndFootprint(uint16_t         
 inline std::vector<EtcPalMcastNetintId> MergeReceiver::GetNetworkInterfaces()
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<EtcPalMcastNetintId> netints;
-  size_t                           size_guess  = 4u;
-  size_t                           num_netints = 0u;
+  size_t                           size_guess = 4u;
+  std::vector<EtcPalMcastNetintId> netints(size_guess);
+  size_t num_netints = sacn_merge_receiver_get_network_interfaces(handle_.value(), netints.data(), netints.size());
 
-  do
+  while (num_netints > netints.size())
   {
+    size_guess = num_netints + 4u;
     netints.resize(size_guess);
     num_netints = sacn_merge_receiver_get_network_interfaces(handle_.value(), netints.data(), netints.size());
-    size_guess  = num_netints + 4u;
-  } while (num_netints > netints.size());
+  }
 
   netints.resize(num_netints);
   return netints;
@@ -823,7 +831,7 @@ inline etcpal::Error MergeReceiver::ResetNetworking(std::vector<SacnMcastInterfa
  *
  * @return The handle, which will only be valid if the merge receiver has been successfully created using Startup().
  */
-inline constexpr MergeReceiver::Handle MergeReceiver::handle() const
+constexpr MergeReceiver::Handle MergeReceiver::handle() const
 {
   return handle_;
 }

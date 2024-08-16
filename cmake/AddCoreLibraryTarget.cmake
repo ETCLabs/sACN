@@ -27,6 +27,9 @@ function(sacn_add_core_library_target target_name)
   endif()
 
   target_link_libraries(${target_name} PUBLIC EtcPal)
+  if(NOT COMPILING_AS_OSS)
+    target_clang_tidy(${target_name})
+  endif()
 
   # Organize sources in IDEs
   source_group(TREE ${SACN_SRC}/sacn PREFIX src FILES

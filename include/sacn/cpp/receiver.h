@@ -71,7 +71,13 @@ public:
   class NotifyHandler
   {
   public:
+    NotifyHandler()          = default;
     virtual ~NotifyHandler() = default;
+
+    NotifyHandler(const NotifyHandler& other)            = default;
+    NotifyHandler& operator=(const NotifyHandler& other) = default;
+    NotifyHandler(NotifyHandler&& other)                 = default;
+    NotifyHandler& operator=(NotifyHandler&& other)      = default;
 
     /**
      * @brief Notify that new universe data within the configured footprint has been received.
@@ -226,11 +232,13 @@ public:
     NetintList(sacn_receiver_t receiver_handle, const std::vector<SacnMcastInterface>& network_interfaces);
   };
 
-  Receiver()                                 = default;
+  Receiver()          = default;
+  virtual ~Receiver() = default;
+
   Receiver(const Receiver& other)            = delete;
   Receiver& operator=(const Receiver& other) = delete;
-  Receiver(Receiver&& other)                 = default; /**< Move a device instance. */
-  Receiver& operator=(Receiver&& other)      = default; /**< Move a device instance. */
+  Receiver(Receiver&& other)                 = default; /**< Move a receiver instance. */
+  Receiver& operator=(Receiver&& other)      = default; /**< Move a receiver instance. */
 
   etcpal::Error              Startup(const Settings& settings, NotifyHandler& notify_handler, McastMode mcast_mode);
   etcpal::Error              Startup(const Settings&                  settings,
@@ -256,7 +264,7 @@ public:
   constexpr Handle handle() const;
 
 private:
-  SacnReceiverConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
+  static SacnReceiverConfig TranslateConfig(const Settings& settings, NotifyHandler& notify_handler);
 
   Handle handle_;
 };
@@ -457,7 +465,7 @@ inline etcpal::Error Receiver::Startup(const Settings&                  settings
 
   if (netints.empty())
   {
-    result = sacn_receiver_create(&config, &c_handle, NULL);
+    result = sacn_receiver_create(&config, &c_handle, nullptr);
   }
   else
   {
@@ -500,8 +508,8 @@ inline etcpal::Expected<uint16_t> Receiver::GetUniverse() const
   etcpal_error_t err    = sacn_receiver_get_universe(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
-  else
-    return err;
+
+  return err;
 }
 
 /**
@@ -517,8 +525,8 @@ inline etcpal::Expected<SacnRecvUniverseSubrange> Receiver::GetFootprint() const
   etcpal_error_t           err = sacn_receiver_get_footprint(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
-  else
-    return err;
+
+  return err;
 }
 
 /**
@@ -583,16 +591,16 @@ inline etcpal::Error Receiver::ChangeUniverseAndFootprint(uint16_t              
 inline std::vector<EtcPalMcastNetintId> Receiver::GetNetworkInterfaces()
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<EtcPalMcastNetintId> netints;
-  size_t                           size_guess  = 4u;
-  size_t                           num_netints = 0u;
+  size_t                           size_guess = 4u;
+  std::vector<EtcPalMcastNetintId> netints(size_guess);
+  size_t num_netints = sacn_receiver_get_network_interfaces(handle_.value(), netints.data(), netints.size());
 
-  do
+  while (num_netints > netints.size())
   {
+    size_guess = num_netints + 4u;
     netints.resize(size_guess);
     num_netints = sacn_receiver_get_network_interfaces(handle_.value(), netints.data(), netints.size());
-    size_guess  = num_netints + 4u;
-  } while (num_netints > netints.size());
+  }
 
   netints.resize(num_netints);
   return netints;
@@ -753,7 +761,7 @@ inline etcpal::Error Receiver::ResetNetworking(std::vector<SacnMcastInterface>& 
  *
  * @return The handle, which will only be valid if the receiver has been successfully created using Startup().
  */
-inline constexpr Receiver::Handle Receiver::handle() const
+constexpr Receiver::Handle Receiver::handle() const
 {
   return handle_;
 }

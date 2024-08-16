@@ -112,27 +112,27 @@ void mark_sources_online(uint16_t                        universe,
   for (const SacnRemoteSourceInternal* online_src = online_sources; online_src < online_sources + num_online_sources;
        ++online_src)
   {
-    TerminationSet* ts      = *term_set_list;
-    TerminationSet* last_ts = NULL;
-    while (ts)
+    TerminationSet* term_set      = *term_set_list;
+    TerminationSet* last_term_set = NULL;
+    while (term_set)
     {
       // Remove the source from the termination set if it exists, as it is confirmed online.
       TerminationSetSourceKey ts_src_key;
       ts_src_key.handle   = online_src->handle;
       ts_src_key.universe = universe;
-      etcpal_rbtree_remove_with_cb(&ts->sources, &ts_src_key, source_remove_from_ts_callback);
+      etcpal_rbtree_remove_with_cb(&term_set->sources, &ts_src_key, source_remove_from_ts_callback);
 
-      if (etcpal_rbtree_size(&ts->sources) == 0)  // Remove empty termination sets immediately.
+      if (etcpal_rbtree_size(&term_set->sources) == 0)  // Remove empty termination sets immediately.
       {
-        TerminationSet* to_remove = ts;
-        ts                        = ts->next;
+        TerminationSet* to_remove = term_set;
+        term_set                  = term_set->next;
 
-        remove_term_set_from_list(term_set_list, to_remove, last_ts);
+        remove_term_set_from_list(term_set_list, to_remove, last_term_set);
       }
       else
       {
-        last_ts = ts;
-        ts      = ts->next;
+        last_term_set = term_set;
+        term_set      = term_set->next;
       }
     }
   }
@@ -178,7 +178,7 @@ etcpal_error_t mark_sources_offline(uint16_t                        universe,
         ts_src->terminated = offline_src->terminated;
       }
     }
-    else  // If we didn't find the source in any termination sets, we must create a new one.
+    else if (res == kEtcPalErrOk)  // If we didn't find the source in any termination sets, we must create a new one.
     {
       TerminationSet* ts_new = ALLOC_TERM_SET();
       if (!ts_new)
@@ -274,13 +274,13 @@ void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification
   if (!SACN_ASSERT_VERIFY(term_set_list) || !SACN_ASSERT_VERIFY(sources_lost))
     return;
 
-  TerminationSet* ts      = *term_set_list;
-  TerminationSet* last_ts = NULL;
-  while (ts)
+  TerminationSet* term_set      = *term_set_list;
+  TerminationSet* last_term_set = NULL;
+  while (term_set)
   {
     bool remove_ts = false;
 
-    if (etcpal_timer_is_expired(&ts->wait_period))
+    if (etcpal_timer_is_expired(&term_set->wait_period))
     {
       // Check each source in the termination set to determine whether it is online or offline. Each termination set has
       // at least one unique source.
@@ -290,7 +290,7 @@ void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification
       EtcPalRbIter ts_src_it;
       etcpal_rbiter_init(&ts_src_it);
 
-      TerminationSetSource* ts_src = (TerminationSetSource*)etcpal_rbiter_first(&ts_src_it, &ts->sources);
+      TerminationSetSource* ts_src = (TerminationSetSource*)etcpal_rbiter_first(&ts_src_it, &term_set->sources);
       while (ts_src)
       {
         if (ts_src->offline)
@@ -325,15 +325,15 @@ void get_expired_sources(TerminationSet** term_set_list, SourcesLostNotification
 
     if (remove_ts)
     {
-      TerminationSet* to_remove = ts;
-      ts                        = ts->next;
+      TerminationSet* to_remove = term_set;
+      term_set                  = term_set->next;
 
-      remove_term_set_from_list(term_set_list, to_remove, last_ts);
+      remove_term_set_from_list(term_set_list, to_remove, last_term_set);
     }
     else
     {
-      last_ts = ts;
-      ts      = ts->next;
+      last_term_set = term_set;
+      term_set      = term_set->next;
     }
   }
 }
@@ -357,17 +357,17 @@ int term_set_source_compare(const EtcPalRbTree* tree, const void* value_a, const
   if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
     return 0;
 
-  TerminationSetSourceKey* a = (TerminationSetSourceKey*)value_a;
-  TerminationSetSourceKey* b = (TerminationSetSourceKey*)value_b;
+  TerminationSetSourceKey* lhs = (TerminationSetSourceKey*)value_a;
+  TerminationSetSourceKey* rhs = (TerminationSetSourceKey*)value_b;
 
-  if (a->handle > b->handle)
+  if (lhs->handle > rhs->handle)
     return 1;
 
-  if (a->handle == b->handle)
+  if (lhs->handle == rhs->handle)
   {
-    if (a->universe > b->universe)
+    if (lhs->universe > rhs->universe)
       return 1;
-    if (a->universe == b->universe)
+    if (lhs->universe == rhs->universe)
       return 0;
   }
 

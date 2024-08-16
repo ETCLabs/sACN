@@ -96,7 +96,7 @@
 #endif
 
 /* Assertion failure handler */
-bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, const int line);
+bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, int line);
 
 /**
  * @brief The assertion handler used by the sACN library.
@@ -105,7 +105,7 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
  * this, it must be redefined as a macro taking a single argument (the assertion expression).
  */
 #ifndef SACN_ASSERT_VERIFY
-#define SACN_ASSERT_VERIFY(exp) ((exp) ? true : sacn_assert_verify_fail(#exp, __FILE__, __func__, __LINE__))
+#define SACN_ASSERT_VERIFY(exp) ((exp) ? true : (sacn_assert_verify_fail(#exp, __FILE__, __func__, __LINE__) && false))
 #endif
 
 /**

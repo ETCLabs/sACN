@@ -36,8 +36,6 @@
  **************************************************************************************************/
 
 constexpr const uint16_t UNIVERSE_INVALID = 0;
-constexpr const uint16_t UNIVERSE_MIN     = 1;
-constexpr const uint16_t UNIVERSE_MAX     = 63999;
 constexpr const uint8_t  LEVEL_MIN        = 0;
 constexpr const uint8_t  LEVEL_MAX        = 255;
 
@@ -535,7 +533,7 @@ uint16_t SACNSourceExample::GetUniverseFromInput()
     std::string universe_string;
     if (print_prompt)
     {
-      std::cout << "Universe (" << UNIVERSE_MIN << " - " << UNIVERSE_MAX << "): ";
+      std::cout << "Universe (" << sacn::kMinimumUniverse << " - " << sacn::kMaximumUniverse << "): ";
     }
     std::getline(std::cin, universe_string);
     if (universe_string == "")
@@ -545,7 +543,7 @@ uint16_t SACNSourceExample::GetUniverseFromInput()
     }
     print_prompt = true;
     int temp     = atoi(universe_string.c_str());
-    if ((temp >= UNIVERSE_MIN) && (temp <= UNIVERSE_MAX))
+    if ((temp >= sacn::kMinimumUniverse) && (temp <= sacn::kMaximumUniverse))
     {
       universe = (uint16_t)temp;
     }

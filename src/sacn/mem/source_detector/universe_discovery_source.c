@@ -154,7 +154,7 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid*             
 
   if (result == kEtcPalErrOk)
   {
-    etcpal_timer_start(&src->expiration_timer, SACN_UNIVERSE_DISCOVERY_INTERVAL * 2);
+    etcpal_timer_start(&src->expiration_timer, kSacnUniverseDiscoveryInterval * 2);
     src->next_universe_index = 0;
     src->next_page           = 0;
 

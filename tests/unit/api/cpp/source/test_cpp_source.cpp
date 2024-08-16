@@ -47,7 +47,7 @@ static constexpr uint8_t       kTestPriority     = 77u;
 static constexpr bool          kTestPreviewFlag  = true;
 static constexpr uint8_t       kTestStartCode    = 12u;
 
-static std::vector<SacnMcastInterface> kTestNetints = {
+static std::vector<SacnMcastInterface> test_netints = {
     {{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},  {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
     {{kEtcPalIpTypeV4, 3u}, kEtcPalErrOk},  {{kEtcPalIpTypeV4, 4u}, kEtcPalErrOk},
     {{kEtcPalIpTypeV4, 5u}, kEtcPalErrOk},  {{kEtcPalIpTypeV4, 6u}, kEtcPalErrOk},
@@ -56,12 +56,12 @@ static std::vector<SacnMcastInterface> kTestNetints = {
     {{kEtcPalIpTypeV4, 11u}, kEtcPalErrOk}, {{kEtcPalIpTypeV4, 12u}, kEtcPalErrOk},
     {{kEtcPalIpTypeV4, 13u}, kEtcPalErrOk}, {{kEtcPalIpTypeV4, 14u}, kEtcPalErrOk},
     {{kEtcPalIpTypeV4, 15u}, kEtcPalErrOk}};
-static std::vector<SacnMcastInterface> kTestNetintsEmpty = {};
+static std::vector<SacnMcastInterface> test_netints_empty = {};
 
-static std::vector<sacn::Source::UniverseNetintList> kTestNetintLists = {{kTestHandle, kTestUniverse, kTestNetints},
-                                                                         {kTestHandle, kTestUniverse2, kTestNetints},
-                                                                         {kTestHandle2, kTestUniverse, kTestNetints},
-                                                                         {kTestHandle2, kTestUniverse2, kTestNetints}};
+static std::vector<sacn::Source::UniverseNetintList> test_netint_lists = {{kTestHandle, kTestUniverse, test_netints},
+                                                                          {kTestHandle, kTestUniverse2, test_netints},
+                                                                          {kTestHandle2, kTestUniverse, test_netints},
+                                                                          {kTestHandle2, kTestUniverse2, test_netints}};
 
 static const std::vector<uint16_t> kTestUniverses = {1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u, 11u, 12u, 13u, 14u, 15u};
 
@@ -240,7 +240,7 @@ TEST_F(TestSource, AddUniverseWorksWithoutNetints)
 
   EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse)).IsOk(), true);
   EXPECT_EQ(sacn_source_add_universe_fake.call_count, 1u);
-  EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse), kTestNetintsEmpty).IsOk(), true);
+  EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse), test_netints_empty).IsOk(), true);
   EXPECT_EQ(sacn_source_add_universe_fake.call_count, 2u);
 }
 
@@ -259,8 +259,8 @@ TEST_F(TestSource, AddUniverseWorksWithNetints)
     EXPECT_NE(netint_config, nullptr);
     if (netint_config)
     {
-      EXPECT_EQ(netint_config->netints, kTestNetints.data());
-      EXPECT_EQ(netint_config->num_netints, kTestNetints.size());
+      EXPECT_EQ(netint_config->netints, test_netints.data());
+      EXPECT_EQ(netint_config->num_netints, test_netints.size());
     }
     return kEtcPalErrOk;
   };
@@ -268,7 +268,7 @@ TEST_F(TestSource, AddUniverseWorksWithNetints)
   sacn::Source source;
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
-  EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse), kTestNetints).IsOk(), true);
+  EXPECT_EQ(source.AddUniverse(sacn::Source::UniverseSettings(kTestUniverse), test_netints).IsOk(), true);
   EXPECT_EQ(sacn_source_add_universe_fake.call_count, 1u);
 }
 
@@ -628,8 +628,8 @@ TEST_F(TestSource, ResetNetworkingWorksWithNetints)
     EXPECT_NE(netint_config, nullptr);
     if (netint_config)
     {
-      EXPECT_EQ(netint_config->netints, kTestNetints.data());
-      EXPECT_EQ(netint_config->num_netints, kTestNetints.size());
+      EXPECT_EQ(netint_config->netints, test_netints.data());
+      EXPECT_EQ(netint_config->num_netints, test_netints.size());
     }
     return kEtcPalErrOk;
   };
@@ -637,7 +637,7 @@ TEST_F(TestSource, ResetNetworkingWorksWithNetints)
   sacn::Source source;
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
-  EXPECT_EQ(source.ResetNetworking(kTestNetints).IsOk(), true);
+  EXPECT_EQ(source.ResetNetworking(test_netints).IsOk(), true);
   EXPECT_EQ(sacn_source_reset_networking_fake.call_count, 1u);
 }
 
@@ -645,15 +645,15 @@ TEST_F(TestSource, ResetNetworkingPerUniverseWorks)
 {
   sacn_source_reset_networking_per_universe_fake.custom_fake =
       [](const SacnNetintConfig*, const SacnSourceUniverseNetintList* netint_lists, size_t num_netint_lists) {
-        EXPECT_EQ(num_netint_lists, kTestNetintLists.size());
+        EXPECT_EQ(num_netint_lists, test_netint_lists.size());
 
         for (size_t i = 0u; i < num_netint_lists; ++i)
         {
-          EXPECT_EQ(netint_lists[i].handle, kTestNetintLists[i].handle);
-          EXPECT_EQ(netint_lists[i].universe, kTestNetintLists[i].universe);
-          EXPECT_EQ(netint_lists[i].netints, kTestNetintLists[i].netints.data());
-          EXPECT_EQ(netint_lists[i].num_netints, kTestNetintLists[i].netints.size());
-          EXPECT_EQ(netint_lists[i].no_netints, kTestNetintLists[i].no_netints);
+          EXPECT_EQ(netint_lists[i].handle, test_netint_lists[i].handle);
+          EXPECT_EQ(netint_lists[i].universe, test_netint_lists[i].universe);
+          EXPECT_EQ(netint_lists[i].netints, test_netint_lists[i].netints.data());
+          EXPECT_EQ(netint_lists[i].num_netints, test_netint_lists[i].netints.size());
+          EXPECT_EQ(netint_lists[i].no_netints, test_netint_lists[i].no_netints);
         }
 
         return kEtcPalErrOk;
@@ -662,7 +662,7 @@ TEST_F(TestSource, ResetNetworkingPerUniverseWorks)
   sacn::Source source;
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
-  EXPECT_EQ(source.ResetNetworking(kTestNetints, kTestNetintLists).IsOk(), true);
+  EXPECT_EQ(source.ResetNetworking(test_netints, test_netint_lists).IsOk(), true);
   EXPECT_EQ(sacn_source_reset_networking_per_universe_fake.call_count, 1u);
 }
 
@@ -675,8 +675,8 @@ TEST_F(TestSource, GetGrowingNetintsWorks)
     EXPECT_NE(netints, nullptr);
     EXPECT_EQ(netints_size, current_netints.size() + 4u);
 
-    for (int i = 0; (i < 5) && (current_netints.size() < kTestNetints.size()); ++i)
-      current_netints.push_back(kTestNetints[current_netints.size()]);
+    for (int i = 0; (i < 5) && (current_netints.size() < test_netints.size()); ++i)
+      current_netints.push_back(test_netints[current_netints.size()]);
 
     if (sacn_source_get_network_interfaces_fake.call_count < 4u)
       EXPECT_LT(netints_size, current_netints.size());
@@ -697,8 +697,8 @@ TEST_F(TestSource, GetGrowingNetintsWorks)
   std::vector<EtcPalMcastNetintId> result = source.GetNetworkInterfaces(kTestUniverse);
   for (size_t i = 0u; i < result.size(); ++i)
   {
-    EXPECT_EQ(result[i].index, kTestNetints[i].iface.index);
-    EXPECT_EQ(result[i].ip_type, kTestNetints[i].iface.ip_type);
+    EXPECT_EQ(result[i].index, test_netints[i].iface.index);
+    EXPECT_EQ(result[i].ip_type, test_netints[i].iface.ip_type);
   }
 
   EXPECT_EQ(sacn_source_get_network_interfaces_fake.call_count, 4u);
@@ -715,12 +715,12 @@ TEST_F(TestSource, GetUnchangingNetintsWorks)
     if (sacn_source_get_network_interfaces_fake.call_count == 1u)
       EXPECT_EQ(netints_size, 4u);
     else
-      EXPECT_EQ(netints_size, kTestNetints.size() + 4u);
+      EXPECT_EQ(netints_size, test_netints.size() + 4u);
 
-    for (size_t i = 0; (i < netints_size) && (i < kTestNetints.size()); ++i)
-      netints[i] = kTestNetints[i].iface;
+    for (size_t i = 0; (i < netints_size) && (i < test_netints.size()); ++i)
+      netints[i] = test_netints[i].iface;
 
-    return kTestNetints.size();
+    return test_netints.size();
   };
 
   sacn::Source source;
@@ -729,8 +729,8 @@ TEST_F(TestSource, GetUnchangingNetintsWorks)
   std::vector<EtcPalMcastNetintId> result = source.GetNetworkInterfaces(kTestUniverse);
   for (size_t i = 0u; i < result.size(); ++i)
   {
-    EXPECT_EQ(result[i].index, kTestNetints[i].iface.index);
-    EXPECT_EQ(result[i].ip_type, kTestNetints[i].iface.ip_type);
+    EXPECT_EQ(result[i].index, test_netints[i].iface.index);
+    EXPECT_EQ(result[i].ip_type, test_netints[i].iface.ip_type);
   }
 
   EXPECT_EQ(sacn_source_get_network_interfaces_fake.call_count, 2u);

@@ -29,9 +29,11 @@
 extern "C" {
 #endif
 
-etcpal_error_t    add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetintId* id);
-SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNetintId* id);
-SacnSourceNetint* lookup_source_netint_and_index(SacnSource* source, const EtcPalMcastNetintId* id, size_t* index);
+etcpal_error_t    add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetintId* netint_id);
+SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNetintId* netint_id);
+SacnSourceNetint* lookup_source_netint_and_index(SacnSource*                source,
+                                                 const EtcPalMcastNetintId* netint_id,
+                                                 size_t*                    index);
 void              remove_sacn_source_netint(SacnSource* source, size_t index);
 
 #ifdef __cplusplus

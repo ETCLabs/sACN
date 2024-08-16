@@ -22,7 +22,10 @@
 
 #include "sacn/private/common.h"
 
-#define SACN_PERIODIC_INTERVAL 120
+enum
+{
+  kSacnPeriodicInterval = 120
+};
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,9 +46,9 @@ void            remove_source_detector_from_thread(SacnSourceDetector* detector)
 etcpal_error_t  add_receiver_sockets(SacnReceiver* receiver);
 etcpal_error_t  add_source_detector_sockets(SacnSourceDetector* detector);
 void            begin_sampling_period(SacnReceiver* receiver);
-void            remove_receiver_sockets(SacnReceiver* receiver, socket_cleanup_behavior_t cleanup_behavior);
-void remove_source_detector_sockets(SacnSourceDetector* detector, socket_cleanup_behavior_t cleanup_behavior);
-void remove_all_receiver_sockets(socket_cleanup_behavior_t cleanup_behavior);
+void            remove_receiver_sockets(SacnReceiver* receiver, sacn_socket_cleanup_behavior_t cleanup_behavior);
+void remove_source_detector_sockets(SacnSourceDetector* detector, sacn_socket_cleanup_behavior_t cleanup_behavior);
+void remove_all_receiver_sockets(sacn_socket_cleanup_behavior_t cleanup_behavior);
 void read_network_and_process(SacnRecvThreadContext* context);
 void terminate_sources_on_removed_netints(SacnReceiver* receiver);
 

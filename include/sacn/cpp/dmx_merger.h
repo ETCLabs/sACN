@@ -126,7 +126,9 @@ public:
     bool IsValid() const;
   };
 
-  DmxMerger()                                  = default;
+  DmxMerger()          = default;
+  virtual ~DmxMerger() = default;
+
   DmxMerger(const DmxMerger& other)            = delete;
   DmxMerger& operator=(const DmxMerger& other) = delete;
   DmxMerger(DmxMerger&& other)                 = default; /**< Move a dmx merger instance. */
@@ -147,7 +149,7 @@ public:
   constexpr Handle handle() const;
 
 private:
-  SacnDmxMergerConfig TranslateConfig(const Settings& settings);
+  static SacnDmxMergerConfig TranslateConfig(const Settings& settings);
 
   Handle handle_;
 };
@@ -231,8 +233,8 @@ inline etcpal::Expected<sacn_dmx_merger_source_t> DmxMerger::AddSource()
   etcpal_error_t           err    = sacn_dmx_merger_add_source(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;
-  else
-    return err;
+
+  return err;
 }
 
 /**
@@ -370,7 +372,7 @@ inline etcpal::Error DmxMerger::RemovePap(sacn_dmx_merger_source_t source)
  *
  * @return The handle, which will only be valid if the DMX merger has been successfully created using Startup().
  */
-inline constexpr DmxMerger::Handle DmxMerger::handle() const
+constexpr DmxMerger::Handle DmxMerger::handle() const
 {
   return handle_;
 }

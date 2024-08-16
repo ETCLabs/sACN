@@ -83,8 +83,8 @@ static etcpal_socket_t       ipv6_unicast_send_socket = ETCPAL_SOCKET_INVALID;
 
 /*********************** Private function prototypes *************************/
 
-static etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_type_t net_type);
-static etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, networking_type_t net_type);
+static etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, sacn_networking_type_t net_type);
+static etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, sacn_networking_type_t net_type);
 static void           clear_source_networking();
 #if SACN_RECEIVER_ENABLED || DOXYGEN
 static etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_netints,
@@ -96,10 +96,10 @@ static bool           netints_valid(const SacnMcastInterface* netints, size_t nu
 static size_t         apply_netint_config(const SacnNetintConfig* netint_config,
                                           SysNetintList*          netint_list,
                                           SacnSocketsSysNetints*  sys_netints,
-                                          networking_type_t       net_type);
+                                          sacn_networking_type_t  net_type);
 static etcpal_error_t test_netint(const EtcPalNetintInfo* netint,
                                   SacnSocketsSysNetints*  sys_netints,
-                                  networking_type_t       net_type);
+                                  sacn_networking_type_t  net_type);
 static etcpal_error_t test_sacn_receiver_netint(unsigned int           index,
                                                 etcpal_iptype_t        ip_type,
                                                 const EtcPalIpAddr*    addr,
@@ -130,21 +130,21 @@ static etcpal_error_t queue_subscription(SacnRecvThreadContext*     recv_thread_
                                          const EtcPalIpAddr*        group,
                                          const EtcPalMcastNetintId* netints,
                                          size_t                     num_netints);
-static etcpal_error_t unsubscribe_socket(SacnRecvThreadContext*     recv_thread_context,
-                                         etcpal_socket_t            sock,
-                                         const EtcPalIpAddr*        group,
-                                         const EtcPalMcastNetintId* netints,
-                                         size_t                     num_netints,
-                                         socket_cleanup_behavior_t  cleanup_behavior);
-static void           unsubscribe_socket_ref(SacnRecvThreadContext*     recv_thread_context,
-                                             int                        ref_index,
-                                             uint16_t                   universe,
-                                             const EtcPalMcastNetintId* netints,
-                                             size_t                     num_netints,
-                                             socket_cleanup_behavior_t  cleanup_behavior);
-static void           cleanup_receive_socket(SacnRecvThreadContext*    context,
-                                             const ReceiveSocket*      socket,
-                                             socket_cleanup_behavior_t cleanup_behavior);
+static etcpal_error_t unsubscribe_socket(SacnRecvThreadContext*         recv_thread_context,
+                                         etcpal_socket_t                sock,
+                                         const EtcPalIpAddr*            group,
+                                         const EtcPalMcastNetintId*     netints,
+                                         size_t                         num_netints,
+                                         sacn_socket_cleanup_behavior_t cleanup_behavior);
+static void           unsubscribe_socket_ref(SacnRecvThreadContext*         recv_thread_context,
+                                             int                            ref_index,
+                                             uint16_t                       universe,
+                                             const EtcPalMcastNetintId*     netints,
+                                             size_t                         num_netints,
+                                             sacn_socket_cleanup_behavior_t cleanup_behavior);
+static void           cleanup_receive_socket(SacnRecvThreadContext*         context,
+                                             const ReceiveSocket*           socket,
+                                             sacn_socket_cleanup_behavior_t cleanup_behavior);
 #endif  // SACN_RECEIVER_ENABLED || DOXYGEN
 static etcpal_error_t subscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
 static etcpal_error_t unsubscribe_on_single_interface(etcpal_socket_t sock, const EtcPalGroupReq* group);
@@ -217,12 +217,12 @@ etcpal_error_t sacn_sockets_reset_source_detector(const SacnNetintConfig* netint
 
 #if SACN_RECEIVER_ENABLED || DOXYGEN
 
-void unsubscribe_socket_ref(SacnRecvThreadContext*     recv_thread_context,
-                            int                        ref_index,
-                            uint16_t                   universe,
-                            const EtcPalMcastNetintId* netints,
-                            size_t                     num_netints,
-                            socket_cleanup_behavior_t  cleanup_behavior)
+void unsubscribe_socket_ref(SacnRecvThreadContext*         recv_thread_context,
+                            int                            ref_index,
+                            uint16_t                       universe,
+                            const EtcPalMcastNetintId*     netints,
+                            size_t                         num_netints,
+                            sacn_socket_cleanup_behavior_t cleanup_behavior)
 {
   if (!SACN_ASSERT_VERIFY(recv_thread_context))
     return;
@@ -242,9 +242,9 @@ void unsubscribe_socket_ref(SacnRecvThreadContext*     recv_thread_context,
     cleanup_receive_socket(recv_thread_context, &socket, cleanup_behavior);
 }
 
-void cleanup_receive_socket(SacnRecvThreadContext*    context,
-                            const ReceiveSocket*      socket,
-                            socket_cleanup_behavior_t cleanup_behavior)
+void cleanup_receive_socket(SacnRecvThreadContext*         context,
+                            const ReceiveSocket*           socket,
+                            sacn_socket_cleanup_behavior_t cleanup_behavior)
 {
   if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(socket))
     return;
@@ -301,7 +301,7 @@ etcpal_error_t send_multicast(uint16_t universe_id, const uint8_t* send_buf, con
   // Determine the multicast destination
   EtcPalSockAddr dest;
   sacn_get_mcast_addr(netint->ip_type, universe_id, &dest.ip);
-  dest.port = SACN_PORT;
+  dest.port = kSacnPort;
 
   // Determine the socket to use
   etcpal_socket_t sock            = ETCPAL_SOCKET_INVALID;
@@ -359,7 +359,7 @@ etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_ad
   // Convert destination to SockAddr
   EtcPalSockAddr sockaddr_dest;
   sockaddr_dest.ip   = *dest_addr;
-  sockaddr_dest.port = SACN_PORT;
+  sockaddr_dest.port = kSacnPort;
 
   // Try to send the data (ignore errors)
   const size_t send_buf_length =
@@ -388,7 +388,7 @@ EtcPalSockAddr get_bind_address(etcpal_iptype_t ip_type)
 {
   EtcPalSockAddr recv_any;
   etcpal_ip_set_wildcard(ip_type, &recv_any.ip);
-  recv_any.port = SACN_PORT;
+  recv_any.port = kSacnPort;
   return recv_any;
 }
 
@@ -684,22 +684,22 @@ void poll_add_socket(SacnRecvThreadContext* recv_thread_context, ReceiveSocket* 
  *
  * [in] ip_type Whether the multicast address is IPv4 or IPv6.
  * [in] universe The multicast address' universe.
- * [out] ip The multicast address for the given universe and IP type.
+ * [out] ip_addr The multicast address for the given universe and IP type.
  */
-void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAddr* ip)
+void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAddr* ip_addr)
 {
   if (ip_type == kEtcPalIpTypeV4)
   {
-    ETCPAL_IP_SET_V4_ADDRESS(ip, (0xefff0000 | universe));
+    ETCPAL_IP_SET_V4_ADDRESS(ip_addr, (0xefff0000 | universe));
   }
   else
   {
     static const uint8_t ipv6_addr_template[ETCPAL_IPV6_BYTES] = {0xff, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                                                   0x00, 0x00, 0x00, 0x00, 0x83, 0x00, 0x00, 0x00};
 
-    ETCPAL_IP_SET_V6_ADDRESS(ip, ipv6_addr_template);
-    ip->addr.v6.addr_buf[14] = (uint8_t)(universe >> 8);
-    ip->addr.v6.addr_buf[15] = (uint8_t)(universe & 0xff);
+    ETCPAL_IP_SET_V6_ADDRESS(ip_addr, ipv6_addr_template);
+    ip_addr->addr.v6.addr_buf[14] = (uint8_t)(universe >> 8);
+    ip_addr->addr.v6.addr_buf[15] = (uint8_t)(universe & 0xff);
   }
 }
 
@@ -719,7 +719,8 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t           thread_id,
                                         etcpal_socket_t*           socket)
 {
   if (!SACN_ASSERT_VERIFY(ip_type == kEtcPalIpTypeV4 || ip_type == kEtcPalIpTypeV6) ||
-      !SACN_ASSERT_VERIFY(universe >= 1 && ((universe <= 63999) || (universe == SACN_DISCOVERY_UNIVERSE))) ||
+      !SACN_ASSERT_VERIFY(universe >= kSacnMinimumUniverse &&
+                          ((universe <= kSacnMaximumUniverse) || (universe == kSacnDiscoveryUniverse))) ||
       !SACN_ASSERT_VERIFY(netints) || !SACN_ASSERT_VERIFY(num_netints > 0) || !SACN_ASSERT_VERIFY(socket))
   {
     return kEtcPalErrSys;
@@ -738,7 +739,7 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t           thread_id,
 
   EtcPalSockAddr universe_mcast_addr;
   sacn_get_mcast_addr(ip_type, universe, &universe_mcast_addr.ip);
-  universe_mcast_addr.port = SACN_PORT;
+  universe_mcast_addr.port = kSacnPort;
 
   // Find or create a shared socket.
   SocketRef* ref = NULL;
@@ -807,12 +808,12 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t           thread_id,
   return res;
 }
 
-void sacn_remove_receiver_socket(sacn_thread_id_t           thread_id,
-                                 etcpal_socket_t*           socket,
-                                 uint16_t                   universe,
-                                 const EtcPalMcastNetintId* netints,
-                                 size_t                     num_netints,
-                                 socket_cleanup_behavior_t  cleanup_behavior)
+void sacn_remove_receiver_socket(sacn_thread_id_t               thread_id,
+                                 etcpal_socket_t*               socket,
+                                 uint16_t                       universe,
+                                 const EtcPalMcastNetintId*     netints,
+                                 size_t                         num_netints,
+                                 sacn_socket_cleanup_behavior_t cleanup_behavior)
 {
 #if SACN_RECEIVER_SOCKET_PER_NIC
   if (!SACN_ASSERT_VERIFY(num_netints <= 1))
@@ -901,12 +902,12 @@ etcpal_error_t queue_subscription(SacnRecvThreadContext*     recv_thread_context
  * [in] cleanup_behavior Determines if socket cleanup is being queued or not. If it is, the unsubscribe is also queued.
  * Returns kEtcPalErrOk if the unsubscribe was performed or queued successfully, error code otherwise.
  */
-etcpal_error_t unsubscribe_socket(SacnRecvThreadContext*     recv_thread_context,
-                                  etcpal_socket_t            sock,
-                                  const EtcPalIpAddr*        group,
-                                  const EtcPalMcastNetintId* netints,
-                                  size_t                     num_netints,
-                                  socket_cleanup_behavior_t  cleanup_behavior)
+etcpal_error_t unsubscribe_socket(SacnRecvThreadContext*         recv_thread_context,
+                                  etcpal_socket_t                sock,
+                                  const EtcPalIpAddr*            group,
+                                  const EtcPalMcastNetintId*     netints,
+                                  size_t                         num_netints,
+                                  sacn_socket_cleanup_behavior_t cleanup_behavior)
 {
   if (!SACN_ASSERT_VERIFY(recv_thread_context) || !SACN_ASSERT_VERIFY(sock != ETCPAL_SOCKET_INVALID) ||
       !SACN_ASSERT_VERIFY(group))
@@ -1103,7 +1104,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
 
       EtcPalMsgHdr msg = {{0}};
       msg.buf          = recv_thread_context->recv_buf;
-      msg.buflen       = SACN_MTU;
+      msg.buflen       = kSacnMtu;
       msg.control      = control_buf;
       msg.controllen   = ETCPAL_MAX_CONTROL_SIZE_PKTINFO;
 
@@ -1112,7 +1113,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
       {
         if (msg.flags & ETCPAL_MSG_TRUNC)
         {
-          recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than SACN_MTU.
+          recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than kSacnMtu.
         }
         else
         {
@@ -1206,7 +1207,7 @@ etcpal_error_t sacn_send_unicast(sacn_ip_support_t   ip_supported,
   return res;
 }
 
-SacnSocketsSysNetints* sacn_sockets_get_sys_netints(networking_type_t type)
+SacnSocketsSysNetints* sacn_sockets_get_sys_netints(sacn_networking_type_t type)
 {
   SacnSocketsSysNetints* sys_netints = NULL;
   switch (type)
@@ -1293,7 +1294,7 @@ etcpal_error_t sacn_initialize_source_netints(SacnInternalNetintArray* source_ne
   return res;
 }
 
-etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_type_t net_type)
+etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, sacn_networking_type_t net_type)
 {
   SacnSocketsSysNetints* sys_netints = sacn_sockets_get_sys_netints(net_type);
   if (!SACN_ASSERT_VERIFY(sys_netints))
@@ -1369,7 +1370,7 @@ etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_ty
   return res;
 }
 
-etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, networking_type_t net_type)
+etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, sacn_networking_type_t net_type)
 {
   etcpal_error_t res = (netint_config && !netints_valid(netint_config->netints, netint_config->num_netints))
                            ? kEtcPalErrInvalid
@@ -1557,7 +1558,7 @@ bool netints_valid(const SacnMcastInterface* netints, size_t num_netints)
 size_t apply_netint_config(const SacnNetintConfig* netint_config,
                            SysNetintList*          netint_list,
                            SacnSocketsSysNetints*  sys_netints,
-                           networking_type_t       net_type)
+                           sacn_networking_type_t  net_type)
 {
   if (!SACN_ASSERT_VERIFY(netint_list) || !SACN_ASSERT_VERIFY(netint_list->netints) || !SACN_ASSERT_VERIFY(sys_netints))
     return 0;
@@ -1616,7 +1617,7 @@ size_t apply_netint_config(const SacnNetintConfig* netint_config,
 
 etcpal_error_t test_netint(const EtcPalNetintInfo* netint,
                            SacnSocketsSysNetints*  sys_netints,
-                           networking_type_t       net_type)
+                           sacn_networking_type_t  net_type)
 {
   if (!SACN_ASSERT_VERIFY(netint) || !SACN_ASSERT_VERIFY(sys_netints))
     return kEtcPalErrSys;

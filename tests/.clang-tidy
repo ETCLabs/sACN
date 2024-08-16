@@ -1,0 +1,16 @@
+---
+InheritParentConfig: true
+# For all disabled checks, please provide a rationale here.
+#
+# - cppcoreguidelines-non-private-member-variables-in-classes: Certain tests make use of test
+#   fixture inheritance and make the members protected. This is acceptable.
+# - cppcoreguidelines-pro-type-reinterpret-cast: This is unavoidable due to red-black tree usage.
+# - readability-inconsistent-declaration-parameter-name: Must disable because of FFF mocking.
+#
+Checks: >
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -readability-inconsistent-declaration-parameter-name
+CheckOptions:
+  - { key: readability-identifier-naming.FunctionCase, value: CamelCase  }
+...

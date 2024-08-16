@@ -41,7 +41,7 @@ FAKE_VOID_FUNC(source_updated, sacn_remote_source_t, const EtcPalUuid*, const ch
 FAKE_VOID_FUNC(source_expired, sacn_remote_source_t, const EtcPalUuid*, const char*, void*);
 FAKE_VOID_FUNC(limit_exceeded, void*);
 
-static const EtcPalSockAddr kTestSourceAddr = {SACN_PORT, etcpal::IpAddr::FromString("10.101.1.1").get()};
+static const EtcPalSockAddr kTestSourceAddr = {kSacnPort, etcpal::IpAddr::FromString("10.101.1.1").get()};
 const std::string           kTestName       = "Test Name";
 
 #if SACN_DYNAMIC_MEM
@@ -104,7 +104,7 @@ protected:
   {
     size_t last_page = (complete_universe_list.size() / 512u);
 
-    uint8_t buf[SACN_MTU] = {0};
+    uint8_t buf[kSacnMtu] = {0};
 
     size_t num_universes = complete_universe_list.size() - (page_number * 512);
     if (num_universes > 512)
@@ -271,7 +271,7 @@ TEST_F(TestSourceDetectorState, SourceExpiredWorksAllAtOnce)
     etcpal_getms_fake.return_val += 200u;
   }
 
-  etcpal_getms_fake.return_val += (SACN_UNIVERSE_DISCOVERY_INTERVAL * 2u);
+  etcpal_getms_fake.return_val += (kSacnUniverseDiscoveryInterval * 2u);
 
   static unsigned int index       = 0u;
   source_expired_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name, void* context) {
@@ -299,7 +299,7 @@ TEST_F(TestSourceDetectorState, SourceExpiredWorksOneAtATime)
     etcpal_getms_fake.return_val += 200u;
   }
 
-  etcpal_getms_fake.return_val += ((SACN_UNIVERSE_DISCOVERY_INTERVAL * 2u) - (200u * kTestMaxSources));
+  etcpal_getms_fake.return_val += ((kSacnUniverseDiscoveryInterval * 2u) - (200u * kTestMaxSources));
 
   static unsigned int index       = 0u;
   source_expired_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name, void* context) {
@@ -338,7 +338,7 @@ TEST_F(TestSourceDetectorState, SourceLimitExceededWorks)
 
   // Now remove a source to end suppression.
   EXPECT_EQ(source_expired_fake.call_count, 0u);
-  etcpal_getms_fake.return_val += ((SACN_UNIVERSE_DISCOVERY_INTERVAL * 2u) - (200u * (kTestMaxSources - 1u)));
+  etcpal_getms_fake.return_val += ((kSacnUniverseDiscoveryInterval * 2u) - (200u * (kTestMaxSources - 1u)));
   ProcessSourceDetector();
   EXPECT_EQ(source_expired_fake.call_count, 1u);
 

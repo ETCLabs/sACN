@@ -82,10 +82,10 @@ etcpal_error_t init_sampling_period_netints(void)
 }
 
 etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree*              tree,
-                                               const EtcPalMcastNetintId* id,
+                                               const EtcPalMcastNetintId* netint_id,
                                                bool                       in_future_sampling_period)
 {
-  if (!SACN_ASSERT_VERIFY(tree) || !SACN_ASSERT_VERIFY(id))
+  if (!SACN_ASSERT_VERIFY(tree) || !SACN_ASSERT_VERIFY(netint_id))
     return kEtcPalErrSys;
 
   etcpal_error_t result = kEtcPalErrOk;
@@ -96,7 +96,7 @@ etcpal_error_t add_sacn_sampling_period_netint(EtcPalRbTree*              tree,
 
   if (result == kEtcPalErrOk)
   {
-    netint->id                        = *id;
+    netint->id                        = *netint_id;
     netint->in_future_sampling_period = in_future_sampling_period;
 
     result = etcpal_rbtree_insert(tree, netint);
@@ -146,12 +146,12 @@ void remove_current_sampling_period_netints(EtcPalRbTree* tree)
   } while (next_current_sp_netint);
 }
 
-etcpal_error_t remove_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* id)
+etcpal_error_t remove_sampling_period_netint(EtcPalRbTree* tree, const EtcPalMcastNetintId* netint_id)
 {
-  if (!SACN_ASSERT_VERIFY(tree) || !SACN_ASSERT_VERIFY(id))
+  if (!SACN_ASSERT_VERIFY(tree) || !SACN_ASSERT_VERIFY(netint_id))
     return kEtcPalErrSys;
 
-  return etcpal_rbtree_remove_with_cb(tree, id, sampling_period_netint_tree_dealloc);
+  return etcpal_rbtree_remove_with_cb(tree, netint_id, sampling_period_netint_tree_dealloc);
 }
 
 int sampling_period_netint_compare(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
@@ -161,12 +161,12 @@ int sampling_period_netint_compare(const EtcPalRbTree* tree, const void* value_a
   if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
     return 0;
 
-  EtcPalMcastNetintId* a = (EtcPalMcastNetintId*)value_a;
-  EtcPalMcastNetintId* b = (EtcPalMcastNetintId*)value_b;
+  EtcPalMcastNetintId* lhs = (EtcPalMcastNetintId*)value_a;
+  EtcPalMcastNetintId* rhs = (EtcPalMcastNetintId*)value_b;
 
-  int res = ((int)a->ip_type > (int)b->ip_type) - ((int)a->ip_type < (int)b->ip_type);
+  int res = ((int)lhs->ip_type > (int)rhs->ip_type) - ((int)lhs->ip_type < (int)rhs->ip_type);
   if (res == 0)
-    res = (a->index > b->index) - (a->index < b->index);
+    res = (lhs->index > rhs->index) - (lhs->index < rhs->index);
 
   return res;
 }

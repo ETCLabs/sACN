@@ -29,14 +29,15 @@ determine_compile_environment()
 
 if(NOT COMPILING_AS_OSS)
   include(${SACN_CMAKE}/AddCMakeTools.cmake)
-
-  get_directory_property(HAS_PARENT PARENT_DIRECTORY)
-
-  if(NOT HAS_PARENT)  # Only set up quality gates when building standalone
-    include(${CMAKE_TOOLS_MODULES}/QualityGateHelpers.cmake)
+  include(${CMAKE_TOOLS_MODULES}/QualityGateHelpers.cmake)
+  
+  # While the functions below already check for standalone, this check is performed to avoid the risk of unknown
+  # function errors during CMake generation (i.e. when the application's CMake Tools is out-of-date).
+  get_directory_property(IS_DEPENDENCY PARENT_DIRECTORY)
+  if(NOT IS_DEPENDENCY)
     setup_standalone_compile()
     setup_clang_format(${SACN_ROOT})
-    # TODO: setup_clang_tidy()
+    setup_clang_tidy()
     setup_address_sanitizer()
     setup_memory_sanitizer()
     setup_undefined_behavior_sanitizer()

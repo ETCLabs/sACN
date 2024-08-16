@@ -69,12 +69,12 @@ protected:
     sacn_source_mem_deinit();
   }
 
-  void DoForEachThread(std::function<void(sacn_thread_id_t)>&& fn)
+  static void DoForEachThread(std::function<void(sacn_thread_id_t)>&& func)
   {
     for (sacn_thread_id_t thread = 0; thread < kTestNumThreads; ++thread)
     {
       SCOPED_TRACE("While testing thread ID " + std::to_string(thread));
-      fn(thread);
+      func(thread);
     }
   }
 };
@@ -489,37 +489,37 @@ TEST_F(TestMem, AddLostSourceWorks)
     SourcesLostNotification* sources_lost = get_sources_lost_buffer(thread, 1);
     ASSERT_NE(sources_lost, nullptr);
 
-    size_t i = 0;
+    size_t index = 0;
 #if SACN_DYNAMIC_MEM
     // Just test some arbitrary number
-    for (; i < 20; ++i)
+    for (; index < 20; ++index)
     {
       auto        cid_to_add = etcpal::Uuid::V4();
-      std::string test_name  = "test name " + std::to_string(i);
-      ASSERT_TRUE(add_lost_source(sources_lost, static_cast<sacn_remote_source_t>(i), &cid_to_add.get(),
+      std::string test_name  = "test name " + std::to_string(index);
+      ASSERT_TRUE(add_lost_source(sources_lost, static_cast<sacn_remote_source_t>(index), &cid_to_add.get(),
                                   test_name.c_str(), true));
-      EXPECT_EQ(sources_lost->num_lost_sources, i + 1);
-      EXPECT_EQ(sources_lost->lost_sources[i].cid, cid_to_add);
-      EXPECT_STREQ(sources_lost->lost_sources[i].name, test_name.c_str());
-      EXPECT_EQ(sources_lost->lost_sources[i].terminated, true);
+      EXPECT_EQ(sources_lost->num_lost_sources, index + 1);
+      EXPECT_EQ(sources_lost->lost_sources[index].cid, cid_to_add);
+      EXPECT_STREQ(sources_lost->lost_sources[index].name, test_name.c_str());
+      EXPECT_EQ(sources_lost->lost_sources[index].terminated, true);
     }
 #else
     // Test up to the maximum capacity
-    for (; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
+    for (; index < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++index)
     {
       auto        cid_to_add = etcpal::Uuid::V4();
-      std::string test_name  = "test name " + std::to_string(i);
-      ASSERT_TRUE(add_lost_source(sources_lost, static_cast<sacn_remote_source_t>(i), &cid_to_add.get(),
+      std::string test_name  = "test name " + std::to_string(index);
+      ASSERT_TRUE(add_lost_source(sources_lost, static_cast<sacn_remote_source_t>(index), &cid_to_add.get(),
                                   test_name.c_str(), true));
-      EXPECT_EQ(sources_lost->num_lost_sources, i + 1);
-      EXPECT_EQ(sources_lost->lost_sources[i].cid, cid_to_add);
-      EXPECT_STREQ(sources_lost->lost_sources[i].name, test_name.c_str());
-      EXPECT_EQ(sources_lost->lost_sources[i].terminated, true);
+      EXPECT_EQ(sources_lost->num_lost_sources, index + 1);
+      EXPECT_EQ(sources_lost->lost_sources[index].cid, cid_to_add);
+      EXPECT_STREQ(sources_lost->lost_sources[index].name, test_name.c_str());
+      EXPECT_EQ(sources_lost->lost_sources[index].terminated, true);
     }
     // And make sure we can't add another
     auto cid_to_add = etcpal::Uuid::V4();
     EXPECT_FALSE(
-        add_lost_source(sources_lost, static_cast<sacn_remote_source_t>(i), &cid_to_add.get(), "test name", true));
+        add_lost_source(sources_lost, static_cast<sacn_remote_source_t>(index), &cid_to_add.get(), "test name", true));
 #endif
   });
 }

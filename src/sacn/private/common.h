@@ -50,23 +50,26 @@ extern "C" {
  * Global constants, macros, types, etc.
  *****************************************************************************/
 
-#define SACN_DATA_PACKET_MTU               638
-#define SACN_UNIVERSE_DISCOVERY_PACKET_MTU 1144
-#define SACN_MTU                           SACN_UNIVERSE_DISCOVERY_PACKET_MTU
-#define SACN_PORT                          5568
+enum
+{
+  kSacnDataPacketMtu              = 638,
+  kSacnUniverseDiscoveryPacketMtu = 1144,
+  kSacnMtu                        = kSacnUniverseDiscoveryPacketMtu,
+  kSacnPort                       = 5568,
 
-#define SACN_UNIVERSE_DISCOVERY_MAX_UNIVERSES_PER_PAGE 512
-#define SACN_DISCOVERY_UNIVERSE                        64214
-#define SACN_UNIVERSE_DISCOVERY_INTERVAL               10000
+  kSacnUniverseDiscoveryMaxUniversesPerPage = 512,
+  kSacnDiscoveryUniverse                    = 64214,
+  kSacnUniverseDiscoveryInterval            = 10000,
 
-#define SACN_STATS_LOG_INTERVAL 10000
+  kSacnStatsLogInterval = 10000,
 
-/* The source-loss timeout, defined in E1.31 as network data loss */
-#define SACN_SOURCE_LOSS_TIMEOUT 2500
-/* How long to wait for a 0xdd packet once a new source is discovered */
-#define SACN_WAIT_FOR_PRIORITY 1500
-/* Length of the sampling period for a new universe */
-#define SACN_SAMPLE_TIME 1500
+  /* The source-loss timeout, defined in E1.31 as network data loss */
+  kSacnSourceLossTimeout = 2500,
+  /* How long to wait for a 0xdd packet once a new source is discovered */
+  kSacnWaitForPriority = 1500,
+  /* Length of the sampling period for a new universe */
+  kSacnSampleTime = 1500
+};
 
 /*
  * This ensures there are always enough SocketRefs. This is multiplied by 2 because SocketRefs come in pairs - one for
@@ -85,7 +88,7 @@ extern "C" {
 typedef unsigned int sacn_thread_id_t;
 #define SACN_THREAD_ID_INVALID UINT_MAX
 
-#define UNIVERSE_ID_VALID(universe_id) ((universe_id != 0) && (universe_id < 64000))
+#define UNIVERSE_ID_VALID(universe_id) ((universe_id >= kSacnMinimumUniverse) && (universe_id <= kSacnMaximumUniverse))
 
 #define SACN_RECEIVER_ENABLED                                                                                 \
   ((!SACN_DYNAMIC_MEM && (SACN_RECEIVER_MAX_UNIVERSES > 0) && (SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE > 0) && \
@@ -564,7 +567,7 @@ typedef enum
 {
   kPerformAllSocketCleanupNow,
   kQueueSocketCleanup
-} socket_cleanup_behavior_t;
+} sacn_socket_cleanup_behavior_t;
 
 typedef struct SacnSamplingPeriodNetint
 {
@@ -716,7 +719,7 @@ typedef struct SacnRecvThreadContext
   // This section is only touched from the thread, outside the lock.
   EtcPalPollContext poll_context;
   bool              poll_context_initialized;
-  uint8_t           recv_buf[SACN_MTU];
+  uint8_t           recv_buf[kSacnMtu];
   EtcPalTimer       periodic_timer;
   bool              periodic_timer_started;
 } SacnRecvThreadContext;
@@ -784,7 +787,7 @@ typedef enum
   kTerminatingAndRemoving,
   kTerminatingWithoutRemoving,
   kNotTerminating
-} termination_state_t;
+} sacn_termination_state_t;
 
 typedef struct SacnSourceNetint
 {
@@ -794,18 +797,18 @@ typedef struct SacnSourceNetint
 
 typedef struct SacnUnicastDestination
 {
-  EtcPalIpAddr        dest_addr;  // This must be the first struct member.
-  termination_state_t termination_state;
-  int                 num_terminations_sent;
-  etcpal_error_t      last_send_error;
+  EtcPalIpAddr             dest_addr;  // This must be the first struct member.
+  sacn_termination_state_t termination_state;
+  int                      num_terminations_sent;
+  etcpal_error_t           last_send_error;
 } SacnUnicastDestination;
 
 typedef struct SacnSourceUniverse
 {
   uint16_t universe_id;  // This must be the first struct member.
 
-  termination_state_t termination_state;
-  int                 num_terminations_sent;
+  sacn_termination_state_t termination_state;
+  int                      num_terminations_sent;
 
   uint8_t  priority;
   uint16_t sync_universe;
@@ -815,7 +818,7 @@ typedef struct SacnSourceUniverse
   // Start code 0x00 state
   int         level_packets_sent_before_suppression;
   EtcPalTimer level_keep_alive_timer;
-  uint8_t     level_send_buf[SACN_DATA_PACKET_MTU];
+  uint8_t     level_send_buf[kSacnDataPacketMtu];
   bool        has_level_data;
   bool        levels_sent_this_tick;
 
@@ -823,7 +826,7 @@ typedef struct SacnSourceUniverse
   // Start code 0xDD state
   int         pap_packets_sent_before_suppression;
   EtcPalTimer pap_keep_alive_timer;
-  uint8_t     pap_send_buf[SACN_DATA_PACKET_MTU];
+  uint8_t     pap_send_buf[kSacnDataPacketMtu];
   bool        has_pap_data;
   bool        pap_sent_this_tick;
 #endif
@@ -868,14 +871,14 @@ typedef struct SacnSource
   SACN_DECLARE_BUF(SacnSourceNetint, netints, SACN_MAX_NETINTS);
   size_t num_netints;
 
-  uint8_t universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_PACKET_MTU];
+  uint8_t universe_discovery_send_buf[kSacnUniverseDiscoveryPacketMtu];
 } SacnSource;
 
 typedef enum
 {
   kEnableForceSync,
   kDisableForceSync
-} force_sync_behavior_t;
+} sacn_force_sync_behavior_t;
 
 /******************************************************************************
  * Global variables, functions, and state tracking

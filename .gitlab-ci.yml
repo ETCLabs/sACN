@@ -117,8 +117,8 @@ lint:
   stage: build
   tags:
     - etc-linux-docker
-  variables:
-    CMAKE_OPTIONS: -DSACN_ENABLE_CLANG_TIDY=ON -DSACN_CLANG_TIDY_WERROR=ON
+  #variables:
+  #  CMAKE_OPTIONS: -DSACN_ENABLE_CLANG_TIDY=ON -DSACN_CLANG_TIDY_WERROR=ON
   image: etc-docker.artifactory.etcconnect.com/etc/common-tech/gcc-cmake:llvm18
   script:
     - mkdir build

@@ -168,9 +168,10 @@ int merge_receiver_compare(const EtcPalRbTree* tree, const void* value_a, const 
 {
   ETCPAL_UNUSED_ARG(tree);
 
-  const SacnMergeReceiver* a = (const SacnMergeReceiver*)value_a;
-  const SacnMergeReceiver* b = (const SacnMergeReceiver*)value_b;
-  return (a->merge_receiver_handle > b->merge_receiver_handle) - (a->merge_receiver_handle < b->merge_receiver_handle);
+  const SacnMergeReceiver* lhs = (const SacnMergeReceiver*)value_a;
+  const SacnMergeReceiver* rhs = (const SacnMergeReceiver*)value_b;
+  return (lhs->merge_receiver_handle > rhs->merge_receiver_handle) -
+         (lhs->merge_receiver_handle < rhs->merge_receiver_handle);
 }
 
 EtcPalRbNode* merge_receiver_node_alloc(void)

@@ -36,17 +36,17 @@
 
 /*********************** Private function prototypes *************************/
 
-static size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found);
+static size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* netint_id, bool* found);
 
 /*************************** Function definitions ****************************/
 
 // Needs lock
-etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetintId* id)
+etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetintId* netint_id)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(id))
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(netint_id))
     return kEtcPalErrSys;
 
-  SacnSourceNetint* netint = lookup_source_netint(source, id);
+  SacnSourceNetint* netint = lookup_source_netint(source, netint_id);
 
   if (netint)
   {
@@ -57,7 +57,7 @@ etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetin
     CHECK_ROOM_FOR_ONE_MORE(source, netints, SacnSourceNetint, SACN_MAX_NETINTS, kEtcPalErrNoMem);
 
     netint           = &source->netints[source->num_netints++];
-    netint->id       = *id;
+    netint->id       = *netint_id;
     netint->num_refs = 1;
   }
 
@@ -65,24 +65,26 @@ etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetin
 }
 
 // Needs lock
-SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNetintId* id)
+SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNetintId* netint_id)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(id))
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(netint_id))
     return NULL;
 
   bool   found = false;
-  size_t index = get_source_netint_index(source, id, &found);
+  size_t index = get_source_netint_index(source, netint_id, &found);
   return found ? &source->netints[index] : NULL;
 }
 
 // Needs lock
-SacnSourceNetint* lookup_source_netint_and_index(SacnSource* source, const EtcPalMcastNetintId* id, size_t* index)
+SacnSourceNetint* lookup_source_netint_and_index(SacnSource*                source,
+                                                 const EtcPalMcastNetintId* netint_id,
+                                                 size_t*                    index)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(id) || !SACN_ASSERT_VERIFY(index))
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(netint_id) || !SACN_ASSERT_VERIFY(index))
     return NULL;
 
   bool found = false;
-  *index     = get_source_netint_index(source, id, &found);
+  *index     = get_source_netint_index(source, netint_id, &found);
   return found ? &source->netints[*index] : NULL;
 }
 
@@ -95,7 +97,7 @@ void remove_sacn_source_netint(SacnSource* source, size_t index)
   REMOVE_AT_INDEX(source, SacnSourceNetint, netints, index);
 }
 
-size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id, bool* found)
+size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* netint_id, bool* found)
 {
   if (!SACN_ASSERT_VERIFY(found))
     return 0;
@@ -105,10 +107,15 @@ size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* id
 
   while (!(*found) && (index < source->num_netints))
   {
-    if ((source->netints[index].id.index == id->index) && (source->netints[index].id.ip_type == id->ip_type))
+    if ((source->netints[index].id.index == netint_id->index) &&
+        (source->netints[index].id.ip_type == netint_id->ip_type))
+    {
       *found = true;
+    }
     else
+    {
       ++index;
+    }
   }
 
   return index;

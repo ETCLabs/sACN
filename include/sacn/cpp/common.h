@@ -60,6 +60,11 @@ using RemoteSourceHandle = sacn_remote_source_t;
 /** An invalid RemoteSourceHandle value. */
 constexpr RemoteSourceHandle kInvalidRemoteSourceHandle = SACN_REMOTE_SOURCE_INVALID;
 
+/** The lowest sACN universe number supported. */
+constexpr uint16_t kMinimumUniverse = kSacnMinimumUniverse;
+/** The highest sACN universe number supported. */
+constexpr uint16_t kMaximumUniverse = kSacnMaximumUniverse;
+
 /**
  * @ingroup sacn_cpp_common
  * @brief Initialize the sACN library.
@@ -190,7 +195,7 @@ inline etcpal::Error Init(const etcpal::Logger& logger, std::vector<SacnMcastInt
  */
 inline void Deinit()
 {
-  return sacn_deinit();
+  sacn_deinit();
 }
 
 /**

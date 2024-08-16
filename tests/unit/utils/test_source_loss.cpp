@@ -38,14 +38,14 @@
 #define TestSourceLoss TestSourceLossStatic
 #endif
 
-bool operator<(const SacnRemoteSourceInternal& a, const SacnRemoteSourceInternal& b)
+bool operator<(const SacnRemoteSourceInternal& lhs, const SacnRemoteSourceInternal& rhs)
 {
-  return a.handle < b.handle;
+  return lhs.handle < rhs.handle;
 }
 
-bool operator==(const SacnRemoteSourceInternal& a, const SacnRemoteSourceInternal& b)
+bool operator==(const SacnRemoteSourceInternal& lhs, const SacnRemoteSourceInternal& rhs)
 {
-  return (a.handle == b.handle && (0 == std::strcmp(a.name, b.name)));
+  return (lhs.handle == rhs.handle && (0 == std::strcmp(lhs.name, rhs.name)));
 }
 
 class TestSourceLoss : public ::testing::Test
@@ -82,9 +82,9 @@ protected:
     sacn_receiver_mem_deinit();
   }
 
-  void VerifySourcesMatch(const SacnLostSource*                        lost_sources,
-                          size_t                                       num_lost_sources,
-                          const std::vector<SacnRemoteSourceInternal>& sources)
+  static void VerifySourcesMatch(const SacnLostSource*                        lost_sources,
+                                 size_t                                       num_lost_sources,
+                                 const std::vector<SacnRemoteSourceInternal>& sources)
   {
     std::vector<SacnRemoteSourceInternal> expired_sources;
     expired_sources.reserve(num_lost_sources);

@@ -348,9 +348,9 @@ int receiver_compare(const EtcPalRbTree* tree, const void* value_a, const void* 
   if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
     return 0;
 
-  const SacnReceiver* a = (const SacnReceiver*)value_a;
-  const SacnReceiver* b = (const SacnReceiver*)value_b;
-  return (a->keys.handle > b->keys.handle) - (a->keys.handle < b->keys.handle);
+  const SacnReceiver* lhs = (const SacnReceiver*)value_a;
+  const SacnReceiver* rhs = (const SacnReceiver*)value_b;
+  return (lhs->keys.handle > rhs->keys.handle) - (lhs->keys.handle < rhs->keys.handle);
 }
 
 int receiver_compare_by_universe(const EtcPalRbTree* tree, const void* value_a, const void* value_b)
@@ -360,9 +360,9 @@ int receiver_compare_by_universe(const EtcPalRbTree* tree, const void* value_a, 
   if (!SACN_ASSERT_VERIFY(value_a) || !SACN_ASSERT_VERIFY(value_b))
     return 0;
 
-  const SacnReceiver* a = (const SacnReceiver*)value_a;
-  const SacnReceiver* b = (const SacnReceiver*)value_b;
-  return (a->keys.universe > b->keys.universe) - (a->keys.universe < b->keys.universe);
+  const SacnReceiver* lhs = (const SacnReceiver*)value_a;
+  const SacnReceiver* rhs = (const SacnReceiver*)value_b;
+  return (lhs->keys.universe > rhs->keys.universe) - (lhs->keys.universe < rhs->keys.universe);
 }
 
 EtcPalRbNode* receiver_node_alloc(void)

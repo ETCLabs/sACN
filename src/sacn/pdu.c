@@ -347,7 +347,7 @@ void init_sacn_data_send_buf(uint8_t*          send_buf,
   if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(source_cid) || !SACN_ASSERT_VERIFY(source_name))
     return;
 
-  memset(send_buf, 0, SACN_DATA_PACKET_MTU);
+  memset(send_buf, 0, kSacnDataPacketMtu);
   int written = 0;
   written += pack_sacn_root_layer(send_buf, SACN_DATA_HEADER_SIZE, false, source_cid);
   written += pack_sacn_data_framing_layer(&send_buf[written], 0, VECTOR_E131_DATA_PACKET, source_name, priority,
@@ -355,10 +355,10 @@ void init_sacn_data_send_buf(uint8_t*          send_buf,
   written += pack_sacn_dmp_layer_header(&send_buf[written], start_code, 0);
 }
 
-void update_send_buf_data(uint8_t*              send_buf,
-                          const uint8_t*        new_data,
-                          uint16_t              new_data_size,
-                          force_sync_behavior_t force_sync)
+void update_send_buf_data(uint8_t*                   send_buf,
+                          const uint8_t*             new_data,
+                          uint16_t                   new_data_size,
+                          sacn_force_sync_behavior_t force_sync)
 {
   ETCPAL_UNUSED_ARG(force_sync);  // TODO sacn_sync
 
