@@ -19,6 +19,8 @@
 
 #include "sacn/source.h"
 
+#include <gsl/util>
+#include <gsl/span>
 #include <limits>
 #include "etcpal/cpp/error.h"
 #include "etcpal/cpp/inet.h"
@@ -75,9 +77,10 @@
 
 static const etcpal::Uuid kTestLocalCid = etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22");
 
-static constexpr char kTestLocalName[]        = "Test Source";
-static constexpr char kTestLocalName2[]       = "Test Source 2";
-static constexpr char kTestLocalNameTooLong[] = "Test Source Name Too Long Test Source Name Too Long Test Source N";
+static constexpr const char* kTestLocalName  = "Test Source";
+static constexpr const char* kTestLocalName2 = "Test Source 2";
+static constexpr const char* kTestLocalNameTooLong =
+    "Test Source Name Too Long Test Source Name Too Long Test Source N";
 
 static constexpr sacn_source_t kTestHandle  = 123;
 static constexpr sacn_source_t kTestHandle2 = 456;
@@ -261,7 +264,7 @@ TEST_F(TestSource, SourceConfigInitWorks)
   SacnSourceConfig config;
   sacn_source_config_init(&config);
   EXPECT_EQ(ETCPAL_UUID_CMP(&config.cid, &kEtcPalNullUuid), 0);
-  EXPECT_EQ(config.name, (char*)NULL);
+  EXPECT_EQ(config.name, (char*)nullptr);
   EXPECT_EQ(config.universe_count_max, (size_t)SACN_SOURCE_INFINITE_UNIVERSES);
   EXPECT_EQ(config.manually_process_source, false);
   EXPECT_EQ(config.ip_supported, kSacnIpV4AndIpV6);
@@ -282,7 +285,7 @@ TEST_F(TestSource, SourceUniverseConfigInitWorks)
   EXPECT_EQ(config.priority, 100u);
   EXPECT_EQ(config.send_preview, false);
   EXPECT_EQ(config.send_unicast_only, false);
-  EXPECT_EQ(config.unicast_destinations, (EtcPalIpAddr*)NULL);
+  EXPECT_EQ(config.unicast_destinations, (EtcPalIpAddr*)nullptr);
   EXPECT_EQ(config.num_unicast_destinations, 0u);
   EXPECT_EQ(config.sync_universe, 0u);
 }
@@ -328,6 +331,7 @@ TEST_F(TestSource, ManualSourceCreateWorks)
   EXPECT_EQ(handle, kTestHandle);
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestSource, SourceCreateErrInvalidWorks)
 {
   SacnSourceConfig valid_config                          = SACN_SOURCE_CONFIG_DEFAULT_INIT;
@@ -524,11 +528,13 @@ TEST_F(TestSource, SourceAddUniverseWorks)
   EXPECT_EQ(lookup_source_and_universe(kTestHandle, kTestUniverse, &source, &universe), kEtcPalErrOk);
   if (source)
   {
+    auto source_netints = gsl::make_span(source->netints, source->num_netints);
+
     EXPECT_EQ(source->num_netints, (size_t)test_netints.size());
     for (size_t i = 0; (i < test_netints.size()) && (i < source->num_netints); ++i)
     {
-      EXPECT_EQ(source->netints[i].id.index, test_netints[i].iface.index);
-      EXPECT_EQ(source->netints[i].id.ip_type, test_netints[i].iface.ip_type);
+      EXPECT_EQ(gsl::at(source_netints, i).id.index, test_netints[i].iface.index);
+      EXPECT_EQ(gsl::at(source_netints, i).id.ip_type, test_netints[i].iface.ip_type);
     }
   }
 }
@@ -552,6 +558,7 @@ TEST_F(TestSource, SourceAddUniverseErrNoNetintsWorks)
                                   kEtcPalErrNoNetints);
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestSource, SourceAddUniverseErrInvalidWorks)
 {
   SetUpSource(kTestHandle);
@@ -767,33 +774,35 @@ TEST_F(TestSource, SourceAddUnicastDestinationWorks)
     EXPECT_EQ(behavior, kResetLevelAndPap);
   };
 
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]),
-                                  kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()), kEtcPalErrOk);
 
   SacnSource*             source_state   = nullptr;
   SacnSourceUniverse*     universe_state = nullptr;
   SacnUnicastDestination* unicast_dest   = nullptr;
   EXPECT_EQ(lookup_source_and_universe(kTestHandle, kTestUniverse, &source_state, &universe_state), kEtcPalErrOk);
-  EXPECT_EQ(lookup_unicast_dest(universe_state, &kTestRemoteAddrs[0], &unicast_dest), kEtcPalErrOk);
+  EXPECT_EQ(lookup_unicast_dest(universe_state, kTestRemoteAddrs.data(), &unicast_dest), kEtcPalErrOk);
 
   EXPECT_EQ(reset_transmission_suppression_fake.call_count, 1u);
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestSource, SourceAddUnicastDestinationErrInvalidWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
   VERIFY_NO_LOCKING_AND_RETURN_VALUE(
-      sacn_source_add_unicast_destination(SACN_SOURCE_INVALID, kTestUniverse, &kTestRemoteAddrs[0]), kEtcPalErrInvalid);
-  VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, 0u, &kTestRemoteAddrs[0]),
+      sacn_source_add_unicast_destination(SACN_SOURCE_INVALID, kTestUniverse, kTestRemoteAddrs.data()),
+      kEtcPalErrInvalid);
+  VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, 0u, kTestRemoteAddrs.data()),
                                      kEtcPalErrInvalid);
-  VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, 64000u, &kTestRemoteAddrs[0]),
+  VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, 64000u, kTestRemoteAddrs.data()),
                                      kEtcPalErrInvalid);
   VERIFY_NO_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, nullptr),
                                      kEtcPalErrInvalid);
   VERIFY_NO_LOCKING_AND_RETURN_VALUE(
       sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &etcpal::IpAddr().get()), kEtcPalErrInvalid);
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]),
-                                  kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceAddUnicastDestinationErrNotInitWorks)
@@ -801,21 +810,21 @@ TEST_F(TestSource, SourceAddUnicastDestinationErrNotInitWorks)
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
   sacn_initialized_fake.return_val = false;
   VERIFY_NO_LOCKING_AND_RETURN_VALUE(
-      sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]), kEtcPalErrNotInit);
+      sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()), kEtcPalErrNotInit);
   sacn_initialized_fake.return_val = true;
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]),
-                                  kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceAddUnicastDestinationErrNotFoundWorks)
 {
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]),
-                                  kEtcPalErrNotFound);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()), kEtcPalErrNotFound);
 
   SetUpSource(kTestHandle);
 
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]),
-                                  kEtcPalErrNotFound);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()), kEtcPalErrNotFound);
 
   SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
   universe_config.universe                 = kTestUniverse;
@@ -828,22 +837,22 @@ TEST_F(TestSource, SourceAddUnicastDestinationErrNotFoundWorks)
 
   GetUniverse(kTestHandle, kTestUniverse)->termination_state = kTerminatingAndRemoving;
 
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]),
-                                  kEtcPalErrNotFound);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()), kEtcPalErrNotFound);
 
   GetUniverse(kTestHandle, kTestUniverse)->termination_state = kNotTerminating;
 
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]),
-                                  kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, SourceAddUnicastDestinationErrExistsWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]),
-                                  kEtcPalErrOk);
-  VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]),
-                                  kEtcPalErrExists);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()), kEtcPalErrOk);
+  VERIFY_LOCKING_AND_RETURN_VALUE(
+      sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()), kEtcPalErrExists);
 }
 
 #if !SACN_DYNAMIC_MEM
@@ -856,7 +865,7 @@ TEST_F(TestSource, SourceAddUnicastDestinationErrNoMemWorks)
   {
     VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &addr),
                                     kEtcPalErrOk);
-    ++addr.addr.v4;
+    ++addr.addr.v4;  // NOLINT(cppcoreguidelines-pro-type-union-access)
   }
 
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &addr),
@@ -869,11 +878,11 @@ TEST_F(TestSource, SourceRemoveUnicastDestinationWorks)
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
 
   set_unicast_dest_terminating_fake.custom_fake = [](SacnUnicastDestination* dest, sacn_set_terminating_behavior_t) {
-    EXPECT_EQ(etcpal_ip_cmp(&dest->dest_addr, &kTestRemoteAddrs[0]), 0);
+    EXPECT_EQ(etcpal_ip_cmp(&dest->dest_addr, kTestRemoteAddrs.data()), 0);
   };
 
-  EXPECT_EQ(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]), kEtcPalErrOk);
-  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]));
+  EXPECT_EQ(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()), kEtcPalErrOk);
+  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()));
   EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 1u);
 }
 
@@ -885,12 +894,12 @@ TEST_F(TestSource, SourceRemoveUnicastDestinationHandlesInvalid)
 
 TEST_F(TestSource, SourceRemoveUnicastDestinationHandlesNotFound)
 {
-  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]));
+  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()));
   EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 0u);
 
   SetUpSource(kTestHandle);
 
-  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]));
+  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()));
   EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 0u);
 
   SacnSourceUniverseConfig universe_config = SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT;
@@ -902,20 +911,20 @@ TEST_F(TestSource, SourceRemoveUnicastDestinationHandlesNotFound)
 
   sacn_source_add_universe(kTestHandle, &universe_config, &netint_config);
 
-  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]));
+  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()));
   EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 0u);
 
-  EXPECT_EQ(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]), kEtcPalErrOk);
+  EXPECT_EQ(sacn_source_add_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()), kEtcPalErrOk);
 
   SacnUnicastDestination* dest = nullptr;
-  lookup_unicast_dest(GetUniverse(kTestHandle, kTestUniverse), &kTestRemoteAddrs[0], &dest);
+  lookup_unicast_dest(GetUniverse(kTestHandle, kTestUniverse), kTestRemoteAddrs.data(), &dest);
 
   dest->termination_state = kTerminatingAndRemoving;
-  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]));
+  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()));
   EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 0u);
 
   dest->termination_state = kNotTerminating;
-  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, &kTestRemoteAddrs[0]));
+  VERIFY_LOCKING(sacn_source_remove_unicast_destination(kTestHandle, kTestUniverse, kTestRemoteAddrs.data()));
   EXPECT_EQ(set_unicast_dest_terminating_fake.call_count, 1u);
 }
 
@@ -1131,6 +1140,7 @@ TEST_F(TestSource, SourceSendNowWorks)
   EXPECT_EQ(send_universe_unicast_fake.call_count, 1u);
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestSource, SourceSendNowErrInvalidWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
@@ -1581,6 +1591,7 @@ TEST_F(TestSource, SourceResetNetworkingErrNotInitWorks)
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking(&netint_config), kEtcPalErrOk);
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestSource, SourceResetNetworkingPerUniverseWorks)
 {
   static unsigned int clear_source_netints_index             = 0u;
@@ -1646,6 +1657,7 @@ TEST_F(TestSource, SourceResetNetworkingPerUniverseErrNoNetintsWorks)
       kEtcPalErrOk);
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestSource, SourceResetNetworkingPerUniverseErrInvalidWorks)
 {
   SetUpSourcesAndUniverses(kTestNetintLists, kTestNetintLists.size());

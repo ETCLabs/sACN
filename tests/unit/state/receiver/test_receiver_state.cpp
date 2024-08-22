@@ -33,7 +33,7 @@
 #include "sacn/opts.h"
 #include "sacn/private/pdu.h"
 #include "gtest/gtest.h"
-#include "fff.h"
+#include "etc_fff_wrapper.h"
 
 #if SACN_DYNAMIC_MEM
 #define TestReceiverState  TestReceiverStateDynamic
@@ -43,17 +43,17 @@
 #define TestReceiverThread TestReceiverThreadStatic
 #endif
 
-FAKE_VOID_FUNC(universe_data,
-               sacn_receiver_t,
-               const EtcPalSockAddr*,
-               const SacnRemoteSource*,
-               const SacnRecvUniverseData*,
-               void*);
-FAKE_VOID_FUNC(sources_lost, sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*);
-FAKE_VOID_FUNC(sampling_period_started, sacn_receiver_t, uint16_t, void*);
-FAKE_VOID_FUNC(sampling_period_ended, sacn_receiver_t, uint16_t, void*);
-FAKE_VOID_FUNC(source_pap_lost, sacn_receiver_t, uint16_t, const SacnRemoteSource*, void*);
-FAKE_VOID_FUNC(source_limit_exceeded, sacn_receiver_t, uint16_t, void*);
+ETC_FAKE_VOID_FUNC(universe_data,
+                   sacn_receiver_t,
+                   const EtcPalSockAddr*,
+                   const SacnRemoteSource*,
+                   const SacnRecvUniverseData*,
+                   void*);
+ETC_FAKE_VOID_FUNC(sources_lost, sacn_receiver_t, uint16_t, const SacnLostSource*, size_t, void*);
+ETC_FAKE_VOID_FUNC(sampling_period_started, sacn_receiver_t, uint16_t, void*);
+ETC_FAKE_VOID_FUNC(sampling_period_ended, sacn_receiver_t, uint16_t, void*);
+ETC_FAKE_VOID_FUNC(source_pap_lost, sacn_receiver_t, uint16_t, const SacnRemoteSource*, void*);
+ETC_FAKE_VOID_FUNC(source_limit_exceeded, sacn_receiver_t, uint16_t, void*);
 
 static constexpr uint16_t kTestUniverse = 123u;
 static int                kTestContext  = 1234567;

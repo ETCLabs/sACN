@@ -29,7 +29,7 @@
 #include "sacn/opts.h"
 #include "sacn/private/pdu.h"
 #include "gtest/gtest.h"
-#include "fff.h"
+#include "etc_fff_wrapper.h"
 
 #if SACN_DYNAMIC_MEM
 #define TestSourceDetectorState TestSourceDetectorStateDynamic
@@ -37,9 +37,15 @@
 #define TestSourceDetectorState TestSourceDetectorStateStatic
 #endif
 
-FAKE_VOID_FUNC(source_updated, sacn_remote_source_t, const EtcPalUuid*, const char*, const uint16_t*, size_t, void*);
-FAKE_VOID_FUNC(source_expired, sacn_remote_source_t, const EtcPalUuid*, const char*, void*);
-FAKE_VOID_FUNC(limit_exceeded, void*);
+ETC_FAKE_VOID_FUNC(source_updated,
+                   sacn_remote_source_t,
+                   const EtcPalUuid*,
+                   const char*,
+                   const uint16_t*,
+                   size_t,
+                   void*);
+ETC_FAKE_VOID_FUNC(source_expired, sacn_remote_source_t, const EtcPalUuid*, const char*, void*);
+ETC_FAKE_VOID_FUNC(limit_exceeded, void*);
 
 static const EtcPalSockAddr kTestSourceAddr = {kSacnPort, etcpal::IpAddr::FromString("10.101.1.1").get()};
 const std::string           kTestName       = "Test Name";

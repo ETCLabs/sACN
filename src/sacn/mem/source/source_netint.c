@@ -46,6 +46,11 @@ etcpal_error_t add_sacn_source_netint(SacnSource* source, const EtcPalMcastNetin
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(netint_id))
     return kEtcPalErrSys;
 
+#if SACN_DYNAMIC_MEM
+  if (!SACN_ASSERT_VERIFY(source->netints))
+    return kEtcPalErrSys;
+#endif  // SACN_DYNAMIC_MEM
+
   SacnSourceNetint* netint = lookup_source_netint(source, netint_id);
 
   if (netint)
@@ -70,6 +75,11 @@ SacnSourceNetint* lookup_source_netint(SacnSource* source, const EtcPalMcastNeti
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(netint_id))
     return NULL;
 
+#if SACN_DYNAMIC_MEM
+  if (!SACN_ASSERT_VERIFY(source->netints))
+    return NULL;
+#endif  // SACN_DYNAMIC_MEM
+
   bool   found = false;
   size_t index = get_source_netint_index(source, netint_id, &found);
   return found ? &source->netints[index] : NULL;
@@ -83,6 +93,11 @@ SacnSourceNetint* lookup_source_netint_and_index(SacnSource*                sour
   if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(netint_id) || !SACN_ASSERT_VERIFY(index))
     return NULL;
 
+#if SACN_DYNAMIC_MEM
+  if (!SACN_ASSERT_VERIFY(source->netints))
+    return NULL;
+#endif  // SACN_DYNAMIC_MEM
+
   bool found = false;
   *index     = get_source_netint_index(source, netint_id, &found);
   return found ? &source->netints[*index] : NULL;
@@ -94,6 +109,11 @@ void remove_sacn_source_netint(SacnSource* source, size_t index)
   if (!SACN_ASSERT_VERIFY(source))
     return;
 
+#if SACN_DYNAMIC_MEM
+  if (!SACN_ASSERT_VERIFY(source->netints))
+    return;
+#endif  // SACN_DYNAMIC_MEM
+
   REMOVE_AT_INDEX(source, SacnSourceNetint, netints, index);
 }
 
@@ -101,6 +121,11 @@ size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* ne
 {
   if (!SACN_ASSERT_VERIFY(found))
     return 0;
+
+#if SACN_DYNAMIC_MEM
+  if (!SACN_ASSERT_VERIFY(source->netints))
+    return 0;
+#endif  // SACN_DYNAMIC_MEM
 
   *found       = false;
   size_t index = 0;

@@ -20,6 +20,7 @@
 #include "sacn/private/source_loss.h"
 
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <iterator>
 #include <vector>
@@ -101,8 +102,8 @@ protected:
 
   std::vector<std::string>              test_names_;
   std::vector<SacnRemoteSourceInternal> sources_;  // The same source set is used in multiple universes
-  TerminationSet*          term_set_lists_[SACN_RECEIVER_MAX_UNIVERSES]{nullptr};  // Separate list per universe
-  SourcesLostNotification* expired_sources_{nullptr};
+  std::array<TerminationSet*, SACN_RECEIVER_MAX_UNIVERSES> term_set_lists_{nullptr};  // Separate list per universe
+  SourcesLostNotification*                                 expired_sources_{nullptr};
 };
 
 // Test the case where all sources are marked offline in the same tick. In this case, we should get
@@ -115,18 +116,18 @@ TEST_F(TestSourceLoss, AllSourcesOfflineAtOnce)
       sources_.begin(), sources_.end(), std::back_inserter(offline_sources),
       [](const SacnRemoteSourceInternal& source) { return SacnLostSourceInternal{source.handle, source.name, true}; });
   mark_sources_offline(kTestDefaultUniverse, offline_sources.data(), offline_sources.size(), nullptr, 0u,
-                       &term_set_lists_[0], kTestExpiredWait);
+                       term_set_lists_.data(), kTestExpiredWait);
 
   // The expired notification wait time has not passed yet, so we should not get a notification
   // yet.
-  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+  get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
 
   // Advance time past expired wait period
   etcpal_getms_fake.return_val = kTestExpiredWait + 100u;
 
   // We should now get our notification containing all sources
-  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+  get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, static_cast<size_t>(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE));
 
   // Check to make sure the list of sources lost matches our original source list.
@@ -147,8 +148,8 @@ TEST_F(TestSourceLoss, AllSourcesOfflineOneByOne)
     offline.name       = sources_[i].name;
     offline.terminated = false;
     mark_sources_offline(kTestDefaultUniverse, &offline, 1, &sources_[i + 1], sources_.size() - i - 1,
-                         &term_set_lists_[0], kTestExpiredWait);
-    get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+                         term_set_lists_.data(), kTestExpiredWait);
+    get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
     EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
     // Advance time by 50ms
     etcpal_getms_fake.return_val += 50;
@@ -158,18 +159,18 @@ TEST_F(TestSourceLoss, AllSourcesOfflineOneByOne)
   offline.handle     = sources_[sources_.size() - 1].handle;
   offline.name       = sources_[sources_.size() - 1].name;
   offline.terminated = false;
-  mark_sources_offline(kTestDefaultUniverse, &offline, 1, nullptr, 0, &term_set_lists_[0], kTestExpiredWait);
+  mark_sources_offline(kTestDefaultUniverse, &offline, 1, nullptr, 0, term_set_lists_.data(), kTestExpiredWait);
 
   // The expired notification wait time has not passed yet, so we should not get a notification
   // yet.
-  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+  get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
 
   // Advance time past expired wait period
   etcpal_getms_fake.return_val = kTestExpiredWait + 100u;
 
   // We should now get our one notification containing all sources
-  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+  get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
   ASSERT_EQ(expired_sources_[0].num_lost_sources, static_cast<size_t>(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE));
 
   // Check to make sure the list of sources lost matches our original source list.
@@ -192,24 +193,24 @@ TEST_F(TestSourceLoss, WorstCaseEachSourceOfflineIndividually)
     if (i < sources_.size() - 1)
     {
       mark_sources_offline(kTestDefaultUniverse, offline.data(), offline.size(), &sources_[i + 1],
-                           sources_.size() - i - 1, &term_set_lists_[0], kTestExpiredWait);
-      mark_sources_online(kTestDefaultUniverse, &sources_[i + 1], sources_.size() - 1 - i, &term_set_lists_[0]);
+                           sources_.size() - i - 1, term_set_lists_.data(), kTestExpiredWait);
+      mark_sources_online(kTestDefaultUniverse, &sources_[i + 1], sources_.size() - 1 - i, term_set_lists_.data());
     }
     else
     {
-      mark_sources_offline(kTestDefaultUniverse, offline.data(), offline.size(), nullptr, 0, &term_set_lists_[0],
+      mark_sources_offline(kTestDefaultUniverse, offline.data(), offline.size(), nullptr, 0, term_set_lists_.data(),
                            kTestExpiredWait);
     }
-    get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+    get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
     EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
     // Advance time by 50ms
     etcpal_getms_fake.return_val += 50;
   }
 
   // None of the timeouts have expired yet.
-  mark_sources_offline(kTestDefaultUniverse, offline.data(), offline.size(), nullptr, 0, &term_set_lists_[0],
+  mark_sources_offline(kTestDefaultUniverse, offline.data(), offline.size(), nullptr, 0, term_set_lists_.data(),
                        kTestExpiredWait);
-  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+  get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
 
   etcpal_getms_fake.return_val = kTestExpiredWait + 1u;
@@ -219,10 +220,10 @@ TEST_F(TestSourceLoss, WorstCaseEachSourceOfflineIndividually)
   lost_sources.reserve(SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   for (size_t i = 0; i < sources_.size(); ++i)
   {
-    mark_sources_offline(kTestDefaultUniverse, &offline[i], offline.size() - i, nullptr, 0, &term_set_lists_[0],
+    mark_sources_offline(kTestDefaultUniverse, &offline[i], offline.size() - i, nullptr, 0, term_set_lists_.data(),
                          kTestExpiredWait);
     expired_sources_ = get_sources_lost_buffer(0, SACN_RECEIVER_MAX_UNIVERSES);
-    get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+    get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
     ASSERT_EQ(expired_sources_[0].num_lost_sources, 1u) << "Failed on iteration" << i;
     lost_sources.push_back(expired_sources_[0].lost_sources[0]);
     etcpal_getms_fake.return_val += 50;
@@ -242,29 +243,29 @@ TEST_F(TestSourceLoss, EachSourceOfflineThenOnline)
     if (i < sources_.size() - 1)
     {
       mark_sources_offline(kTestDefaultUniverse, &offline, 1, &sources_[i + 1], sources_.size() - i - 1,
-                           &term_set_lists_[0], kTestExpiredWait);
+                           term_set_lists_.data(), kTestExpiredWait);
     }
     else
     {
-      mark_sources_offline(kTestDefaultUniverse, &offline, 1, nullptr, 0, &term_set_lists_[0], kTestExpiredWait);
+      mark_sources_offline(kTestDefaultUniverse, &offline, 1, nullptr, 0, term_set_lists_.data(), kTestExpiredWait);
     }
 
     if (i > 0)
-      mark_sources_online(kTestDefaultUniverse, sources_.data(), i, &term_set_lists_[0]);
+      mark_sources_online(kTestDefaultUniverse, sources_.data(), i, term_set_lists_.data());
 
     // Advance time by 50ms
     etcpal_getms_fake.return_val += 50;
   }
 
   // All sources have gone back online
-  mark_sources_online(kTestDefaultUniverse, sources_.data(), sources_.size(), &term_set_lists_[0]);
-  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+  mark_sources_online(kTestDefaultUniverse, sources_.data(), sources_.size(), term_set_lists_.data());
+  get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
 
   // Advance time past expired wait period
   etcpal_getms_fake.return_val = kTestExpiredWait + 100u;
 
-  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+  get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
   EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
   EXPECT_EQ(term_set_lists_[0], nullptr);
 }
@@ -282,15 +283,15 @@ TEST_F(TestSourceLoss, ClearListWorks)
     if (i < sources_.size() - 1)
     {
       mark_sources_offline(kTestDefaultUniverse, offline.data(), offline.size(), &sources_[i + 1],
-                           sources_.size() - i - 1, &term_set_lists_[0], kTestExpiredWait);
-      mark_sources_online(kTestDefaultUniverse, &sources_[i + 1], sources_.size() - 1 - i, &term_set_lists_[0]);
+                           sources_.size() - i - 1, term_set_lists_.data(), kTestExpiredWait);
+      mark_sources_online(kTestDefaultUniverse, &sources_[i + 1], sources_.size() - 1 - i, term_set_lists_.data());
     }
     else
     {
-      mark_sources_offline(kTestDefaultUniverse, offline.data(), offline.size(), nullptr, 0, &term_set_lists_[0],
+      mark_sources_offline(kTestDefaultUniverse, offline.data(), offline.size(), nullptr, 0, term_set_lists_.data(),
                            kTestExpiredWait);
     }
-    get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+    get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
     EXPECT_EQ(expired_sources_[0].num_lost_sources, 0u);
     // Advance time by 50ms
     etcpal_getms_fake.return_val += 50;
@@ -320,14 +321,14 @@ TEST_F(TestSourceLoss, AllowsOneTermSetForEachSourceUpToMax)
         offline.terminated = false;
 
         uint16_t universe = kTestDefaultUniverse + static_cast<uint16_t>(j);
-        EXPECT_EQ(mark_sources_offline(universe, &offline, 1, nullptr, 0, &term_set_lists_[j], kTestExpiredWait),
+        EXPECT_EQ(mark_sources_offline(universe, &offline, 1, nullptr, 0, &term_set_lists_.at(j), kTestExpiredWait),
                   kEtcPalErrOk);
       }
     }
   }
 
-  for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
-    clear_term_set_list(term_set_lists_[i]);
+  for (auto term_set_list : term_set_lists_)
+    clear_term_set_list(term_set_list);
 }
 
 // This test alternates a source between offline and online, with all the other sources reported as unknown each time.
@@ -356,13 +357,13 @@ TEST_F(TestSourceLoss, AlternatingOnlineOfflineDoesNotBreakMaxLimits)
         EXPECT_EQ(mark_sources_offline(universe, &offline, 1, &sources_[1], sources_.size() - 1, &term_set_lists_[j],
                                        kTestExpiredWait),
                   kEtcPalErrOk);
-        mark_sources_online(universe, &sources_[0], 1, &term_set_lists_[j]);
+        mark_sources_online(universe, sources_.data(), 1, &term_set_lists_[j]);
       }
     }
   }
 
-  for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
-    clear_term_set_list(term_set_lists_[i]);
+  for (auto term_set_list : term_set_lists_)
+    clear_term_set_list(term_set_list);
 }
 
 TEST_F(TestSourceLoss, EachExpiredSourceNotifiesOnlyOnce)
@@ -376,21 +377,21 @@ TEST_F(TestSourceLoss, EachExpiredSourceNotifiesOnlyOnce)
   // Create two termination sets - one which includes all sources besides the offline source that originated it, and
   // another that includes the remaining source when it goes back offline once again. The same sources are fed in as
   // "unknown" the second time as well as the first, but ultimately they shouldn't be notified for twice, but only once.
-  mark_sources_offline(kTestDefaultUniverse, &offline_sources[0], 1, &sources_[1], sources_.size() - 1,
-                       &term_set_lists_[0], kTestExpiredWait);
-  mark_sources_online(kTestDefaultUniverse, &sources_[0], 1, &term_set_lists_[0]);
+  mark_sources_offline(kTestDefaultUniverse, offline_sources.data(), 1, &sources_[1], sources_.size() - 1,
+                       term_set_lists_.data(), kTestExpiredWait);
+  mark_sources_online(kTestDefaultUniverse, sources_.data(), 1, term_set_lists_.data());
   etcpal_getms_fake.return_val += 100u;
-  mark_sources_offline(kTestDefaultUniverse, &offline_sources[0], 1, &sources_[1], sources_.size() - 1,
-                       &term_set_lists_[0], kTestExpiredWait);
+  mark_sources_offline(kTestDefaultUniverse, offline_sources.data(), 1, &sources_[1], sources_.size() - 1,
+                       term_set_lists_.data(), kTestExpiredWait);
   mark_sources_offline(kTestDefaultUniverse, offline_sources.data(), offline_sources.size(), nullptr, 0u,
-                       &term_set_lists_[0], kTestExpiredWait);
+                       term_set_lists_.data(), kTestExpiredWait);
 
   // Advance time past first expired wait period.
   etcpal_getms_fake.return_val = kTestExpiredWait + 1u;
 
   // The first notification should be all sources besides the first.
   std::vector<SacnRemoteSourceInternal> expected_to_expire_first(sources_.begin() + 1, sources_.end());
-  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+  get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
   VerifySourcesMatch(expired_sources_[0].lost_sources, expired_sources_[0].num_lost_sources, expected_to_expire_first);
 
   // Advance time past second expired wait period.
@@ -399,6 +400,6 @@ TEST_F(TestSourceLoss, EachExpiredSourceNotifiesOnlyOnce)
   // The second notification should be the first source - none of the others should be notified for again.
   std::vector<SacnRemoteSourceInternal> expected_to_expire_last(sources_.begin(), sources_.begin() + 1);
   expired_sources_ = get_sources_lost_buffer(0, SACN_RECEIVER_MAX_UNIVERSES);  // Re-zero notification struct
-  get_expired_sources(&term_set_lists_[0], &expired_sources_[0]);
+  get_expired_sources(term_set_lists_.data(), &expired_sources_[0]);
   VerifySourcesMatch(expired_sources_[0].lost_sources, expired_sources_[0].num_lost_sources, expected_to_expire_last);
 }

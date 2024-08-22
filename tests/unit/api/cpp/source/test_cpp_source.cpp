@@ -596,7 +596,7 @@ TEST_F(TestSource, ProcessManualWorks)
   sacn::Source source;
   source.Startup(sacn::Source::Settings(kTestLocalCid, kTestLocalName));
 
-  source.ProcessManual();
+  sacn::Source::ProcessManual();
   EXPECT_EQ(sacn_source_process_manual_fake.call_count, 1u);
 }
 

@@ -4,11 +4,13 @@ InheritParentConfig: true
 #
 # - cppcoreguidelines-non-private-member-variables-in-classes: Certain tests make use of test
 #   fixture inheritance and make the members protected. This is acceptable.
+# - cppcoreguidelines-owning-memory: gsl::owner cannot be introduced in the C codebase.
 # - cppcoreguidelines-pro-type-reinterpret-cast: This is unavoidable due to red-black tree usage.
 # - readability-inconsistent-declaration-parameter-name: Must disable because of FFF mocking.
 #
 Checks: >
   -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-owning-memory,
   -cppcoreguidelines-pro-type-reinterpret-cast,
   -readability-inconsistent-declaration-parameter-name
 CheckOptions:

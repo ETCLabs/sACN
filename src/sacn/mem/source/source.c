@@ -85,6 +85,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
                                     &config->cid);
     written +=
         pack_sacn_universe_discovery_framing_layer(&source->universe_discovery_send_buf[written], 0, config->name);
+    // NOLINTNEXTLINE(clang-analyzer-deadcode.DeadStores)
     written += pack_sacn_universe_discovery_layer_header(&source->universe_discovery_send_buf[written], 0, 0, 0);
 
     // Initialize everything else.

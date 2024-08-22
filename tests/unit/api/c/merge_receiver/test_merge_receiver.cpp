@@ -19,6 +19,9 @@
 
 #include "sacn/merge_receiver.h"
 
+#include <array>
+#include <gsl/util>
+#include <gsl/span>
 #include <limits>
 #include <optional>
 #include <unordered_set>
@@ -32,7 +35,7 @@
 #include "sacn/opts.h"
 #include "sacn/private/merge_receiver.h"
 #include "gtest/gtest.h"
-#include "fff.h"
+#include "etc_fff_wrapper.h"
 
 #if SACN_DYNAMIC_MEM
 #define TestMergeReceiver TestMergeReceiverDynamic
@@ -40,18 +43,18 @@
 #define TestMergeReceiver TestMergeReceiverStatic
 #endif
 
-FAKE_VOID_FUNC(universe_data, sacn_merge_receiver_t, const SacnRecvMergedData*, void*);
-FAKE_VOID_FUNC(universe_non_dmx,
-               sacn_merge_receiver_t,
-               const EtcPalSockAddr*,
-               const SacnRemoteSource*,
-               const SacnRecvUniverseData*,
-               void*);
-FAKE_VOID_FUNC(sources_lost, sacn_merge_receiver_t, uint16_t, const SacnLostSource*, size_t, void*);
-FAKE_VOID_FUNC(sampling_started, sacn_merge_receiver_t, uint16_t, void*);
-FAKE_VOID_FUNC(sampling_ended, sacn_merge_receiver_t, uint16_t, void*);
-FAKE_VOID_FUNC(source_pap_lost, sacn_merge_receiver_t, uint16_t, const SacnRemoteSource*, void*);
-FAKE_VOID_FUNC(source_limit_exceeded, sacn_merge_receiver_t, uint16_t, void*);
+ETC_FAKE_VOID_FUNC(universe_data, sacn_merge_receiver_t, const SacnRecvMergedData*, void*);
+ETC_FAKE_VOID_FUNC(universe_non_dmx,
+                   sacn_merge_receiver_t,
+                   const EtcPalSockAddr*,
+                   const SacnRemoteSource*,
+                   const SacnRecvUniverseData*,
+                   void*);
+ETC_FAKE_VOID_FUNC(sources_lost, sacn_merge_receiver_t, uint16_t, const SacnLostSource*, size_t, void*);
+ETC_FAKE_VOID_FUNC(sampling_started, sacn_merge_receiver_t, uint16_t, void*);
+ETC_FAKE_VOID_FUNC(sampling_ended, sacn_merge_receiver_t, uint16_t, void*);
+ETC_FAKE_VOID_FUNC(source_pap_lost, sacn_merge_receiver_t, uint16_t, const SacnRemoteSource*, void*);
+ETC_FAKE_VOID_FUNC(source_limit_exceeded, sacn_merge_receiver_t, uint16_t, void*);
 
 static constexpr uint16_t                kTestUniverse        = 123u;
 static constexpr uint8_t                 kTestPriority        = 100u;
@@ -61,7 +64,7 @@ static constexpr sacn_dmx_merger_t       kInitialMergerHandle = 0;
 static constexpr SacnMergeReceiverConfig kTestConfig          = {
     kTestUniverse,
     {universe_data, universe_non_dmx, sources_lost, sampling_started, sampling_ended, source_pap_lost,
-              source_limit_exceeded, NULL},
+              source_limit_exceeded, nullptr},
     {1, SACN_DMX_MERGER_MAX_SLOTS},
     SACN_RECEIVER_INFINITE_SOURCES,
     true,
@@ -304,7 +307,7 @@ TEST_F(TestMergeReceiver, CreateWorks)
   EXPECT_EQ(create_sacn_dmx_merger_fake.call_count, 1u);
 #endif
 
-  SacnMergeReceiver* merge_receiver = NULL;
+  SacnMergeReceiver* merge_receiver = nullptr;
   ASSERT_EQ(lookup_merge_receiver(handle, &merge_receiver), kEtcPalErrOk);
   EXPECT_EQ(merge_receiver->merge_receiver_handle, handle);
   EXPECT_EQ(merge_receiver->merger_handle, kInitialMergerHandle);
@@ -386,31 +389,33 @@ TEST_F(TestMergeReceiver, ResetNetworkingPerReceiverWorks)
 {
   static constexpr size_t kNumNetintLists = 7u;
 
-  SacnMergeReceiverNetintList netint_lists[kNumNetintLists];
+  std::array<SacnMergeReceiverNetintList, kNumNetintLists> netint_lists;
 
   for (size_t i = 0u; i < kNumNetintLists; ++i)
   {
-    netint_lists[i].handle      = (sacn_merge_receiver_t)i;
-    netint_lists[i].netints     = nullptr;
-    netint_lists[i].num_netints = 0u;
-    netint_lists[i].no_netints  = false;
+    netint_lists.at(i).handle      = (sacn_merge_receiver_t)i;
+    netint_lists.at(i).netints     = nullptr;
+    netint_lists.at(i).num_netints = 0u;
+    netint_lists.at(i).no_netints  = false;
   }
 
   sacn_receiver_reset_networking_per_receiver_fake.custom_fake =
       [](const SacnNetintConfig*, const SacnReceiverNetintList* netint_lists, size_t num_netint_lists) {
+        auto netint_lists_span = gsl::make_span(netint_lists, num_netint_lists);
         for (size_t i = 0u; i < kNumNetintLists; ++i)
         {
-          EXPECT_EQ(netint_lists[i].handle, (sacn_receiver_t)i);
-          EXPECT_EQ(netint_lists[i].netints, nullptr);
-          EXPECT_EQ(netint_lists[i].num_netints, 0u);
-          EXPECT_EQ(netint_lists[i].no_netints, false);
+          EXPECT_EQ(gsl::at(netint_lists_span, i).handle, (sacn_receiver_t)i);
+          EXPECT_EQ(gsl::at(netint_lists_span, i).netints, nullptr);
+          EXPECT_EQ(gsl::at(netint_lists_span, i).num_netints, 0u);
+          EXPECT_EQ(gsl::at(netint_lists_span, i).no_netints, false);
           EXPECT_EQ(num_netint_lists, kNumNetintLists);
         }
 
         return kEtcPalErrOk;
       };
 
-  EXPECT_EQ(sacn_merge_receiver_reset_networking_per_receiver(nullptr, netint_lists, kNumNetintLists), kEtcPalErrOk);
+  EXPECT_EQ(sacn_merge_receiver_reset_networking_per_receiver(nullptr, netint_lists.data(), kNumNetintLists),
+            kEtcPalErrOk);
   EXPECT_EQ(sacn_receiver_reset_networking_per_receiver_fake.call_count, 1u);
 }
 
@@ -707,6 +712,7 @@ TEST_F(TestMergeReceiver, SamplingPeriodBlocksUniverseData)
 // A sampling period could occur due to a networking reset. Current sources should continue to be included in ongoing
 // merged data notifications, but the sources included on the new interfaces being sampled should be merged separately
 // and should only be included in the merged data when their sampling period is over.
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestMergeReceiver, UniverseDataHandlesSamplingPeriodSources)
 {
   static constexpr sacn_dmx_merger_t    kPrimaryMergerHandle  = kInitialMergerHandle;
@@ -1102,14 +1108,14 @@ static const std::string      kSource2Name = "Source 2 Name";
 
 TEST_F(TestMergeReceiver, TracksSourceInfo)
 {
-  sacn_merge_receiver_t merge_receiver_handle = SACN_MERGE_RECEIVER_INVALID;
+  sacn_merge_receiver_t merge_receiver_handle{SACN_MERGE_RECEIVER_INVALID};
   EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &merge_receiver_handle, nullptr), kEtcPalErrOk);
 
-  sacn_remote_source_t source_1_handle;
+  sacn_remote_source_t source_1_handle{SACN_REMOTE_SOURCE_INVALID};
   EXPECT_EQ(add_remote_source_handle(&kSource1Cid.get(), &source_1_handle), kEtcPalErrOk);
   SacnMergeReceiverSource source1 = ConstructSource(source_1_handle, kSource1Addr, kSource1Cid, kSource1Name);
 
-  sacn_remote_source_t source_2_handle;
+  sacn_remote_source_t source_2_handle{SACN_REMOTE_SOURCE_INVALID};
   EXPECT_EQ(add_remote_source_handle(&kSource2Cid.get(), &source_2_handle), kEtcPalErrOk);
   SacnMergeReceiverSource source2 = ConstructSource(source_2_handle, kSource2Addr, kSource2Cid, kSource2Name);
 
@@ -1130,14 +1136,14 @@ TEST_F(TestMergeReceiver, TracksSourceInfo)
 
 TEST_F(TestMergeReceiver, TracksUniversePriority)
 {
-  sacn_merge_receiver_t merge_receiver_handle = SACN_MERGE_RECEIVER_INVALID;
+  sacn_merge_receiver_t merge_receiver_handle{SACN_MERGE_RECEIVER_INVALID};
   EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &merge_receiver_handle, nullptr), kEtcPalErrOk);
 
-  sacn_remote_source_t source_1_handle;
+  sacn_remote_source_t source_1_handle{SACN_REMOTE_SOURCE_INVALID};
   EXPECT_EQ(add_remote_source_handle(&kSource1Cid.get(), &source_1_handle), kEtcPalErrOk);
   SacnMergeReceiverSource source1 = ConstructSource(source_1_handle, kSource1Addr, kSource1Cid, kSource1Name);
 
-  sacn_remote_source_t source_2_handle;
+  sacn_remote_source_t source_2_handle{SACN_REMOTE_SOURCE_INVALID};
   EXPECT_EQ(add_remote_source_handle(&kSource2Cid.get(), &source_2_handle), kEtcPalErrOk);
   SacnMergeReceiverSource source2 = ConstructSource(source_2_handle, kSource2Addr, kSource2Cid, kSource2Name);
 
@@ -1160,15 +1166,15 @@ TEST_F(TestMergeReceiver, TracksUniversePriority)
 
 TEST_F(TestMergeReceiver, TracksPriorityType)
 {
-  sacn_merge_receiver_t merge_receiver_handle = SACN_MERGE_RECEIVER_INVALID;
+  sacn_merge_receiver_t merge_receiver_handle{SACN_MERGE_RECEIVER_INVALID};
   EXPECT_EQ(sacn_merge_receiver_create(&kTestConfig, &merge_receiver_handle, nullptr), kEtcPalErrOk);
 
-  sacn_remote_source_t source_1_handle;
+  sacn_remote_source_t source_1_handle{SACN_REMOTE_SOURCE_INVALID};
   EXPECT_EQ(add_remote_source_handle(&kSource1Cid.get(), &source_1_handle), kEtcPalErrOk);
   SacnMergeReceiverSource source1 =
       ConstructSource(source_1_handle, kSource1Addr, kSource1Cid, kSource1Name, kTestPriority, false);
 
-  sacn_remote_source_t source_2_handle;
+  sacn_remote_source_t source_2_handle{SACN_REMOTE_SOURCE_INVALID};
   EXPECT_EQ(add_remote_source_handle(&kSource2Cid.get(), &source_2_handle), kEtcPalErrOk);
   SacnMergeReceiverSource source2 =
       ConstructSource(source_2_handle, kSource2Addr, kSource2Cid, kSource2Name, kTestPriority, true);

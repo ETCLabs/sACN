@@ -62,7 +62,7 @@ protected:
     sacn_initialize_receiver_netints_fake.custom_fake = [](SacnInternalNetintArray* internal_netints, bool,
                                                            EtcPalRbTree*, const SacnNetintConfig*) {
 #if SACN_DYNAMIC_MEM
-      internal_netints->netints          = NULL;
+      internal_netints->netints          = nullptr;
       internal_netints->netints_capacity = 0;
 #endif
       internal_netints->num_netints = 0;
@@ -98,7 +98,7 @@ protected:
       return kEtcPalErrOk;
     };
 
-    sacn_receiver_t handle;
+    sacn_receiver_t handle{SACN_RECEIVER_INVALID};
     sacn_receiver_create(&config, &handle, nullptr);
 
     clear_term_set_list_fake.custom_fake = [](TerminationSet* list) { EXPECT_EQ(list, nullptr); };
@@ -262,13 +262,13 @@ TEST_F(TestReceiver, ChangeUniverseErrExistsWorks)
 
   config.universe_id = kChangeUniverseReceiverExistsUniverse;
 
-  sacn_receiver_t handle_existing_receiver;
+  sacn_receiver_t handle_existing_receiver{SACN_RECEIVER_INVALID};
   sacn_receiver_create(&config, &handle_existing_receiver, nullptr);
 
   config.universe_id = kChangeUniverseNoReceiverUniverse1;
   ++get_next_receiver_handle_fake.return_val;
 
-  sacn_receiver_t handle_changing_receiver;
+  sacn_receiver_t handle_changing_receiver{SACN_RECEIVER_INVALID};
   sacn_receiver_create(&config, &handle_changing_receiver, nullptr);
 
   etcpal_error_t change_universe_no_err_exists_result =
@@ -293,7 +293,7 @@ TEST_F(TestReceiver, ChangeUniverseErrNotFoundWorks)
   config.callbacks.sampling_period_ended = [](sacn_receiver_t, uint16_t, void*) {};
   config.universe_id                     = kChangeUniverseValidUniverse1;
 
-  sacn_receiver_t handle;
+  sacn_receiver_t handle{SACN_RECEIVER_INVALID};
   sacn_receiver_create(&config, &handle, nullptr);
 
   etcpal_error_t change_universe_found_result = sacn_receiver_change_universe(handle, kChangeUniverseValidUniverse2);
@@ -325,7 +325,7 @@ TEST_F(TestReceiver, ResetNetworkingTerminatesSourcesOnLostNetints)
 
   config.universe_id = kChangeUniverseReceiverExistsUniverse;
 
-  sacn_receiver_t handle;
+  sacn_receiver_t handle{SACN_RECEIVER_INVALID};
   sacn_receiver_create(&config, &handle, nullptr);
 
   SacnNetintConfig sys_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;

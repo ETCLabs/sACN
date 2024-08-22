@@ -66,43 +66,40 @@ protected:
   static constexpr size_t            kTestNewValuesCount         = 123;
   static constexpr size_t            kTestAddressPrioritiesCount = 456;
 
-  static const SacnDmxMergerSource kTestSource;
-  static const uint8_t             kTestNewValues[SACN_DMX_MERGER_MAX_SLOTS];
-  static const uint8_t             kTestAddressPriorities[SACN_DMX_MERGER_MAX_SLOTS];
-  static const uint8_t             kTestPdata[SACN_DMX_MERGER_MAX_SLOTS];
+  static const SacnDmxMergerSource                                kTestSource;
+  static constexpr std::array<uint8_t, SACN_DMX_MERGER_MAX_SLOTS> kTestNewValues{};
+  static constexpr std::array<uint8_t, SACN_DMX_MERGER_MAX_SLOTS> kTestAddressPriorities{};
+  static constexpr std::array<uint8_t, SACN_DMX_MERGER_MAX_SLOTS> kTestPdata{};
 
-  static uint8_t                  levels_[SACN_DMX_MERGER_MAX_SLOTS];
-  static uint8_t                  pap_[SACN_DMX_MERGER_MAX_SLOTS];
-  static sacn_dmx_merger_source_t owners_[SACN_DMX_MERGER_MAX_SLOTS];
+  static std::array<uint8_t, SACN_DMX_MERGER_MAX_SLOTS>                  levels_;
+  static std::array<uint8_t, SACN_DMX_MERGER_MAX_SLOTS>                  pap_;
+  static std::array<sacn_dmx_merger_source_t, SACN_DMX_MERGER_MAX_SLOTS> owners_;
 
   static etcpal_error_t            test_return_value_;
   static sacn_dmx_merger_source_t  test_source_handle_;
   static sacn::DmxMerger::Settings settings_default_;
 };
 
-const SacnDmxMergerSource TestMerger::kTestSource              = {0};
-const uint8_t             TestMerger::kTestNewValues[]         = {};
-const uint8_t             TestMerger::kTestAddressPriorities[] = {};
-const uint8_t             TestMerger::kTestPdata[]             = {};
+const SacnDmxMergerSource TestMerger::kTestSource = {0};
 
-etcpal_error_t            TestMerger::test_return_value_;
-sacn_dmx_merger_source_t  TestMerger::test_source_handle_;
-uint8_t                   TestMerger::levels_[] = {};
-uint8_t                   TestMerger::pap_[]    = {};
-sacn_dmx_merger_source_t  TestMerger::owners_[] = {};
-sacn::DmxMerger::Settings TestMerger::settings_default_(nullptr);
+etcpal_error_t                                                  TestMerger::test_return_value_;
+sacn_dmx_merger_source_t                                        TestMerger::test_source_handle_;
+std::array<uint8_t, SACN_DMX_MERGER_MAX_SLOTS>                  TestMerger::levels_ = {};
+std::array<uint8_t, SACN_DMX_MERGER_MAX_SLOTS>                  TestMerger::pap_    = {};
+std::array<sacn_dmx_merger_source_t, SACN_DMX_MERGER_MAX_SLOTS> TestMerger::owners_ = {};
+sacn::DmxMerger::Settings                                       TestMerger::settings_default_(nullptr);
 
 TEST_F(TestMerger, SettingsConstructorWorks)
 {
-  sacn::DmxMerger::Settings settings(levels_);
-  EXPECT_EQ(settings.levels, levels_);
+  sacn::DmxMerger::Settings settings(levels_.data());
+  EXPECT_EQ(settings.levels, levels_.data());
   EXPECT_EQ(settings.per_address_priorities, nullptr);
   EXPECT_EQ(settings.owners, nullptr);
 }
 
 TEST_F(TestMerger, SettingsIsValidWorks)
 {
-  sacn::DmxMerger::Settings settings_valid(levels_);
+  sacn::DmxMerger::Settings settings_valid(levels_.data());
   sacn::DmxMerger::Settings settings_invalid(nullptr);
 
   EXPECT_EQ(settings_valid.IsValid(), true);
@@ -117,9 +114,9 @@ TEST_F(TestMerger, StartupWorks)
 
     if (config)
     {
-      EXPECT_EQ(config->levels, levels_);
-      EXPECT_EQ(config->per_address_priorities, pap_);
-      EXPECT_EQ(config->owners, owners_);
+      EXPECT_EQ(config->levels, levels_.data());
+      EXPECT_EQ(config->per_address_priorities, pap_.data());
+      EXPECT_EQ(config->owners, owners_.data());
       EXPECT_EQ(config->source_count_max, SACN_RECEIVER_INFINITE_SOURCES);
     }
 
@@ -131,9 +128,9 @@ TEST_F(TestMerger, StartupWorks)
 
   sacn::DmxMerger merger;
 
-  sacn::DmxMerger::Settings settings(levels_);
-  settings.per_address_priorities = pap_;
-  settings.owners                 = owners_;
+  sacn::DmxMerger::Settings settings(levels_.data());
+  settings.per_address_priorities = pap_.data();
+  settings.owners                 = owners_.data();
 
   etcpal::Error result = merger.Startup(settings);
 
@@ -218,7 +215,7 @@ TEST_F(TestMerger, GetSourceInfoWorks)
   sacn::DmxMerger merger;
 
   merger.Startup(settings_default_);
-  auto result = merger.GetSourceInfo(test_source_handle_);
+  const auto* result = merger.GetSourceInfo(test_source_handle_);
   EXPECT_EQ(sacn_dmx_merger_get_source_fake.call_count, 1u);
   EXPECT_EQ(result, &kTestSource);
 }
@@ -229,7 +226,7 @@ TEST_F(TestMerger, UpdateLevelsWorks)
                                                       const uint8_t* new_levels, size_t new_levels_count) {
     EXPECT_EQ(merger, kTestMergerHandle);
     EXPECT_EQ(source, test_source_handle_);
-    EXPECT_EQ(new_levels, kTestNewValues);
+    EXPECT_EQ(new_levels, kTestNewValues.data());
     EXPECT_EQ(new_levels_count, kTestNewValuesCount);
 
     return test_return_value_;
@@ -239,7 +236,7 @@ TEST_F(TestMerger, UpdateLevelsWorks)
 
   merger.Startup(settings_default_);
 
-  etcpal::Error result = merger.UpdateLevels(test_source_handle_, kTestNewValues, kTestNewValuesCount);
+  etcpal::Error result = merger.UpdateLevels(test_source_handle_, kTestNewValues.data(), kTestNewValuesCount);
 
   EXPECT_EQ(sacn_dmx_merger_update_levels_fake.call_count, 1u);
   EXPECT_EQ(result.code(), test_return_value_);
@@ -251,7 +248,7 @@ TEST_F(TestMerger, UpdatePapWorks)
                                                    const uint8_t* pap, size_t pap_count) {
     EXPECT_EQ(merger, kTestMergerHandle);
     EXPECT_EQ(source, test_source_handle_);
-    EXPECT_EQ(pap, kTestAddressPriorities);
+    EXPECT_EQ(pap, kTestAddressPriorities.data());
     EXPECT_EQ(pap_count, kTestAddressPrioritiesCount);
 
     return test_return_value_;
@@ -261,7 +258,8 @@ TEST_F(TestMerger, UpdatePapWorks)
 
   merger.Startup(settings_default_);
 
-  etcpal::Error result = merger.UpdatePap(test_source_handle_, kTestAddressPriorities, kTestAddressPrioritiesCount);
+  etcpal::Error result =
+      merger.UpdatePap(test_source_handle_, kTestAddressPriorities.data(), kTestAddressPrioritiesCount);
 
   EXPECT_EQ(sacn_dmx_merger_update_pap_fake.call_count, 1u);
   EXPECT_EQ(result.code(), test_return_value_);
