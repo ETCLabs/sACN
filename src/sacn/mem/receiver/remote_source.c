@@ -182,9 +182,9 @@ etcpal_error_t add_remote_source_handle(const EtcPalUuid* cid, sacn_remote_sourc
 sacn_remote_source_t get_remote_source_handle(const EtcPalUuid* source_cid)
 {
   if (!SACN_ASSERT_VERIFY(source_cid))
-    return SACN_REMOTE_SOURCE_INVALID;
+    return kSacnRemoteSourceInvalid;
 
-  sacn_remote_source_t result = SACN_REMOTE_SOURCE_INVALID;
+  sacn_remote_source_t result = kSacnRemoteSourceInvalid;
 
   SacnRemoteSourceHandle* tree_result = (SacnRemoteSourceHandle*)etcpal_rbtree_find(&remote_source_handles, source_cid);
 
@@ -196,7 +196,7 @@ sacn_remote_source_t get_remote_source_handle(const EtcPalUuid* source_cid)
 
 const EtcPalUuid* get_remote_source_cid(sacn_remote_source_t handle)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnRemoteSourceInvalid))
     return NULL;
 
   const EtcPalUuid* result = NULL;
@@ -211,7 +211,7 @@ const EtcPalUuid* get_remote_source_cid(sacn_remote_source_t handle)
 
 etcpal_error_t remove_remote_source_handle(sacn_remote_source_t handle)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnRemoteSourceInvalid))
     return kEtcPalErrSys;
 
   etcpal_error_t handle_result = kEtcPalErrOk;

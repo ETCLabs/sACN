@@ -117,7 +117,7 @@ TEST_F(TestMerger, StartupWorks)
       EXPECT_EQ(config->levels, levels_.data());
       EXPECT_EQ(config->per_address_priorities, pap_.data());
       EXPECT_EQ(config->owners, owners_.data());
-      EXPECT_EQ(config->source_count_max, SACN_RECEIVER_INFINITE_SOURCES);
+      EXPECT_EQ(config->source_count_max, kSacnReceiverInfiniteSources);
     }
 
     if (handle)

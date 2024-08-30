@@ -70,12 +70,12 @@
 static const SacnSourceConfig kTestSourceConfig = {
     etcpal::Uuid::FromString("5103d586-44bf-46df-8c5a-e690f3dd6e22").get(),
     "Test Source",
-    SACN_SOURCE_INFINITE_UNIVERSES,
+    kSacnSourceInfiniteUniverses,
     false,
     kSacnIpV4AndIpV6,
-    SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT,
-    SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT};
-static constexpr SacnSourceUniverseConfig kTestUniverseConfig = {1, 100, false, false, NULL, 0, 0};
+    kSacnSourceKeepAliveIntervalDefault,
+    kSacnSourcePapKeepAliveIntervalDefault};
+static constexpr SacnSourceUniverseConfig kTestUniverseConfig = {1, 100, false, false, nullptr, 0, 0};
 
 static std::vector<SacnMcastInterface> kTestNetints = {{{kEtcPalIpTypeV4, 1u}, kEtcPalErrOk},
                                                        {{kEtcPalIpTypeV4, 2u}, kEtcPalErrOk},
@@ -389,8 +389,8 @@ protected:
   sacn_source_t next_source_handle_ = 0;
 
   const std::vector<uint8_t> test_buffer_512_slots_ = [&] {
-    std::vector<uint8_t> vect(DMX_ADDRESS_COUNT);
-    for (int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+    std::vector<uint8_t> vect(kSacnDmxAddressCount);
+    for (int i = 0; i < kSacnDmxAddressCount; ++i)
       vect[i] = 100;
     return vect;
   }();
@@ -1308,7 +1308,7 @@ TEST_F(TestSourceState, InterruptTerminatingWithoutRemovingWorks)
   EXPECT_EQ(sacn_send_multicast_fake.call_count, kTestNetints.size() * 5u);
   EXPECT_EQ(sacn_send_unicast_fake.call_count, kTestRemoteAddrs.size() * 5u);
 
-  etcpal_getms_fake.return_val += (SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT + 1u);
+  etcpal_getms_fake.return_val += (kSacnSourceKeepAliveIntervalDefault + 1u);
 
   VERIFY_LOCKING(RunThreadCycle());
 
@@ -1400,7 +1400,7 @@ TEST_F(TestSourceState, UniverseRemovalUpdatesSourceNetints)
 
 TEST_F(TestSourceState, TransmitsLevelsAndPapCorrectlyAtDefaultInterval)
 {
-  TestLevelPapTransmission(SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
+  TestLevelPapTransmission(kSacnSourceKeepAliveIntervalDefault);
 }
 
 TEST_F(TestSourceState, TransmitsLevelsAndPapCorrectlyAtShortInterval)
@@ -1451,7 +1451,7 @@ TEST_F(TestSourceState, TerminatingUnicastDestsOnlySendTerminations)
       EXPECT_NE(TERMINATED_OPT_SET(send_buf), 0x00u);
 
       uint8_t start_code = send_buf[SACN_DATA_HEADER_SIZE - 1];
-      EXPECT_EQ(start_code, SACN_STARTCODE_DMX);
+      EXPECT_EQ(start_code, kSacnStartcodeDmx);
     }
     else
     {
@@ -1481,7 +1481,7 @@ TEST_F(TestSourceState, PapNotTransmittedIfNotAdded)
   sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t, const uint8_t* send_buf, const EtcPalIpAddr*,
                                           etcpal_error_t*) {
     uint8_t start_code = send_buf[SACN_DATA_HEADER_SIZE - 1];
-    EXPECT_EQ(start_code, SACN_STARTCODE_DMX);
+    EXPECT_EQ(start_code, kSacnStartcodeDmx);
     return kEtcPalErrOk;
   };
 
@@ -2117,7 +2117,7 @@ TEST_F(TestSourceState, SetSourceNameWorks)
   char* name_in_discovery_buffer = (char*)(&GetSource(source)->universe_discovery_send_buf[SACN_SOURCE_NAME_OFFSET]);
   EXPECT_EQ(strncmp(name_in_discovery_buffer, kTestName.c_str(), kTestName.length()), 0);
 
-  for (size_t i = kTestName.length(); i < (size_t)SACN_SOURCE_NAME_MAX_LEN; ++i)
+  for (size_t i = kTestName.length(); i < (size_t)kSacnSourceNameMaxLen; ++i)
   {
     EXPECT_EQ(GetSource(source)->name[i], '\0');
     EXPECT_EQ(name_in_discovery_buffer[i], '\0');
@@ -2130,7 +2130,7 @@ TEST_F(TestSourceState, SetSourceNameWorks)
     EXPECT_EQ(strncmp(name_in_level_buffer, kTestName.c_str(), kTestName.length()), 0);
     EXPECT_EQ(strncmp(name_in_pap_buffer, kTestName.c_str(), kTestName.length()), 0);
 
-    for (size_t i = kTestName.length(); i < (size_t)SACN_SOURCE_NAME_MAX_LEN; ++i)
+    for (size_t i = kTestName.length(); i < (size_t)kSacnSourceNameMaxLen; ++i)
     {
       EXPECT_EQ(name_in_level_buffer[i], '\0');
       EXPECT_EQ(name_in_pap_buffer[i], '\0');

@@ -104,10 +104,10 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver*              receiver,
   size_t current_number_of_sources = etcpal_rbtree_size(&receiver->sources);
 #if SACN_DYNAMIC_MEM
   size_t max_number_of_sources = receiver->source_count_max;
-  bool   infinite_sources      = (max_number_of_sources == SACN_RECEIVER_INFINITE_SOURCES);
+  bool   infinite_sources      = (max_number_of_sources == kSacnReceiverInfiniteSources);
 #else
   size_t max_number_of_sources = ((receiver->source_count_max > SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE) ||
-                                  (receiver->source_count_max == SACN_RECEIVER_INFINITE_SOURCES))
+                                  (receiver->source_count_max == kSacnReceiverInfiniteSources))
                                      ? SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE
                                      : receiver->source_count_max;
   bool   infinite_sources      = false;
@@ -119,7 +119,7 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver*              receiver,
   if (!src)
     result = kEtcPalErrNoMem;
 
-  sacn_remote_source_t handle = SACN_REMOTE_SOURCE_INVALID;
+  sacn_remote_source_t handle = kSacnRemoteSourceInvalid;
   if (result == kEtcPalErrOk)
     result = add_remote_source_handle(sender_cid, &handle);
 
@@ -138,7 +138,7 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver*              receiver,
     if (receiver->sampling)
     {
       // During the sampling period, any packet should trigger a notification
-      if (first_start_code == SACN_STARTCODE_PRIORITY)
+      if (first_start_code == kSacnStartcodePriority)
       {
         src->recv_state = kRecvStateHavePapOnly;
         etcpal_timer_start(&src->pap_timer, kSacnSourceLossTimeout);
@@ -150,7 +150,7 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver*              receiver,
     }
     else
     {
-      if (first_start_code == SACN_STARTCODE_PRIORITY)
+      if (first_start_code == kSacnStartcodePriority)
         src->recv_state = kRecvStateHavePapOnly;  // Always allow 0xDD packets to notify
       else
         src->recv_state = kRecvStateWaitingForPap;  // 0x00 packets should always notify after 0xDD
@@ -167,7 +167,7 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver*              receiver,
   }
   else
   {
-    if (handle != SACN_REMOTE_SOURCE_INVALID)
+    if (handle != kSacnRemoteSourceInvalid)
       remove_remote_source_handle(handle);
     if (src)
       FREE_TRACKED_SOURCE(src);
@@ -187,7 +187,7 @@ etcpal_error_t clear_receiver_sources(SacnReceiver* receiver)
 
 etcpal_error_t remove_receiver_source(SacnReceiver* receiver, sacn_remote_source_t handle)
 {
-  if (!SACN_ASSERT_VERIFY(receiver) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID))
+  if (!SACN_ASSERT_VERIFY(receiver) || !SACN_ASSERT_VERIFY(handle != kSacnRemoteSourceInvalid))
     return kEtcPalErrSys;
 
   return etcpal_rbtree_remove_with_cb(&receiver->sources, &handle, tracked_source_tree_dealloc);

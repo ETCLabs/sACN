@@ -113,7 +113,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
   {
     if (sacn_receiver_lock())
     {
-      sacn_receiver_t    receiver_handle = SACN_RECEIVER_INVALID;
+      sacn_receiver_t    receiver_handle = kSacnReceiverInvalid;
       SacnReceiverConfig receiver_config = SACN_RECEIVER_CONFIG_DEFAULT_INIT;
       receiver_config.universe_id        = config->universe_id;
       receiver_config.footprint          = config->footprint;
@@ -125,7 +125,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
               ? SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER
               : SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE;
 #endif
-      receiver_config.flags        = SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA;
+      receiver_config.flags        = kSacnReceiverOptsFilterPreviewData;
       receiver_config.ip_supported = config->ip_supported;
 
       SacnReceiverInternalCallbacks internal_callbacks;
@@ -145,7 +145,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
       if (result == kEtcPalErrOk)
         result = add_sacn_merge_receiver(merge_receiver_handle, config, &merge_receiver);
 
-      sacn_dmx_merger_t merger_handle = SACN_DMX_MERGER_INVALID;
+      sacn_dmx_merger_t merger_handle = kSacnDmxMergerInvalid;
       if (result == kEtcPalErrOk)
       {
         *handle = merge_receiver_handle;
@@ -162,7 +162,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
         merge_receiver->merger_handle = merger_handle;
 
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
-      sacn_dmx_merger_t sampling_merger_handle = SACN_DMX_MERGER_INVALID;
+      sacn_dmx_merger_t sampling_merger_handle = kSacnDmxMergerInvalid;
       if (result == kEtcPalErrOk)
       {
         SacnDmxMergerConfig sampling_merger_config    = SACN_DMX_MERGER_CONFIG_INIT;
@@ -179,16 +179,16 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
 
       if (result != kEtcPalErrOk)
       {
-        if (receiver_handle != SACN_RECEIVER_INVALID)
+        if (receiver_handle != kSacnReceiverInvalid)
         {
           remove_sacn_merge_receiver((sacn_merge_receiver_t)receiver_handle);
           destroy_sacn_receiver(receiver_handle);
         }
 
-        if (merger_handle != SACN_DMX_MERGER_INVALID)
+        if (merger_handle != kSacnDmxMergerInvalid)
           destroy_sacn_dmx_merger(merger_handle);
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
-        if (sampling_merger_handle != SACN_DMX_MERGER_INVALID)
+        if (sampling_merger_handle != kSacnDmxMergerInvalid)
           destroy_sacn_dmx_merger(sampling_merger_handle);
 #endif
       }
@@ -224,7 +224,7 @@ etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
 
   if (!sacn_initialized())
     result = kEtcPalErrNotInit;
-  else if (handle == SACN_MERGE_RECEIVER_INVALID)
+  else if (handle == kSacnMergeReceiverInvalid)
     result = kEtcPalErrInvalid;
 
   if (result == kEtcPalErrOk)
@@ -558,7 +558,7 @@ etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t    merge_rec
   if (!sacn_initialized())
     return kEtcPalErrNotInit;
 
-  if ((merge_receiver_handle == SACN_MERGE_RECEIVER_INVALID) || (source_handle == SACN_REMOTE_SOURCE_INVALID) ||
+  if ((merge_receiver_handle == kSacnMergeReceiverInvalid) || (source_handle == kSacnRemoteSourceInvalid) ||
       !source_info)
   {
     return kEtcPalErrInvalid;
@@ -585,7 +585,7 @@ etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t    merge_rec
     if (res == kEtcPalErrOk)
     {
       source_info->handle = source->handle;
-      memcpy(source_info->name, source->name, SACN_SOURCE_NAME_MAX_LEN);
+      memcpy(source_info->name, source->name, kSacnSourceNameMaxLen);
       source_info->addr                          = source->addr;
       source_info->per_address_priorities_active = source->per_address_priorities_active;
       source_info->universe_priority             = source->universe_priority;
@@ -608,9 +608,9 @@ void merge_receiver_universe_data(sacn_receiver_t             receiver_handle,
                                   const SacnRecvUniverseData* universe_data,
                                   sacn_thread_id_t            thread_id)
 {
-  if (!SACN_ASSERT_VERIFY(receiver_handle != SACN_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(source_addr) ||
+  if (!SACN_ASSERT_VERIFY(receiver_handle != kSacnReceiverInvalid) || !SACN_ASSERT_VERIFY(source_addr) ||
       !SACN_ASSERT_VERIFY(source_info) || !SACN_ASSERT_VERIFY(universe_data) ||
-      !SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+      !SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid))
   {
     return;
   }
@@ -655,14 +655,14 @@ void merge_receiver_universe_data(sacn_receiver_t             receiver_handle,
         if ((universe_data->slot_range.address_count > 0) &&
             (universe_data->slot_range.address_count <= SACN_DMX_MERGER_MAX_SLOTS))
         {
-          if (universe_data->start_code == SACN_STARTCODE_DMX)
+          if (universe_data->start_code == kSacnStartcodeDmx)
           {
             update_sacn_dmx_merger_levels(merger_handle, merger_source_handle, universe_data->values,
                                           universe_data->slot_range.address_count);
             update_sacn_dmx_merger_universe_priority(merger_handle, merger_source_handle, universe_data->priority);
             new_merge_occurred = true;
           }
-          else if ((universe_data->start_code == SACN_STARTCODE_PRIORITY) && merge_receiver->use_pap)
+          else if ((universe_data->start_code == kSacnStartcodePriority) && merge_receiver->use_pap)
           {
             update_sacn_dmx_merger_pap(merger_handle, merger_source_handle, universe_data->values,
                                        universe_data->slot_range.address_count);
@@ -691,7 +691,7 @@ void merge_receiver_universe_data(sacn_receiver_t             receiver_handle,
           }
         }
 
-        if ((universe_data->start_code != SACN_STARTCODE_DMX) && (universe_data->start_code != SACN_STARTCODE_PRIORITY))
+        if ((universe_data->start_code != kSacnStartcodeDmx) && (universe_data->start_code != kSacnStartcodePriority))
           non_dmx_callback = merge_receiver->callbacks.universe_non_dmx;
 
         context = merge_receiver->callbacks.callback_context;
@@ -730,8 +730,8 @@ void merge_receiver_sources_lost(sacn_receiver_t       handle,
                                  size_t                num_lost_sources,
                                  sacn_thread_id_t      thread_id)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(lost_sources) ||
-      !SACN_ASSERT_VERIFY(num_lost_sources > 0) || !SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnReceiverInvalid) || !SACN_ASSERT_VERIFY(lost_sources) ||
+      !SACN_ASSERT_VERIFY(num_lost_sources > 0) || !SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid))
   {
     return;
   }
@@ -826,7 +826,7 @@ void merge_receiver_sources_lost(sacn_receiver_t       handle,
 
 void merge_receiver_sampling_started(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnReceiverInvalid))
     return;
 
   ETCPAL_UNUSED_ARG(universe);
@@ -870,7 +870,7 @@ void merge_receiver_sampling_started(sacn_receiver_t handle, uint16_t universe, 
 
 void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sacn_thread_id_t thread_id)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnReceiverInvalid) || !SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid))
     return;
 
   if (merge_receiver_cb_lock())
@@ -979,8 +979,8 @@ void merge_receiver_pap_lost(sacn_receiver_t         handle,
                              const SacnRemoteSource* source,
                              sacn_thread_id_t        thread_id)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID) || !SACN_ASSERT_VERIFY(source) ||
-      !SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnReceiverInvalid) || !SACN_ASSERT_VERIFY(source) ||
+      !SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid))
   {
     return;
   }
@@ -1039,7 +1039,7 @@ void merge_receiver_pap_lost(sacn_receiver_t         handle,
 
           remote_source.handle = source->handle;
           memcpy(remote_source.cid.data, source->cid.data, ETCPAL_UUID_BYTES);
-          memcpy(remote_source.name, source->name, SACN_SOURCE_NAME_MAX_LEN);
+          memcpy(remote_source.name, source->name, kSacnSourceNameMaxLen);
 
           source_pap_lost_callback = merge_receiver->callbacks.source_pap_lost;
           context                  = merge_receiver->callbacks.callback_context;
@@ -1077,7 +1077,7 @@ void merge_receiver_source_limit_exceeded(sacn_receiver_t handle, uint16_t unive
 {
   ETCPAL_UNUSED_ARG(thread_id);
 
-  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnReceiverInvalid))
     return;
 
   if (merge_receiver_cb_lock())

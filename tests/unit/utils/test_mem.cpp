@@ -39,9 +39,9 @@ static constexpr SacnMergeReceiverConfig kTestMergeReceiverConfig = {
     1u,
     {[](sacn_merge_receiver_t, const SacnRecvMergedData*, void*) {},
      [](sacn_merge_receiver_t, const EtcPalSockAddr*, const SacnRemoteSource*, const SacnRecvUniverseData*, void*) {},
-     NULL, NULL},
+     nullptr, nullptr},
     {1, SACN_DMX_MERGER_MAX_SLOTS},
-    SACN_RECEIVER_INFINITE_SOURCES,
+    kSacnReceiverInfiniteSources,
     true,
     kSacnIpV4AndIpV6};
 
@@ -69,7 +69,7 @@ protected:
     sacn_source_mem_deinit();
   }
 
-  static void DoForEachThread(std::function<void(sacn_thread_id_t)>&& func)
+  static void DoForEachThread(const std::function<void(sacn_thread_id_t)>& func)
   {
     for (sacn_thread_id_t thread = 0; thread < kTestNumThreads; ++thread)
     {
@@ -355,8 +355,10 @@ TEST_F(TestMem, AddSocketRefWorks)
   });
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestMem, RemoveSocketRefWorks)
 {
+  // NOLINTNEXTLINE(readability-function-cognitive-complexity)
   DoForEachThread([](sacn_thread_id_t thread) {
     SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread);
     ASSERT_NE(recv_thread_context, nullptr);
@@ -411,9 +413,9 @@ TEST_F(TestMem, ValidInitializedUniverseData)
 
     EXPECT_EQ(universe_data->api_callback, nullptr);
     EXPECT_EQ(universe_data->internal_callback, nullptr);
-    EXPECT_EQ(universe_data->receiver_handle, SACN_RECEIVER_INVALID);
+    EXPECT_EQ(universe_data->receiver_handle, kSacnReceiverInvalid);
     EXPECT_EQ(universe_data->universe_data.values, nullptr);
-    EXPECT_EQ(universe_data->thread_id, SACN_THREAD_ID_INVALID);
+    EXPECT_EQ(universe_data->thread_id, kSacnThreadIdInvalid);
     EXPECT_EQ(universe_data->context, nullptr);
   });
 }
@@ -436,9 +438,9 @@ TEST_F(TestMem, UniverseDataIsReZeroedWithEachGet)
 
   EXPECT_EQ(universe_data->api_callback, nullptr);
   EXPECT_EQ(universe_data->internal_callback, nullptr);
-  EXPECT_EQ(universe_data->receiver_handle, SACN_RECEIVER_INVALID);
+  EXPECT_EQ(universe_data->receiver_handle, kSacnReceiverInvalid);
   EXPECT_EQ(universe_data->universe_data.values, nullptr);
-  EXPECT_EQ(universe_data->thread_id, SACN_THREAD_ID_INVALID);
+  EXPECT_EQ(universe_data->thread_id, kSacnThreadIdInvalid);
   EXPECT_EQ(universe_data->context, nullptr);
 }
 
@@ -452,12 +454,12 @@ TEST_F(TestMem, ValidInitializedSourcesLostBuf)
 
     for (int i = 0; i < 20; ++i)
     {
-      auto sources_lost = &sources_lost_buf[i];
+      auto* sources_lost = &sources_lost_buf[i];
       EXPECT_EQ(sources_lost->api_callback, nullptr);
       EXPECT_EQ(sources_lost->internal_callback, nullptr);
-      EXPECT_EQ(sources_lost->handle, SACN_RECEIVER_INVALID);
+      EXPECT_EQ(sources_lost->handle, kSacnReceiverInvalid);
       EXPECT_EQ(sources_lost->num_lost_sources, 0u);
-      EXPECT_EQ(sources_lost->thread_id, SACN_THREAD_ID_INVALID);
+      EXPECT_EQ(sources_lost->thread_id, kSacnThreadIdInvalid);
       EXPECT_EQ(sources_lost->context, nullptr);
     }
 #else
@@ -467,12 +469,12 @@ TEST_F(TestMem, ValidInitializedSourcesLostBuf)
     // Test up to the maximum capacity
     for (int i = 0; i < SACN_RECEIVER_MAX_THREADS; ++i)
     {
-      auto sources_lost = &sources_lost_buf[i];
+      auto* sources_lost = &sources_lost_buf[i];
       EXPECT_EQ(sources_lost->api_callback, nullptr);
       EXPECT_EQ(sources_lost->internal_callback, nullptr);
-      EXPECT_EQ(sources_lost->handle, SACN_RECEIVER_INVALID);
+      EXPECT_EQ(sources_lost->handle, kSacnReceiverInvalid);
       EXPECT_EQ(sources_lost->num_lost_sources, 0u);
-      EXPECT_EQ(sources_lost->thread_id, SACN_THREAD_ID_INVALID);
+      EXPECT_EQ(sources_lost->thread_id, kSacnThreadIdInvalid);
       EXPECT_EQ(sources_lost->context, nullptr);
     }
 
@@ -543,9 +545,9 @@ TEST_F(TestMem, SourcesLostIsReZeroedWithEachGet)
 
   EXPECT_EQ(sources_lost->api_callback, nullptr);
   EXPECT_EQ(sources_lost->internal_callback, nullptr);
-  EXPECT_EQ(sources_lost->handle, SACN_RECEIVER_INVALID);
+  EXPECT_EQ(sources_lost->handle, kSacnReceiverInvalid);
   EXPECT_EQ(sources_lost->num_lost_sources, 0u);
-  EXPECT_EQ(sources_lost->thread_id, SACN_THREAD_ID_INVALID);
+  EXPECT_EQ(sources_lost->thread_id, kSacnThreadIdInvalid);
   EXPECT_EQ(sources_lost->context, nullptr);
 }
 
@@ -557,8 +559,8 @@ TEST_F(TestMem, ValidInitializedSourcePapLost)
 
     EXPECT_EQ(source_pap_lost->api_callback, nullptr);
     EXPECT_EQ(source_pap_lost->internal_callback, nullptr);
-    EXPECT_EQ(source_pap_lost->handle, SACN_RECEIVER_INVALID);
-    EXPECT_EQ(source_pap_lost->thread_id, SACN_THREAD_ID_INVALID);
+    EXPECT_EQ(source_pap_lost->handle, kSacnReceiverInvalid);
+    EXPECT_EQ(source_pap_lost->thread_id, kSacnThreadIdInvalid);
     EXPECT_EQ(source_pap_lost->context, nullptr);
   });
 }
@@ -581,8 +583,8 @@ TEST_F(TestMem, SourcePapLostIsReZeroedWithEachGet)
 
   EXPECT_EQ(source_pap_lost->api_callback, nullptr);
   EXPECT_EQ(source_pap_lost->internal_callback, nullptr);
-  EXPECT_EQ(source_pap_lost->handle, SACN_RECEIVER_INVALID);
-  EXPECT_EQ(source_pap_lost->thread_id, SACN_THREAD_ID_INVALID);
+  EXPECT_EQ(source_pap_lost->handle, kSacnReceiverInvalid);
+  EXPECT_EQ(source_pap_lost->thread_id, kSacnThreadIdInvalid);
   EXPECT_EQ(source_pap_lost->context, nullptr);
 }
 
@@ -596,11 +598,11 @@ TEST_F(TestMem, ValidInitializedSamplingStartedBuf)
 
     for (int i = 0; i < 20; ++i)
     {
-      auto sampling_started = &sampling_started_buf[i];
+      auto* sampling_started = &sampling_started_buf[i];
       EXPECT_EQ(sampling_started->api_callback, nullptr);
       EXPECT_EQ(sampling_started->internal_callback, nullptr);
-      EXPECT_EQ(sampling_started->handle, SACN_RECEIVER_INVALID);
-      EXPECT_EQ(sampling_started->thread_id, SACN_THREAD_ID_INVALID);
+      EXPECT_EQ(sampling_started->handle, kSacnReceiverInvalid);
+      EXPECT_EQ(sampling_started->thread_id, kSacnThreadIdInvalid);
       EXPECT_EQ(sampling_started->context, nullptr);
     }
 #else
@@ -611,11 +613,11 @@ TEST_F(TestMem, ValidInitializedSamplingStartedBuf)
     // Test up to the maximum capacity
     for (int i = 0; i < SACN_RECEIVER_MAX_THREADS; ++i)
     {
-      auto sampling_started = &sampling_started_buf[i];
+      auto* sampling_started = &sampling_started_buf[i];
       EXPECT_EQ(sampling_started->api_callback, nullptr);
       EXPECT_EQ(sampling_started->internal_callback, nullptr);
-      EXPECT_EQ(sampling_started->handle, SACN_RECEIVER_INVALID);
-      EXPECT_EQ(sampling_started->thread_id, SACN_THREAD_ID_INVALID);
+      EXPECT_EQ(sampling_started->handle, kSacnReceiverInvalid);
+      EXPECT_EQ(sampling_started->thread_id, kSacnThreadIdInvalid);
       EXPECT_EQ(sampling_started->context, nullptr);
     }
 
@@ -644,8 +646,8 @@ TEST_F(TestMem, SamplingStartedIsReZeroedWithEachGet)
 
   EXPECT_EQ(sampling_started->api_callback, nullptr);
   EXPECT_EQ(sampling_started->internal_callback, nullptr);
-  EXPECT_EQ(sampling_started->handle, SACN_RECEIVER_INVALID);
-  EXPECT_EQ(sampling_started->thread_id, SACN_THREAD_ID_INVALID);
+  EXPECT_EQ(sampling_started->handle, kSacnReceiverInvalid);
+  EXPECT_EQ(sampling_started->thread_id, kSacnThreadIdInvalid);
   EXPECT_EQ(sampling_started->context, nullptr);
 }
 
@@ -659,11 +661,11 @@ TEST_F(TestMem, ValidInitializedSamplingEndedBuf)
 
     for (int i = 0; i < 20; ++i)
     {
-      auto sampling_ended = &sampling_ended_buf[i];
+      auto* sampling_ended = &sampling_ended_buf[i];
       EXPECT_EQ(sampling_ended->api_callback, nullptr);
       EXPECT_EQ(sampling_ended->internal_callback, nullptr);
-      EXPECT_EQ(sampling_ended->handle, SACN_RECEIVER_INVALID);
-      EXPECT_EQ(sampling_ended->thread_id, SACN_THREAD_ID_INVALID);
+      EXPECT_EQ(sampling_ended->handle, kSacnReceiverInvalid);
+      EXPECT_EQ(sampling_ended->thread_id, kSacnThreadIdInvalid);
       EXPECT_EQ(sampling_ended->context, nullptr);
     }
 #else
@@ -673,11 +675,11 @@ TEST_F(TestMem, ValidInitializedSamplingEndedBuf)
     // Test up to the maximum capacity
     for (int i = 0; i < SACN_RECEIVER_MAX_THREADS; ++i)
     {
-      auto sampling_ended = &sampling_ended_buf[i];
+      auto* sampling_ended = &sampling_ended_buf[i];
       EXPECT_EQ(sampling_ended->api_callback, nullptr);
       EXPECT_EQ(sampling_ended->internal_callback, nullptr);
-      EXPECT_EQ(sampling_ended->handle, SACN_RECEIVER_INVALID);
-      EXPECT_EQ(sampling_ended->thread_id, SACN_THREAD_ID_INVALID);
+      EXPECT_EQ(sampling_ended->handle, kSacnReceiverInvalid);
+      EXPECT_EQ(sampling_ended->thread_id, kSacnThreadIdInvalid);
       EXPECT_EQ(sampling_ended->context, nullptr);
     }
 
@@ -706,8 +708,8 @@ TEST_F(TestMem, SamplingEndedIsReZeroedWithEachGet)
 
   EXPECT_EQ(sampling_ended->api_callback, nullptr);
   EXPECT_EQ(sampling_ended->internal_callback, nullptr);
-  EXPECT_EQ(sampling_ended->handle, SACN_RECEIVER_INVALID);
-  EXPECT_EQ(sampling_ended->thread_id, SACN_THREAD_ID_INVALID);
+  EXPECT_EQ(sampling_ended->handle, kSacnReceiverInvalid);
+  EXPECT_EQ(sampling_ended->thread_id, kSacnThreadIdInvalid);
   EXPECT_EQ(sampling_ended->context, nullptr);
 }
 
@@ -719,8 +721,8 @@ TEST_F(TestMem, ValidInitializedSourceLimitExceeded)
 
     EXPECT_EQ(source_limit_exceeded->api_callback, nullptr);
     EXPECT_EQ(source_limit_exceeded->internal_callback, nullptr);
-    EXPECT_EQ(source_limit_exceeded->handle, SACN_RECEIVER_INVALID);
-    EXPECT_EQ(source_limit_exceeded->thread_id, SACN_THREAD_ID_INVALID);
+    EXPECT_EQ(source_limit_exceeded->handle, kSacnReceiverInvalid);
+    EXPECT_EQ(source_limit_exceeded->thread_id, kSacnThreadIdInvalid);
     EXPECT_EQ(source_limit_exceeded->context, nullptr);
   });
 }
@@ -744,8 +746,8 @@ TEST_F(TestMem, SourceLimitExceededIsReZeroedWithEachGet)
 
   EXPECT_EQ(source_limit_exceeded->api_callback, nullptr);
   EXPECT_EQ(source_limit_exceeded->internal_callback, nullptr);
-  EXPECT_EQ(source_limit_exceeded->handle, SACN_RECEIVER_INVALID);
-  EXPECT_EQ(source_limit_exceeded->thread_id, SACN_THREAD_ID_INVALID);
+  EXPECT_EQ(source_limit_exceeded->handle, kSacnReceiverInvalid);
+  EXPECT_EQ(source_limit_exceeded->thread_id, kSacnThreadIdInvalid);
   EXPECT_EQ(source_limit_exceeded->context, nullptr);
 }
 
@@ -818,7 +820,7 @@ TEST_F(TestMem, AddSacnMergeReceiverWorks)
 
   ASSERT_NE(merge_receiver, nullptr);
   EXPECT_EQ(merge_receiver->merge_receiver_handle, kTestMergeReceiverHandle);
-  EXPECT_EQ(merge_receiver->merger_handle, SACN_DMX_MERGER_INVALID);
+  EXPECT_EQ(merge_receiver->merger_handle, kSacnDmxMergerInvalid);
   EXPECT_EQ(merge_receiver->callbacks.universe_data, kTestMergeReceiverConfig.callbacks.universe_data);
   EXPECT_EQ(merge_receiver->callbacks.universe_non_dmx, kTestMergeReceiverConfig.callbacks.universe_non_dmx);
   EXPECT_EQ(merge_receiver->callbacks.source_limit_exceeded, nullptr);
@@ -905,7 +907,7 @@ TEST_F(TestMem, InitCleansUpRecvThreadContext)
 TEST_F(TestMem, RespectsMaxMergeReceiverLimit)
 {
   SacnMergeReceiverConfig config         = SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT;
-  SacnMergeReceiver*      merge_receiver = NULL;
+  SacnMergeReceiver*      merge_receiver = nullptr;
   for (int i = 0; i < SACN_RECEIVER_MAX_UNIVERSES; ++i)
   {
     config.universe_id = static_cast<uint16_t>(i + 1);
@@ -917,7 +919,7 @@ TEST_F(TestMem, RespectsMaxMergeReceiverSourceLimit)
 {
   SacnMergeReceiverConfig config = SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT;
 
-  SacnMergeReceiver* merge_receiver = NULL;
+  SacnMergeReceiver* merge_receiver = nullptr;
   EXPECT_EQ(add_sacn_merge_receiver(kTestMergeReceiverHandle, &config, &merge_receiver), kEtcPalErrOk);
 
   EtcPalSockAddr       source_addr{};
@@ -937,7 +939,7 @@ TEST_F(TestMem, RespectsMaxRemoteSourceLimit)
   {
     EtcPalUuid cid = etcpal::Uuid::V4().get();
 
-    sacn_remote_source_t handle;
+    sacn_remote_source_t handle{kSacnRemoteSourceInvalid};
     EXPECT_EQ(add_remote_source_handle(&cid, &handle), kEtcPalErrOk);
   }
 }

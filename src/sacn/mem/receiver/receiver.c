@@ -131,7 +131,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t                      handle,
   if (lookup_receiver_by_universe(config->universe_id, &tmp) == kEtcPalErrOk)
     return kEtcPalErrExists;
 
-  if (handle == SACN_RECEIVER_INVALID)
+  if (handle == kSacnReceiverInvalid)
     return kEtcPalErrNoMem;
 
   SacnReceiver* receiver = ALLOC_RECEIVER();
@@ -140,7 +140,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t                      handle,
 
   receiver->keys.handle   = handle;
   receiver->keys.universe = config->universe_id;
-  receiver->thread_id     = SACN_THREAD_ID_INVALID;
+  receiver->thread_id     = kSacnThreadIdInvalid;
 
 #if SACN_RECEIVER_SOCKET_PER_NIC
 #if SACN_DYNAMIC_MEM
@@ -179,7 +179,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t                      handle,
   etcpal_rbtree_init(&receiver->sources, remote_source_compare, tracked_source_node_alloc, tracked_source_node_dealloc);
   receiver->term_sets = NULL;
 
-  receiver->filter_preview_data = ((config->flags & SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA) != 0);
+  receiver->filter_preview_data = ((config->flags & kSacnReceiverOptsFilterPreviewData) != 0);
 
   receiver->api_callbacks = config->callbacks;
 
@@ -282,14 +282,14 @@ etcpal_error_t initialize_receiver_sockets(SacnInternalSocketState* sockets)
 #if SACN_DYNAMIC_MEM
   if (!sockets->ipv4_sockets)
   {
-    sockets->ipv4_sockets          = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
-    sockets->ipv4_sockets_capacity = INITIAL_CAPACITY;
+    sockets->ipv4_sockets          = calloc(kSacnInitialCapacity, sizeof(etcpal_socket_t));
+    sockets->ipv4_sockets_capacity = kSacnInitialCapacity;
   }
 
   if (!sockets->ipv6_sockets)
   {
-    sockets->ipv6_sockets          = calloc(INITIAL_CAPACITY, sizeof(etcpal_socket_t));
-    sockets->ipv6_sockets_capacity = INITIAL_CAPACITY;
+    sockets->ipv6_sockets          = calloc(kSacnInitialCapacity, sizeof(etcpal_socket_t));
+    sockets->ipv6_sockets_capacity = kSacnInitialCapacity;
   }
 
   if (!sockets->ipv4_sockets || !sockets->ipv6_sockets)

@@ -89,7 +89,7 @@ static void update_pap(SacnSource*                source_state,
                        sacn_force_sync_behavior_t force_sync);
 static void zero_levels_where_pap_is_zero(SacnSourceUniverse* universe_state);
 #endif
-static void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id);
+static void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* netint_id);
 static void reset_unicast_dest(SacnUnicastDestination* dest);
 static void reset_universe(SacnSourceUniverse* universe);
 static void cancel_termination_if_not_removing(SacnSourceUniverse* universe);
@@ -126,7 +126,7 @@ bool source_handle_in_use(int handle_val, void* cookie)
   ETCPAL_UNUSED_ARG(cookie);
 
   SacnSource* tmp = NULL;
-  return (handle_val == SACN_SOURCE_INVALID) || (lookup_source(handle_val, &tmp) == kEtcPalErrOk);
+  return (handle_val == kSacnSourceInvalid) || (lookup_source(handle_val, &tmp) == kEtcPalErrOk);
 }
 
 // Needs lock
@@ -901,8 +901,8 @@ void set_source_name(SacnSource* source, const char* new_name)
     return;
 
   // Update the name in the source state and universe discovery buffer
-  strncpy(source->name, new_name, SACN_SOURCE_NAME_MAX_LEN);
-  strncpy((char*)(&source->universe_discovery_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
+  strncpy(source->name, new_name, kSacnSourceNameMaxLen);
+  strncpy((char*)(&source->universe_discovery_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, kSacnSourceNameMaxLen);
 
   // For each universe:
   for (size_t i = 0; i < source->num_universes; ++i)
@@ -910,8 +910,8 @@ void set_source_name(SacnSource* source, const char* new_name)
     SacnSourceUniverse* universe = &source->universes[i];
 
     // Update the source name in this universe's send buffers
-    strncpy((char*)(&universe->level_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
-    strncpy((char*)(&universe->pap_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, SACN_SOURCE_NAME_MAX_LEN);
+    strncpy((char*)(&universe->level_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, kSacnSourceNameMaxLen);
+    strncpy((char*)(&universe->pap_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, kSacnSourceNameMaxLen);
 
     // Reset transmission suppression for start codes 0x00 and 0xDD
     reset_transmission_suppression(source, universe, kResetLevelAndPap);
@@ -1083,13 +1083,13 @@ void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bo
   reset_transmission_suppression(source, universe, kResetLevelAndPap);
 }
 
-void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* id)
+void remove_from_source_netints(SacnSource* source, const EtcPalMcastNetintId* netint_id)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(id))
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(netint_id))
     return;
 
   size_t            netint_index = 0;
-  SacnSourceNetint* netint_state = lookup_source_netint_and_index(source, id, &netint_index);
+  SacnSourceNetint* netint_state = lookup_source_netint_and_index(source, netint_id, &netint_index);
 
   if (netint_state)
   {
@@ -1155,7 +1155,7 @@ void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* univer
 
   // The assertions below enforce assumptions made by the sequence number logic - specifically that only levels & PAP
   // can be sent in combination, and also that PAP is sent last each tick.
-  if (send_buf[SACN_START_CODE_OFFSET] == SACN_STARTCODE_DMX)
+  if (send_buf[SACN_START_CODE_OFFSET] == kSacnStartcodeDmx)
   {
     SACN_ASSERT_VERIFY(!universe->other_sent_this_tick);
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -1164,7 +1164,7 @@ void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* univer
     universe->levels_sent_this_tick = true;
   }
 #if SACN_ETC_PRIORITY_EXTENSION
-  else if (send_buf[SACN_START_CODE_OFFSET] == SACN_STARTCODE_PRIORITY)
+  else if (send_buf[SACN_START_CODE_OFFSET] == kSacnStartcodePriority)
   {
     SACN_ASSERT_VERIFY(!universe->other_sent_this_tick);
     universe->pap_sent_this_tick = true;

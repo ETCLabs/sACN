@@ -64,16 +64,14 @@ extern "C" {
 
 /** Each merger has a handle associated with it.*/
 typedef int sacn_dmx_merger_t;
-
 /** An invalid sACN merger handle value. */
-#define SACN_DMX_MERGER_INVALID -1
+static const sacn_dmx_merger_t kSacnDmxMergerInvalid = -1;
 
 /** A source handle used by the DMX merger, could represent a remote source or another logical source (e.g. a local DMX
  * port). */
 typedef uint16_t sacn_dmx_merger_source_t;
-
 /** An invalid DMX merger source handle value. */
-#define SACN_DMX_MERGER_SOURCE_INVALID ((sacn_dmx_merger_source_t) - 1)
+static const sacn_dmx_merger_source_t kSacnDmxMergerSourceInvalid = 0xFFFF;
 
 /** A set of configuration information for a merger instance. */
 typedef struct SacnDmxMergerConfig
@@ -106,14 +104,14 @@ typedef struct SacnDmxMergerConfig
 
   /** This is only allowed to be NULL if and only if #SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER is 0.
       Buffer of #SACN_DMX_MERGER_MAX_SLOTS source IDs that indicate the current winner of the merge for that slot, or
-      #SACN_DMX_MERGER_SOURCE_INVALID to indicate that there is no winner for that slot. This is used if you
+      #kSacnDmxMergerSourceInvalid to indicate that there is no winner for that slot. This is used if you
       need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to NULL
       and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of 0 (not
       sourced).
       Memory is owned by the application and must remain allocated until the merger is destroyed.*/
   sacn_dmx_merger_source_t* owners;
 
-  /** The maximum number of sources this merger will listen to.  Defaults to #SACN_RECEIVER_INFINITE_SOURCES.
+  /** The maximum number of sources this merger will listen to.  Defaults to #kSacnReceiverInfiniteSources.
       This parameter is ignored when configured to use static memory -- #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used
       instead.*/
   int source_count_max;
@@ -131,9 +129,9 @@ typedef struct SacnDmxMergerConfig
  * @endcode
  *
  */
-#define SACN_DMX_MERGER_CONFIG_INIT                              \
-  {                                                              \
-    NULL, NULL, NULL, NULL, NULL, SACN_RECEIVER_INFINITE_SOURCES \
+#define SACN_DMX_MERGER_CONFIG_INIT                            \
+  {                                                            \
+    NULL, NULL, NULL, NULL, NULL, kSacnReceiverInfiniteSources \
   }
 
 /**
@@ -143,7 +141,7 @@ typedef struct SacnDmxMergerConfig
  *
  */
 #define SACN_DMX_MERGER_SOURCE_IS_VALID(owners_array, slot_index) \
-  (owners_array[slot_index] != SACN_DMX_MERGER_SOURCE_INVALID)
+  (owners_array[slot_index] != kSacnDmxMergerSourceInvalid)
 
 /** The current input data for a single source of the merge.  This is exposed as read-only information. */
 typedef struct SacnDmxMergerSource

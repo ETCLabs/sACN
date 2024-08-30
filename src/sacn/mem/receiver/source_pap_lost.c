@@ -52,16 +52,16 @@ static SourcePapLostNotification sacn_pool_source_pap_lost[SACN_RECEIVER_MAX_THR
  */
 SourcePapLostNotification* get_source_pap_lost(sacn_thread_id_t thread_id)
 {
-  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  if (!SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid))
     return NULL;
 
   if (thread_id < sacn_mem_get_num_threads())
   {
     SourcePapLostNotification* to_return = &sacn_pool_source_pap_lost[thread_id];
     memset(to_return, 0, sizeof(SourcePapLostNotification));
-    to_return->source.handle = SACN_REMOTE_SOURCE_INVALID;
-    to_return->handle        = SACN_RECEIVER_INVALID;
-    to_return->thread_id     = SACN_THREAD_ID_INVALID;
+    to_return->source.handle = kSacnRemoteSourceInvalid;
+    to_return->handle        = kSacnReceiverInvalid;
+    to_return->thread_id     = kSacnThreadIdInvalid;
     return to_return;
   }
   return NULL;

@@ -69,12 +69,12 @@ TEST_F(TestDmxMergerDisabled, DmxMergerIsEnabledInDynamicMode)
 {
   // Run the API functions to confirm everything links.
   sacn_dmx_merger_create(nullptr, nullptr);
-  sacn_dmx_merger_destroy(SACN_DMX_MERGER_INVALID);
-  sacn_dmx_merger_add_source(SACN_DMX_MERGER_INVALID, nullptr);
-  sacn_dmx_merger_remove_source(SACN_DMX_MERGER_INVALID, SACN_DMX_MERGER_SOURCE_INVALID);
-  sacn_dmx_merger_update_levels(SACN_DMX_MERGER_INVALID, SACN_DMX_MERGER_SOURCE_INVALID, nullptr, 0);
-  sacn_dmx_merger_update_pap(SACN_DMX_MERGER_INVALID, SACN_DMX_MERGER_SOURCE_INVALID, nullptr, 0);
-  sacn_dmx_merger_update_universe_priority(SACN_DMX_MERGER_INVALID, SACN_DMX_MERGER_SOURCE_INVALID, 0);
-  sacn_dmx_merger_remove_pap(SACN_DMX_MERGER_INVALID, SACN_DMX_MERGER_SOURCE_INVALID);
+  sacn_dmx_merger_destroy(kSacnDmxMergerInvalid);
+  sacn_dmx_merger_add_source(kSacnDmxMergerInvalid, nullptr);
+  sacn_dmx_merger_remove_source(kSacnDmxMergerInvalid, kSacnDmxMergerSourceInvalid);
+  sacn_dmx_merger_update_levels(kSacnDmxMergerInvalid, kSacnDmxMergerSourceInvalid, nullptr, 0);
+  sacn_dmx_merger_update_pap(kSacnDmxMergerInvalid, kSacnDmxMergerSourceInvalid, nullptr, 0);
+  sacn_dmx_merger_update_universe_priority(kSacnDmxMergerInvalid, kSacnDmxMergerSourceInvalid, 0);
+  sacn_dmx_merger_remove_pap(kSacnDmxMergerInvalid, kSacnDmxMergerSourceInvalid);
 }
 #endif  // SACN_DYNAMIC_MEM

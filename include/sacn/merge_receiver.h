@@ -51,8 +51,8 @@ extern "C" {
 
 /** A handle to an sACN Merge Receiver. */
 typedef int sacn_merge_receiver_t;
-/** An invalid sACN merge_receiver handle value. */
-#define SACN_MERGE_RECEIVER_INVALID SACN_RECEIVER_INVALID
+/** An invalid sACN Merge Receiver handle value. */
+static const sacn_merge_receiver_t kSacnMergeReceiverInvalid = -1;
 
 /**
  * Newly updated merged data within the configured footprint.
@@ -78,7 +78,7 @@ typedef struct SacnRecvMergedData
   const uint8_t* priorities;
   /**
    * The source handles of the owners of the slots within slot_range.  If a value in the buffer is
-   * #SACN_REMOTE_SOURCE_INVALID, the corresponding slot is not currently controlled. This buffer is owned by the
+   * #kSacnRemoteSourceInvalid, the corresponding slot is not currently controlled. This buffer is owned by the
    * library.
    */
   const sacn_remote_source_t* owners;
@@ -266,7 +266,7 @@ typedef struct SacnMergeReceiverConfig
   /** The footprint within the universe to monitor. TODO: WIP, not 100% implemented yet. */
   SacnRecvUniverseSubrange footprint;
 
-  /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
+  /** The maximum number of sources this universe will listen to.  May be #kSacnReceiverInfiniteSources.
       This parameter is ignored when configured to use static memory -- the lower of
       #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER or #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.*/
   int source_count_max;
@@ -281,10 +281,9 @@ typedef struct SacnMergeReceiverConfig
 } SacnMergeReceiverConfig;
 
 /** A default-value initializer for an SacnMergeReceiverConfig struct. */
-#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                                        \
-  {                                                                                                    \
-    0, {NULL, NULL, NULL, NULL}, {1, SACN_DMX_MERGER_MAX_SLOTS}, SACN_RECEIVER_INFINITE_SOURCES, true, \
-        kSacnIpV4AndIpV6                                                                               \
+#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                                                       \
+  {                                                                                                                   \
+    0, {NULL, NULL, NULL, NULL}, {1, SACN_DMX_MERGER_MAX_SLOTS}, kSacnReceiverInfiniteSources, true, kSacnIpV4AndIpV6 \
   }
 
 /** A set of network interfaces for a particular merge receiver. */
@@ -310,7 +309,7 @@ typedef struct SacnMergeReceiverSource
   /** The Component Identifier (CID) of the source. */
   EtcPalUuid cid;
   /** The name of the source. */
-  char name[SACN_SOURCE_NAME_MAX_LEN];
+  char name[kSacnSourceNameMaxLen];
   /** The network address from which the most recent sACN packet originated. */
   EtcPalSockAddr addr;
   /** Whether the source is sending per-address priority packets, or only per-universe. */

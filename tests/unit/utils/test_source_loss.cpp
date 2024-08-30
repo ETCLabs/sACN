@@ -68,7 +68,7 @@ protected:
 
     for (size_t i = 0; i < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++i)
     {
-      sacn_remote_source_t next_handle = SACN_REMOTE_SOURCE_INVALID;
+      sacn_remote_source_t next_handle = kSacnRemoteSourceInvalid;
       ASSERT_EQ(add_remote_source_handle(&etcpal::Uuid::V4().get(), &next_handle), kEtcPalErrOk);
 
       test_names_.push_back("test name " + std::to_string(i));
@@ -327,7 +327,7 @@ TEST_F(TestSourceLoss, AllowsOneTermSetForEachSourceUpToMax)
     }
   }
 
-  for (auto term_set_list : term_set_lists_)
+  for (auto* term_set_list : term_set_lists_)
     clear_term_set_list(term_set_list);
 }
 
@@ -354,15 +354,15 @@ TEST_F(TestSourceLoss, AlternatingOnlineOfflineDoesNotBreakMaxLimits)
       for (int k = 0; k < SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE; ++k)
       {
         uint16_t universe = kTestDefaultUniverse + static_cast<uint16_t>(j);
-        EXPECT_EQ(mark_sources_offline(universe, &offline, 1, &sources_[1], sources_.size() - 1, &term_set_lists_[j],
+        EXPECT_EQ(mark_sources_offline(universe, &offline, 1, &sources_[1], sources_.size() - 1, &term_set_lists_.at(j),
                                        kTestExpiredWait),
                   kEtcPalErrOk);
-        mark_sources_online(universe, sources_.data(), 1, &term_set_lists_[j]);
+        mark_sources_online(universe, sources_.data(), 1, &term_set_lists_.at(j));
       }
     }
   }
 
-  for (auto term_set_list : term_set_lists_)
+  for (auto* term_set_list : term_set_lists_)
     clear_term_set_list(term_set_list);
 }
 

@@ -61,7 +61,7 @@ class MergeReceiver
 {
 public:
   /** A handle type used by the sACN library to identify merge receiver instances. */
-  using Handle = etcpal::OpaqueId<detail::MergeReceiverHandleType, sacn_merge_receiver_t, SACN_MERGE_RECEIVER_INVALID>;
+  using Handle = etcpal::OpaqueId<detail::MergeReceiverHandleType, sacn_merge_receiver_t, kSacnMergeReceiverInvalid>;
 
   /**
    * @ingroup sacn_merge_receiver_cpp
@@ -227,7 +227,7 @@ public:
     SacnRecvUniverseSubrange footprint{1, SACN_DMX_MERGER_MAX_SLOTS};
 
     /** The maximum number of sources this universe will listen to when using dynamic memory. */
-    int source_count_max{SACN_RECEIVER_INFINITE_SOURCES};
+    int source_count_max{kSacnReceiverInfiniteSources};
 
     /** If true, this allows per-address priorities (if any are received) to be fed into the merger. If false, received
         per-address priorities are ignored, and only universe priorities are used in the merger. Keep in mind that this
@@ -256,7 +256,7 @@ public:
   struct NetintList
   {
     /** The merge receiver's handle. */
-    sacn_merge_receiver_t handle{SACN_MERGE_RECEIVER_INVALID};
+    sacn_merge_receiver_t handle{kSacnMergeReceiverInvalid};
 
     /** If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If
         empty, all available interfaces are tried. */
@@ -278,7 +278,7 @@ public:
   struct Source
   {
     /** The handle of the source. */
-    sacn_remote_source_t handle{SACN_REMOTE_SOURCE_INVALID};
+    sacn_remote_source_t handle{kSacnRemoteSourceInvalid};
     /** The Component Identifier (CID) of the source. */
     etcpal::Uuid cid;
     /** The name of the source. */
@@ -494,7 +494,7 @@ inline etcpal::Error MergeReceiver::Startup(const Settings& settings,
   if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
-  sacn_merge_receiver_t c_handle = SACN_MERGE_RECEIVER_INVALID;
+  sacn_merge_receiver_t c_handle = kSacnMergeReceiverInvalid;
   etcpal::Error         result   = sacn_merge_receiver_create(&config, &c_handle, &netint_config);
 
   handle_.SetValue(c_handle);
@@ -531,7 +531,7 @@ inline etcpal::Error MergeReceiver::Startup(const Settings&                  set
 {
   SacnMergeReceiverConfig config = TranslateConfig(settings, notify_handler);
 
-  sacn_merge_receiver_t c_handle = SACN_MERGE_RECEIVER_INVALID;
+  sacn_merge_receiver_t c_handle = kSacnMergeReceiverInvalid;
   etcpal::Error         result   = kEtcPalErrOk;
 
   if (netints.empty())

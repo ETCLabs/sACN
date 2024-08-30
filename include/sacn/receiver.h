@@ -57,23 +57,26 @@ extern "C" {
 /** A handle to an sACN receiver. */
 typedef int sacn_receiver_t;
 /** An invalid sACN receiver handle value. */
-#define SACN_RECEIVER_INVALID -1
+static const sacn_receiver_t kSacnReceiverInvalid = -1;
 
-/**
- * @brief Constant for "infinite" when listening or merging sACN universes.
- *
- * When using dynamic memory, this constant can be passed in when creating a receiver or a merger.
- * It represents an infinite number of sources on that universe.
- */
-#define SACN_RECEIVER_INFINITE_SOURCES 0
+enum
+{
+  /**
+   * @brief Constant for "infinite" when listening or merging sACN universes.
+   *
+   * When using dynamic memory, this constant can be passed in when creating a receiver or a merger.
+   * It represents an infinite number of sources on that universe.
+   */
+  kSacnReceiverInfiniteSources = 0,
 
-/**
- * @brief The default expired notification wait time.
- *
- * The default amount of time the library will wait after a universe enters a source loss condition
- * before calling the sources_lost() callback. Can be changed with sacn_receiver_set_expired_wait().
- */
-#define SACN_DEFAULT_EXPIRED_WAIT_MS 1000u
+  /**
+   * @brief The default expired notification wait time.
+   *
+   * The default amount of time the library will wait after a universe enters a source loss condition
+   * before calling the sources_lost() callback. Can be changed with sacn_receiver_set_expired_wait().
+   */
+  kSacnDefaultExpiredWaitMs = 1000u
+};
 
 /** Defines a range of addresses within a sACN universe. */
 typedef struct SacnRecvUniverseSubrange
@@ -130,7 +133,7 @@ typedef struct SacnRemoteSource
   /** The Component Identifier (CID) of the source. */
   EtcPalUuid cid;
   /** The name of the source. */
-  char name[SACN_SOURCE_NAME_MAX_LEN];
+  char name[kSacnSourceNameMaxLen];
 } SacnRemoteSource;
 
 /** Information about a sACN source that was lost. */
@@ -141,7 +144,7 @@ typedef struct SacnLostSource
   /** The Component Identifier (CID) of the source. */
   EtcPalUuid cid;
   /** The name of the source. */
-  char name[SACN_SOURCE_NAME_MAX_LEN];
+  char name[kSacnSourceNameMaxLen];
   /** If true, the source was determined to be lost due to the Stream_Terminated bit being set in the
    *  sACN data packet. If false, the source was lost due to a source loss timeout. */
   bool terminated;
@@ -152,8 +155,11 @@ typedef struct SacnLostSource
  * Valid values for the flags member in the SacnReceiverConfig struct.
  * @{
  */
-/** Filter preview data. If set, any sACN data with the Preview flag set will be dropped for this universe. */
-#define SACN_RECEIVER_OPTS_FILTER_PREVIEW_DATA 0x1
+enum
+{
+  /** Filter preview data. If set, any sACN data with the Preview flag set will be dropped for this universe. */
+  kSacnReceiverOptsFilterPreviewData = 0x1
+};
 /**
  * @}
  */
@@ -263,7 +269,7 @@ typedef void (*SacnSourcePapLostCallback)(sacn_receiver_t         handle,
  *
  * If #SACN_DYNAMIC_MEM was defined to 1 when sACN was compiled (the default on non-embedded
  * platforms), and the configuration you pass to sacn_receiver_create() has source_count_max set to
- * #SACN_RECEIVER_INFINITE_SOURCES, this callback will never be called and may be set to NULL.
+ * #kSacnReceiverInfiniteSources, this callback will never be called and may be set to NULL.
  *
  * If #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max is only used if it's less than
  * #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE, otherwise #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.
@@ -305,7 +311,7 @@ typedef struct SacnReceiverConfig
   /** The footprint within the universe to monitor. TODO: WIP, not 100% implemented yet. */
   SacnRecvUniverseSubrange footprint;
 
-  /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
+  /** The maximum number of sources this universe will listen to.  May be #kSacnReceiverInfiniteSources.
       When configured to use static memory, this parameter is only used if it's less than
       #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE -- otherwise #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.*/
   int source_count_max;
@@ -317,10 +323,10 @@ typedef struct SacnReceiverConfig
 } SacnReceiverConfig;
 
 /** A default-value initializer for an SacnReceiverConfig struct. */
-#define SACN_RECEIVER_CONFIG_DEFAULT_INIT                                                               \
-  {                                                                                                     \
-    0, {NULL, NULL, NULL, NULL, NULL, NULL}, {1, DMX_ADDRESS_COUNT}, SACN_RECEIVER_INFINITE_SOURCES, 0, \
-        kSacnIpV4AndIpV6                                                                                \
+#define SACN_RECEIVER_CONFIG_DEFAULT_INIT                                                                \
+  {                                                                                                      \
+    0, {NULL, NULL, NULL, NULL, NULL, NULL}, {1, kSacnDmxAddressCount}, kSacnReceiverInfiniteSources, 0, \
+        kSacnIpV4AndIpV6                                                                                 \
   }
 
 /** A set of network interfaces for a particular receiver. */

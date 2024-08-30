@@ -1,0 +1,9 @@
+---
+InheritParentConfig: true
+# For all disabled checks, please provide a rationale here.
+#
+# - readability-inconsistent-declaration-parameter-name: Must disable because of FFF mocking.
+#
+Checks: >
+  -readability-inconsistent-declaration-parameter-name
+...

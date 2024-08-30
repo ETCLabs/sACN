@@ -63,7 +63,7 @@ bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_sock
  */
 SacnRecvThreadContext* get_recv_thread_context(sacn_thread_id_t thread_id)
 {
-  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  if (!SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid))
     return NULL;
 
   if (thread_id < sacn_mem_get_num_threads())
@@ -371,25 +371,25 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context, sa
   context->thread_id = thread_id;
 
 #if SACN_DYNAMIC_MEM
-  context->dead_sockets = calloc(INITIAL_CAPACITY, sizeof(ReceiveSocket));
+  context->dead_sockets = calloc(kSacnInitialCapacity, sizeof(ReceiveSocket));
   if (!context->dead_sockets)
     return kEtcPalErrNoMem;
-  context->dead_sockets_capacity = INITIAL_CAPACITY;
+  context->dead_sockets_capacity = kSacnInitialCapacity;
 
-  context->socket_refs = calloc(INITIAL_CAPACITY, sizeof(SocketRef));
+  context->socket_refs = calloc(kSacnInitialCapacity, sizeof(SocketRef));
   if (!context->socket_refs)
     return kEtcPalErrNoMem;
-  context->socket_refs_capacity = INITIAL_CAPACITY;
+  context->socket_refs_capacity = kSacnInitialCapacity;
 
-  context->subscribes = calloc(INITIAL_CAPACITY, sizeof(SocketGroupReq));
+  context->subscribes = calloc(kSacnInitialCapacity, sizeof(SocketGroupReq));
   if (!context->subscribes)
     return kEtcPalErrNoMem;
-  context->subscribes_capacity = INITIAL_CAPACITY;
+  context->subscribes_capacity = kSacnInitialCapacity;
 
-  context->unsubscribes = calloc(INITIAL_CAPACITY, sizeof(SocketGroupReq));
+  context->unsubscribes = calloc(kSacnInitialCapacity, sizeof(SocketGroupReq));
   if (!context->unsubscribes)
     return kEtcPalErrNoMem;
-  context->unsubscribes_capacity = INITIAL_CAPACITY;
+  context->unsubscribes_capacity = kSacnInitialCapacity;
 #endif
 
   context->num_dead_sockets = 0;

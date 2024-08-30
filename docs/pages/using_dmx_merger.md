@@ -25,7 +25,7 @@ whether per-address priority packets should be transmitted to sACN, and the univ
 transmit. These are set to NULL if not used. The application owns the memory that it points to in
 the config, and must ensure that the memory provided is valid until the merger is destroyed. The
 maximum source count (the maximum number of sources the merger will merge when #SACN_DYNAMIC_MEM
-is 1) is also specified in the config, and it defaults to #SACN_RECEIVER_INFINITE_SOURCES. If
+is 1) is also specified in the config, and it defaults to #kSacnReceiverInfiniteSources. If
 #SACN_DYNAMIC_MEM is 0, then #SACN_DMX_MERGER_MAX_SOURCES_PER_MERGER is used instead.
 
 Once the merger is created, the merger's functionality can be used. Mergers can also be destroyed
@@ -35,11 +35,11 @@ destroyed automatically when sACN deinitializes.
 <!-- CODE_BLOCK_START -->
 ```c
 // These buffers are updated on each merger call with the merge results.
-uint8_t merged_levels[DMX_ADDRESS_COUNT];
-uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
+uint8_t merged_levels[kSacnDmxAddressCount];
+uint8_t per_address_priorities[kSacnDmxAddressCount];
 bool should_transmit_per_address_priorities = false;
 uint8_t universe_priority_to_transmit = 0;
-sacn_dmx_merger_source_t owners[DMX_ADDRESS_COUNT];
+sacn_dmx_merger_source_t owners[kSacnDmxAddressCount];
 
 // Merger configuration used for the initialization of each merger:
 SacnDmxMergerConfig merger_config = SACN_DMX_MERGER_CONFIG_INIT;
@@ -61,11 +61,11 @@ sacn_dmx_merger_destroy(merger_handle);
 ```cpp
 // These buffers are updated on each merger call with the merge results.
 // They must be valid as long as the merger is using them.
-uint8_t merged_levels[DMX_ADDRESS_COUNT];
-uint8_t per_address_priorities[DMX_ADDRESS_COUNT];
+uint8_t merged_levels[kSacnDmxAddressCount];
+uint8_t per_address_priorities[kSacnDmxAddressCount];
 bool should_transmit_per_address_priorities = false;
 uint8_t universe_priority_to_transmit = 0;
-sacn_dmx_merger_source_t owners[DMX_ADDRESS_COUNT];
+sacn_dmx_merger_source_t owners[kSacnDmxAddressCount];
 
 // Merger configuration used for the initialization of each merger:
 sacn::DmxMerger::Settings settings(merged_levels);
@@ -154,40 +154,40 @@ at this point, and the source still wins a slot, then the merger will output a l
 
 <!-- CODE_BLOCK_START -->
 ```c
-uint8_t levels[DMX_ADDRESS_COUNT];
-uint8_t pap[DMX_ADDRESS_COUNT];
+uint8_t levels[kSacnDmxAddressCount];
+uint8_t pap[kSacnDmxAddressCount];
 uint8_t universe_priority;
 // Initialize levels, pap, and universe_priority here...
 
 // To update levels:
-sacn_dmx_merger_update_levels(merger_handle, source_1_handle, levels, DMX_ADDRESS_COUNT);
+sacn_dmx_merger_update_levels(merger_handle, source_1_handle, levels, kSacnDmxAddressCount);
 
 // Then call one of these to update priority:
 sacn_dmx_merger_update_universe_priority(merger_handle, source_1_handle, universe_priority);
-sacn_dmx_merger_update_pap(merger_handle, source_1_handle, pap, DMX_ADDRESS_COUNT);
+sacn_dmx_merger_update_pap(merger_handle, source_1_handle, pap, kSacnDmxAddressCount);
 
 // Now the source has been factored into the merge results, which are printed here.
-for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+for(unsigned int i = 0; i < kSacnDmxAddressCount; ++i)
 {
   printf("Slot %u:\n Level: %u\n PAP: %u\n Source ID: %u\n", i, merged_levels[i], per_address_priorities[i], owners[i]);
 }
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
-uint8_t levels[DMX_ADDRESS_COUNT];
-uint8_t pap[DMX_ADDRESS_COUNT];
+uint8_t levels[kSacnDmxAddressCount];
+uint8_t pap[kSacnDmxAddressCount];
 uint8_t universe_priority;
 // Initialize levels, pap, and universe_priority here...
 
 // To update levels:
-merger.UpdateLevels(source_1_handle, levels, DMX_ADDRESS_COUNT);
+merger.UpdateLevels(source_1_handle, levels, kSacnDmxAddressCount);
 
 // Then call one of these to update priority:
 merger.UpdateUniversePriority(source_1_handle, universe_priority);
-merger.UpdatePap(source_1_handle, pap, DMX_ADDRESS_COUNT);
+merger.UpdatePap(source_1_handle, pap, kSacnDmxAddressCount);
 
 // Now the source has been factored into the merge results, which are printed here.
-for(unsigned int i = 0; i < DMX_ADDRESS_COUNT; ++i)
+for(unsigned int i = 0; i < kSacnDmxAddressCount; ++i)
 {
   std::cout << "Slot " << i << ":\n Level: " << merged_levels[i] << ":\n PAP: " << per_address_priorities[i] << "\n Source ID: "
             << owners[i] << "\n";

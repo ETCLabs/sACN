@@ -46,13 +46,13 @@ etcpal_error_t add_sacn_source_detector_expired_source(SourceDetectorSourceExpir
                                                        sacn_remote_source_t                     handle,
                                                        const char*                              name)
 {
-  if (!SACN_ASSERT_VERIFY(source_expired) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) ||
+  if (!SACN_ASSERT_VERIFY(source_expired) || !SACN_ASSERT_VERIFY(handle != kSacnRemoteSourceInvalid) ||
       !SACN_ASSERT_VERIFY(name))
   {
     return kEtcPalErrSys;
   }
 
-  if (!source_expired || (handle == SACN_REMOTE_SOURCE_INVALID) || !name)
+  if (!source_expired || (handle == kSacnRemoteSourceInvalid) || !name)
     return kEtcPalErrInvalid;
 
   const EtcPalUuid* cid = get_remote_source_cid(handle);
@@ -62,9 +62,9 @@ etcpal_error_t add_sacn_source_detector_expired_source(SourceDetectorSourceExpir
 #if SACN_DYNAMIC_MEM
   if (!source_expired->expired_sources)
   {
-    source_expired->expired_sources = calloc(INITIAL_CAPACITY, sizeof(SourceDetectorExpiredSource));
+    source_expired->expired_sources = calloc(kSacnInitialCapacity, sizeof(SourceDetectorExpiredSource));
     if (source_expired->expired_sources)
-      source_expired->expired_sources_capacity = INITIAL_CAPACITY;
+      source_expired->expired_sources_capacity = kSacnInitialCapacity;
     else
       return kEtcPalErrNoMem;
   }
@@ -75,7 +75,7 @@ etcpal_error_t add_sacn_source_detector_expired_source(SourceDetectorSourceExpir
 
   source_expired->expired_sources[source_expired->num_expired_sources].handle = handle;
   source_expired->expired_sources[source_expired->num_expired_sources].cid    = *cid;
-  strncpy(source_expired->expired_sources[source_expired->num_expired_sources].name, name, SACN_SOURCE_NAME_MAX_LEN);
+  strncpy(source_expired->expired_sources[source_expired->num_expired_sources].name, name, kSacnSourceNameMaxLen);
   ++source_expired->num_expired_sources;
 
   return kEtcPalErrOk;

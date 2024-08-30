@@ -75,7 +75,7 @@ static void deinit_sources_lost_entry(SourcesLostNotification* notification);
  */
 SourcesLostNotification* get_sources_lost_buffer(sacn_thread_id_t thread_id, size_t size)
 {
-  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  if (!SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid))
     return NULL;
 
   if (thread_id < sacn_mem_get_num_threads())
@@ -121,7 +121,7 @@ bool add_lost_source(SourcesLostNotification* notification,
                      const char*              name,
                      bool                     terminated)
 {
-  if (!SACN_ASSERT_VERIFY(notification) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) ||
+  if (!SACN_ASSERT_VERIFY(notification) || !SACN_ASSERT_VERIFY(handle != kSacnRemoteSourceInvalid) ||
       !SACN_ASSERT_VERIFY(cid) || !SACN_ASSERT_VERIFY(name))
   {
     return false;
@@ -147,9 +147,9 @@ void zero_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t s
   {
     notification->api_callback      = NULL;
     notification->internal_callback = NULL;
-    notification->handle            = SACN_RECEIVER_INVALID;
+    notification->handle            = kSacnReceiverInvalid;
     notification->num_lost_sources  = 0;
-    notification->thread_id         = SACN_THREAD_ID_INVALID;
+    notification->thread_id         = kSacnThreadIdInvalid;
     notification->context           = NULL;
   }
 }
@@ -184,12 +184,12 @@ etcpal_error_t init_sources_lost_buf(SourcesLostNotificationBuf* sources_lost_bu
   if (!SACN_ASSERT_VERIFY(sources_lost_buf))
     return kEtcPalErrSys;
 
-  sources_lost_buf->buf = calloc(INITIAL_CAPACITY, sizeof(SourcesLostNotification));
+  sources_lost_buf->buf = calloc(kSacnInitialCapacity, sizeof(SourcesLostNotification));
   if (!sources_lost_buf->buf)
     return kEtcPalErrNoMem;
 
-  sources_lost_buf->buf_capacity = INITIAL_CAPACITY;
-  return init_sources_lost_array(sources_lost_buf->buf, INITIAL_CAPACITY);
+  sources_lost_buf->buf_capacity = kSacnInitialCapacity;
+  return init_sources_lost_array(sources_lost_buf->buf, kSacnInitialCapacity);
 }
 
 etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr, size_t size)
@@ -199,7 +199,7 @@ etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr
 
   for (SourcesLostNotification* notification = sources_lost_arr; notification < sources_lost_arr + size; ++notification)
   {
-    notification->lost_sources = calloc(INITIAL_CAPACITY, sizeof(SacnLostSource));
+    notification->lost_sources = calloc(kSacnInitialCapacity, sizeof(SacnLostSource));
     if (!notification->lost_sources)
     {
       for (SourcesLostNotification* notif_to_clean = sources_lost_arr; notif_to_clean < notification; ++notif_to_clean)
@@ -207,7 +207,7 @@ etcpal_error_t init_sources_lost_array(SourcesLostNotification* sources_lost_arr
 
       return kEtcPalErrNoMem;
     }
-    notification->lost_sources_capacity = INITIAL_CAPACITY;
+    notification->lost_sources_capacity = kSacnInitialCapacity;
   }
   return kEtcPalErrOk;
 }

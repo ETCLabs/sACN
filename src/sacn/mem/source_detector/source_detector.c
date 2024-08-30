@@ -59,7 +59,7 @@ etcpal_error_t add_sacn_source_detector(const SacnSourceDetectorConfig* config,
 
   if (res == kEtcPalErrOk)
   {
-    source_detector.thread_id = SACN_THREAD_ID_INVALID;
+    source_detector.thread_id = kSacnThreadIdInvalid;
 
 #if SACN_RECEIVER_SOCKET_PER_NIC
 #if SACN_DYNAMIC_MEM

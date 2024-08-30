@@ -53,7 +53,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource*                     source,
 
 #if SACN_DYNAMIC_MEM
   // Make sure to check against universe_count_max.
-  if ((source->universe_count_max != SACN_SOURCE_INFINITE_UNIVERSES) &&
+  if ((source->universe_count_max != kSacnSourceInfiniteUniverses) &&
       (source->num_universes >= source->universe_count_max))
   {
     result = kEtcPalErrNoMem;  // No room to allocate additional universe.
@@ -93,14 +93,14 @@ etcpal_error_t add_sacn_source_universe(SacnSource*                     source,
     universe->next_seq_num  = 0;
 
     universe->level_packets_sent_before_suppression = 0;
-    init_sacn_data_send_buf(universe->level_send_buf, SACN_STARTCODE_DMX, &source->cid, source->name, config->priority,
+    init_sacn_data_send_buf(universe->level_send_buf, kSacnStartcodeDmx, &source->cid, source->name, config->priority,
                             config->universe, config->sync_universe, config->send_preview);
     universe->has_level_data        = false;
     universe->levels_sent_this_tick = false;
 
 #if SACN_ETC_PRIORITY_EXTENSION
     universe->pap_packets_sent_before_suppression = 0;
-    init_sacn_data_send_buf(universe->pap_send_buf, SACN_STARTCODE_PRIORITY, &source->cid, source->name,
+    init_sacn_data_send_buf(universe->pap_send_buf, kSacnStartcodePriority, &source->cid, source->name,
                             config->priority, config->universe, config->sync_universe, config->send_preview);
     universe->has_pap_data       = false;
     universe->pap_sent_this_tick = false;
@@ -113,8 +113,8 @@ etcpal_error_t add_sacn_source_universe(SacnSource*                     source,
 
     universe->num_unicast_dests = 0;
 #if SACN_DYNAMIC_MEM
-    universe->unicast_dests          = calloc(INITIAL_CAPACITY, sizeof(SacnUnicastDestination));
-    universe->unicast_dests_capacity = universe->unicast_dests ? INITIAL_CAPACITY : 0;
+    universe->unicast_dests          = calloc(kSacnInitialCapacity, sizeof(SacnUnicastDestination));
+    universe->unicast_dests_capacity = universe->unicast_dests ? kSacnInitialCapacity : 0;
 
     if (!universe->unicast_dests)
       result = kEtcPalErrNoMem;
@@ -169,7 +169,7 @@ etcpal_error_t lookup_source_and_universe(sacn_source_t        source,
                                           SacnSource**         source_state,
                                           SacnSourceUniverse** universe_state)
 {
-  if (!SACN_ASSERT_VERIFY(source != SACN_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(source_state) ||
+  if (!SACN_ASSERT_VERIFY(source != kSacnSourceInvalid) || !SACN_ASSERT_VERIFY(source_state) ||
       !SACN_ASSERT_VERIFY(universe_state))
   {
     return kEtcPalErrSys;

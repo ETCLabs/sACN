@@ -59,7 +59,7 @@ void sacn_receiver_config_init(SacnReceiverConfig* config)
     memset(config, 0, sizeof(SacnReceiverConfig));
     config->footprint.start_address = 1;
     config->footprint.address_count = SACN_RECEIVER_MAX_FOOTPRINT;
-    config->source_count_max        = SACN_RECEIVER_INFINITE_SOURCES;
+    config->source_count_max        = kSacnReceiverInfiniteSources;
   }
 }
 
@@ -148,7 +148,7 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 
   if (!sacn_initialized())
     res = kEtcPalErrNotInit;
-  else if (handle == SACN_RECEIVER_INVALID)
+  else if (handle == kSacnReceiverInvalid)
     res = kEtcPalErrInvalid;
 
   if (res == kEtcPalErrOk)
@@ -246,7 +246,7 @@ etcpal_error_t sacn_receiver_get_footprint(sacn_receiver_t handle, SacnRecvUnive
   if (result == kEtcPalErrOk)
   {
     footprint->start_address = 1;
-    footprint->address_count = DMX_ADDRESS_COUNT;
+    footprint->address_count = kSacnDmxAddressCount;
   }
 
   return result;
@@ -582,7 +582,7 @@ void sacn_receiver_set_expired_wait(uint32_t wait_ms)
  */
 uint32_t sacn_receiver_get_expired_wait()
 {
-  uint32_t res = SACN_DEFAULT_EXPIRED_WAIT_MS;
+  uint32_t res = kSacnDefaultExpiredWaitMs;
 
   if (!sacn_initialized())
     return res;
@@ -637,7 +637,7 @@ etcpal_error_t create_sacn_receiver(const SacnReceiverConfig*            config,
 // Needs sACN lock (and receiver_cb lock if called from receiver API)
 etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnReceiverInvalid))
     return kEtcPalErrSys;
 
   SacnReceiver*  receiver = NULL;
@@ -655,7 +655,7 @@ etcpal_error_t destroy_sacn_receiver(sacn_receiver_t handle)
 // Needs lock
 etcpal_error_t change_sacn_receiver_universe(sacn_receiver_t handle, uint16_t new_universe_id)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_RECEIVER_INVALID))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnReceiverInvalid))
     return kEtcPalErrSys;
 
   etcpal_error_t res = kEtcPalErrOk;

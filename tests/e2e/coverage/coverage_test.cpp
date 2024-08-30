@@ -264,13 +264,13 @@ public:
 
       for (const auto& start_code : params.start_codes)
       {
-        ASSERT_TRUE((start_code.code == SACN_STARTCODE_DMX) || (start_code.code == SACN_STARTCODE_PRIORITY));
+        ASSERT_TRUE((start_code.code == kSacnStartcodeDmx) || (start_code.code == kSacnStartcodePriority));
         switch (start_code.code)
         {
-          case SACN_STARTCODE_DMX:
+          case kSacnStartcodeDmx:
             state.null_start_code = StartCodeState(start_code);
             break;
-          case SACN_STARTCODE_PRIORITY:
+          case kSacnStartcodePriority:
             state.pap_start_code = StartCodeState(start_code);
             break;
         }
@@ -307,9 +307,9 @@ private:
     StartCodeState() = default;
     StartCodeState(const StartCodeParams& p) : params(p) { buffer.fill(static_cast<uint8_t>(p.value)); }
 
-    StartCodeParams                        params;
-    std::array<uint8_t, DMX_ADDRESS_COUNT> buffer{};
-    bool                                   uninitialized{true};
+    StartCodeParams                           params;
+    std::array<uint8_t, kSacnDmxAddressCount> buffer{};
+    bool                                      uninitialized{true};
   };
 
   struct UniverseState
@@ -419,7 +419,7 @@ TEST_F(CoverageTest, SendAndReceiveSimpleUniverse)
   merge_receiver.StartAllUniverses();
 
   TestSource source;
-  source.AddUniverse({.start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
+  source.AddUniverse({.start_codes = {{.code = kSacnStartcodeDmx, .value = 0xFF}}});
 
   etcpal::Thread::Sleep(2000u);  // Cover sampling period
 }
@@ -449,8 +449,8 @@ TEST_F(CoverageTest, SendReceiveAndMergeAtScale)
     for (UniverseId universe_id : kTestUniverses)
     {
       source.AddUniverse({.universe    = universe_id,
-                          .start_codes = {{.code = SACN_STARTCODE_DMX, .min = 0x00, .max = 0xFF},
-                                          {.code = SACN_STARTCODE_PRIORITY, .min = 0x00, .max = 0xFF}}});
+                          .start_codes = {{.code = kSacnStartcodeDmx, .min = 0x00, .max = 0xFF},
+                                          {.code = kSacnStartcodePriority, .min = 0x00, .max = 0xFF}}});
     }
 
     sources.push_back(std::move(source));
@@ -476,7 +476,7 @@ TEST_F(CoverageTest, SwitchThroughUniverses)
 
   TestSource source;
   for (UniverseId universe_id : kTestUniverses)
-    source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
+    source.AddUniverse({.universe = universe_id, .start_codes = {{.code = kSacnStartcodeDmx, .value = 0xFF}}});
 
   for (int i = 0, j = 1; j < kNumTestUniverses; ++i, ++j)
   {
@@ -502,7 +502,7 @@ TEST_F(CoverageTest, DetectSourcesComingAndGoing)
   {
     TestSource source;
     for (UniverseId universe_id : kTestUniverses)
-      source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
+      source.AddUniverse({.universe = universe_id, .start_codes = {{.code = kSacnStartcodeDmx, .value = 0xFF}}});
 
     sources.push_back(std::move(source));
   }
@@ -512,7 +512,7 @@ TEST_F(CoverageTest, DetectSourcesComingAndGoing)
   for (int i = 0; i < kNumTestSources; ++i)
     sources.pop_back();
 
-  etcpal::Thread::Sleep(21000u);  // Cover universe discovery expiration
+  etcpal::Thread::Sleep(30000u);  // Cover universe discovery expiration
 }
 
 TEST_F(CoverageTest, ResetNetworkingAtScale)
@@ -541,7 +541,7 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
   {
     TestSource source(sacn::McastMode::kDisabledOnAllInterfaces);
     for (uint16_t universe_id = 1u; universe_id <= kNumUniverses; ++universe_id)
-      source.AddUniverse({.universe = universe_id, .start_codes = {{.code = SACN_STARTCODE_DMX, .value = 0xFF}}});
+      source.AddUniverse({.universe = universe_id, .start_codes = {{.code = kSacnStartcodeDmx, .value = 0xFF}}});
 
     sources.push_back(std::move(source));
   }

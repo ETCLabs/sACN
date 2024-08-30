@@ -137,13 +137,16 @@
 extern "C" {
 #endif
 
-/**
- * @brief Constant for "infinite" when listening for sources or universes on a source.
- *
- * When using dynamic memory, this constant can be passed in when creating a source detector.
- * It represents an infinite number of sources or universes on a source.
- */
-#define SACN_SOURCE_DETECTOR_INFINITE 0
+enum
+{
+  /**
+   * @brief Constant for "infinite" when listening for sources or universes on a source.
+   *
+   * When using dynamic memory, this constant can be passed in when creating a source detector.
+   * It represents an infinite number of sources or universes on a source.
+   */
+  kSacnSourceDetectorInfinite = 0
+};
 
 /**
  * @brief Notify that a source is new or has changed.
@@ -188,7 +191,7 @@ typedef void (*SacnSourceDetectorSourceExpiredCallback)(sacn_remote_source_t han
  *
  * If #SACN_DYNAMIC_MEM was defined to 1 when sACN was compiled (the default on non-embedded
  * platforms), and the configuration you pass to sacn_source_detector_create() has source_count_max and
- * universes_per_source_max set to #SACN_SOURCE_DETECTOR_INFINITE, this callback will never be called (except for the
+ * universes_per_source_max set to #kSacnSourceDetectorInfinite, this callback will never be called (except for the
  * rare case where a heap allocation function fails) and may be set to NULL.
  *
  * If #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max and universes_per_source_max are
@@ -219,12 +222,12 @@ typedef struct SacnSourceDetectorConfig
   /********* Optional values **********/
 
   /** The maximum number of sources the detector will record.  It is recommended that applications using dynamic
-     memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when configured to use
+     memory use #kSacnSourceDetectorInfinite for this value. This parameter is ignored when configured to use
      static memory -- #SACN_SOURCE_DETECTOR_MAX_SOURCES is used instead.*/
   int source_count_max;
 
   /** The maximum number of universes the detector will record for a source.  It is recommended that applications using
-     dynamic memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when configured to
+     dynamic memory use #kSacnSourceDetectorInfinite for this value. This parameter is ignored when configured to
      use static memory -- #SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE is used instead.*/
   int universes_per_source_max;
 
@@ -233,9 +236,9 @@ typedef struct SacnSourceDetectorConfig
 } SacnSourceDetectorConfig;
 
 /** A default-value initializer for an SacnSourceDetectorConfig struct. */
-#define SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT                                                             \
-  {                                                                                                          \
-    {NULL, NULL, NULL, NULL}, SACN_SOURCE_DETECTOR_INFINITE, SACN_SOURCE_DETECTOR_INFINITE, kSacnIpV4AndIpV6 \
+#define SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT                                                         \
+  {                                                                                                      \
+    {NULL, NULL, NULL, NULL}, kSacnSourceDetectorInfinite, kSacnSourceDetectorInfinite, kSacnIpV4AndIpV6 \
   }
 
 void sacn_source_detector_config_init(SacnSourceDetectorConfig* config);

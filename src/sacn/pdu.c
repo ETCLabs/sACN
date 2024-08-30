@@ -28,9 +28,12 @@
 #pragma warning(disable : 4996)
 #endif
 
-#define SACN_DATA_PACKET_MIN_SIZE              88
-#define SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE 8
-#define SACN_DMPVECT_SET_PROPERTY              0x02
+enum
+{
+  kSacnDataPacketMinSize             = 88,
+  kSacnUniverseDiscoveryLayerMinSize = 8,
+  kSacnDmpvectSetProperty            = 0x02
+};
 
 bool parse_sacn_data_packet(const uint8_t*        buf,
                             size_t                buflen,
@@ -46,7 +49,7 @@ bool parse_sacn_data_packet(const uint8_t*        buf,
   }
 
   // Check the buffer size
-  if (buflen < SACN_DATA_PACKET_MIN_SIZE)
+  if (buflen < kSacnDataPacketMinSize)
     return false;
 
   // Check the framing layer vector
@@ -54,7 +57,7 @@ bool parse_sacn_data_packet(const uint8_t*        buf,
     return false;
 
   // Check the DMP vector and fixed values
-  if (buf[79] != SACN_DMPVECT_SET_PROPERTY || buf[80] != 0xa1u || etcpal_unpack_u16b(&buf[81]) != 0x0000u ||
+  if (buf[79] != kSacnDmpvectSetProperty || buf[80] != 0xa1u || etcpal_unpack_u16b(&buf[81]) != 0x0000u ||
       etcpal_unpack_u16b(&buf[83]) != 0x0001u)
   {
     return false;
@@ -68,10 +71,10 @@ bool parse_sacn_data_packet(const uint8_t*        buf,
   if (universe_data->values + universe_data->slot_range.address_count > buf + buflen)
     return false;
 
-  strncpy(source_info->name, (char*)&buf[6], SACN_SOURCE_NAME_MAX_LEN);
+  strncpy(source_info->name, (char*)&buf[6], kSacnSourceNameMaxLen);
   // Just in case the string is not null terminated even though it is required to be
-  source_info->name[SACN_SOURCE_NAME_MAX_LEN - 1] = '\0';
-  universe_data->priority                         = buf[70];
+  source_info->name[kSacnSourceNameMaxLen - 1] = '\0';
+  universe_data->priority                      = buf[70];
   // TODO universe_data->sync_address = etcpal_unpack_u16b(&buf[71]);
   *seq                       = buf[73];
   universe_data->preview     = (bool)(buf[74] & SACN_OPTVAL_PREVIEW);
@@ -108,12 +111,12 @@ bool parse_sacn_universe_discovery_layer(const uint8_t*  buf,
   }
 
   // Check the buffer size
-  if (buflen < SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE)
+  if (buflen < kSacnUniverseDiscoveryLayerMinSize)
     return false;
 
   // Check PDU length
   int pdu_length = ACN_PDU_LENGTH(buf);
-  if (pdu_length < SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE)
+  if (pdu_length < kSacnUniverseDiscoveryLayerMinSize)
     return false;
 
   // Check the vector
@@ -122,7 +125,7 @@ bool parse_sacn_universe_discovery_layer(const uint8_t*  buf,
 
   *page          = buf[6];
   *last_page     = buf[7];
-  *universes     = (buflen > SACN_UNIVERSE_DISCOVERY_LAYER_MIN_SIZE) ? &buf[8] : NULL;
+  *universes     = (buflen > kSacnUniverseDiscoveryLayerMinSize) ? &buf[8] : NULL;
   *num_universes = (pdu_length - 8) / 2;
 
   return true;
@@ -197,9 +200,9 @@ int pack_sacn_data_framing_layer(uint8_t*    buf,
   // Framing layer
   etcpal_pack_u32b(pcur, vector);
   pcur += 4;
-  strncpy((char*)pcur, source_name, SACN_SOURCE_NAME_MAX_LEN);
-  pcur[SACN_SOURCE_NAME_MAX_LEN - 1] = '\0';
-  pcur += SACN_SOURCE_NAME_MAX_LEN;
+  strncpy((char*)pcur, source_name, kSacnSourceNameMaxLen);
+  pcur[kSacnSourceNameMaxLen - 1] = '\0';
+  pcur += kSacnSourceNameMaxLen;
   *pcur = priority;
   ++pcur;
   etcpal_pack_u16b(pcur, 0 /* TODO sync_address */);
@@ -236,7 +239,7 @@ int pack_sacn_dmp_layer_header(uint8_t* buf, uint8_t start_code, uint16_t slot_c
   pcur += 2;
 
   // DMP layer
-  *pcur = SACN_DMPVECT_SET_PROPERTY;
+  *pcur = kSacnDmpvectSetProperty;
   ++pcur;
   *pcur = 0xa1u;
   ++pcur;
@@ -298,9 +301,9 @@ int pack_sacn_universe_discovery_framing_layer(uint8_t* buf, uint16_t universe_c
   // Framing layer
   etcpal_pack_u32b(pcur, VECTOR_E131_EXTENDED_DISCOVERY);
   pcur += 4;
-  strncpy((char*)pcur, source_name, SACN_SOURCE_NAME_MAX_LEN);
-  pcur[SACN_SOURCE_NAME_MAX_LEN - 1] = '\0';
-  pcur += SACN_SOURCE_NAME_MAX_LEN;
+  strncpy((char*)pcur, source_name, kSacnSourceNameMaxLen);
+  pcur[kSacnSourceNameMaxLen - 1] = '\0';
+  pcur += kSacnSourceNameMaxLen;
   etcpal_pack_u32b(pcur, 0u);  // Reserved
   pcur += 4;
 
@@ -352,6 +355,7 @@ void init_sacn_data_send_buf(uint8_t*          send_buf,
   written += pack_sacn_root_layer(send_buf, SACN_DATA_HEADER_SIZE, false, source_cid);
   written += pack_sacn_data_framing_layer(&send_buf[written], 0, VECTOR_E131_DATA_PACKET, source_name, priority,
                                           sync_universe, 0, send_preview, false, false, universe);
+  // NOLINTNEXTLINE(clang-analyzer-deadcode.DeadStores)
   written += pack_sacn_dmp_layer_header(&send_buf[written], start_code, 0);
 }
 

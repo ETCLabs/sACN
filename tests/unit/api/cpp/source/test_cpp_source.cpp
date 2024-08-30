@@ -113,11 +113,11 @@ TEST_F(TestSource, SettingsConstructorWorks)
   sacn::Source::Settings settings(kTestLocalCid, kTestLocalName);
   EXPECT_EQ(ETCPAL_UUID_CMP(&settings.cid.get(), &kTestLocalCid.get()), 0);
   EXPECT_EQ(settings.name, kTestLocalName);
-  EXPECT_EQ(settings.universe_count_max, static_cast<size_t>(SACN_SOURCE_INFINITE_UNIVERSES));
+  EXPECT_EQ(settings.universe_count_max, static_cast<size_t>(kSacnSourceInfiniteUniverses));
   EXPECT_EQ(settings.manually_process_source, false);
   EXPECT_EQ(settings.ip_supported, kSacnIpV4AndIpV6);
-  EXPECT_EQ(settings.keep_alive_interval, SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
-  EXPECT_EQ(settings.pap_keep_alive_interval, SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT);
+  EXPECT_EQ(settings.keep_alive_interval, kSacnSourceKeepAliveIntervalDefault);
+  EXPECT_EQ(settings.pap_keep_alive_interval, kSacnSourcePapKeepAliveIntervalDefault);
 }
 
 TEST_F(TestSource, SettingsIsValidWorks)
@@ -168,11 +168,11 @@ TEST_F(TestSource, StartupWorks)
   sacn_source_create_fake.custom_fake = [](const SacnSourceConfig* config, sacn_source_t* handle) {
     EXPECT_EQ(ETCPAL_UUID_CMP(&config->cid, &kTestLocalCid.get()), 0);
     EXPECT_EQ(strcmp(config->name, kTestLocalName.c_str()), 0);
-    EXPECT_EQ(config->universe_count_max, static_cast<size_t>(SACN_SOURCE_INFINITE_UNIVERSES));
+    EXPECT_EQ(config->universe_count_max, static_cast<size_t>(kSacnSourceInfiniteUniverses));
     EXPECT_EQ(config->manually_process_source, false);
     EXPECT_EQ(config->ip_supported, kSacnIpV4AndIpV6);
-    EXPECT_EQ(config->keep_alive_interval, SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT);
-    EXPECT_EQ(config->pap_keep_alive_interval, SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT);
+    EXPECT_EQ(config->keep_alive_interval, kSacnSourceKeepAliveIntervalDefault);
+    EXPECT_EQ(config->pap_keep_alive_interval, kSacnSourcePapKeepAliveIntervalDefault);
     EXPECT_NE(handle, nullptr);
     *handle = kTestHandle;
     return kEtcPalErrOk;
@@ -196,7 +196,7 @@ TEST_F(TestSource, ShutdownWorks)
   EXPECT_EQ(source.handle().value(), kTestHandle);
   source.Shutdown();
   EXPECT_EQ(sacn_source_destroy_fake.call_count, 1u);
-  EXPECT_EQ(source.handle().value(), SACN_SOURCE_INVALID);
+  EXPECT_EQ(source.handle().value(), kSacnSourceInvalid);
 }
 
 TEST_F(TestSource, ChangeNameWorks)

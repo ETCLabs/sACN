@@ -67,7 +67,7 @@ class DmxMerger
 {
 public:
   /** A handle type used by the sACN library to identify merger instances. */
-  using Handle = etcpal::OpaqueId<detail::DmxMergerHandleType, sacn_dmx_merger_t, SACN_DMX_MERGER_INVALID>;
+  using Handle = etcpal::OpaqueId<detail::DmxMergerHandleType, sacn_dmx_merger_t, kSacnDmxMergerInvalid>;
 
   /**
    * @ingroup sacn_dmx_merger_cpp
@@ -104,14 +104,14 @@ public:
 
     /** This is only allowed to be NULL if and only if #SACN_DMX_MERGER_DISABLE_INTERNAL_OWNER_BUFFER is 0.
         Buffer of #SACN_DMX_MERGER_MAX_SLOTS source IDs that indicate the current winner of the merge for that slot, or
-        #SACN_DMX_MERGER_SOURCE_INVALID to indicate that there is no winner for that slot. This is used if
+        #kSacnDmxMergerSourceInvalid to indicate that there is no winner for that slot. This is used if
         you need to know the source of each slot. If you only need to know whether or not a slot is sourced, set this to
         NULL and use per_address_priorities (which has half the memory footprint) to check if the slot has a priority of
         0 (not sourced).
         Memory is owned by the application and must remain allocated until the merger is destroyed.*/
     sacn_dmx_merger_source_t* owners{nullptr};
 
-    int source_count_max{SACN_RECEIVER_INFINITE_SOURCES}; /**< The maximum number of sources this universe will
+    int source_count_max{kSacnReceiverInfiniteSources}; /**< The maximum number of sources this universe will
                                                                 listen to when using dynamic memory. */
 
     /** Create an empty, invalid data structure by default. */
@@ -188,7 +188,7 @@ inline etcpal::Error DmxMerger::Startup(const Settings& settings)
 {
   SacnDmxMergerConfig config = TranslateConfig(settings);
 
-  sacn_dmx_merger_t c_handle = SACN_DMX_MERGER_INVALID;
+  sacn_dmx_merger_t c_handle = kSacnDmxMergerInvalid;
   etcpal::Error     result   = sacn_dmx_merger_create(&config, &c_handle);
 
   handle_.SetValue(c_handle);
@@ -229,7 +229,7 @@ inline void DmxMerger::Shutdown()
  */
 inline etcpal::Expected<sacn_dmx_merger_source_t> DmxMerger::AddSource()
 {
-  sacn_dmx_merger_source_t result = SACN_DMX_MERGER_SOURCE_INVALID;
+  sacn_dmx_merger_source_t result = kSacnDmxMergerSourceInvalid;
   etcpal_error_t           err    = sacn_dmx_merger_add_source(handle_.value(), &result);
   if (err == kEtcPalErrOk)
     return result;

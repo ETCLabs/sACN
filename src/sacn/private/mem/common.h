@@ -30,6 +30,7 @@ extern "C" {
 #endif
 
 #if SACN_DYNAMIC_MEM
+// NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
 #define CLEAR_BUF(ptr, buf_name)  \
   do                              \
   {                               \
@@ -81,7 +82,10 @@ extern "C" {
   CHECK_CAPACITY(container, container->num_##buffer + 1, buffer, buffer_type, max_static, failure_return_value)
 #endif  // SACN_DYNAMIC_MEM
 
-#define INITIAL_CAPACITY 8
+enum
+{
+  kSacnInitialCapacity = 8
+};
 
 #define REMOVE_AT_INDEX(container, buffer_type, buffer, index)          \
   do                                                                    \

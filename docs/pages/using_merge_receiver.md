@@ -238,7 +238,7 @@ void my_universe_data_callback(sacn_merge_receiver_t handle, const SacnRecvMerge
   for (int i = 0; i < merged_data->slot_range.address_count; ++i)  // For each slot in my DMX footprint
   {
     // merged_data->owners[0] always represents the owner of the first slot in the footprint
-    if (merged_data->owners[i] == SACN_REMOTE_SOURCE_INVALID)
+    if (merged_data->owners[i] == kSacnRemoteSourceInvalid)
     {
       // One of the slots in my DMX footprint does not have a valid source
       return;
@@ -405,7 +405,7 @@ delivered until the number of tracked sources falls below the limit and then exc
 If sACN was compiled with #SACN_DYNAMIC_MEM set to 1 (the default on non-embedded platforms), the
 library will check against the `source_count_max` value from the merge receiver config/settings,
 instead of #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE. The `source_count_max` value may be set to
-#SACN_RECEIVER_INFINITE_SOURCES, in which case the library will track as many sources as it is
+#kSacnReceiverInfiniteSources, in which case the library will track as many sources as it is
 able to dynamically allocate memory for, and this callback will not be called in normal program
 operation (in this case it can be set to NULL in the config struct in C).
 

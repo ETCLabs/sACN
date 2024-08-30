@@ -120,7 +120,7 @@ etcpal_error_t lookup_merge_receiver_source(SacnMergeReceiver*                me
                                             sacn_remote_source_t              source_handle,
                                             SacnMergeReceiverInternalSource** source)
 {
-  if (!SACN_ASSERT_VERIFY(merge_receiver) || !SACN_ASSERT_VERIFY(source_handle != SACN_REMOTE_SOURCE_INVALID) ||
+  if (!SACN_ASSERT_VERIFY(merge_receiver) || !SACN_ASSERT_VERIFY(source_handle != kSacnRemoteSourceInvalid) ||
       !SACN_ASSERT_VERIFY(source))
   {
     return kEtcPalErrSys;
@@ -133,7 +133,7 @@ etcpal_error_t lookup_merge_receiver_source(SacnMergeReceiver*                me
 // Needs lock
 void remove_sacn_merge_receiver_source(SacnMergeReceiver* merge_receiver, sacn_remote_source_t source_handle)
 {
-  if (!SACN_ASSERT_VERIFY(merge_receiver) || !SACN_ASSERT_VERIFY(source_handle != SACN_REMOTE_SOURCE_INVALID))
+  if (!SACN_ASSERT_VERIFY(merge_receiver) || !SACN_ASSERT_VERIFY(source_handle != kSacnRemoteSourceInvalid))
     return;
 
   SacnMergeReceiverInternalSource* source = etcpal_rbtree_find(&merge_receiver->sources, &source_handle);
@@ -163,12 +163,12 @@ void update_merge_receiver_source_info(SacnMergeReceiverInternalSource* info,
     return;
   }
 
-  memcpy(info->name, remote_source->name, SACN_SOURCE_NAME_MAX_LEN);
+  memcpy(info->name, remote_source->name, kSacnSourceNameMaxLen);
   info->addr = *addr;
 
-  if (universe_data->start_code == SACN_STARTCODE_PRIORITY)
+  if (universe_data->start_code == kSacnStartcodePriority)
     info->per_address_priorities_active = true;  // Only sets to true if PAP is present - PAP lost handler sets to false
-  else if (universe_data->start_code == SACN_STARTCODE_DMX)
+  else if (universe_data->start_code == kSacnStartcodeDmx)
     info->levels_active = true;
 
   info->universe_priority = universe_data->priority;

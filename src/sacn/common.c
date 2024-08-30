@@ -297,17 +297,17 @@ void sacn_deinit(void)
 #if SACN_RECEIVER_ENABLED || DOXYGEN
 
 /**
- * @brief Converts a remote source CID to the corresponding handle, or #SACN_REMOTE_SOURCE_INVALID if not found.
+ * @brief Converts a remote source CID to the corresponding handle, or #kSacnRemoteSourceInvalid if not found.
  *
  * This is a simple conversion from a remote source CID to it's corresponding remote source handle. A handle will be
  * returned only if it is a source that has been discovered by a receiver, merge receiver, or source detector.
  *
  * @param[in] source_cid The UUID of the remote source CID.
- * @return The remote source handle, or #SACN_REMOTE_SOURCE_INVALID if not found.
+ * @return The remote source handle, or #kSacnRemoteSourceInvalid if not found.
  */
 sacn_remote_source_t sacn_get_remote_source_handle(const EtcPalUuid* source_cid)
 {
-  sacn_remote_source_t result = SACN_REMOTE_SOURCE_INVALID;
+  sacn_remote_source_t result = kSacnRemoteSourceInvalid;
 
   if (sacn_receiver_lock())
   {
@@ -334,7 +334,7 @@ etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, Et
 {
   etcpal_error_t result = kEtcPalErrOk;
 
-  if ((source_handle == SACN_REMOTE_SOURCE_INVALID) || !source_cid)
+  if ((source_handle == kSacnRemoteSourceInvalid) || !source_cid)
   {
     result = kEtcPalErrInvalid;
   }

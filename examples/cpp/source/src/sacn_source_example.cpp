@@ -67,7 +67,7 @@ extern void install_keyboard_interrupt_handler(void (*handler)());
 void UniverseInfo::SetEffectStateConstant(const uint8_t level)
 {
   effect_ = Effect::kConstant;
-  for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
+  for (int i = 0; i < kSacnDmxAddressCount; i++)
   {
     levels_[i] = level;
   }
@@ -76,7 +76,7 @@ void UniverseInfo::SetEffectStateConstant(const uint8_t level)
 void UniverseInfo::SetEffectStateRamping()
 {
   effect_ = Effect::kRamp;
-  for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
+  for (int i = 0; i < kSacnDmxAddressCount; i++)
   {
     levels_[i] = LEVEL_MIN;
   }
@@ -91,7 +91,7 @@ void UniverseInfo::SetPriorityStateUniverse(const uint8_t universe_priority)
 void UniverseInfo::SetPriorityStatePerAddress(const uint8_t per_address_priority)
 {
   priority_type_ = Priority::kPerAddress;
-  for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
+  for (int i = 0; i < kSacnDmxAddressCount; i++)
   {
     per_address_priorities_[i] = per_address_priority;
   }
@@ -109,7 +109,7 @@ void UniverseInfo::IncrementLevels()
   {
     new_level = 0;
   }
-  for (int i = 0; i < DMX_ADDRESS_COUNT; i++)
+  for (int i = 0; i < kSacnDmxAddressCount; i++)
   {
     levels_[i] = new_level;
   }
@@ -164,7 +164,7 @@ etcpal::Error SACNSourceExample::InitSACNLibrary()
   EtcPalLogParams log_params;
   log_params.action                       = ETCPAL_LOG_CREATE_HUMAN_READABLE;
   log_params.log_fn                       = sacn_log_function;
-  log_params.time_fn                      = NULL;
+  log_params.time_fn                      = nullptr;
   log_params.log_mask                     = ETCPAL_LOG_UPTO(ETCPAL_LOG_DEBUG);
   std::vector<SacnMcastInterface> netints = network_select_.GetMcastInterfaces();
 
@@ -214,7 +214,7 @@ void SACNSourceExample::DoRamping()
     if (universe_info->IsRamping())
     {
       universe_info->IncrementLevels();
-      sacn_source_.UpdateLevels(universe, universe_info->levels_, DMX_ADDRESS_COUNT);
+      sacn_source_.UpdateLevels(universe, universe_info->levels_, kSacnDmxAddressCount);
     }
   }
 }  // DoRamping
@@ -224,7 +224,7 @@ void RampFunction(void* arg)
   SACNSourceExample* me = (SACNSourceExample*)arg;
   if (!me)
   {
-    std::cout << "Error: RampFunction() argument is NULL.\n";
+    std::cout << "Error: RampFunction() argument is nullptr.\n";
     return;
   }
   while (me->GetContinueRamping())
@@ -350,7 +350,7 @@ bool SACNSourceExample::AddNewUniverseToSACNSource(const uint16_t               
         {
           std::cout << "success\n";
           std::cout << "Setting levels... ";
-          sacn_source_.UpdateLevels(new_universe, new_universe_info->levels_, DMX_ADDRESS_COUNT);
+          sacn_source_.UpdateLevels(new_universe, new_universe_info->levels_, kSacnDmxAddressCount);
           std::cout << "success\n";
         }
         else
@@ -361,8 +361,8 @@ bool SACNSourceExample::AddNewUniverseToSACNSource(const uint16_t               
       else
       {
         std::cout << "Setting levels and per address priorities... ";
-        sacn_source_.UpdateLevelsAndPap(new_universe, new_universe_info->levels_, DMX_ADDRESS_COUNT,
-                                        new_universe_info->per_address_priorities_, DMX_ADDRESS_COUNT);
+        sacn_source_.UpdateLevelsAndPap(new_universe, new_universe_info->levels_, kSacnDmxAddressCount,
+                                        new_universe_info->per_address_priorities_, kSacnDmxAddressCount);
         std::cout << "success\n";
       }
       return true;

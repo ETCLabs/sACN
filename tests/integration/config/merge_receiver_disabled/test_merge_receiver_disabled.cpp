@@ -69,9 +69,9 @@ TEST_F(TestMergeReceiverDisabled, MergeReceiverIsEnabledInDynamicMode)
 {
   // Run the API functions to confirm everything links.
   sacn_merge_receiver_create(nullptr, nullptr, nullptr);
-  sacn_merge_receiver_destroy(SACN_MERGE_RECEIVER_INVALID);
-  sacn_merge_receiver_get_universe(SACN_MERGE_RECEIVER_INVALID, nullptr);
-  sacn_merge_receiver_change_universe(SACN_MERGE_RECEIVER_INVALID, 0);
+  sacn_merge_receiver_destroy(kSacnMergeReceiverInvalid);
+  sacn_merge_receiver_get_universe(kSacnMergeReceiverInvalid, nullptr);
+  sacn_merge_receiver_change_universe(kSacnMergeReceiverInvalid, 0);
   sacn_merge_receiver_reset_networking(nullptr);
   sacn_merge_receiver_reset_networking_per_receiver(nullptr, nullptr, 0);
 }

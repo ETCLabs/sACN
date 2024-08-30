@@ -58,7 +58,7 @@ enum class McastMode
 /** A source discovered on an sACN network that has a CID - used by Receiver and Merge Receiver. */
 using RemoteSourceHandle = sacn_remote_source_t;
 /** An invalid RemoteSourceHandle value. */
-constexpr RemoteSourceHandle kInvalidRemoteSourceHandle = SACN_REMOTE_SOURCE_INVALID;
+constexpr RemoteSourceHandle kInvalidRemoteSourceHandle = kSacnRemoteSourceInvalid;
 
 /** The lowest sACN universe number supported. */
 constexpr uint16_t kMinimumUniverse = kSacnMinimumUniverse;
@@ -200,13 +200,13 @@ inline void Deinit()
 
 /**
  * @ingroup sacn_cpp_common
- * @brief Converts a remote source CID to the corresponding handle, or #SACN_REMOTE_SOURCE_INVALID if not found.
+ * @brief Converts a remote source CID to the corresponding handle, or #kSacnRemoteSourceInvalid if not found.
  *
  * This is a simple conversion from a remote source CID to it's corresponding remote source handle. A handle will be
  * returned only if it is a source that has been discovered by a receiver, merge receiver, or source detector.
  *
  * @param[in] source_cid The UUID of the remote source CID.
- * @return The remote source handle, or #SACN_REMOTE_SOURCE_INVALID if not found.
+ * @return The remote source handle, or #kSacnRemoteSourceInvalid if not found.
  */
 inline RemoteSourceHandle GetRemoteSourceHandle(const etcpal::Uuid& source_cid)
 {

@@ -441,7 +441,7 @@ etcpal_error_t insert_new_ts_src(TerminationSetSource* ts_src_new, TerminationSe
 
 TerminationSetSource* find_existing_ts_src(uint16_t universe, sacn_remote_source_t handle)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnRemoteSourceInvalid))
     return NULL;
 
   TerminationSetSourceKey ts_src_key;

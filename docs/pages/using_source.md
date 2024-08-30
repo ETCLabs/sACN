@@ -22,7 +22,7 @@ Shutdown function.
 <!-- CODE_BLOCK_START -->
 ```c
 EtcPalUuid my_cid;
-char my_name[SACN_SOURCE_NAME_MAX_LEN];
+char my_name[kSacnSourceNameMaxLen];
 // Assuming my_cid and my_name are initialized by the application...
 
 SacnSourceConfig my_config = SACN_SOURCE_CONFIG_DEFAULT_INIT;
@@ -142,26 +142,26 @@ library is compiled with #SACN_ETC_PRIORITY_EXTENSION set to 0.
 <!-- CODE_BLOCK_START -->
 ```c
 // Initialize my_levels_buffer and (possibly) my_priorities_buffer with the data you want to send...
-uint8_t my_levels_buffer[DMX_ADDRESS_COUNT];
-uint8_t my_priorities_buffer[DMX_ADDRESS_COUNT];
+uint8_t my_levels_buffer[kSacnDmxAddressCount];
+uint8_t my_priorities_buffer[kSacnDmxAddressCount];
 
 // Now copy in the new data to send. Then the source thread will handle transmitting the 
 // data (unless you set manually_process_source to true in the SacnSourceConfig).
-sacn_source_update_levels(my_handle, my_universe, my_levels_buffer, DMX_ADDRESS_COUNT);
+sacn_source_update_levels(my_handle, my_universe, my_levels_buffer, kSacnDmxAddressCount);
 // Or if you're using per-address priorities:
-sacn_source_update_levels_and_pap(my_handle, my_universe, my_levels_buffer, DMX_ADDRESS_COUNT, my_priorities_buffer, DMX_ADDRESS_COUNT);
+sacn_source_update_levels_and_pap(my_handle, my_universe, my_levels_buffer, kSacnDmxAddressCount, my_priorities_buffer, kSacnDmxAddressCount);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
 // Initialize my_levels_buffer and (possibly) my_priorities_buffer with the data you want to send...
-uint8_t my_levels_buffer[DMX_ADDRESS_COUNT];
-uint8_t my_priorities_buffer[DMX_ADDRESS_COUNT];
+uint8_t my_levels_buffer[kSacnDmxAddressCount];
+uint8_t my_priorities_buffer[kSacnDmxAddressCount];
 
 // Now copy in the new data to send. Then the source thread will handle transmitting the 
 // data (unless you set manually_process_source to true in the Source::Settings).
-my_source.UpdateLevels(my_universe, my_levels_buffer, DMX_ADDRESS_COUNT);
+my_source.UpdateLevels(my_universe, my_levels_buffer, kSacnDmxAddressCount);
 // Or if you're using per-address priorities:
-my_source.UpdateLevelsAndPap(my_universe, my_levels_buffer, DMX_ADDRESS_COUNT, my_priorities_buffer, DMX_ADDRESS_COUNT);
+my_source.UpdateLevelsAndPap(my_universe, my_levels_buffer, kSacnDmxAddressCount, my_priorities_buffer, kSacnDmxAddressCount);
 ```
 <!-- CODE_BLOCK_END -->
 
@@ -231,18 +231,18 @@ transmit that data synchronously.
 <!-- CODE_BLOCK_START -->
 ```c
 uint8_t my_custom_start_code;
-uint8_t my_custom_start_code_data[DMX_ADDRESS_COUNT];
+uint8_t my_custom_start_code_data[kSacnDmxAddressCount];
 // Initialize start code and data...
 
-sacn_source_send_now(my_handle, my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);
+sacn_source_send_now(my_handle, my_universe, my_custom_start_code, my_custom_start_code_data, kSacnDmxAddressCount);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
 uint8_t my_custom_start_code;
-uint8_t my_custom_start_code_data[DMX_ADDRESS_COUNT];
+uint8_t my_custom_start_code_data[kSacnDmxAddressCount];
 // Initialize start code and data...
 
-my_source.SendNow(my_universe, my_custom_start_code, my_custom_start_code_data, DMX_ADDRESS_COUNT);
+my_source.SendNow(my_universe, my_custom_start_code, my_custom_start_code_data, kSacnDmxAddressCount);
 ```
 <!-- CODE_BLOCK_END -->
 

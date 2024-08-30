@@ -85,8 +85,8 @@ enum
   ((((SACN_RECEIVER_MAX_UNIVERSES - 1) / SACN_RECEIVER_MAX_SUBS_PER_SOCKET) + 1) * 2)
 #endif
 
-typedef unsigned int sacn_thread_id_t;
-#define SACN_THREAD_ID_INVALID UINT_MAX
+typedef unsigned int          sacn_thread_id_t;
+static const sacn_thread_id_t kSacnThreadIdInvalid = UINT_MAX;
 
 #define UNIVERSE_ID_VALID(universe_id) ((universe_id >= kSacnMinimumUniverse) && (universe_id <= kSacnMaximumUniverse))
 
@@ -291,12 +291,12 @@ typedef struct SacnSourceDetector
   SacnSourceDetectorCallbacks callbacks;
 
   /* The maximum number of sources the detector will record.  It is recommended that applications using dynamic
-   * memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when configured to use
+   * memory use #kSacnSourceDetectorInfinite for this value. This parameter is ignored when configured to use
    * static memory -- #SACN_SOURCE_DETECTOR_MAX_SOURCES is used instead.*/
   int source_count_max;
 
   /* The maximum number of universes the detector will record for a source.  It is recommended that applications using
-   * dynamic memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when configured to
+   * dynamic memory use #kSacnSourceDetectorInfinite for this value. This parameter is ignored when configured to
    * use static memory -- #SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE is used instead.*/
   int universes_per_source_max;
 
@@ -307,7 +307,7 @@ typedef struct SacnSourceDetector
 typedef struct SacnUniverseDiscoverySource
 {
   sacn_remote_source_t handle;  // This must be the first member.
-  char                 name[SACN_SOURCE_NAME_MAX_LEN];
+  char                 name[kSacnSourceNameMaxLen];
 
   SACN_DECLARE_SOURCE_DETECTOR_BUF(uint16_t, universes, SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE);
   size_t num_universes;
@@ -353,19 +353,19 @@ typedef struct SourceDetectorSourceUpdatedNotification
 } SourceDetectorSourceUpdatedNotification;
 
 #if SACN_DYNAMIC_MEM
-#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT                \
-  {                                                             \
-    NULL, SACN_REMOTE_SOURCE_INVALID, NULL, NULL, NULL, 0, NULL \
+#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT              \
+  {                                                           \
+    NULL, kSacnRemoteSourceInvalid, NULL, NULL, NULL, 0, NULL \
   }
 #elif SACN_SOURCE_DETECTOR_ENABLED
-#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT               \
-  {                                                            \
-    NULL, SACN_REMOTE_SOURCE_INVALID, NULL, NULL, {0}, 0, NULL \
+#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT             \
+  {                                                          \
+    NULL, kSacnRemoteSourceInvalid, NULL, NULL, {0}, 0, NULL \
   }
 #else
-#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT                \
-  {                                                             \
-    NULL, SACN_REMOTE_SOURCE_INVALID, NULL, NULL, NULL, 0, NULL \
+#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT              \
+  {                                                           \
+    NULL, kSacnRemoteSourceInvalid, NULL, NULL, NULL, 0, NULL \
   }
 #endif
 
@@ -373,12 +373,12 @@ typedef struct SourceDetectorExpiredSource
 {
   sacn_remote_source_t handle;
   EtcPalUuid           cid;
-  char                 name[SACN_SOURCE_NAME_MAX_LEN];
+  char                 name[kSacnSourceNameMaxLen];
 } SourceDetectorExpiredSource;
 
 #define SRC_DETECTOR_EXPIRED_SOURCE_DEFAULT_INIT \
   {                                              \
-    SACN_REMOTE_SOURCE_INVALID, {{0}},           \
+    kSacnRemoteSourceInvalid, {{0}},             \
     {                                            \
       0                                          \
     }                                            \
@@ -496,7 +496,7 @@ struct SacnReceiver
   SacnReceiverCallbacks         api_callbacks;
   SacnReceiverInternalCallbacks internal_callbacks;
 
-  /* The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
+  /* The maximum number of sources this universe will listen to.  May be #kSacnReceiverInfiniteSources.
    * When configured to use static memory, this parameter is only used if it's less than
    * #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE -- otherwise #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead. */
   size_t source_count_max;
@@ -535,7 +535,7 @@ typedef enum
 typedef struct SacnTrackedSource
 {
   sacn_remote_source_t handle;  // This must be the first member of this struct.
-  char                 name[SACN_SOURCE_NAME_MAX_LEN];
+  char                 name[kSacnSourceNameMaxLen];
   EtcPalMcastNetintId  netint;
 
   EtcPalTimer packet_timer;
@@ -730,7 +730,7 @@ typedef struct SacnRecvThreadContext
 typedef struct SacnMergeReceiverInternalSource
 {
   sacn_remote_source_t handle;  // This must be the first struct member.
-  char                 name[SACN_SOURCE_NAME_MAX_LEN];
+  char                 name[kSacnSourceNameMaxLen];
   EtcPalSockAddr       addr;
   bool                 sampling;
   bool                 per_address_priorities_active;
@@ -848,7 +848,7 @@ typedef struct SacnSource
   sacn_source_t handle;  // This must be the first struct member.
 
   EtcPalUuid cid;
-  char       name[SACN_SOURCE_NAME_MAX_LEN];
+  char       name[kSacnSourceNameMaxLen];
 
   bool terminating;  // If in the process of terminating all universes and removing this source.
 

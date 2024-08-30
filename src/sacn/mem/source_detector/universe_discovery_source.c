@@ -114,13 +114,13 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid*             
   SacnUniverseDiscoverySource* src    = NULL;
 
   sacn_remote_source_t existing_handle = get_remote_source_handle(cid);
-  if ((existing_handle != SACN_REMOTE_SOURCE_INVALID) &&
+  if ((existing_handle != kSacnRemoteSourceInvalid) &&
       etcpal_rbtree_find(&universe_discovery_sources, &existing_handle))
   {
     result = kEtcPalErrExists;
   }
 
-  sacn_remote_source_t handle = SACN_REMOTE_SOURCE_INVALID;
+  sacn_remote_source_t handle = kSacnRemoteSourceInvalid;
   if (result == kEtcPalErrOk)
     result = add_remote_source_handle(cid, &handle);
 
@@ -135,15 +135,15 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid*             
   if (result == kEtcPalErrOk)
   {
     src->handle = handle;
-    strncpy(src->name, name, SACN_SOURCE_NAME_MAX_LEN);
+    strncpy(src->name, name, kSacnSourceNameMaxLen);
 
     src->universes_dirty                               = true;
     src->num_universes                                 = 0;
     src->last_notified_universe_count                  = 0;
     src->suppress_universe_limit_exceeded_notification = false;
 #if SACN_DYNAMIC_MEM
-    src->universes          = calloc(INITIAL_CAPACITY, sizeof(uint16_t));
-    src->universes_capacity = src->universes ? INITIAL_CAPACITY : 0;
+    src->universes          = calloc(kSacnInitialCapacity, sizeof(uint16_t));
+    src->universes_capacity = src->universes ? kSacnInitialCapacity : 0;
 
     if (!src->universes)
       result = kEtcPalErrNoMem;
@@ -168,7 +168,7 @@ etcpal_error_t add_sacn_universe_discovery_source(const EtcPalUuid*             
   }
   else
   {
-    if (handle != SACN_REMOTE_SOURCE_INVALID)
+    if (handle != kSacnRemoteSourceInvalid)
       remove_remote_source_handle(handle);
 
     if (src)
@@ -195,7 +195,7 @@ size_t replace_universe_discovery_universes(SacnUniverseDiscoverySource* source,
     return 0;
 
 #if SACN_DYNAMIC_MEM
-  if ((dynamic_universe_limit != SACN_SOURCE_DETECTOR_INFINITE) &&
+  if ((dynamic_universe_limit != kSacnSourceDetectorInfinite) &&
       ((replace_start_index + num_replacement_universes) > dynamic_universe_limit))
   {
     return (dynamic_universe_limit - replace_start_index);
@@ -220,7 +220,7 @@ size_t replace_universe_discovery_universes(SacnUniverseDiscoverySource* source,
 
 etcpal_error_t lookup_universe_discovery_source(sacn_remote_source_t handle, SacnUniverseDiscoverySource** source_state)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(source_state))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnRemoteSourceInvalid) || !SACN_ASSERT_VERIFY(source_state))
     return kEtcPalErrSys;
 
   *source_state = (SacnUniverseDiscoverySource*)etcpal_rbtree_find(&universe_discovery_sources, &handle);
@@ -251,7 +251,7 @@ size_t get_num_universe_discovery_sources()
 
 etcpal_error_t remove_sacn_universe_discovery_source(sacn_remote_source_t handle)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnRemoteSourceInvalid))
     return kEtcPalErrSys;
 
   return etcpal_rbtree_remove_with_cb(&universe_discovery_sources, &handle, universe_discovery_sources_tree_dealloc);

@@ -70,14 +70,14 @@ TEST_F(TestSourceDisabled, SourceIsEnabledInDynamicMode)
 {
   // Run the API functions to confirm everything links.
   sacn_source_create(nullptr, nullptr);
-  sacn_source_change_name(SACN_SOURCE_INVALID, nullptr);
-  sacn_source_add_universe(SACN_SOURCE_INVALID, nullptr, nullptr);
-  sacn_source_add_unicast_destination(SACN_SOURCE_INVALID, 0u, nullptr);
-  sacn_source_change_priority(SACN_SOURCE_INVALID, 0u, 0u);
-  sacn_source_change_preview_flag(SACN_SOURCE_INVALID, 0u, false);
-  sacn_source_change_synchronization_universe(SACN_SOURCE_INVALID, 0u, 0u);
-  sacn_source_send_now(SACN_SOURCE_INVALID, 0u, 0u, nullptr, 0u);
-  sacn_source_send_synchronization(SACN_SOURCE_INVALID, 0u);
+  sacn_source_change_name(kSacnSourceInvalid, nullptr);
+  sacn_source_add_universe(kSacnSourceInvalid, nullptr, nullptr);
+  sacn_source_add_unicast_destination(kSacnSourceInvalid, 0u, nullptr);
+  sacn_source_change_priority(kSacnSourceInvalid, 0u, 0u);
+  sacn_source_change_preview_flag(kSacnSourceInvalid, 0u, false);
+  sacn_source_change_synchronization_universe(kSacnSourceInvalid, 0u, 0u);
+  sacn_source_send_now(kSacnSourceInvalid, 0u, 0u, nullptr, 0u);
+  sacn_source_send_synchronization(kSacnSourceInvalid, 0u);
   sacn_source_reset_networking(nullptr);
   sacn_source_reset_networking_per_universe(nullptr, nullptr, 0u);
 }

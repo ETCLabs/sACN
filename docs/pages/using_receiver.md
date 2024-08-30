@@ -411,7 +411,7 @@ delivered until the number of tracked sources falls below the limit and then exc
 
 The library will also check against the `source_count_max` value from the receiver config/settings,
 limiting it to #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE if #SACN_DYNAMIC_MEM is 0. The
-`source_count_max` value may be set to #SACN_RECEIVER_INFINITE_SOURCES, which is the default. In
+`source_count_max` value may be set to #kSacnReceiverInfiniteSources, which is the default. In
 this case, if #SACN_DYNAMIC_MEM is 0, #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE will be the limit.
 Otherwise, if #SACN_DYNAMIC_MEM is 1, the library will track as many sources as it is able to
 dynamically allocate memory for, and this callback will not be called in normal program operation

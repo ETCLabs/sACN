@@ -69,9 +69,9 @@ TEST_F(TestReceiverDisabled, ReceiverIsEnabledInDynamicMode)
 {
   // Run the API functions to confirm everything links.
   sacn_receiver_create(nullptr, nullptr, nullptr);
-  sacn_receiver_destroy(SACN_RECEIVER_INVALID);
-  sacn_receiver_get_universe(SACN_RECEIVER_INVALID, nullptr);
-  sacn_receiver_change_universe(SACN_RECEIVER_INVALID, 0);
+  sacn_receiver_destroy(kSacnReceiverInvalid);
+  sacn_receiver_get_universe(kSacnReceiverInvalid, nullptr);
+  sacn_receiver_change_universe(kSacnReceiverInvalid, 0);
   sacn_receiver_reset_networking(nullptr);
   sacn_receiver_reset_networking_per_receiver(nullptr, nullptr, 0);
 

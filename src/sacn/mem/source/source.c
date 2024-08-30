@@ -55,7 +55,7 @@ static size_t get_source_index(sacn_source_t handle, bool* found);
 // Needs lock
 etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(config) ||
+  if (!SACN_ASSERT_VERIFY(handle != kSacnSourceInvalid) || !SACN_ASSERT_VERIFY(config) ||
       !SACN_ASSERT_VERIFY(source_state))
   {
     return kEtcPalErrSys;
@@ -90,7 +90,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
 
     // Initialize everything else.
     source->cid = config->cid;
-    memset(source->name, 0, SACN_SOURCE_NAME_MAX_LEN);
+    memset(source->name, 0, kSacnSourceNameMaxLen);
     memcpy(source->name, config->name, strlen(config->name));
     source->terminating          = false;
     source->num_active_universes = 0;
@@ -108,10 +108,10 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->num_universes = 0;
     source->num_netints   = 0;
 #if SACN_DYNAMIC_MEM
-    source->universes          = calloc(INITIAL_CAPACITY, sizeof(SacnSourceUniverse));
-    source->universes_capacity = source->universes ? INITIAL_CAPACITY : 0;
-    source->netints            = calloc(INITIAL_CAPACITY, sizeof(SacnSourceNetint));
-    source->netints_capacity   = source->netints ? INITIAL_CAPACITY : 0;
+    source->universes          = calloc(kSacnInitialCapacity, sizeof(SacnSourceUniverse));
+    source->universes_capacity = source->universes ? kSacnInitialCapacity : 0;
+    source->netints            = calloc(kSacnInitialCapacity, sizeof(SacnSourceNetint));
+    source->netints_capacity   = source->netints ? kSacnInitialCapacity : 0;
 
     if (!source->universes || !source->netints)
       result = kEtcPalErrNoMem;
@@ -139,7 +139,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
 // Needs lock
 etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state)
 {
-  if (!SACN_ASSERT_VERIFY(handle != SACN_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(source_state))
+  if (!SACN_ASSERT_VERIFY(handle != kSacnSourceInvalid) || !SACN_ASSERT_VERIFY(source_state))
     return kEtcPalErrSys;
 
   bool   found  = false;
@@ -190,8 +190,8 @@ etcpal_error_t init_sources(void)
 {
   etcpal_error_t res = kEtcPalErrOk;
 #if SACN_DYNAMIC_MEM
-  sacn_pool_source_mem.sources          = calloc(INITIAL_CAPACITY, sizeof(SacnSource));
-  sacn_pool_source_mem.sources_capacity = sacn_pool_source_mem.sources ? INITIAL_CAPACITY : 0;
+  sacn_pool_source_mem.sources          = calloc(kSacnInitialCapacity, sizeof(SacnSource));
+  sacn_pool_source_mem.sources_capacity = sacn_pool_source_mem.sources ? kSacnInitialCapacity : 0;
   if (!sacn_pool_source_mem.sources)
     res = kEtcPalErrNoMem;
 #else   // SACN_DYNAMIC_MEM

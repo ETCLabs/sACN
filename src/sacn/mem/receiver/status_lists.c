@@ -64,7 +64,7 @@ static void deinit_status_lists_entry(SacnSourceStatusLists* lists);
  */
 SacnSourceStatusLists* get_status_lists(sacn_thread_id_t thread_id)
 {
-  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  if (!SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid))
     return NULL;
 
   if (thread_id < sacn_mem_get_num_threads())
@@ -88,7 +88,7 @@ SacnSourceStatusLists* get_status_lists(sacn_thread_id_t thread_id)
  */
 bool add_offline_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle, const char* name, bool terminated)
 {
-  if (!SACN_ASSERT_VERIFY(lists) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) ||
+  if (!SACN_ASSERT_VERIFY(lists) || !SACN_ASSERT_VERIFY(handle != kSacnRemoteSourceInvalid) ||
       !SACN_ASSERT_VERIFY(name))
   {
     return false;
@@ -114,7 +114,7 @@ bool add_offline_source(SacnSourceStatusLists* lists, sacn_remote_source_t handl
  */
 bool add_online_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle, const char* name)
 {
-  if (!SACN_ASSERT_VERIFY(lists) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) ||
+  if (!SACN_ASSERT_VERIFY(lists) || !SACN_ASSERT_VERIFY(handle != kSacnRemoteSourceInvalid) ||
       !SACN_ASSERT_VERIFY(name))
   {
     return false;
@@ -139,7 +139,7 @@ bool add_online_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle
  */
 bool add_unknown_source(SacnSourceStatusLists* lists, sacn_remote_source_t handle, const char* name)
 {
-  if (!SACN_ASSERT_VERIFY(lists) || !SACN_ASSERT_VERIFY(handle != SACN_REMOTE_SOURCE_INVALID) ||
+  if (!SACN_ASSERT_VERIFY(lists) || !SACN_ASSERT_VERIFY(handle != kSacnRemoteSourceInvalid) ||
       !SACN_ASSERT_VERIFY(name))
   {
     return false;
@@ -195,26 +195,26 @@ etcpal_error_t init_status_lists_entry(SacnSourceStatusLists* lists)
 
   etcpal_error_t res = kEtcPalErrOk;
 
-  lists->offline = calloc(INITIAL_CAPACITY, sizeof(SacnLostSourceInternal));
+  lists->offline = calloc(kSacnInitialCapacity, sizeof(SacnLostSourceInternal));
   if (lists->offline)
-    lists->offline_capacity = INITIAL_CAPACITY;
+    lists->offline_capacity = kSacnInitialCapacity;
   else
     res = kEtcPalErrNoMem;
 
   if (res == kEtcPalErrOk)
   {
-    lists->online = calloc(INITIAL_CAPACITY, sizeof(SacnRemoteSourceInternal));
+    lists->online = calloc(kSacnInitialCapacity, sizeof(SacnRemoteSourceInternal));
     if (lists->online)
-      lists->online_capacity = INITIAL_CAPACITY;
+      lists->online_capacity = kSacnInitialCapacity;
     else
       res = kEtcPalErrNoMem;
   }
 
   if (res == kEtcPalErrOk)
   {
-    lists->unknown = calloc(INITIAL_CAPACITY, sizeof(SacnRemoteSourceInternal));
+    lists->unknown = calloc(kSacnInitialCapacity, sizeof(SacnRemoteSourceInternal));
     if (lists->unknown)
-      lists->unknown_capacity = INITIAL_CAPACITY;
+      lists->unknown_capacity = kSacnInitialCapacity;
     else
       res = kEtcPalErrNoMem;
   }

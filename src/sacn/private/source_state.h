@@ -59,8 +59,8 @@ etcpal_error_t initialize_source_thread();
 sacn_source_t  get_next_source_handle();
 void           update_levels_and_or_pap(SacnSource*                source,
                                         SacnSourceUniverse*        universe,
-                                        const uint8_t*             new_values,
-                                        size_t                     new_values_size,
+                                        const uint8_t*             new_levels,
+                                        size_t                     new_levels_size,
                                         const uint8_t*             new_priorities,
                                         size_t                     new_priorities_size,
                                         sacn_force_sync_behavior_t force_sync);

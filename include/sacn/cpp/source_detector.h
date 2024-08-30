@@ -128,7 +128,13 @@ public:
   class NotifyHandler
   {
   public:
+    NotifyHandler()          = default;
     virtual ~NotifyHandler() = default;
+
+    NotifyHandler(const NotifyHandler& other)            = default;
+    NotifyHandler& operator=(const NotifyHandler& other) = default;
+    NotifyHandler(NotifyHandler&& other)                 = default;
+    NotifyHandler& operator=(NotifyHandler&& other)      = default;
 
     /**
      * @brief Notify that a source is new or has changed.
@@ -164,7 +170,7 @@ public:
      *
      * If #SACN_DYNAMIC_MEM was defined to 1 when sACN was compiled (the default on non-embedded platforms), and the
      * configuration you pass to Startup() has source_count_max and universes_per_source_max set to
-     * #SACN_SOURCE_DETECTOR_INFINITE, this callback will never be called (except for the rare case where a heap
+     * #kSacnSourceDetectorInfinite, this callback will never be called (except for the rare case where a heap
      * allocation function fails).
      *
      * If #SACN_DYNAMIC_MEM was defined to 0 when sACN was compiled, source_count_max and universes_per_source_max are
@@ -190,14 +196,14 @@ public:
     /********* Optional values **********/
 
     /** The maximum number of sources the detector will record.  It is recommended that applications using dynamic
-       memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when configured to use
+       memory use #kSacnSourceDetectorInfinite for this value. This parameter is ignored when configured to use
        static memory -- #SACN_SOURCE_DETECTOR_MAX_SOURCES is used instead.*/
-    int source_count_max{SACN_SOURCE_DETECTOR_INFINITE};
+    int source_count_max{kSacnSourceDetectorInfinite};
 
     /** The maximum number of universes the detector will record for a source.  It is recommended that applications
-       using dynamic memory use #SACN_SOURCE_DETECTOR_INFINITE for this value. This parameter is ignored when
+       using dynamic memory use #kSacnSourceDetectorInfinite for this value. This parameter is ignored when
        configured to use static memory -- #SACN_SOURCE_DETECTOR_MAX_UNIVERSES_PER_SOURCE is used instead.*/
-    int universes_per_source_max{SACN_SOURCE_DETECTOR_INFINITE};
+    int universes_per_source_max{kSacnSourceDetectorInfinite};
 
     /** What IP networking the source detector will support. */
     sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6};
@@ -384,7 +390,7 @@ inline etcpal::Error SourceDetector::Startup(const Settings&                  se
   SacnSourceDetectorConfig config = TranslateConfig(settings, notify_handler);
 
   if (netints.empty())
-    return sacn_source_detector_create(&config, NULL);
+    return sacn_source_detector_create(&config, nullptr);
 
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   netint_config.netints          = netints.data();
@@ -474,14 +480,12 @@ inline etcpal::Error SourceDetector::ResetNetworking(std::vector<SacnMcastInterf
   {
     return sacn_source_detector_reset_networking(nullptr);
   }
-  else
-  {
-    SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-    netint_config.netints          = sys_netints.data();
-    netint_config.num_netints      = sys_netints.size();
 
-    return sacn_source_detector_reset_networking(&netint_config);
-  }
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints          = sys_netints.data();
+  netint_config.num_netints      = sys_netints.size();
+
+  return sacn_source_detector_reset_networking(&netint_config);
 }
 
 /**
@@ -492,16 +496,16 @@ inline etcpal::Error SourceDetector::ResetNetworking(std::vector<SacnMcastInterf
 inline std::vector<EtcPalMcastNetintId> SourceDetector::GetNetworkInterfaces()
 {
   // This uses a guessing algorithm with a while loop to avoid race conditions.
-  std::vector<EtcPalMcastNetintId> netints;
-  size_t                           size_guess  = 4u;
-  size_t                           num_netints = 0u;
+  size_t                           size_guess = 4u;
+  std::vector<EtcPalMcastNetintId> netints(size_guess);
+  size_t num_netints = sacn_source_detector_get_network_interfaces(netints.data(), netints.size());
 
-  do
+  while (num_netints > netints.size())
   {
+    size_guess = num_netints + 4u;
     netints.resize(size_guess);
     num_netints = sacn_source_detector_get_network_interfaces(netints.data(), netints.size());
-    size_guess  = num_netints + 4u;
-  } while (num_netints > netints.size());
+  }
 
   netints.resize(num_netints);
   return netints;

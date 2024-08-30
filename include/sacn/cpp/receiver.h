@@ -62,7 +62,7 @@ class Receiver
 {
 public:
   /** A handle type used by the sACN library to identify receiver instances. */
-  using Handle = etcpal::OpaqueId<detail::ReceiverHandleType, sacn_receiver_t, SACN_RECEIVER_INVALID>;
+  using Handle = etcpal::OpaqueId<detail::ReceiverHandleType, sacn_receiver_t, kSacnReceiverInvalid>;
 
   /**
    * @ingroup sacn_receiver_cpp
@@ -189,12 +189,12 @@ public:
     /********* Optional values **********/
 
     /** The footprint within the universe to monitor. TODO: Currently unimplemented and thus ignored. */
-    SacnRecvUniverseSubrange footprint{1, DMX_ADDRESS_COUNT};
+    SacnRecvUniverseSubrange footprint{1, kSacnDmxAddressCount};
 
-    /** The maximum number of sources this universe will listen to.  May be #SACN_RECEIVER_INFINITE_SOURCES.
+    /** The maximum number of sources this universe will listen to.  May be #kSacnReceiverInfiniteSources.
         When configured to use static memory, this parameter is only used if it's less than
         #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE -- otherwise #SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE is used instead.*/
-    int          source_count_max{SACN_RECEIVER_INFINITE_SOURCES};
+    int          source_count_max{kSacnReceiverInfiniteSources};
     unsigned int flags{0}; /**< A set of option flags. See the C API's "sACN receiver flags". */
 
     sacn_ip_support_t ip_supported{kSacnIpV4AndIpV6}; /**< What IP networking the receiver will support. */
@@ -217,7 +217,7 @@ public:
   struct NetintList
   {
     /** The receiver's handle. */
-    sacn_receiver_t handle{SACN_RECEIVER_INVALID};
+    sacn_receiver_t handle{kSacnReceiverInvalid};
 
     /** If !empty, this is the list of interfaces the application wants to use, and the status codes are filled in. If
         empty, all available interfaces are tried. */
@@ -356,9 +356,9 @@ inline Receiver::Settings::Settings(uint16_t new_universe_id) : universe_id(new_
  */
 inline bool Receiver::Settings::IsValid() const
 {
-  return (universe_id > 0) && (footprint.start_address >= 1) && (footprint.start_address <= DMX_ADDRESS_COUNT) &&
+  return (universe_id > 0) && (footprint.start_address >= 1) && (footprint.start_address <= kSacnDmxAddressCount) &&
          (footprint.address_count >= 1) &&
-         (footprint.address_count <= (DMX_ADDRESS_COUNT - footprint.start_address + 1));
+         (footprint.address_count <= (kSacnDmxAddressCount - footprint.start_address + 1));
 }
 
 /**
@@ -419,7 +419,7 @@ inline etcpal::Error Receiver::Startup(const Settings& settings,
   if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
-  sacn_receiver_t c_handle = SACN_RECEIVER_INVALID;
+  sacn_receiver_t c_handle = kSacnReceiverInvalid;
   etcpal::Error   result   = sacn_receiver_create(&config, &c_handle, &netint_config);
 
   handle_.SetValue(c_handle);
@@ -460,7 +460,7 @@ inline etcpal::Error Receiver::Startup(const Settings&                  settings
 {
   SacnReceiverConfig config = TranslateConfig(settings, notify_handler);
 
-  sacn_receiver_t c_handle = SACN_RECEIVER_INVALID;
+  sacn_receiver_t c_handle = kSacnReceiverInvalid;
   etcpal::Error   result   = kEtcPalErrOk;
 
   if (netints.empty())

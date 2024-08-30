@@ -72,7 +72,7 @@ static void deinit_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_end
  */
 SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id, size_t size)
 {
-  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) ||
+  if (!SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid) ||
       !SACN_ASSERT_VERIFY(thread_id < sacn_mem_get_num_threads()))
   {
     return NULL;
@@ -85,8 +85,8 @@ SamplingEndedNotification* get_sampling_ended_buffer(sacn_thread_id_t thread_id,
   memset(notifications->buf, 0, size * sizeof(SamplingEndedNotification));
   for (size_t i = 0; i < size; ++i)
   {
-    notifications->buf[i].handle    = SACN_RECEIVER_INVALID;
-    notifications->buf[i].thread_id = SACN_THREAD_ID_INVALID;
+    notifications->buf[i].handle    = kSacnReceiverInvalid;
+    notifications->buf[i].thread_id = kSacnThreadIdInvalid;
   }
 
   return notifications->buf;
@@ -122,11 +122,11 @@ etcpal_error_t init_sampling_ended_buf(SamplingEndedNotificationBuf* sampling_en
   if (!SACN_ASSERT_VERIFY(sampling_ended_buf))
     return kEtcPalErrSys;
 
-  sampling_ended_buf->buf = calloc(INITIAL_CAPACITY, sizeof(SamplingEndedNotification));
+  sampling_ended_buf->buf = calloc(kSacnInitialCapacity, sizeof(SamplingEndedNotification));
   if (!sampling_ended_buf->buf)
     return kEtcPalErrNoMem;
 
-  sampling_ended_buf->buf_capacity = INITIAL_CAPACITY;
+  sampling_ended_buf->buf_capacity = kSacnInitialCapacity;
   return kEtcPalErrOk;
 }
 

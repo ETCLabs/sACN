@@ -58,8 +58,8 @@ public:
   Effect   effect_;
   Priority priority_type_;
   uint8_t  universe_priority_;
-  uint8_t  per_address_priorities_[DMX_ADDRESS_COUNT];
-  uint8_t  levels_[DMX_ADDRESS_COUNT];
+  uint8_t  per_address_priorities_[kSacnDmxAddressCount];
+  uint8_t  levels_[kSacnDmxAddressCount];
 };
 
 class SACNSourceExample

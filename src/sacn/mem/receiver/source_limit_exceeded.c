@@ -52,15 +52,15 @@ static SourceLimitExceededNotification source_limit_exceeded[SACN_RECEIVER_MAX_T
  */
 SourceLimitExceededNotification* get_source_limit_exceeded(sacn_thread_id_t thread_id)
 {
-  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  if (!SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid))
     return NULL;
 
   if (thread_id < sacn_mem_get_num_threads())
   {
     SourceLimitExceededNotification* to_return = &source_limit_exceeded[thread_id];
     memset(to_return, 0, sizeof(SourceLimitExceededNotification));
-    to_return->handle    = SACN_RECEIVER_INVALID;
-    to_return->thread_id = SACN_THREAD_ID_INVALID;
+    to_return->handle    = kSacnReceiverInvalid;
+    to_return->thread_id = kSacnThreadIdInvalid;
     return to_return;
   }
   return NULL;

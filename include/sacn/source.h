@@ -55,21 +55,22 @@ extern "C" {
 /** A handle to a sACN source. */
 typedef int sacn_source_t;
 /** An invalid sACN source handle value. */
-#define SACN_SOURCE_INVALID -1
+static const sacn_source_t kSacnSourceInvalid = -1;
 
-/**
- * @brief Constant for "infinite" when sending sACN universes.
- *
- * When using dynamic memory, this constant can be passed in when creating a source.
- * It represents an infinite number of universes that can be sent to.
- */
-#define SACN_SOURCE_INFINITE_UNIVERSES 0
-
-/** The default NULL start code keep-alive interval for sources, in milliseconds. */
-#define SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT 800
-
-/** The default per-address priority keep-alive interval for sources, in milliseconds. */
-#define SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT 1000
+enum
+{
+  /**
+   * @brief Constant for "infinite" when sending sACN universes.
+   *
+   * When using dynamic memory, this constant can be passed in when creating a source.
+   * It represents an infinite number of universes that can be sent to.
+   */
+  kSacnSourceInfiniteUniverses = 0,
+  /** The default NULL start code keep-alive interval for sources, in milliseconds. */
+  kSacnSourceKeepAliveIntervalDefault = 800,
+  /** The default per-address priority keep-alive interval for sources, in milliseconds. */
+  kSacnSourcePapKeepAliveIntervalDefault = 1000
+};
 
 /** This enum determines the type of start code (levels and/or PAP) to process/transmit in a source tick. */
 typedef enum
@@ -94,7 +95,7 @@ typedef struct SacnSourceConfig
 
   /********* Optional values **********/
 
-  /** The maximum number of universes this source will send to.  May be #SACN_SOURCE_INFINITE_UNIVERSES.
+  /** The maximum number of universes this source will send to.  May be #kSacnSourceInfiniteUniverses.
       This parameter is ignored when configured to use static memory -- #SACN_SOURCE_MAX_UNIVERSES_PER_SOURCE is used
       instead. */
   size_t universe_count_max;
@@ -109,19 +110,19 @@ typedef struct SacnSourceConfig
   sacn_ip_support_t ip_supported;
 
   /** The interval at which the source will send keep-alive NULL start code packets during transmission suppression, in
-      milliseconds. The default is #SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT. */
+      milliseconds. The default is #kSacnSourceKeepAliveIntervalDefault. */
   int keep_alive_interval;
 
   /** The interval at which the source will send keep-alive per-address priority packets during transmission
-      suppression, in milliseconds. The default is #SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT. */
+      suppression, in milliseconds. The default is #kSacnSourcePapKeepAliveIntervalDefault. */
   int pap_keep_alive_interval;
 } SacnSourceConfig;
 
 /** A default-value initializer for an SacnSourceConfig struct. */
-#define SACN_SOURCE_CONFIG_DEFAULT_INIT                                                      \
-  {                                                                                          \
-    kEtcPalNullUuid, NULL, SACN_SOURCE_INFINITE_UNIVERSES, false, kSacnIpV4AndIpV6,          \
-        SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT, SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT \
+#define SACN_SOURCE_CONFIG_DEFAULT_INIT                                                                                \
+  {                                                                                                                    \
+    kEtcPalNullUuid, NULL, kSacnSourceInfiniteUniverses, false, kSacnIpV4AndIpV6, kSacnSourceKeepAliveIntervalDefault, \
+        kSacnSourcePapKeepAliveIntervalDefault                                                                         \
   }
 
 void sacn_source_config_init(SacnSourceConfig* config);

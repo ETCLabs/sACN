@@ -57,7 +57,7 @@ typedef struct SourceData
 {
   bool       valid;
   EtcPalUuid cid;
-  char       name[SACN_SOURCE_NAME_MAX_LEN];
+  char       name[kSacnSourceNameMaxLen];
   uint8_t    priority;
   int        num_updates;
   uint32_t   update_start_time_ms;
@@ -105,7 +105,7 @@ static void invalidate_listeners()
 {
   for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
   {
-    listener->receiver_handle = SACN_RECEIVER_INVALID;
+    listener->receiver_handle = kSacnReceiverInvalid;
   }
 }
 
@@ -126,7 +126,7 @@ static ListeningUniverse* find_listener_hole()
 {
   for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
   {
-    if (listener->receiver_handle == SACN_RECEIVER_INVALID)
+    if (listener->receiver_handle == kSacnReceiverInvalid)
     {
       return listener;
     }
@@ -224,7 +224,7 @@ static etcpal_error_t destroy_listener(ListeningUniverse* listener)
   if (destroy_res == kEtcPalErrOk)
   {
     invalidate_sources(listener);
-    listener->receiver_handle = SACN_RECEIVER_INVALID;
+    listener->receiver_handle = kSacnReceiverInvalid;
   }
   else
   {
@@ -302,7 +302,7 @@ static void console_print_universe_updates()
     printf(BEGIN_BORDER_STRING);
     for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
     {
-      if (listener->receiver_handle != SACN_RECEIVER_INVALID)
+      if (listener->receiver_handle != kSacnReceiverInvalid)
       {
         printf("Receiver %d on universe %u currently tracking %zu sources:\n", listener->receiver_handle,
                listener->universe, listener->num_sources);
@@ -669,7 +669,7 @@ int main(void)
 
   for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
   {
-    if (listener->receiver_handle != SACN_RECEIVER_INVALID)
+    if (listener->receiver_handle != kSacnReceiverInvalid)
     {
       destroy_listener(listener);
     }

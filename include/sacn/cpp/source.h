@@ -61,7 +61,7 @@ class Source
 {
 public:
   /** A handle type used by the sACN library to identify source instances. */
-  using Handle = etcpal::OpaqueId<detail::SourceHandleType, sacn_source_t, SACN_SOURCE_INVALID>;
+  using Handle = etcpal::OpaqueId<detail::SourceHandleType, sacn_source_t, kSacnSourceInvalid>;
 
   /** This enum determines the type of start code (levels and/or PAP) to process/transmit in a source tick. */
   enum class TickMode
@@ -90,7 +90,7 @@ public:
     /********* Optional values **********/
 
     /** The maximum number of universes this source will send to when using dynamic memory. */
-    size_t universe_count_max{SACN_SOURCE_INFINITE_UNIVERSES};
+    size_t universe_count_max{kSacnSourceInfiniteUniverses};
 
     /** If false (default), this source will be added to a background thread that will send sACN updates at a
         maximum rate of every 23 ms. If true, the source will not be added to the thread and the application
@@ -102,11 +102,11 @@ public:
 
     /** The interval at which the source will send NULL start code keep-alive packets during transmission suppression,
         in milliseconds. */
-    int keep_alive_interval{SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT};
+    int keep_alive_interval{kSacnSourceKeepAliveIntervalDefault};
 
     /** The interval at which the source will send per-address priority keep-alive packets during transmission
         suppression, in milliseconds. */
-    int pap_keep_alive_interval{SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT};
+    int pap_keep_alive_interval{kSacnSourcePapKeepAliveIntervalDefault};
 
     /** Create an empty, invalid data structure by default. */
     Settings() = default;
@@ -161,7 +161,7 @@ public:
   struct UniverseNetintList
   {
     /** The source's handle. */
-    sacn_source_t handle{SACN_SOURCE_INVALID};
+    sacn_source_t handle{kSacnSourceInvalid};
     /** The ID of the universe. */
     uint16_t universe{0};
 
@@ -319,7 +319,7 @@ inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t             
  *
  * @param[in] settings Configuration parameters for the sACN source to be created. If any of these parameters are
  * invalid, #kEtcPalErrInvalid will be returned. This includes if the source name's length (including the null
- * terminator) is beyond #SACN_SOURCE_NAME_MAX_LEN.
+ * terminator) is beyond #kSacnSourceNameMaxLen.
  * @return #kEtcPalErrOk: Source successfully created.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrNotInit: Module not initialized.
@@ -329,7 +329,7 @@ inline Source::UniverseNetintList::UniverseNetintList(sacn_source_t             
 inline etcpal::Error Source::Startup(const Settings& settings)
 {
   SacnSourceConfig config   = TranslateConfig(settings);
-  sacn_source_t    c_handle = SACN_SOURCE_INVALID;
+  sacn_source_t    c_handle = kSacnSourceInvalid;
   etcpal::Error    result   = sacn_source_create(&config, &c_handle);
   handle_.SetValue(c_handle);
   return result;
@@ -353,7 +353,7 @@ inline void Source::Shutdown()
  *
  * The name is a UTF-8 string representing "a user-assigned name provided by the source of the packet for use in
  * displaying the identity of a source to a user." If its length (including the null terminator) is longer than
- * #SACN_SOURCE_NAME_MAX_LEN, then #kEtcPalErrInvalid will be returned.
+ * #kSacnSourceNameMaxLen, then #kEtcPalErrInvalid will be returned.
  *
  * This function will update the packet buffers of all this source's universes with the new name. For each universe that
  * is transmitting NULL start code or PAP data, the logic that slows down packet transmission due to inactivity will be
@@ -678,7 +678,7 @@ inline etcpal::Error Source::SendSynchronization(uint16_t sync_universe)
  * @param[in] universe Universe to update.
  * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #kSacnDmxAddressCount.
  */
 inline void Source::UpdateLevels(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size)
 {
@@ -701,11 +701,11 @@ inline void Source::UpdateLevels(uint16_t universe, const uint8_t* new_levels, s
  * @param[in] universe Universe to update.
  * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #kSacnDmxAddressCount.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This will only be sent when DMX is also
  * being sent. This may be NULL if you are not using per-address priorities or want to stop using per-address
  * priorities.
- * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #kSacnDmxAddressCount.
  */
 inline void Source::UpdateLevelsAndPap(uint16_t       universe,
                                        const uint8_t* new_levels,
@@ -731,7 +731,7 @@ inline void Source::UpdateLevelsAndPap(uint16_t       universe,
  * @param[in] universe Universe to update.
  * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #kSacnDmxAddressCount.
  */
 inline void Source::UpdateLevelsAndForceSync(uint16_t universe, const uint8_t* new_levels, size_t new_levels_size)
 {
@@ -758,11 +758,11 @@ inline void Source::UpdateLevelsAndForceSync(uint16_t universe, const uint8_t* n
  * @param[in] universe Universe to update.
  * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #kSacnDmxAddressCount.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This will only be sent when DMX is also
  * being sent. This may be NULL if you are not using per-address priorities or want to stop using per-address
  * priorities.
- * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #kSacnDmxAddressCount.
  */
 inline void Source::UpdateLevelsAndPapAndForceSync(uint16_t       universe,
                                                    const uint8_t* new_levels,

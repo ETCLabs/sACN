@@ -112,7 +112,9 @@ static bool           add_sacn_sys_netint(const EtcPalMcastNetintId* netint_id,
 static bool           add_sacn_source_sys_netint(const EtcPalMcastNetintId* netint_id,
                                                  etcpal_error_t             status,
                                                  etcpal_socket_t            socket);
-static int netint_id_index_in_array(const EtcPalMcastNetintId* id, const SacnMcastInterface* array, size_t array_size);
+static int            netint_id_index_in_array(const EtcPalMcastNetintId* netint_id,
+                                               const SacnMcastInterface*  array,
+                                               size_t                     array_size);
 
 static etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id, etcpal_socket_t* socket);
 static etcpal_error_t create_unicast_send_socket(etcpal_iptype_t ip_type, etcpal_socket_t* socket);
@@ -318,11 +320,11 @@ etcpal_error_t send_multicast(uint16_t universe_id, const uint8_t* send_buf, con
     return kEtcPalErrNotInit;
 
   // Try to send the data (ignore errors)
-  const size_t send_buf_length =
+  const size_t kSendBufLength =
       (size_t)ACN_UDP_PREAMBLE_SIZE + (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
 
   etcpal_error_t res        = kEtcPalErrOk;
-  int            sendto_res = etcpal_sendto(sock, send_buf, send_buf_length, 0, &dest);
+  int            sendto_res = etcpal_sendto(sock, send_buf, kSendBufLength, 0, &dest);
   if (sendto_res < 0)
     res = (etcpal_error_t)sendto_res;
 
@@ -362,11 +364,11 @@ etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_ad
   sockaddr_dest.port = kSacnPort;
 
   // Try to send the data (ignore errors)
-  const size_t send_buf_length =
+  const size_t kSendBufLength =
       (size_t)ACN_UDP_PREAMBLE_SIZE + (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
 
   etcpal_error_t res        = kEtcPalErrOk;
-  int            sendto_res = etcpal_sendto(sock, send_buf, send_buf_length, 0, &sockaddr_dest);
+  int            sendto_res = etcpal_sendto(sock, send_buf, kSendBufLength, 0, &sockaddr_dest);
   if (sendto_res < 0)
     res = (etcpal_error_t)sendto_res;
 
@@ -444,12 +446,12 @@ etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id
 
   if (res == kEtcPalErrOk)
   {
-    const int ttl = SACN_SOURCE_MULTICAST_TTL;
-    res           = etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_TTL, &ttl, sizeof ttl);
+    const int kTtl = SACN_SOURCE_MULTICAST_TTL;
+    res            = etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_TTL, &kTtl, sizeof kTtl);
 
     if (res != kEtcPalErrOk)
     {
-      SACN_LOG_ERR("Failed to set %s IP_MULTICAST_TTL socket option to %d: '%s'", sockopt_ip_level_str, ttl,
+      SACN_LOG_ERR("Failed to set %s IP_MULTICAST_TTL socket option to %d: '%s'", sockopt_ip_level_str, kTtl,
                    etcpal_strerror(res));
     }
   }
@@ -576,7 +578,7 @@ etcpal_error_t create_receive_socket(etcpal_iptype_t       ip_type,
   if (!SACN_ASSERT_VERIFY(ip_type != kEtcPalIpTypeInvalid) || !SACN_ASSERT_VERIFY(socket))
     return kEtcPalErrSys;
 
-  etcpal_socket_t new_sock;
+  etcpal_socket_t new_sock = ETCPAL_SOCKET_INVALID;
   etcpal_error_t  res =
       etcpal_socket(ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET, ETCPAL_SOCK_DGRAM, &new_sock);
   if (res == kEtcPalErrOk)
@@ -694,10 +696,10 @@ void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAdd
   }
   else
   {
-    static const uint8_t ipv6_addr_template[ETCPAL_IPV6_BYTES] = {0xff, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                                  0x00, 0x00, 0x00, 0x00, 0x83, 0x00, 0x00, 0x00};
+    static const uint8_t kIpv6AddrTemplate[ETCPAL_IPV6_BYTES] = {0xff, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                                 0x00, 0x00, 0x00, 0x00, 0x83, 0x00, 0x00, 0x00};
 
-    ETCPAL_IP_SET_V6_ADDRESS(ip_addr, ipv6_addr_template);
+    ETCPAL_IP_SET_V6_ADDRESS(ip_addr, kIpv6AddrTemplate);
     ip_addr->addr.v6.addr_buf[14] = (uint8_t)(universe >> 8);
     ip_addr->addr.v6.addr_buf[15] = (uint8_t)(universe & 0xff);
   }
@@ -1098,7 +1100,8 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
       etcpal_poll_remove_socket(&recv_thread_context->poll_context, event.socket);
       return event.err;
     }
-    else if (event.events & ETCPAL_POLL_IN)
+
+    if (event.events & ETCPAL_POLL_IN)
     {
       uint8_t control_buf[ETCPAL_MAX_CONTROL_SIZE_PKTINFO] = {0};  // Ancillary data
 
@@ -1877,14 +1880,14 @@ bool add_sacn_source_sys_netint(const EtcPalMcastNetintId* netint_id, etcpal_err
   return false;
 }
 
-int netint_id_index_in_array(const EtcPalMcastNetintId* id, const SacnMcastInterface* array, size_t array_size)
+int netint_id_index_in_array(const EtcPalMcastNetintId* netint_id, const SacnMcastInterface* array, size_t array_size)
 {
-  if (!SACN_ASSERT_VERIFY(id) || !SACN_ASSERT_VERIFY(array))
+  if (!SACN_ASSERT_VERIFY(netint_id) || !SACN_ASSERT_VERIFY(array))
     return -1;
 
   for (size_t i = 0; i < array_size; ++i)
   {
-    if ((array[i].iface.index == id->index) && (array[i].iface.ip_type == id->ip_type))
+    if ((array[i].iface.index == netint_id->index) && (array[i].iface.ip_type == netint_id->ip_type))
       return (int)i;
   }
   return -1;
@@ -1896,9 +1899,9 @@ etcpal_error_t init_sys_netint_list(SysNetintList* netint_list)
     return kEtcPalErrSys;
 
 #if SACN_DYNAMIC_MEM
-  netint_list->netints = calloc(INITIAL_CAPACITY, sizeof(EtcPalNetintInfo));
+  netint_list->netints = calloc(kSacnInitialCapacity, sizeof(EtcPalNetintInfo));
   if (netint_list->netints)
-    netint_list->netints_capacity = INITIAL_CAPACITY;
+    netint_list->netints_capacity = kSacnInitialCapacity;
   else
     return kEtcPalErrNoMem;
 #else

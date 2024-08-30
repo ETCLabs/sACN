@@ -36,7 +36,7 @@
 
 /*********************** Private function prototypes *************************/
 
-static size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* netint_id, bool* found);
+static size_t get_source_netint_index(const SacnSource* source, const EtcPalMcastNetintId* netint_id, bool* found);
 
 /*************************** Function definitions ****************************/
 
@@ -117,7 +117,7 @@ void remove_sacn_source_netint(SacnSource* source, size_t index)
   REMOVE_AT_INDEX(source, SacnSourceNetint, netints, index);
 }
 
-size_t get_source_netint_index(SacnSource* source, const EtcPalMcastNetintId* netint_id, bool* found)
+size_t get_source_netint_index(const SacnSource* source, const EtcPalMcastNetintId* netint_id, bool* found)
 {
   if (!SACN_ASSERT_VERIFY(found))
     return 0;

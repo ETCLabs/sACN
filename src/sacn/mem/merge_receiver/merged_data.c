@@ -52,14 +52,14 @@ static MergeReceiverMergedDataNotification sacn_pool_merged_data[SACN_RECEIVER_M
  */
 MergeReceiverMergedDataNotification* get_merged_data(sacn_thread_id_t thread_id)
 {
-  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID))
+  if (!SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid))
     return NULL;
 
   if (thread_id < sacn_mem_get_num_threads())
   {
     MergeReceiverMergedDataNotification* to_return = &sacn_pool_merged_data[thread_id];
     to_return->callback                            = NULL;
-    to_return->handle                              = SACN_MERGE_RECEIVER_INVALID;
+    to_return->handle                              = kSacnMergeReceiverInvalid;
     to_return->universe                            = 0;
     to_return->slot_range.start_address            = 1;
     to_return->slot_range.address_count            = SACN_DMX_MERGER_MAX_SLOTS;
@@ -116,11 +116,11 @@ etcpal_error_t init_merged_data_buf(unsigned int num_threads)
 
   for (unsigned int i = 0; i < num_threads; ++i)
   {
-    sacn_pool_merged_data[i].active_sources = calloc(INITIAL_CAPACITY, sizeof(sacn_remote_source_t));
+    sacn_pool_merged_data[i].active_sources = calloc(kSacnInitialCapacity, sizeof(sacn_remote_source_t));
     if (!sacn_pool_merged_data[i].active_sources)
       return kEtcPalErrNoMem;
 
-    sacn_pool_merged_data[i].active_sources_capacity = INITIAL_CAPACITY;
+    sacn_pool_merged_data[i].active_sources_capacity = kSacnInitialCapacity;
   }
 #else   // SACN_DYNAMIC_MEM
   ETCPAL_UNUSED_ARG(num_threads);

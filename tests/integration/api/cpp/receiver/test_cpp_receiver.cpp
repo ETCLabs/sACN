@@ -117,7 +117,7 @@ std::vector<uint8_t> test_levels_data =
   0x00, 0x00,                                                                                      // first address
   0x00, 0x01,                                                                                      // increment
   0x02, 0x01,                                                                                      // count 513
-  SACN_STARTCODE_DMX,                                                                              // start code
+  kSacnStartcodeDmx,                                                                              // start code
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // data
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -177,7 +177,7 @@ std::vector<uint8_t> test_pap_data =
   0x00, 0x00,                                                                                      // first address
   0x00, 0x01,                                                                                      // increment
   0x02, 0x01,                                                                                      // count 513
-  SACN_STARTCODE_PRIORITY,                                                                         // start code
+  kSacnStartcodePriority,                                                                         // start code
   0x64, 0x64, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // data
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -247,11 +247,11 @@ public:
       }
     }
 
-    if (universe_data.start_code == SACN_STARTCODE_DMX)
+    if (universe_data.start_code == kSacnStartcodeDmx)
     {
       received_levels_data = true;
     }
-    else if (universe_data.start_code == SACN_STARTCODE_PRIORITY)
+    else if (universe_data.start_code == kSacnStartcodePriority)
     {
       received_pap_data = true;
     }

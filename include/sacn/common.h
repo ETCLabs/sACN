@@ -42,30 +42,25 @@
 extern "C" {
 #endif
 
-/**
- * @brief The maximum length of an sACN source name, including the null-terminator.
- *
- * E1.31 specifies that the Source Name field must be null-terminated on the wire.
- */
-#define SACN_SOURCE_NAME_MAX_LEN 64
-
-/**
- * The number of addresses in a DMX universe.
- */
-#define DMX_ADDRESS_COUNT 512
-
 /** A source discovered on an sACN network that has a CID - used by Receiver and Merge Receiver. */
 typedef uint16_t sacn_remote_source_t;
 /** An invalid remote source handle value. */
-#define SACN_REMOTE_SOURCE_INVALID ((sacn_remote_source_t) - 1)
-
-/** The DMX start code. */
-#define SACN_STARTCODE_DMX 0x00u
-/** The per-address priority start code. */
-#define SACN_STARTCODE_PRIORITY 0xddu
+static const sacn_remote_source_t kSacnRemoteSourceInvalid = 0xFFFF;
 
 enum
 {
+  /**
+   * @brief The maximum length of an sACN source name, including the null-terminator.
+   *
+   * E1.31 specifies that the Source Name field must be null-terminated on the wire.
+   */
+  kSacnSourceNameMaxLen = 64,
+  /** The number of addresses in a DMX universe. */
+  kSacnDmxAddressCount = 512,
+  /** The DMX start code. */
+  kSacnStartcodeDmx = 0x00u,
+  /** The per-address priority start code. */
+  kSacnStartcodePriority = 0xddu,
   /** The lowest sACN universe number supported. */
   kSacnMinimumUniverse = 1,
   /** The highest sACN universe number supported. */

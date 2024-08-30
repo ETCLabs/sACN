@@ -32,6 +32,12 @@ static etcpal_mutex_t source_detector_cb_mutex;
 
 /*********************** Private function prototypes *************************/
 
+static etcpal_error_t find_or_add_source(SacnSourceDetector*                      source_detector,
+                                         const SacnUniverseDiscoveryPage*         page,
+                                         SacnUniverseDiscoverySource**            source,
+                                         SourceDetectorLimitExceededNotification* limit_exceeded);
+static bool           page_modifies_universe_list(const SacnUniverseDiscoverySource* current_source,
+                                                  const SacnUniverseDiscoveryPage*   incoming_page);
 static void process_universe_discovery_page(SacnSourceDetector* source_detector, const SacnUniverseDiscoveryPage* page);
 
 /*************************** Function definitions ****************************/
@@ -91,7 +97,7 @@ void handle_sacn_universe_discovery_packet(SacnRecvThreadContext* context,
       page.from_addr   = from_addr;
       page.source_name = source_name;
 
-      const uint8_t* universe_buf;
+      const uint8_t* universe_buf = NULL;
       if (parse_sacn_universe_discovery_layer(data, datalen, &page.page, &page.last_page, &universe_buf,
                                               &page.num_universes))
       {
@@ -182,6 +188,71 @@ void source_detector_cb_unlock()
   etcpal_mutex_unlock(&source_detector_cb_mutex);
 }
 
+// Needs sACN lock & source_detector_cb lock
+static etcpal_error_t find_or_add_source(SacnSourceDetector*                      source_detector,
+                                         const SacnUniverseDiscoveryPage*         page,
+                                         SacnUniverseDiscoverySource**            source,
+                                         SourceDetectorLimitExceededNotification* limit_exceeded)
+{
+  if (!SACN_ASSERT_VERIFY(source_detector) || !SACN_ASSERT_VERIFY(page) || !SACN_ASSERT_VERIFY(source) ||
+      !SACN_ASSERT_VERIFY(limit_exceeded))
+  {
+    return kEtcPalErrSys;
+  }
+
+  sacn_remote_source_t source_handle = get_remote_source_handle(page->sender_cid);
+  etcpal_error_t       source_result = (source_handle == kSacnRemoteSourceInvalid)
+                                           ? kEtcPalErrNotFound
+                                           : lookup_universe_discovery_source(source_handle, source);
+
+  if (source_result == kEtcPalErrNotFound)
+  {
+#if SACN_DYNAMIC_MEM
+    if ((source_detector->source_count_max != kSacnSourceDetectorInfinite) &&
+        (get_num_universe_discovery_sources() >= (size_t)source_detector->source_count_max))
+    {
+      source_result = kEtcPalErrNoMem;
+    }
+#endif
+    if (source_result != kEtcPalErrNoMem)
+      source_result = add_sacn_universe_discovery_source(page->sender_cid, page->source_name, source);
+  }
+
+  if ((source_result == kEtcPalErrNoMem) && !source_detector->suppress_source_limit_exceeded_notification)
+  {
+    source_detector->suppress_source_limit_exceeded_notification = true;
+    limit_exceeded->callback                                     = source_detector->callbacks.limit_exceeded;
+    limit_exceeded->context                                      = source_detector->callbacks.context;
+  }
+
+  return source_result;
+}
+
+bool page_modifies_universe_list(const SacnUniverseDiscoverySource* current_source,
+                                 const SacnUniverseDiscoveryPage*   incoming_page)
+{
+  if (!SACN_ASSERT_VERIFY(current_source) || !SACN_ASSERT_VERIFY(incoming_page) ||
+      !SACN_ASSERT_VERIFY(incoming_page->universes || (incoming_page->num_universes == 0)))
+  {
+    return false;
+  }
+
+  size_t num_remaining_universes = (current_source->num_universes - current_source->next_universe_index);
+
+  // Check if the universes increased.
+  if (incoming_page->num_universes > num_remaining_universes)
+    return true;
+
+  // Check if the universes decreased.
+  if ((incoming_page->page == incoming_page->last_page) && (incoming_page->num_universes < num_remaining_universes))
+    return true;
+
+  // Otherwise do a comparison of the current universes.
+  return (incoming_page->num_universes > 0) &&
+         (memcmp(&current_source->universes[current_source->next_universe_index], incoming_page->universes,
+                 incoming_page->num_universes * sizeof(uint16_t)) != 0);
+}
+
 // Takes sACN lock, needs source_detector_cb lock
 void process_universe_discovery_page(SacnSourceDetector* source_detector, const SacnUniverseDiscoveryPage* page)
 {
@@ -193,33 +264,8 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
 
   if (sacn_receiver_lock())
   {
-    SacnUniverseDiscoverySource* source        = NULL;
-    sacn_remote_source_t         source_handle = get_remote_source_handle(page->sender_cid);
-    etcpal_error_t               source_result = (source_handle == SACN_REMOTE_SOURCE_INVALID)
-                                                     ? kEtcPalErrNotFound
-                                                     : lookup_universe_discovery_source(source_handle, &source);
-
-    if (source_result == kEtcPalErrNotFound)
-    {
-#if SACN_DYNAMIC_MEM
-      if ((source_detector->source_count_max != SACN_SOURCE_DETECTOR_INFINITE) &&
-          (get_num_universe_discovery_sources() >= (size_t)source_detector->source_count_max))
-      {
-        source_result = kEtcPalErrNoMem;
-      }
-#endif
-      if (source_result != kEtcPalErrNoMem)
-        source_result = add_sacn_universe_discovery_source(page->sender_cid, page->source_name, &source);
-    }
-
-    if ((source_result == kEtcPalErrNoMem) && !source_detector->suppress_source_limit_exceeded_notification)
-    {
-      source_detector->suppress_source_limit_exceeded_notification = true;
-      limit_exceeded.callback                                      = source_detector->callbacks.limit_exceeded;
-      limit_exceeded.context                                       = source_detector->callbacks.context;
-    }
-
-    if (source_result == kEtcPalErrOk)
+    SacnUniverseDiscoverySource* source = NULL;
+    if (find_or_add_source(source_detector, page, &source, &limit_exceeded) == kEtcPalErrOk)
     {
       etcpal_timer_reset(&source->expiration_timer);
 
@@ -239,12 +285,7 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
           source->next_page           = 0;
         }
 
-        // If this page modifies the universe list:
-        size_t num_remaining_universes = (source->num_universes - source->next_universe_index);
-        if ((page->num_universes > num_remaining_universes) ||
-            ((page->page == page->last_page) && (page->num_universes < num_remaining_universes)) ||
-            (memcmp(&source->universes[source->next_universe_index], page->universes,
-                    page->num_universes * sizeof(uint16_t)) != 0))
+        if (page_modifies_universe_list(source, page))
         {
           source->universes_dirty = true;
 

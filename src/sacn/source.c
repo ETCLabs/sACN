@@ -58,11 +58,11 @@ void sacn_source_config_init(SacnSourceConfig* config)
   {
     config->cid                     = kEtcPalNullUuid;
     config->name                    = NULL;
-    config->universe_count_max      = SACN_SOURCE_INFINITE_UNIVERSES;
+    config->universe_count_max      = kSacnSourceInfiniteUniverses;
     config->manually_process_source = false;
     config->ip_supported            = kSacnIpV4AndIpV6;
-    config->keep_alive_interval     = SACN_SOURCE_KEEP_ALIVE_INTERVAL_DEFAULT;
-    config->pap_keep_alive_interval = SACN_SOURCE_PAP_KEEP_ALIVE_INTERVAL_DEFAULT;
+    config->keep_alive_interval     = kSacnSourceKeepAliveIntervalDefault;
+    config->pap_keep_alive_interval = kSacnSourcePapKeepAliveIntervalDefault;
   }
 }
 
@@ -94,7 +94,7 @@ void sacn_source_universe_config_init(SacnSourceUniverseConfig* config)
  *
  * @param[in] config Configuration parameters for the sACN source to be created. If any of these parameters are invalid,
  * #kEtcPalErrInvalid will be returned. This includes if the source name's length (including the null terminator) is
- * beyond #SACN_SOURCE_NAME_MAX_LEN.
+ * beyond #kSacnSourceNameMaxLen.
  * @param[out] handle Filled in on success with a handle to the sACN source.
  * @return #kEtcPalErrOk: Source successfully created.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -115,7 +115,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
   if (result == kEtcPalErrOk)
   {
     if (!config || ETCPAL_UUID_IS_NULL(&config->cid) || !config->name ||
-        (strlen(config->name) > (SACN_SOURCE_NAME_MAX_LEN - 1)) || (config->keep_alive_interval <= 0) ||
+        (strlen(config->name) > (kSacnSourceNameMaxLen - 1)) || (config->keep_alive_interval <= 0) ||
         (config->pap_keep_alive_interval <= 0) || !handle)
     {
       result = kEtcPalErrInvalid;
@@ -155,7 +155,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
  *
  * The name is a UTF-8 string representing "a user-assigned name provided by the source of the packet for use in
  * displaying the identity of a source to a user." If its length (including the null terminator) is longer than
- * #SACN_SOURCE_NAME_MAX_LEN, then #kEtcPalErrInvalid will be returned.
+ * #kSacnSourceNameMaxLen, then #kEtcPalErrInvalid will be returned.
  *
  * This function will update the packet buffers of all this source's universes with the new name. For each universe that
  * is transmitting NULL start code or PAP data, the logic that slows down packet transmission due to inactivity will be
@@ -180,7 +180,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if ((handle == SACN_SOURCE_INVALID) || !new_name || (strlen(new_name) > (SACN_SOURCE_NAME_MAX_LEN - 1)))
+    if ((handle == kSacnSourceInvalid) || !new_name || (strlen(new_name) > (kSacnSourceNameMaxLen - 1)))
       result = kEtcPalErrInvalid;
   }
 
@@ -222,7 +222,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
 void sacn_source_destroy(sacn_source_t handle)
 {
   // Validate and lock.
-  if (sacn_initialized() && (handle != SACN_SOURCE_INVALID) && sacn_source_lock())
+  if (sacn_initialized() && (handle != kSacnSourceInvalid) && sacn_source_lock())
   {
     // Try to find the source's state.
     SacnSource* source = NULL;
@@ -275,7 +275,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t                   handle,
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if ((handle == SACN_SOURCE_INVALID) || !config || !UNIVERSE_ID_VALID(config->universe) ||
+    if ((handle == kSacnSourceInvalid) || !config || !UNIVERSE_ID_VALID(config->universe) ||
         (config->sync_universe && !UNIVERSE_ID_VALID(config->sync_universe)) ||
         ((config->num_unicast_destinations > 0) && !config->unicast_destinations))
     {
@@ -419,7 +419,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if ((handle == SACN_SOURCE_INVALID) || !UNIVERSE_ID_VALID(universe) || !dest || ETCPAL_IP_IS_INVALID(dest))
+    if ((handle == kSacnSourceInvalid) || !UNIVERSE_ID_VALID(universe) || !dest || ETCPAL_IP_IS_INVALID(dest))
       result = kEtcPalErrInvalid;
   }
 
@@ -569,7 +569,7 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if ((handle == SACN_SOURCE_INVALID) || !UNIVERSE_ID_VALID(universe) || (new_priority > 200))
+    if ((handle == kSacnSourceInvalid) || !UNIVERSE_ID_VALID(universe) || (new_priority > 200))
       result = kEtcPalErrInvalid;
   }
 
@@ -630,7 +630,7 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if ((handle == SACN_SOURCE_INVALID) || !UNIVERSE_ID_VALID(universe))
+    if ((handle == kSacnSourceInvalid) || !UNIVERSE_ID_VALID(universe))
       result = kEtcPalErrInvalid;
   }
 
@@ -728,7 +728,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t  handle,
   // Check for invalid arguments.
   if (result == kEtcPalErrOk)
   {
-    if ((handle == SACN_SOURCE_INVALID) || !UNIVERSE_ID_VALID(universe) || (buflen > DMX_ADDRESS_COUNT) || !buffer ||
+    if ((handle == kSacnSourceInvalid) || !UNIVERSE_ID_VALID(universe) || (buflen > kSacnDmxAddressCount) || !buffer ||
         (buflen == 0))
     {
       result = kEtcPalErrInvalid;
@@ -819,14 +819,14 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t s
  * @param[in] universe Universe to update.
  * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #kSacnDmxAddressCount.
  */
 void sacn_source_update_levels(sacn_source_t  handle,
                                uint16_t       universe,
                                const uint8_t* new_levels,
                                size_t         new_levels_size)
 {
-  if ((new_levels_size <= DMX_ADDRESS_COUNT) && sacn_source_lock())
+  if ((new_levels_size <= kSacnDmxAddressCount) && sacn_source_lock())
   {
     SacnSource*         source_state   = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -865,11 +865,11 @@ void sacn_source_update_levels(sacn_source_t  handle,
  * @param[in] universe Universe to update.
  * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #kSacnDmxAddressCount.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This will only be sent when DMX is also
  * being sent. Setting this to NULL will stop the transmission of per-address priorities, in which case receivers will
  * revert to the universe priority after PAP times out.
- * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #kSacnDmxAddressCount.
  */
 void sacn_source_update_levels_and_pap(sacn_source_t  handle,
                                        uint16_t       universe,
@@ -878,7 +878,7 @@ void sacn_source_update_levels_and_pap(sacn_source_t  handle,
                                        const uint8_t* new_priorities,
                                        size_t         new_priorities_size)
 {
-  if ((new_levels_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_source_lock())
+  if ((new_levels_size <= kSacnDmxAddressCount) && (new_priorities_size <= kSacnDmxAddressCount) && sacn_source_lock())
   {
     SacnSource*         source_state   = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -915,14 +915,14 @@ void sacn_source_update_levels_and_pap(sacn_source_t  handle,
  * @param[in] universe Universe to update.
  * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #kSacnDmxAddressCount.
  */
 void sacn_source_update_levels_and_force_sync(sacn_source_t  handle,
                                               uint16_t       universe,
                                               const uint8_t* new_levels,
                                               size_t         new_levels_size)
 {
-  if ((new_levels_size <= DMX_ADDRESS_COUNT) && sacn_source_lock())
+  if ((new_levels_size <= kSacnDmxAddressCount) && sacn_source_lock())
   {
     SacnSource*         source_state   = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -966,11 +966,11 @@ void sacn_source_update_levels_and_force_sync(sacn_source_t  handle,
  * @param[in] universe Universe to update.
  * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
- * @param[in] new_levels_size Size of new_levels. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_levels_size Size of new_levels. This must be no larger than #kSacnDmxAddressCount.
  * @param[in] new_priorities A buffer of per-address priorities to copy from. This will only be sent when DMX is also
  * being sent. Setting this to NULL will stop the transmission of per-address priorities, in which case receivers will
  * revert to the universe priority after PAP times out.
- * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #DMX_ADDRESS_COUNT.
+ * @param[in] new_priorities_size Size of new_priorities. This must be no larger than #kSacnDmxAddressCount.
  */
 void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t  handle,
                                                       uint16_t       universe,
@@ -979,7 +979,7 @@ void sacn_source_update_levels_and_pap_and_force_sync(sacn_source_t  handle,
                                                       const uint8_t* new_priorities,
                                                       size_t         new_priorities_size)
 {
-  if ((new_levels_size <= DMX_ADDRESS_COUNT) && (new_priorities_size <= DMX_ADDRESS_COUNT) && sacn_source_lock())
+  if ((new_levels_size <= kSacnDmxAddressCount) && (new_priorities_size <= kSacnDmxAddressCount) && sacn_source_lock())
   {
     SacnSource*         source_state   = NULL;
     SacnSourceUniverse* universe_state = NULL;
@@ -1259,7 +1259,7 @@ size_t get_per_universe_netint_lists_index(sacn_source_t                       s
                                            size_t                              num_per_universe_netint_lists,
                                            bool*                               found)
 {
-  if (!SACN_ASSERT_VERIFY(source != SACN_SOURCE_INVALID) || !SACN_ASSERT_VERIFY(per_universe_netint_lists))
+  if (!SACN_ASSERT_VERIFY(source != kSacnSourceInvalid) || !SACN_ASSERT_VERIFY(per_universe_netint_lists))
     return 0;
 
   for (size_t i = 0; i < num_per_universe_netint_lists; ++i)

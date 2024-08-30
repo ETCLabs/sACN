@@ -119,7 +119,7 @@ static void process_new_source_data(SacnReceiver*                    receiver,
                                     SacnTrackedSource**              new_source,
                                     SourceLimitExceededNotification* source_limit_exceeded,
                                     bool*                            notify);
-static bool check_sequence(int8_t new_seq, int8_t old_seq);
+static bool check_sequence(uint8_t new_seq, uint8_t old_seq);
 static void deliver_receive_callbacks(const EtcPalSockAddr*            from_addr,
                                       const SacnRemoteSource*          source_info,
                                       uint16_t                         universe_id,
@@ -142,16 +142,16 @@ static void end_current_sampling_period(SacnReceiver* receiver);
 etcpal_error_t sacn_receiver_state_init(void)
 {
   init_int_handle_manager(&handle_mgr, -1, receiver_handle_in_use, NULL);
-  expired_wait = SACN_DEFAULT_EXPIRED_WAIT_MS;
+  expired_wait = kSacnDefaultExpiredWaitMs;
 
   return etcpal_mutex_create(&receiver_cb_mutex) ? kEtcPalErrOk : kEtcPalErrSys;
 }
 
 void sacn_receiver_state_deinit(void)
 {
-  sacn_thread_id_t threads_ids_to_deinit[SACN_RECEIVER_MAX_THREADS];
-  etcpal_thread_t* threads_handles_to_deinit[SACN_RECEIVER_MAX_THREADS];
-  int              num_threads_to_deinit = 0;
+  sacn_thread_id_t threads_ids_to_deinit[SACN_RECEIVER_MAX_THREADS]     = {0};
+  etcpal_thread_t* threads_handles_to_deinit[SACN_RECEIVER_MAX_THREADS] = {NULL};
+  int              num_threads_to_deinit                                = 0;
 
   // Stop all receive threads
   if (sacn_receiver_lock())
@@ -824,7 +824,7 @@ void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
                              const EtcPalSockAddr*      from_addr,
                              const EtcPalMcastNetintId* netint)
 {
-  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) || !SACN_ASSERT_VERIFY(data) ||
+  if (!SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid) || !SACN_ASSERT_VERIFY(data) ||
       !SACN_ASSERT_VERIFY(sender_cid) || !SACN_ASSERT_VERIFY(from_addr) || !SACN_ASSERT_VERIFY(netint))
   {
     return;
@@ -842,9 +842,9 @@ void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
       return;
     }
 
-    uint8_t seq;
-    bool    is_termination_packet;
-    bool    parse_res = false;
+    uint8_t seq                   = 0u;
+    bool    is_termination_packet = false;
+    bool    parse_res             = false;
 
     universe_data->source_info.cid = *sender_cid;
 
@@ -864,9 +864,9 @@ void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
       return;
     }
 
-    // Ignore SACN_STARTCODE_PRIORITY packets if SACN_ETC_PRIORITY_EXTENSION is disabled.
+    // Ignore kSacnStartcodePriority packets if SACN_ETC_PRIORITY_EXTENSION is disabled.
 #if !SACN_ETC_PRIORITY_EXTENSION
-    if (universe_data->universe_data.start_code == SACN_STARTCODE_PRIORITY)
+    if (universe_data->universe_data.start_code == kSacnStartcodePriority)
     {
       receiver_cb_unlock();
       return;
@@ -941,17 +941,17 @@ void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
         src->seq = seq;
 
         // Based on the start code, update the timers.
-        if (universe_data->universe_data.start_code == SACN_STARTCODE_DMX)
+        if (universe_data->universe_data.start_code == kSacnStartcodeDmx)
         {
           process_null_start_code(receiver, src, source_pap_lost, &notify);
         }
 #if SACN_ETC_PRIORITY_EXTENSION
-        else if (universe_data->universe_data.start_code == SACN_STARTCODE_PRIORITY)
+        else if (universe_data->universe_data.start_code == kSacnStartcodePriority)
         {
           process_pap(receiver, src, &notify);
         }
 #endif
-        else if (universe_data->universe_data.start_code != SACN_STARTCODE_PRIORITY)
+        else if (universe_data->universe_data.start_code != kSacnStartcodePriority)
         {
           notify = true;
         }
@@ -1020,7 +1020,7 @@ void handle_sacn_extended_packet(SacnRecvThreadContext* context,
     return;
   }
 
-  uint32_t vector;
+  uint32_t vector = 0u;
   if (parse_framing_layer_vector(data, datalen, &vector))
   {
 #if SACN_SOURCE_DETECTOR_ENABLED
@@ -1200,10 +1200,10 @@ void process_new_source_data(SacnReceiver*                    receiver,
   }
 
 #if SACN_ETC_PRIORITY_EXTENSION
-  if ((universe_data->start_code != SACN_STARTCODE_DMX) && (universe_data->start_code != SACN_STARTCODE_PRIORITY))
+  if ((universe_data->start_code != kSacnStartcodeDmx) && (universe_data->start_code != kSacnStartcodePriority))
     return;
 #else
-  if (universe_data->start_code != SACN_STARTCODE_DMX)
+  if (universe_data->start_code != kSacnStartcodeDmx)
     return;
 #endif
 
@@ -1216,7 +1216,7 @@ void process_new_source_data(SacnReceiver*                    receiver,
   {
 #if SACN_ETC_PRIORITY_EXTENSION
     // After the sampling period, 0x00 packets should always notify after 0xDD
-    if ((universe_data->start_code == SACN_STARTCODE_DMX) && !receiver->sampling)
+    if ((universe_data->start_code == kSacnStartcodeDmx) && !receiver->sampling)
       *notify = false;
 #endif
 
@@ -1251,9 +1251,9 @@ void process_new_source_data(SacnReceiver*                    receiver,
  * [in] old_seq The most recent previous sequence number that was received.
  * Returns whether this packet is in sequence and should be processed.
  */
-bool check_sequence(int8_t new_seq, int8_t old_seq)
+bool check_sequence(uint8_t new_seq, uint8_t old_seq)
 {
-  int8_t seqnum_cmp = new_seq - old_seq;
+  int seqnum_cmp = (int)new_seq - (int)old_seq;
   return (seqnum_cmp > 0 || seqnum_cmp <= -20);
 }
 
@@ -1277,7 +1277,7 @@ void deliver_receive_callbacks(const EtcPalSockAddr*            from_addr,
   ETCPAL_UNUSED_ARG(universe_id);
 #endif
 
-  if (source_limit_exceeded->handle != SACN_RECEIVER_INVALID)
+  if (source_limit_exceeded->handle != kSacnReceiverInvalid)
   {
     if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))
     {
@@ -1302,7 +1302,7 @@ void deliver_receive_callbacks(const EtcPalSockAddr*            from_addr,
     }
   }
 
-  if (source_pap_lost->handle != SACN_RECEIVER_INVALID)
+  if (source_pap_lost->handle != kSacnReceiverInvalid)
   {
     if (source_pap_lost->internal_callback)
     {
@@ -1317,7 +1317,7 @@ void deliver_receive_callbacks(const EtcPalSockAddr*            from_addr,
     }
   }
 
-  if (universe_data->receiver_handle != SACN_RECEIVER_INVALID)
+  if (universe_data->receiver_handle != kSacnReceiverInvalid)
   {
     if (universe_data->internal_callback)
     {
@@ -1423,7 +1423,7 @@ void process_receivers(SacnRecvThreadContext* recv_thread_context)
 
 void process_receiver_sources(sacn_thread_id_t thread_id, SacnReceiver* receiver, SourcesLostNotification* sources_lost)
 {
-  if (!SACN_ASSERT_VERIFY(thread_id != SACN_THREAD_ID_INVALID) || !SACN_ASSERT_VERIFY(receiver) ||
+  if (!SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid) || !SACN_ASSERT_VERIFY(receiver) ||
       !SACN_ASSERT_VERIFY(sources_lost))
   {
     return;
