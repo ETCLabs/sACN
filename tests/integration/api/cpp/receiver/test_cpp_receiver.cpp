@@ -28,6 +28,7 @@
 #include "sacn_mock/private/receiver_state.h"
 #include "sacn/private/mem/receiver/recv_thread_context.h"
 #include "sacn/private/pdu.h"
+#include "test_clang_tidy_defs.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
@@ -313,7 +314,7 @@ protected:
 
     PopulateFakeNetints();
 
-    static auto validate_get_interfaces_args = [](EtcPalNetintInfo* netints, size_t* num_netints) {
+    static auto validate_get_interfaces_args = [](EtcPalNetintInfo* netints, const size_t* num_netints) {
       if (!num_netints)
         return kEtcPalErrInvalid;
       if ((!netints && (*num_netints > 0)) && (netints && (*num_netints == 0)))
@@ -386,18 +387,18 @@ protected:
   {
     EXPECT_NE(msg, nullptr);
     EtcPalSockAddr etcpal_sock_addr;
-    EtcPalIpAddr   ip;
+    EtcPalIpAddr   ip_addr;
     if (mode == FakeReceiveMode::kMulticast)
     {
       auto& fake_network_info = fake_networks_info[index];
-      etcpal_string_to_ip(fake_network_info.type, fake_network_info.addr.c_str(), &ip);
+      etcpal_string_to_ip(fake_network_info.type, fake_network_info.addr.c_str(), &ip_addr);
     }
     else
     {
       auto& fake_unicast_info = fake_unicasts_info[index];
-      etcpal_string_to_ip(fake_unicast_info.type, fake_unicast_info.addr_string.c_str(), &ip);
+      etcpal_string_to_ip(fake_unicast_info.type, fake_unicast_info.addr_string.c_str(), &ip_addr);
     }
-    etcpal_sock_addr.ip   = ip;
+    etcpal_sock_addr.ip   = ip_addr;
     etcpal_sock_addr.port = 0;
     msg->flags            = 0;
     msg->name             = etcpal_sock_addr;
@@ -431,7 +432,7 @@ protected:
     return res;
   }
 
-  void PopulateFakeNetints()
+  static void PopulateFakeNetints()
   {
     EtcPalNetintInfo fake_netint;
     for (auto fake_network_info : fake_networks_info)
@@ -454,7 +455,7 @@ protected:
     }
   }
 
-  void ResetNotifyVariables()
+  static void ResetNotifyVariables()
   {
     received_levels_data = false;
     received_pap_data    = false;
@@ -468,7 +469,7 @@ protected:
     }
   }
 
-  void RunThreadCycle(bool increment_sequence_num)
+  static void RunThreadCycle(bool increment_sequence_num)
   {
     sacn_thread_id_t       thread_id           = 0;
     SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread_id);
@@ -535,7 +536,7 @@ protected:
   NiceMock<MockMergeReceiverNotifyHandler> mock_notify_handler_;
 };
 
-MATCHER_P(ControlsLevels, expected_levels, "")  // NOLINT(readability-redundant-string-init)
+TIDY_MATCHER_P(ControlsLevels, expected_levels, "")
 {
   ETCPAL_UNUSED_ARG(result_listener);
 

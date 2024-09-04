@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 #if SACN_DYNAMIC_MEM
-// NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
+// NOLINTBEGIN(cppcoreguidelines-no-malloc)
 #define CLEAR_BUF(ptr, buf_name)  \
   do                              \
   {                               \
@@ -39,6 +39,7 @@ extern "C" {
     (ptr)->buf_name       = NULL; \
     (ptr)->num_##buf_name = 0;    \
   } while (0)
+// NOLINTEND(cppcoreguidelines-no-malloc)
 
 #define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static, failure_return_value)        \
   do                                                                                                            \
@@ -62,12 +63,14 @@ extern "C" {
 #define CHECK_ROOM_FOR_ONE_MORE(container, buffer, buffer_type, max_static, failure_return_value) \
   CHECK_CAPACITY(container, container->num_##buffer + 1, buffer, buffer_type, max_static, failure_return_value)
 #else  // SACN_DYNAMIC_MEM
+// NOLINTBEGIN(cppcoreguidelines-no-malloc)
 #define CLEAR_BUF(ptr, buf_name)                         \
   do                                                     \
   {                                                      \
     memset((ptr)->buf_name, 0, sizeof((ptr)->buf_name)); \
     (ptr)->num_##buf_name = 0;                           \
   } while (0)
+// NOLINTEND(cppcoreguidelines-no-malloc)
 
 #define CHECK_CAPACITY(container, size_requested, buffer, buffer_type, max_static, failure_return_value) \
   do                                                                                                     \

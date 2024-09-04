@@ -22,11 +22,7 @@
 #include "etcpal/cpp/netint.h"
 #include <iostream>
 
-NetworkSelect::NetworkSelect()
-{
-}
-
-void NetworkSelect::InitializeNics(void)
+void NetworkSelect::InitializeNics()
 {
   auto netints = etcpal::netint::GetInterfaces();
   if (netints)
@@ -49,7 +45,7 @@ void NetworkSelect::InitializeNics(void)
   }
 }  // InitializeNics
 
-void NetworkSelect::PrintNics(void) const
+void NetworkSelect::PrintNics() const
 {
   std::cout << "Selected Index Network Interface\n";
   std::cout << "======== ===== =================\n";
@@ -80,18 +76,18 @@ bool NetworkSelect::IsAnyNicSelected() const
   return false;
 }  // IsAnyNicSelected
 
-void NetworkSelect::SelectNics(void)
+void NetworkSelect::SelectNics()
 {
-  int ch = -1;
+  int input = -1;
   while (true)
   {
-    if (ch != '\n')
+    if (input != '\n')
     {
       PrintNics();
       std::cout << "Type index letter to select / deselect a network interface, type 0 when finished\n";
     }
-    ch = getchar();
-    if (ch == '0')
+    input = getchar();
+    if (input == '0')
     {
       if (IsAnyNicSelected())
       {
@@ -100,12 +96,12 @@ void NetworkSelect::SelectNics(void)
       std::cout << "Please select at least one network interface\n\n";
       continue;
     }
-    if (ch != '\n')
+    if (input != '\n')
     {
       bool found = false;
       for (const auto& network_interface : all_network_interfaces_)
       {
-        if (ch == network_interface->ui_index)
+        if (input == network_interface->ui_index)
         {
           found                       = true;
           network_interface->selected = !network_interface->selected;
@@ -119,17 +115,17 @@ void NetworkSelect::SelectNics(void)
   }
 }  // SelectNics
 
-std::vector<SacnMcastInterface> NetworkSelect::GetMcastInterfaces(void) const
+std::vector<SacnMcastInterface> NetworkSelect::GetMcastInterfaces() const
 {
   std::vector<SacnMcastInterface> interfaces;
   for (const auto& network_interface : all_network_interfaces_)
   {
     if (network_interface && network_interface->selected)
     {
-      SacnMcastInterface i = {
+      SacnMcastInterface iface = {
           {static_cast<etcpal_iptype_t>(network_interface->addr.type()), network_interface->os_index.value()},
           kEtcPalErrOk};
-      interfaces.push_back(i);
+      interfaces.push_back(iface);
     }
   }
   return interfaces;

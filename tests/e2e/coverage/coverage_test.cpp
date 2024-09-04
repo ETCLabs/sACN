@@ -61,7 +61,12 @@ static constexpr UniverseId kDefaultUniverse = 1u;
 class MockLogMessageHandler : public etcpal::LogMessageHandler
 {
 public:
-  MockLogMessageHandler() = default;
+  MockLogMessageHandler()                                              = default;
+  MockLogMessageHandler(const MockLogMessageHandler& other)            = delete;
+  MockLogMessageHandler& operator=(const MockLogMessageHandler& other) = delete;
+  MockLogMessageHandler(MockLogMessageHandler&& other)                 = delete;
+  MockLogMessageHandler& operator=(MockLogMessageHandler&& other)      = delete;
+  virtual ~MockLogMessageHandler()                                     = default;
 
   MOCK_METHOD(void, HandleLogMessage, (const EtcPalLogStrings& strings), (override));
 };
@@ -120,13 +125,18 @@ public:
   struct UniverseChange
   {
     UniverseId from{kDefaultUniverse};
-    UniverseId to;
+    UniverseId to{kDefaultUniverse};
   };
 
   TestMergeReceiver(sacn::McastMode initial_mcast_mode = sacn::McastMode::kEnabledOnAllInterfaces)
       : initial_mcast_mode_(initial_mcast_mode)
   {
   }
+
+  TestMergeReceiver(const TestMergeReceiver& other)            = default;
+  TestMergeReceiver& operator=(const TestMergeReceiver& other) = default;
+  TestMergeReceiver(TestMergeReceiver&& other)                 = default;
+  TestMergeReceiver& operator=(TestMergeReceiver&& other)      = default;
 
   ~TestMergeReceiver()
   {
@@ -185,6 +195,12 @@ public:
       : initial_mcast_mode_(initial_mcast_mode)
   {
   }
+
+  TestSourceDetector(const TestSourceDetector& other)            = delete;
+  TestSourceDetector& operator=(const TestSourceDetector& other) = delete;
+  TestSourceDetector(TestSourceDetector&& other)                 = default;
+  TestSourceDetector& operator=(TestSourceDetector&& other)      = delete;
+
   ~TestSourceDetector() { sacn::SourceDetector::Shutdown(); }
 
   void Startup() { EXPECT_TRUE(sacn::SourceDetector::Startup(notify_, initial_mcast_mode_)); }
@@ -200,8 +216,8 @@ class TestSource
 public:
   struct StartCodeParams
   {
-    int                code;
-    int                value;
+    int                code{};
+    int                value{};
     std::optional<int> min;
     std::optional<int> max;
   };
@@ -238,8 +254,10 @@ public:
     }
   }
 
-  TestSource(const TestSource& rhs)     = delete;
-  TestSource(TestSource&& rhs) noexcept = default;
+  TestSource(const TestSource& rhs)              = delete;
+  TestSource& operator=(const TestSource& other) = delete;
+  TestSource(TestSource&& rhs) noexcept          = default;
+  TestSource& operator=(TestSource&& other)      = default;
 
   ~TestSource()
   {
@@ -305,7 +323,10 @@ private:
   struct StartCodeState
   {
     StartCodeState() = default;
-    StartCodeState(const StartCodeParams& p) : params(p) { buffer.fill(static_cast<uint8_t>(p.value)); }
+    StartCodeState(const StartCodeParams& start_code_params) : params(start_code_params)
+    {
+      buffer.fill(static_cast<uint8_t>(start_code_params.value));
+    }
 
     StartCodeParams                           params;
     std::array<uint8_t, kSacnDmxAddressCount> buffer{};
@@ -386,7 +407,7 @@ protected:
     logger_.Shutdown();
   }
 
-  void ResetNetworking()
+  static void ResetNetworking()
   {
     // Do this asynchronously to catch any data races between API boundaries
     etcpal::Thread merge_receiver_reset_thread;
@@ -426,11 +447,11 @@ TEST_F(CoverageTest, SendAndReceiveSimpleUniverse)
 
 TEST_F(CoverageTest, SendReceiveAndMergeAtScale)
 {
-  static constexpr UniverseId kTestUniverses[] = {1u, 2u, 3u, 4u, 5u, 6u, 7u};
-  static constexpr int        kNumTestSources  = 7u;
+  static constexpr int                                     kNumTestSources = 7;
+  static constexpr std::array<UniverseId, kNumTestSources> kTestUniverses  = {1u, 2u, 3u, 4u, 5u, 6u, 7u};
 
   TestMergeReceiver merge_receiver;
-  for (UniverseId universe_id : kTestUniverses)
+  for (auto universe_id : kTestUniverses)
   {
     merge_receiver.AddUniverse(universe_id);
     EXPECT_CALL(merge_receiver.GetNotifyHandlerForUniverse(universe_id), HandleMergedData(_, _)).Times(AtLeast(1));
@@ -461,8 +482,8 @@ TEST_F(CoverageTest, SendReceiveAndMergeAtScale)
 
 TEST_F(CoverageTest, SwitchThroughUniverses)
 {
-  static constexpr UniverseId kTestUniverses[]  = {1u, 2u, 3u};
-  static constexpr int        kNumTestUniverses = sizeof(kTestUniverses) / sizeof(UniverseId);
+  static constexpr int                                       kNumTestUniverses = 3;
+  static constexpr std::array<UniverseId, kNumTestUniverses> kTestUniverses    = {1u, 2u, 3u};
 
   TestMergeReceiver merge_receiver;
   merge_receiver.AddUniverse(kTestUniverses[0]);
@@ -475,13 +496,13 @@ TEST_F(CoverageTest, SwitchThroughUniverses)
   merge_receiver.StartAllUniverses();
 
   TestSource source;
-  for (UniverseId universe_id : kTestUniverses)
+  for (auto universe_id : kTestUniverses)
     source.AddUniverse({.universe = universe_id, .start_codes = {{.code = kSacnStartcodeDmx, .value = 0xFF}}});
 
   for (int i = 0, j = 1; j < kNumTestUniverses; ++i, ++j)
   {
     etcpal::Thread::Sleep(2000u);  // Cover sampling period
-    merge_receiver.ChangeUniverse({.from = kTestUniverses[i], .to = kTestUniverses[j]});
+    merge_receiver.ChangeUniverse({.from = kTestUniverses.at(i), .to = kTestUniverses.at(j)});
   }
 
   etcpal::Thread::Sleep(2000u);  // Cover sampling period
@@ -489,8 +510,8 @@ TEST_F(CoverageTest, SwitchThroughUniverses)
 
 TEST_F(CoverageTest, DetectSourcesComingAndGoing)
 {
-  static constexpr UniverseId kTestUniverses[] = {1u, 2u, 3u, 4u, 5u, 6u, 7u};
-  static constexpr int        kNumTestSources  = 7u;
+  static constexpr int                                     kNumTestSources = 7;
+  static constexpr std::array<UniverseId, kNumTestSources> kTestUniverses  = {1u, 2u, 3u, 4u, 5u, 6u, 7u};
 
   TestSourceDetector source_detector;
   EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceUpdated(_, _, _, _)).Times(AtLeast(1));
@@ -501,7 +522,7 @@ TEST_F(CoverageTest, DetectSourcesComingAndGoing)
   for (int i = 0; i < kNumTestSources; ++i)
   {
     TestSource source;
-    for (UniverseId universe_id : kTestUniverses)
+    for (auto universe_id : kTestUniverses)
       source.AddUniverse({.universe = universe_id, .start_codes = {{.code = kSacnStartcodeDmx, .value = 0xFF}}});
 
     sources.push_back(std::move(source));

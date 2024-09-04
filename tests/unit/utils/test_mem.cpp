@@ -355,10 +355,8 @@ TEST_F(TestMem, AddSocketRefWorks)
   });
 }
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestMem, RemoveSocketRefWorks)
 {
-  // NOLINTNEXTLINE(readability-function-cognitive-complexity)
   DoForEachThread([](sacn_thread_id_t thread) {
     SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread);
     ASSERT_NE(recv_thread_context, nullptr);

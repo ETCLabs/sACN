@@ -83,6 +83,7 @@ CheckOptions:
   - { key: readability-identifier-naming.MemberConstantPrefix,    value: k                   }
   - { key: readability-identifier-naming.ConstantCase,            value: CamelCase           }
   - { key: readability-identifier-naming.ConstantPrefix,          value: k                   }
+  - { key: readability-identifier-naming.ConstantParameterCase,   value: lower_case          }
   - { key: readability-identifier-naming.MethodCase,              value: aNy_CasE            }
   - { key: readability-identifier-naming.NamespaceCase,           value: lower_case          }
   - { key: readability-identifier-naming.ParameterCase,           value: lower_case          }

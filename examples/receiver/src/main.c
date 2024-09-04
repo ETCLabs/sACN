@@ -40,9 +40,13 @@
  * Constants
  *************************************************************************************************/
 
-#define MAX_LISTENERS            10
-#define NUM_SOURCES_PER_LISTENER 4
-#define NUM_SLOTS_DISPLAYED      10
+enum
+{
+  kMaxListeners          = 10,
+  kNumSourcesPerListener = 4,
+  kNumSlotsDisplayed     = 10
+};
+
 #define BEGIN_BORDER_STRING \
   ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
 #define END_BORDER_STRING \
@@ -61,18 +65,18 @@ typedef struct SourceData
   uint8_t    priority;
   int        num_updates;
   uint32_t   update_start_time_ms;
-  uint8_t    last_update[NUM_SLOTS_DISPLAYED];
+  uint8_t    last_update[kNumSlotsDisplayed];
 } SourceData;
 
 typedef struct ListeningUniverse
 {
   sacn_receiver_t receiver_handle;
   uint16_t        universe;
-  SourceData      sources[NUM_SOURCES_PER_LISTENER];
+  SourceData      sources[kNumSourcesPerListener];
   size_t          num_sources;
 } ListeningUniverse;
 
-ListeningUniverse listeners[MAX_LISTENERS];
+ListeningUniverse listeners[kMaxListeners];
 
 etcpal_mutex_t state_lock;
 
@@ -82,7 +86,7 @@ etcpal_mutex_t state_lock;
 
 static SourceData* find_source(ListeningUniverse* listener, const EtcPalUuid* cid)
 {
-  for (SourceData* source = listener->sources; source < listener->sources + NUM_SOURCES_PER_LISTENER; ++source)
+  for (SourceData* source = listener->sources; source < listener->sources + kNumSourcesPerListener; ++source)
   {
     if (source->valid && ETCPAL_UUID_CMP(&source->cid, cid) == 0)
       return source;
@@ -92,7 +96,7 @@ static SourceData* find_source(ListeningUniverse* listener, const EtcPalUuid* ci
 
 static SourceData* find_source_hole(ListeningUniverse* listener)
 {
-  for (SourceData* source = listener->sources; source < listener->sources + NUM_SOURCES_PER_LISTENER; ++source)
+  for (SourceData* source = listener->sources; source < listener->sources + kNumSourcesPerListener; ++source)
   {
     if (!source->valid)
       return source;
@@ -103,7 +107,7 @@ static SourceData* find_source_hole(ListeningUniverse* listener)
 
 static void invalidate_listeners()
 {
-  for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
+  for (ListeningUniverse* listener = listeners; listener < listeners + kMaxListeners; ++listener)
   {
     listener->receiver_handle = kSacnReceiverInvalid;
   }
@@ -113,7 +117,7 @@ static void invalidate_sources(ListeningUniverse* listener)
 {
   if (listener)
   {
-    for (SourceData* source = listener->sources; source < listener->sources + NUM_SOURCES_PER_LISTENER; ++source)
+    for (SourceData* source = listener->sources; source < listener->sources + kNumSourcesPerListener; ++source)
     {
       source->valid = false;
     }
@@ -124,7 +128,7 @@ static void invalidate_sources(ListeningUniverse* listener)
 
 static ListeningUniverse* find_listener_hole()
 {
-  for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
+  for (ListeningUniverse* listener = listeners; listener < listeners + kMaxListeners; ++listener)
   {
     if (listener->receiver_handle == kSacnReceiverInvalid)
     {
@@ -137,7 +141,7 @@ static ListeningUniverse* find_listener_hole()
 
 static ListeningUniverse* find_listener_on_universe(uint16_t universe)
 {
-  for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
+  for (ListeningUniverse* listener = listeners; listener < listeners + kMaxListeners; ++listener)
   {
     if (listener->universe == universe)
     {
@@ -300,23 +304,23 @@ static void console_print_universe_updates()
   if (etcpal_mutex_lock(&state_lock))
   {
     printf(BEGIN_BORDER_STRING);
-    for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
+    for (ListeningUniverse* listener = listeners; listener < listeners + kMaxListeners; ++listener)
     {
       if (listener->receiver_handle != kSacnReceiverInvalid)
       {
         printf("Receiver %d on universe %u currently tracking %zu sources:\n", listener->receiver_handle,
                listener->universe, listener->num_sources);
-        for (SourceData* source = listener->sources; source < listener->sources + NUM_SOURCES_PER_LISTENER; ++source)
+        for (SourceData* source = listener->sources; source < listener->sources + kNumSourcesPerListener; ++source)
         {
           if (source->valid)
           {
             char cid_str[ETCPAL_UUID_STRING_BYTES];
             etcpal_uuid_to_string(&source->cid, cid_str);
             uint32_t interval_ms = etcpal_getms() - source->update_start_time_ms;
-            int      update_rate = source->num_updates * 1000 / interval_ms;
+            int      update_rate = (int)(source->num_updates * 1000 / interval_ms);
             printf("  Source %s\tPriority: %u\tUpdates per second: %d\tLast update: ", cid_str, source->priority,
                    update_rate);
-            for (size_t i = 0; i < NUM_SLOTS_DISPLAYED; ++i)
+            for (size_t i = 0; i < kNumSlotsDisplayed; ++i)
             {
               printf("%02x ", source->last_update[i]);
             }
@@ -458,11 +462,11 @@ static void handle_universe_data(sacn_receiver_t             receiver_handle,
     {
       ++source->num_updates;
       source->priority  = universe_data->priority;
-      size_t values_len = (universe_data->slot_range.address_count < NUM_SLOTS_DISPLAYED)
+      size_t values_len = (universe_data->slot_range.address_count < kNumSlotsDisplayed)
                               ? universe_data->slot_range.address_count
-                              : NUM_SLOTS_DISPLAYED;
+                              : kNumSlotsDisplayed;
       memcpy(source->last_update, universe_data->values, values_len);
-      memset(source->last_update + values_len, 0, NUM_SLOTS_DISPLAYED - values_len);
+      memset(source->last_update + values_len, 0, kNumSlotsDisplayed - values_len);
     }
 
     etcpal_mutex_unlock(&state_lock);
@@ -628,8 +632,8 @@ int main(void)
 
     etcpal_error_t console_result = kEtcPalErrOk;
 
-    int ch = getchar();
-    switch (ch)
+    int input = getchar();
+    switch (input)
     {
       case 'h':
         console_print_help();
@@ -667,7 +671,7 @@ int main(void)
 
   printf("Shutting down sACN...\n");
 
-  for (ListeningUniverse* listener = listeners; listener < listeners + MAX_LISTENERS; ++listener)
+  for (ListeningUniverse* listener = listeners; listener < listeners + kMaxListeners; ++listener)
   {
     if (listener->receiver_handle != kSacnReceiverInvalid)
     {

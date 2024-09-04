@@ -35,7 +35,7 @@
 class NetworkSelect
 {
 public:
-  NetworkSelect();
+  NetworkSelect() = default;
   void                            InitializeNics(void);
   void                            SelectNics(void);
   std::vector<SacnMcastInterface> GetMcastInterfaces(void) const;

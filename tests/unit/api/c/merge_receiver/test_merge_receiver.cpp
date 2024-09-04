@@ -711,7 +711,6 @@ TEST_F(TestMergeReceiver, SamplingPeriodBlocksUniverseData)
 // A sampling period could occur due to a networking reset. Current sources should continue to be included in ongoing
 // merged data notifications, but the sources included on the new interfaces being sampled should be merged separately
 // and should only be included in the merged data when their sampling period is over.
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestMergeReceiver, UniverseDataHandlesSamplingPeriodSources)
 {
   static constexpr sacn_dmx_merger_t    kPrimaryMergerHandle  = kInitialMergerHandle;

@@ -99,7 +99,7 @@ protected:
 
     ResetMulticastSentInfo();
 
-    static auto validate_get_interfaces_args = [](EtcPalNetintInfo* netints, size_t* num_netints) {
+    static auto validate_get_interfaces_args = [](EtcPalNetintInfo* netints, const size_t* num_netints) {
       if (!num_netints)
         return kEtcPalErrInvalid;
       if ((!netints && (*num_netints > 0)) && (netints && (*num_netints == 0)))
@@ -144,7 +144,7 @@ protected:
     };
   }
 
-  void PopulateFakeNetints()
+  static void PopulateFakeNetints()
   {
     EtcPalNetintInfo fake_netint;
     for (auto fake_network_info : kFakeNetworksInfo)
@@ -167,22 +167,22 @@ protected:
     }
   }
 
-  void ResetMulticastSentInfo()
+  static void ResetMulticastSentInfo()
   {
     ipv4_multicast_packet_sent_ = false;
     ipv6_multicast_packet_sent_ = false;
   }
 
-  void Start() { EXPECT_EQ(source_.Startup(settings_).code(), kEtcPalErrOk); }
+  static void Start() { EXPECT_EQ(source_.Startup(settings_).code(), kEtcPalErrOk); }
 
-  void StartAndAddUniverse()
+  static void StartAndAddUniverse()
   {
     EXPECT_EQ(source_.Startup(settings_).code(), kEtcPalErrOk);
     EXPECT_EQ(source_.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
     source_.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
   }
 
-  void RunThreadCycle()
+  static void RunThreadCycle()
   {
     take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessLevelsOnly);
     take_lock_and_process_sources(kProcessThreadedSources, kSacnSourceTickModeProcessPapOnly);
@@ -234,15 +234,15 @@ protected:
     ASSERT_EQ(Init().code(), kEtcPalErrOk);
   }
 
-  void ResetNetworking(Source& source, const std::deque<SacnMcastInterface>& sys_netints)
+  static void ResetNetworking(Source& source, const std::deque<SacnMcastInterface>& sys_netints)
   {
     std::vector<SacnMcastInterface> vect(sys_netints.begin(), sys_netints.end());
     EXPECT_TRUE(source.ResetNetworking(vect).IsOk());
   }
 
-  void ResetNetworkingPerUniverse(Source&                                  source,
-                                  const std::deque<SacnMcastInterface>&    sys_netints,
-                                  std::vector<Source::UniverseNetintList>& netint_lists)
+  static void ResetNetworkingPerUniverse(Source&                                  source,
+                                         const std::deque<SacnMcastInterface>&    sys_netints,
+                                         std::vector<Source::UniverseNetintList>& netint_lists)
   {
     std::vector<SacnMcastInterface> vect(sys_netints.begin(), sys_netints.end());
     EXPECT_TRUE(source.ResetNetworking(vect, netint_lists).IsOk());
@@ -311,10 +311,10 @@ TEST_F(TestSource, UniverseRemovalUsesOldNetintsAsAllowedByPerUniverseReset)
   // Track number of terminations on multicast.
   static int num_terminations_sent = 0;
   etcpal_sendto_fake.custom_fake   = [](etcpal_socket_t, const void*, size_t, int, const EtcPalSockAddr* dest_addr) {
-    EtcPalIpAddr ip;
-    sacn_get_mcast_addr(kEtcPalIpTypeV4, kTestUniverse, &ip);
+    EtcPalIpAddr ip_addr;
+    sacn_get_mcast_addr(kEtcPalIpTypeV4, kTestUniverse, &ip_addr);
 
-    if (etcpal_ip_cmp(&dest_addr->ip, &ip) == 0)
+    if (etcpal_ip_cmp(&dest_addr->ip, &ip_addr) == 0)
       ++num_terminations_sent;
 
     return 0;
@@ -371,7 +371,7 @@ protected:
     ASSERT_EQ(Init().code(), kEtcPalErrOk);
   }
 
-  void StartAndRunSource(const sacn_ip_support_t ip_supported)
+  static void StartAndRunSource(sacn_ip_support_t ip_supported)
   {
     settings_.ip_supported = ip_supported;
     StartAndAddUniverse();
@@ -439,7 +439,7 @@ protected:
     ASSERT_EQ(Init().code(), kEtcPalErrOk);
   }
 
-  void ResetUnicastSentInfo()
+  static void ResetUnicastSentInfo()
   {
     for (auto& fake_unicast_info : fake_unicasts_info_)
     {
@@ -447,7 +447,7 @@ protected:
     }
   }
 
-  void StartAndRunSource(bool add_unicast)
+  static void StartAndRunSource(bool add_unicast)
   {
     StartAndAddUniverse();
     if (add_unicast)
@@ -505,8 +505,10 @@ protected:
 
     ResetFoundInfo();
 
-    etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void* message, size_t, int, const EtcPalSockAddr*) {
-      etcpal::Uuid dest_cid(&((uint8_t*)message)[kDmxCidOffset]);
+    etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void* message, size_t length, int,
+                                        const EtcPalSockAddr*) {
+      auto         message_data = gsl::make_span(reinterpret_cast<const uint8_t*>(message), length);
+      etcpal::Uuid dest_cid(&message_data[kDmxCidOffset]);
       if (settings_.cid != dest_cid)
       {
         cid_found_always_ = false;
@@ -518,9 +520,9 @@ protected:
     ASSERT_EQ(Init().code(), kEtcPalErrOk);
   }
 
-  void ResetFoundInfo() { cid_found_always_ = true; }
+  static void ResetFoundInfo() { cid_found_always_ = true; }
 
-  void StartAndRunSource()
+  static void StartAndRunSource()
   {
     StartAndAddUniverse();
     for (auto fake_unicast_info : fake_unicasts_info_)

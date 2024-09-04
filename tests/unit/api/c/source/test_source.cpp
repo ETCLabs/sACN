@@ -153,9 +153,10 @@ protected:
     sacn_initialize_source_netints_fake.custom_fake = [](SacnInternalNetintArray* source_netints,
                                                          const SacnNetintConfig*  app_netint_config) {
 #if SACN_DYNAMIC_MEM
-      // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
+      // NOLINTBEGIN(cppcoreguidelines-no-malloc)
       source_netints->netints =
           reinterpret_cast<EtcPalMcastNetintId*>(calloc(test_netints.size(), sizeof(EtcPalMcastNetintId)));
+      // NOLINTEND(cppcoreguidelines-no-malloc)
       if (!source_netints->netints)
         return kEtcPalErrNoMem;
 
@@ -332,7 +333,6 @@ TEST_F(TestSource, ManualSourceCreateWorks)
   EXPECT_EQ(handle, kTestHandle);
 }
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestSource, SourceCreateErrInvalidWorks)
 {
   SacnSourceConfig valid_config                          = SACN_SOURCE_CONFIG_DEFAULT_INIT;
@@ -787,7 +787,6 @@ TEST_F(TestSource, SourceAddUnicastDestinationWorks)
   EXPECT_EQ(reset_transmission_suppression_fake.call_count, 1u);
 }
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestSource, SourceAddUnicastDestinationErrInvalidWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
@@ -1141,7 +1140,6 @@ TEST_F(TestSource, SourceSendNowWorks)
   EXPECT_EQ(send_universe_unicast_fake.call_count, 1u);
 }
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestSource, SourceSendNowErrInvalidWorks)
 {
   SetUpSourceAndUniverse(kTestHandle, kTestUniverse);
@@ -1592,7 +1590,6 @@ TEST_F(TestSource, SourceResetNetworkingErrNotInitWorks)
   VERIFY_LOCKING_AND_RETURN_VALUE(sacn_source_reset_networking(&netint_config), kEtcPalErrOk);
 }
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestSource, SourceResetNetworkingPerUniverseWorks)
 {
   static unsigned int clear_source_netints_index             = 0u;
@@ -1658,7 +1655,6 @@ TEST_F(TestSource, SourceResetNetworkingPerUniverseErrNoNetintsWorks)
       kEtcPalErrOk);
 }
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_F(TestSource, SourceResetNetworkingPerUniverseErrInvalidWorks)
 {
   SetUpSourcesAndUniverses(kTestNetintLists, kTestNetintLists.size());

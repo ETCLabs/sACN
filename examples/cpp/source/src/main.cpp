@@ -19,8 +19,8 @@
 
 #include "sacn_source_example.h"
 
-int main(void)
+int main()
 {
-  SACNSourceExample sac_source_example;  // this class does all of the work
+  SACNSourceExample sacn_source_example;  // this class does all of the work
   return 0;
 }

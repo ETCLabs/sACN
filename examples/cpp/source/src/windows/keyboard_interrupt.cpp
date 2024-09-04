@@ -17,26 +17,23 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include <signal.h>
-#include <stddef.h>
+#include <Windows.h>
 
 static void (*keyboard_interrupt_handler)();
 
-void signal_handler(int signal)
+BOOL WINAPI ConsoleSignalHandler(DWORD signal)
 {
-  if (signal == SIGINT && keyboard_interrupt_handler)
+  if (signal == CTRL_C_EVENT && keyboard_interrupt_handler)
   {
     keyboard_interrupt_handler();
+    return TRUE;
   }
+  return FALSE;
 }
 
-void install_keyboard_interrupt_handler(void (*handler)())
+void InstallKeyboardInterruptHandler(void (*handler)())
 {
-  struct sigaction sigint_handler;
-  sigint_handler.sa_handler = signal_handler;
-  sigemptyset(&sigint_handler.sa_mask);
-  sigint_handler.sa_flags = 0;
-  if (sigaction(SIGINT, &sigint_handler, NULL) == 0)
+  if (SetConsoleCtrlHandler(ConsoleSignalHandler, TRUE))
   {
     keyboard_interrupt_handler = handler;
   }

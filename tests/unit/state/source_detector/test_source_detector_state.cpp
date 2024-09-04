@@ -19,6 +19,7 @@
 
 #include "sacn/private/source_detector_state.h"
 
+#include <array>
 #include "etcpal_mock/common.h"
 #include "etcpal_mock/timer.h"
 #include "etcpal/cpp/error.h"
@@ -110,34 +111,36 @@ protected:
   {
     size_t last_page = (complete_universe_list.size() / 512u);
 
-    uint8_t buf[kSacnMtu] = {0};
+    std::array<uint8_t, kSacnMtu> buf{};
 
     size_t num_universes = complete_universe_list.size() - (page_number * 512);
     if (num_universes > 512)
       num_universes = 512;
 
-    size_t buf_len = CreateUniverseDiscoveryBuffer(&complete_universe_list.data()[page_number * 512], num_universes,
-                                                   page_number, (uint8_t)last_page, buf);
+    size_t buf_len =
+        CreateUniverseDiscoveryBuffer((num_universes > 0) ? &complete_universe_list[page_number * 512] : nullptr,
+                                      num_universes, page_number, (uint8_t)last_page, buf.data());
 
     SacnRecvThreadContext context;
     context.source_detector = detector_;
 
-    handle_sacn_universe_discovery_packet(&context, buf, buf_len, &cid.get(), &kTestSourceAddr, kTestName.c_str());
+    handle_sacn_universe_discovery_packet(&context, buf.data(), buf_len, &cid.get(), &kTestSourceAddr,
+                                          kTestName.c_str());
   }
 
   void ProcessUniverseDiscoveryPages(const etcpal::Uuid& cid, const std::vector<uint16_t>& complete_universe_list)
   {
-    uint8_t last_page = static_cast<uint8_t>(complete_universe_list.size() / 512);
+    auto last_page = static_cast<uint8_t>(complete_universe_list.size() / 512);
 
     for (uint8_t page = 0u; page <= last_page; ++page)
       ProcessUniverseDiscoveryPage(cid, complete_universe_list, page);
   }
 
-  size_t CreateUniverseDiscoveryBuffer(const uint16_t* universes,
-                                       size_t          num_universes,
-                                       uint8_t         page,
-                                       uint8_t         last,
-                                       uint8_t*        buffer)
+  static size_t CreateUniverseDiscoveryBuffer(const uint16_t* universes,
+                                              size_t          num_universes,
+                                              uint8_t         page,
+                                              uint8_t         last,
+                                              uint8_t*        buffer)
   {
     uint8_t* pcur = buffer;
     ACN_PDU_SET_V_FLAG(*pcur);
@@ -177,7 +180,8 @@ protected:
 
 TEST_F(TestSourceDetectorState, SourceUpdatedWorks)
 {
-  static std::vector<uint16_t> universe_list_1, universe_list_2;
+  static std::vector<uint16_t> universe_list_1;
+  static std::vector<uint16_t> universe_list_2;
   static etcpal::Uuid          test_cid;
   static constexpr uint16_t    kNumUniverses = 700u;
 
@@ -264,7 +268,7 @@ TEST_F(TestSourceDetectorState, SourceUpdatedFiltersDroppedLists)
 
 TEST_F(TestSourceDetectorState, SourceExpiredWorksAllAtOnce)
 {
-  static etcpal::Uuid test_cids[kTestMaxSources];
+  static std::array<etcpal::Uuid, kTestMaxSources> test_cids{};
 
   std::vector<uint16_t> universe_list = {1u, 2u, 3u};
 
@@ -272,8 +276,8 @@ TEST_F(TestSourceDetectorState, SourceExpiredWorksAllAtOnce)
   for (unsigned int i = 0u; i < kTestMaxSources; ++i)
   {
     etcpal_pack_u32b(cid.data, i);  // Increasing sequence of CIDs, so expired notifies in the same order.
-    test_cids[i] = cid;
-    ProcessUniverseDiscoveryPages(test_cids[i], universe_list);
+    test_cids.at(i) = cid;
+    ProcessUniverseDiscoveryPages(test_cids.at(i), universe_list);
     etcpal_getms_fake.return_val += 200u;
   }
 
@@ -281,7 +285,7 @@ TEST_F(TestSourceDetectorState, SourceExpiredWorksAllAtOnce)
 
   static unsigned int index       = 0u;
   source_expired_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name, void* context) {
-    EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cids[index].get()), 0);
+    EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cids.at(index).get()), 0);
     EXPECT_EQ(strcmp(name, kTestName.c_str()), 0);
     EXPECT_EQ(context, nullptr);
     index = ((index + 1) % kTestMaxSources);
@@ -294,14 +298,14 @@ TEST_F(TestSourceDetectorState, SourceExpiredWorksAllAtOnce)
 
 TEST_F(TestSourceDetectorState, SourceExpiredWorksOneAtATime)
 {
-  static etcpal::Uuid test_cids[kTestMaxSources];
+  static std::array<etcpal::Uuid, kTestMaxSources> test_cids{};
 
   std::vector<uint16_t> universe_list = {1u, 2u, 3u};
 
-  for (unsigned int i = 0u; i < kTestMaxSources; ++i)
+  for (auto& cid : test_cids)
   {
-    test_cids[i] = etcpal::Uuid::V4();
-    ProcessUniverseDiscoveryPages(test_cids[i], universe_list);
+    cid = etcpal::Uuid::V4();
+    ProcessUniverseDiscoveryPages(cid, universe_list);
     etcpal_getms_fake.return_val += 200u;
   }
 
@@ -309,7 +313,7 @@ TEST_F(TestSourceDetectorState, SourceExpiredWorksOneAtATime)
 
   static unsigned int index       = 0u;
   source_expired_fake.custom_fake = [](sacn_remote_source_t, const EtcPalUuid* cid, const char* name, void* context) {
-    EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cids[index].get()), 0);
+    EXPECT_EQ(ETCPAL_UUID_CMP(cid, &test_cids.at(index).get()), 0);
     EXPECT_EQ(strcmp(name, kTestName.c_str()), 0);
     EXPECT_EQ(context, nullptr);
     index = ((index + 1) % kTestMaxSources);

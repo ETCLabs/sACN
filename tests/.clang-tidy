@@ -14,5 +14,8 @@ Checks: >
   -cppcoreguidelines-pro-type-reinterpret-cast,
   -readability-inconsistent-declaration-parameter-name
 CheckOptions:
-  - { key: readability-identifier-naming.FunctionCase, value: CamelCase  }
+# GTest macros make the cognitive complexity a lot higher
+  - { key: readability-function-cognitive-complexity.Threshold, value: '200' }
+# C++ function naming
+  - { key: readability-identifier-naming.FunctionCase, value: CamelCase }
 ...

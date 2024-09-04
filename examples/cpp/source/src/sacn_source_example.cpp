@@ -35,51 +35,42 @@
  * Constants
  **************************************************************************************************/
 
-constexpr const uint16_t UNIVERSE_INVALID = 0;
-constexpr const uint8_t  LEVEL_MIN        = 0;
-constexpr const uint8_t  LEVEL_MAX        = 255;
+constexpr const uint16_t kUniverseInvalid = 0;
+constexpr const uint8_t  kLevelMin        = 0;
+constexpr const uint8_t  kLevelMax        = 255;
 
 /**************************************************************************************************
  * Logging Callback
  **************************************************************************************************/
-static void sacn_log_function(void* context, const EtcPalLogStrings* strings)
+static void SacnLogFunction(void* context, const EtcPalLogStrings* strings)
 {
   ETCPAL_UNUSED_ARG(context);
   std::cout << strings->human_readable << "\n";
-}  // sacn_log_function
+}  // SacnLogFunction
 
 /**************************************************************************************************
- * Keyboard
- *Interrupt Handling
+ * Keyboard Interrupt Handling
  **************************************************************************************************/
 bool        keep_running = true;
-static void handle_keyboard_interrupt()
+static void HandleKeyboardInterrupt()
 {
   keep_running = false;
 }
 
-extern "C" {
-extern void install_keyboard_interrupt_handler(void (*handler)());
-}
+extern void InstallKeyboardInterruptHandler(void (*handler)());
 
 /* ============================= UniverseInfo ============================== */
 
 void UniverseInfo::SetEffectStateConstant(const uint8_t level)
 {
   effect_ = Effect::kConstant;
-  for (int i = 0; i < kSacnDmxAddressCount; i++)
-  {
-    levels_[i] = level;
-  }
+  levels_.fill(level);
 }  // SetEffectStateConstant
 
 void UniverseInfo::SetEffectStateRamping()
 {
   effect_ = Effect::kRamp;
-  for (int i = 0; i < kSacnDmxAddressCount; i++)
-  {
-    levels_[i] = LEVEL_MIN;
-  }
+  levels_.fill(kLevelMin);
 }  // SetEffectStateRamping
 
 void UniverseInfo::SetPriorityStateUniverse(const uint8_t universe_priority)
@@ -91,28 +82,19 @@ void UniverseInfo::SetPriorityStateUniverse(const uint8_t universe_priority)
 void UniverseInfo::SetPriorityStatePerAddress(const uint8_t per_address_priority)
 {
   priority_type_ = Priority::kPerAddress;
-  for (int i = 0; i < kSacnDmxAddressCount; i++)
-  {
-    per_address_priorities_[i] = per_address_priority;
-  }
+  per_address_priorities_.fill(per_address_priority);
 }  // SetPriorityStatePerAddress
 
 void UniverseInfo::IncrementLevels()
 {
   uint8_t new_level      = 0;
   uint8_t existing_level = levels_[0];
-  if (existing_level < LEVEL_MAX)
-  {
+  if (existing_level < kLevelMax)
     new_level = existing_level + 1;
-  }
   else
-  {
     new_level = 0;
-  }
-  for (int i = 0; i < kSacnDmxAddressCount; i++)
-  {
-    levels_[i] = new_level;
-  }
+
+  levels_.fill(new_level);
 }  // IncrementLevels
 
 /* =========================== SACNSourceExample =========================== */
@@ -120,7 +102,7 @@ void UniverseInfo::IncrementLevels()
 SACNSourceExample::SACNSourceExample()
 {
   // Handle Ctrl+C gracefully and shut down in compatible consoles
-  install_keyboard_interrupt_handler(handle_keyboard_interrupt);
+  InstallKeyboardInterruptHandler(HandleKeyboardInterrupt);
   if (InitEtcPal())
   {
     network_select_.InitializeNics();
@@ -163,7 +145,7 @@ etcpal::Error SACNSourceExample::InitSACNLibrary()
   // Initialize the sACN library, allowing it to log messages through our callback
   EtcPalLogParams log_params;
   log_params.action                       = ETCPAL_LOG_CREATE_HUMAN_READABLE;
-  log_params.log_fn                       = sacn_log_function;
+  log_params.log_fn                       = SacnLogFunction;
   log_params.time_fn                      = nullptr;
   log_params.log_mask                     = ETCPAL_LOG_UPTO(ETCPAL_LOG_DEBUG);
   std::vector<SacnMcastInterface> netints = network_select_.GetMcastInterfaces();
@@ -214,22 +196,23 @@ void SACNSourceExample::DoRamping()
     if (universe_info->IsRamping())
     {
       universe_info->IncrementLevels();
-      sacn_source_.UpdateLevels(universe, universe_info->levels_, kSacnDmxAddressCount);
+      sacn_source_.UpdateLevels(universe, universe_info->levels_.data(), kSacnDmxAddressCount);
     }
   }
 }  // DoRamping
 
 void RampFunction(void* arg)
 {
-  SACNSourceExample* me = (SACNSourceExample*)arg;
-  if (!me)
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  auto* sacn_source_example = reinterpret_cast<SACNSourceExample*>(arg);
+  if (!sacn_source_example)
   {
     std::cout << "Error: RampFunction() argument is nullptr.\n";
     return;
   }
-  while (me->GetContinueRamping())
+  while (sacn_source_example->GetContinueRamping())
   {
-    me->DoRamping();
+    sacn_source_example->DoRamping();
     etcpal_thread_sleep(100);  // Sleep for 100 milliseconds
   }
 }  // RampFunction
@@ -272,7 +255,7 @@ void SACNSourceExample::AddUniverse()
   if (VerifyNewUniverse(new_universe))
   {
     std::unique_ptr<UniverseInfo> new_universe_info = std::make_unique<UniverseInfo>();
-    bool                          ctrl_c_pressed;
+    bool                          ctrl_c_pressed{false};
     int effect = GetSingleCharFromInput("Enter effect:\nc : constant\nr : ramp\n", {'c', 'r'}, &ctrl_c_pressed);
     if (ctrl_c_pressed)
     {
@@ -280,7 +263,7 @@ void SACNSourceExample::AddUniverse()
     }
     if (effect == 'c')
     {
-      uint8_t level = GetUint8FromInput(LEVEL_MIN, LEVEL_MAX, "Level");
+      uint8_t level = GetUint8FromInput(kLevelMin, kLevelMax, "Level");
       new_universe_info->SetEffectStateConstant(level);
     }
     else if (effect == 'r')
@@ -350,7 +333,7 @@ bool SACNSourceExample::AddNewUniverseToSACNSource(const uint16_t               
         {
           std::cout << "success\n";
           std::cout << "Setting levels... ";
-          sacn_source_.UpdateLevels(new_universe, new_universe_info->levels_, kSacnDmxAddressCount);
+          sacn_source_.UpdateLevels(new_universe, new_universe_info->levels_.data(), kSacnDmxAddressCount);
           std::cout << "success\n";
         }
         else
@@ -361,8 +344,8 @@ bool SACNSourceExample::AddNewUniverseToSACNSource(const uint16_t               
       else
       {
         std::cout << "Setting levels and per address priorities... ";
-        sacn_source_.UpdateLevelsAndPap(new_universe, new_universe_info->levels_, kSacnDmxAddressCount,
-                                        new_universe_info->per_address_priorities_, kSacnDmxAddressCount);
+        sacn_source_.UpdateLevelsAndPap(new_universe, new_universe_info->levels_.data(), kSacnDmxAddressCount,
+                                        new_universe_info->per_address_priorities_.data(), kSacnDmxAddressCount);
         std::cout << "success\n";
       }
       return true;
@@ -443,15 +426,11 @@ void SACNSourceExample::ResetNetworking()
 {
   std::vector<SacnMcastInterface> interfaces = network_select_.GetMcastInterfaces();
   std::cout << "Resetting network interface(s)... ";
-  etcpal::Error result = sacn_source_.ResetNetworking(interfaces);
+  etcpal::Error result = sacn::Source::ResetNetworking(interfaces);
   if (result == kEtcPalErrOk)
-  {
     std::cout << "success\n";
-  }
   else
-  {
     std::cout << "fail, " << result.ToString() << "\n";
-  }
 }  // ResetNetworking
 
 void SACNSourceExample::RunSourceExample()
@@ -459,14 +438,14 @@ void SACNSourceExample::RunSourceExample()
   // Handle user input until we are told to stop
   while (keep_running)
   {
-    bool ctrl_c_pressed;
-    int  ch = GetSingleCharFromInput("Enter input (enter h for help):\n", {'h', 'a', 'r', '+', '-', 'n', 'q'},
-                                     &ctrl_c_pressed);
+    bool ctrl_c_pressed{false};
+    int  input = GetSingleCharFromInput("Enter input (enter h for help):\n", {'h', 'a', 'r', '+', '-', 'n', 'q'},
+                                        &ctrl_c_pressed);
     if (ctrl_c_pressed)
     {
       keep_running = false;
     }
-    switch (ch)
+    switch (input)
     {
       case 'h':
         PrintHelp();
@@ -495,26 +474,25 @@ void SACNSourceExample::RunSourceExample()
 
 /* utility functions */
 
-uint8_t SACNSourceExample::GetUint8FromInput(const uint8_t min, const uint8_t max, const std::string label)
+uint8_t SACNSourceExample::GetUint8FromInput(const uint8_t min, const uint8_t max, const std::string& label)
 {
   uint8_t value        = min;
   bool    print_prompt = true;
   bool    finished     = false;
   while (!finished)
   {
-    std::string s;
+    std::string input;
     if (print_prompt)
-    {
       std::cout << label << " (" << (unsigned int)min << " - " << (unsigned int)max << "): ";
-    }
-    std::getline(std::cin, s);
-    if (s == "")
+
+    std::getline(std::cin, input);
+    if (input.empty())
     {
       print_prompt = false;
       continue;
     }
     print_prompt = true;
-    int temp     = atoi(s.c_str());
+    int temp     = atoi(input.c_str());
     if ((temp >= min) && (temp <= max))
     {
       value    = (uint8_t)temp;
@@ -527,16 +505,15 @@ uint8_t SACNSourceExample::GetUint8FromInput(const uint8_t min, const uint8_t ma
 uint16_t SACNSourceExample::GetUniverseFromInput()
 {
   bool     print_prompt = true;
-  uint16_t universe     = UNIVERSE_INVALID;
-  while (universe == UNIVERSE_INVALID)
+  uint16_t universe     = kUniverseInvalid;
+  while (universe == kUniverseInvalid)
   {
     std::string universe_string;
     if (print_prompt)
-    {
       std::cout << "Universe (" << sacn::kMinimumUniverse << " - " << sacn::kMaximumUniverse << "): ";
-    }
+
     std::getline(std::cin, universe_string);
-    if (universe_string == "")
+    if (universe_string.empty())
     {
       print_prompt = false;
       continue;
@@ -544,61 +521,52 @@ uint16_t SACNSourceExample::GetUniverseFromInput()
     print_prompt = true;
     int temp     = atoi(universe_string.c_str());
     if ((temp >= sacn::kMinimumUniverse) && (temp <= sacn::kMaximumUniverse))
-    {
       universe = (uint16_t)temp;
-    }
   }
   return universe;
 }  // GetUniverseFromInput
 
-#define UNIVERSE_PRIORITY_MIN 0
-#define UNIVERSE_PRIORITY_MAX 200
 uint8_t SACNSourceExample::GetUniversePriorityFromInput()
 {
-  return GetUint8FromInput(UNIVERSE_PRIORITY_MIN, UNIVERSE_PRIORITY_MAX, "Universe Priority");
+  static constexpr uint8_t kUniversePriorityMin = 0u;
+  static constexpr uint8_t kUniversePriorityMax = 200u;
+  return GetUint8FromInput(kUniversePriorityMin, kUniversePriorityMax, "Universe Priority");
 }  // GetUniversePriorityFromInput
 
-#define PER_ADDRESS_PRIORITY_MIN 0
-#define PER_ADDRESS_PRIORITY_MAX 200
 uint8_t SACNSourceExample::GetPerAddressPriorityFromInput()
 {
-  return GetUint8FromInput(PER_ADDRESS_PRIORITY_MIN, PER_ADDRESS_PRIORITY_MAX, "Per Address Priority");
+  static constexpr uint8_t kPerAddressPriorityMin = 0u;
+  static constexpr uint8_t kPerAddressPriorityMax = 200u;
+  return GetUint8FromInput(kPerAddressPriorityMin, kPerAddressPriorityMax, "Per Address Priority");
 }  // GetPerAddressPriorityFromInput
 
-int SACNSourceExample::GetSingleCharFromInput(const std::string      prompt,
-                                              const std::vector<int> valid_letters,
-                                              bool*                  ctrl_c_pressed)
+int SACNSourceExample::GetSingleCharFromInput(const std::string&      prompt,
+                                              const std::vector<int>& valid_letters,
+                                              bool*                   ctrl_c_pressed)
 {
   *ctrl_c_pressed   = false;
   bool print_prompt = true;
   while (true)
   {
     if (print_prompt)
-    {
       std::cout << prompt;
-    }
     else
-    {
       print_prompt = true;  // Print it next time by default.
-    }
-    int ch = getchar();
-    if (ch == EOF)
+
+    int input = getchar();
+    if (input == EOF)
     {
       *ctrl_c_pressed = true;
       return 0;
     }
-    if (std::find(valid_letters.begin(), valid_letters.end(), ch) != valid_letters.end())
-    {
-      return ch;
-    }
-    if (ch == '\n')
-    {
+
+    if (std::find(valid_letters.begin(), valid_letters.end(), input) != valid_letters.end())
+      return input;
+
+    if (input == '\n')
       print_prompt = false;  // Otherwise the prompt is printed twice.
-    }
     else
-    {
       std::cout << "Invalid input.\n";
-    }
   }
   return 0;
 }  // GetSingleCharFromInput

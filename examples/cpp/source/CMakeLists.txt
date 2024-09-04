@@ -4,11 +4,11 @@ add_executable(sacn_cpp_source_example
   src/main.cpp
 )
 if(WIN32)
-  target_sources(sacn_cpp_source_example PRIVATE src/windows/keyboard_interrupt.c)
+  target_sources(sacn_cpp_source_example PRIVATE src/windows/keyboard_interrupt.cpp)
 elseif(UNIX)
-  target_sources(sacn_cpp_source_example PRIVATE src/linux/keyboard_interrupt.c)
+  target_sources(sacn_cpp_source_example PRIVATE src/linux/keyboard_interrupt.cpp)
 else()
-  target_sources(sacn_cpp_source_example PRIVATE src/other/keyboard_interrupt.c)
+  target_sources(sacn_cpp_source_example PRIVATE src/other/keyboard_interrupt.cpp)
 endif()
 
 target_link_libraries(sacn_cpp_source_example PRIVATE sACN)

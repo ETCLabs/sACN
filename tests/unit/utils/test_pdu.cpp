@@ -229,7 +229,7 @@ protected:
     std::array<uint8_t, kSacnMtu> result{};
     std::array<uint8_t, kSacnMtu> expected{};
     int result_length   = pack_sacn_root_layer(result.data(), pdu_length, extended, &source_cid);
-    int expected_length = static_cast<int>(InitRootLayer(expected, pdu_length, extended, source_cid));
+    int expected_length = InitRootLayer(expected, pdu_length, extended, source_cid);
 
     EXPECT_EQ(result_length, expected_length);
     EXPECT_EQ(result, expected);
@@ -251,8 +251,8 @@ protected:
     int                           result_length =
         pack_sacn_data_framing_layer(result.data(), slot_count, vector, source_name, priority, sync_address, seq_num,
                                      preview, terminated, force_sync, universe_id);
-    int expected_length = static_cast<int>(InitFramingLayer(expected, slot_count, vector, source_name, priority,
-                                                            seq_num, preview, terminated, universe_id));
+    int expected_length = InitFramingLayer(expected, slot_count, vector, source_name, priority, seq_num, preview,
+                                           terminated, universe_id);
 
     EXPECT_EQ(result_length, expected_length);
     EXPECT_EQ(result, expected);
@@ -263,7 +263,7 @@ protected:
     std::array<uint8_t, kSacnMtu> result{};
     std::array<uint8_t, kSacnMtu> expected{};
     int                           result_length   = pack_sacn_dmp_layer_header(result.data(), start_code, slot_count);
-    int                           expected_length = static_cast<int>(InitDmpLayer(expected, start_code, slot_count));
+    int                           expected_length = InitDmpLayer(expected, start_code, slot_count);
 
     EXPECT_EQ(result_length, expected_length);
     EXPECT_EQ(result, expected);

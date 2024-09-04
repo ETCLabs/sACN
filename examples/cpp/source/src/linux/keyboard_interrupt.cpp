@@ -17,6 +17,27 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-void install_keyboard_interrupt_handler(void (*handler)())
+#include <signal.h>
+#include <stddef.h>
+
+static void (*keyboard_interrupt_handler)();
+
+void SignalHandler(int signal)
 {
+  if (signal == SIGINT && keyboard_interrupt_handler)
+  {
+    keyboard_interrupt_handler();
+  }
+}
+
+void InstallKeyboardInterruptHandler(void (*handler)())
+{
+  struct sigaction sigint_handler = {};
+  sigint_handler.sa_handler       = SignalHandler;
+  sigemptyset(&sigint_handler.sa_mask);
+  sigint_handler.sa_flags = 0;
+  if (sigaction(SIGINT, &sigint_handler, nullptr) == 0)
+  {
+    keyboard_interrupt_handler = handler;
+  }
 }

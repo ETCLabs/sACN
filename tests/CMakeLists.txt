@@ -10,6 +10,7 @@ function(sacn_test_setup target_name config_dir)
   target_include_directories(${target_name} PRIVATE
     ${config_dir}
     ${SACN_TEST}/configs
+    ${SACN_TEST}
     ${SACN_INCLUDE}
     ${SACN_SRC}
   )

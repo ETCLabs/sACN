@@ -47,8 +47,8 @@ protected:
       return kEtcPalErrOk;
     };
 
-    etcpal_socket_fake.custom_fake = [](unsigned int, unsigned int, etcpal_socket_t* id) {
-      *id = static_cast<etcpal_socket_t>(0);
+    etcpal_socket_fake.custom_fake = [](unsigned int, unsigned int, etcpal_socket_t* socket_id) {
+      *socket_id = static_cast<etcpal_socket_t>(0);
       return kEtcPalErrOk;
     };
 

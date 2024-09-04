@@ -25,7 +25,6 @@
 #include "etcpal_mock/netint.h"
 #include "etcpal_mock/socket.h"
 #include "sacn/common.h"
-#include "sacn/source.h"
 #include "sacn/private/mem.h"
 #include "sacn/opts.h"
 #include "sacn/private/source.h"
@@ -48,8 +47,8 @@ protected:
       return kEtcPalErrOk;
     };
 
-    etcpal_socket_fake.custom_fake = [](unsigned int, unsigned int, etcpal_socket_t* id) {
-      *id = static_cast<etcpal_socket_t>(0);
+    etcpal_socket_fake.custom_fake = [](unsigned int, unsigned int, etcpal_socket_t* socket_id) {
+      *socket_id = static_cast<etcpal_socket_t>(0);
       return kEtcPalErrOk;
     };
 

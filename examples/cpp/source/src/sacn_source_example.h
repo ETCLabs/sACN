@@ -25,6 +25,7 @@
  * @brief Runs the sACN C++ source example
  */
 
+#include <array>
 #include <unordered_map>
 #include "network_select.h"
 #include "sacn/cpp/source.h"
@@ -55,11 +56,11 @@ public:
   bool IsRamping() const { return effect_ == Effect::kRamp; }
   void IncrementLevels();
 
-  Effect   effect_;
-  Priority priority_type_;
-  uint8_t  universe_priority_;
-  uint8_t  per_address_priorities_[kSacnDmxAddressCount];
-  uint8_t  levels_[kSacnDmxAddressCount];
+  Effect                                    effect_;
+  Priority                                  priority_type_;
+  uint8_t                                   universe_priority_;
+  std::array<uint8_t, kSacnDmxAddressCount> per_address_priorities_{};
+  std::array<uint8_t, kSacnDmxAddressCount> levels_{};
 };
 
 class SACNSourceExample
@@ -87,13 +88,13 @@ private:
   void RunSourceExample();
 
   /* utility functions */
-  static uint8_t        GetUint8FromInput(const uint8_t min, const uint8_t max, const std::string label);
+  static uint8_t        GetUint8FromInput(const uint8_t min, const uint8_t max, const std::string& label);
   static uint16_t       GetUniverseFromInput();
   static uint8_t        GetUniversePriorityFromInput();
   static uint8_t        GetPerAddressPriorityFromInput();
-  static int            GetSingleCharFromInput(const std::string      prompt,
-                                               const std::vector<int> valid_letters,
-                                               bool*                  ctrl_c_pressed);
+  static int            GetSingleCharFromInput(const std::string&      prompt,
+                                               const std::vector<int>& valid_letters,
+                                               bool*                   ctrl_c_pressed);
   static etcpal::IpAddr GetIPAddressFromInput();
 
   NetworkSelect                                               network_select_;

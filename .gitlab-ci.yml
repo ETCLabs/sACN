@@ -13,11 +13,11 @@ variables:
 include:
   # Versioned build automation
   - project: "etc/common-tech/tools/gitlab-ci-util"
-    ref: v2.2.3
+    ref: v2.3.1
     file: "/ci-yml/deploy-versioned-build.yml"
   # Klocwork static analysis
   - project: "etc/common-tech/tools/gitlab-ci-util"
-    ref: v2.2.3
+    ref: v2.3.1
     file: "/ci-yml/linux-klocwork.yml"
 
 windows-build:
@@ -35,7 +35,7 @@ windows-build:
   artifacts:
     when: always
     reports:
-      junit: build/tests/unit/test-results/*.xml
+      junit: build/tests/test-results/*.xml
 
 macos-build:
   stage: build
@@ -55,7 +55,7 @@ macos-build:
   artifacts:
     when: always
     reports:
-      junit: build/tests/unit/test-results/*.xml
+      junit: build/tests/test-results/*.xml
 
 linux-gcc-build:
   stage: build
@@ -71,12 +71,12 @@ linux-gcc-build:
     - mkdir build
     - cd build
     - cmake ${GLOBAL_CMAKE_OPTIONS} ${SANITIZER_DEFS} ..
-    - cmake --build .
+    - make -j `nproc`
     - ctest --output-on-failure
   artifacts:
     when: always
     reports:
-      junit: build/tests/unit/test-results/*.xml
+      junit: build/tests/test-results/*.xml
 
 linux-clang-build:
   stage: build
@@ -91,12 +91,12 @@ linux-clang-build:
     - mkdir build
     - cd build
     - cmake ${GLOBAL_CMAKE_OPTIONS} ${SANITIZER_DEFS} ..
-    - cmake --build .
+    - make -j `nproc`
     - ctest --output-on-failure
   artifacts:
     when: always
     reports:
-      junit: build/tests/unit/test-results/*.xml
+      junit: build/tests/test-results/*.xml
 
 oss-build:
   stage: build
@@ -110,22 +110,22 @@ oss-build:
     - cd build
     # Use default config, no options
     - cmake ..
-    - cmake --build .
+    - make -j `nproc`
 
 # Job to lint the code using clang-tidy and clang-format.
 lint:
   stage: build
   tags:
     - etc-linux-docker
-  #variables:
-  #  CMAKE_OPTIONS: -DSACN_ENABLE_CLANG_TIDY=ON -DSACN_CLANG_TIDY_WERROR=ON
+  variables:
+    CMAKE_OPTIONS: -DSACN_ENABLE_CLANG_TIDY=ON -DSACN_CLANG_TIDY_WERROR=ON
   image: etc-docker.artifactory.etcconnect.com/etc/common-tech/gcc-cmake:llvm18
   script:
     - mkdir build
     - cd build
     - cmake ${GLOBAL_CMAKE_OPTIONS} ${CMAKE_OPTIONS} ..
     - make check_formatting
-    - cmake --build . -j
+    - make -j `nproc`
 
 docs:
   stage: build
