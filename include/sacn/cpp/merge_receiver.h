@@ -73,10 +73,31 @@ public:
     NotifyHandler()          = default;
     virtual ~NotifyHandler() = default;
 
-    NotifyHandler(const NotifyHandler& other)            = default;
+    /**
+     * @brief Defaulted copy constructor.
+     * @param other Copy source.
+     */
+    NotifyHandler(const NotifyHandler& other) = default;
+
+    /**
+     * @brief Defaulted copy assignment operator.
+     * @param other Copy source.
+     * @return Reference to this.
+     */
     NotifyHandler& operator=(const NotifyHandler& other) = default;
-    NotifyHandler(NotifyHandler&& other)                 = default;
-    NotifyHandler& operator=(NotifyHandler&& other)      = default;
+
+    /**
+     * @brief Defaulted move constructor.
+     * @param other Move source.
+     */
+    NotifyHandler(NotifyHandler&& other) = default;
+
+    /**
+     * @brief Defaulted move assignment operator.
+     * @param other Move source.
+     * @return Reference to this.
+     */
+    NotifyHandler& operator=(NotifyHandler&& other) = default;
 
     /**
      * @brief Notify that a new data packet has been received and merged.

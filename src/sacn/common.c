@@ -42,9 +42,14 @@ const EtcPalLogParams* sacn_log_params;
 
 /**************************** Private variables ******************************/
 
+/**
+ * State to track library initialization and logging parameters.
+ */
 static struct SacnState
 {
-  bool            initted;
+  /** Whether or not the library is initialized. */
+  bool initted;
+  /** The current log parameters being used by the library. */
   EtcPalLogParams log_params;
 } sacn_pool_sacn_state;
 

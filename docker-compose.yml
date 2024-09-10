@@ -14,6 +14,13 @@ services:
       - .:/sacn:cached
     command: sleep infinity
 
+  doxygen:
+    image: etc-docker.artifactory.etcconnect.com/etc/common-tech/doxygen:1.11.0
+    volumes:
+      # Mount the root folder that contains .git
+      - .:/sacn:cached
+    command: sleep infinity
+
   klocwork:
     image: etc-docker.artifactory.etcconnect.com/etc/common-tech/klocwork:latest
     volumes:

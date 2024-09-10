@@ -200,11 +200,6 @@ inline etcpal::Error DmxMerger::Startup(const Settings& settings)
  * @brief Destroy a merger instance.
  *
  * Tears down the merger and cleans up its resources.
- *
- * @return #kEtcPalErrOk: Merger destroyed successfully.
- * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: Handle does not correspond to a valid merger.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline void DmxMerger::Shutdown()
 {

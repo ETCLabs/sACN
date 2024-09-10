@@ -113,6 +113,9 @@ typedef struct SacnNetintConfig
   bool no_netints;
 } SacnNetintConfig;
 
+/**
+ * Initializes the members of a SacnNetintConfig to defaults.
+ */
 #define SACN_NETINT_CONFIG_DEFAULT_INIT \
   {                                     \
     NULL, 0, false                      \

@@ -46,6 +46,8 @@
 
 #include <stdio.h>
 
+#ifndef DOXYGEN  // No Doxygen needed here
+
 /****************************** Private macros *******************************/
 
 #ifdef _MSC_VER
@@ -1978,3 +1980,5 @@ etcpal_error_t get_netint_ip_string(etcpal_iptype_t ip_type, unsigned int index,
 
   return res;
 }
+
+#endif  // DOXYGEN

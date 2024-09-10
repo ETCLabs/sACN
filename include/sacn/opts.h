@@ -95,7 +95,17 @@
 #define SACN_LOG_MSG_PREFIX "sACN: "
 #endif
 
-/* Assertion failure handler */
+/**
+ * @brief The assertion failure handler function used by the sACN library.
+ *
+ * This will log the error and trigger an assert.
+ *
+ * @param exp The expression that failed as a string.
+ * @param file The path of the file where the assert failed.
+ * @param func The name of the function where the assert failed.
+ * @param line The line number where the assert failed.
+ * @return False.
+ */
 bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func, int line);
 
 /**
@@ -324,7 +334,7 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 /**
  * @brief Determines whether sACN should try to set the SO_RCVBUF socket option.
  *
- * If enabled, the library will try to set it to #SACN_RECEIVER_SOCKET_RCVBUF_SIZE and log an error if it failed.
+ * If enabled, the library will try to set it to SACN_RECEIVER_SOCKET_RCVBUF_SIZE and log an error if it failed.
  *
  * Define to 0 to disable. Then the library will not attempt this sockopt, avoiding potential errors.
  */
@@ -451,6 +461,14 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
  * @{
  */
 
+#ifndef DOXYGEN  // Internal define
+#ifdef SACN_DMX_MERGER_MAX_MERGERS
+#define SACN_DMX_MERGER_DEFAULT_MAX_MERGERS 0
+#else  // SACN_DMX_MERGER_MAX_MERGERS
+#define SACN_DMX_MERGER_DEFAULT_MAX_MERGERS 1
+#endif  // SACN_DMX_MERGER_MAX_MERGERS
+#endif  // DOXYGEN
+
 /**
  * @brief The maximum number of mergers that can be instanced.
  *
@@ -458,11 +476,8 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
  *
  * Meaningful only if #SACN_DYNAMIC_MEM is defined to 0.
  */
-#ifdef SACN_DMX_MERGER_MAX_MERGERS
-#define SACN_DMX_MERGER_DEFAULT_MAX_MERGERS 0
-#else
-#define SACN_DMX_MERGER_MAX_MERGERS         SACN_RECEIVER_MAX_UNIVERSES
-#define SACN_DMX_MERGER_DEFAULT_MAX_MERGERS 1
+#ifndef SACN_DMX_MERGER_MAX_MERGERS
+#define SACN_DMX_MERGER_MAX_MERGERS SACN_RECEIVER_MAX_UNIVERSES
 #endif
 
 /**

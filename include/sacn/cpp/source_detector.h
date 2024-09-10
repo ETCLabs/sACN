@@ -131,10 +131,31 @@ public:
     NotifyHandler()          = default;
     virtual ~NotifyHandler() = default;
 
-    NotifyHandler(const NotifyHandler& other)            = default;
+    /**
+     * @brief Defaulted copy constructor.
+     * @param other Copy source.
+     */
+    NotifyHandler(const NotifyHandler& other) = default;
+
+    /**
+     * @brief Defaulted copy assignment operator.
+     * @param other Copy source.
+     * @return Reference to this.
+     */
     NotifyHandler& operator=(const NotifyHandler& other) = default;
-    NotifyHandler(NotifyHandler&& other)                 = default;
-    NotifyHandler& operator=(NotifyHandler&& other)      = default;
+
+    /**
+     * @brief Defaulted move constructor.
+     * @param other Move source.
+     */
+    NotifyHandler(NotifyHandler&& other) = default;
+
+    /**
+     * @brief Defaulted move assignment operator.
+     * @param other Move source.
+     * @return Reference to this.
+     */
+    NotifyHandler& operator=(NotifyHandler&& other) = default;
 
     /**
      * @brief Notify that a source is new or has changed.
@@ -405,11 +426,6 @@ inline etcpal::Error SourceDetector::Startup(const Settings&                  se
  * WARNING: Calling this from a source detector callback will deadlock!
  *
  * After this function completes, callbacks will no longer be called for the source detector.
- *
- * @return #kEtcPalErrOk: Detector destroyed successfully.
- * @return #kEtcPalErrNotInit: Module not initialized.
- * @return #kEtcPalErrNotFound: The detector has not yet been created.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline void SourceDetector::Shutdown()
 {

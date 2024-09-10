@@ -36,7 +36,7 @@
 #include "etcpal/pack.h"
 #include "etcpal/timer.h"
 
-#if SACN_RECEIVER_ENABLED || DOXYGEN
+#if SACN_RECEIVER_ENABLED && !DOXYGEN  // No Doxygen needed here
 
 /***************************** Private constants *****************************/
 
@@ -1636,4 +1636,4 @@ void end_current_sampling_period(SacnReceiver* receiver)
   }
 }
 
-#endif  // SACN_RECEIVER_ENABLED || DOXYGEN
+#endif  // SACN_RECEIVER_ENABLED && !DOXYGEN
