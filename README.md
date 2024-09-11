@@ -29,7 +29,7 @@ C functionality supports C99 with the exception of the following features:
 
 ## Quality Gates
 
-This library meets a high quality standard by employing a variety of quality gates, including code review, automated tests, and a variety of static and dynamic analysis tools.
+This library meets a high quality standard by employing a variety of quality gates, including code review, automated tests, and a variety of static and runtime analysis tools.
 
 ### Code Reviews
 
