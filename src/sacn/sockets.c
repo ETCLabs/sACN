@@ -48,6 +48,14 @@
 
 #ifndef DOXYGEN  // No Doxygen needed here
 
+/****************************** Private macros *******************************/
+
+#ifdef _MSC_VER
+#define SACN_SPRINTF __pragma(warning(suppress : 4996)) sprintf
+#else
+#define SACN_SPRINTF sprintf
+#endif
+
 /****************************** Private types ********************************/
 
 typedef struct MulticastSendSocket
@@ -484,7 +492,7 @@ etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id
 
     char        sock_desc[100] = {'\0'};
     const char* ip_type_desc   = (netint_id->ip_type == kEtcPalIpTypeV4) ? "IPv4" : "IPv6";
-    snprintf(sock_desc, sizeof(sock_desc), "%s multicast socket for network interface %s", ip_type_desc, netint_addr);
+    SACN_SPRINTF(sock_desc, "%s multicast socket for network interface %s", ip_type_desc, netint_addr);
     configure_sndbuf_size(new_sock, sock_desc);
 #endif
 
