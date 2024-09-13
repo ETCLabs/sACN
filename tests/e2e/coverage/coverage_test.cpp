@@ -552,7 +552,7 @@ TEST_F(CoverageTest, SwitchThroughUniverses)
 
 TEST_F(CoverageTest, DetectSourcesComingAndGoing)
 {
-  static uint32_t kWorstCaseWaitMs = 300000u;
+  static constexpr uint32_t kWorstCaseWaitMs = 300000u;
 
   static constexpr int                                     kNumTestSources = 7;
   static constexpr std::array<UniverseId, kNumTestSources> kTestUniverses  = {1u, 2u, 3u, 4u, 5u, 6u, 7u};
