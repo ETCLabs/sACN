@@ -37,7 +37,7 @@ if(NOT COMPILING_AS_OSS)
   if(NOT IS_DEPENDENCY)
     setup_standalone_compile()
     if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-      add_compile_options(-Wno-deprecated-declarations)
+      add_compile_options(-Wno-deprecated-declarations)  # For compatibility with all platforms
     endif()
     setup_clang_format(${SACN_ROOT})
     setup_clang_tidy()
