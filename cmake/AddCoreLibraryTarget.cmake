@@ -31,6 +31,10 @@ function(sacn_add_core_library_target target_name)
     target_clang_tidy(${target_name})
   endif()
 
+  if(SACN_WARN_AS_ERROR)
+    enable_standalone_warnings(${target_name})
+  endif()
+
   # Organize sources in IDEs
   source_group(TREE ${SACN_SRC}/sacn PREFIX src FILES
     ${SACN_PRIVATE_HEADERS}

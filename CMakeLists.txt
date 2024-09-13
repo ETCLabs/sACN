@@ -21,6 +21,7 @@ option(SACN_BUILD_TESTS "Build the sACN unit tests" OFF)
 option(SACN_BUILD_EXAMPLES "Build the sACN example applications" OFF)
 option(SACN_BUILD_TEST_TOOLS "Build the sACN test tools (typically used in development only)" OFF)
 option(SACN_INSTALL_PDBS "Include PDBs in sACN install target" ON)
+option(SACN_WARN_AS_ERROR "Turn compilation warnings into errors." OFF)
 
 ####################### Dependencies & standalone support ######################
 
@@ -35,7 +36,7 @@ if(NOT COMPILING_AS_OSS)
   # function errors during CMake generation (i.e. when the application's CMake Tools is out-of-date).
   get_directory_property(IS_DEPENDENCY PARENT_DIRECTORY)
   if(NOT IS_DEPENDENCY)
-    setup_standalone_compile()
+    setup_standalone_compile(SKIP_WARNING_FLAGS)
     setup_clang_format(${SACN_ROOT})
     setup_clang_tidy()
     setup_address_sanitizer()
