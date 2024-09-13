@@ -40,7 +40,7 @@ windows-build:
 macos-build:
   stage: build
   tags:
-    - ct-macos
+    - ct-mac-m2
   parallel:
     matrix:
       - SANITIZER_DEFS:
