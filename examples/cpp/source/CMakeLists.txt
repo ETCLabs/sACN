@@ -19,5 +19,5 @@ set_target_properties(sacn_cpp_source_example PROPERTIES FOLDER examples)
 set_target_properties(sacn_cpp_source_example PROPERTIES CXX_STANDARD 14 FOLDER examples)
 
 if(SACN_WARN_AS_ERROR)
-  enable_standalone_warnings(sacn_cpp_source_example WERROR)
+  enable_standalone_warnings(sacn_cpp_source_example)
 endif()

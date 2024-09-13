@@ -32,7 +32,7 @@ function(sacn_add_core_library_target target_name)
   endif()
 
   if(SACN_WARN_AS_ERROR)
-    enable_standalone_warnings(${target_name} WERROR)
+    enable_standalone_warnings(${target_name})
   endif()
 
   # Organize sources in IDEs

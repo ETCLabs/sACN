@@ -17,5 +17,5 @@ endif()
 set_target_properties(sacn_receiver_example PROPERTIES FOLDER examples)
 
 if(SACN_WARN_AS_ERROR)
-  enable_standalone_warnings(sacn_receiver_example WERROR)
+  enable_standalone_warnings(sacn_receiver_example)
 endif()
