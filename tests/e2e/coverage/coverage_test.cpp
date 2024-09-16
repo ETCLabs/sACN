@@ -58,6 +58,21 @@ using UniverseId = uint16_t;
 
 static constexpr UniverseId kDefaultUniverse = 1u;
 
+bool WaitForSignal(etcpal::Signal& signal, uint32_t or_until_ms_elapsed)
+{
+  static constexpr uint32_t kWaitIntervalMs = 1000u;
+
+  for (uint32_t elapsed_ms = 0u; elapsed_ms < or_until_ms_elapsed; elapsed_ms += kWaitIntervalMs)
+  {
+    if (signal.TryWait())
+      return true;
+
+    etcpal::Thread::Sleep(kWaitIntervalMs);
+  }
+
+  return false;
+}
+
 class MockLogMessageHandler : public etcpal::LogMessageHandler
 {
 public:
@@ -103,7 +118,16 @@ public:
 class MockSourceDetectorNotifyHandler : public sacn::SourceDetector::NotifyHandler
 {
 public:
-  MockSourceDetectorNotifyHandler() = default;
+  MockSourceDetectorNotifyHandler()
+  {
+    ON_CALL(*this, HandleSourceUpdated(_, _, _, _))
+        .WillByDefault(Invoke([&](sacn::RemoteSourceHandle, const etcpal::Uuid&, const std::string&,
+                                  const std::vector<uint16_t>&) { handle_source_updated_signal_.Notify(); }));
+    ON_CALL(*this, HandleSourceExpired(_, _, _))
+        .WillByDefault(Invoke([&](sacn::RemoteSourceHandle, const etcpal::Uuid&, const std::string&) {
+          handle_source_expired_signal_.Notify();
+        }));
+  }
 
   MOCK_METHOD(void,
               HandleSourceUpdated,
@@ -117,6 +141,24 @@ public:
               (sacn::RemoteSourceHandle handle, const etcpal::Uuid& cid, const std::string& name),
               (override));
   MOCK_METHOD(void, HandleMemoryLimitExceeded, (), (override));
+
+  bool WaitForSourceUpdated(uint32_t or_until_ms_elapsed)
+  {
+    bool res = WaitForSignal(handle_source_updated_signal_, or_until_ms_elapsed);
+    etcpal::Thread::Sleep(3000u);  // A bit extra for other sources
+    return res;
+  }
+
+  bool WaitForSourceExpired(uint32_t or_until_ms_elapsed)
+  {
+    bool res = WaitForSignal(handle_source_expired_signal_, or_until_ms_elapsed);
+    etcpal::Thread::Sleep(3000u);  // A bit extra for other sources
+    return res;
+  }
+
+private:
+  etcpal::Signal handle_source_updated_signal_;
+  etcpal::Signal handle_source_expired_signal_;
 };
 
 class TestMergeReceiver
@@ -510,6 +552,8 @@ TEST_F(CoverageTest, SwitchThroughUniverses)
 
 TEST_F(CoverageTest, DetectSourcesComingAndGoing)
 {
+  static constexpr uint32_t kWorstCaseWaitMs = 300000u;
+
   static constexpr int                                     kNumTestSources = 7;
   static constexpr std::array<UniverseId, kNumTestSources> kTestUniverses  = {1u, 2u, 3u, 4u, 5u, 6u, 7u};
 
@@ -528,12 +572,12 @@ TEST_F(CoverageTest, DetectSourcesComingAndGoing)
     sources.push_back(std::move(source));
   }
 
-  etcpal::Thread::Sleep(11000u);  // Some time to detect sources
+  EXPECT_TRUE(source_detector.GetNotifyHandler().WaitForSourceUpdated(kWorstCaseWaitMs));
 
   for (int i = 0; i < kNumTestSources; ++i)
     sources.pop_back();
 
-  etcpal::Thread::Sleep(30000u);  // Cover universe discovery expiration
+  EXPECT_TRUE(source_detector.GetNotifyHandler().WaitForSourceExpired(kWorstCaseWaitMs));
 }
 
 TEST_F(CoverageTest, ResetNetworkingAtScale)
