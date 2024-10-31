@@ -931,7 +931,8 @@ void update_levels_single_source(MergerState*   merger,
  *
  * Priority and owner outputs will also be updated if the level count changed.
  *
- * The sacn_dmx_merger_lock MUST be taken before calling this (to protect state as well as static EtcPalRbIter tree_iter).
+ * The sacn_dmx_merger_lock MUST be taken before calling this (to protect state as well as static EtcPalRbIter
+ * tree_iter).
  */
 void update_levels_multi_source(MergerState*   merger,
                                 SourceState*   source,
@@ -1117,7 +1118,8 @@ void update_universe_priority_multi_source(MergerState* merger, SourceState* sou
 /*
  * Merge a source's new priority on a range of slots. Assumes the level has not changed since the last merge.
  *
- * The sacn_dmx_merger_lock MUST be taken before calling this (to protect state as well as static EtcPalRbIter tree_iter).
+ * The sacn_dmx_merger_lock MUST be taken before calling this (to protect state as well as static EtcPalRbIter
+ * tree_iter).
  */
 void merge_new_priorities(MergerState*       merger,
                           const SourceState* source,

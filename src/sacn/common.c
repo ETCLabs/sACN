@@ -310,7 +310,7 @@ void sacn_deinit(void)
   if ((sacn_pool_sacn_state.initted_features & SACN_FEATURE_DMX_MERGER) != 0)
     sacn_dmx_merger_deinit();
 #endif  // SACN_DMX_MERGER_ENABLED
-  
+
   if ((sacn_pool_sacn_state.initted_features & SACN_ALL_OTHER_FEATURES) == SACN_ALL_OTHER_FEATURES)
   {
 #if SACN_SOURCE_ENABLED

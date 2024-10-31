@@ -242,7 +242,7 @@ protected:
     sacn::Source source;
 
     sacn::Source::Settings settings;
-    settings.cid = etcpal::Uuid::V4();
+    settings.cid  = etcpal::Uuid::V4();
     settings.name = kTestName;
 
     sacn::Source::UniverseSettings universe_settings;
