@@ -36,7 +36,10 @@
 #define SACN_ETCPAL_FEATURES \
   (ETCPAL_FEATURE_SOCKETS | ETCPAL_FEATURE_TIMERS | ETCPAL_FEATURE_NETINTS | ETCPAL_FEATURE_LOGGING)
 
-#define SACN_FEATURES_NONE 0x00000000u
+enum
+{
+  kSacnFeaturesNone = 0x00000000u
+};
 
 /***************************** Global variables ******************************/
 
@@ -348,7 +351,7 @@ void sacn_deinit(void)
   }
 
   sacn_log_params                       = NULL;
-  sacn_pool_sacn_state.initted_features = SACN_FEATURES_NONE;
+  sacn_pool_sacn_state.initted_features = kSacnFeaturesNone;
 }
 
 #if SACN_RECEIVER_ENABLED || DOXYGEN
