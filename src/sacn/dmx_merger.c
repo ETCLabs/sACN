@@ -195,7 +195,7 @@ etcpal_error_t sacn_dmx_merger_create(const SacnDmxMergerConfig* config, sacn_dm
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_FEATURE_DMX_MERGER))
     result = kEtcPalErrNotInit;
 
   // Validate arguments.
@@ -250,7 +250,7 @@ etcpal_error_t sacn_dmx_merger_destroy(sacn_dmx_merger_t handle)
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_FEATURE_DMX_MERGER))
     result = kEtcPalErrNotInit;
 
   // Validate handle.
@@ -298,7 +298,7 @@ etcpal_error_t sacn_dmx_merger_add_source(sacn_dmx_merger_t merger, sacn_dmx_mer
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_FEATURE_DMX_MERGER))
     result = kEtcPalErrNotInit;
 
   if (result == kEtcPalErrOk)
@@ -340,7 +340,7 @@ etcpal_error_t sacn_dmx_merger_remove_source(sacn_dmx_merger_t merger, sacn_dmx_
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_FEATURE_DMX_MERGER))
     result = kEtcPalErrNotInit;
 
   // Check if the handles are invalid.
@@ -429,7 +429,7 @@ etcpal_error_t sacn_dmx_merger_update_levels(sacn_dmx_merger_t        merger,
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_FEATURE_DMX_MERGER))
     result = kEtcPalErrNotInit;
 
   // Validate arguments.
@@ -489,7 +489,7 @@ etcpal_error_t sacn_dmx_merger_update_pap(sacn_dmx_merger_t        merger,
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_FEATURE_DMX_MERGER))
     result = kEtcPalErrNotInit;
 
   // Validate arguments.
@@ -551,7 +551,7 @@ etcpal_error_t sacn_dmx_merger_update_universe_priority(sacn_dmx_merger_t       
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_FEATURE_DMX_MERGER))
     result = kEtcPalErrNotInit;
 
   // Validate arguments.
@@ -595,7 +595,7 @@ etcpal_error_t sacn_dmx_merger_remove_pap(sacn_dmx_merger_t merger, sacn_dmx_mer
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_FEATURE_DMX_MERGER))
     result = kEtcPalErrNotInit;
 
   // Validate arguments.

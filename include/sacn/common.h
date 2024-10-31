@@ -121,7 +121,40 @@ typedef struct SacnNetintConfig
     NULL, 0, false                      \
   }
 
+/** A mask of desired sACN features. See "sACN feature masks". */
+typedef uint32_t sacn_features_t;
+
+/**
+ * @name sACN feature masks
+ *
+ * Pass one or more of these to sacn_init_features() to initialize the relevant sACN feature. Multiple features can be
+ * requested using logical OR.
+ *
+ * Currently the DMX merger is the only feature that can be initialized individually. All other APIs can later be
+ * initialized with SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER). Consequently, SACN_FEATURES_ALL (used by
+ * sacn_init()) represents all APIs regardless if they have an individual feature defined for them.
+ *
+ * @{
+ */
+
+#define SACN_FEATURE_DMX_MERGER ((sacn_features_t)(1u << 0)) /**< Use the sacn/dmx_merger module. */
+#define SACN_FEATURES_ALL       0xffffffffu                  /**< Use every available module. */
+
+/**
+ * @brief Use every available module except the ones passed in mask.
+ * @param mask Mask of SACN_FEATURE_* macros to not include in the feature mask.
+ * @return Resulting sACN feature mask to pass to sacn_init_features().
+ */
+#define SACN_FEATURES_ALL_BUT(mask) (((uint32_t)SACN_FEATURES_ALL) & ((uint32_t)(~((uint32_t)(mask)))))
+
+/**
+ * @}
+ */
+
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConfig* sys_netint_config);
+etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
+                                  const SacnNetintConfig* sys_netint_config,
+                                  sacn_features_t         features);
 void           sacn_deinit(void);
 
 sacn_remote_source_t sacn_get_remote_source_handle(const EtcPalUuid* source_cid);
