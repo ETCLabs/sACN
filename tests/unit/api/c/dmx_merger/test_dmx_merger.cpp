@@ -454,8 +454,6 @@ TEST_F(TestDmxMerger, CreatesMultipleMergersAndDeinits)
     EXPECT_EQ(sacn_dmx_merger_create(&merger_config_, &merger_handle_), kEtcPalErrOk);
 
   EXPECT_EQ(get_number_of_mergers(), static_cast<size_t>(SACN_DMX_MERGER_MAX_MERGERS));
-
-  sacn_dmx_merger_deinit();
 }
 
 TEST_F(TestDmxMerger, MergerCreateWorks)
