@@ -29,4 +29,6 @@ endfunction()
 
 add_subdirectory(unit)
 add_subdirectory(integration)
-add_subdirectory(e2e)
+if(SACN_ENABLE_E2E_TESTS)
+  add_subdirectory(e2e)
+endif()

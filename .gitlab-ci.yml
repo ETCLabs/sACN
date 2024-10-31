@@ -25,7 +25,7 @@ windows-build:
   tags:
     - ct-windows
   variables:
-    SANITIZER_DEFS: -DSACN_ENABLE_ASAN=ON
+    SANITIZER_DEFS: -DSACN_ENABLE_E2E_TESTS=ON -DSACN_ENABLE_ASAN=ON
   script:
     - mkdir build
     - cd build
@@ -65,8 +65,8 @@ linux-gcc-build:
   parallel:
     matrix:
       - SANITIZER_DEFS:
-          - -DSACN_ENABLE_ASAN=ON -DSACN_ENABLE_UBSAN=ON
-          - -DSACN_ENABLE_TSAN=ON
+          - -DSACN_ENABLE_E2E_TESTS=ON -DSACN_ENABLE_ASAN=ON -DSACN_ENABLE_UBSAN=ON
+          - -DSACN_ENABLE_E2E_TESTS=ON -DSACN_ENABLE_TSAN=ON
   script:
     - mkdir build
     - cd build
@@ -86,7 +86,7 @@ linux-clang-build:
   parallel:
     matrix:
       - SANITIZER_DEFS:
-          - -DSACN_ENABLE_MSAN=ON
+          - -DSACN_ENABLE_E2E_TESTS=ON -DSACN_ENABLE_MSAN=ON
   script:
     - mkdir build
     - cd build

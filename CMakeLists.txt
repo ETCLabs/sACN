@@ -18,6 +18,7 @@ if(DEFINED SACN_CONFIG_LOC)
 endif()
 
 option(SACN_BUILD_TESTS "Build the sACN unit tests" OFF)
+option(SACN_ENABLE_E2E_TESTS "Enable the end-to-end sACN tests (requires SACN_BUILD_TESTS)" OFF)
 option(SACN_BUILD_EXAMPLES "Build the sACN example applications" OFF)
 option(SACN_BUILD_TEST_TOOLS "Build the sACN test tools (typically used in development only)" OFF)
 option(SACN_INSTALL_PDBS "Include PDBs in sACN install target" ON)

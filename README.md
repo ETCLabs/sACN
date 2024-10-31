@@ -58,7 +58,7 @@ This library meets a high quality standard by employing a variety of quality gat
 
 ### Automated Runtime Analysis
 
-* All automated tests are run under Address Sanitizer (Windows, Mac, & Linux), Memory Sanitizer (Linux), Undefined Behavior Sanitizer (Mac & Linux), and Thread Sanitizer (Mac & Linux).
+* All automated tests* are run under Address Sanitizer (Windows, Mac, & Linux), Memory Sanitizer (Linux), Undefined Behavior Sanitizer (Mac & Linux), and Thread Sanitizer (Mac & Linux). *E2E tests are only run on Windows (ASAN) and Linux (all).
 
 ## Revision Control
 
