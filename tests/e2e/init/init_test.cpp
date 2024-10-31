@@ -166,7 +166,7 @@ protected:
     }
     else
     {
-      EXPECT_EQ(merger.Startup({}), kEtcPalErrNotInit);
+      EXPECT_EQ(merger.Startup(settings), kEtcPalErrNotInit);
       EXPECT_EQ(merger.AddSource(), kEtcPalErrNotInit);
     }
   }
@@ -265,7 +265,7 @@ protected:
     }
     else
     {
-      EXPECT_EQ(source.Startup({}), kEtcPalErrNotInit);
+      EXPECT_EQ(source.Startup(settings), kEtcPalErrNotInit);
 
       EXPECT_EQ(source.AddUniverse(universe_settings), kEtcPalErrNotInit);
       EXPECT_EQ(source.ChangeName(std::string(kTestName) + " 2"), kEtcPalErrNotInit);
