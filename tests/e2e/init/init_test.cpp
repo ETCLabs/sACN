@@ -29,6 +29,8 @@
 
 #include <array>
 
+#include "sacn_config.h"
+
 using testing::_;
 using testing::AtLeast;
 using testing::InSequence;
@@ -47,13 +49,13 @@ using UniverseId = uint16_t;
 static constexpr sacn_features_t kNoFeatures       = 0u;
 static constexpr sacn_features_t kAllOtherFeatures = SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER);
 
-static constexpr UniverseId                                kTestUniverse    = 123u;
-static constexpr uint8_t                                   kTestPriority    = 123u;
-static constexpr uint8_t                                   kTestStartCode   = 123u;
-static constexpr std::array<uint8_t, kSacnDmxAddressCount> kTestValues      = {};
-static constexpr uint32_t                                  kTestExpiredWait = 123u;
-static constexpr const char*                               kTestName        = "Test Name";
-static const etcpal::IpAddr                                kTestAddr        = etcpal::IpAddr::FromString("10.101.1.1");
+static constexpr UniverseId                                     kTestUniverse    = 123u;
+static constexpr uint8_t                                        kTestPriority    = 123u;
+static constexpr uint8_t                                        kTestStartCode   = 123u;
+static constexpr std::array<uint8_t, SACN_DMX_MERGER_MAX_SLOTS> kTestValues      = {};
+static constexpr uint32_t                                       kTestExpiredWait = 123u;
+static constexpr const char*                                    kTestName        = "Test Name";
+static const etcpal::IpAddr                                     kTestAddr = etcpal::IpAddr::FromString("10.101.1.1");
 
 class MockReceiverNotifyHandler : public sacn::Receiver::NotifyHandler
 {
