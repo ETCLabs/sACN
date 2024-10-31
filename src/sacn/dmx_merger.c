@@ -1412,7 +1412,7 @@ size_t get_number_of_mergers()
 {
   size_t result = 0;
 
-  if (sacn_initialized(SACN_FEATURE_DMX_MERGER) && sacn_dmx_merger_lock())
+  if (sacn_dmx_merger_lock())
   {
     result = etcpal_rbtree_size(&mergers);
     sacn_dmx_merger_unlock();

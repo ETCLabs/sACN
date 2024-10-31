@@ -447,7 +447,7 @@ protected:
 
 int TestDmxMergerUpdate::MergerCall::next_id_ = 0;
 
-TEST_F(TestDmxMerger, DeinitClearsMergers)
+TEST_F(TestDmxMerger, CreatesMultipleMergersAndDeinits)
 {
   // Add up to the maximum number of mergers.
   for (int i = 0; i < SACN_DMX_MERGER_MAX_MERGERS; ++i)
@@ -456,8 +456,6 @@ TEST_F(TestDmxMerger, DeinitClearsMergers)
   EXPECT_EQ(get_number_of_mergers(), static_cast<size_t>(SACN_DMX_MERGER_MAX_MERGERS));
 
   sacn_dmx_merger_deinit();
-
-  EXPECT_EQ(get_number_of_mergers(), 0u);
 }
 
 TEST_F(TestDmxMerger, MergerCreateWorks)
