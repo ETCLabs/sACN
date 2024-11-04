@@ -153,7 +153,7 @@ etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
   }
 
   etcpal_error_t res = kEtcPalErrOk;
-  if ((features & SACN_ALL_OTHER_FEATURES) == SACN_ALL_OTHER_FEATURES)
+  if ((features & SACN_ALL_NETWORK_FEATURES) == SACN_ALL_NETWORK_FEATURES)
   {
     if (res == kEtcPalErrOk)
       etcpal_initted = ((res = etcpal_init(SACN_ETCPAL_FEATURES)) == kEtcPalErrOk);
@@ -314,7 +314,7 @@ void sacn_deinit(void)
     sacn_dmx_merger_deinit();
 #endif  // SACN_DMX_MERGER_ENABLED
 
-  if ((sacn_pool_sacn_state.initted_features & SACN_ALL_OTHER_FEATURES) == SACN_ALL_OTHER_FEATURES)
+  if ((sacn_pool_sacn_state.initted_features & SACN_ALL_NETWORK_FEATURES) == SACN_ALL_NETWORK_FEATURES)
   {
 #if SACN_SOURCE_ENABLED
     sacn_source_deinit();

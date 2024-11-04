@@ -172,7 +172,7 @@ static const sacn_thread_id_t kSacnThreadIdInvalid = UINT_MAX;
 #define SACN_DECLARE_SOURCE_DETECTOR_BUF(type, name, size) type* name
 #endif
 
-#define SACN_ALL_OTHER_FEATURES SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER)
+#define SACN_ALL_NETWORK_FEATURES SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER)
 
 /******************************************************************************
  * Logging
