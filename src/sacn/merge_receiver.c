@@ -1028,7 +1028,8 @@ void merge_receiver_pap_lost(sacn_receiver_t         handle,
               merged_data_notification->slot_range.address_count = SACN_MERGE_RECEIVER_MAX_SLOTS;
               memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_MERGE_RECEIVER_MAX_SLOTS);
               memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_MERGE_RECEIVER_MAX_SLOTS);
-              memcpy(merged_data_notification->owners, merge_receiver->owners,
+              memcpy(
+                  merged_data_notification->owners, merge_receiver->owners,
                   SACN_MERGE_RECEIVER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
             }
             else
