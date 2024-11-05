@@ -746,16 +746,18 @@ typedef struct SacnMergeReceiver
   SacnMergeReceiverCallbacks callbacks;
   bool                       use_pap;
 
-  sacn_dmx_merger_t        merger_handle;
-  uint8_t                  levels[SACN_MERGE_RECEIVER_MAX_SLOTS];
-  uint8_t                  priorities[SACN_MERGE_RECEIVER_MAX_SLOTS];
-  sacn_dmx_merger_source_t owners[SACN_MERGE_RECEIVER_MAX_SLOTS];
+  sacn_dmx_merger_t merger_handle;
+
+  // The DMX merger requires the buffer size to be SACN_DMX_MERGER_MAX_SLOTS.
+  uint8_t                  levels[SACN_DMX_MERGER_MAX_SLOTS];
+  uint8_t                  priorities[SACN_DMX_MERGER_MAX_SLOTS];
+  sacn_dmx_merger_source_t owners[SACN_DMX_MERGER_MAX_SLOTS];
 
 #if SACN_MERGE_RECEIVER_ENABLE_SAMPLING_MERGER
   sacn_dmx_merger_t        sampling_merger_handle;
-  uint8_t                  sampling_levels[SACN_MERGE_RECEIVER_MAX_SLOTS];
-  uint8_t                  sampling_priorities[SACN_MERGE_RECEIVER_MAX_SLOTS];
-  sacn_dmx_merger_source_t sampling_owners[SACN_MERGE_RECEIVER_MAX_SLOTS];
+  uint8_t                  sampling_levels[SACN_DMX_MERGER_MAX_SLOTS];
+  uint8_t                  sampling_priorities[SACN_DMX_MERGER_MAX_SLOTS];
+  sacn_dmx_merger_source_t sampling_owners[SACN_DMX_MERGER_MAX_SLOTS];
 #endif
 
   EtcPalRbTree sources;

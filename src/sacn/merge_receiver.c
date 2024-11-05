@@ -673,7 +673,8 @@ void merge_receiver_universe_data(sacn_receiver_t             receiver_handle,
         // Notify if needed.
         if (merged_data_notification && new_merge_occurred && !sampling)
         {
-          if (add_active_sources(merged_data_notification, merge_receiver))
+          if (SACN_ASSERT_VERIFY(SACN_MERGE_RECEIVER_MAX_SLOTS <= SACN_DMX_MERGER_MAX_SLOTS) &&
+              add_active_sources(merged_data_notification, merge_receiver))
           {
             merged_data_notification->callback                 = merge_receiver->callbacks.universe_data;
             merged_data_notification->handle                   = (sacn_merge_receiver_t)receiver_handle;
@@ -774,7 +775,8 @@ void merge_receiver_sources_lost(sacn_receiver_t       handle,
 
         if (merged_data_notification && non_sampling_merge_occurred)
         {
-          if (add_active_sources(merged_data_notification, merge_receiver))
+          if (SACN_ASSERT_VERIFY(SACN_MERGE_RECEIVER_MAX_SLOTS <= SACN_DMX_MERGER_MAX_SLOTS) &&
+              add_active_sources(merged_data_notification, merge_receiver))
           {
             merged_data_notification->callback                 = merge_receiver->callbacks.universe_data;
             merged_data_notification->handle                   = (sacn_merge_receiver_t)handle;
@@ -923,7 +925,8 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
 
         if (merged_data_notification && (etcpal_rbtree_size(&merge_receiver->sources) > 0))
         {
-          if (add_active_sources(merged_data_notification, merge_receiver))
+          if (SACN_ASSERT_VERIFY(SACN_MERGE_RECEIVER_MAX_SLOTS <= SACN_DMX_MERGER_MAX_SLOTS) &&
+              add_active_sources(merged_data_notification, merge_receiver))
           {
             merged_data_notification->callback                 = merge_receiver->callbacks.universe_data;
             merged_data_notification->handle                   = (sacn_merge_receiver_t)handle;
@@ -1019,7 +1022,8 @@ void merge_receiver_pap_lost(sacn_receiver_t         handle,
 
           if (merged_data_notification && !internal_source->sampling)
           {
-            if (add_active_sources(merged_data_notification, merge_receiver))
+            if (SACN_ASSERT_VERIFY(SACN_MERGE_RECEIVER_MAX_SLOTS <= SACN_DMX_MERGER_MAX_SLOTS) &&
+                add_active_sources(merged_data_notification, merge_receiver))
             {
               merged_data_notification->callback                 = merge_receiver->callbacks.universe_data;
               merged_data_notification->handle                   = (sacn_merge_receiver_t)handle;
