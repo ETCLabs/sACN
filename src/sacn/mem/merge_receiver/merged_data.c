@@ -62,10 +62,10 @@ MergeReceiverMergedDataNotification* get_merged_data(sacn_thread_id_t thread_id)
     to_return->handle                              = kSacnMergeReceiverInvalid;
     to_return->universe                            = 0;
     to_return->slot_range.start_address            = 1;
-    to_return->slot_range.address_count            = SACN_DMX_MERGER_MAX_SLOTS;
-    memset(to_return->levels, 0, SACN_DMX_MERGER_MAX_SLOTS);
-    memset(to_return->priorities, 0, SACN_DMX_MERGER_MAX_SLOTS);
-    memset(to_return->owners, 0, SACN_DMX_MERGER_MAX_SLOTS * sizeof(sacn_remote_source_t));
+    to_return->slot_range.address_count            = SACN_MERGE_RECEIVER_MAX_SLOTS;
+    memset(to_return->levels, 0, SACN_MERGE_RECEIVER_MAX_SLOTS);
+    memset(to_return->priorities, 0, SACN_MERGE_RECEIVER_MAX_SLOTS);
+    memset(to_return->owners, 0, SACN_MERGE_RECEIVER_MAX_SLOTS * sizeof(sacn_remote_source_t));
     to_return->num_active_sources = 0;
 
     return to_return;

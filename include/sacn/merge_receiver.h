@@ -45,6 +45,10 @@
  * @{
  */
 
+/** The maximum number of slots that can be merged by a single sACN Merge Receiver. */
+#define SACN_MERGE_RECEIVER_MAX_SLOTS \
+  ((SACN_DMX_MERGER_MAX_SLOTS > kSacnDmxAddressCount) ? kSacnDmxAddressCount : SACN_DMX_MERGER_MAX_SLOTS)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -281,9 +285,10 @@ typedef struct SacnMergeReceiverConfig
 } SacnMergeReceiverConfig;
 
 /** A default-value initializer for an SacnMergeReceiverConfig struct. */
-#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                                                       \
-  {                                                                                                                   \
-    0, {NULL, NULL, NULL, NULL}, {1, SACN_DMX_MERGER_MAX_SLOTS}, kSacnReceiverInfiniteSources, true, kSacnIpV4AndIpV6 \
+#define SACN_MERGE_RECEIVER_CONFIG_DEFAULT_INIT                                                          \
+  {                                                                                                      \
+    0, {NULL, NULL, NULL, NULL}, {1, SACN_MERGE_RECEIVER_MAX_SLOTS}, kSacnReceiverInfiniteSources, true, \
+        kSacnIpV4AndIpV6                                                                                 \
   }
 
 /** A set of network interfaces for a particular merge receiver. */
