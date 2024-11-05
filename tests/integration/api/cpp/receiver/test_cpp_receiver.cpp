@@ -820,3 +820,31 @@ TEST_F(TestMergeReceiver, InitialPapDoesNotMergeUntilLevelsArrive)
   };
   RunThreadCycle(true);
 }
+
+TEST_F(TestMergeReceiver, HandlesMaxSlots)
+{
+  static const std::vector<uint8_t> kEmptyLevelData = {};
+  static const std::vector<uint8_t> kLevelData(SACN_MERGE_RECEIVER_MAX_SLOTS, 255);
+  static const std::vector<uint8_t> kPapData(SACN_MERGE_RECEIVER_MAX_SLOTS, 100);
+
+  static const etcpal::Uuid kSourceCid = etcpal::Uuid::V4();
+
+  // Elapse sampling period
+  RunThreadCycle(false);
+  etcpal_getms_fake.return_val += (kSacnSampleTime + 1u);
+  RunThreadCycle(false);
+
+  // Source 1 0xDD received - expect empty merge results
+  EXPECT_CALL(mock_notify_handler_, HandleMergedData(_, ControlsLevels(kEmptyLevelData))).Times(1);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomPapData(kPapData), msg, kSourceCid);
+  };
+  RunThreadCycle(true);
+
+  // Source 1 0x00 received - should be seen in merge now
+  EXPECT_CALL(mock_notify_handler_, HandleMergedData(_, ControlsLevels(kLevelData))).Times(1);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomLevelData(kLevelData), msg, kSourceCid);
+  };
+  RunThreadCycle(true);
+}
