@@ -496,7 +496,7 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
  */
 #ifdef SACN_DMX_MERGER_MAX_SLOTS
 #if (SACN_DMX_MERGER_MAX_SLOTS < 1)
-#error "Error: SACN_DMX_MERGER_MAX_SLOTS must be above 1."
+#error "Error: SACN_DMX_MERGER_MAX_SLOTS must be >= 1."
 #endif
 #else
 #define SACN_DMX_MERGER_MAX_SLOTS 512
