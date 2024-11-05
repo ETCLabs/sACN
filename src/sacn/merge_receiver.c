@@ -602,6 +602,7 @@ etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t    merge_rec
  * Receiver callback implementations
  *************************************************************************************************/
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void merge_receiver_universe_data(sacn_receiver_t             receiver_handle,
                                   const EtcPalSockAddr*       source_addr,
                                   const SacnRemoteSource*     source_info,
