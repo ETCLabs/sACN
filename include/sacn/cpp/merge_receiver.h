@@ -245,7 +245,7 @@ public:
     /********* Optional values **********/
 
     /** The footprint within the universe to monitor. TODO: Currently unimplemented and thus ignored. */
-    SacnRecvUniverseSubrange footprint{1, SACN_DMX_MERGER_MAX_SLOTS};
+    SacnRecvUniverseSubrange footprint{1, SACN_MERGE_RECEIVER_MAX_SLOTS};
 
     /** The maximum number of sources this universe will listen to when using dynamic memory. */
     int source_count_max{kSacnReceiverInfiniteSources};
@@ -453,8 +453,8 @@ inline MergeReceiver::Settings::Settings(uint16_t new_universe_id) : universe_id
 inline bool MergeReceiver::Settings::IsValid() const
 {
   return (universe_id > 0) && (footprint.start_address >= 1) &&
-         (footprint.start_address <= SACN_DMX_MERGER_MAX_SLOTS) && (footprint.address_count >= 1) &&
-         (footprint.address_count <= (SACN_DMX_MERGER_MAX_SLOTS - footprint.start_address + 1));
+         (footprint.start_address <= SACN_MERGE_RECEIVER_MAX_SLOTS) && (footprint.address_count >= 1) &&
+         (footprint.address_count <= (SACN_MERGE_RECEIVER_MAX_SLOTS - footprint.start_address + 1));
 }
 
 /**

@@ -820,3 +820,46 @@ TEST_F(TestMergeReceiver, InitialPapDoesNotMergeUntilLevelsArrive)
   };
   RunThreadCycle(true);
 }
+
+TEST_F(TestMergeReceiver, MergesMaxSlots)
+{
+  static const std::vector<uint8_t> kEmptyLevelData = {};
+  static const std::vector<uint8_t> kLevelData1(SACN_MERGE_RECEIVER_MAX_SLOTS, 255);
+  static const std::vector<uint8_t> kPapData1(SACN_MERGE_RECEIVER_MAX_SLOTS, 50);
+  static const std::vector<uint8_t> kLevelData2(SACN_MERGE_RECEIVER_MAX_SLOTS, 128);
+  static const std::vector<uint8_t> kPapData2(SACN_MERGE_RECEIVER_MAX_SLOTS, 100);
+
+  static const etcpal::Uuid kSourceCid1 = etcpal::Uuid::V4();
+  static const etcpal::Uuid kSourceCid2 = etcpal::Uuid::V4();
+
+  // Elapse sampling period
+  RunThreadCycle(false);
+  etcpal_getms_fake.return_val += (kSacnSampleTime + 1u);
+  RunThreadCycle(false);
+
+  // Source 1 appears in merge once levels arrive
+  EXPECT_CALL(mock_notify_handler_, HandleMergedData(_, ControlsLevels(kEmptyLevelData))).Times(1);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomPapData(kPapData1), msg, kSourceCid1);
+  };
+  RunThreadCycle(true);
+
+  EXPECT_CALL(mock_notify_handler_, HandleMergedData(_, ControlsLevels(kLevelData1))).Times(1);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomLevelData(kLevelData1), msg, kSourceCid1);
+  };
+  RunThreadCycle(true);
+
+  // Add another source to test merging
+  EXPECT_CALL(mock_notify_handler_, HandleMergedData(_, ControlsLevels(kLevelData1))).Times(1);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomPapData(kPapData2), msg, kSourceCid2);
+  };
+  RunThreadCycle(true);
+
+  EXPECT_CALL(mock_notify_handler_, HandleMergedData(_, ControlsLevels(kLevelData2))).Times(1);
+  etcpal_recvmsg_fake.custom_fake = [](etcpal_socket_t, EtcPalMsgHdr* msg, int) {
+    return FakeReceive(FakeReceiveMode::kMulticast, 0, CustomLevelData(kLevelData2), msg, kSourceCid2);
+  };
+  RunThreadCycle(true);
+}

@@ -1005,7 +1005,7 @@ TEST_F(TestDmxMergerUpdate, MergesLevelsOnChange)
 {
   std::vector<uint8_t> variable_levels = kTestValuesDescending;
 
-  size_t start_offset = 256 - (kNumTestIterations / 2);
+  size_t start_offset = (SACN_DMX_MERGER_MAX_SLOTS / 2) - (kNumTestIterations / 2);
   ASSERT_LE(start_offset + kNumTestIterations, variable_levels.size());
 
   bool merge_results_pass = true;
@@ -1029,7 +1029,7 @@ TEST_F(TestDmxMergerUpdate, MergesPapOnChange)
 {
   std::vector<uint8_t> variable_pap = kTestValuesAscending;
 
-  size_t start_offset = 256 - (kNumTestIterations / 2);
+  size_t start_offset = (SACN_DMX_MERGER_MAX_SLOTS / 2) - (kNumTestIterations / 2);
   ASSERT_LE(start_offset + kNumTestIterations, variable_pap.size());
 
   bool merge_results_pass = true;

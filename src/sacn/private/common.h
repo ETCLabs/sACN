@@ -746,7 +746,9 @@ typedef struct SacnMergeReceiver
   SacnMergeReceiverCallbacks callbacks;
   bool                       use_pap;
 
-  sacn_dmx_merger_t        merger_handle;
+  sacn_dmx_merger_t merger_handle;
+
+  // The DMX merger requires the buffer size to be SACN_DMX_MERGER_MAX_SLOTS.
   uint8_t                  levels[SACN_DMX_MERGER_MAX_SLOTS];
   uint8_t                  priorities[SACN_DMX_MERGER_MAX_SLOTS];
   sacn_dmx_merger_source_t owners[SACN_DMX_MERGER_MAX_SLOTS];
@@ -773,9 +775,9 @@ typedef struct MergeReceiverMergedDataNotification
   sacn_merge_receiver_t               handle;
   uint16_t                            universe;
   SacnRecvUniverseSubrange            slot_range;
-  uint8_t                             levels[SACN_DMX_MERGER_MAX_SLOTS];
-  uint8_t                             priorities[SACN_DMX_MERGER_MAX_SLOTS];
-  sacn_remote_source_t                owners[SACN_DMX_MERGER_MAX_SLOTS];
+  uint8_t                             levels[SACN_MERGE_RECEIVER_MAX_SLOTS];
+  uint8_t                             priorities[SACN_MERGE_RECEIVER_MAX_SLOTS];
+  sacn_remote_source_t                owners[SACN_MERGE_RECEIVER_MAX_SLOTS];
   SACN_DECLARE_MERGE_RECEIVER_BUF(sacn_remote_source_t, active_sources, SACN_RECEIVER_MAX_SOURCES_PER_UNIVERSE);
   size_t num_active_sources;
 } MergeReceiverMergedDataNotification;

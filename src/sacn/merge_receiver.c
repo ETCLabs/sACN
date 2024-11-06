@@ -602,6 +602,7 @@ etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t    merge_rec
  * Receiver callback implementations
  *************************************************************************************************/
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void merge_receiver_universe_data(sacn_receiver_t             receiver_handle,
                                   const EtcPalSockAddr*       source_addr,
                                   const SacnRemoteSource*     source_info,
@@ -653,7 +654,7 @@ void merge_receiver_universe_data(sacn_receiver_t             receiver_handle,
 
         bool new_merge_occurred = false;
         if ((universe_data->slot_range.address_count > 0) &&
-            (universe_data->slot_range.address_count <= SACN_DMX_MERGER_MAX_SLOTS))
+            (universe_data->slot_range.address_count <= SACN_MERGE_RECEIVER_MAX_SLOTS))
         {
           if (universe_data->start_code == kSacnStartcodeDmx)
           {
@@ -673,17 +674,18 @@ void merge_receiver_universe_data(sacn_receiver_t             receiver_handle,
         // Notify if needed.
         if (merged_data_notification && new_merge_occurred && !sampling)
         {
-          if (add_active_sources(merged_data_notification, merge_receiver))
+          if (SACN_ASSERT_VERIFY(SACN_MERGE_RECEIVER_MAX_SLOTS <= SACN_DMX_MERGER_MAX_SLOTS) &&
+              add_active_sources(merged_data_notification, merge_receiver))
           {
             merged_data_notification->callback                 = merge_receiver->callbacks.universe_data;
             merged_data_notification->handle                   = (sacn_merge_receiver_t)receiver_handle;
             merged_data_notification->universe                 = universe_data->universe_id;
             merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-            merged_data_notification->slot_range.address_count = SACN_DMX_MERGER_MAX_SLOTS;
-            memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_DMX_MERGER_MAX_SLOTS);
-            memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_DMX_MERGER_MAX_SLOTS);
+            merged_data_notification->slot_range.address_count = SACN_MERGE_RECEIVER_MAX_SLOTS;
+            memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_MERGE_RECEIVER_MAX_SLOTS);
+            memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_MERGE_RECEIVER_MAX_SLOTS);
             memcpy(merged_data_notification->owners, merge_receiver->owners,
-                   SACN_DMX_MERGER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+                   SACN_MERGE_RECEIVER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
           }
           else
           {
@@ -774,17 +776,18 @@ void merge_receiver_sources_lost(sacn_receiver_t       handle,
 
         if (merged_data_notification && non_sampling_merge_occurred)
         {
-          if (add_active_sources(merged_data_notification, merge_receiver))
+          if (SACN_ASSERT_VERIFY(SACN_MERGE_RECEIVER_MAX_SLOTS <= SACN_DMX_MERGER_MAX_SLOTS) &&
+              add_active_sources(merged_data_notification, merge_receiver))
           {
             merged_data_notification->callback                 = merge_receiver->callbacks.universe_data;
             merged_data_notification->handle                   = (sacn_merge_receiver_t)handle;
             merged_data_notification->universe                 = universe;
             merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-            merged_data_notification->slot_range.address_count = SACN_DMX_MERGER_MAX_SLOTS;
-            memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_DMX_MERGER_MAX_SLOTS);
-            memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_DMX_MERGER_MAX_SLOTS);
+            merged_data_notification->slot_range.address_count = SACN_MERGE_RECEIVER_MAX_SLOTS;
+            memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_MERGE_RECEIVER_MAX_SLOTS);
+            memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_MERGE_RECEIVER_MAX_SLOTS);
             memcpy(merged_data_notification->owners, merge_receiver->owners,
-                   SACN_DMX_MERGER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+                   SACN_MERGE_RECEIVER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
           }
           else
           {
@@ -923,17 +926,18 @@ void merge_receiver_sampling_ended(sacn_receiver_t handle, uint16_t universe, sa
 
         if (merged_data_notification && (etcpal_rbtree_size(&merge_receiver->sources) > 0))
         {
-          if (add_active_sources(merged_data_notification, merge_receiver))
+          if (SACN_ASSERT_VERIFY(SACN_MERGE_RECEIVER_MAX_SLOTS <= SACN_DMX_MERGER_MAX_SLOTS) &&
+              add_active_sources(merged_data_notification, merge_receiver))
           {
             merged_data_notification->callback                 = merge_receiver->callbacks.universe_data;
             merged_data_notification->handle                   = (sacn_merge_receiver_t)handle;
             merged_data_notification->universe                 = universe;
             merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-            merged_data_notification->slot_range.address_count = SACN_DMX_MERGER_MAX_SLOTS;
-            memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_DMX_MERGER_MAX_SLOTS);
-            memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_DMX_MERGER_MAX_SLOTS);
+            merged_data_notification->slot_range.address_count = SACN_MERGE_RECEIVER_MAX_SLOTS;
+            memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_MERGE_RECEIVER_MAX_SLOTS);
+            memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_MERGE_RECEIVER_MAX_SLOTS);
             memcpy(merged_data_notification->owners, merge_receiver->owners,
-                   SACN_DMX_MERGER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+                   SACN_MERGE_RECEIVER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
           }
           else
           {
@@ -1019,17 +1023,19 @@ void merge_receiver_pap_lost(sacn_receiver_t         handle,
 
           if (merged_data_notification && !internal_source->sampling)
           {
-            if (add_active_sources(merged_data_notification, merge_receiver))
+            if (SACN_ASSERT_VERIFY(SACN_MERGE_RECEIVER_MAX_SLOTS <= SACN_DMX_MERGER_MAX_SLOTS) &&
+                add_active_sources(merged_data_notification, merge_receiver))
             {
               merged_data_notification->callback                 = merge_receiver->callbacks.universe_data;
               merged_data_notification->handle                   = (sacn_merge_receiver_t)handle;
               merged_data_notification->universe                 = universe;
               merged_data_notification->slot_range.start_address = 1;  // TODO: Route footprint from receiver
-              merged_data_notification->slot_range.address_count = SACN_DMX_MERGER_MAX_SLOTS;
-              memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_DMX_MERGER_MAX_SLOTS);
-              memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_DMX_MERGER_MAX_SLOTS);
-              memcpy(merged_data_notification->owners, merge_receiver->owners,
-                     SACN_DMX_MERGER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
+              merged_data_notification->slot_range.address_count = SACN_MERGE_RECEIVER_MAX_SLOTS;
+              memcpy(merged_data_notification->levels, merge_receiver->levels, SACN_MERGE_RECEIVER_MAX_SLOTS);
+              memcpy(merged_data_notification->priorities, merge_receiver->priorities, SACN_MERGE_RECEIVER_MAX_SLOTS);
+              memcpy(
+                  merged_data_notification->owners, merge_receiver->owners,
+                  SACN_MERGE_RECEIVER_MAX_SLOTS * sizeof(sacn_remote_source_t));  // Cast back to sacn_remote_source_t
             }
             else
             {
