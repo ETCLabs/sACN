@@ -95,7 +95,7 @@ etcpal_error_t sacn_receiver_create(const SacnReceiverConfig* config,
 {
   etcpal_error_t res = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
   {
     res = kEtcPalErrNotInit;
   }
@@ -146,7 +146,7 @@ etcpal_error_t sacn_receiver_destroy(sacn_receiver_t handle)
 {
   etcpal_error_t res = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     res = kEtcPalErrNotInit;
   else if (handle == kSacnReceiverInvalid)
     res = kEtcPalErrInvalid;
@@ -191,7 +191,7 @@ etcpal_error_t sacn_receiver_get_universe(sacn_receiver_t handle, uint16_t* univ
 {
   etcpal_error_t res = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     res = kEtcPalErrNotInit;
   else if (universe_id == NULL)
     res = kEtcPalErrInvalid;
@@ -273,7 +273,7 @@ etcpal_error_t sacn_receiver_change_universe(sacn_receiver_t handle, uint16_t ne
 {
   etcpal_error_t res = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     res = kEtcPalErrNotInit;
   else if (!UNIVERSE_ID_VALID(new_universe_id))
     res = kEtcPalErrInvalid;
@@ -364,7 +364,7 @@ etcpal_error_t sacn_receiver_reset_networking(const SacnNetintConfig* sys_netint
 {
   etcpal_error_t res = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     res = kEtcPalErrNotInit;
 
   if (res == kEtcPalErrOk)
@@ -442,7 +442,7 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfi
 {
   etcpal_error_t res = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     res = kEtcPalErrNotInit;
 
   if ((per_receiver_netint_lists == NULL) || (num_per_receiver_netint_lists == 0))
@@ -561,7 +561,7 @@ size_t sacn_receiver_get_network_interfaces(sacn_receiver_t handle, EtcPalMcastN
  */
 void sacn_receiver_set_expired_wait(uint32_t wait_ms)
 {
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     return;
 
   if (sacn_receiver_lock())
@@ -584,7 +584,7 @@ uint32_t sacn_receiver_get_expired_wait()
 {
   uint32_t res = kSacnDefaultExpiredWaitMs;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     return res;
 
   if (sacn_receiver_lock())

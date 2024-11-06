@@ -108,7 +108,7 @@ etcpal_error_t sacn_source_create(const SacnSourceConfig* config, sacn_source_t*
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
 
   // Check for invalid arguments.
@@ -174,7 +174,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
 
   // Check for invalid arguments.
@@ -222,7 +222,7 @@ etcpal_error_t sacn_source_change_name(sacn_source_t handle, const char* new_nam
 void sacn_source_destroy(sacn_source_t handle)
 {
   // Validate and lock.
-  if (sacn_initialized() && (handle != kSacnSourceInvalid) && sacn_source_lock())
+  if (sacn_initialized(SACN_ALL_NETWORK_FEATURES) && (handle != kSacnSourceInvalid) && sacn_source_lock())
   {
     // Try to find the source's state.
     SacnSource* source = NULL;
@@ -269,7 +269,7 @@ etcpal_error_t sacn_source_add_universe(sacn_source_t                   handle,
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
 
   // Check for invalid arguments.
@@ -413,7 +413,7 @@ etcpal_error_t sacn_source_add_unicast_destination(sacn_source_t handle, uint16_
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
 
   // Check for invalid arguments.
@@ -563,7 +563,7 @@ etcpal_error_t sacn_source_change_priority(sacn_source_t handle, uint16_t univer
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
 
   // Check for invalid arguments.
@@ -624,7 +624,7 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
 
   // Check for invalid arguments.
@@ -722,7 +722,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t  handle,
   etcpal_error_t result = kEtcPalErrOk;
 
   // Verify module initialized.
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
 
   // Check for invalid arguments.
@@ -1052,7 +1052,7 @@ etcpal_error_t sacn_source_reset_networking(const SacnNetintConfig* sys_netint_c
 {
   etcpal_error_t result = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
 
   if (result == kEtcPalErrOk)
@@ -1125,7 +1125,7 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*
 {
   etcpal_error_t result = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
 
   if ((per_universe_netint_lists == NULL) || (num_per_universe_netint_lists == 0))

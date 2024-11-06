@@ -27,3 +27,4 @@ function(sacn_add_static_test test_name)
 endfunction()
 
 add_subdirectory(coverage)
+add_subdirectory(init)

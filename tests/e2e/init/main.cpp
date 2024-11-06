@@ -17,28 +17,18 @@
  * https://github.com/ETCLabs/sACN
  *****************************************************************************/
 
-#include "sacn_mock/private/common.h"
+#include "gtest/gtest.h"
 
-#include "sacn_mock/private/source_loss.h"
-#include "sacn_mock/private/sockets.h"
-
-#include "stdio.h"
-
-DEFINE_FAKE_VALUE_FUNC(bool, sacn_initialized, sacn_features_t);
-DEFINE_FAKE_VALUE_FUNC(bool, sacn_receiver_lock);
-DEFINE_FAKE_VOID_FUNC(sacn_receiver_unlock);
-DEFINE_FAKE_VALUE_FUNC(bool, sacn_source_lock);
-DEFINE_FAKE_VOID_FUNC(sacn_source_unlock);
-
-void sacn_common_reset_all_fakes(void)
+extern "C" bool SacnTestingAssertHandler(const char* expression, const char* file, const char* func, unsigned int line)
 {
-  RESET_FAKE(sacn_initialized);
-  RESET_FAKE(sacn_receiver_lock);
-  RESET_FAKE(sacn_receiver_unlock);
-  RESET_FAKE(sacn_source_lock);
-  RESET_FAKE(sacn_source_unlock);
+  ADD_FAILURE() << "Assertion failure from inside sACN library. Expression: " << expression << " File: " << file
+                << " Function: " << func << " Line: " << line;
 
-  sacn_initialized_fake.return_val   = true;
-  sacn_receiver_lock_fake.return_val = true;
-  sacn_source_lock_fake.return_val   = true;
+  return false;
+}
+
+int main(int argc, char* argv[])
+{
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

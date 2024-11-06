@@ -102,7 +102,7 @@ etcpal_error_t sacn_merge_receiver_create(const SacnMergeReceiverConfig* config,
 {
   etcpal_error_t result = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
   else if (!config || !handle)
     result = kEtcPalErrInvalid;
@@ -222,7 +222,7 @@ etcpal_error_t sacn_merge_receiver_destroy(sacn_merge_receiver_t handle)
 {
   etcpal_error_t result = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
   else if (handle == kSacnMergeReceiverInvalid)
     result = kEtcPalErrInvalid;
@@ -321,7 +321,7 @@ etcpal_error_t sacn_merge_receiver_change_universe(sacn_merge_receiver_t handle,
 {
   etcpal_error_t result = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
   else if (!UNIVERSE_ID_VALID(new_universe_id))
     result = kEtcPalErrInvalid;
@@ -477,7 +477,7 @@ etcpal_error_t sacn_merge_receiver_reset_networking_per_receiver(
 {
   etcpal_error_t result = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     result = kEtcPalErrNotInit;
   else if (!per_receiver_netint_lists || (num_per_receiver_netint_lists == 0))
     result = kEtcPalErrInvalid;
@@ -555,7 +555,7 @@ etcpal_error_t sacn_merge_receiver_get_source(sacn_merge_receiver_t    merge_rec
                                               sacn_remote_source_t     source_handle,
                                               SacnMergeReceiverSource* source_info)
 {
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     return kEtcPalErrNotInit;
 
   if ((merge_receiver_handle == kSacnMergeReceiverInvalid) || (source_handle == kSacnRemoteSourceInvalid) ||

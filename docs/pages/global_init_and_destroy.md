@@ -33,3 +33,27 @@ sacn::Init();
 sacn::Deinit();
 ```
 <!-- CODE_BLOCK_END -->
+
+Individual features can also be initialized separately:
+
+<!-- CODE_BLOCK_START -->
+```c
+sacn_init_features(NULL, NULL, SACN_FEATURE_DMX_MERGER);
+
+// Later on...
+sacn_init_features(NULL, NULL, SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER));
+
+// During shutdown (all featured get deinitialized):
+sacn_deinit();
+```
+<!-- CODE_BLOCK_MID -->
+```cpp
+sacn::Init(SACN_FEATURE_DMX_MERGER);
+
+// Later on...
+sacn::Init(SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER));
+
+// During shutdown (all featured get deinitialized):
+sacn::Deinit();
+```
+<!-- CODE_BLOCK_END -->

@@ -172,6 +172,8 @@ static const sacn_thread_id_t kSacnThreadIdInvalid = UINT_MAX;
 #define SACN_DECLARE_SOURCE_DETECTOR_BUF(type, name, size) type* name
 #endif
 
+#define SACN_ALL_NETWORK_FEATURES SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER)
+
 /******************************************************************************
  * Logging
  *****************************************************************************/
@@ -894,7 +896,7 @@ void sacn_receiver_unlock(void);
 bool sacn_source_lock(void);
 void sacn_source_unlock(void);
 
-bool sacn_initialized(void);
+bool sacn_initialized(sacn_features_t features);
 
 #ifdef __cplusplus
 }

@@ -87,7 +87,7 @@ etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* confi
 {
   etcpal_error_t res = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     res = kEtcPalErrNotInit;
   else if (!config || !config->callbacks.source_updated || !config->callbacks.source_expired)
     res = kEtcPalErrInvalid;
@@ -128,7 +128,7 @@ etcpal_error_t sacn_source_detector_create(const SacnSourceDetectorConfig* confi
  */
 void sacn_source_detector_destroy()
 {
-  if (sacn_initialized())
+  if (sacn_initialized(SACN_ALL_NETWORK_FEATURES))
   {
     if (source_detector_cb_lock())
     {
@@ -179,7 +179,7 @@ etcpal_error_t sacn_source_detector_reset_networking(const SacnNetintConfig* sys
 {
   etcpal_error_t res = kEtcPalErrOk;
 
-  if (!sacn_initialized())
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
     res = kEtcPalErrNotInit;
 
   if (res == kEtcPalErrOk)
