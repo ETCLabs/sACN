@@ -138,7 +138,9 @@ typedef uint32_t sacn_features_t;
  */
 
 #define SACN_FEATURE_DMX_MERGER ((sacn_features_t)(1u << 0)) /**< Use the sacn/dmx_merger module. */
-#define SACN_FEATURES_ALL       0xffffffffu                  /**< Use every available module. */
+
+// NOLINTNEXTLINE(cppcoreguidelines-macro-to-enum,modernize-macro-to-enum)
+#define SACN_FEATURES_ALL 0xffffffffu /**< Use every available module. */
 
 /**
  * @}
