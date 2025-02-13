@@ -340,7 +340,7 @@ void sacn_deinit(void)
  *
  * This function is not thread safe with respect to other sACN API functions. Make sure to join your threads that use
  * the APIs before calling this.
- * 
+ *
  * @param[in] features Mask of sACN features to deinitialize.
  */
 void sacn_deinit_features(sacn_features_t features)

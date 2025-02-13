@@ -137,7 +137,7 @@ inline etcpal::Error Init(const EtcPalLogParams* log_params, sacn_features_t fea
  */
 inline etcpal::Error Init(const EtcPalLogParams* log_params,
                           McastMode              mcast_mode,
-                          sacn_features_t        features   = SACN_FEATURES_ALL)
+                          sacn_features_t        features = SACN_FEATURES_ALL)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   if (mcast_mode == McastMode::kDisabledOnAllInterfaces)

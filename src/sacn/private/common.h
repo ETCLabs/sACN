@@ -173,7 +173,7 @@ static const sacn_thread_id_t kSacnThreadIdInvalid = UINT_MAX;
 #endif
 
 #define SACN_FEATURES_ALL_BUT(mask) (((uint32_t)SACN_FEATURES_ALL) & ((uint32_t)(~((uint32_t)(mask)))))
-#define SACN_ALL_NETWORK_FEATURES SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER)
+#define SACN_ALL_NETWORK_FEATURES   SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER)
 
 /******************************************************************************
  * Logging
