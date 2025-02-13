@@ -36,11 +36,6 @@
 #define SACN_ETCPAL_FEATURES \
   (ETCPAL_FEATURE_SOCKETS | ETCPAL_FEATURE_TIMERS | ETCPAL_FEATURE_NETINTS | ETCPAL_FEATURE_LOGGING)
 
-enum
-{
-  kSacnFeaturesNone = 0x00000000u
-};
-
 /***************************** Global variables ******************************/
 
 const EtcPalLogParams* sacn_log_params;
@@ -52,8 +47,10 @@ const EtcPalLogParams* sacn_log_params;
  */
 static struct SacnState
 {
-  /** Which sACN features are currently initialized. */
-  sacn_features_t initted_features;
+  /** Initialization counter for the DMX merger feature. */
+  int dmx_merger_feature_init_count;
+  /** Initialization counter for all network features. */
+  int all_network_features_init_count;
   /** The current log parameters being used by the library. */
   EtcPalLogParams log_params;
 } sacn_pool_sacn_state;
@@ -68,13 +65,15 @@ static etcpal_mutex_t sacn_source_mutex;
  *
  * Do all necessary initialization before other sACN API functions can be called.
  *
+ * Redundant initialization is permitted - the library tracks counters for each feature and expects deinit to be called
+ * the same number of times as init for each feature.
+ *
  * @param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
  *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
  * @param[in, out] sys_netint_config Optional. If non-NULL, this is the list of system interfaces the library will be
  * limited to (with the added option of not allowing any interfaces to be used), and the status codes are filled in.  If
  * NULL, the library is allowed to use all available system interfaces.
  * @return #kEtcPalErrOk: Initialization successful.
- * @return #kEtcPalErrAlready: Some features have already been initialized, please call with more specific features.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
@@ -88,6 +87,9 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
  *
  * Do all necessary initialization before other sACN API functions can be called.
  *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
+ *
  * @param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
  *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
  * @param[in, out] sys_netint_config Optional. If non-NULL, this is the list of system interfaces the library will be
@@ -95,8 +97,6 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
  * NULL, the library is allowed to use all available system interfaces.
  * @param[in] features Mask of sACN features to initialize.
  * @return #kEtcPalErrOk: Initialization successful.
- * @return #kEtcPalErrAlready: Some of the specified features have already been initialized, please call with more
- * specific features.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
@@ -104,8 +104,20 @@ etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
                                   const SacnNetintConfig* sys_netint_config,
                                   sacn_features_t         features)
 {
-  if ((features & sacn_pool_sacn_state.initted_features) != 0)
-    return kEtcPalErrAlready;
+  sacn_features_t features_to_init = features;
+
+  // Avoid redundant init
+  if ((features_to_init & SACN_FEATURE_DMX_MERGER) != 0)
+  {
+    if (sacn_pool_sacn_state.dmx_merger_feature_init_count > 0)
+      features_to_init = (features_to_init & ~SACN_FEATURE_DMX_MERGER);
+  }
+
+  if ((features_to_init & SACN_ALL_NETWORK_FEATURES) == SACN_ALL_NETWORK_FEATURES)
+  {
+    if (sacn_pool_sacn_state.all_network_features_init_count > 0)
+      features_to_init = (features_to_init & ~SACN_ALL_NETWORK_FEATURES);
+  }
 
   bool log_params_initted     = false;
   bool etcpal_initted         = false;
@@ -153,7 +165,7 @@ etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
   }
 
   etcpal_error_t res = kEtcPalErrOk;
-  if ((features & SACN_ALL_NETWORK_FEATURES) == SACN_ALL_NETWORK_FEATURES)
+  if ((features_to_init & SACN_ALL_NETWORK_FEATURES) == SACN_ALL_NETWORK_FEATURES)
   {
     if (res == kEtcPalErrOk)
       etcpal_initted = ((res = etcpal_init(SACN_ETCPAL_FEATURES)) == kEtcPalErrOk);
@@ -225,7 +237,7 @@ etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
   }
 
 #if SACN_DMX_MERGER_ENABLED
-  if ((features & SACN_FEATURE_DMX_MERGER) != 0)
+  if ((features_to_init & SACN_FEATURE_DMX_MERGER) != 0)
   {
     if (res == kEtcPalErrOk)
       merger_initted = ((res = sacn_dmx_merger_init()) == kEtcPalErrOk);
@@ -234,7 +246,13 @@ etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
 
   if (res == kEtcPalErrOk)
   {
-    sacn_pool_sacn_state.initted_features |= features;
+    // Not all of features may be in features_to_init, but we want to increment the counters regardless, so use the
+    // former.
+    if ((features & SACN_FEATURE_DMX_MERGER) != 0)
+      ++sacn_pool_sacn_state.dmx_merger_feature_init_count;
+
+    if ((features & SACN_ALL_NETWORK_FEATURES) == SACN_ALL_NETWORK_FEATURES)
+      ++sacn_pool_sacn_state.all_network_features_init_count;
   }
   else
   {
@@ -299,22 +317,55 @@ etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
 }
 
 /**
- * @brief Deinitialize the sACN library.
+ * @brief Deinitialize all features of the sACN library.
  *
- * Set the sACN library back to an uninitialized state. Calls to other sACN API functions will fail
- * until sacn_init() is called again.
+ * Set all sACN library features back to an uninitialized state if deinit is called as many times as init for
+ * a given feature. Calls to deinitialized sACN API functions will fail until sacn_init() is called again for their
+ * feature(s).
  *
  * This function is not thread safe with respect to other sACN API functions. Make sure to join your threads that use
  * the APIs before calling this.
  */
 void sacn_deinit(void)
 {
+  sacn_deinit_features(SACN_FEATURES_ALL);
+}
+
+/**
+ * @brief Deinitialize specific features of the sACN library.
+ *
+ * Set specific sACN library feature(s) back to an uninitialized state if deinit is called as many times as init for
+ * a given feature. Calls to deinitialized sACN API functions will fail until sacn_init() is called again for their
+ * feature(s).
+ *
+ * This function is not thread safe with respect to other sACN API functions. Make sure to join your threads that use
+ * the APIs before calling this.
+ *
+ * @param[in] features Mask of sACN features to deinitialize.
+ */
+void sacn_deinit_features(sacn_features_t features)
+{
+  sacn_features_t features_to_deinit = features;
+
+  // Avoid redundant init
+  if ((features_to_deinit & SACN_FEATURE_DMX_MERGER) != 0)
+  {
+    if (sacn_pool_sacn_state.dmx_merger_feature_init_count != 1)
+      features_to_deinit = (features_to_deinit & ~SACN_FEATURE_DMX_MERGER);
+  }
+
+  if ((features_to_deinit & SACN_ALL_NETWORK_FEATURES) == SACN_ALL_NETWORK_FEATURES)
+  {
+    if (sacn_pool_sacn_state.all_network_features_init_count != 1)
+      features_to_deinit = (features_to_deinit & ~SACN_ALL_NETWORK_FEATURES);
+  }
+
 #if SACN_DMX_MERGER_ENABLED
-  if ((sacn_pool_sacn_state.initted_features & SACN_FEATURE_DMX_MERGER) != 0)
+  if ((features_to_deinit & SACN_FEATURE_DMX_MERGER) != 0)
     sacn_dmx_merger_deinit();
 #endif  // SACN_DMX_MERGER_ENABLED
 
-  if ((sacn_pool_sacn_state.initted_features & SACN_ALL_NETWORK_FEATURES) == SACN_ALL_NETWORK_FEATURES)
+  if ((features_to_deinit & SACN_ALL_NETWORK_FEATURES) == SACN_ALL_NETWORK_FEATURES)
   {
 #if SACN_SOURCE_ENABLED
     sacn_source_deinit();
@@ -350,8 +401,18 @@ void sacn_deinit(void)
     etcpal_deinit(SACN_ETCPAL_FEATURES);
   }
 
-  sacn_log_params                       = NULL;
-  sacn_pool_sacn_state.initted_features = kSacnFeaturesNone;
+  sacn_log_params = NULL;
+
+  // Not all of features may be in features_to_deinit, but we want to decrement the counters regardless, so use the
+  // former.
+  if (((features & SACN_FEATURE_DMX_MERGER) != 0) && (sacn_pool_sacn_state.dmx_merger_feature_init_count > 0))
+    --sacn_pool_sacn_state.dmx_merger_feature_init_count;
+
+  if (((features_to_deinit & SACN_ALL_NETWORK_FEATURES) == SACN_ALL_NETWORK_FEATURES) &&
+      (sacn_pool_sacn_state.all_network_features_init_count > 0))
+  {
+    --sacn_pool_sacn_state.all_network_features_init_count;
+  }
 }
 
 #if SACN_RECEIVER_ENABLED || DOXYGEN
@@ -458,5 +519,11 @@ void sacn_source_unlock(void)
 
 bool sacn_initialized(sacn_features_t features)
 {
-  return (sacn_pool_sacn_state.initted_features & features) == features;
+  if (((features & SACN_FEATURE_DMX_MERGER) != 0) && (sacn_pool_sacn_state.dmx_merger_feature_init_count == 0))
+    return false;
+
+  if (((features & SACN_ALL_NETWORK_FEATURES) != 0) && (sacn_pool_sacn_state.all_network_features_init_count == 0))
+    return false;
+
+  return true;
 }

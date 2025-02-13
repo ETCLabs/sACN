@@ -74,8 +74,10 @@ constexpr uint16_t kMaximumUniverse = kSacnMaximumUniverse;
  *
  * This is an overload of Init that only takes features (which default to all features). It doesn't specify a logger and
  * assumes all network interfaces should be used - this is useful for initializing a feature for which neither of these
- * are relevant (e.g. SACN_FEATURE_DMX_MERGER), since they can be passed in when calling Init again for the rest of the
- * features (e.g. SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER)).
+ * are relevant (e.g. SACN_FEATURE_DMX_MERGER), since Init can be called again for the rest of the features later.
+ *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
  *
  * @param features Mask of sACN features to initialize (defaults to all features).
  * @return etcpal::Error::Ok(): Initialization successful.
@@ -94,8 +96,37 @@ inline etcpal::Error Init(sacn_features_t features = SACN_FEATURES_ALL)
  * Wraps sacn_init_features(). Does all initialization required before the sACN API modules can be
  * used.
  *
+ * This is an overload of Init that only takes a logger & features (which default to all features). It assumes all
+ * network interfaces should be used - this is useful for initializing a feature for which the network is irrelevant
+ * (e.g. SACN_FEATURE_DMX_MERGER), since the rest can be initialized later when calling Init again for all features.
+ *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
+ *
+ * @param log_params (optional) Log parameters for the sACN library to use to log messages. If
+ *                   not provided, no logging will be performed.
+ * @param features Mask of sACN features to initialize (defaults to all features).
+ * @return etcpal::Error::Ok(): Initialization successful.
+ * @return Errors from sacn_init_features().
+ */
+inline etcpal::Error Init(const EtcPalLogParams* log_params, sacn_features_t features = SACN_FEATURES_ALL)
+{
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  return sacn_init_features(log_params, &netint_config, features);
+}
+
+/**
+ * @ingroup sacn_cpp_common
+ * @brief Initialize the sACN library.
+ *
+ * Wraps sacn_init_features(). Does all initialization required before the sACN API modules can be
+ * used.
+ *
  * This is an overload of Init that defaults to using all system interfaces for multicast traffic, but can also be used
  * to disable multicast traffic on all interfaces.
+ *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
  *
  * @param log_params (optional) Log parameters for the sACN library to use to log messages. If
  *                   not provided, no logging will be performed.
@@ -105,8 +136,8 @@ inline etcpal::Error Init(sacn_features_t features = SACN_FEATURES_ALL)
  * @return Errors from sacn_init_features().
  */
 inline etcpal::Error Init(const EtcPalLogParams* log_params,
-                          McastMode              mcast_mode = McastMode::kEnabledOnAllInterfaces,
-                          sacn_features_t        features   = SACN_FEATURES_ALL)
+                          McastMode              mcast_mode,
+                          sacn_features_t        features = SACN_FEATURES_ALL)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
@@ -121,6 +152,9 @@ inline etcpal::Error Init(const EtcPalLogParams* log_params,
  *
  * Wraps sacn_init_features(). Does all initialization required before the sACN API modules can be
  * used.
+ *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
  *
  * @param log_params Log parameters for the sACN library to use to log messages. If not provided, no logging will be
  *                   performed.
@@ -150,6 +184,9 @@ inline etcpal::Error Init(const EtcPalLogParams*           log_params,
  *
  * This is an overload of Init that does not enable logging.
  *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
+ *
  * @param sys_netints If !empty, this is the list of system interfaces the library will be limited to, and the status
  *                    codes are filled in.  If empty, the library is allowed to use all available system interfaces.
  * @param features Mask of sACN features to initialize (defaults to all features).
@@ -175,6 +212,9 @@ inline etcpal::Error Init(std::vector<SacnMcastInterface>& sys_netints, sacn_fea
  * This is an overload of Init that defaults to using all system interfaces for multicast traffic, but can also be used
  * to disable multicast traffic on all interfaces.
  *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
+ *
  * @param logger Logger instance for the sACN library to use to log messages.
  * @param mcast_mode This controls whether or not multicast traffic is allowed on the system's network interfaces.
  * @param features Mask of sACN features to initialize (defaults to all features).
@@ -199,6 +239,34 @@ inline etcpal::Error Init(const etcpal::Logger& logger,
  * Wraps sacn_init_features(). Does all initialization required before the sACN API modules can be
  * used.
  *
+ * This is an overload of Init that only takes a logger & features (which default to all features). It assumes all
+ * network interfaces should be used - this is useful for initializing a feature for which the network is irrelevant
+ * (e.g. SACN_FEATURE_DMX_MERGER), since the rest can be initialized later when calling Init again for all features.
+ *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
+ *
+ * @param logger Logger instance for the sACN library to use to log messages.
+ * @param features Mask of sACN features to initialize (defaults to all features).
+ * @return etcpal::Error::Ok(): Initialization successful.
+ * @return Errors from sacn_init_features().
+ */
+inline etcpal::Error Init(const etcpal::Logger& logger, sacn_features_t features)
+{
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  return sacn_init_features(&logger.log_params(), &netint_config, features);
+}
+
+/**
+ * @ingroup sacn_cpp_common
+ * @brief Initialize the sACN library.
+ *
+ * Wraps sacn_init_features(). Does all initialization required before the sACN API modules can be
+ * used.
+ *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
+ *
  * @param logger Logger instance for the sACN library to use to log messages.
  * @param sys_netints If !empty, this is the list of system interfaces the library will be limited to, and the status
  *                    codes are filled in.  If empty, the library is allowed to use all available system interfaces.
@@ -218,18 +286,19 @@ inline etcpal::Error Init(const etcpal::Logger&            logger,
 }
 
 /**
- * @ingroup sacn_cpp_common
- * @brief Deinitialize the sACN library.
+ * @brief Deinitialize features of the sACN library.
  *
- * Closes all connections, deallocates all resources and joins the background thread. No sACN
- * API functions are usable after this function is called.
+ * Set sACN library feature(s) back to an uninitialized state if deinit is called as many times as init for a given
+ * feature. Calls to deinitialized sACN API functions will fail until sacn_init() is called again for their feature(s).
  *
  * This function is not thread safe with respect to other sACN API functions. Make sure to join your threads that use
  * the APIs before calling this.
+ *
+ * @param[in] features Mask of sACN features to deinitialize (defaults to all features).
  */
-inline void Deinit()
+inline void Deinit(sacn_features_t features = SACN_FEATURES_ALL)
 {
-  sacn_deinit();
+  sacn_deinit_features(features);
 }
 
 /**

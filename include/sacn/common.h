@@ -131,21 +131,16 @@ typedef uint32_t sacn_features_t;
  * requested using logical OR.
  *
  * Currently the DMX merger is the only feature that can be initialized individually. All other APIs can later be
- * initialized with SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER). Consequently, SACN_FEATURES_ALL (used by
- * sacn_init()) represents all APIs regardless if they have an individual feature defined for them.
+ * initialized with SACN_FEATURES_ALL, which represents all APIs regardless if they have an individual feature defined
+ * for them. Redundant initialization will ensure the same feature isn't initialized twice.
  *
  * @{
  */
 
 #define SACN_FEATURE_DMX_MERGER ((sacn_features_t)(1u << 0)) /**< Use the sacn/dmx_merger module. */
-#define SACN_FEATURES_ALL       0xffffffffu                  /**< Use every available module. */
 
-/**
- * @brief Use every available module except the ones passed in mask.
- * @param mask Mask of SACN_FEATURE_* macros to not include in the feature mask.
- * @return Resulting sACN feature mask to pass to sacn_init_features().
- */
-#define SACN_FEATURES_ALL_BUT(mask) (((uint32_t)SACN_FEATURES_ALL) & ((uint32_t)(~((uint32_t)(mask)))))
+// NOLINTNEXTLINE(cppcoreguidelines-macro-to-enum,modernize-macro-to-enum)
+#define SACN_FEATURES_ALL 0xffffffffu /**< Use every available module. */
 
 /**
  * @}
@@ -156,6 +151,7 @@ etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
                                   const SacnNetintConfig* sys_netint_config,
                                   sacn_features_t         features);
 void           sacn_deinit(void);
+void           sacn_deinit_features(sacn_features_t features);
 
 sacn_remote_source_t sacn_get_remote_source_handle(const EtcPalUuid* source_cid);
 etcpal_error_t       sacn_get_remote_source_cid(sacn_remote_source_t source_handle, EtcPalUuid* source_cid);
