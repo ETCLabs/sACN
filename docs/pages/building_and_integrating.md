@@ -52,7 +52,7 @@ results named some variation of "build".
 
 **NOTE**: If you are cross-compiling and/or building for an embedded target, some additional
 configuration is necessary. EtcPal helps make this possible; see the
-[EtcPal embedded build documentation](https://etclabs.github.io/EtcPal/docs/head/building_for_embedded.html)
+[EtcPal embedded build documentation](https://etclabs.github.io/EtcPalDocs/head/building_for_embedded.html)
 for more details.
 
 1. Create the build directory:

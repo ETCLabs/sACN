@@ -34,26 +34,36 @@ sacn::Deinit();
 ```
 <!-- CODE_BLOCK_END -->
 
-Individual features can also be initialized separately:
+Individual features can also be initialized separately. The rest can then be initialized
+separately, since redundant initialization is handled to allow cases such as the following:
 
 <!-- CODE_BLOCK_START -->
 ```c
 sacn_init_features(NULL, NULL, SACN_FEATURE_DMX_MERGER);
 
-// Later on...
-sacn_init_features(NULL, NULL, SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER));
+// Later on, initialize everything else
+sacn_init(NULL, NULL);
 
-// During shutdown (all featured get deinitialized):
+// During shutdown (redundant init tracking keeps DMX merger alive):
 sacn_deinit();
+
+// Then clean up DMX merger
+sacn_deinit_features(SACN_FEATURE_DMX_MERGER);
 ```
 <!-- CODE_BLOCK_MID -->
 ```cpp
 sacn::Init(SACN_FEATURE_DMX_MERGER);
 
-// Later on...
-sacn::Init(SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER));
+// Later on, initialize everything else
+sacn::Init();
 
-// During shutdown (all featured get deinitialized):
+// During shutdown (redundant init tracking keeps DMX merger alive):
 sacn::Deinit();
+
+// Then clean up DMX merger
+sacn::Deinit(SACN_FEATURE_DMX_MERGER);
 ```
 <!-- CODE_BLOCK_END -->
+
+You could also flip the init or deinit calls - order doesn't matter here (beyond calling init
+before deinit of course).
