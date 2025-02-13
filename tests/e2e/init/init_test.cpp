@@ -47,7 +47,7 @@ using testing::Return;
 using UniverseId = uint16_t;
 
 static constexpr sacn_features_t kNoFeatures       = 0u;
-static constexpr sacn_features_t kAllOtherFeatures = SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER);
+static constexpr sacn_features_t kAllOtherFeatures = (SACN_FEATURES_ALL & ~SACN_FEATURE_DMX_MERGER);
 
 static constexpr UniverseId                                     kTestUniverse    = 123u;
 static constexpr uint8_t                                        kTestPriority    = 123u;
@@ -301,16 +301,21 @@ TEST_F(InitTest, InitializesDmxMergerFeature)
   EXPECT_TRUE(sacn::Init(SACN_FEATURE_DMX_MERGER));
   VerifyInit(SACN_FEATURE_DMX_MERGER);
 
-  sacn::Deinit();
+  sacn::Deinit(SACN_FEATURE_DMX_MERGER);
+  VerifyInit(kNoFeatures);
 }
 
 TEST_F(InitTest, InitializesAllFeaturesSeparately)
 {
   EXPECT_TRUE(sacn::Init(SACN_FEATURE_DMX_MERGER));
-  EXPECT_TRUE(sacn::Init(SACN_FEATURES_ALL_BUT(SACN_FEATURE_DMX_MERGER)));
+  VerifyInit(SACN_FEATURE_DMX_MERGER);
+  EXPECT_TRUE(sacn::Init());
   VerifyInit(SACN_FEATURES_ALL);
 
   sacn::Deinit();
+  VerifyInit(SACN_FEATURE_DMX_MERGER);
+  sacn::Deinit(SACN_FEATURE_DMX_MERGER);
+  VerifyInit(kNoFeatures);
 }
 
 TEST_F(InitTest, InitializesAllFeaturesAtOnce)
@@ -319,4 +324,5 @@ TEST_F(InitTest, InitializesAllFeaturesAtOnce)
   VerifyInit(SACN_FEATURES_ALL);
 
   sacn::Deinit();
+  VerifyInit(kNoFeatures);
 }
