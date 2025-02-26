@@ -248,11 +248,14 @@ my_source.SendNow(my_universe, my_custom_start_code, my_custom_start_code_data, 
 
 ## sACN Sync
 
+NOTE: sACN Sync has not been implemented in the library yet - the following describes how it will
+be used once it is implemented.
+
 You can also configure synchronization universes for each of your universes using the Change
 Synchronization Universe function. Then the transmitted DMX data will include this synchronization
 universe, indicating to the receivers to wait to apply the data until a synchronization message is
 received on the specified synchronization universe. To send the synchronization message, call the
-Send Synchronization function. NOTE: sACN Sync will not be supported in sACN 2.0.x.
+Send Synchronization function.
 
 <!-- CODE_BLOCK_START -->
 ```c
