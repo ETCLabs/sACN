@@ -95,6 +95,7 @@ static void reset_universe(SacnSourceUniverse* universe);
 static void cancel_termination_if_not_removing(SacnSourceUniverse* universe);
 
 static void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* universe);
+static void handle_sync_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* universe);
 
 /*************************** Function definitions ****************************/
 
@@ -631,7 +632,17 @@ bool send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
   }
 
   if (at_least_one_sent)
-    handle_data_packet_sent(send_buf, universe);
+  {
+    // We are working with sACN sources so it's safe to assume each buffer starts with a RLP followed by a FLP.
+    uint32_t flp_vector = etcpal_unpack_u32b(&send_buf[SACN_FRAMING_VECTOR_OFFSET]);
+    if (flp_vector == VECTOR_E131_DATA_PACKET)
+      handle_data_packet_sent(send_buf, universe);
+    else if (flp_vector == VECTOR_E131_EXTENDED_SYNCHRONIZATION)
+      handle_sync_packet_sent(send_buf, universe);
+    else
+      SACN_ASSERT(false);  // We need to know what kind of packet this is before we can make assumptions about it's size
+                           // and layout.
+  }
 
   return all_sends_succeeded;
 }
@@ -663,7 +674,17 @@ bool send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
   }
 
   if (at_least_one_sent)
-    handle_data_packet_sent(send_buf, universe);
+  {
+    // We are working with sACN sources so it's safe to assume each buffer starts with a RLP followed by a FLP.
+    uint32_t flp_vector = etcpal_unpack_u32b(&send_buf[SACN_FRAMING_VECTOR_OFFSET]);
+    if (flp_vector == VECTOR_E131_DATA_PACKET)
+      handle_data_packet_sent(send_buf, universe);
+    else if (flp_vector == VECTOR_E131_EXTENDED_SYNCHRONIZATION)
+      handle_sync_packet_sent(send_buf, universe);
+    else
+      SACN_ASSERT(false);  // We need to know what kind of packet this is before we can make assumptions about it's size
+                           // and layout.
+  }
 
   return all_sends_succeeded;
 }
@@ -1178,6 +1199,15 @@ void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* univer
 #endif
     universe->other_sent_this_tick = true;
   }
+
+  universe->anything_sent_this_tick = true;
+}
+
+// Needs lock
+void handle_sync_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* universe)
+{
+  if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(universe))
+    return;
 
   universe->anything_sent_this_tick = true;
 }

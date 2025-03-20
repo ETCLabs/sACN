@@ -184,9 +184,6 @@ int pack_sacn_data_framing_layer(uint8_t*    buf,
   if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(source_name))
     return 0;
 
-  ETCPAL_UNUSED_ARG(sync_address);  // TODO sacn_sync
-  ETCPAL_UNUSED_ARG(force_sync);    // TODO sacn_sync
-
   uint8_t* pcur = buf;
 
   // Framing layer flags and length
@@ -205,7 +202,7 @@ int pack_sacn_data_framing_layer(uint8_t*    buf,
   pcur += kSacnSourceNameMaxLen;
   *pcur = priority;
   ++pcur;
-  etcpal_pack_u16b(pcur, 0 /* TODO sync_address */);
+  etcpal_pack_u16b(pcur, sync_address);
   pcur += 2;
   *pcur = seq_num;
   ++pcur;
@@ -214,8 +211,8 @@ int pack_sacn_data_framing_layer(uint8_t*    buf,
     *pcur |= SACN_OPTVAL_PREVIEW;
   if (terminated)
     *pcur |= SACN_OPTVAL_TERMINATED;
-  // TODO if (force_sync)
-  // TODO  *pcur |= SACN_OPTVAL_FORCE_SYNC;
+  if (force_sync)
+    *pcur |= SACN_OPTVAL_FORCE_SYNC;
   ++pcur;
   etcpal_pack_u16b(pcur, universe_id);
   pcur += 2;
@@ -357,6 +354,18 @@ void init_sacn_data_send_buf(uint8_t*          send_buf,
                                           sync_universe, 0, send_preview, false, false, universe);
   // NOLINTNEXTLINE(clang-analyzer-deadcode.DeadStores)
   written += pack_sacn_dmp_layer_header(&send_buf[written], start_code, 0);
+}
+
+void init_sacn_sync_send_buf(uint8_t* send_buf, const EtcPalUuid* source_cid, uint8_t seq_num, uint16_t sync_universe)
+
+{
+  if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(source_cid))
+    return;
+
+  memset(send_buf, 0, kSacnSyncPacketMtu);
+  int written = 0;
+  written += pack_sacn_root_layer(send_buf, SACN_SYNC_PDU_SIZE, true, source_cid);
+  written += pack_sacn_sync_framing_layer(&send_buf[written], seq_num, sync_universe);
 }
 
 void update_send_buf_data(uint8_t*                   send_buf,

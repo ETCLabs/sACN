@@ -151,6 +151,7 @@ void init_sacn_data_send_buf(uint8_t*          send_buf,
                              uint16_t          universe,
                              uint16_t          sync_universe,
                              bool              send_preview);
+void init_sacn_sync_send_buf(uint8_t* send_buf, const EtcPalUuid* source_cid, uint8_t seq_num, uint16_t sync_universe);
 
 void update_send_buf_data(uint8_t*                   send_buf,
                           const uint8_t*             new_data,

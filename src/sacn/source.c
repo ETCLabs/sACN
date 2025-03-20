@@ -786,8 +786,6 @@ etcpal_error_t sacn_source_send_now(sacn_source_t  handle,
  *
  * This will cause the source to transmit a synchronization packet on the given synchronization universe.
  *
- * @todo At this time, synchronization is not supported by this library, so this function is not implemented.
- *
  * @param[in] handle Handle to the source.
  * @param[in] sync_universe The synchronization universe to send on.
  * @return #kEtcPalErrOk: Message successfully sent.
@@ -799,11 +797,59 @@ etcpal_error_t sacn_source_send_now(sacn_source_t  handle,
  */
 etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t sync_universe)
 {
-  // TODO
+  etcpal_error_t result = kEtcPalErrOk;
 
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(sync_universe);
-  return kEtcPalErrNotImpl;
+  // Verify module initialized.
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
+    result = kEtcPalErrNotInit;
+
+  // Check for invalid arguments.
+  if (result == kEtcPalErrOk)
+  {
+    if ((handle == kSacnSourceInvalid) || !UNIVERSE_ID_VALID(sync_universe))
+    {
+      result = kEtcPalErrInvalid;
+    }
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    if (sacn_source_lock())
+    {
+      // Look up state
+      SacnSource* source_state = NULL;
+      SacnSourceUniverse* universe_state = NULL;
+      result = lookup_source_and_universe(handle, sync_universe, &source_state, &universe_state);
+
+      if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
+        result = kEtcPalErrNotFound;
+
+      if (result == kEtcPalErrOk)
+      {
+        // Initialize send buffer
+        uint8_t send_buf[kSacnSyncPacketMtu];
+        init_sacn_sync_send_buf(send_buf, &source_state->cid, universe_state->next_seq_num++,
+                                universe_state->sync_universe);
+
+        // Send on the network
+        send_universe_multicast(source_state, universe_state, send_buf);
+        send_universe_unicast(source_state, universe_state, send_buf);
+
+        if (!universe_state->anything_sent_this_tick)
+          result = universe_state->last_send_error;
+
+        increment_sequence_number(universe_state);
+      }
+
+      sacn_source_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
+  }
+
+  return result;
 }
 
 /**
