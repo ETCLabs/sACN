@@ -670,8 +670,6 @@ etcpal_error_t sacn_source_change_preview_flag(sacn_source_t handle, uint16_t un
  * This function will update the packet buffers with the new sync universe. If this universe is transmitting NULL start
  * code or PAP data, the logic that slows down packet transmission due to inactivity will be reset.
  *
- * @todo At this time, synchronization is not supported by this library.
- *
  * @param[in] handle Handle to the source to change.
  * @param[in] universe The universe to change.
  * @param[in] new_sync_universe The new synchronization universe to set.
@@ -685,12 +683,44 @@ etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
                                                            uint16_t      universe,
                                                            uint16_t      new_sync_universe)
 {
-  // TODO
+  etcpal_error_t result = kEtcPalErrOk;
 
-  ETCPAL_UNUSED_ARG(handle);
-  ETCPAL_UNUSED_ARG(universe);
-  ETCPAL_UNUSED_ARG(new_sync_universe);
-  return kEtcPalErrNotImpl;
+  // Verify module initialized.
+  if (!sacn_initialized(SACN_ALL_NETWORK_FEATURES))
+    result = kEtcPalErrNotInit;
+
+  // Check for invalid arguments.
+  if (result == kEtcPalErrOk)
+  {
+    if ((handle == kSacnSourceInvalid) || !UNIVERSE_ID_VALID(universe))
+      result = kEtcPalErrInvalid;
+  }
+
+  if (result == kEtcPalErrOk)
+  {
+    if (sacn_source_lock())
+    {
+      // Look up the source and universe state.
+      SacnSource*         source_state   = NULL;
+      SacnSourceUniverse* universe_state = NULL;
+      result                             = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
+
+      if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
+        result = kEtcPalErrNotFound;
+
+      // Set the preview flag.
+      if (result == kEtcPalErrOk)
+        universe_state->sync_universe = new_sync_universe;
+
+      sacn_source_unlock();
+    }
+    else
+    {
+      result = kEtcPalErrSys;
+    }
+  }
+
+  return result;
 }
 
 /**
