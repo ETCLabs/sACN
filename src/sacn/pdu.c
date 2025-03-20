@@ -184,6 +184,8 @@ int pack_sacn_data_framing_layer(uint8_t*    buf,
   if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(source_name))
     return 0;
 
+  ETCPAL_UNUSED_ARG(force_sync);    // TODO sacn_sync
+
   uint8_t* pcur = buf;
 
   // Framing layer flags and length
@@ -211,8 +213,8 @@ int pack_sacn_data_framing_layer(uint8_t*    buf,
     *pcur |= SACN_OPTVAL_PREVIEW;
   if (terminated)
     *pcur |= SACN_OPTVAL_TERMINATED;
-  if (force_sync)
-    *pcur |= SACN_OPTVAL_FORCE_SYNC;
+  // TODO if (force_sync)
+  // TODO   *pcur |= SACN_OPTVAL_FORCE_SYNC;
   ++pcur;
   etcpal_pack_u16b(pcur, universe_id);
   pcur += 2;
