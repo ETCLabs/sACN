@@ -65,14 +65,14 @@ extern "C" {
 #define SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET SACN_UNIVERSE_DISCOVERY_OFFSET + 7
 
 #define SET_SEQUENCE(bufptr, seq)              (bufptr[SACN_SEQ_OFFSET] = seq)
-#define SET_FORCE_SYNC_OPT(bufptr, force_sync) /* TODO                                                         \
-                                               do                                                              \
-                                               {                                                               \
-                                               if (force_sync)                                                 \
-                                               bufptr[SACN_OPTS_OFFSET] |= SACN_OPTVAL_FORCE_SYNC;             \
-                                               else                                                            \
-                                               bufptr[SACN_OPTS_OFFSET] &= ~(uint8_t)(SACN_OPTVAL_FORCE_SYNC); \
-                                               } while (0) */
+#define SET_FORCE_SYNC_OPT(bufptr, force_sync)                        \
+  do                                                                  \
+  {                                                                   \
+    if (force_sync)                                                   \
+      bufptr[SACN_OPTS_OFFSET] |= SACN_OPTVAL_FORCE_SYNC;             \
+    else                                                              \
+      bufptr[SACN_OPTS_OFFSET] &= ~(uint8_t)(SACN_OPTVAL_FORCE_SYNC); \
+  } while (0)
 #define SET_TERMINATED_OPT(bufptr, terminated)                        \
   do                                                                  \
   {                                                                   \

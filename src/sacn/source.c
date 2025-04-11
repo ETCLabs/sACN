@@ -991,8 +991,6 @@ void sacn_source_update_levels_and_pap(sacn_source_t  handle,
  *
  * If no synchronization universe is configured, this function acts like a direct call to sacn_source_update_levels().
  *
- * @todo At this time, synchronization is not supported by this library.
- *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.
  * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
@@ -1041,8 +1039,6 @@ void sacn_source_update_levels_and_force_sync(sacn_source_t  handle,
  *
  * If no synchronization universe is configured, this function acts like a direct call to
  * sacn_source_update_levels_and_pap().
- *
- * @todo At this time, synchronization is not supported by this library.
  *
  * @param[in] handle Handle to the source to update.
  * @param[in] universe Universe to update.

@@ -143,8 +143,7 @@ public:
         Source::AddUnicastDestination() and Source::RemoveUnicastDestination(). */
     std::vector<etcpal::IpAddr> unicast_destinations;
 
-    /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0.
-        TODO: At this time, synchronization is not supported by this library. */
+    /** If non-zero, this is the synchronization universe used to synchronize the sACN output. Defaults to 0. */
     uint16_t sync_universe{0};
 
     /** Create an empty, invalid data structure by default. */
@@ -608,8 +607,6 @@ inline etcpal::Error Source::ChangePreviewFlag(uint16_t universe, bool new_previ
  * This function will update the packet buffers with the new sync universe. If this universe is transmitting NULL start
  * code or PAP data, the logic that slows down packet transmission due to inactivity will be reset.
  *
- * TODO: At this time, synchronization is not supported by this library.
- *
  * @param[in] universe The universe to change.
  * @param[in] new_sync_universe The new synchronization universe to set.
  * @return #kEtcPalErrOk: sync_universe set successfully.
@@ -726,8 +723,6 @@ inline void Source::UpdateLevelsAndPap(uint16_t       universe,
  *
  * If no synchronization universe is configured, this function acts like a direct call to UpdateLevels().
  *
- * TODO: At this time, synchronization is not supported by this library.
- *
  * @param[in] universe Universe to update.
  * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
  * transmission without removing the universe.
@@ -752,8 +747,6 @@ inline void Source::UpdateLevelsAndForceSync(uint16_t universe, const uint8_t* n
  * setting the PAP to 0 or reducing the PAP count).
  *
  * If no synchronization universe is configured, this function acts like a direct call to UpdateLevelsAndPap().
- *
- * TODO: At this time, synchronization is not supported by this library.
  *
  * @param[in] universe Universe to update.
  * @param[in] new_levels A buffer of DMX levels to copy from. If this pointer is NULL, the source will terminate DMX
