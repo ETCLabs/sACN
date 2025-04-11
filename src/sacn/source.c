@@ -705,8 +705,11 @@ etcpal_error_t sacn_source_change_synchronization_universe(sacn_source_t handle,
       SacnSourceUniverse* universe_state = NULL;
       result                             = lookup_source_and_universe(handle, universe, &source_state, &universe_state);
 
-      if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
-        result = kEtcPalErrNotFound;
+      if (result == kEtcPalErrOk)
+      {
+        if (!universe_state || (universe_state->termination_state == kTerminatingAndRemoving))
+          result = kEtcPalErrNotFound;
+      }
 
       // Set the preview flag.
       if (result == kEtcPalErrOk)
@@ -851,8 +854,11 @@ etcpal_error_t sacn_source_send_synchronization(sacn_source_t handle, uint16_t s
       SacnSourceUniverse* universe_state = NULL;
       result = lookup_source_and_universe(handle, sync_universe, &source_state, &universe_state);
 
-      if ((result == kEtcPalErrOk) && universe_state && (universe_state->termination_state == kTerminatingAndRemoving))
-        result = kEtcPalErrNotFound;
+      if (result == kEtcPalErrOk)
+      {
+        if (!universe_state || (universe_state->termination_state == kTerminatingAndRemoving))
+          result = kEtcPalErrNotFound;
+      }
 
       if (result == kEtcPalErrOk)
       {
