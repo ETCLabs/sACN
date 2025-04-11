@@ -51,6 +51,11 @@ docs-build/
 ehthumbs.db
 Thumbs.db
 
+# CLion #
+#########
+.idea/
+cmake-build-*/
+
 # Visual Studio Code #
 ######################
 .vscode/

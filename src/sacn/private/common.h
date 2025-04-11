@@ -53,6 +53,7 @@ extern "C" {
 enum
 {
   kSacnDataPacketMtu              = 638,
+  kSacnSyncPacketMtu              = 49,
   kSacnUniverseDiscoveryPacketMtu = 1144,
   kSacnMtu                        = kSacnUniverseDiscoveryPacketMtu,
   kSacnPort                       = 5568,
