@@ -94,7 +94,7 @@ static void reset_unicast_dest(SacnUnicastDestination* dest);
 static void reset_universe(SacnSourceUniverse* universe);
 static void cancel_termination_if_not_removing(SacnSourceUniverse* universe);
 
-static void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* universe);
+static void handle_data_or_sync_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* universe);
 
 /*************************** Function definitions ****************************/
 
@@ -546,7 +546,7 @@ bool send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
   if (sacn_send_unicast(source->ip_supported, universe->level_send_buf, &dest->dest_addr, &dest->last_send_error) ==
       kEtcPalErrOk)
   {
-    handle_data_packet_sent(universe->level_send_buf, universe);
+    handle_data_or_sync_packet_sent(universe->level_send_buf, universe);
   }
   else
   {
@@ -631,7 +631,7 @@ bool send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
   }
 
   if (at_least_one_sent)
-    handle_data_packet_sent(send_buf, universe);
+    handle_data_or_sync_packet_sent(send_buf, universe);
 
   return all_sends_succeeded;
 }
@@ -663,7 +663,7 @@ bool send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
   }
 
   if (at_least_one_sent)
-    handle_data_packet_sent(send_buf, universe);
+    handle_data_or_sync_packet_sent(send_buf, universe);
 
   return all_sends_succeeded;
 }
@@ -1148,38 +1148,50 @@ void cancel_termination_if_not_removing(SacnSourceUniverse* universe)
 }
 
 // Needs lock
-void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* universe)
+void handle_data_or_sync_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* universe)
 {
   if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(universe))
     return;
 
-  // The assertions below enforce assumptions made by the sequence number logic - specifically that only levels & PAP
-  // can be sent in combination, and also that PAP is sent last each tick.
-  if (send_buf[SACN_START_CODE_OFFSET] == kSacnStartcodeDmx)
-  {
-    SACN_ASSERT_VERIFY(!universe->other_sent_this_tick);
-#if SACN_ETC_PRIORITY_EXTENSION
-    SACN_ASSERT_VERIFY(!universe->pap_sent_this_tick);
-#endif
-    universe->levels_sent_this_tick = true;
-  }
-#if SACN_ETC_PRIORITY_EXTENSION
-  else if (send_buf[SACN_START_CODE_OFFSET] == kSacnStartcodePriority)
-  {
-    SACN_ASSERT_VERIFY(!universe->other_sent_this_tick);
-    universe->pap_sent_this_tick = true;
-  }
-#endif
-  else
-  {
-    SACN_ASSERT_VERIFY(!universe->levels_sent_this_tick);
-#if SACN_ETC_PRIORITY_EXTENSION
-    SACN_ASSERT_VERIFY(!universe->pap_sent_this_tick);
-#endif
-    universe->other_sent_this_tick = true;
-  }
+  // We are working with sACN sources so it's safe to assume each buffer starts with a RLP followed by a FLP.
+  uint32_t flp_vector = etcpal_unpack_u32b(&send_buf[SACN_FRAMING_VECTOR_OFFSET]);
+  if (!SACN_ASSERT_VERIFY((flp_vector == VECTOR_E131_DATA_PACKET) || (flp_vector == VECTOR_E131_EXTENDED_SYNCHRONIZATION)))
+    return;  // We need to know what kind of packet this is before we can make assumptions about it's size and layout.
 
-  universe->anything_sent_this_tick = true;
+  if (flp_vector == VECTOR_E131_DATA_PACKET)
+  {
+    // The assertions below enforce assumptions made by the sequence number logic - specifically that only levels & PAP
+    // can be sent in combination, and also that PAP is sent last each tick.
+    if (send_buf[SACN_START_CODE_OFFSET] == kSacnStartcodeDmx)
+    {
+      SACN_ASSERT_VERIFY(!universe->other_sent_this_tick);
+#if SACN_ETC_PRIORITY_EXTENSION
+      SACN_ASSERT_VERIFY(!universe->pap_sent_this_tick);
+#endif
+      universe->levels_sent_this_tick = true;
+    }
+#if SACN_ETC_PRIORITY_EXTENSION
+    else if (send_buf[SACN_START_CODE_OFFSET] == kSacnStartcodePriority)
+    {
+      SACN_ASSERT_VERIFY(!universe->other_sent_this_tick);
+      universe->pap_sent_this_tick = true;
+    }
+#endif
+    else
+    {
+      SACN_ASSERT_VERIFY(!universe->levels_sent_this_tick);
+#if SACN_ETC_PRIORITY_EXTENSION
+      SACN_ASSERT_VERIFY(!universe->pap_sent_this_tick);
+#endif
+      universe->other_sent_this_tick = true;
+    }
+
+    universe->anything_sent_this_tick = true;
+  }
+  else if (flp_vector == VECTOR_E131_EXTENDED_SYNCHRONIZATION)
+  {
+    universe->anything_sent_this_tick = true;
+  }
 }
 
 #endif  // SACN_SOURCE_ENABLED || DOXYGEN

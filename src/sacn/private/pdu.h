@@ -65,14 +65,14 @@ extern "C" {
 #define SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET SACN_UNIVERSE_DISCOVERY_OFFSET + 7
 
 #define SET_SEQUENCE(bufptr, seq)              (bufptr[SACN_SEQ_OFFSET] = seq)
-#define SET_FORCE_SYNC_OPT(bufptr, force_sync) /* TODO                                                         \
-                                               do                                                              \
-                                               {                                                               \
-                                               if (force_sync)                                                 \
-                                               bufptr[SACN_OPTS_OFFSET] |= SACN_OPTVAL_FORCE_SYNC;             \
-                                               else                                                            \
-                                               bufptr[SACN_OPTS_OFFSET] &= ~(uint8_t)(SACN_OPTVAL_FORCE_SYNC); \
-                                               } while (0) */
+#define SET_FORCE_SYNC_OPT(bufptr, force_sync)                        \
+  do                                                                  \
+  {                                                                   \
+    if (force_sync)                                                   \
+      bufptr[SACN_OPTS_OFFSET] |= SACN_OPTVAL_FORCE_SYNC;             \
+    else                                                              \
+      bufptr[SACN_OPTS_OFFSET] &= ~(uint8_t)(SACN_OPTVAL_FORCE_SYNC); \
+  } while (0)
 #define SET_TERMINATED_OPT(bufptr, terminated)                        \
   do                                                                  \
   {                                                                   \
@@ -151,6 +151,7 @@ void init_sacn_data_send_buf(uint8_t*          send_buf,
                              uint16_t          universe,
                              uint16_t          sync_universe,
                              bool              send_preview);
+void init_sacn_sync_send_buf(uint8_t* send_buf, const EtcPalUuid* source_cid, uint8_t seq_num, uint16_t sync_universe);
 
 void update_send_buf_data(uint8_t*                   send_buf,
                           const uint8_t*             new_data,
