@@ -43,10 +43,6 @@
         {
           "name": "EtcPal",
           "site": "https://etclabs.github.io/EtcPalDocs"
-        },
-        {
-          "webPath": "https://upload.cppreference.com/mwiki/images/f/f8/cppreference-doxygen-web.tag.xml",
-          "site": "https://en.cppreference.com/w"
         }
       ],
       "multiVersion": {
