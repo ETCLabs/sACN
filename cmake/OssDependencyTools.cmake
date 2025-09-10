@@ -4,7 +4,7 @@
 # From https://github.com/cpm-cmake/CPM.cmake/blob/939123d1b42014a65a807450db77b0e623c9a312/cmake/get_cpm.cmake
 # Then macro-ized
 macro(get_cpm)
-  set(CPM_DOWNLOAD_VERSION 0.34.3)
+  set(CPM_DOWNLOAD_VERSION 0.42.0)
 
   if(CPM_SOURCE_CACHE)
     # Expand relative path. This is important if the provided path contains a tilde (~)

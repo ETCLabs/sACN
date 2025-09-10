@@ -116,10 +116,7 @@ typedef struct SacnNetintConfig
 /**
  * Initializes the members of a SacnNetintConfig to defaults.
  */
-#define SACN_NETINT_CONFIG_DEFAULT_INIT \
-  {                                     \
-    NULL, 0, false                      \
-  }
+#define SACN_NETINT_CONFIG_DEFAULT_INIT {NULL, 0, false}
 
 /** A mask of desired sACN features. See "sACN feature masks". */
 typedef uint32_t sacn_features_t;

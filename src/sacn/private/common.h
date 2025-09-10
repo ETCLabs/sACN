@@ -356,20 +356,11 @@ typedef struct SourceDetectorSourceUpdatedNotification
 } SourceDetectorSourceUpdatedNotification;
 
 #if SACN_DYNAMIC_MEM
-#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT              \
-  {                                                           \
-    NULL, kSacnRemoteSourceInvalid, NULL, NULL, NULL, 0, NULL \
-  }
+#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT {NULL, kSacnRemoteSourceInvalid, NULL, NULL, NULL, 0, NULL}
 #elif SACN_SOURCE_DETECTOR_ENABLED
-#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT             \
-  {                                                          \
-    NULL, kSacnRemoteSourceInvalid, NULL, NULL, {0}, 0, NULL \
-  }
+#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT {NULL, kSacnRemoteSourceInvalid, NULL, NULL, {0}, 0, NULL}
 #else
-#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT              \
-  {                                                           \
-    NULL, kSacnRemoteSourceInvalid, NULL, NULL, NULL, 0, NULL \
-  }
+#define SRC_DETECTOR_SOURCE_UPDATED_DEFAULT_INIT {NULL, kSacnRemoteSourceInvalid, NULL, NULL, NULL, 0, NULL}
 #endif
 
 typedef struct SourceDetectorExpiredSource
@@ -396,20 +387,11 @@ typedef struct SourceDetectorSourceExpiredNotification
 } SourceDetectorSourceExpiredNotification;
 
 #if SACN_DYNAMIC_MEM
-#define SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT \
-  {                                              \
-    NULL, NULL, 0, 0, NULL                       \
-  }
+#define SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT {NULL, NULL, 0, 0, NULL}
 #elif SACN_SOURCE_DETECTOR_ENABLED
-#define SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT              \
-  {                                                           \
-    NULL, {SRC_DETECTOR_EXPIRED_SOURCE_DEFAULT_INIT}, 0, NULL \
-  }
+#define SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT {NULL, {SRC_DETECTOR_EXPIRED_SOURCE_DEFAULT_INIT}, 0, NULL}
 #else
-#define SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT \
-  {                                              \
-    NULL, NULL, 0, NULL                          \
-  }
+#define SRC_DETECTOR_SOURCE_EXPIRED_DEFAULT_INIT {NULL, NULL, 0, NULL}
 #endif
 
 typedef struct SourceDetectorLimitExceededNotification
@@ -418,10 +400,7 @@ typedef struct SourceDetectorLimitExceededNotification
   void*                                   context;
 } SourceDetectorLimitExceededNotification;
 
-#define SRC_DETECTOR_LIMIT_EXCEEDED_DEFAULT_INIT \
-  {                                              \
-    NULL, NULL                                   \
-  }
+#define SRC_DETECTOR_LIMIT_EXCEEDED_DEFAULT_INIT {NULL, NULL}
 
 /******************************************************************************
  * Types used by the sACN Receive module
@@ -664,10 +643,7 @@ typedef struct ReceiveSocket
 #endif
 } ReceiveSocket;
 
-#define RECV_SOCKET_DEFAULT_INIT                              \
-  {                                                           \
-    ETCPAL_SOCKET_INVALID, kEtcPalIpTypeInvalid, false, false \
-  }
+#define RECV_SOCKET_DEFAULT_INIT {ETCPAL_SOCKET_INVALID, kEtcPalIpTypeInvalid, false, false}
 
 /* For the shared-socket model, this represents a shared socket. */
 typedef struct SocketRef

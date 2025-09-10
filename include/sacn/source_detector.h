@@ -236,10 +236,8 @@ typedef struct SacnSourceDetectorConfig
 } SacnSourceDetectorConfig;
 
 /** A default-value initializer for an SacnSourceDetectorConfig struct. */
-#define SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT                                                         \
-  {                                                                                                      \
-    {NULL, NULL, NULL, NULL}, kSacnSourceDetectorInfinite, kSacnSourceDetectorInfinite, kSacnIpV4AndIpV6 \
-  }
+#define SACN_SOURCE_DETECTOR_CONFIG_DEFAULT_INIT \
+  {{NULL, NULL, NULL, NULL}, kSacnSourceDetectorInfinite, kSacnSourceDetectorInfinite, kSacnIpV4AndIpV6}
 
 void sacn_source_detector_config_init(SacnSourceDetectorConfig* config);
 
