@@ -129,10 +129,7 @@ typedef struct SacnDmxMergerConfig
  * @endcode
  *
  */
-#define SACN_DMX_MERGER_CONFIG_INIT                            \
-  {                                                            \
-    NULL, NULL, NULL, NULL, NULL, kSacnReceiverInfiniteSources \
-  }
+#define SACN_DMX_MERGER_CONFIG_INIT {NULL, NULL, NULL, NULL, NULL, kSacnReceiverInfiniteSources}
 
 /**
  * @brief Utility to see if a slot owner is valid.

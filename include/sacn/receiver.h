@@ -323,11 +323,13 @@ typedef struct SacnReceiverConfig
 } SacnReceiverConfig;
 
 /** A default-value initializer for an SacnReceiverConfig struct. */
-#define SACN_RECEIVER_CONFIG_DEFAULT_INIT                                                                \
-  {                                                                                                      \
-    0, {NULL, NULL, NULL, NULL, NULL, NULL}, {1, kSacnDmxAddressCount}, kSacnReceiverInfiniteSources, 0, \
-        kSacnIpV4AndIpV6                                                                                 \
-  }
+#define SACN_RECEIVER_CONFIG_DEFAULT_INIT \
+  {0,                                     \
+   {NULL, NULL, NULL, NULL, NULL, NULL},  \
+   {1, kSacnDmxAddressCount},             \
+   kSacnReceiverInfiniteSources,          \
+   0,                                     \
+   kSacnIpV4AndIpV6}
 
 /** A set of network interfaces for a particular receiver. */
 typedef struct SacnReceiverNetintList

@@ -119,11 +119,14 @@ typedef struct SacnSourceConfig
 } SacnSourceConfig;
 
 /** A default-value initializer for an SacnSourceConfig struct. */
-#define SACN_SOURCE_CONFIG_DEFAULT_INIT                                                                                \
-  {                                                                                                                    \
-    kEtcPalNullUuid, NULL, kSacnSourceInfiniteUniverses, false, kSacnIpV4AndIpV6, kSacnSourceKeepAliveIntervalDefault, \
-        kSacnSourcePapKeepAliveIntervalDefault                                                                         \
-  }
+#define SACN_SOURCE_CONFIG_DEFAULT_INIT \
+  {kEtcPalNullUuid,                     \
+   NULL,                                \
+   kSacnSourceInfiniteUniverses,        \
+   false,                               \
+   kSacnIpV4AndIpV6,                    \
+   kSacnSourceKeepAliveIntervalDefault, \
+   kSacnSourcePapKeepAliveIntervalDefault}
 
 void sacn_source_config_init(SacnSourceConfig* config);
 
@@ -161,10 +164,7 @@ typedef struct SacnSourceUniverseConfig
 } SacnSourceUniverseConfig;
 
 /** A default-value initializer for an SacnSourceUniverseConfig struct. */
-#define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT \
-  {                                              \
-    0, 100, false, false, NULL, 0, 0             \
-  }
+#define SACN_SOURCE_UNIVERSE_CONFIG_DEFAULT_INIT {0, 100, false, false, NULL, 0, 0}
 
 void sacn_source_universe_config_init(SacnSourceUniverseConfig* config);
 
