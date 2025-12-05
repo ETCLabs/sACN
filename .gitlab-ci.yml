@@ -15,10 +15,6 @@ include:
   - project: "etc/common-tech/tools/gitlab-ci-util"
     ref: v2.3.1
     file: "/ci-yml/deploy-versioned-build.yml"
-  # Klocwork static analysis
-  - project: "etc/common-tech/tools/gitlab-ci-util"
-    ref: v2.3.1
-    file: "/ci-yml/linux-klocwork.yml"
 
 windows-build:
   stage: build
