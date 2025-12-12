@@ -944,7 +944,7 @@ TEST_F(TestSockets, SendTransmitsMinimumLength)
   const EtcPalIpAddr        kTestAddr       = etcpal::IpAddr::FromString("10.101.40.50").get();
   static constexpr uint16_t kTestLength     = 123u;
 
-  std::array<uint8_t, kSacnMtu> send_buf{};
+  std::array<uint8_t, SACN_MTU> send_buf{};
   ACN_PDU_PACK_NORMAL_LEN(&send_buf.at(ACN_UDP_PREAMBLE_SIZE), kTestLength);
 
   etcpal_sendto_fake.custom_fake = [](etcpal_socket_t, const void*, size_t length, int, const EtcPalSockAddr*) {

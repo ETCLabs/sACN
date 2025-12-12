@@ -52,10 +52,7 @@ extern "C" {
 
 enum
 {
-  kSacnDataPacketMtu              = 638,
-  kSacnUniverseDiscoveryPacketMtu = 1144,
-  kSacnMtu                        = kSacnUniverseDiscoveryPacketMtu,
-  kSacnPort                       = 5568,
+  kSacnPort = 5568,
 
   kSacnUniverseDiscoveryMaxUniversesPerPage = 512,
   kSacnDiscoveryUniverse                    = 64214,
@@ -70,6 +67,10 @@ enum
   /* Length of the sampling period for a new universe */
   kSacnSampleTime = 1500
 };
+
+#define SACN_DATA_PACKET_MTU               (638 /* + SRTP_MAX_TRAILER_LEN*/)
+#define SACN_UNIVERSE_DISCOVERY_PACKET_MTU (1144 /* + SRTP_MAX_TRAILER_LEN*/)
+#define SACN_MTU                           SACN_UNIVERSE_DISCOVERY_PACKET_MTU
 
 /*
  * This ensures there are always enough SocketRefs. This is multiplied by 2 because SocketRefs come in pairs - one for
@@ -698,7 +699,7 @@ typedef struct SacnRecvThreadContext
   // This section is only touched from the thread, outside the lock.
   EtcPalPollContext poll_context;
   bool              poll_context_initialized;
-  uint8_t           recv_buf[kSacnMtu];
+  uint8_t           recv_buf[SACN_MTU];
   EtcPalTimer       periodic_timer;
   bool              periodic_timer_started;
 } SacnRecvThreadContext;
@@ -799,7 +800,7 @@ typedef struct SacnSourceUniverse
   // Start code 0x00 state
   int         level_packets_sent_before_suppression;
   EtcPalTimer level_keep_alive_timer;
-  uint8_t     level_send_buf[kSacnDataPacketMtu];
+  uint8_t     level_send_buf[SACN_DATA_PACKET_MTU];
   bool        has_level_data;
   bool        levels_sent_this_tick;
 
@@ -807,7 +808,7 @@ typedef struct SacnSourceUniverse
   // Start code 0xDD state
   int         pap_packets_sent_before_suppression;
   EtcPalTimer pap_keep_alive_timer;
-  uint8_t     pap_send_buf[kSacnDataPacketMtu];
+  uint8_t     pap_send_buf[SACN_DATA_PACKET_MTU];
   bool        has_pap_data;
   bool        pap_sent_this_tick;
 #endif
@@ -852,7 +853,7 @@ typedef struct SacnSource
   SACN_DECLARE_BUF(SacnSourceNetint, netints, SACN_MAX_NETINTS);
   size_t num_netints;
 
-  uint8_t universe_discovery_send_buf[kSacnUniverseDiscoveryPacketMtu];
+  uint8_t universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_PACKET_MTU];
 } SacnSource;
 
 typedef enum

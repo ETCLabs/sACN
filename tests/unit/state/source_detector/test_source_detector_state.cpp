@@ -111,7 +111,7 @@ protected:
   {
     size_t last_page = (complete_universe_list.size() / 512u);
 
-    std::array<uint8_t, kSacnMtu> buf{};
+    std::array<uint8_t, SACN_MTU> buf{};
 
     size_t num_universes = complete_universe_list.size() - (page_number * 512);
     if (num_universes > 512)

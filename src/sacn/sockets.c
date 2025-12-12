@@ -1109,7 +1109,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
 
       EtcPalMsgHdr msg = {{0}};
       msg.buf          = recv_thread_context->recv_buf;
-      msg.buflen       = kSacnMtu;
+      msg.buflen       = SACN_MTU;
       msg.control      = control_buf;
       msg.controllen   = ETCPAL_MAX_CONTROL_SIZE_PKTINFO;
 
@@ -1118,7 +1118,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
       {
         if (msg.flags & ETCPAL_MSG_TRUNC)
         {
-          recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than kSacnMtu.
+          recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than SACN_MTU.
         }
         else
         {

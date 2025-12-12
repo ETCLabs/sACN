@@ -338,7 +338,7 @@ protected:
     sacn_read_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadResult* read_result) {
       read_result->from_addr = kTestSockAddr;
       read_result->data      = test_data_.data();
-      read_result->data_len  = kSacnMtu;
+      read_result->data_len  = SACN_MTU;
       read_result->netint    = test_data_netint_;
       return kEtcPalErrOk;
     };
@@ -422,12 +422,12 @@ protected:
 
   SacnReceiver*                        test_receiver_{nullptr};
   static uint8_t                       seq_num_;
-  static std::array<uint8_t, kSacnMtu> test_data_;
+  static std::array<uint8_t, SACN_MTU> test_data_;
   static EtcPalMcastNetintId           test_data_netint_;
 };
 
 uint8_t                       TestReceiverThread::seq_num_          = 0u;
-std::array<uint8_t, kSacnMtu> TestReceiverThread::test_data_        = {};
+std::array<uint8_t, SACN_MTU> TestReceiverThread::test_data_        = {};
 EtcPalMcastNetintId           TestReceiverThread::test_data_netint_ = test_netints[0].iface;
 
 TEST_F(TestReceiverState, RespectsMaxReceiverLimit)

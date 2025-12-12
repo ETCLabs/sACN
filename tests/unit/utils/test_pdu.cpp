@@ -210,7 +210,7 @@ protected:
     SacnRecvUniverseData universe_data_out;
     uint8_t              seq_out{0u};
     bool                 terminated_out{false};
-    EXPECT_TRUE(parse_sacn_data_packet(&test_buffer_[SACN_FRAMING_OFFSET], kSacnMtu - SACN_FRAMING_OFFSET,
+    EXPECT_TRUE(parse_sacn_data_packet(&test_buffer_[SACN_FRAMING_OFFSET], SACN_MTU - SACN_FRAMING_OFFSET,
                                        &source_info_out, &seq_out, &terminated_out, &universe_data_out));
 
     EXPECT_EQ(strcmp(source_info_out.name, source_info.name), 0);
@@ -226,8 +226,8 @@ protected:
 
   static void TestPackRootLayer(uint16_t pdu_length, bool extended, const EtcPalUuid& source_cid)
   {
-    std::array<uint8_t, kSacnMtu> result{};
-    std::array<uint8_t, kSacnMtu> expected{};
+    std::array<uint8_t, SACN_MTU> result{};
+    std::array<uint8_t, SACN_MTU> expected{};
     int result_length   = pack_sacn_root_layer(result.data(), pdu_length, extended, &source_cid);
     int expected_length = InitRootLayer(expected, pdu_length, extended, source_cid);
 
@@ -246,8 +246,8 @@ protected:
                                        bool        force_sync,
                                        uint16_t    universe_id)
   {
-    std::array<uint8_t, kSacnMtu> result{};
-    std::array<uint8_t, kSacnMtu> expected{};
+    std::array<uint8_t, SACN_MTU> result{};
+    std::array<uint8_t, SACN_MTU> expected{};
     int                           result_length =
         pack_sacn_data_framing_layer(result.data(), slot_count, vector, source_name, priority, sync_address, seq_num,
                                      preview, terminated, force_sync, universe_id);
@@ -260,8 +260,8 @@ protected:
 
   static void TestPackDmpLayerHeader(uint8_t start_code, uint16_t slot_count)
   {
-    std::array<uint8_t, kSacnMtu> result{};
-    std::array<uint8_t, kSacnMtu> expected{};
+    std::array<uint8_t, SACN_MTU> result{};
+    std::array<uint8_t, SACN_MTU> expected{};
     int                           result_length   = pack_sacn_dmp_layer_header(result.data(), start_code, slot_count);
     int                           expected_length = InitDmpLayer(expected, start_code, slot_count);
 
@@ -269,14 +269,14 @@ protected:
     EXPECT_EQ(result, expected);
   }
 
-  std::array<uint8_t, kSacnMtu> test_buffer_{};
+  std::array<uint8_t, SACN_MTU> test_buffer_{};
 };
 
 TEST_F(TestPdu, SetSequenceWorks)
 {
   static constexpr uint8_t kTestSeqNum = 123u;
 
-  std::array<uint8_t, kSacnMtu> old_buf{test_buffer_};
+  std::array<uint8_t, SACN_MTU> old_buf{test_buffer_};
 
   SET_SEQUENCE(test_buffer_, kTestSeqNum);
   EXPECT_EQ(test_buffer_[SACN_SEQ_OFFSET], kTestSeqNum);
@@ -286,7 +286,7 @@ TEST_F(TestPdu, SetSequenceWorks)
 
 TEST_F(TestPdu, SetTerminatedOptWorks)
 {
-  std::array<uint8_t, kSacnMtu> old_buf{test_buffer_};
+  std::array<uint8_t, SACN_MTU> old_buf{test_buffer_};
 
   SET_TERMINATED_OPT(test_buffer_, true);
   EXPECT_GT(test_buffer_[SACN_OPTS_OFFSET] & SACN_OPTVAL_TERMINATED, 0u);
@@ -304,7 +304,7 @@ TEST_F(TestPdu, TerminatedOptSetWorks)
 
 TEST_F(TestPdu, SetPreviewOptWorks)
 {
-  std::array<uint8_t, kSacnMtu> old_buf{test_buffer_};
+  std::array<uint8_t, SACN_MTU> old_buf{test_buffer_};
 
   SET_PREVIEW_OPT(test_buffer_, true);
   EXPECT_GT(test_buffer_[SACN_OPTS_OFFSET] & SACN_OPTVAL_PREVIEW, 0u);
@@ -316,7 +316,7 @@ TEST_F(TestPdu, SetPriorityWorks)
 {
   static constexpr uint8_t kTestPriority = 64u;
 
-  std::array<uint8_t, kSacnMtu> old_buf{test_buffer_};
+  std::array<uint8_t, SACN_MTU> old_buf{test_buffer_};
 
   SET_PRIORITY(test_buffer_, kTestPriority);
   EXPECT_EQ(test_buffer_[SACN_PRI_OFFSET], kTestPriority);
@@ -371,7 +371,7 @@ TEST_F(TestPdu, SetPageWorks)
 {
   static constexpr uint8_t kTestPage = 12u;
 
-  std::array<uint8_t, kSacnMtu> old_buf{test_buffer_};
+  std::array<uint8_t, SACN_MTU> old_buf{test_buffer_};
 
   SET_PAGE(test_buffer_, kTestPage);
   EXPECT_EQ(test_buffer_.at(SACN_UNIVERSE_DISCOVERY_PAGE_OFFSET), kTestPage);
@@ -383,7 +383,7 @@ TEST_F(TestPdu, SetLastPageWorks)
 {
   static constexpr uint8_t kTestPage = 12u;
 
-  std::array<uint8_t, kSacnMtu> old_buf{test_buffer_};
+  std::array<uint8_t, SACN_MTU> old_buf{test_buffer_};
 
   SET_LAST_PAGE(test_buffer_, kTestPage);
   EXPECT_EQ(test_buffer_[SACN_UNIVERSE_DISCOVERY_LAST_PAGE_OFFSET], kTestPage);
@@ -451,7 +451,7 @@ TEST_F(TestPdu, ParseSacnDataPacketHandlesInvalid)
   uint8_t              seq_out{0u};
   bool                 terminated_out{false};
 
-  std::array<uint8_t, kSacnMtu> valid_data{};
+  std::array<uint8_t, SACN_MTU> valid_data{};
   InitDataPacket(valid_data, kValidSourceInfo, kValidUniverseData, 1u, false);
   EXPECT_TRUE(parse_sacn_data_packet(&valid_data.at(SACN_FRAMING_OFFSET), kValidBufferLength, &source_info_out,
                                      &seq_out, &terminated_out, &universe_data_out));
@@ -461,32 +461,32 @@ TEST_F(TestPdu, ParseSacnDataPacketHandlesInvalid)
                                       &terminated_out, &universe_data_out));
 
   // Now test buffer defects
-  std::array<uint8_t, kSacnMtu> vector_not_data{};
+  std::array<uint8_t, SACN_MTU> vector_not_data{};
   InitDataPacket(vector_not_data, kValidSourceInfo, kValidUniverseData, 1u, false);
   etcpal_pack_u32b(&vector_not_data.at(SACN_FRAMING_OFFSET + 2), kNonDataVector);
   EXPECT_FALSE(parse_sacn_data_packet(&vector_not_data.at(SACN_FRAMING_OFFSET), kValidBufferLength, &source_info_out,
                                       &seq_out, &terminated_out, &universe_data_out));
-  std::array<uint8_t, kSacnMtu> invalid_dmp_vector{};
+  std::array<uint8_t, SACN_MTU> invalid_dmp_vector{};
   InitDataPacket(invalid_dmp_vector, kValidSourceInfo, kValidUniverseData, 1u, false);
   invalid_dmp_vector.at(SACN_FRAMING_OFFSET + 79) = kInvalidDmpVector;
   EXPECT_FALSE(parse_sacn_data_packet(&invalid_dmp_vector.at(SACN_FRAMING_OFFSET), kValidBufferLength, &source_info_out,
                                       &seq_out, &terminated_out, &universe_data_out));
-  std::array<uint8_t, kSacnMtu> invalid_address_data_type{};
+  std::array<uint8_t, SACN_MTU> invalid_address_data_type{};
   InitDataPacket(invalid_address_data_type, kValidSourceInfo, kValidUniverseData, 1u, false);
   invalid_address_data_type.at(SACN_FRAMING_OFFSET + 80) = kInvalidAddressDataType;
   EXPECT_FALSE(parse_sacn_data_packet(&invalid_address_data_type.at(SACN_FRAMING_OFFSET), kValidBufferLength,
                                       &source_info_out, &seq_out, &terminated_out, &universe_data_out));
-  std::array<uint8_t, kSacnMtu> invalid_first_property_addr{};
+  std::array<uint8_t, SACN_MTU> invalid_first_property_addr{};
   InitDataPacket(invalid_first_property_addr, kValidSourceInfo, kValidUniverseData, 1u, false);
   etcpal_pack_u16b(&invalid_first_property_addr.at(SACN_FRAMING_OFFSET + 81), kInvalidFirstPropertyAddr);
   EXPECT_FALSE(parse_sacn_data_packet(&invalid_first_property_addr.at(SACN_FRAMING_OFFSET), kValidBufferLength,
                                       &source_info_out, &seq_out, &terminated_out, &universe_data_out));
-  std::array<uint8_t, kSacnMtu> invalid_addr_increment{};
+  std::array<uint8_t, SACN_MTU> invalid_addr_increment{};
   InitDataPacket(invalid_addr_increment, kValidSourceInfo, kValidUniverseData, 1u, false);
   etcpal_pack_u16b(&invalid_addr_increment.at(SACN_FRAMING_OFFSET + 83), kInvalidAddrIncrement);
   EXPECT_FALSE(parse_sacn_data_packet(&invalid_addr_increment.at(SACN_FRAMING_OFFSET), kValidBufferLength,
                                       &source_info_out, &seq_out, &terminated_out, &universe_data_out));
-  std::array<uint8_t, kSacnMtu> data_too_big{};
+  std::array<uint8_t, SACN_MTU> data_too_big{};
   InitDataPacket(data_too_big, kValidSourceInfo, kValidUniverseData, 1u, false);
   etcpal_pack_u16b(&data_too_big.at(SACN_FRAMING_OFFSET + 85), static_cast<uint16_t>(kValidData.size() + 2u));
   EXPECT_FALSE(parse_sacn_data_packet(&data_too_big.at(SACN_FRAMING_OFFSET), kValidBufferLength, &source_info_out,

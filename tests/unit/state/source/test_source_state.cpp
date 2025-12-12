@@ -1713,7 +1713,7 @@ TEST_F(TestSourceState, LevelsZeroWhereverPapAreZeroed)
   update_levels_and_or_pap(source_state, universe_state, kTestBuffer.data(), kTestBuffer.size(), pap_buffer.data(),
                            pap_buffer.size(), kDisableForceSync);
 
-  auto level_send_buf = gsl::make_span(universe_state->level_send_buf, kSacnDataPacketMtu);
+  auto level_send_buf = gsl::make_span(universe_state->level_send_buf, SACN_DATA_PACKET_MTU);
   for (size_t i = 0u; i < kTestBuffer.size(); ++i)
   {
     if ((i % 2) == 0)
@@ -1822,7 +1822,7 @@ TEST_F(TestSourceState, IncrementSequenceNumberWorks)
 TEST_F(TestSourceState, SendUniverseUnicastWorks)
 {
   static std::vector<uint8_t> test_send_buf = kTestBuffer;
-  test_send_buf.resize(kSacnDataPacketMtu);
+  test_send_buf.resize(SACN_DATA_PACKET_MTU);
 
   sacn_send_unicast_fake.custom_fake = [](sacn_ip_support_t ip_supported, const uint8_t* send_buf,
                                           const EtcPalIpAddr* dest_addr, etcpal_error_t*) {
@@ -1867,7 +1867,7 @@ TEST_F(TestSourceState, SendUniverseUnicastWorks)
 TEST_F(TestSourceState, SendUniverseMulticastWorks)
 {
   static std::vector<uint8_t> test_send_buf = kTestBuffer;
-  test_send_buf.resize(kSacnDataPacketMtu);
+  test_send_buf.resize(SACN_DATA_PACKET_MTU);
 
   sacn_send_multicast_fake.custom_fake = [](uint16_t universe_id, sacn_ip_support_t ip_supported,
                                             const uint8_t* send_buf, const EtcPalMcastNetintId* netint) {
@@ -2153,7 +2153,7 @@ TEST_F(TestSourceState, SetSourceNameWorks)
   EXPECT_EQ(strcmp(GetSource(source)->name, kTestName.c_str()), 0);
 
   auto source_universe_discovery_send_buf =
-      gsl::make_span(GetSource(source)->universe_discovery_send_buf, kSacnUniverseDiscoveryPacketMtu);
+      gsl::make_span(GetSource(source)->universe_discovery_send_buf, SACN_UNIVERSE_DISCOVERY_PACKET_MTU);
   char* name_in_discovery_buffer =
       reinterpret_cast<char*>(&source_universe_discovery_send_buf[SACN_SOURCE_NAME_OFFSET]);
   EXPECT_EQ(strncmp(name_in_discovery_buffer, kTestName.c_str(), kTestName.length()), 0);
@@ -2167,8 +2167,8 @@ TEST_F(TestSourceState, SetSourceNameWorks)
 
   for (uint16_t universe = kTestUniverseConfig.universe; universe < (kTestUniverseConfig.universe + 3u); ++universe)
   {
-    auto  level_send_buf       = gsl::make_span(GetUniverse(source, universe)->level_send_buf, kSacnDataPacketMtu);
-    auto  pap_send_buf         = gsl::make_span(GetUniverse(source, universe)->pap_send_buf, kSacnDataPacketMtu);
+    auto  level_send_buf       = gsl::make_span(GetUniverse(source, universe)->level_send_buf, SACN_DATA_PACKET_MTU);
+    auto  pap_send_buf         = gsl::make_span(GetUniverse(source, universe)->pap_send_buf, SACN_DATA_PACKET_MTU);
     char* name_in_level_buffer = reinterpret_cast<char*>(&level_send_buf[SACN_SOURCE_NAME_OFFSET]);
     char* name_in_pap_buffer   = reinterpret_cast<char*>(&pap_send_buf[SACN_SOURCE_NAME_OFFSET]);
     EXPECT_EQ(strncmp(name_in_level_buffer, kTestName.c_str(), kTestName.length()), 0);
