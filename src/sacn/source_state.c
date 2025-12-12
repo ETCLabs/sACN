@@ -103,6 +103,8 @@ etcpal_error_t sacn_source_state_init(void)
   shutting_down = false;
   init_int_handle_manager(&source_handle_mgr, -1, source_handle_in_use, NULL);
 
+  srand(etcpal_getms());  // For RTP SSRC generation
+
   return kEtcPalErrOk;
 }
 
@@ -425,11 +427,18 @@ bool transmit_levels_and_pap_when_needed(SacnSource*             source,
 
   bool all_sends_succeeded = true;
 
+  SacnRtpHeader hdr;
+  hdr.ssrc = universe->rtp_ssrc;
+
   // If 0x00 data is ready to send
   if (can_process_levels && universe->has_level_data &&
       ((universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
        etcpal_timer_is_expired(&universe->level_keep_alive_timer)))
   {
+    hdr.seq = universe->next_rtp_seq_num++;
+    hdr.ts  = etcpal_getms();
+    pack_sacn_rtp_header(universe->level_send_buf, &hdr);
+
     // Send 0x00 data & reset the keep-alive timer
     all_sends_succeeded = send_universe_multicast(source, universe, universe->level_send_buf);
     all_sends_succeeded = all_sends_succeeded && send_universe_unicast(source, universe, universe->level_send_buf);
@@ -445,6 +454,10 @@ bool transmit_levels_and_pap_when_needed(SacnSource*             source,
       ((universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS) ||
        etcpal_timer_is_expired(&universe->pap_keep_alive_timer)))
   {
+    hdr.seq = universe->next_rtp_seq_num++;
+    hdr.ts  = etcpal_getms();
+    pack_sacn_rtp_header(universe->pap_send_buf, &hdr);
+
     // PAP will always be sent after levels, so if levels were sent this tick, PAP's seq_num should be one greater.
     // This is the only place where we can determine whether or not we need to do this prior to sending PAP. If we do,
     // the increment_sequence_number function will know to increment next_seq_num by 2 based on the send flags.
@@ -519,6 +532,13 @@ bool send_termination_multicast(const SacnSource* source, SacnSourceUniverse* un
   bool old_terminated_opt = TERMINATED_OPT_SET(universe->level_send_buf);
   SET_TERMINATED_OPT(universe->level_send_buf, true);
 
+  // Also update RTP header
+  SacnRtpHeader hdr;
+  hdr.seq  = universe->next_rtp_seq_num++;
+  hdr.ts   = etcpal_getms();
+  hdr.ssrc = universe->rtp_ssrc;
+  pack_sacn_rtp_header(universe->level_send_buf, &hdr);
+
   // Send the termination packet on multicast only
   bool all_sends_succeeded = send_universe_multicast(source, universe, universe->level_send_buf);
 
@@ -579,6 +599,13 @@ bool send_universe_discovery(SacnSource* source)
     // Pack the next page & loop while there's a page to send
     while (pack_universe_discovery_page(source, &total_universes_processed, page_number) > 0)
     {
+      // Each packet needs to update RTP header as well
+      SacnRtpHeader hdr;
+      hdr.seq  = source->universe_discovery_next_rtp_seq_num++;
+      hdr.ts   = etcpal_getms();
+      hdr.ssrc = source->universe_discovery_rtp_ssrc;
+      pack_sacn_rtp_header(source->universe_discovery_send_buf, &hdr);
+
       // Send multicast on IPv4 and/or IPv6
       bool at_least_one_send_worked = false;
       for (size_t i = 0; i < source->num_netints; ++i)

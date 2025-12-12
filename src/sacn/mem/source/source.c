@@ -80,9 +80,11 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     // Initialize the universe discovery send buffer.
     memset(source->universe_discovery_send_buf, 0, SACN_UNIVERSE_DISCOVERY_PACKET_MTU);
 
-    int written = 0;
-    written += pack_sacn_root_layer(source->universe_discovery_send_buf, SACN_UNIVERSE_DISCOVERY_HEADER_SIZE, true,
-                                    &config->cid);
+    int           written    = 0;
+    SacnRtpHeader rtp_header = {0};  // Zero-initialize to start
+    written += pack_sacn_rtp_header(source->universe_discovery_send_buf, &rtp_header);
+    written += pack_sacn_root_layer(&source->universe_discovery_send_buf[written], SACN_UNIVERSE_DISCOVERY_HEADER_SIZE,
+                                    true, &config->cid);
     written +=
         pack_sacn_universe_discovery_framing_layer(&source->universe_discovery_send_buf[written], 0, config->name);
     // NOLINTNEXTLINE(clang-analyzer-deadcode.DeadStores)
@@ -100,6 +102,9 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->keep_alive_interval     = config->keep_alive_interval;
     source->pap_keep_alive_interval = config->pap_keep_alive_interval;
     source->universe_count_max      = config->universe_count_max;
+
+    source->universe_discovery_rtp_ssrc         = ((uint32_t)rand() << 16) | (uint32_t)rand();
+    source->universe_discovery_next_rtp_seq_num = 0;
 
     etcpal_timer_start(&source->stats_log_timer, kSacnStatsLogInterval);
     source->total_tick_count  = 0;

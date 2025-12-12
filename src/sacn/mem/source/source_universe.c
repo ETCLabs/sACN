@@ -92,6 +92,9 @@ etcpal_error_t add_sacn_source_universe(SacnSource*                     source,
     universe->send_preview  = config->send_preview;
     universe->next_seq_num  = 0;
 
+    universe->rtp_ssrc         = ((uint32_t)rand() << 16) | (uint32_t)rand();
+    universe->next_rtp_seq_num = 0;
+
     universe->level_packets_sent_before_suppression = 0;
     init_sacn_data_send_buf(universe->level_send_buf, kSacnStartcodeDmx, &source->cid, source->name, config->priority,
                             config->universe, config->sync_universe, config->send_preview);

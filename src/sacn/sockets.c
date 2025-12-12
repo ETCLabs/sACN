@@ -322,8 +322,8 @@ etcpal_error_t send_multicast(uint16_t universe_id, const uint8_t* send_buf, con
     return kEtcPalErrNotInit;
 
   // Try to send the data (ignore errors)
-  const size_t kSendBufLength =
-      (size_t)ACN_UDP_PREAMBLE_SIZE + (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
+  const size_t kSendBufLength = (size_t)SACN_RTP_HEADER_SIZE + (size_t)ACN_UDP_PREAMBLE_SIZE +
+                                (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
 
   etcpal_error_t res        = kEtcPalErrOk;
   int            sendto_res = etcpal_sendto(sock, send_buf, kSendBufLength, 0, &dest);
@@ -366,8 +366,8 @@ etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_ad
   sockaddr_dest.port = kSacnPort;
 
   // Try to send the data (ignore errors)
-  const size_t kSendBufLength =
-      (size_t)ACN_UDP_PREAMBLE_SIZE + (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
+  const size_t kSendBufLength = (size_t)SACN_RTP_HEADER_SIZE + (size_t)ACN_UDP_PREAMBLE_SIZE +
+                                (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
 
   etcpal_error_t res        = kEtcPalErrOk;
   int            sendto_res = etcpal_sendto(sock, send_buf, kSendBufLength, 0, &sockaddr_dest);

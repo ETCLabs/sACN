@@ -27,7 +27,9 @@
 #ifndef SACN_PRIVATE_COMMON_H_
 #define SACN_PRIVATE_COMMON_H_
 
+#include "srtp.h"
 #include <limits.h>
+
 #include "etcpal/common.h"
 #include "etcpal/mutex.h"
 #include "etcpal/log.h"
@@ -68,8 +70,8 @@ enum
   kSacnSampleTime = 1500
 };
 
-#define SACN_DATA_PACKET_MTU               (638 /* + SRTP_MAX_TRAILER_LEN*/)
-#define SACN_UNIVERSE_DISCOVERY_PACKET_MTU (1144 /* + SRTP_MAX_TRAILER_LEN*/)
+#define SACN_DATA_PACKET_MTU               (638 + SRTP_MAX_TRAILER_LEN)
+#define SACN_UNIVERSE_DISCOVERY_PACKET_MTU (1144 + SRTP_MAX_TRAILER_LEN)
 #define SACN_MTU                           SACN_UNIVERSE_DISCOVERY_PACKET_MTU
 
 /*
@@ -228,6 +230,13 @@ typedef struct SacnInternalSocketState
   etcpal_socket_t ipv6_socket;
 #endif
 } SacnInternalSocketState;
+
+typedef struct SacnRtpHeader
+{
+  uint16_t seq;
+  uint32_t ts;
+  uint32_t ssrc;
+} SacnRtpHeader;
 
 /******************************************************************************
  * Types used by the source loss module
@@ -797,6 +806,9 @@ typedef struct SacnSourceUniverse
   bool     send_preview;
   uint8_t  next_seq_num;
 
+  uint32_t rtp_ssrc;
+  uint16_t next_rtp_seq_num;
+
   // Start code 0x00 state
   int         level_packets_sent_before_suppression;
   EtcPalTimer level_keep_alive_timer;
@@ -854,6 +866,9 @@ typedef struct SacnSource
   size_t num_netints;
 
   uint8_t universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_PACKET_MTU];
+
+  uint32_t universe_discovery_rtp_ssrc;
+  uint16_t universe_discovery_next_rtp_seq_num;
 } SacnSource;
 
 typedef enum

@@ -792,8 +792,12 @@ void handle_incoming(SacnRecvThreadContext*     context,
     return;
   }
 
+  SacnRtpHeader rtp_header;
+  if (!parse_sacn_rtp_header(data, (int)datalen, &rtp_header))
+    return;
+
   AcnUdpPreamble preamble;
-  if (!acn_parse_udp_preamble(data, datalen, &preamble))
+  if (!acn_parse_udp_preamble(&data[SACN_RTP_HEADER_SIZE], datalen - SACN_RTP_HEADER_SIZE, &preamble))
     return;
 
   AcnRootLayerPdu rlp;

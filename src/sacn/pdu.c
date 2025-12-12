@@ -142,6 +142,17 @@ bool parse_sacn_universe_list(const uint8_t* buf, size_t num_universes, uint16_t
   return true;
 }
 
+bool parse_sacn_rtp_header(const uint8_t* buf, int len, SacnRtpHeader* hdr)
+{
+  if (!hdr || (len < SACN_RTP_HEADER_SIZE))
+    return false;
+
+  hdr->seq  = etcpal_unpack_u16b(buf + 2);
+  hdr->ts   = etcpal_unpack_u32b(buf + 4);
+  hdr->ssrc = etcpal_unpack_u32b(buf + 8);
+  return true;
+}
+
 int pack_sacn_root_layer(uint8_t* buf, uint16_t pdu_length, bool extended, const EtcPalUuid* source_cid)
 {
   if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(source_cid))
@@ -337,6 +348,18 @@ int pack_sacn_universe_discovery_layer_header(uint8_t* buf, uint16_t universe_co
   return (int)(pcur - buf);
 }
 
+int pack_sacn_rtp_header(uint8_t* buf, const SacnRtpHeader* hdr)
+{
+  if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(hdr))
+    return 0;
+
+  etcpal_pack_u16b(buf, 0x8060);  // V=2,P=0,X=0,CC=0,M=0,PT=96
+  etcpal_pack_u16b(buf + 2, hdr->seq);
+  etcpal_pack_u32b(buf + 4, hdr->ts);
+  etcpal_pack_u32b(buf + 8, hdr->ssrc);
+  return SACN_RTP_HEADER_SIZE;
+}
+
 void init_sacn_data_send_buf(uint8_t*          send_buf,
                              uint8_t           start_code,
                              const EtcPalUuid* source_cid,
@@ -351,8 +374,10 @@ void init_sacn_data_send_buf(uint8_t*          send_buf,
     return;
 
   memset(send_buf, 0, SACN_DATA_PACKET_MTU);
-  int written = 0;
-  written += pack_sacn_root_layer(send_buf, SACN_DATA_HEADER_SIZE, false, source_cid);
+  int           written    = 0;
+  SacnRtpHeader rtp_header = {0};  // Zero-initialize to start
+  written += pack_sacn_rtp_header(send_buf, &rtp_header);
+  written += pack_sacn_root_layer(&send_buf[written], SACN_DATA_HEADER_SIZE, false, source_cid);
   written += pack_sacn_data_framing_layer(&send_buf[written], 0, VECTOR_E131_DATA_PACKET, source_name, priority,
                                           sync_universe, 0, send_preview, false, false, universe);
   // NOLINTNEXTLINE(clang-analyzer-deadcode.DeadStores)
