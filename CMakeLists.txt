@@ -36,10 +36,6 @@ if(NOT COMPILING_AS_OSS)
   # function errors during CMake generation (i.e. when the application's CMake Tools is out-of-date).
   get_directory_property(IS_DEPENDENCY PARENT_DIRECTORY)
   if(NOT IS_DEPENDENCY)
-    setup_standalone_compile()
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-      add_compile_options(-Wno-deprecated-declarations)  # For compatibility with all platforms
-    endif()
     setup_clang_format(${SACN_ROOT})
     setup_clang_tidy()
     setup_address_sanitizer()
@@ -49,7 +45,24 @@ if(NOT COMPILING_AS_OSS)
   endif()
 endif()
 
+# Dependency configuration overrides
+set(MBEDTLS_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/_deps/mbedtls-src/include CACHE PATH "Override" FORCE)
+set(ENABLE_MBEDTLS ON CACHE BOOL "Override" FORCE)
+set(ENABLE_PROGRAMS OFF CACHE BOOL "Override" FORCE)
+set(LIBSRTP_TEST_APPS OFF CACHE BOOL "Override" FORCE)
+
 include(${SACN_CMAKE}/ResolveDependencies.cmake)
+
+# Set up standalone compile settings after dependencies (since they trigger warnings as errors)
+if(NOT COMPILING_AS_OSS)
+  get_directory_property(IS_DEPENDENCY PARENT_DIRECTORY)
+  if(NOT IS_DEPENDENCY)
+    setup_standalone_compile()
+    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+      add_compile_options(-Wno-deprecated-declarations)  # For compatibility with all platforms
+    endif()
+  endif()
+endif()
 
 ################################ Main libraries ###############################
 

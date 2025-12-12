@@ -6,6 +6,8 @@ if(COMPILING_AS_OSS)
   get_cpm()
 
   add_oss_dependency(EtcPal GIT_REPOSITORY https://github.com/ETCLabs/EtcPal.git)
+  add_oss_dependency(mbedtls GIT_REPOSITORY https://github.com/Mbed-TLS/mbedtls.git)
+  add_oss_dependency(libsrtp GIT_REPOSITORY https://github.com/cisco/libsrtp.git)
 
   if(SACN_BUILD_TESTS)
     add_oss_dependency(googletest GIT_REPOSITORY https://github.com/google/googletest.git)
