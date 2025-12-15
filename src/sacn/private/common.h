@@ -70,9 +70,12 @@ enum
   kSacnSampleTime = 1500
 };
 
-#define SACN_DATA_PACKET_MTU               (638 + SRTP_MAX_TRAILER_LEN)
-#define SACN_UNIVERSE_DISCOVERY_PACKET_MTU (1144 + SRTP_MAX_TRAILER_LEN)
-#define SACN_MTU                           SACN_UNIVERSE_DISCOVERY_PACKET_MTU
+#define SACN_DATA_PACKET_MTU                         650
+#define SACN_UNIVERSE_DISCOVERY_PACKET_MTU           1156
+#define SACN_MTU                                     SACN_UNIVERSE_DISCOVERY_PACKET_MTU
+#define SACN_DATA_PACKET_MTU_ENCRYPTED               (SACN_DATA_PACKET_MTU + SRTP_MAX_TRAILER_LEN)
+#define SACN_UNIVERSE_DISCOVERY_PACKET_MTU_ENCRYPTED (SACN_UNIVERSE_DISCOVERY_PACKET_MTU + SRTP_MAX_TRAILER_LEN)
+#define SACN_MTU_ENCRYPTED                           SACN_UNIVERSE_DISCOVERY_PACKET_MTU_ENCRYPTED
 
 /*
  * This ensures there are always enough SocketRefs. This is multiplied by 2 because SocketRefs come in pairs - one for
