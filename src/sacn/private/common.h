@@ -828,6 +828,7 @@ typedef struct SacnSourceUniverse
   int         level_packets_sent_before_suppression;
   EtcPalTimer level_keep_alive_timer;
   uint8_t     level_send_buf[SACN_DATA_PACKET_MTU];
+  uint8_t     level_send_buf_encrypted[SACN_DATA_PACKET_MTU_ENCRYPTED];
   bool        has_level_data;
   bool        levels_sent_this_tick;
 
@@ -836,6 +837,7 @@ typedef struct SacnSourceUniverse
   int         pap_packets_sent_before_suppression;
   EtcPalTimer pap_keep_alive_timer;
   uint8_t     pap_send_buf[SACN_DATA_PACKET_MTU];
+  uint8_t     pap_send_buf_encrypted[SACN_DATA_PACKET_MTU_ENCRYPTED];
   bool        has_pap_data;
   bool        pap_sent_this_tick;
 #endif
@@ -881,6 +883,7 @@ typedef struct SacnSource
   size_t num_netints;
 
   uint8_t universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_PACKET_MTU];
+  uint8_t universe_discovery_send_buf_encrypted[SACN_UNIVERSE_DISCOVERY_PACKET_MTU_ENCRYPTED];
 
   uint32_t      universe_discovery_rtp_ssrc;
   uint16_t      universe_discovery_next_rtp_seq_num;
@@ -911,6 +914,7 @@ void sacn_source_unlock(void);
 bool sacn_initialized(sacn_features_t features);
 
 srtp_policy_t sacn_create_srtp_policy(const srtp_ssrc_t* ssrc);
+etcpal_error_t sacn_srtp_protect(srtp_t session, const uint8_t* buf_in, uint8_t* buf_out, size_t* buf_out_len);
 
 #ifdef __cplusplus
 }

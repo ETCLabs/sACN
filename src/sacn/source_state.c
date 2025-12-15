@@ -94,7 +94,7 @@ static void reset_unicast_dest(SacnUnicastDestination* dest);
 static void reset_universe(SacnSourceUniverse* universe);
 static void cancel_termination_if_not_removing(SacnSourceUniverse* universe);
 
-static void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* universe);
+static void handle_data_packet_sent(const uint8_t* unencrypted_buf, SacnSourceUniverse* universe);
 
 /*************************** Function definitions ****************************/
 
@@ -439,14 +439,26 @@ bool transmit_levels_and_pap_when_needed(SacnSource*             source,
     hdr.ts  = etcpal_getms();
     pack_sacn_rtp_header(universe->level_send_buf, &hdr);
 
-    // Send 0x00 data & reset the keep-alive timer
-    all_sends_succeeded = send_universe_multicast(source, universe, universe->level_send_buf);
-    all_sends_succeeded = all_sends_succeeded && send_universe_unicast(source, universe, universe->level_send_buf);
+    size_t encrypted_len = SACN_DATA_PACKET_MTU_ENCRYPTED;
+    if (sacn_srtp_protect(universe->srtp_session, universe->level_send_buf, universe->level_send_buf_encrypted,
+                          &encrypted_len) == kEtcPalErrOk)
+    {
+      // Send 0x00 data & reset the keep-alive timer
+      all_sends_succeeded = send_universe_multicast(source, universe, universe->level_send_buf,
+                                                    universe->level_send_buf_encrypted, encrypted_len);
+      all_sends_succeeded =
+          all_sends_succeeded && send_universe_unicast(source, universe, universe->level_send_buf,
+                                                       universe->level_send_buf_encrypted, encrypted_len);
 
-    if (universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
-      ++universe->level_packets_sent_before_suppression;
+      if (universe->level_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
+        ++universe->level_packets_sent_before_suppression;
 
-    etcpal_timer_reset(&universe->level_keep_alive_timer);
+      etcpal_timer_reset(&universe->level_keep_alive_timer);
+    }
+    else
+    {
+      all_sends_succeeded = false;
+    }
   }
 #if SACN_ETC_PRIORITY_EXTENSION
   // If 0xDD data is ready to send
@@ -465,14 +477,27 @@ bool transmit_levels_and_pap_when_needed(SacnSource*             source,
     if (universe->levels_sent_this_tick)
       pack_sequence_number(universe->pap_send_buf, universe->next_seq_num + 1);
 
-    // Send 0xDD data & reset the keep-alive timer
-    all_sends_succeeded = all_sends_succeeded && send_universe_multicast(source, universe, universe->pap_send_buf);
-    all_sends_succeeded = all_sends_succeeded && send_universe_unicast(source, universe, universe->pap_send_buf);
+    size_t encrypted_len = SACN_DATA_PACKET_MTU_ENCRYPTED;
+    if (sacn_srtp_protect(universe->srtp_session, universe->pap_send_buf, universe->pap_send_buf_encrypted,
+                          &encrypted_len) == kEtcPalErrOk)
+    {
+      // Send 0xDD data & reset the keep-alive timer
+      all_sends_succeeded =
+          all_sends_succeeded && send_universe_multicast(source, universe, universe->pap_send_buf,
+                                                         universe->pap_send_buf_encrypted, encrypted_len);
+      all_sends_succeeded =
+          all_sends_succeeded && send_universe_unicast(source, universe, universe->pap_send_buf,
+                                                       universe->pap_send_buf_encrypted, encrypted_len);
 
-    if (universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
-      ++universe->pap_packets_sent_before_suppression;
+      if (universe->pap_packets_sent_before_suppression < NUM_PRE_SUPPRESSION_PACKETS)
+        ++universe->pap_packets_sent_before_suppression;
 
-    etcpal_timer_reset(&universe->pap_keep_alive_timer);
+      etcpal_timer_reset(&universe->pap_keep_alive_timer);
+    }
+    else
+    {
+      all_sends_succeeded = false;
+    }
   }
 #endif
 
@@ -539,14 +564,24 @@ bool send_termination_multicast(const SacnSource* source, SacnSourceUniverse* un
   hdr.ssrc = universe->rtp_ssrc;
   pack_sacn_rtp_header(universe->level_send_buf, &hdr);
 
-  // Send the termination packet on multicast only
-  bool all_sends_succeeded = send_universe_multicast(source, universe, universe->level_send_buf);
+  bool all_sends_succeeded = false;
 
-  // Increment the termination counter
-  ++universe->num_terminations_sent;
+  // Encrypt the termination packet
+  size_t encrypted_len = SACN_DATA_PACKET_MTU_ENCRYPTED;
+  if (sacn_srtp_protect(universe->srtp_session, universe->level_send_buf, universe->level_send_buf_encrypted, &encrypted_len) ==
+      kEtcPalErrOk)
+  {
+    // Send the termination packet on multicast only
+    all_sends_succeeded = send_universe_multicast(source, universe, universe->level_send_buf,
+                                                  universe->level_send_buf_encrypted, encrypted_len);
 
-  // Revert terminated flag
-  SET_TERMINATED_OPT(universe->level_send_buf, old_terminated_opt);
+    // Increment the termination counter
+    ++universe->num_terminations_sent;
+
+    // Revert terminated flag
+    SET_TERMINATED_OPT(universe->level_send_buf, old_terminated_opt);
+  }
+
 
   return all_sends_succeeded;
 }
@@ -568,16 +603,19 @@ bool send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
   hdr.ssrc = universe->rtp_ssrc;
   pack_sacn_rtp_header(universe->level_send_buf, &hdr);
 
-  // Send the termination packet on unicast only
-  bool res = true;
-  if (sacn_send_unicast(source->ip_supported, universe->level_send_buf, &dest->dest_addr, &dest->last_send_error) ==
-      kEtcPalErrOk)
+  // Encrypt the termination packet
+  bool   res           = false;
+  size_t encrypted_len = SACN_DATA_PACKET_MTU_ENCRYPTED;
+  if (sacn_srtp_protect(universe->srtp_session, universe->level_send_buf, universe->level_send_buf_encrypted,
+                        &encrypted_len) == kEtcPalErrOk)
   {
-    handle_data_packet_sent(universe->level_send_buf, universe);
-  }
-  else
-  {
-    res = false;
+    // Send the termination packet on unicast only
+    if (sacn_send_unicast(source->ip_supported, universe->level_send_buf_encrypted, encrypted_len, &dest->dest_addr,
+                          &dest->last_send_error) == kEtcPalErrOk)
+    {
+      res = true;
+      handle_data_packet_sent(universe->level_send_buf, universe);
+    }
   }
 
   ++dest->num_terminations_sent;
@@ -606,6 +644,8 @@ bool send_universe_discovery(SacnSource* source)
     // Pack the next page & loop while there's a page to send
     while (pack_universe_discovery_page(source, &total_universes_processed, page_number) > 0)
     {
+      bool at_least_one_send_worked = false;
+
       // Each packet needs to update RTP header as well
       SacnRtpHeader hdr;
       hdr.seq  = source->universe_discovery_next_rtp_seq_num++;
@@ -613,19 +653,28 @@ bool send_universe_discovery(SacnSource* source)
       hdr.ssrc = source->universe_discovery_rtp_ssrc;
       pack_sacn_rtp_header(source->universe_discovery_send_buf, &hdr);
 
-      // Send multicast on IPv4 and/or IPv6
-      bool at_least_one_send_worked = false;
-      for (size_t i = 0; i < source->num_netints; ++i)
+      size_t encrypted_len = SACN_UNIVERSE_DISCOVERY_PACKET_MTU_ENCRYPTED;
+      if (sacn_srtp_protect(source->universe_discovery_srtp_session, source->universe_discovery_send_buf,
+                            source->universe_discovery_send_buf_encrypted, &encrypted_len) == kEtcPalErrOk)
       {
-        if (sacn_send_multicast(kSacnDiscoveryUniverse, source->ip_supported, source->universe_discovery_send_buf,
-                                &source->netints[i].id) == kEtcPalErrOk)
+        // Send multicast on IPv4 and/or IPv6
+        for (size_t i = 0; i < source->num_netints; ++i)
         {
-          at_least_one_send_worked = true;
+          if (sacn_send_multicast(kSacnDiscoveryUniverse, source->ip_supported,
+                                  source->universe_discovery_send_buf_encrypted, encrypted_len,
+                                  &source->netints[i].id) == kEtcPalErrOk)
+          {
+            at_least_one_send_worked = true;
+          }
+          else
+          {
+            all_sends_succeeded = false;
+          }
         }
-        else
-        {
-          all_sends_succeeded = false;
-        }
+      }
+      else
+      {
+        all_sends_succeeded = false;
       }
 
       if (at_least_one_send_worked)
@@ -639,10 +688,17 @@ bool send_universe_discovery(SacnSource* source)
 }
 
 // Needs lock
-bool send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
+bool send_universe_multicast(const SacnSource*   source,
+                             SacnSourceUniverse* universe,
+                             const uint8_t*      unencrypted_buf,
+                             const uint8_t*      send_buf,
+                             size_t              send_buf_len)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf))
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(unencrypted_buf) ||
+      !SACN_ASSERT_VERIFY(send_buf))
+  {
     return false;
+  }
 
   bool at_least_one_sent   = false;
   bool all_sends_succeeded = true;
@@ -650,8 +706,8 @@ bool send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
   {
     for (size_t i = 0; i < universe->netints.num_netints; ++i)
     {
-      etcpal_error_t send_res =
-          sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, &universe->netints.netints[i]);
+      etcpal_error_t send_res = sacn_send_multicast(universe->universe_id, source->ip_supported, send_buf, send_buf_len,
+                                                    &universe->netints.netints[i]);
       if (send_res == kEtcPalErrOk)
       {
         at_least_one_sent = true;
@@ -665,16 +721,23 @@ bool send_universe_multicast(const SacnSource* source, SacnSourceUniverse* unive
   }
 
   if (at_least_one_sent)
-    handle_data_packet_sent(send_buf, universe);
+    handle_data_packet_sent(unencrypted_buf, universe);
 
   return all_sends_succeeded;
 }
 
 // Needs lock
-bool send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf)
+bool send_universe_unicast(const SacnSource*   source,
+                           SacnSourceUniverse* universe,
+                           const uint8_t*      unencrypted_buf,
+                           const uint8_t*      send_buf,
+                           size_t              send_buf_len)
 {
-  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(send_buf))
+  if (!SACN_ASSERT_VERIFY(source) || !SACN_ASSERT_VERIFY(universe) || !SACN_ASSERT_VERIFY(unencrypted_buf) ||
+      !SACN_ASSERT_VERIFY(send_buf))
+  {
     return false;
+  }
 
   bool at_least_one_sent   = false;
   bool all_sends_succeeded = true;
@@ -682,8 +745,9 @@ bool send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
   {
     if (universe->unicast_dests[i].termination_state == kNotTerminating)
     {
-      etcpal_error_t send_res = sacn_send_unicast(source->ip_supported, send_buf, &universe->unicast_dests[i].dest_addr,
-                                                  &universe->unicast_dests[i].last_send_error);
+      etcpal_error_t send_res =
+          sacn_send_unicast(source->ip_supported, send_buf, send_buf_len, &universe->unicast_dests[i].dest_addr,
+                            &universe->unicast_dests[i].last_send_error);
       if (send_res == kEtcPalErrOk)
       {
         at_least_one_sent = true;
@@ -697,7 +761,7 @@ bool send_universe_unicast(const SacnSource* source, SacnSourceUniverse* univers
   }
 
   if (at_least_one_sent)
-    handle_data_packet_sent(send_buf, universe);
+    handle_data_packet_sent(unencrypted_buf, universe);
 
   return all_sends_succeeded;
 }
@@ -1182,14 +1246,14 @@ void cancel_termination_if_not_removing(SacnSourceUniverse* universe)
 }
 
 // Needs lock
-void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* universe)
+void handle_data_packet_sent(const uint8_t* unencrypted_buf, SacnSourceUniverse* universe)
 {
-  if (!SACN_ASSERT_VERIFY(send_buf) || !SACN_ASSERT_VERIFY(universe))
+  if (!SACN_ASSERT_VERIFY(unencrypted_buf) || !SACN_ASSERT_VERIFY(universe))
     return;
 
   // The assertions below enforce assumptions made by the sequence number logic - specifically that only levels & PAP
   // can be sent in combination, and also that PAP is sent last each tick.
-  if (send_buf[SACN_START_CODE_OFFSET] == kSacnStartcodeDmx)
+  if (unencrypted_buf[SACN_START_CODE_OFFSET] == kSacnStartcodeDmx)
   {
     SACN_ASSERT_VERIFY(!universe->other_sent_this_tick);
 #if SACN_ETC_PRIORITY_EXTENSION
@@ -1198,7 +1262,7 @@ void handle_data_packet_sent(const uint8_t* send_buf, SacnSourceUniverse* univer
     universe->levels_sent_this_tick = true;
   }
 #if SACN_ETC_PRIORITY_EXTENSION
-  else if (send_buf[SACN_START_CODE_OFFSET] == kSacnStartcodePriority)
+  else if (unencrypted_buf[SACN_START_CODE_OFFSET] == kSacnStartcodePriority)
   {
     SACN_ASSERT_VERIFY(!universe->other_sent_this_tick);
     universe->pap_sent_this_tick = true;

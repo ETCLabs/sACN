@@ -66,8 +66,16 @@ void           update_levels_and_or_pap(SacnSource*                source,
                                         sacn_force_sync_behavior_t force_sync);
 void           pack_sequence_number(uint8_t* buf, uint8_t seq_num);
 void           increment_sequence_number(SacnSourceUniverse* universe);
-bool           send_universe_unicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
-bool           send_universe_multicast(const SacnSource* source, SacnSourceUniverse* universe, const uint8_t* send_buf);
+bool           send_universe_unicast(const SacnSource*   source,
+                                     SacnSourceUniverse* universe,
+                                     const uint8_t*      unencrypted_buf,
+                                     const uint8_t*      send_buf,
+                                     size_t              send_buf_len);
+bool           send_universe_multicast(const SacnSource*   source,
+                                       SacnSourceUniverse* universe,
+                                       const uint8_t*      unencrypted_buf,
+                                       const uint8_t*      send_buf,
+                                       size_t              send_buf_len);
 void           set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bool preview);
 void           set_universe_priority(const SacnSource* source, SacnSourceUniverse* universe, uint8_t priority);
 void           set_unicast_dest_terminating(SacnUnicastDestination* dest, sacn_set_terminating_behavior_t behavior);

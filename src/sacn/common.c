@@ -20,6 +20,7 @@
 #include "sacn/private/common.h"
 
 #include "sacn/private/mem.h"
+#include "sacn/private/pdu.h"
 #include "sacn/private/source_loss.h"
 #include "sacn/private/receiver_state.h"
 #include "sacn/private/source_state.h"
@@ -552,4 +553,14 @@ srtp_policy_t sacn_create_srtp_policy(const srtp_ssrc_t* ssrc)
   policy.next            = NULL;
 
   return policy;
+}
+
+etcpal_error_t sacn_srtp_protect(srtp_t session, const uint8_t* buf_in, uint8_t* buf_out, size_t* buf_out_len)
+{
+  const size_t kInBufLength = (size_t)SACN_RTP_HEADER_SIZE + (size_t)ACN_UDP_PREAMBLE_SIZE +
+                              (size_t)ACN_PDU_LENGTH((&buf_in[SACN_RTP_HEADER_SIZE + ACN_UDP_PREAMBLE_SIZE]));
+
+  srtp_err_status_t res = srtp_protect(session, buf_in, kInBufLength, buf_out, buf_out_len, 0u);
+
+  return (res == srtp_err_status_ok) ? kEtcPalErrOk : kEtcPalErrSys;
 }

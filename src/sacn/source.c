@@ -750,25 +750,33 @@ etcpal_error_t sacn_source_send_now(sacn_source_t  handle,
           result = kEtcPalErrNotFound;
       }
 
+      uint8_t unencrypted_buf[SACN_DATA_PACKET_MTU] = {0u};
+      uint8_t encrypted_buf[SACN_DATA_PACKET_MTU_ENCRYPTED] = {0u};
+      size_t  encrypted_len = SACN_DATA_PACKET_MTU_ENCRYPTED;
       if (result == kEtcPalErrOk)
       {
         // Initialize send buffer
-        uint8_t send_buf[SACN_DATA_PACKET_MTU];
-        init_sacn_data_send_buf(send_buf, start_code, &source_state->cid, source_state->name, universe_state->priority,
+        init_sacn_data_send_buf(unencrypted_buf, start_code, &source_state->cid, source_state->name,
+                                universe_state->priority,
                                 universe_state->universe_id, universe_state->sync_universe,
                                 universe_state->send_preview);
-        pack_sequence_number(send_buf, universe_state->next_seq_num);
-        update_send_buf_data(send_buf, buffer, (uint16_t)buflen, kDisableForceSync);
+        pack_sequence_number(unencrypted_buf, universe_state->next_seq_num);
+        update_send_buf_data(unencrypted_buf, buffer, (uint16_t)buflen, kDisableForceSync);
 
         SacnRtpHeader hdr;
         hdr.seq  = universe_state->next_rtp_seq_num++;
         hdr.ts   = etcpal_getms();
         hdr.ssrc = universe_state->rtp_ssrc;
-        pack_sacn_rtp_header(send_buf, &hdr);
+        pack_sacn_rtp_header(unencrypted_buf, &hdr);
 
+        result = sacn_srtp_protect(universe_state->srtp_session, unencrypted_buf, encrypted_buf, &encrypted_len);
+      }
+
+      if (result == kEtcPalErrOk)
+      {
         // Send on the network
-        send_universe_multicast(source_state, universe_state, send_buf);
-        send_universe_unicast(source_state, universe_state, send_buf);
+        send_universe_multicast(source_state, universe_state, unencrypted_buf, encrypted_buf, encrypted_len);
+        send_universe_unicast(source_state, universe_state, unencrypted_buf, encrypted_buf, encrypted_len);
 
         if (!universe_state->anything_sent_this_tick)
           result = universe_state->last_send_error;
