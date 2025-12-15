@@ -121,6 +121,7 @@ etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
 
   bool log_params_initted     = false;
   bool etcpal_initted         = false;
+  bool srtp_initted         = false;
   bool receiver_mutex_initted = false;
   bool source_mutex_initted   = false;
 #if SACN_RECEIVER_ENABLED
@@ -169,6 +170,13 @@ etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
   {
     if (res == kEtcPalErrOk)
       etcpal_initted = ((res = etcpal_init(SACN_ETCPAL_FEATURES)) == kEtcPalErrOk);
+
+    if (res == kEtcPalErrOk)
+    {
+      srtp_initted = (srtp_init() == srtp_err_status_ok);
+      if (!srtp_initted)
+        res = kEtcPalErrSys;
+    }
 
     if (res == kEtcPalErrOk)
     {
@@ -526,4 +534,22 @@ bool sacn_initialized(sacn_features_t features)
     return false;
 
   return true;
+}
+
+srtp_policy_t sacn_create_srtp_policy(const srtp_ssrc_t* ssrc)
+{
+  srtp_policy_t policy;
+  memset(&policy, 0, sizeof(policy));
+
+  srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtp);
+
+  if (ssrc)
+    policy.ssrc = *ssrc;
+
+  policy.key             = (uint8_t*)kSrtpMasterKey;
+  policy.window_size     = 128;
+  policy.allow_repeat_tx = 0;
+  policy.next            = NULL;
+
+  return policy;
 }

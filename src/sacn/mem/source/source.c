@@ -75,6 +75,22 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
 
   if (result == kEtcPalErrOk)
   {
+    source->universe_discovery_rtp_ssrc         = ((uint32_t)rand() << 16) | (uint32_t)rand();
+    source->universe_discovery_next_rtp_seq_num = 0;
+    source->universe_discovery_srtp_session     = NULL;
+
+    srtp_ssrc_t ssrc                       = {ssrc_specific, source->universe_discovery_rtp_ssrc};
+    source->universe_discovery_srtp_policy = sacn_create_srtp_policy(&ssrc);
+
+    if (srtp_create(&source->universe_discovery_srtp_session, &source->universe_discovery_srtp_policy) !=
+        srtp_err_status_ok)
+    {
+      result = kEtcPalErrSys;
+    }
+  }
+
+  if (result == kEtcPalErrOk)
+  {
     source->handle = handle;
 
     // Initialize the universe discovery send buffer.
@@ -102,9 +118,6 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->keep_alive_interval     = config->keep_alive_interval;
     source->pap_keep_alive_interval = config->pap_keep_alive_interval;
     source->universe_count_max      = config->universe_count_max;
-
-    source->universe_discovery_rtp_ssrc         = ((uint32_t)rand() << 16) | (uint32_t)rand();
-    source->universe_discovery_next_rtp_seq_num = 0;
 
     etcpal_timer_start(&source->stats_log_timer, kSacnStatsLogInterval);
     source->total_tick_count  = 0;
@@ -134,6 +147,12 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
   {
     CLEAR_BUF(source, universes);
     CLEAR_BUF(source, netints);
+
+    if (source->universe_discovery_srtp_session)
+    {
+      srtp_dealloc(source->universe_discovery_srtp_session);
+      source->universe_discovery_srtp_session = NULL;
+    }
   }
 
   *source_state = source;
@@ -166,6 +185,9 @@ size_t get_num_sources()
 // Needs lock
 void remove_sacn_source(size_t index)
 {
+  if (sacn_pool_source_mem.sources[index].universe_discovery_srtp_session)
+    srtp_dealloc(sacn_pool_source_mem.sources[index].universe_discovery_srtp_session);
+
   CLEAR_BUF(&sacn_pool_source_mem.sources[index], universes);
   CLEAR_BUF(&sacn_pool_source_mem.sources[index], netints);
 

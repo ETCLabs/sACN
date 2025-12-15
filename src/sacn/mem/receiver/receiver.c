@@ -138,6 +138,17 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t                      handle,
   if (!receiver)
     return kEtcPalErrNoMem;
 
+  receiver->srtp_session = NULL;
+
+  srtp_ssrc_t ssrc      = {ssrc_any_inbound};
+  receiver->srtp_policy = sacn_create_srtp_policy(&ssrc);
+
+  if (srtp_create(&receiver->srtp_session, &receiver->srtp_policy) != srtp_err_status_ok)
+  {
+    FREE_RECEIVER(receiver);
+    return kEtcPalErrSys;
+  }
+
   receiver->keys.handle   = handle;
   receiver->keys.universe = config->universe_id;
   receiver->thread_id     = kSacnThreadIdInvalid;
@@ -168,6 +179,7 @@ etcpal_error_t add_sacn_receiver(sacn_receiver_t                      handle,
       sacn_initialize_receiver_netints(&receiver->netints, false, &receiver->sampling_period_netints, netint_config);
   if (res != kEtcPalErrOk)
   {
+    srtp_dealloc(receiver->srtp_session);
     FREE_RECEIVER(receiver);
     return res;
   }
@@ -268,6 +280,9 @@ void remove_sacn_receiver(SacnReceiver* receiver)
 {
   if (!SACN_ASSERT_VERIFY(receiver))
     return;
+
+  if (receiver->srtp_session)
+    srtp_dealloc(receiver->srtp_session);
 
   clear_term_set_list(receiver->term_sets);
   etcpal_rbtree_clear_with_cb(&receiver->sampling_period_netints, sampling_period_netint_tree_dealloc);

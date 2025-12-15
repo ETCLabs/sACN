@@ -472,6 +472,10 @@ struct SacnReceiver
   SacnReceiverKeys keys;  // This must be the first member.
   sacn_thread_id_t thread_id;
 
+  // SRTP
+  srtp_t        srtp_session;
+  srtp_policy_t srtp_policy;
+
   // Sockets / network interface info
   SacnInternalSocketState sockets;
   /* Array of network interfaces on which to listen to the specified universe. */
@@ -812,8 +816,10 @@ typedef struct SacnSourceUniverse
   bool     send_preview;
   uint8_t  next_seq_num;
 
-  uint32_t rtp_ssrc;
-  uint16_t next_rtp_seq_num;
+  uint32_t      rtp_ssrc;
+  uint16_t      next_rtp_seq_num;
+  srtp_t        srtp_session;
+  srtp_policy_t srtp_policy;
 
   // Start code 0x00 state
   int         level_packets_sent_before_suppression;
@@ -873,8 +879,10 @@ typedef struct SacnSource
 
   uint8_t universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_PACKET_MTU];
 
-  uint32_t universe_discovery_rtp_ssrc;
-  uint16_t universe_discovery_next_rtp_seq_num;
+  uint32_t      universe_discovery_rtp_ssrc;
+  uint16_t      universe_discovery_next_rtp_seq_num;
+  srtp_t        universe_discovery_srtp_session;
+  srtp_policy_t universe_discovery_srtp_policy;
 } SacnSource;
 
 typedef enum
@@ -898,6 +906,8 @@ bool sacn_source_lock(void);
 void sacn_source_unlock(void);
 
 bool sacn_initialized(sacn_features_t features);
+
+srtp_policy_t sacn_create_srtp_policy(const srtp_ssrc_t* ssrc);
 
 #ifdef __cplusplus
 }

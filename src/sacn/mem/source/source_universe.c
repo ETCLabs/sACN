@@ -82,6 +82,19 @@ etcpal_error_t add_sacn_source_universe(SacnSource*                     source,
     universe = &source->universes[insert_index];
     memset(universe, 0, sizeof(SacnSourceUniverse));
 
+    universe->rtp_ssrc         = ((uint32_t)rand() << 16) | (uint32_t)rand();
+    universe->next_rtp_seq_num = 0;
+    universe->srtp_session     = NULL;
+
+    srtp_ssrc_t ssrc      = {ssrc_specific, universe->rtp_ssrc};
+    universe->srtp_policy = sacn_create_srtp_policy(&ssrc);
+
+    if (srtp_create(&universe->srtp_session, &universe->srtp_policy) != srtp_err_status_ok)
+      result = kEtcPalErrSys;
+  }
+
+  if (result == kEtcPalErrOk)
+  {
     universe->universe_id = config->universe;
 
     universe->termination_state     = kNotTerminating;
@@ -91,9 +104,6 @@ etcpal_error_t add_sacn_source_universe(SacnSource*                     source,
     universe->sync_universe = config->sync_universe;
     universe->send_preview  = config->send_preview;
     universe->next_seq_num  = 0;
-
-    universe->rtp_ssrc         = ((uint32_t)rand() << 16) | (uint32_t)rand();
-    universe->next_rtp_seq_num = 0;
 
     universe->level_packets_sent_before_suppression = 0;
     init_sacn_data_send_buf(universe->level_send_buf, kSacnStartcodeDmx, &source->cid, source->name, config->priority,
@@ -153,6 +163,12 @@ etcpal_error_t add_sacn_source_universe(SacnSource*                     source,
     CLEAR_BUF(&universe->netints, netints);
     CLEAR_BUF(universe, unicast_dests);
 
+    if (universe->srtp_session)
+    {
+      srtp_dealloc(universe->srtp_session);
+      universe->srtp_session = NULL;
+    }
+
     // Undo the previous memory shift so that a valid universe isn't lost
     if (insert_index < source->num_universes)
     {
@@ -203,6 +219,9 @@ void remove_sacn_source_universe(SacnSource* source, size_t index)
 {
   if (!SACN_ASSERT_VERIFY(source))
     return;
+
+  if (source->universes[index].srtp_session)
+    srtp_dealloc(source->universes[index].srtp_session);
 
   CLEAR_BUF(&source->universes[index], unicast_dests);
   CLEAR_BUF(&source->universes[index].netints, netints);
