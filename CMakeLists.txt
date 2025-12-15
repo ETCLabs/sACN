@@ -47,8 +47,9 @@ endif()
 
 # Dependency configuration overrides
 set(MBEDTLS_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/_deps/mbedtls-src/include CACHE PATH "Override" FORCE)
-set(ENABLE_MBEDTLS ON CACHE BOOL "Override" FORCE)
+set(CRYPTO_LIBRARY "mbedtls" CACHE STRING "Override" FORCE)
 set(ENABLE_PROGRAMS OFF CACHE BOOL "Override" FORCE)
+set(ENABLE_WARNINGS_AS_ERRORS OFF CACHE BOOL "Override" FORCE)
 set(LIBSRTP_TEST_APPS OFF CACHE BOOL "Override" FORCE)
 
 include(${SACN_CMAKE}/ResolveDependencies.cmake)

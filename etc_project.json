@@ -13,7 +13,7 @@
     {
       "name": "libsrtp",
       "gitlabPath": "mirrors/thirdparty/cisco/libsrtp",
-      "version": "2.7.0"
+      "gitTag": "c26095605bb542feb120b9a336c3bceea28d99cf"
     },
     {
       "name": "GSL",

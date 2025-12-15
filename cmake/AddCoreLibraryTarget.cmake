@@ -26,7 +26,7 @@ function(sacn_add_core_library_target target_name)
     target_compile_definitions(${target_name} PUBLIC SACN_HAVE_CONFIG_H)
   endif()
 
-  target_link_libraries(${target_name} PUBLIC EtcPal libSRTP::srtp2 mbedcrypto mbedx509 mbedtls)
+  target_link_libraries(${target_name} PUBLIC EtcPal libSRTP::srtp3 mbedcrypto mbedx509 mbedtls)
   if(NOT COMPILING_AS_OSS)
     target_clang_tidy(${target_name})
   endif()
