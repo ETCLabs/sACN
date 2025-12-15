@@ -561,6 +561,13 @@ bool send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
   bool old_terminated_opt = TERMINATED_OPT_SET(universe->level_send_buf);
   SET_TERMINATED_OPT(universe->level_send_buf, true);
 
+  // Also update RTP header
+  SacnRtpHeader hdr;
+  hdr.seq  = universe->next_rtp_seq_num++;
+  hdr.ts   = etcpal_getms();
+  hdr.ssrc = universe->rtp_ssrc;
+  pack_sacn_rtp_header(universe->level_send_buf, &hdr);
+
   // Send the termination packet on unicast only
   bool res = true;
   if (sacn_send_unicast(source->ip_supported, universe->level_send_buf, &dest->dest_addr, &dest->last_send_error) ==
