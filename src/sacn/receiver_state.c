@@ -638,8 +638,23 @@ void sacn_receive_thread(void* arg)
     return;
   }
 
+  context->srtp_session = NULL;
+
+  srtp_ssrc_t ssrc      = {ssrc_any_inbound};
+  context->srtp_policy = sacn_create_srtp_policy(&ssrc);
+
+  if (srtp_create(&context->srtp_session, &context->srtp_policy) != srtp_err_status_ok)
+  {
+    SACN_LOG_CRIT("Could not create an SRTP session for sACN. sACN Receive functionality will not work properly.");
+    etcpal_poll_context_deinit(&context->poll_context);
+    return;
+  }
+
   while (!etcpal_signal_try_wait(&context->deinit_signal))
     read_network_and_process(context);
+
+  if (context->srtp_session)
+    srtp_dealloc(context->srtp_session);
 
   // Destroy the poll context
   if (sacn_receiver_lock())

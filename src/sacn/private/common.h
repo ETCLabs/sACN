@@ -475,10 +475,6 @@ struct SacnReceiver
   SacnReceiverKeys keys;  // This must be the first member.
   sacn_thread_id_t thread_id;
 
-  // SRTP
-  srtp_t        srtp_session;
-  srtp_policy_t srtp_policy;
-
   // Sockets / network interface info
   SacnInternalSocketState sockets;
   /* Array of network interfaces on which to listen to the specified universe. */
@@ -724,6 +720,8 @@ typedef struct SacnRecvThreadContext
   uint8_t           recv_buf[SACN_MTU];
   EtcPalTimer       periodic_timer;
   bool              periodic_timer_started;
+  srtp_t            srtp_session;
+  srtp_policy_t     srtp_policy;
 } SacnRecvThreadContext;
 
 /******************************************************************************
