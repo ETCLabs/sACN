@@ -698,11 +698,11 @@ void sacn_get_mcast_addr(etcpal_iptype_t ip_type, uint16_t universe, EtcPalIpAdd
 {
   if (ip_type == kEtcPalIpTypeV4)
   {
-    ETCPAL_IP_SET_V4_ADDRESS(ip_addr, (0xefff0000 | universe));
+    ETCPAL_IP_SET_V4_ADDRESS(ip_addr, (0xeffe0000 | universe));
   }
   else
   {
-    static const uint8_t kIpv6AddrTemplate[ETCPAL_IPV6_BYTES] = {0xff, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    static const uint8_t kIpv6AddrTemplate[ETCPAL_IPV6_BYTES] = {0xff, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                                                  0x00, 0x00, 0x00, 0x00, 0x83, 0x00, 0x00, 0x00};
 
     ETCPAL_IP_SET_V6_ADDRESS(ip_addr, kIpv6AddrTemplate);
