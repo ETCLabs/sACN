@@ -1113,7 +1113,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
 
       EtcPalMsgHdr msg = {{0}};
       msg.buf          = recv_thread_context->recv_buf;
-      msg.buflen       = SACN_MTU;
+      msg.buflen       = SACN_MTU_ENCRYPTED;
       msg.control      = control_buf;
       msg.controllen   = ETCPAL_MAX_CONTROL_SIZE_PKTINFO;
 
@@ -1122,13 +1122,21 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
       {
         if (msg.flags & ETCPAL_MSG_TRUNC)
         {
-          recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than SACN_MTU.
+          recv_res = kEtcPalErrProtocol;  // No sACN packets should be bigger than SACN_MTU_ENCRYPTED.
         }
         else
         {
           read_result->from_addr = msg.name;
-          read_result->data_len  = (size_t)recv_res;
-          read_result->data      = recv_thread_context->recv_buf;
+
+          size_t            data_len = (size_t)recv_res;
+          srtp_err_status_t unprotect_res =
+              srtp_unprotect(recv_thread_context->srtp_session, recv_thread_context->recv_buf, data_len,
+                             recv_thread_context->recv_buf, &data_len);
+          if (unprotect_res != srtp_err_status_ok)
+            return kEtcPalErrSys;  // Decryption failed, drop packet
+
+          read_result->data_len = data_len;
+          read_result->data     = recv_thread_context->recv_buf;
 
           // Obtain the network interface the packet came in on using one of two configured methods
 #if SACN_RECEIVER_SOCKET_PER_NIC

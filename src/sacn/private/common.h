@@ -717,7 +717,7 @@ typedef struct SacnRecvThreadContext
   // This section is only touched from the thread, outside the lock.
   EtcPalPollContext poll_context;
   bool              poll_context_initialized;
-  uint8_t           recv_buf[SACN_MTU];
+  uint8_t           recv_buf[SACN_MTU_ENCRYPTED];
   EtcPalTimer       periodic_timer;
   bool              periodic_timer_started;
   srtp_t            srtp_session;
