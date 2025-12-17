@@ -27,7 +27,6 @@
 #ifndef SACN_PRIVATE_COMMON_H_
 #define SACN_PRIVATE_COMMON_H_
 
-#include "sacn/opts.h"  // This may be needed to define SRTP options as well
 #include "srtp.h"
 #include <limits.h>
 
@@ -43,6 +42,7 @@
 #include "sacn/source.h"
 #include "sacn/source_detector.h"
 #include "sacn/dmx_merger.h"
+#include "sacn/opts.h"
 
 #ifdef __cplusplus
 extern "C" {
