@@ -27,7 +27,10 @@
 #ifndef SACN_PRIVATE_COMMON_H_
 #define SACN_PRIVATE_COMMON_H_
 
-#include "sacn/opts.h"  // This may be needed to define SRTP options as well
+// sacn_config.h may be needed to define SRTP options as well, so put opts.h at the top with what it needs.
+#include <stdbool.h>
+#include "sacn/opts.h"
+
 #include "srtp.h"
 #include <limits.h>
 
