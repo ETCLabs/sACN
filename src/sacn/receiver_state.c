@@ -1674,7 +1674,7 @@ void process_stats_log(SacnRecvThreadContext* context)
       if (SACN_CAN_LOG(ETCPAL_LOG_INFO))
       {
         double decrypt_avg_ms = ((double)context->total_decrypt_time_ms / (double)context->num_packets_processed);
-        SACN_LOG_INFO("Processed %d total packets with an average decryption time of %f%%ms.",
+        SACN_LOG_INFO("Processed %d total packets with an average decryption time of %fms.",
                       context->num_packets_processed, decrypt_avg_ms);
       }
 #endif
@@ -1710,12 +1710,12 @@ void process_stats_log(SacnRecvThreadContext* context)
 
 #if SACN_ETC_PRIORITY_EXTENSION
               SACN_LOG_INFO(
-                  "  Source %s (%s) - 0x00: %f%%Hz (%d packets, avg. decrypt %f%%ms), 0xDD: %f%%Hz (%d packets, avg. "
-                  "decrypt %f%%ms)",
+                  "  Source %s (%s) - 0x00: %fHz (%d packets, avg. decrypt %fms), 0xDD: %fHz (%d packets, avg. "
+                  "decrypt %fms)",
                   src->name, cid_str, null_frequency, src->null_packets_processed, null_decrypt_avg_ms, dd_frequency,
                   src->dd_packets_processed, dd_decrypt_avg_ms);
 #else
-              SACN_LOG_INFO("  Source %s (%s) - 0x00: %f%%Hz (%d packets, avg. decrypt %f%%ms)", src->name, cid_str,
+              SACN_LOG_INFO("  Source %s (%s) - 0x00: %fHz (%d packets, avg. decrypt %fms)", src->name, cid_str,
                             null_frequency, src->null_packets_processed, null_decrypt_avg_ms);
 #endif
             }
