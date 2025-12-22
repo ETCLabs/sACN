@@ -37,6 +37,7 @@ typedef struct SacnReadResult
   size_t              data_len;
   EtcPalSockAddr      from_addr;
   EtcPalMcastNetintId netint;
+  uint32_t            decrypt_time_ms;
 } SacnReadResult;
 
 typedef struct SacnSocketsSysNetints

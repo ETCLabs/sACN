@@ -1128,12 +1128,19 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
         {
           read_result->from_addr = msg.name;
 
+          uint32_t before_decrypt_ms = etcpal_getms();
+
           size_t            data_len = (size_t)recv_res;
           srtp_err_status_t unprotect_res =
               srtp_unprotect(recv_thread_context->srtp_session, recv_thread_context->recv_buf, data_len,
                              recv_thread_context->recv_buf, &data_len);
+
           if (unprotect_res != srtp_err_status_ok)
             return kEtcPalErrSys;  // Decryption failed, drop packet
+
+          read_result->decrypt_time_ms = etcpal_getms() - before_decrypt_ms;
+          recv_thread_context->total_decrypt_time_ms += read_result->decrypt_time_ms;
+          ++recv_thread_context->num_packets_processed;
 
           read_result->data_len = data_len;
           read_result->data     = recv_thread_context->recv_buf;

@@ -544,11 +544,18 @@ typedef struct SacnTrackedSource
   bool        terminated;
   bool        dmx_received_since_last_tick;
 
+  int      null_packets_processed;
+  uint32_t total_null_decrypt_time_ms;
+
 #if SACN_ETC_PRIORITY_EXTENSION
   sacn_recv_state_t recv_state;
   /* pap stands for Per-Address Priority. */
   EtcPalTimer pap_timer;
+
+  int      dd_packets_processed;
+  uint32_t total_dd_decrypt_time_ms;
 #endif
+
 } SacnTrackedSource;
 
 typedef struct SacnRemoteSourceHandle
@@ -722,6 +729,10 @@ typedef struct SacnRecvThreadContext
   bool              periodic_timer_started;
   srtp_t            srtp_session;
   srtp_policy_t     srtp_policy;
+
+  EtcPalTimer stats_log_timer;  // Maintains a repeating interval, at the end of which statistics are logged
+  int         num_packets_processed;
+  uint32_t    total_decrypt_time_ms;
 } SacnRecvThreadContext;
 
 /******************************************************************************

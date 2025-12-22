@@ -134,6 +134,9 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver*              receiver,
     src->terminated                   = false;
     src->dmx_received_since_last_tick = true;
 
+    src->null_packets_processed     = 0;
+    src->total_null_decrypt_time_ms = 0;
+
 #if SACN_ETC_PRIORITY_EXTENSION
     if (receiver->sampling)
     {
@@ -156,6 +159,9 @@ etcpal_error_t add_sacn_tracked_source(SacnReceiver*              receiver,
         src->recv_state = kRecvStateWaitingForPap;  // 0x00 packets should always notify after 0xDD
       etcpal_timer_start(&src->pap_timer, kSacnWaitForPriority);
     }
+
+    src->dd_packets_processed     = 0;
+    src->total_dd_decrypt_time_ms = 0;
 #endif
 
     result = etcpal_rbtree_insert(&receiver->sources, src);
