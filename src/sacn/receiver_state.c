@@ -1668,61 +1668,74 @@ void process_stats_log(SacnRecvThreadContext* context)
 
   if (etcpal_timer_is_expired(&context->stats_log_timer))
   {
+    if (context->num_packets_processed > 0)
+    {
 #if SACN_LOGGING_ENABLED
-    if (SACN_CAN_LOG(ETCPAL_LOG_INFO))
-    {
-      double decrypt_avg_ms = (double)context->total_decrypt_time_ms / (double)context->num_packets_processed;
-      SACN_LOG_INFO("Processed %d total packets with an average decryption time of %f%%ms.",
-                    context->num_packets_processed, decrypt_avg_ms);
-    }
-#endif
-
-    for (SacnReceiver* receiver = context->receivers; receiver; receiver = receiver->next)
-    {
-      SACN_LOG_INFO("Statistics for universe %u:", receiver->keys.universe);
-
-      EtcPalRbIter iter;
-      for (SacnTrackedSource* src = etcpal_rbiter_first(&iter, &receiver->sources); src;
-            src                    = etcpal_rbiter_next(&iter))
+      if (SACN_CAN_LOG(ETCPAL_LOG_INFO))
       {
-#if SACN_LOGGING_ENABLED
-        if (SACN_CAN_LOG(ETCPAL_LOG_INFO))
+        double decrypt_avg_ms = ((double)context->total_decrypt_time_ms / (double)context->num_packets_processed);
+        SACN_LOG_INFO("Processed %d total packets with an average decryption time of %f%%ms.",
+                      context->num_packets_processed, decrypt_avg_ms);
+      }
+#endif
+
+      for (SacnReceiver* receiver = context->receivers; receiver; receiver = receiver->next)
+      {
+        if (etcpal_rbtree_size(&receiver->sources) > 0)
         {
-          char cid_str[ETCPAL_UUID_STRING_BYTES];
-          etcpal_uuid_to_string(get_remote_source_cid(src->handle), cid_str);
+          SACN_LOG_INFO("Statistics for universe %u:", receiver->keys.universe);
 
-          double null_frequency      = (double)src->null_packets_processed / ((double)kSacnStatsLogInterval / 1000.0);
-          double null_decrypt_avg_ms = (double)src->total_null_decrypt_time_ms / (double)src->null_packets_processed;
+          EtcPalRbIter iter;
+          for (SacnTrackedSource* src = etcpal_rbiter_first(&iter, &receiver->sources); src;
+               src                    = etcpal_rbiter_next(&iter))
+          {
+#if SACN_LOGGING_ENABLED
+            if (SACN_CAN_LOG(ETCPAL_LOG_INFO))
+            {
+              char cid_str[ETCPAL_UUID_STRING_BYTES];
+              etcpal_uuid_to_string(get_remote_source_cid(src->handle), cid_str);
+
+              double null_frequency = (double)src->null_packets_processed / ((double)kSacnStatsLogInterval / 1000.0);
+              double null_decrypt_avg_ms =
+                  (src->null_packets_processed == 0)
+                      ? 0.0
+                      : ((double)src->total_null_decrypt_time_ms / (double)src->null_packets_processed);
 #if SACN_ETC_PRIORITY_EXTENSION
-          double dd_frequency      = (double)src->dd_packets_processed / ((double)kSacnStatsLogInterval / 1000.0);
-          double dd_decrypt_avg_ms = (double)src->total_dd_decrypt_time_ms / (double)src->dd_packets_processed;
+              double dd_frequency = (double)src->dd_packets_processed / ((double)kSacnStatsLogInterval / 1000.0);
+              double dd_decrypt_avg_ms =
+                  (src->dd_packets_processed == 0)
+                      ? 0.0
+                      : ((double)src->total_dd_decrypt_time_ms / (double)src->dd_packets_processed);
 #endif
 
 #if SACN_ETC_PRIORITY_EXTENSION
-          SACN_LOG_INFO(
-              "  Source %s (%s) - 0x00: %f%%Hz (%d packets, avg. decrypt %f%%ms), 0xDD: %f%%Hz (%d packets, avg. "
-              "decrypt %f%%ms)",
-              src->name, cid_str, null_frequency, src->null_packets_processed, null_decrypt_avg_ms, dd_frequency,
-              src->dd_packets_processed, dd_decrypt_avg_ms);
+              SACN_LOG_INFO(
+                  "  Source %s (%s) - 0x00: %f%%Hz (%d packets, avg. decrypt %f%%ms), 0xDD: %f%%Hz (%d packets, avg. "
+                  "decrypt %f%%ms)",
+                  src->name, cid_str, null_frequency, src->null_packets_processed, null_decrypt_avg_ms, dd_frequency,
+                  src->dd_packets_processed, dd_decrypt_avg_ms);
 #else
-          SACN_LOG_INFO("  Source %s (%s) - 0x00: %f%%Hz (%d packets, avg. decrypt %f%%ms)", src->name, cid_str,
-                        null_frequency, src->null_packets_processed, null_decrypt_avg_ms);
+              SACN_LOG_INFO("  Source %s (%s) - 0x00: %f%%Hz (%d packets, avg. decrypt %f%%ms)", src->name, cid_str,
+                            null_frequency, src->null_packets_processed, null_decrypt_avg_ms);
 #endif
-        }
+            }
 #endif  // SACN_LOGGING_ENABLED
 
-        src->null_packets_processed     = 0;
-        src->total_null_decrypt_time_ms = 0;
+            src->null_packets_processed     = 0;
+            src->total_null_decrypt_time_ms = 0;
 #if SACN_ETC_PRIORITY_EXTENSION
-        src->dd_packets_processed     = 0;
-        src->total_dd_decrypt_time_ms = 0;
+            src->dd_packets_processed     = 0;
+            src->total_dd_decrypt_time_ms = 0;
 #endif
+          }
+        }
       }
+
+      context->num_packets_processed = 0;
+      context->total_decrypt_time_ms = 0;
     }
 
     etcpal_timer_reset(&context->stats_log_timer);
-    context->num_packets_processed = 0;
-    context->total_decrypt_time_ms = 0;
   }
 }
 
