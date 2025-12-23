@@ -183,6 +183,19 @@ etcpal::Error SACNSourceExample::InitSACNSource()
   {
     std::cout << "fail, " << result.ToString() << "\n";
   }
+
+  {
+    etcpal::MutexGuard lock(universe_infos_mutex_);
+
+    for (uint16_t i = 1u; i <= 4u; ++i)
+    {
+      universe_infos_[i] = std::make_unique<UniverseInfo>();
+      universe_infos_[i]->SetEffectStateRamping();
+      universe_infos_[i]->SetPriorityStatePerAddress(100);
+      AddNewUniverseToSACNSource(i, universe_infos_[i]);
+    }
+  }
+
   return result.code();
 }  // InitSACNSource
 

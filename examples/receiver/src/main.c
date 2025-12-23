@@ -43,7 +43,7 @@
 enum
 {
   kMaxListeners          = 10,
-  kNumSourcesPerListener = 4,
+  kNumSourcesPerListener = 8,
   kNumSlotsDisplayed     = 10
 };
 
