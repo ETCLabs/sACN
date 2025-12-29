@@ -38,13 +38,11 @@ enum
 bool parse_sacn_data_packet(const uint8_t*        buf,
                             size_t                buflen,
                             SacnRemoteSource*     source_info,
-                            uint8_t*              seq,
-                            uint8_t*              options,
                             bool*                 terminated,
                             SacnRecvUniverseData* universe_data)
 {
-  if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(source_info) || !SACN_ASSERT_VERIFY(seq) ||
-      !SACN_ASSERT_VERIFY(options) || !SACN_ASSERT_VERIFY(terminated) || !SACN_ASSERT_VERIFY(universe_data))
+  if (!SACN_ASSERT_VERIFY(buf) || !SACN_ASSERT_VERIFY(source_info) || !SACN_ASSERT_VERIFY(terminated) ||
+      !SACN_ASSERT_VERIFY(universe_data))
   {
     return false;
   }
@@ -76,13 +74,13 @@ bool parse_sacn_data_packet(const uint8_t*        buf,
   // Just in case the string is not null terminated even though it is required to be
   source_info->name[kSacnSourceNameMaxLen - 1] = '\0';
   universe_data->priority                      = buf[70];
-  // TODO universe_data->sync_address = etcpal_unpack_u16b(&buf[71]);
-  *seq                       = buf[73];
-  *options                   = buf[74];
-  universe_data->preview     = (bool)(buf[74] & SACN_OPTVAL_PREVIEW);
-  *terminated                = (bool)(buf[74] & SACN_OPTVAL_TERMINATED);
-  universe_data->universe_id = etcpal_unpack_u16b(&buf[75]);
-  universe_data->start_code  = buf[87];
+  universe_data->sync_universe                 = etcpal_unpack_u16b(&buf[71]);
+  universe_data->sequence                      = buf[73];
+  universe_data->options                       = buf[74];
+  universe_data->preview                       = (bool)(buf[74] & SACN_OPTVAL_PREVIEW);
+  *terminated                                  = (bool)(buf[74] & SACN_OPTVAL_TERMINATED);
+  universe_data->universe_id                   = etcpal_unpack_u16b(&buf[75]);
+  universe_data->start_code                    = buf[87];
   return true;
 }
 

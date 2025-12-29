@@ -112,6 +112,10 @@ typedef struct SacnRecvUniverseData
    */
   bool is_sampling;
   /**
+   * The sync universe (TODO NOTE: sync is not fully implemented in the library).
+   */
+  uint16_t sync_universe;
+  /**
    * The sequence number field directly from the packet.
    */
   uint8_t sequence;
