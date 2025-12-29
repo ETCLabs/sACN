@@ -854,12 +854,13 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
     }
 
     uint8_t seq                   = 0u;
+    uint8_t options               = 0u;
     bool    is_termination_packet = false;
     bool    parse_res             = false;
 
     universe_data->source_info.cid = rlp->sender_cid;
 
-    parse_res = parse_sacn_data_packet(rlp->pdata, rlp->data_len, &universe_data->source_info, &seq,
+    parse_res = parse_sacn_data_packet(rlp->pdata, rlp->data_len, &universe_data->source_info, &seq, &options,
                                        &is_termination_packet, &universe_data->universe_data);
 
     if (!parse_res)
@@ -1002,6 +1003,8 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
           universe_data->receiver_handle           = receiver->keys.handle;
           universe_data->universe_data.universe_id = receiver->keys.universe;
           universe_data->universe_data.is_sampling = (sp_netint != NULL);
+          universe_data->universe_data.sequence    = seq;
+          universe_data->universe_data.options     = options;
 
           // TODO: Finish footprint implementation (factor in start_address)
           if (universe_data->universe_data.slot_range.address_count > receiver->footprint.address_count)

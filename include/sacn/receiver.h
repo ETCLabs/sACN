@@ -112,6 +112,14 @@ typedef struct SacnRecvUniverseData
    */
   bool is_sampling;
   /**
+   * The sequence number field directly from the packet.
+   */
+  uint8_t sequence;
+  /**
+   * The options field directly from the packet.
+   */
+  uint8_t options;
+  /**
    * The start code of the DMX data.
    */
   uint8_t start_code;
