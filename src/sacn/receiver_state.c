@@ -108,7 +108,6 @@ static void process_new_source_data(SacnReceiver*                    receiver,
                                     const SacnRemoteSource*          source_info,
                                     const EtcPalMcastNetintId*       netint,
                                     const SacnRecvUniverseData*      universe_data,
-                                    uint8_t                          seq,
                                     SacnTrackedSource**              new_source,
                                     SourceLimitExceededNotification* source_limit_exceeded,
                                     bool*                            notify);
@@ -823,15 +822,13 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
       return;
     }
 
-    uint8_t seq                   = 0u;
-    uint8_t options               = 0u;
-    bool    is_termination_packet = false;
-    bool    parse_res             = false;
+    bool is_termination_packet = false;
+    bool parse_res             = false;
 
     universe_data->source_info.cid = rlp->sender_cid;
 
-    parse_res = parse_sacn_data_packet(rlp->pdata, rlp->data_len, &universe_data->source_info, &seq, &options,
-                                       &is_termination_packet, &universe_data->universe_data);
+    parse_res = parse_sacn_data_packet(rlp->pdata, rlp->data_len, &universe_data->source_info, &is_termination_packet,
+                                       &universe_data->universe_data);
 
     if (!parse_res)
     {
@@ -914,14 +911,14 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
           return;
         }
 
-        if (!check_sequence(seq, src->seq))
+        if (!check_sequence(universe_data->universe_data.sequence, src->seq))
         {
           // Drop the packet
           sacn_receiver_unlock();
           receiver_cb_unlock();
           return;
         }
-        src->seq = seq;
+        src->seq = universe_data->universe_data.sequence;
 
         // Based on the start code, update the timers.
         if (universe_data->universe_data.start_code == kSacnStartcodeDmx)
@@ -942,7 +939,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
       else if (!is_termination_packet)
       {
         process_new_source_data(receiver, &universe_data->source_info, &read_result->netint,
-                                &universe_data->universe_data, seq, &src, source_limit_exceeded, &notify);
+                                &universe_data->universe_data, &src, source_limit_exceeded, &notify);
 
         if (src)
           universe_data->source_info.handle = src->handle;
@@ -961,8 +958,6 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
           universe_data->receiver_handle           = receiver->keys.handle;
           universe_data->universe_data.universe_id = receiver->keys.universe;
           universe_data->universe_data.is_sampling = (sp_netint != NULL);
-          universe_data->universe_data.sequence    = seq;
-          universe_data->universe_data.options     = options;
 
           // TODO: Finish footprint implementation (factor in start_address)
           if (universe_data->universe_data.slot_range.address_count > receiver->footprint.address_count)
@@ -1173,7 +1168,6 @@ void process_new_source_data(SacnReceiver*                    receiver,
                              const SacnRemoteSource*          source_info,
                              const EtcPalMcastNetintId*       netint,
                              const SacnRecvUniverseData*      universe_data,
-                             uint8_t                          seq,
                              SacnTrackedSource**              new_source,
                              SourceLimitExceededNotification* source_limit_exceeded,
                              bool*                            notify)
@@ -1197,8 +1191,8 @@ void process_new_source_data(SacnReceiver*                    receiver,
   *notify = true;
 
   // A new source has appeared!
-  if (add_sacn_tracked_source(receiver, &source_info->cid, source_info->name, netint, seq, universe_data->start_code,
-                              new_source) == kEtcPalErrOk)
+  if (add_sacn_tracked_source(receiver, &source_info->cid, source_info->name, netint, universe_data->sequence,
+                              universe_data->start_code, new_source) == kEtcPalErrOk)
   {
 #if SACN_ETC_PRIORITY_EXTENSION
     // After the sampling period, 0x00 packets should always notify after 0xDD
