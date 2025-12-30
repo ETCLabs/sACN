@@ -23,6 +23,14 @@ option(SACN_BUILD_EXAMPLES "Build the sACN example applications" OFF)
 option(SACN_BUILD_TEST_TOOLS "Build the sACN test tools (typically used in development only)" OFF)
 option(SACN_INSTALL_PDBS "Include PDBs in sACN install target" ON)
 
+set(SACN_SRTP_CRYPTO_POLICY_VALUES "default;aes-cm-128-hmac-sha1-32;aes-cm-128-null-auth;null-cipher-hmac-sha1-80;null-cipher-hmac-null;aes-cm-256-hmac-sha1-80;aes-cm-256-hmac-sha1-32;aes-cm-256-null-auth;aes-cm-192-hmac-sha1-80;aes-cm-192-hmac-sha1-32;aes-cm-192-null-auth;aes-gcm-128-16-auth;aes-gcm-256-16-auth")
+set(SACN_SRTP_CRYPTO_POLICY "default" CACHE STRING "SRTP crypto policy, can be one of: ${SACN_SRTP_CRYPTO_POLICY_VALUES}")
+set_property(CACHE SACN_SRTP_CRYPTO_POLICY PROPERTY STRINGS ${SACN_SRTP_CRYPTO_POLICY_VALUES})
+if(NOT SACN_SRTP_CRYPTO_POLICY IN_LIST SACN_SRTP_CRYPTO_POLICY_VALUES)
+  message(FATAL_ERROR "Invalid value for SACN_SRTP_CRYPTO_POLICY: ${SACN_SRTP_CRYPTO_POLICY}. Allowed values are: ${SACN_SRTP_CRYPTO_POLICY_VALUES}")
+endif()
+message(STATUS "Using SRTP crypto policy: ${SACN_SRTP_CRYPTO_POLICY}")
+
 ####################### Dependencies & standalone support ######################
 
 include(${SACN_CMAKE}/OssDependencyTools.cmake)

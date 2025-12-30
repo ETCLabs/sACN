@@ -542,7 +542,35 @@ srtp_policy_t sacn_create_srtp_policy(const srtp_ssrc_t* ssrc)
   srtp_policy_t policy;
   memset(&policy, 0, sizeof(policy));
 
+#if SACN_SRTP_CRYPTO_POLICY_DEFAULT
+  srtp_crypto_policy_set_rtp_default(&policy.rtp);
+#elif SACN_SRTP_CRYPTO_POLICY_AES_CM_128_HMAC_SHA1_32
+  srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
+#elif SACN_SRTP_CRYPTO_POLICY_AES_CM_128_NULL_AUTH
+  srtp_crypto_policy_set_aes_cm_128_null_auth(&policy.rtp);
+#elif SACN_SRTP_CRYPTO_POLICY_NULL_CIPHER_HMAC_SHA1_80
+  srtp_crypto_policy_set_null_cipher_hmac_sha1_80(&policy.rtp);
+#elif SACN_SRTP_CRYPTO_POLICY_NULL_CIPHER_HMAC_NULL
+  srtp_crypto_policy_set_null_cipher_hmac_null(&policy.rtp);
+#elif SACN_SRTP_CRYPTO_POLICY_AES_CM_256_HMAC_SHA1_80
+  srtp_crypto_policy_set_aes_cm_256_hmac_sha1_80(&policy.rtp);
+#elif SACN_SRTP_CRYPTO_POLICY_AES_CM_256_HMAC_SHA1_32
+  srtp_crypto_policy_set_aes_cm_256_hmac_sha1_32(&policy.rtp);
+#elif SACN_SRTP_CRYPTO_POLICY_AES_CM_256_NULL_AUTH
+  srtp_crypto_policy_set_aes_cm_256_null_auth(&policy.rtp);
+#elif SACN_SRTP_CRYPTO_POLICY_AES_CM_192_HMAC_SHA1_80
+  srtp_crypto_policy_set_aes_cm_192_hmac_sha1_80(&policy.rtp);
+#elif SACN_SRTP_CRYPTO_POLICY_AES_CM_192_HMAC_SHA1_32
+  srtp_crypto_policy_set_aes_cm_192_hmac_sha1_32(&policy.rtp);
+#elif SACN_SRTP_CRYPTO_POLICY_AES_CM_192_NULL_AUTH
+  srtp_crypto_policy_set_aes_cm_192_null_auth(&policy.rtp);
+#elif SACN_SRTP_CRYPTO_POLICY_AES_GCM_128_16_AUTH
+  srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtp);
+#elif SACN_SRTP_CRYPTO_POLICY_AES_GCM_256_16_AUTH
   srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtp);
+#else
+  srtp_crypto_policy_set_rtp_default(&policy.rtp);
+#endif
 
   if (ssrc)
     policy.ssrc = *ssrc;
