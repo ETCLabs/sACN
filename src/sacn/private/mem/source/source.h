@@ -36,7 +36,12 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
 etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state);
 SacnSource*    get_source(size_t index);
 size_t         get_num_sources();
+bool           source_rekey_timer_running();
+bool           source_rekey_timer_expired();
+void           start_source_rekey_timer();
+void           reset_source_rekey_timer();
 void           remove_sacn_source(size_t index);
+size_t         get_source_rekey_interval_number();
 
 #ifdef __cplusplus
 }

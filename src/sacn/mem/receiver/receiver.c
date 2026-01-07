@@ -89,6 +89,12 @@ ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_R
 static EtcPalRbTree receivers;
 static EtcPalRbTree receivers_by_universe;
 
+EtcPalTimer rekey_timer;
+bool        rekey_timer_running;  // Starts on first packet received
+EtcPalTimer rollover_timer;
+bool        rollover_timer_running;  // Starts on first packet received
+size_t      rekey_interval_number;
+
 /*********************** Private function prototypes *************************/
 
 // Receiver memory management
@@ -264,6 +270,76 @@ etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_uni
   return res;
 }
 
+// Needs lock
+bool receiver_rekey_timer_running()
+{
+  return rekey_timer_running;
+}
+
+// Needs lock
+bool receiver_rekey_timer_expired()
+{
+  return rekey_timer_running && etcpal_timer_is_expired(&rekey_timer);
+}
+
+// Needs lock
+uint32_t receiver_rekey_timer_remaining_ms()
+{
+  return etcpal_timer_remaining(&rekey_timer);
+}
+
+// Needs lock
+void start_receiver_rekey_timer()
+{
+  if (!rekey_timer_running)
+  {
+    rekey_timer_running = true;
+    etcpal_timer_start(&rekey_timer, SACN_REKEY_TEST_INTERVAL_MS);
+  }
+}
+
+// Needs lock
+void reset_receiver_rekey_timer()
+{
+  if (rekey_timer_running)
+  {
+    etcpal_timer_reset(&rekey_timer);
+    ++rekey_interval_number;
+  }
+}
+
+// Needs lock
+bool start_receiver_rollover_timer()
+{
+  if (!rollover_timer_running)
+  {
+    etcpal_timer_start(&rollover_timer, SACN_REKEY_TEST_ROLLOVER_INTERVAL_MS);
+    rollover_timer_running = true;
+    return true;
+  }
+
+  return false;
+}
+
+// Needs lock
+bool receiver_rollover_timer_expired()
+{
+  if (rollover_timer_running && etcpal_timer_is_expired(&rollover_timer))
+  {
+    rollover_timer_running = false;
+    return true;
+  }
+
+  return false;
+
+}
+
+// Needs lock
+size_t get_receiver_rekey_interval_number()
+{
+  return rekey_interval_number;
+}
+
 void remove_sacn_receiver(SacnReceiver* receiver)
 {
   if (!SACN_ASSERT_VERIFY(receiver))
@@ -415,6 +491,10 @@ etcpal_error_t init_receivers(void)
 
   if (res == kEtcPalErrOk)
   {
+    rekey_timer_running    = false;
+    rollover_timer_running = false;
+    rekey_interval_number  = 0;
+
     etcpal_rbtree_init(&receivers, receiver_compare, receiver_node_alloc, receiver_node_dealloc);
     etcpal_rbtree_init(&receivers_by_universe, receiver_compare_by_universe, receiver_node_alloc,
                        receiver_node_dealloc);

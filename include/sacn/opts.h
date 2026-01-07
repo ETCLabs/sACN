@@ -241,6 +241,20 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #endif
 
 /**
+ * @brief The interval at which sources and receivers should rekey, in milliseconds.
+ */
+#ifndef SACN_REKEY_TEST_INTERVAL_MS
+#define SACN_REKEY_TEST_INTERVAL_MS 10000
+#endif
+
+/**
+ * @brief The duration of the period when receivers must listen to both keys at once.
+ */
+#ifndef SACN_REKEY_TEST_ROLLOVER_INTERVAL_MS
+#define SACN_REKEY_TEST_ROLLOVER_INTERVAL_MS 2000
+#endif
+
+/**
  * @}
  */
 

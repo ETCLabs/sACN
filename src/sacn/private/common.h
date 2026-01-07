@@ -94,12 +94,22 @@ enum
 typedef unsigned int          sacn_thread_id_t;
 static const sacn_thread_id_t kSacnThreadIdInvalid = UINT_MAX;
 
-// 46-byte master key (HARDCODED FOR TESTING): 32B AES key + 14B salt (largest possible key for SRTP)
-static const uint8_t kSrtpMasterKey[46] = {0xC1, 0xEE, 0xC3, 0x71, 0x7D, 0xA7, 0x61, 0x95, 0xBB, 0x87, 0x85,
-                                           0x78, 0x79, 0x0A, 0xF7, 0x1C, 0x4E, 0xE9, 0xF8, 0x59, 0xE1, 0x97,
-                                           0xA4, 0x14, 0xA7, 0x8D, 0x5A, 0xBC, 0x74, 0x51, 0xA1, 0xB2, 0xC3,
-                                           0xD4, 0xE5, 0xF6, 0x07, 0x18, 0x29, 0x3A, 0x4B, 0x5C, 0x6D, 0x7E,
-                                           0x8F, 0x90};
+// 46-byte master keys (HARDCODED FOR TESTING): 32B AES key + 14B salt (largest possible key for SRTP)
+#define SRTP_KEY_SIZE 46
+
+static const uint8_t kSrtpKey0[SRTP_KEY_SIZE] = {0xC1, 0xEE, 0xC3, 0x71, 0x7D, 0xA7, 0x61, 0x95, 0xBB, 0x87, 0x85, 0x78,
+                                                 0x79, 0x0A, 0xF7, 0x1C, 0x4E, 0xE9, 0xF8, 0x59, 0xE1, 0x97, 0xA4, 0x14,
+                                                 0xA7, 0x8D, 0x5A, 0xBC, 0x74, 0x51, 0xA1, 0xB2, 0xC3, 0xD4, 0xE5, 0xF6,
+                                                 0x07, 0x18, 0x29, 0x3A, 0x4B, 0x5C, 0x6D, 0x7E, 0x8F, 0x90};
+
+static const uint8_t kSrtpMki0 = 0x00;
+
+static const uint8_t kSrtpKey1[SRTP_KEY_SIZE] = {0x1A, 0x2B, 0x3C, 0x4D, 0x5E, 0x6F, 0x70, 0x81, 0x92, 0xA3, 0xB4, 0xC5,
+                                                 0xD6, 0xE7, 0xF8, 0x09, 0x10, 0x21, 0x32, 0x43, 0x54, 0x65, 0x76, 0x87,
+                                                 0x98, 0xA9, 0xBA, 0xCB, 0xDC, 0xED, 0xFE, 0x0F, 0x1B, 0x2C, 0x3D, 0x4E,
+                                                 0x5F, 0x60, 0x71, 0x82, 0x93, 0xA4, 0xB5, 0xC6, 0xD7, 0xE8};
+
+static const uint8_t kSrtpMki1 = 0x01;
 
 #define UNIVERSE_ID_VALID(universe_id) ((universe_id >= kSacnMinimumUniverse) && (universe_id <= kSacnMaximumUniverse))
 
@@ -729,7 +739,15 @@ typedef struct SacnRecvThreadContext
   EtcPalTimer       periodic_timer;
   bool              periodic_timer_started;
   srtp_t            srtp_session;
-  srtp_policy_t     srtp_policy;
+
+  uint8_t            key_0[SRTP_KEY_SIZE];
+  uint8_t            key_1[SRTP_KEY_SIZE];
+  uint8_t            mki_0;
+  uint8_t            mki_1;
+  srtp_master_key_t  master_key_0;
+  srtp_master_key_t  master_key_1;
+  srtp_master_key_t* master_keys[2];
+  srtp_policy_t      srtp_policy;
 
   EtcPalTimer stats_log_timer;  // Maintains a repeating interval, at the end of which statistics are logged
   int         num_packets_processed;
@@ -832,7 +850,15 @@ typedef struct SacnSourceUniverse
   uint32_t      rtp_ssrc;
   uint16_t      next_rtp_seq_num;
   srtp_t        srtp_session;
-  srtp_policy_t srtp_policy;
+
+  uint8_t            key_0[SRTP_KEY_SIZE];
+  uint8_t            key_1[SRTP_KEY_SIZE];
+  uint8_t            mki_0;
+  uint8_t            mki_1;
+  srtp_master_key_t  master_key_0;
+  srtp_master_key_t  master_key_1;
+  srtp_master_key_t* master_keys[2];
+  srtp_policy_t      srtp_policy;
 
   // Start code 0x00 state
   int         level_packets_sent_before_suppression;
@@ -898,6 +924,14 @@ typedef struct SacnSource
   uint32_t      universe_discovery_rtp_ssrc;
   uint16_t      universe_discovery_next_rtp_seq_num;
   srtp_t        universe_discovery_srtp_session;
+
+  uint8_t            universe_discovery_key_0[SRTP_KEY_SIZE];
+  uint8_t            universe_discovery_key_1[SRTP_KEY_SIZE];
+  uint8_t            universe_discovery_mki_0;
+  uint8_t            universe_discovery_mki_1;
+  srtp_master_key_t  universe_discovery_master_key_0;
+  srtp_master_key_t  universe_discovery_master_key_1;
+  srtp_master_key_t* universe_discovery_master_keys[2];
   srtp_policy_t universe_discovery_srtp_policy;
 } SacnSource;
 
@@ -923,7 +957,15 @@ void sacn_source_unlock(void);
 
 bool sacn_initialized(sacn_features_t features);
 
-srtp_policy_t sacn_create_srtp_policy(const srtp_ssrc_t* ssrc);
+srtp_policy_t sacn_create_srtp_policy(const srtp_ssrc_t* ssrc, srtp_master_key_t** master_keys, size_t num_master_keys);
+void          sacn_rekey_source_srtp_policy(size_t              interval_number,
+                                            srtp_policy_t*      policy,
+                                            srtp_master_key_t** master_keys,
+                                            size_t              num_master_keys);
+void           sacn_rekey_receiver_srtp_policy(size_t              interval_number,
+                                               srtp_policy_t*      policy,
+                                               srtp_master_key_t** master_keys,
+                                               size_t              num_master_keys);
 etcpal_error_t sacn_srtp_protect(srtp_t session, const uint8_t* buf_in, uint8_t* buf_out, size_t* buf_out_len);
 
 #ifdef __cplusplus

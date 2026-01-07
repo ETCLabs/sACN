@@ -129,6 +129,7 @@ static void update_source_status(SacnTrackedSource* src, SacnSourceStatusLists* 
 static void deliver_periodic_callbacks(const PeriodicCallbacks* periodic_callbacks);
 static void end_current_sampling_period(SacnReceiver* receiver);
 static void process_stats_log(SacnRecvThreadContext* context);
+static void process_rekeying(SacnRecvThreadContext* context);
 
 /*************************** Function definitions ****************************/
 
@@ -633,8 +634,16 @@ void sacn_receive_thread(void* arg)
 
   context->srtp_session = NULL;
 
-  srtp_ssrc_t ssrc      = {ssrc_any_inbound};
-  context->srtp_policy = sacn_create_srtp_policy(&ssrc);
+  srtp_ssrc_t ssrc = {ssrc_any_inbound};
+
+  context->master_key_0.key    = context->key_0;
+  context->master_key_1.key    = context->key_1;
+  context->master_key_0.mki_id = &context->mki_0;
+  context->master_key_1.mki_id = &context->mki_1;
+  context->master_keys[0]      = &context->master_key_0;
+  context->master_keys[1]      = &context->master_key_1;
+
+  context->srtp_policy = sacn_create_srtp_policy(&ssrc, context->master_keys, 2);
 
   if (srtp_create(&context->srtp_session, &context->srtp_policy) != srtp_err_status_ok)
   {
@@ -651,6 +660,24 @@ void sacn_receive_thread(void* arg)
   {
     read_network_and_process(context);
     process_stats_log(context);
+
+    if (sacn_receiver_lock())
+    {
+      if (receiver_rekey_timer_running())
+      {
+        if (((receiver_rekey_timer_remaining_ms() < (SACN_REKEY_TEST_ROLLOVER_INTERVAL_MS / 2)) &&
+             start_receiver_rollover_timer()) ||
+            receiver_rollover_timer_expired())
+        {
+          process_rekeying(context);
+        }
+
+        if (receiver_rekey_timer_expired())
+          reset_receiver_rekey_timer();
+      }
+
+      sacn_receiver_unlock();
+    }
   }
 
   if (context->srtp_session)
@@ -884,6 +911,9 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
 
     if (sacn_receiver_lock())
     {
+      if (!receiver_rekey_timer_running())
+        start_receiver_rekey_timer();  // Start on first packet received
+
       SacnReceiver* receiver = NULL;
       if (lookup_receiver_by_universe(universe_data->universe_data.universe_id, &receiver) != kEtcPalErrOk)
       {
@@ -1734,6 +1764,16 @@ void process_stats_log(SacnRecvThreadContext* context)
 
     etcpal_timer_reset(&context->stats_log_timer);
   }
+}
+
+// Needs lock
+void process_rekeying(SacnRecvThreadContext* context)
+{
+  if (!SACN_ASSERT_VERIFY(context))
+    return;
+
+  sacn_rekey_receiver_srtp_policy(get_receiver_rekey_interval_number(), &context->srtp_policy, context->master_keys, 2);
+  srtp_update(context->srtp_session, &context->srtp_policy);
 }
 
 #endif  // SACN_RECEIVER_ENABLED && !DOXYGEN

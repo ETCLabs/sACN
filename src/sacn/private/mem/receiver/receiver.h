@@ -42,6 +42,14 @@ etcpal_error_t lookup_receiver_by_universe(uint16_t universe, SacnReceiver** rec
 SacnReceiver*  get_first_receiver(EtcPalRbIter* iterator);
 SacnReceiver*  get_next_receiver(EtcPalRbIter* iterator);
 etcpal_error_t update_receiver_universe(SacnReceiver* receiver, uint16_t new_universe);
+bool           receiver_rekey_timer_running();
+bool           receiver_rekey_timer_expired();
+uint32_t       receiver_rekey_timer_remaining_ms();
+void           start_receiver_rekey_timer();
+void           reset_receiver_rekey_timer();
+bool           start_receiver_rollover_timer();
+bool           receiver_rollover_timer_expired();
+size_t         get_receiver_rekey_interval_number();
 void           remove_sacn_receiver(SacnReceiver* receiver);
 etcpal_error_t initialize_receiver_sockets(SacnInternalSocketState* sockets);
 

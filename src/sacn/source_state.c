@@ -65,6 +65,7 @@ static int  process_sources(sacn_process_sources_behavior_t behavior, sacn_sourc
 static bool process_universe_discovery(SacnSource* source);
 static bool process_universes(SacnSource* source, sacn_source_tick_mode_t tick_mode);
 static void process_stats_log(SacnSource* source, bool all_sends_succeeded);
+static void process_rekeying(SacnSourceUniverse* universe);
 static bool process_unicast_termination(SacnSource* source, SacnSourceUniverse* universe, bool* terminating);
 static bool process_multicast_termination(SacnSource* source, size_t index, bool unicast_terminating);
 static bool transmit_levels_and_pap_when_needed(SacnSource*             source,
@@ -274,6 +275,9 @@ int process_sources(sacn_process_sources_behavior_t behavior, sacn_source_tick_m
     }
   }
 
+  if (source_rekey_timer_expired())
+    reset_source_rekey_timer();
+
   return num_sources_tracked;
 }
 
@@ -306,6 +310,10 @@ bool process_universes(SacnSource* source, sacn_source_tick_mode_t tick_mode)
   for (size_t i = 0; i < initial_num_universes; ++i)
   {
     SacnSourceUniverse* universe = &source->universes[initial_num_universes - 1 - i];
+
+    // SRTP rekeying
+    if (source_rekey_timer_expired())
+      process_rekeying(universe);
 
     // Unicast destination-specific processing
     bool unicast_terminating = false;
@@ -360,6 +368,16 @@ void process_stats_log(SacnSource* source, bool all_sends_succeeded)
     source->total_tick_count  = 0;
     source->failed_tick_count = 0;
   }
+}
+
+// Needs lock
+void process_rekeying(SacnSourceUniverse* universe)
+{
+  if (!SACN_ASSERT_VERIFY(universe))
+    return;
+
+  sacn_rekey_source_srtp_policy(get_source_rekey_interval_number(), &universe->srtp_policy, universe->master_keys, 2);
+  srtp_update(universe->srtp_session, &universe->srtp_policy);
 }
 
 // Needs lock
@@ -700,6 +718,9 @@ bool send_universe_multicast(const SacnSource*   source,
     return false;
   }
 
+  if (!source_rekey_timer_running())
+    start_source_rekey_timer();
+
   bool at_least_one_sent   = false;
   bool all_sends_succeeded = true;
   if (!universe->send_unicast_only)
@@ -738,6 +759,9 @@ bool send_universe_unicast(const SacnSource*   source,
   {
     return false;
   }
+
+  if (!source_rekey_timer_running())
+    start_source_rekey_timer();
 
   bool at_least_one_sent   = false;
   bool all_sends_succeeded = true;

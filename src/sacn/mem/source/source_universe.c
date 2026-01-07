@@ -86,8 +86,16 @@ etcpal_error_t add_sacn_source_universe(SacnSource*                     source,
     universe->next_rtp_seq_num = 0;
     universe->srtp_session     = NULL;
 
-    srtp_ssrc_t ssrc      = {ssrc_specific, universe->rtp_ssrc};
-    universe->srtp_policy = sacn_create_srtp_policy(&ssrc);
+    srtp_ssrc_t ssrc = {ssrc_specific, universe->rtp_ssrc};
+
+    universe->master_key_0.key    = universe->key_0;
+    universe->master_key_1.key    = universe->key_1;
+    universe->master_key_0.mki_id = &universe->mki_0;
+    universe->master_key_1.mki_id = &universe->mki_1;
+    universe->master_keys[0]      = &universe->master_key_0;
+    universe->master_keys[1]      = &universe->master_key_1;
+
+    universe->srtp_policy = sacn_create_srtp_policy(&ssrc, universe->master_keys, 2);
 
     if (srtp_create(&universe->srtp_session, &universe->srtp_policy) != srtp_err_status_ok)
       result = kEtcPalErrSys;
