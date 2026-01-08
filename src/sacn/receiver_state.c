@@ -665,7 +665,7 @@ void sacn_receive_thread(void* arg)
     {
       if (receiver_rekey_timer_running())
       {
-        if (((receiver_rekey_timer_remaining_ms() < (SACN_REKEY_TEST_ROLLOVER_INTERVAL_MS / 2)) &&
+        if (((receiver_rekey_timer_remaining_ms() < (SACN_SRTP_REKEY_TEST_ROLLOVER_INTERVAL_MS / 2)) &&
              start_receiver_rollover_timer()) ||
             receiver_rollover_timer_expired())
         {
@@ -1772,8 +1772,10 @@ void process_rekeying(SacnRecvThreadContext* context)
   if (!SACN_ASSERT_VERIFY(context))
     return;
 
+#if SACN_ENABLE_SRTP_REKEY_TEST
   sacn_rekey_receiver_srtp_policy(get_receiver_rekey_interval_number(), &context->srtp_policy, context->master_keys, 2);
   srtp_update(context->srtp_session, &context->srtp_policy);
+#endif
 }
 
 #endif  // SACN_RECEIVER_ENABLED && !DOXYGEN

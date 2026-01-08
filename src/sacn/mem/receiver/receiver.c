@@ -294,7 +294,7 @@ void start_receiver_rekey_timer()
   if (!rekey_timer_running)
   {
     rekey_timer_running = true;
-    etcpal_timer_start(&rekey_timer, SACN_REKEY_TEST_INTERVAL_MS);
+    etcpal_timer_start(&rekey_timer, SACN_SRTP_REKEY_TEST_INTERVAL_MS);
   }
 }
 
@@ -313,7 +313,7 @@ bool start_receiver_rollover_timer()
 {
   if (!rollover_timer_running)
   {
-    etcpal_timer_start(&rollover_timer, SACN_REKEY_TEST_ROLLOVER_INTERVAL_MS);
+    etcpal_timer_start(&rollover_timer, SACN_SRTP_REKEY_TEST_ROLLOVER_INTERVAL_MS);
     rollover_timer_running = true;
     return true;
   }

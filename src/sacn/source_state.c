@@ -376,8 +376,10 @@ void process_rekeying(SacnSourceUniverse* universe)
   if (!SACN_ASSERT_VERIFY(universe))
     return;
 
+#if SACN_ENABLE_SRTP_REKEY_TEST
   sacn_rekey_source_srtp_policy(get_source_rekey_interval_number(), &universe->srtp_policy, universe->master_keys, 2);
   srtp_update(universe->srtp_session, &universe->srtp_policy);
+#endif
 }
 
 // Needs lock

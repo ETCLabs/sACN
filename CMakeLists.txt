@@ -31,6 +31,8 @@ if(NOT SACN_SRTP_CRYPTO_POLICY IN_LIST SACN_SRTP_CRYPTO_POLICY_VALUES)
 endif()
 message(STATUS "Using SRTP crypto policy: ${SACN_SRTP_CRYPTO_POLICY}")
 
+option(SACN_ENABLE_SRTP_REKEY_TEST "Enable the SRTP rekey test" OFF)
+
 ####################### Dependencies & standalone support ######################
 
 include(${SACN_CMAKE}/OssDependencyTools.cmake)

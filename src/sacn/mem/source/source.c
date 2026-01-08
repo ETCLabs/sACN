@@ -211,7 +211,7 @@ void start_source_rekey_timer()
   if (!sacn_pool_source_mem.rekey_timer_running)
   {
     sacn_pool_source_mem.rekey_timer_running = true;
-    etcpal_timer_start(&sacn_pool_source_mem.rekey_timer, SACN_REKEY_TEST_INTERVAL_MS);
+    etcpal_timer_start(&sacn_pool_source_mem.rekey_timer, SACN_SRTP_REKEY_TEST_INTERVAL_MS);
   }
 }
 
