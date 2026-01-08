@@ -962,10 +962,10 @@ void          sacn_rekey_source_srtp_policy(size_t              interval_number,
                                             srtp_policy_t*      policy,
                                             srtp_master_key_t** master_keys,
                                             size_t              num_master_keys);
-void           sacn_rekey_receiver_srtp_policy(size_t              interval_number,
-                                               srtp_policy_t*      policy,
-                                               srtp_master_key_t** master_keys,
-                                               size_t              num_master_keys);
+void          sacn_rekey_receiver_srtp_policy(size_t              interval_number,
+                                              srtp_policy_t*      policy,
+                                              srtp_master_key_t** master_keys,
+                                              size_t              num_master_keys);
 etcpal_error_t sacn_srtp_protect(srtp_t session, const uint8_t* buf_in, uint8_t* buf_out, size_t* buf_out_len);
 
 #ifdef __cplusplus

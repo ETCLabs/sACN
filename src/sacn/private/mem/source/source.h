@@ -40,8 +40,8 @@ bool           source_rekey_timer_running();
 bool           source_rekey_timer_expired();
 void           start_source_rekey_timer();
 void           reset_source_rekey_timer();
-void           remove_sacn_source(size_t index);
 size_t         get_source_rekey_interval_number();
+void           remove_sacn_source(size_t index);
 
 #ifdef __cplusplus
 }
