@@ -655,6 +655,8 @@ void sacn_receive_thread(void* arg)
   etcpal_timer_start(&context->stats_log_timer, kSacnStatsLogInterval);
   context->num_packets_processed = 0;
   context->total_decrypt_time_ms = 0;
+  context->num_rekeys = 0;
+  context->total_rekey_time_ms = 0;
 
   while (!etcpal_signal_try_wait(&context->deinit_signal))
   {
@@ -1762,6 +1764,20 @@ void process_stats_log(SacnRecvThreadContext* context)
       context->total_decrypt_time_ms = 0;
     }
 
+    if (context->num_rekeys > 0)
+    {
+#if SACN_LOGGING_ENABLED
+      if (SACN_CAN_LOG(ETCPAL_LOG_INFO))
+      {
+        double rekey_avg_ms = ((double)context->total_rekey_time_ms / (double)context->num_rekeys);
+        SACN_LOG_INFO("Receiver(s) rekeyed %d times, average rekey duration: %fms.", context->num_rekeys, rekey_avg_ms);
+      }
+#endif
+
+      context->num_rekeys          = 0;
+      context->total_rekey_time_ms = 0;
+    }
+
     etcpal_timer_reset(&context->stats_log_timer);
   }
 }
@@ -1773,8 +1789,11 @@ void process_rekeying(SacnRecvThreadContext* context)
     return;
 
 #if SACN_ENABLE_SRTP_REKEY_TEST
+  uint32_t pre_rekey_time = etcpal_getms();
   sacn_rekey_receiver_srtp_policy(get_receiver_rekey_interval_number(), &context->srtp_policy, context->master_keys, 2);
   srtp_update(context->srtp_session, &context->srtp_policy);
+  context->total_rekey_time_ms += (etcpal_getms() - pre_rekey_time);
+  ++context->num_rekeys;
 #endif
 }
 

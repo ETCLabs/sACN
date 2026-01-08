@@ -752,6 +752,8 @@ typedef struct SacnRecvThreadContext
   EtcPalTimer stats_log_timer;  // Maintains a repeating interval, at the end of which statistics are logged
   int         num_packets_processed;
   uint32_t    total_decrypt_time_ms;
+  int         num_rekeys;
+  uint32_t    total_rekey_time_ms;
 } SacnRecvThreadContext;
 
 /******************************************************************************
@@ -912,6 +914,9 @@ typedef struct SacnSource
   EtcPalTimer stats_log_timer;    // Maintains a repeating interval, at the end of which statistics are logged
   int         total_tick_count;   // The total number of ticks this interval
   int         failed_tick_count;  // The number of ticks this interval that failed at least one send
+
+  int      num_rekeys;
+  uint32_t total_rekey_time_ms;
 
   // This is the set of unique netints used by all universes of this source, to be used when transmitting universe
   // discovery packets.

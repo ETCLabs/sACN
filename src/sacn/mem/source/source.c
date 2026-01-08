@@ -131,8 +131,10 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     source->universe_count_max      = config->universe_count_max;
 
     etcpal_timer_start(&source->stats_log_timer, kSacnStatsLogInterval);
-    source->total_tick_count  = 0;
-    source->failed_tick_count = 0;
+    source->total_tick_count    = 0;
+    source->failed_tick_count   = 0;
+    source->num_rekeys          = 0;
+    source->total_rekey_time_ms = 0;
 
     source->num_universes = 0;
     source->num_netints   = 0;
