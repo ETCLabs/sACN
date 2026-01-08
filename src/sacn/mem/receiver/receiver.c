@@ -89,11 +89,11 @@ ETCPAL_MEMPOOL_DEFINE(sacn_pool_recv_rb_nodes, EtcPalRbNode, SACN_RECEIVER_MAX_R
 static EtcPalRbTree receivers;
 static EtcPalRbTree receivers_by_universe;
 
-EtcPalTimer rekey_timer;
 bool        rekey_timer_running;  // Starts on first packet received
-EtcPalTimer rollover_timer;
 bool        rollover_timer_running;  // Starts on first packet received
+size_t      rekey_start_time;        // Don't use a timer because that results in drift
 size_t      rekey_interval_number;
+size_t      rollover_interval_number;
 
 /*********************** Private function prototypes *************************/
 
@@ -279,13 +279,33 @@ bool receiver_rekey_timer_running()
 // Needs lock
 bool receiver_rekey_timer_expired()
 {
-  return rekey_timer_running && etcpal_timer_is_expired(&rekey_timer);
+  if (rekey_timer_running)
+  {
+    size_t interval_start_time = rekey_start_time + (SACN_SRTP_REKEY_TEST_INTERVAL_MS * rekey_interval_number);
+    size_t current_time        = etcpal_getms();
+    if (current_time < interval_start_time)
+      return false;
+
+    return (current_time - interval_start_time) >= SACN_SRTP_REKEY_TEST_INTERVAL_MS;
+  }
+
+  return false;
 }
 
 // Needs lock
 uint32_t receiver_rekey_timer_remaining_ms()
 {
-  return etcpal_timer_remaining(&rekey_timer);
+  if (rekey_timer_running)
+  {
+    size_t interval_end_time = rekey_start_time + (SACN_SRTP_REKEY_TEST_INTERVAL_MS * (rekey_interval_number + 1));
+    size_t current_time      = etcpal_getms();
+    if (interval_end_time < current_time)
+      return 0;
+
+    return (uint32_t)(interval_end_time - current_time);
+  }
+
+  return 0;
 }
 
 // Needs lock
@@ -294,7 +314,7 @@ void start_receiver_rekey_timer()
   if (!rekey_timer_running)
   {
     rekey_timer_running = true;
-    etcpal_timer_start(&rekey_timer, SACN_SRTP_REKEY_TEST_INTERVAL_MS);
+    rekey_start_time    = etcpal_getms();
   }
 }
 
@@ -302,10 +322,7 @@ void start_receiver_rekey_timer()
 void reset_receiver_rekey_timer()
 {
   if (rekey_timer_running)
-  {
-    etcpal_timer_reset(&rekey_timer);
     ++rekey_interval_number;
-  }
 }
 
 // Needs lock
@@ -313,7 +330,7 @@ bool start_receiver_rollover_timer()
 {
   if (!rollover_timer_running)
   {
-    etcpal_timer_start(&rollover_timer, SACN_SRTP_REKEY_TEST_ROLLOVER_INTERVAL_MS);
+    rollover_interval_number = rekey_interval_number;
     rollover_timer_running = true;
     return true;
   }
@@ -324,7 +341,9 @@ bool start_receiver_rollover_timer()
 // Needs lock
 bool receiver_rollover_timer_expired()
 {
-  if (rollover_timer_running && etcpal_timer_is_expired(&rollover_timer))
+  if (rollover_timer_running && (rekey_interval_number > rollover_interval_number) &&
+      (receiver_rekey_timer_remaining_ms() <
+       (SACN_SRTP_REKEY_TEST_INTERVAL_MS - (SACN_SRTP_REKEY_TEST_ROLLOVER_INTERVAL_MS / 2))))
   {
     rollover_timer_running = false;
     return true;
@@ -491,9 +510,11 @@ etcpal_error_t init_receivers(void)
 
   if (res == kEtcPalErrOk)
   {
-    rekey_timer_running    = false;
-    rollover_timer_running = false;
-    rekey_interval_number  = 0;
+    rekey_timer_running      = false;
+    rollover_timer_running   = false;
+    rekey_start_time         = 0;
+    rekey_interval_number    = 0;
+    rollover_interval_number = 0;
 
     etcpal_rbtree_init(&receivers, receiver_compare, receiver_node_alloc, receiver_node_dealloc);
     etcpal_rbtree_init(&receivers_by_universe, receiver_compare_by_universe, receiver_node_alloc,

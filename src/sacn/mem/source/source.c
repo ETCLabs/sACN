@@ -43,10 +43,10 @@ static bool sources_initialized = false;
 static struct SacnSourceMem
 {
   SACN_DECLARE_SOURCE_BUF(SacnSource, sources, SACN_SOURCE_MAX_SOURCES);
-  size_t      num_sources;
-  EtcPalTimer rekey_timer;
-  bool        rekey_timer_running;  // Starts on first send (assumes receiver already running)
-  size_t      rekey_interval_number;
+  size_t num_sources;
+  bool   rekey_timer_running;  // Starts on first send (assumes receiver already running)
+  size_t rekey_start_time;     // Don't use a timer because that results in drift
+  size_t rekey_interval_number;
 } sacn_pool_source_mem;
 
 /*********************** Private function prototypes *************************/
@@ -204,7 +204,18 @@ bool source_rekey_timer_running()
 // Needs lock
 bool source_rekey_timer_expired()
 {
-  return sacn_pool_source_mem.rekey_timer_running && etcpal_timer_is_expired(&sacn_pool_source_mem.rekey_timer);
+  if (sacn_pool_source_mem.rekey_timer_running)
+  {
+    size_t interval_start_time = sacn_pool_source_mem.rekey_start_time +
+                                 (SACN_SRTP_REKEY_TEST_INTERVAL_MS * sacn_pool_source_mem.rekey_interval_number);
+    size_t current_time = etcpal_getms();
+    if (current_time < interval_start_time)
+      return false;
+
+    return (current_time - interval_start_time) >= SACN_SRTP_REKEY_TEST_INTERVAL_MS;
+  }
+
+  return false;
 }
 
 // Needs lock
@@ -213,7 +224,7 @@ void start_source_rekey_timer()
   if (!sacn_pool_source_mem.rekey_timer_running)
   {
     sacn_pool_source_mem.rekey_timer_running = true;
-    etcpal_timer_start(&sacn_pool_source_mem.rekey_timer, SACN_SRTP_REKEY_TEST_INTERVAL_MS);
+    sacn_pool_source_mem.rekey_start_time    = etcpal_getms();
   }
 }
 
@@ -221,10 +232,7 @@ void start_source_rekey_timer()
 void reset_source_rekey_timer()
 {
   if (sacn_pool_source_mem.rekey_timer_running)
-  {
-    etcpal_timer_reset(&sacn_pool_source_mem.rekey_timer);
     ++sacn_pool_source_mem.rekey_interval_number;
-  }
 }
 
 // Needs lock
@@ -278,6 +286,7 @@ etcpal_error_t init_sources(void)
   sacn_pool_source_mem.num_sources = 0;
 
   sacn_pool_source_mem.rekey_timer_running   = false;
+  sacn_pool_source_mem.rekey_start_time      = 0;
   sacn_pool_source_mem.rekey_interval_number = 0;
 
   if (res == kEtcPalErrOk)
