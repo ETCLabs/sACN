@@ -32,16 +32,22 @@ extern "C" {
 etcpal_error_t init_sources(void);
 void           deinit_sources(void);
 
-etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state);
-etcpal_error_t lookup_source(sacn_source_t handle, SacnSource** source_state);
-SacnSource*    get_source(size_t index);
-size_t         get_num_sources();
-bool           source_rekey_timer_running();
-bool           source_rekey_timer_expired();
-void           start_source_rekey_timer();
-void           reset_source_rekey_timer();
-size_t         get_source_rekey_interval_number();
-void           remove_sacn_source(size_t index);
+etcpal_error_t      add_sacn_source(sacn_source_t handle, const SacnSourceConfig* config, SacnSource** source_state);
+etcpal_error_t      lookup_source(sacn_source_t handle, SacnSource** source_state);
+SacnSource*         get_source(size_t index);
+size_t              get_num_sources();
+srtp_master_key_t** get_source_srtp_master_keys();
+srtp_t              get_source_srtp_session();
+bool                source_rekey_timer_running();
+bool                source_rekey_timer_expired();
+void                start_source_rekey_timer();
+void                reset_source_rekey_timer();
+size_t              get_source_rekey_interval_number();
+int                 get_num_source_rekeys();
+uint32_t            get_total_source_rekey_time_ms();
+void                add_source_rekey_duration(uint32_t duration_ms);
+void                reset_source_rekey_duration();
+void                remove_sacn_source(size_t index);
 
 #ifdef __cplusplus
 }

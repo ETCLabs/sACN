@@ -542,7 +542,7 @@ srtp_policy_t sacn_create_srtp_policy(const srtp_ssrc_t* ssrc, srtp_master_key_t
   srtp_policy_t policy;
   memset(&policy, 0, sizeof(policy));
 
-  if (!SACN_ASSERT_VERIFY(ssrc) || !SACN_ASSERT_VERIFY(master_keys) || !SACN_ASSERT_VERIFY(num_master_keys == 2) ||
+  if (!SACN_ASSERT_VERIFY(master_keys) || !SACN_ASSERT_VERIFY(num_master_keys == 2) ||
       !SACN_ASSERT_VERIFY(master_keys[0]) || !SACN_ASSERT_VERIFY(master_keys[1]) ||
       !SACN_ASSERT_VERIFY(master_keys[0]->key) || !SACN_ASSERT_VERIFY(master_keys[1]->key) ||
       !SACN_ASSERT_VERIFY(master_keys[0]->mki_id) || !SACN_ASSERT_VERIFY(master_keys[1]->mki_id))
@@ -599,29 +599,37 @@ srtp_policy_t sacn_create_srtp_policy(const srtp_ssrc_t* ssrc, srtp_master_key_t
   return policy;
 }
 
-void sacn_rekey_source_srtp_policy(size_t              interval_number,
-                                   srtp_policy_t*      policy,
-                                   srtp_master_key_t** master_keys,
-                                   size_t              num_master_keys)
+srtp_policy_t sacn_create_srtp_rekey_policy(size_t              interval_number,
+                                            srtp_master_key_t** master_keys,
+                                            size_t              num_master_keys)
 {
-  if (!SACN_ASSERT_VERIFY(policy) || !SACN_ASSERT_VERIFY(master_keys) || !SACN_ASSERT_VERIFY(num_master_keys == 2) ||
+  srtp_policy_t policy;
+  memset(&policy, 0, sizeof(policy));
+
+  if (!SACN_ASSERT_VERIFY(master_keys) || !SACN_ASSERT_VERIFY(num_master_keys == 2) ||
       !SACN_ASSERT_VERIFY(master_keys[0]) || !SACN_ASSERT_VERIFY(master_keys[1]) ||
       !SACN_ASSERT_VERIFY(master_keys[0]->key) || !SACN_ASSERT_VERIFY(master_keys[1]->key) ||
       !SACN_ASSERT_VERIFY(master_keys[0]->mki_id) || !SACN_ASSERT_VERIFY(master_keys[1]->mki_id))
   {
-    return;
+    return policy;
   }
+
+  srtp_ssrc_t ssrc = {ssrc_any_outbound};
+
+  policy = sacn_create_srtp_policy(&ssrc, master_keys, num_master_keys);
 
   if ((interval_number % 2) == 0)  // Even interval (key 0) ending, switch to key 1
   {
-    policy->keys            = &master_keys[1];
-    policy->num_master_keys = 1;
+    policy.keys            = &master_keys[1];
+    policy.num_master_keys = 1;
   }
   else  // Odd interval (key 1) ending, switch to key 0
   {
-    policy->keys            = &master_keys[0];
-    policy->num_master_keys = 1;
+    policy.keys            = &master_keys[0];
+    policy.num_master_keys = 1;
   }
+
+  return policy;
 }
 
 void sacn_rekey_receiver_srtp_policy(size_t              interval_number,

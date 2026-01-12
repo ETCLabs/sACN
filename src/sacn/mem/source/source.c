@@ -44,9 +44,21 @@ static struct SacnSourceMem
 {
   SACN_DECLARE_SOURCE_BUF(SacnSource, sources, SACN_SOURCE_MAX_SOURCES);
   size_t num_sources;
-  bool   rekey_timer_running;  // Starts on first send (assumes receiver already running)
-  size_t rekey_start_time;     // Don't use a timer because that results in drift
-  size_t rekey_interval_number;
+
+  uint8_t            key_0[SRTP_KEY_SIZE];
+  uint8_t            key_1[SRTP_KEY_SIZE];
+  uint8_t            mki_0;
+  uint8_t            mki_1;
+  srtp_master_key_t  master_key_0;
+  srtp_master_key_t  master_key_1;
+  srtp_master_key_t* master_keys[2];
+  srtp_t             srtp_session;
+
+  bool     rekey_timer_running;  // Starts on first send (assumes receiver already running)
+  size_t   rekey_start_time;     // Don't use a timer because that results in drift
+  size_t   rekey_interval_number;
+  int      num_rekeys;
+  uint32_t total_rekey_time_ms;
 } sacn_pool_source_mem;
 
 /*********************** Private function prototypes *************************/
@@ -80,28 +92,7 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
   {
     source->universe_discovery_rtp_ssrc         = ((uint32_t)rand() << 16) | (uint32_t)rand();
     source->universe_discovery_next_rtp_seq_num = 0;
-    source->universe_discovery_srtp_session     = NULL;
 
-    srtp_ssrc_t ssrc = {ssrc_specific, source->universe_discovery_rtp_ssrc};
-
-    source->universe_discovery_master_key_0.key    = source->universe_discovery_key_0;
-    source->universe_discovery_master_key_1.key    = source->universe_discovery_key_1;
-    source->universe_discovery_master_key_0.mki_id = &source->universe_discovery_mki_0;
-    source->universe_discovery_master_key_1.mki_id = &source->universe_discovery_mki_1;
-    source->universe_discovery_master_keys[0]      = &source->universe_discovery_master_key_0;
-    source->universe_discovery_master_keys[1]      = &source->universe_discovery_master_key_1;
-
-    source->universe_discovery_srtp_policy = sacn_create_srtp_policy(&ssrc, source->universe_discovery_master_keys, 2);
-
-    if (srtp_create(&source->universe_discovery_srtp_session, &source->universe_discovery_srtp_policy) !=
-        srtp_err_status_ok)
-    {
-      result = kEtcPalErrSys;
-    }
-  }
-
-  if (result == kEtcPalErrOk)
-  {
     source->handle = handle;
 
     // Initialize the universe discovery send buffer.
@@ -133,8 +124,6 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
     etcpal_timer_start(&source->stats_log_timer, kSacnStatsLogInterval);
     source->total_tick_count    = 0;
     source->failed_tick_count   = 0;
-    source->num_rekeys          = 0;
-    source->total_rekey_time_ms = 0;
 
     source->num_universes = 0;
     source->num_netints   = 0;
@@ -160,12 +149,6 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
   {
     CLEAR_BUF(source, universes);
     CLEAR_BUF(source, netints);
-
-    if (source->universe_discovery_srtp_session)
-    {
-      srtp_dealloc(source->universe_discovery_srtp_session);
-      source->universe_discovery_srtp_session = NULL;
-    }
   }
 
   *source_state = source;
@@ -193,6 +176,18 @@ SacnSource* get_source(size_t index)
 size_t get_num_sources()
 {
   return sacn_pool_source_mem.num_sources;
+}
+
+// Needs lock
+srtp_master_key_t** get_source_srtp_master_keys()
+{
+  return sacn_pool_source_mem.master_keys;
+}
+
+// Needs lock
+srtp_t get_source_srtp_session()
+{
+  return sacn_pool_source_mem.srtp_session;
 }
 
 // Needs lock
@@ -242,11 +237,34 @@ size_t get_source_rekey_interval_number()
 }
 
 // Needs lock
+int get_num_source_rekeys()
+{
+  return sacn_pool_source_mem.num_rekeys;
+}
+
+// Needs lock
+uint32_t get_total_source_rekey_time_ms()
+{
+  return sacn_pool_source_mem.total_rekey_time_ms;
+}
+
+// Needs lock
+void add_source_rekey_duration(uint32_t duration_ms)
+{
+  ++sacn_pool_source_mem.num_rekeys;
+  sacn_pool_source_mem.total_rekey_time_ms += duration_ms;
+}
+
+// Needs lock
+void reset_source_rekey_duration()
+{
+  sacn_pool_source_mem.num_rekeys = 0;
+  sacn_pool_source_mem.total_rekey_time_ms = 0;
+}
+
+// Needs lock
 void remove_sacn_source(size_t index)
 {
-  if (sacn_pool_source_mem.sources[index].universe_discovery_srtp_session)
-    srtp_dealloc(sacn_pool_source_mem.sources[index].universe_discovery_srtp_session);
-
   CLEAR_BUF(&sacn_pool_source_mem.sources[index], universes);
   CLEAR_BUF(&sacn_pool_source_mem.sources[index], netints);
 
@@ -285,9 +303,26 @@ etcpal_error_t init_sources(void)
 #endif  // SACN_DYNAMIC_MEM
   sacn_pool_source_mem.num_sources = 0;
 
+  sacn_pool_source_mem.srtp_session = NULL;
+
+  sacn_pool_source_mem.master_key_0.key    = sacn_pool_source_mem.key_0;
+  sacn_pool_source_mem.master_key_1.key    = sacn_pool_source_mem.key_1;
+  sacn_pool_source_mem.master_key_0.mki_id = &sacn_pool_source_mem.mki_0;
+  sacn_pool_source_mem.master_key_1.mki_id = &sacn_pool_source_mem.mki_1;
+  sacn_pool_source_mem.master_keys[0]      = &sacn_pool_source_mem.master_key_0;
+  sacn_pool_source_mem.master_keys[1]      = &sacn_pool_source_mem.master_key_1;
+
+  srtp_ssrc_t   ssrc   = {ssrc_any_outbound};
+  srtp_policy_t policy = sacn_create_srtp_policy(&ssrc, get_source_srtp_master_keys(), 2);
+
+  if (srtp_create(&sacn_pool_source_mem.srtp_session, &policy) != srtp_err_status_ok)
+    res = kEtcPalErrSys;
+
   sacn_pool_source_mem.rekey_timer_running   = false;
   sacn_pool_source_mem.rekey_start_time      = 0;
   sacn_pool_source_mem.rekey_interval_number = 0;
+  sacn_pool_source_mem.num_rekeys            = 0;
+  sacn_pool_source_mem.total_rekey_time_ms   = 0;
 
   if (res == kEtcPalErrOk)
     sources_initialized = true;
@@ -318,6 +353,9 @@ void deinit_sources(void)
 #if SACN_DYNAMIC_MEM
       sacn_pool_source_mem.sources_capacity = 0;
 #endif
+
+      if (sacn_pool_source_mem.srtp_session)
+        srtp_dealloc(sacn_pool_source_mem.srtp_session);
 
       memset(&sacn_pool_source_mem, 0, sizeof sacn_pool_source_mem);
 

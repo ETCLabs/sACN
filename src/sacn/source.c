@@ -769,7 +769,7 @@ etcpal_error_t sacn_source_send_now(sacn_source_t  handle,
         hdr.ssrc = universe_state->rtp_ssrc;
         pack_sacn_rtp_header(unencrypted_buf, &hdr);
 
-        result = sacn_srtp_protect(universe_state->srtp_session, unencrypted_buf, encrypted_buf, &encrypted_len);
+        result = sacn_srtp_protect(get_source_srtp_session(), unencrypted_buf, encrypted_buf, &encrypted_len);
       }
 
       if (result == kEtcPalErrOk)

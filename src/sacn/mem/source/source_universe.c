@@ -84,25 +84,7 @@ etcpal_error_t add_sacn_source_universe(SacnSource*                     source,
 
     universe->rtp_ssrc         = ((uint32_t)rand() << 16) | (uint32_t)rand();
     universe->next_rtp_seq_num = 0;
-    universe->srtp_session     = NULL;
 
-    srtp_ssrc_t ssrc = {ssrc_specific, universe->rtp_ssrc};
-
-    universe->master_key_0.key    = universe->key_0;
-    universe->master_key_1.key    = universe->key_1;
-    universe->master_key_0.mki_id = &universe->mki_0;
-    universe->master_key_1.mki_id = &universe->mki_1;
-    universe->master_keys[0]      = &universe->master_key_0;
-    universe->master_keys[1]      = &universe->master_key_1;
-
-    universe->srtp_policy = sacn_create_srtp_policy(&ssrc, universe->master_keys, 2);
-
-    if (srtp_create(&universe->srtp_session, &universe->srtp_policy) != srtp_err_status_ok)
-      result = kEtcPalErrSys;
-  }
-
-  if (result == kEtcPalErrOk)
-  {
     universe->universe_id = config->universe;
 
     universe->termination_state     = kNotTerminating;
@@ -171,12 +153,6 @@ etcpal_error_t add_sacn_source_universe(SacnSource*                     source,
     CLEAR_BUF(&universe->netints, netints);
     CLEAR_BUF(universe, unicast_dests);
 
-    if (universe->srtp_session)
-    {
-      srtp_dealloc(universe->srtp_session);
-      universe->srtp_session = NULL;
-    }
-
     // Undo the previous memory shift so that a valid universe isn't lost
     if (insert_index < source->num_universes)
     {
@@ -227,9 +203,6 @@ void remove_sacn_source_universe(SacnSource* source, size_t index)
 {
   if (!SACN_ASSERT_VERIFY(source))
     return;
-
-  if (source->universes[index].srtp_session)
-    srtp_dealloc(source->universes[index].srtp_session);
 
   CLEAR_BUF(&source->universes[index], unicast_dests);
   CLEAR_BUF(&source->universes[index].netints, netints);

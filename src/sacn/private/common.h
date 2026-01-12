@@ -851,16 +851,6 @@ typedef struct SacnSourceUniverse
 
   uint32_t      rtp_ssrc;
   uint16_t      next_rtp_seq_num;
-  srtp_t        srtp_session;
-
-  uint8_t            key_0[SRTP_KEY_SIZE];
-  uint8_t            key_1[SRTP_KEY_SIZE];
-  uint8_t            mki_0;
-  uint8_t            mki_1;
-  srtp_master_key_t  master_key_0;
-  srtp_master_key_t  master_key_1;
-  srtp_master_key_t* master_keys[2];
-  srtp_policy_t      srtp_policy;
 
   // Start code 0x00 state
   int         level_packets_sent_before_suppression;
@@ -915,9 +905,6 @@ typedef struct SacnSource
   int         total_tick_count;   // The total number of ticks this interval
   int         failed_tick_count;  // The number of ticks this interval that failed at least one send
 
-  int      num_rekeys;
-  uint32_t total_rekey_time_ms;
-
   // This is the set of unique netints used by all universes of this source, to be used when transmitting universe
   // discovery packets.
   SACN_DECLARE_BUF(SacnSourceNetint, netints, SACN_MAX_NETINTS);
@@ -928,16 +915,6 @@ typedef struct SacnSource
 
   uint32_t      universe_discovery_rtp_ssrc;
   uint16_t      universe_discovery_next_rtp_seq_num;
-  srtp_t        universe_discovery_srtp_session;
-
-  uint8_t            universe_discovery_key_0[SRTP_KEY_SIZE];
-  uint8_t            universe_discovery_key_1[SRTP_KEY_SIZE];
-  uint8_t            universe_discovery_mki_0;
-  uint8_t            universe_discovery_mki_1;
-  srtp_master_key_t  universe_discovery_master_key_0;
-  srtp_master_key_t  universe_discovery_master_key_1;
-  srtp_master_key_t* universe_discovery_master_keys[2];
-  srtp_policy_t universe_discovery_srtp_policy;
 } SacnSource;
 
 typedef enum
@@ -963,8 +940,7 @@ void sacn_source_unlock(void);
 bool sacn_initialized(sacn_features_t features);
 
 srtp_policy_t sacn_create_srtp_policy(const srtp_ssrc_t* ssrc, srtp_master_key_t** master_keys, size_t num_master_keys);
-void          sacn_rekey_source_srtp_policy(size_t              interval_number,
-                                            srtp_policy_t*      policy,
+srtp_policy_t sacn_create_srtp_rekey_policy(size_t              interval_number,
                                             srtp_master_key_t** master_keys,
                                             size_t              num_master_keys);
 void          sacn_rekey_receiver_srtp_policy(size_t              interval_number,
