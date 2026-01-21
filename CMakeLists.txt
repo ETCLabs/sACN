@@ -66,9 +66,17 @@ set(ENABLE_PROGRAMS OFF CACHE BOOL "Override" FORCE)
 set(ENABLE_TESTING OFF CACHE BOOL "Override" FORCE)
 set(ENABLE_WARNINGS_AS_ERRORS OFF CACHE BOOL "Override" FORCE)
 set(LIBSRTP_TEST_APPS OFF CACHE BOOL "Override" FORCE)
-set(LIBSRTP_INSTALL_CMAKEDIR OFF CACHE BOOL "Override" FORCE)
+
+# Temporarily disable install() for dependencies to avoid export conflicts
+macro(install)
+endmacro()
 
 include(${SACN_CMAKE}/ResolveDependencies.cmake)
+
+# Re-enable install() for sACN itself
+macro(install)
+  _install(${ARGN})
+endmacro()
 
 # Set up standalone compile settings after dependencies (since they trigger warnings as errors)
 if(NOT COMPILING_AS_OSS)
