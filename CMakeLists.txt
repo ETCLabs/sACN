@@ -66,11 +66,9 @@ set(ENABLE_PROGRAMS OFF CACHE BOOL "Override" FORCE)
 set(ENABLE_TESTING OFF CACHE BOOL "Override" FORCE)
 set(ENABLE_WARNINGS_AS_ERRORS OFF CACHE BOOL "Override" FORCE)
 set(LIBSRTP_TEST_APPS OFF CACHE BOOL "Override" FORCE)
+set(DISABLE_PACKAGE_CONFIG_AND_INSTALL OFF CACHE BOOL "Override" FORCE)
 
 include(${SACN_CMAKE}/ResolveDependencies.cmake)
-
-# Install mbedtls targets so libsrtp's export doesn't complain about missing dependencies
-install(TARGETS mbedtls mbedx509 mbedcrypto EXPORT MbedTLSTargets OPTIONAL)
 
 # Set up standalone compile settings after dependencies (since they trigger warnings as errors)
 if(NOT COMPILING_AS_OSS)
