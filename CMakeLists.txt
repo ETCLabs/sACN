@@ -24,7 +24,7 @@ option(SACN_BUILD_TEST_TOOLS "Build the sACN test tools (typically used in devel
 option(SACN_INSTALL_PDBS "Include PDBs in sACN install target" ON)
 
 set(SACN_SRTP_CRYPTO_POLICY_VALUES "default;aes-cm-128-hmac-sha1-32;aes-cm-128-null-auth;null-cipher-hmac-sha1-80;null-cipher-hmac-null;aes-cm-256-hmac-sha1-80;aes-cm-256-hmac-sha1-32;aes-cm-256-null-auth;aes-cm-192-hmac-sha1-80;aes-cm-192-hmac-sha1-32;aes-cm-192-null-auth;aes-gcm-128-16-auth;aes-gcm-256-16-auth")
-set(SACN_SRTP_CRYPTO_POLICY "default" CACHE STRING "SRTP crypto policy, can be one of: ${SACN_SRTP_CRYPTO_POLICY_VALUES}")
+set(SACN_SRTP_CRYPTO_POLICY "aes-gcm-256-16-auth" CACHE STRING "SRTP crypto policy, can be one of: ${SACN_SRTP_CRYPTO_POLICY_VALUES}")
 set_property(CACHE SACN_SRTP_CRYPTO_POLICY PROPERTY STRINGS ${SACN_SRTP_CRYPTO_POLICY_VALUES})
 if(NOT SACN_SRTP_CRYPTO_POLICY IN_LIST SACN_SRTP_CRYPTO_POLICY_VALUES)
   message(FATAL_ERROR "Invalid value for SACN_SRTP_CRYPTO_POLICY: ${SACN_SRTP_CRYPTO_POLICY}. Allowed values are: ${SACN_SRTP_CRYPTO_POLICY_VALUES}")
@@ -57,6 +57,10 @@ endif()
 
 # Dependency configuration overrides
 set(MBEDTLS_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/_deps/mbedtls-src/include CACHE PATH "Override" FORCE)
+set(MbedTLS_FOUND TRUE CACHE BOOL "" FORCE)
+set(MBEDTLS_LIBRARY mbedtls CACHE STRING "" FORCE)
+set(MBEDX509_LIBRARY mbedx509 CACHE STRING "" FORCE)
+set(MBEDCRYPTO_LIBRARY mbedcrypto CACHE STRING "" FORCE)
 set(CRYPTO_LIBRARY "mbedtls" CACHE STRING "Override" FORCE)
 set(ENABLE_PROGRAMS OFF CACHE BOOL "Override" FORCE)
 set(ENABLE_TESTING OFF CACHE BOOL "Override" FORCE)
