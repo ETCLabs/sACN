@@ -19,7 +19,7 @@
 
 #include "sacn_mock/private/sockets.h"
 
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_init, const SacnNetintConfig*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_init, const SacnNetintConfig*, const SacnCommonCallbacks*);
 DEFINE_FAKE_VOID_FUNC(sacn_sockets_deinit);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_source, const SacnNetintConfig*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_receiver, const SacnNetintConfig*);

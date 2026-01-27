@@ -83,6 +83,8 @@ static SacnSocketsSysNetints source_sys_netints;
 static etcpal_socket_t       ipv4_unicast_send_socket = ETCPAL_SOCKET_INVALID;
 static etcpal_socket_t       ipv6_unicast_send_socket = ETCPAL_SOCKET_INVALID;
 
+static SacnCommonCallbacks sacn_common_callbacks = {0};
+
 /*********************** Private function prototypes *************************/
 
 static etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, sacn_networking_type_t net_type);
@@ -173,8 +175,11 @@ static etcpal_error_t get_netint_ip_string(etcpal_iptype_t ip_type, unsigned int
 
 /*************************** Function definitions ****************************/
 
-etcpal_error_t sacn_sockets_init(const SacnNetintConfig* netint_config)
+etcpal_error_t sacn_sockets_init(const SacnNetintConfig* netint_config, const SacnCommonCallbacks* common_callbacks)
 {
+  if (common_callbacks)
+    sacn_common_callbacks = *common_callbacks;
+
   memset(&receiver_sys_netints, 0, sizeof(receiver_sys_netints));
   memset(&source_detector_sys_netints, 0, sizeof(source_detector_sys_netints));
   memset(&source_sys_netints, 0, sizeof(source_sys_netints));
@@ -332,7 +337,20 @@ etcpal_error_t send_multicast(uint16_t                   universe_id,
   etcpal_error_t res        = kEtcPalErrOk;
   int            sendto_res = etcpal_sendto(sock, send_buf, send_buf_len, 0, &dest);
   if (sendto_res < 0)
+  {
     res = (etcpal_error_t)sendto_res;
+    if (sacn_common_callbacks.multicast_send_error)
+    {
+      SacnSocketErrorInfo err_info;
+      err_info.error     = res;
+      err_info.socket    = sock;
+      err_info.message   = send_buf;
+      err_info.length    = kSendBufLength;
+      err_info.flags     = 0;
+      err_info.dest_addr = &dest;
+      sacn_common_callbacks.multicast_send_error(&err_info, sacn_common_callbacks.context);
+    }
+  }
 
   if ((res != kEtcPalErrOk) && (res != *last_send_error))
   {
@@ -376,7 +394,20 @@ etcpal_error_t send_unicast(const uint8_t*      send_buf,
   etcpal_error_t res        = kEtcPalErrOk;
   int            sendto_res = etcpal_sendto(sock, send_buf, send_buf_len, 0, &sockaddr_dest);
   if (sendto_res < 0)
+  {
     res = (etcpal_error_t)sendto_res;
+    if (sacn_common_callbacks.unicast_send_error)
+    {
+      SacnSocketErrorInfo err_info;
+      err_info.error     = res;
+      err_info.socket    = sock;
+      err_info.message   = send_buf;
+      err_info.length    = kSendBufLength;
+      err_info.flags     = 0;
+      err_info.dest_addr = &sockaddr_dest;
+      sacn_common_callbacks.unicast_send_error(&err_info, sacn_common_callbacks.context);
+    }
+  }
 
   if ((res != kEtcPalErrOk) && (res != *last_send_error))
   {
@@ -488,6 +519,20 @@ etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId* netint_id
   }
 #endif
 
+#if SACN_SOURCE_MULTICAST_SOCKET_SNDTIMEO_MS > 0
+  if (res == kEtcPalErrOk)
+  {
+    int sndtimeo_ms = SACN_SOURCE_MULTICAST_SOCKET_SNDTIMEO_MS;
+    res = etcpal_setsockopt(new_sock, ETCPAL_SOL_SOCKET, ETCPAL_SO_SNDTIMEO, &sndtimeo_ms, sizeof sndtimeo_ms);
+
+    if (res != kEtcPalErrOk)
+    {
+      SACN_LOG_ERR("Failed to set SO_SNDTIMEO to %d ms on %s multicast socket: '%s'", sndtimeo_ms, sockopt_ip_level_str,
+                   etcpal_strerror(res));
+    }
+  }
+#endif
+
   if (res == kEtcPalErrOk)
   {
 #if SACN_FULL_OS_AVAILABLE_HINT
@@ -524,6 +569,19 @@ etcpal_error_t create_unicast_send_socket(etcpal_iptype_t ip_type, etcpal_socket
 
   etcpal_error_t res =
       etcpal_socket(ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET, ETCPAL_SOCK_DGRAM, socket);
+
+#if SACN_SOURCE_UNICAST_SOCKET_SNDTIMEO_MS > 0
+  if (res == kEtcPalErrOk)
+  {
+    int sndtimeo_ms = SACN_SOURCE_UNICAST_SOCKET_SNDTIMEO_MS;
+    res = etcpal_setsockopt(*socket, ETCPAL_SOL_SOCKET, ETCPAL_SO_SNDTIMEO, &sndtimeo_ms, sizeof sndtimeo_ms);
+
+    if (res != kEtcPalErrOk)
+    {
+      SACN_LOG_ERR("Failed to set SO_SNDTIMEO to %d ms on unicast socket: '%s'", sndtimeo_ms, etcpal_strerror(res));
+    }
+  }
+#endif
 
   if (res == kEtcPalErrOk)
   {
