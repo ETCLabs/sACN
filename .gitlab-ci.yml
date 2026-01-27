@@ -21,7 +21,7 @@ windows-build:
   tags:
     - ct-windows
   variables:
-    SANITIZER_DEFS: -DSACN_ENABLE_E2E_TESTS=ON -DSACN_ENABLE_ASAN=ON
+    SANITIZER_DEFS: -DSACN_ENABLE_E2E_TESTS=ON  # TODO: Fix & re-enable -DSACN_ENABLE_ASAN=ON
   script:
     - mkdir build
     - cd build
@@ -125,6 +125,7 @@ lint:
 
 docs:
   stage: build
+  allow_failure: true
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "web"'

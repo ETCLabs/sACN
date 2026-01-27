@@ -83,6 +83,32 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
 }
 
 /**
+ * @brief Initialize all features of the sACN library.
+ *
+ * Do all necessary initialization before other sACN API functions can be called.
+ *
+ * Redundant initialization is permitted - the library tracks counters for each feature and expects deinit to be called
+ * the same number of times as init for each feature.
+ *
+ * @param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
+ *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
+ * @param[in, out] sys_netint_config Optional. If non-NULL, this is the list of system interfaces the library will be
+ * limited to (with the added option of not allowing any interfaces to be used), and the status codes are filled in.  If
+ * NULL, the library is allowed to use all available system interfaces.
+ * @param[in] callbacks Optional. A struct of callback functions for the library to use to notify the application of
+ * events.
+ * @return #kEtcPalErrOk: Initialization successful.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_init_with_cb(const EtcPalLogParams*     log_params,
+                                 const SacnNetintConfig*    sys_netint_config,
+                                 const SacnCommonCallbacks* callbacks)
+{
+  return sacn_init_features_with_cb(log_params, sys_netint_config, SACN_FEATURES_ALL, callbacks);
+}
+
+/**
  * @brief Initialize specific features of the sACN library.
  *
  * Do all necessary initialization before other sACN API functions can be called.
@@ -103,6 +129,34 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
 etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
                                   const SacnNetintConfig* sys_netint_config,
                                   sacn_features_t         features)
+{
+  return sacn_init_features_with_cb(log_params, sys_netint_config, features, NULL);
+}
+
+/**
+ * @brief Initialize specific features of the sACN library.
+ *
+ * Do all necessary initialization before other sACN API functions can be called.
+ *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
+ *
+ * @param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
+ *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
+ * @param[in, out] sys_netint_config Optional. If non-NULL, this is the list of system interfaces the library will be
+ * limited to (with the added option of not allowing any interfaces to be used), and the status codes are filled in.  If
+ * NULL, the library is allowed to use all available system interfaces.
+ * @param[in] features Mask of sACN features to initialize.
+ * @param[in] callbacks Optional. A struct of callback functions for the library to use to notify the application of
+ * events.
+ * @return #kEtcPalErrOk: Initialization successful.
+ * @return #kEtcPalErrInvalid: Invalid parameter provided.
+ * @return #kEtcPalErrSys: An internal library or system call error occurred.
+ */
+etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
+                                          const SacnNetintConfig*    sys_netint_config,
+                                          sacn_features_t            features,
+                                          const SacnCommonCallbacks* callbacks)
 {
   sacn_features_t features_to_init = features;
 
@@ -205,7 +259,7 @@ etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
 #endif  // SACN_SOURCE_DETECTOR_ENABLED
 
     if (res == kEtcPalErrOk)
-      sockets_initted = ((res = sacn_sockets_init(sys_netint_config)) == kEtcPalErrOk);
+      sockets_initted = ((res = sacn_sockets_init(sys_netint_config, callbacks)) == kEtcPalErrOk);
 
 #if SACN_MERGE_RECEIVER_ENABLED
     if (res == kEtcPalErrOk)
