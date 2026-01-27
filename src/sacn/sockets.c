@@ -345,7 +345,7 @@ etcpal_error_t send_multicast(uint16_t                   universe_id,
       err_info.error     = res;
       err_info.socket    = sock;
       err_info.message   = send_buf;
-      err_info.length    = kSendBufLength;
+      err_info.length    = send_buf_len;
       err_info.flags     = 0;
       err_info.dest_addr = &dest;
       sacn_common_callbacks.multicast_send_error(&err_info, sacn_common_callbacks.context);
@@ -402,7 +402,7 @@ etcpal_error_t send_unicast(const uint8_t*      send_buf,
       err_info.error     = res;
       err_info.socket    = sock;
       err_info.message   = send_buf;
-      err_info.length    = kSendBufLength;
+      err_info.length    = send_buf_len;
       err_info.flags     = 0;
       err_info.dest_addr = &sockaddr_dest;
       sacn_common_callbacks.unicast_send_error(&err_info, sacn_common_callbacks.context);
