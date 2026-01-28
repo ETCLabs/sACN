@@ -115,6 +115,22 @@ public:
 };
 
 /**
+ * @ingroup sacn_cpp_common
+ * @brief Settings for the sACN library beyond the sacn::Init overrides.
+ */
+struct LibrarySettings
+{
+  /** Callback handler for common notifications from the library. */
+  NotifyHandler* notify_handler{nullptr};
+
+  /** Configuration for send sockets (e.g. configurable sockopts). */
+  SacnSendSocketConfig send_socket_config{0, 0};
+
+  /** Sets default settings. */
+  LibrarySettings() = default;
+};
+
+/**
  * @cond device_c_callbacks
  * Callbacks from underlying device library to be forwarded
  */
@@ -160,15 +176,17 @@ inline SacnCommonCallbacks GetCommonCallbacks(NotifyHandler* notify_handler)
  * to be called the same number of times as init for each feature.
  *
  * @param features Mask of sACN features to initialize (defaults to all features).
- * @param notify_handler Callback handler for common notifications from the library.
+ * @param settings Optional library settings.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init_features().
  */
-inline etcpal::Error Init(sacn_features_t features = SACN_FEATURES_ALL, NotifyHandler* notify_handler = nullptr)
+inline etcpal::Error Init(sacn_features_t features = SACN_FEATURES_ALL, const LibrarySettings& settings = {})
 {
-  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  auto             callbacks     = internal::GetCommonCallbacks(notify_handler);
-  return sacn_init_features_with_cb(nullptr, &netint_config, features, notify_handler ? &callbacks : nullptr);
+  SacnNetintConfig netint_config   = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.send_socket_config = settings.send_socket_config;
+
+  auto callbacks = internal::GetCommonCallbacks(settings.notify_handler);
+  return sacn_init_features_with_cb(nullptr, &netint_config, features, settings.notify_handler ? &callbacks : nullptr);
 }
 
 /**
@@ -188,17 +206,20 @@ inline etcpal::Error Init(sacn_features_t features = SACN_FEATURES_ALL, NotifyHa
  * @param log_params (optional) Log parameters for the sACN library to use to log messages. If
  *                   not provided, no logging will be performed.
  * @param features Mask of sACN features to initialize (defaults to all features).
- * @param notify_handler Callback handler for common notifications from the library.
+ * @param settings Optional library settings.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init_features().
  */
 inline etcpal::Error Init(const EtcPalLogParams* log_params,
-                          sacn_features_t        features       = SACN_FEATURES_ALL,
-                          NotifyHandler*         notify_handler = nullptr)
+                          sacn_features_t        features = SACN_FEATURES_ALL,
+                          const LibrarySettings& settings = {})
 {
-  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  auto             callbacks     = internal::GetCommonCallbacks(notify_handler);
-  return sacn_init_features_with_cb(log_params, &netint_config, features, notify_handler ? &callbacks : nullptr);
+  SacnNetintConfig netint_config   = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.send_socket_config = settings.send_socket_config;
+
+  auto callbacks = internal::GetCommonCallbacks(settings.notify_handler);
+  return sacn_init_features_with_cb(log_params, &netint_config, features,
+                                    settings.notify_handler ? &callbacks : nullptr);
 }
 
 /**
@@ -218,21 +239,24 @@ inline etcpal::Error Init(const EtcPalLogParams* log_params,
  *                   not provided, no logging will be performed.
  * @param mcast_mode This controls whether or not multicast traffic is allowed on the system's network interfaces.
  * @param features Mask of sACN features to initialize (defaults to all features).
- * @param notify_handler Callback handler for common notifications from the library.
+ * @param settings Optional library settings.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init_features().
  */
 inline etcpal::Error Init(const EtcPalLogParams* log_params,
                           McastMode              mcast_mode,
-                          sacn_features_t        features       = SACN_FEATURES_ALL,
-                          NotifyHandler*         notify_handler = nullptr)
+                          sacn_features_t        features = SACN_FEATURES_ALL,
+                          const LibrarySettings& settings = {})
 {
-  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  SacnNetintConfig netint_config   = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.send_socket_config = settings.send_socket_config;
+
   if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
-  auto callbacks = internal::GetCommonCallbacks(notify_handler);
-  return sacn_init_features_with_cb(log_params, &netint_config, features, notify_handler ? &callbacks : nullptr);
+  auto callbacks = internal::GetCommonCallbacks(settings.notify_handler);
+  return sacn_init_features_with_cb(log_params, &netint_config, features,
+                                    settings.notify_handler ? &callbacks : nullptr);
 }
 
 /**
@@ -250,21 +274,23 @@ inline etcpal::Error Init(const EtcPalLogParams* log_params,
  * @param sys_netints If !empty, this is the list of system interfaces the library will be limited to, and the status
  *                    codes are filled in.  If empty, the library is allowed to use all available system interfaces.
  * @param features Mask of sACN features to initialize (defaults to all features).
- * @param notify_handler Callback handler for common notifications from the library.
+ * @param settings Optional library settings.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init_features().
  */
 inline etcpal::Error Init(const EtcPalLogParams*           log_params,
                           std::vector<SacnMcastInterface>& sys_netints,
-                          sacn_features_t                  features       = SACN_FEATURES_ALL,
-                          NotifyHandler*                   notify_handler = nullptr)
+                          sacn_features_t                  features = SACN_FEATURES_ALL,
+                          const LibrarySettings&           settings = {})
 {
-  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints          = sys_netints.data();
-  netint_config.num_netints      = sys_netints.size();
+  SacnNetintConfig netint_config   = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints            = sys_netints.data();
+  netint_config.num_netints        = sys_netints.size();
+  netint_config.send_socket_config = settings.send_socket_config;
 
-  auto callbacks = internal::GetCommonCallbacks(notify_handler);
-  return sacn_init_features_with_cb(log_params, &netint_config, features, notify_handler ? &callbacks : nullptr);
+  auto callbacks = internal::GetCommonCallbacks(settings.notify_handler);
+  return sacn_init_features_with_cb(log_params, &netint_config, features,
+                                    settings.notify_handler ? &callbacks : nullptr);
 }
 
 /**
@@ -282,20 +308,21 @@ inline etcpal::Error Init(const EtcPalLogParams*           log_params,
  * @param sys_netints If !empty, this is the list of system interfaces the library will be limited to, and the status
  *                    codes are filled in.  If empty, the library is allowed to use all available system interfaces.
  * @param features Mask of sACN features to initialize (defaults to all features).
- * @param notify_handler Callback handler for common notifications from the library.
+ * @param settings Optional library settings.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init_features().
  */
 inline etcpal::Error Init(std::vector<SacnMcastInterface>& sys_netints,
-                          sacn_features_t                  features       = SACN_FEATURES_ALL,
-                          NotifyHandler*                   notify_handler = nullptr)
+                          sacn_features_t                  features = SACN_FEATURES_ALL,
+                          const LibrarySettings&           settings = {})
 {
-  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints          = sys_netints.data();
-  netint_config.num_netints      = sys_netints.size();
+  SacnNetintConfig netint_config   = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints            = sys_netints.data();
+  netint_config.num_netints        = sys_netints.size();
+  netint_config.send_socket_config = settings.send_socket_config;
 
-  auto callbacks = internal::GetCommonCallbacks(notify_handler);
-  return sacn_init_features_with_cb(nullptr, &netint_config, features, notify_handler ? &callbacks : nullptr);
+  auto callbacks = internal::GetCommonCallbacks(settings.notify_handler);
+  return sacn_init_features_with_cb(nullptr, &netint_config, features, settings.notify_handler ? &callbacks : nullptr);
 }
 
 /**
@@ -314,22 +341,24 @@ inline etcpal::Error Init(std::vector<SacnMcastInterface>& sys_netints,
  * @param logger Logger instance for the sACN library to use to log messages.
  * @param mcast_mode This controls whether or not multicast traffic is allowed on the system's network interfaces.
  * @param features Mask of sACN features to initialize (defaults to all features).
- * @param notify_handler Callback handler for common notifications from the library.
+ * @param settings Optional library settings.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init_features().
  */
-inline etcpal::Error Init(const etcpal::Logger& logger,
-                          McastMode             mcast_mode     = McastMode::kEnabledOnAllInterfaces,
-                          sacn_features_t       features       = SACN_FEATURES_ALL,
-                          NotifyHandler*        notify_handler = nullptr)
+inline etcpal::Error Init(const etcpal::Logger&  logger,
+                          McastMode              mcast_mode = McastMode::kEnabledOnAllInterfaces,
+                          sacn_features_t        features   = SACN_FEATURES_ALL,
+                          const LibrarySettings& settings   = {})
 {
-  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  SacnNetintConfig netint_config   = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.send_socket_config = settings.send_socket_config;
+
   if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
-  auto callbacks = internal::GetCommonCallbacks(notify_handler);
+  auto callbacks = internal::GetCommonCallbacks(settings.notify_handler);
   return sacn_init_features_with_cb(&logger.log_params(), &netint_config, features,
-                                    notify_handler ? &callbacks : nullptr);
+                                    settings.notify_handler ? &callbacks : nullptr);
 }
 
 /**
@@ -348,18 +377,18 @@ inline etcpal::Error Init(const etcpal::Logger& logger,
  *
  * @param logger Logger instance for the sACN library to use to log messages.
  * @param features Mask of sACN features to initialize (defaults to all features).
- * @param notify_handler Callback handler for common notifications from the library.
+ * @param settings Optional library settings.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init_features().
  */
-inline etcpal::Error Init(const etcpal::Logger& logger,
-                          sacn_features_t       features,
-                          NotifyHandler*        notify_handler = nullptr)
+inline etcpal::Error Init(const etcpal::Logger& logger, sacn_features_t features, const LibrarySettings& settings = {})
 {
-  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  auto             callbacks     = internal::GetCommonCallbacks(notify_handler);
+  SacnNetintConfig netint_config   = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.send_socket_config = settings.send_socket_config;
+
+  auto callbacks = internal::GetCommonCallbacks(settings.notify_handler);
   return sacn_init_features_with_cb(&logger.log_params(), &netint_config, features,
-                                    notify_handler ? &callbacks : nullptr);
+                                    settings.notify_handler ? &callbacks : nullptr);
 }
 
 /**
@@ -376,22 +405,23 @@ inline etcpal::Error Init(const etcpal::Logger& logger,
  * @param sys_netints If !empty, this is the list of system interfaces the library will be limited to, and the status
  *                    codes are filled in.  If empty, the library is allowed to use all available system interfaces.
  * @param features Mask of sACN features to initialize (defaults to all features).
- * @param notify_handler Callback handler for common notifications from the library.
+ * @param settings Optional library settings.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init_features().
  */
 inline etcpal::Error Init(const etcpal::Logger&            logger,
                           std::vector<SacnMcastInterface>& sys_netints,
-                          sacn_features_t                  features       = SACN_FEATURES_ALL,
-                          NotifyHandler*                   notify_handler = nullptr)
+                          sacn_features_t                  features = SACN_FEATURES_ALL,
+                          const LibrarySettings&           settings = {})
 {
-  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints          = sys_netints.data();
-  netint_config.num_netints      = sys_netints.size();
+  SacnNetintConfig netint_config   = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.netints            = sys_netints.data();
+  netint_config.num_netints        = sys_netints.size();
+  netint_config.send_socket_config = settings.send_socket_config;
 
-  auto callbacks = internal::GetCommonCallbacks(notify_handler);
+  auto callbacks = internal::GetCommonCallbacks(settings.notify_handler);
   return sacn_init_features_with_cb(&logger.log_params(), &netint_config, features,
-                                    notify_handler ? &callbacks : nullptr);
+                                    settings.notify_handler ? &callbacks : nullptr);
 }
 
 /**

@@ -98,6 +98,13 @@ typedef struct SacnMcastInterface
   etcpal_error_t status;
 } SacnMcastInterface;
 
+/** Configuration for send sockets (e.g. configurable sockopts). */
+typedef struct SacnSendSocketConfig
+{
+  int unicast_sndtimeo_ms;   /**< Unicast send socket timeout in milliseconds (0 if disabled). */
+  int multicast_sndtimeo_ms; /**< Multicast send socket timeout in milliseconds (0 if disabled). */
+} SacnSendSocketConfig;
+
 /**
  * Network interface configuration information to give the sACN library. Multicast traffic will be restricted to the
  * network interfaces given. The statuses are filled in for each interface.
@@ -112,6 +119,10 @@ typedef struct SacnNetintConfig
   /** If this is true, no network interfaces will be used for multicast. If any are specified in netints, they will be
       ignored and their statuses will be set to invalid. */
   bool no_netints;
+  /** Configuration for send sockets (e.g. configurable sockopts). Only supported when setting library-wide interfaces
+      (i.e. this cannot be set per-universe).
+  */
+  SacnSendSocketConfig send_socket_config;
 } SacnNetintConfig;
 
 /** Information about a socket error that occurred. */
@@ -162,7 +173,13 @@ typedef struct SacnCommonCallbacks
 /**
  * Initializes the members of a SacnNetintConfig to defaults.
  */
-#define SACN_NETINT_CONFIG_DEFAULT_INIT {NULL, 0, false}
+#define SACN_NETINT_CONFIG_DEFAULT_INIT \
+  {                                     \
+    NULL, 0, false,                     \
+    {                                   \
+      0, 0                              \
+    }                                   \
+  }
 
 /** A mask of desired sACN features. See "sACN feature masks". */
 typedef uint32_t sacn_features_t;

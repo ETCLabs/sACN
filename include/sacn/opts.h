@@ -448,24 +448,6 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #endif
 
 /**
- * @brief The value to configure for SO_SNDTIMEO on multicast source sockets, in milliseconds.
- *
- * If 0, SO_SNDTIMEO will not be set.
- */
-#ifndef SACN_SOURCE_MULTICAST_SOCKET_SNDTIMEO_MS
-#define SACN_SOURCE_MULTICAST_SOCKET_SNDTIMEO_MS 0
-#endif
-
-/**
- * @brief The value to configure for SO_SNDTIMEO on unicast source sockets, in milliseconds.
- *
- * If 0, SO_SNDTIMEO will not be set.
- */
-#ifndef SACN_SOURCE_UNICAST_SOCKET_SNDTIMEO_MS
-#define SACN_SOURCE_UNICAST_SOCKET_SNDTIMEO_MS 0
-#endif
-
-/**
  * @}
  */
 
