@@ -228,9 +228,13 @@ etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
 
     if (res == kEtcPalErrOk)
     {
-      srtp_initted = (srtp_init() == srtp_err_status_ok);
+      int srtp_res = srtp_init();
+      srtp_initted = (srtp_res == srtp_err_status_ok);
       if (!srtp_initted)
+      {
         res = kEtcPalErrSys;
+        SACN_LOG_ERR("sACN SRTP initialization failed with code %d", srtp_res);
+      }
     }
 
     if (res == kEtcPalErrOk)
