@@ -228,6 +228,8 @@ etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
 
     if (res == kEtcPalErrOk)
     {
+      srtp_install_log_handler(sacn_srtp_log_handler, NULL);
+
       int srtp_res = srtp_init();
       srtp_initted = (srtp_res == srtp_err_status_ok);
       if (!srtp_initted)
@@ -739,4 +741,25 @@ etcpal_error_t sacn_srtp_protect(srtp_t session, const uint8_t* buf_in, uint8_t*
   srtp_err_status_t res = srtp_protect(session, buf_in, kInBufLength, buf_out, buf_out_len, 0u);
 
   return (res == srtp_err_status_ok) ? kEtcPalErrOk : kEtcPalErrSys;
+}
+
+void sacn_srtp_log_handler(srtp_log_level_t level, const char* msg, void* data)
+{
+  ETCPAL_UNUSED_ARG(data);
+
+  switch (level)
+  {
+    case srtp_log_level_error:
+      SACN_LOG_ERR("libSRTP: %s", msg);
+      break;
+    case srtp_log_level_warning:
+      SACN_LOG_WARNING("libSRTP: %s", msg);
+      break;
+    case srtp_log_level_info:
+      SACN_LOG_INFO("libSRTP: %s", msg);
+      break;
+    case srtp_log_level_debug:
+      SACN_LOG_DEBUG("libSRTP: %s", msg);
+      break;
+  }
 }

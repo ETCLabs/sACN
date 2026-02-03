@@ -948,6 +948,7 @@ void          sacn_rekey_receiver_srtp_policy(size_t              interval_numbe
                                               srtp_master_key_t** master_keys,
                                               size_t              num_master_keys);
 etcpal_error_t sacn_srtp_protect(srtp_t session, const uint8_t* buf_in, uint8_t* buf_out, size_t* buf_out_len);
+void           sacn_srtp_log_handler(srtp_log_level_t level, const char* msg, void* data);
 
 #ifdef __cplusplus
 }
