@@ -85,8 +85,8 @@ static SacnCommonCallbacks sacn_common_callbacks = {0};
 
 /*********************** Private function prototypes *************************/
 
-static etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, sacn_networking_type_t net_type);
-static etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, sacn_networking_type_t net_type);
+static etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, networking_type_t net_type);
+static etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, networking_type_t net_type);
 static void           clear_source_networking();
 #if SACN_RECEIVER_ENABLED || DOXYGEN
 static etcpal_error_t update_sampling_period_netints(SacnInternalNetintArray* receiver_netints,
@@ -98,10 +98,10 @@ static bool           netints_valid(const SacnMcastInterface* netints, size_t nu
 static size_t         apply_netint_config(const SacnNetintConfig* netint_config,
                                           SysNetintList*          netint_list,
                                           SacnSocketsSysNetints*  sys_netints,
-                                          sacn_networking_type_t  net_type);
+                                          networking_type_t  net_type);
 static etcpal_error_t test_netint(const EtcPalNetintInfo*     netint,
                                   SacnSocketsSysNetints*      sys_netints,
-                                  sacn_networking_type_t      net_type,
+                                  networking_type_t      net_type,
                                   const SacnSendSocketConfig* send_socket_config);
 static etcpal_error_t test_sacn_receiver_netint(unsigned int           index,
                                                 etcpal_iptype_t        ip_type,
@@ -331,7 +331,7 @@ etcpal_error_t send_multicast(uint16_t universe_id, const uint8_t* send_buf, con
       err_info.error     = res;
       err_info.socket    = sock;
       err_info.message   = send_buf;
-      err_info.length    = kSendBufLength;
+      err_info.length    = send_buf_length;
       err_info.flags     = 0;
       err_info.dest_addr = &dest;
       sacn_common_callbacks.multicast_send_error(&err_info, sacn_common_callbacks.context);
@@ -388,7 +388,7 @@ etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_ad
       err_info.error     = res;
       err_info.socket    = sock;
       err_info.message   = send_buf;
-      err_info.length    = kSendBufLength;
+      err_info.length    = send_buf_length;
       err_info.flags     = 0;
       err_info.dest_addr = &sockaddr_dest;
       sacn_common_callbacks.unicast_send_error(&err_info, sacn_common_callbacks.context);
@@ -1659,7 +1659,7 @@ size_t apply_netint_config(const SacnNetintConfig* netint_config, SysNetintList*
 
 etcpal_error_t test_netint(const EtcPalNetintInfo*     netint,
                            SacnSocketsSysNetints*      sys_netints,
-                           sacn_networking_type_t      net_type,
+                           networking_type_t      net_type,
                            const SacnSendSocketConfig* send_socket_config)
 {
   if (!SACN_ASSERT_VERIFY(netint) || !SACN_ASSERT_VERIFY(sys_netints) || !SACN_ASSERT_VERIFY(send_socket_config))

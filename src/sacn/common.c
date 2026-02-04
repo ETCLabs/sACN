@@ -67,7 +67,8 @@ static etcpal_mutex_t sacn_mutex;
  */
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConfig* sys_netint_config)
 {
-  etcpal_error_t res = kEtcPalErrAlready;
+  return sacn_init_with_cb(log_params, sys_netint_config, NULL);
+}
 
 /**
  * @brief Initialize all features of the sACN library.
@@ -92,210 +93,151 @@ etcpal_error_t sacn_init_with_cb(const EtcPalLogParams*     log_params,
                                  const SacnNetintConfig*    sys_netint_config,
                                  const SacnCommonCallbacks* callbacks)
 {
-  return sacn_init_features_with_cb(log_params, sys_netint_config, SACN_FEATURES_ALL, callbacks);
-}
+  etcpal_error_t res = kEtcPalErrOk;
 
-/**
- * @brief Initialize specific features of the sACN library.
- *
- * Do all necessary initialization before other sACN API functions can be called.
- *
- * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
- * to be called the same number of times as init for each feature.
- *
- * @param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
- *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
- * @param[in, out] sys_netint_config Optional. If non-NULL, this is the list of system interfaces the library will be
- * limited to (with the added option of not allowing any interfaces to be used), and the status codes are filled in.  If
- * NULL, the library is allowed to use all available system interfaces.
- * @param[in] features Mask of sACN features to initialize.
- * @return #kEtcPalErrOk: Initialization successful.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
- */
-etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
-                                  const SacnNetintConfig* sys_netint_config,
-                                  sacn_features_t         features)
-{
-  return sacn_init_features_with_cb(log_params, sys_netint_config, features, NULL);
-}
-
-/**
- * @brief Initialize specific features of the sACN library.
- *
- * Do all necessary initialization before other sACN API functions can be called.
- *
- * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
- * to be called the same number of times as init for each feature.
- *
- * @param[in] log_params A struct used by the library to log messages, or NULL for no logging. If
- *                       #SACN_LOGGING_ENABLED is 0, this parameter is ignored.
- * @param[in, out] sys_netint_config Optional. If non-NULL, this is the list of system interfaces the library will be
- * limited to (with the added option of not allowing any interfaces to be used), and the status codes are filled in.  If
- * NULL, the library is allowed to use all available system interfaces.
- * @param[in] features Mask of sACN features to initialize.
- * @param[in] callbacks Optional. A struct of callback functions for the library to use to notify the application of
- * events.
- * @return #kEtcPalErrOk: Initialization successful.
- * @return #kEtcPalErrInvalid: Invalid parameter provided.
- * @return #kEtcPalErrSys: An internal library or system call error occurred.
- */
-etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
-                                          const SacnNetintConfig*    sys_netint_config,
-                                          sacn_features_t            features,
-                                          const SacnCommonCallbacks* callbacks)
-{
-  sacn_features_t features_to_init = features;
-
-  // Avoid redundant init
-  if ((features_to_init & SACN_FEATURE_DMX_MERGER) != 0)
+  // Init the log params early so the other modules can log things on initialization
+  if (log_params)
   {
-    res = kEtcPalErrOk;
+    sacn_pool_sacn_state.log_params = *log_params;
+    sacn_log_params = &sacn_pool_sacn_state.log_params;
+  }
 
-    // Init the log params early so the other modules can log things on initialization
-    if (log_params)
-    {
-      sacn_pool_sacn_state.log_params = *log_params;
-      sacn_log_params = &sacn_pool_sacn_state.log_params;
-    }
+  bool etcpal_initted = false;
+  if (res == kEtcPalErrOk)
+    etcpal_initted = ((res = etcpal_init(SACN_ETCPAL_FEATURES)) == kEtcPalErrOk);
 
-    bool etcpal_initted = false;
-    if (res == kEtcPalErrOk)
-      etcpal_initted = ((res = etcpal_init(SACN_ETCPAL_FEATURES)) == kEtcPalErrOk);
-
-    bool mutex_initted = false;
-    if (res == kEtcPalErrOk)
-    {
-      mutex_initted = etcpal_mutex_create(&sacn_mutex);
-      if (!mutex_initted)
-        res = kEtcPalErrSys;
-    }
+  bool mutex_initted = false;
+  if (res == kEtcPalErrOk)
+  {
+    mutex_initted = etcpal_mutex_create(&sacn_mutex);
+    if (!mutex_initted)
+      res = kEtcPalErrSys;
+  }
 
 #if SACN_RECEIVER_ENABLED
-    bool receiver_mem_initted = false;
-    if (res == kEtcPalErrOk)
-      receiver_mem_initted = ((res = sacn_receiver_mem_init(SACN_RECEIVER_MAX_THREADS)) == kEtcPalErrOk);
+  bool receiver_mem_initted = false;
+  if (res == kEtcPalErrOk)
+    receiver_mem_initted = ((res = sacn_receiver_mem_init(SACN_RECEIVER_MAX_THREADS)) == kEtcPalErrOk);
 #endif  // SACN_RECEIVER_ENABLED
 
 #if SACN_SOURCE_ENABLED
-    bool source_mem_initted = false;
-    if (res == kEtcPalErrOk)
-      source_mem_initted = ((res = sacn_source_mem_init()) == kEtcPalErrOk);
+  bool source_mem_initted = false;
+  if (res == kEtcPalErrOk)
+    source_mem_initted = ((res = sacn_source_mem_init()) == kEtcPalErrOk);
 #endif  // SACN_SOURCE_ENABLED
 
 #if SACN_MERGE_RECEIVER_ENABLED
-    bool merge_receiver_mem_initted = false;
-    if (res == kEtcPalErrOk)
-      merge_receiver_mem_initted = ((res = sacn_merge_receiver_mem_init(SACN_RECEIVER_MAX_THREADS)) == kEtcPalErrOk);
+  bool merge_receiver_mem_initted = false;
+  if (res == kEtcPalErrOk)
+    merge_receiver_mem_initted = ((res = sacn_merge_receiver_mem_init(SACN_RECEIVER_MAX_THREADS)) == kEtcPalErrOk);
 #endif  // SACN_MERGE_RECEIVER_ENABLED
 
 #if SACN_SOURCE_DETECTOR_ENABLED
-    bool source_detector_mem_initted = false;
-    if (res == kEtcPalErrOk)
-      source_detector_mem_initted = ((res = sacn_source_detector_mem_init()) == kEtcPalErrOk);
+  bool source_detector_mem_initted = false;
+  if (res == kEtcPalErrOk)
+    source_detector_mem_initted = ((res = sacn_source_detector_mem_init()) == kEtcPalErrOk);
 #endif  // SACN_SOURCE_DETECTOR_ENABLED
 
-    bool sockets_initted = false;
-    if (res == kEtcPalErrOk)
-      sockets_initted = ((res = sacn_sockets_init(sys_netint_config, callbacks)) == kEtcPalErrOk);
+  bool sockets_initted = false;
+  if (res == kEtcPalErrOk)
+    sockets_initted = ((res = sacn_sockets_init(sys_netint_config, callbacks)) == kEtcPalErrOk);
 
 #if SACN_RECEIVER_ENABLED
-    bool source_loss_initted = false;
-    bool receiver_state_initted = false;
-    bool receiver_initted = false;
-    if (res == kEtcPalErrOk)
-      source_loss_initted = ((res = sacn_source_loss_init()) == kEtcPalErrOk);
-    if (res == kEtcPalErrOk)
-      receiver_state_initted = ((res = sacn_receiver_state_init()) == kEtcPalErrOk);
-    if (res == kEtcPalErrOk)
-      receiver_initted = ((res = sacn_receiver_init()) == kEtcPalErrOk);
+  bool source_loss_initted = false;
+  bool receiver_state_initted = false;
+  bool receiver_initted = false;
+  if (res == kEtcPalErrOk)
+    source_loss_initted = ((res = sacn_source_loss_init()) == kEtcPalErrOk);
+  if (res == kEtcPalErrOk)
+    receiver_state_initted = ((res = sacn_receiver_state_init()) == kEtcPalErrOk);
+  if (res == kEtcPalErrOk)
+    receiver_initted = ((res = sacn_receiver_init()) == kEtcPalErrOk);
 #endif  // SACN_RECEIVER_ENABLED
 
 #if SACN_SOURCE_ENABLED
-    bool source_state_initted = false;
-    bool source_initted = false;
-    if (res == kEtcPalErrOk)
-      source_state_initted = ((res = sacn_source_state_init()) == kEtcPalErrOk);
-    if (res == kEtcPalErrOk)
-      source_initted = ((res = sacn_source_init()) == kEtcPalErrOk);
+  bool source_state_initted = false;
+  bool source_initted = false;
+  if (res == kEtcPalErrOk)
+    source_state_initted = ((res = sacn_source_state_init()) == kEtcPalErrOk);
+  if (res == kEtcPalErrOk)
+    source_initted = ((res = sacn_source_init()) == kEtcPalErrOk);
 #endif  // SACN_SOURCE_ENABLED
 
 #if SACN_DMX_MERGER_ENABLED
-    bool merger_initted = false;
-    if (res == kEtcPalErrOk)
-      merger_initted = ((res = sacn_dmx_merger_init()) == kEtcPalErrOk);
+  bool merger_initted = false;
+  if (res == kEtcPalErrOk)
+    merger_initted = ((res = sacn_dmx_merger_init()) == kEtcPalErrOk);
 #endif  // SACN_DMX_MERGER_ENABLED
 
 #if SACN_MERGE_RECEIVER_ENABLED
-    bool merge_receiver_initted = false;
-    if (res == kEtcPalErrOk)
-      merge_receiver_initted = ((res = sacn_merge_receiver_init()) == kEtcPalErrOk);
+  bool merge_receiver_initted = false;
+  if (res == kEtcPalErrOk)
+    merge_receiver_initted = ((res = sacn_merge_receiver_init()) == kEtcPalErrOk);
 #endif  // SACN_MERGE_RECEIVER_ENABLED
 
 #if SACN_SOURCE_DETECTOR_ENABLED
-    bool source_detector_initted = false;
-    if (res == kEtcPalErrOk)
-      source_detector_initted = ((res = sacn_source_detector_init()) == kEtcPalErrOk);
+  bool source_detector_initted = false;
+  if (res == kEtcPalErrOk)
+    source_detector_initted = ((res = sacn_source_detector_init()) == kEtcPalErrOk);
 #endif  // SACN_SOURCE_DETECTOR_ENABLED
 
-    if (res == kEtcPalErrOk)
-    {
-      sacn_pool_sacn_state.initted = true;
-    }
-    else
-    {
-      // Clean up
+  if (res == kEtcPalErrOk)
+  {
+    sacn_pool_sacn_state.initted = true;
+  }
+  else
+  {
+    // Clean up
 #if SACN_SOURCE_DETECTOR_ENABLED
-      if (source_detector_initted)
-        sacn_source_detector_deinit();
+    if (source_detector_initted)
+      sacn_source_detector_deinit();
 #endif  // SACN_SOURCE_DETECTOR_ENABLED
 #if SACN_MERGE_RECEIVER_ENABLED
-      if (merge_receiver_initted)
-        sacn_merge_receiver_deinit();
+    if (merge_receiver_initted)
+      sacn_merge_receiver_deinit();
 #endif  // SACN_MERGE_RECEIVER_ENABLED
 #if SACN_DMX_MERGER_ENABLED
-      if (merger_initted)
-        sacn_dmx_merger_deinit();
+    if (merger_initted)
+      sacn_dmx_merger_deinit();
 #endif  // SACN_DMX_MERGER_ENABLED
 #if SACN_SOURCE_ENABLED
-      if (source_initted)
-        sacn_source_deinit();
-      if (source_state_initted)
-        sacn_source_state_deinit();
+    if (source_initted)
+      sacn_source_deinit();
+    if (source_state_initted)
+      sacn_source_state_deinit();
 #endif  // SACN_SOURCE_ENABLED
 #if SACN_RECEIVER_ENABLED
-      if (receiver_initted)
-        sacn_receiver_deinit();
-      if (receiver_state_initted)
-        sacn_receiver_state_deinit();
-      if (source_loss_initted)
-        sacn_source_loss_deinit();
+    if (receiver_initted)
+      sacn_receiver_deinit();
+    if (receiver_state_initted)
+      sacn_receiver_state_deinit();
+    if (source_loss_initted)
+      sacn_source_loss_deinit();
 #endif  // SACN_RECEIVER_ENABLED
-      if (sockets_initted)
-        sacn_sockets_deinit();
+    if (sockets_initted)
+      sacn_sockets_deinit();
 #if SACN_SOURCE_DETECTOR_ENABLED
-      if (source_detector_mem_initted)
-        sacn_source_detector_mem_deinit();
+    if (source_detector_mem_initted)
+      sacn_source_detector_mem_deinit();
 #endif  // SACN_SOURCE_DETECTOR_ENABLED
 #if SACN_MERGE_RECEIVER_ENABLED
-      if (merge_receiver_mem_initted)
-        sacn_merge_receiver_mem_deinit();
+    if (merge_receiver_mem_initted)
+      sacn_merge_receiver_mem_deinit();
 #endif  // SACN_MERGE_RECEIVER_ENABLED
 #if SACN_SOURCE_ENABLED
-      if (source_mem_initted)
-        sacn_source_mem_deinit();
+    if (source_mem_initted)
+      sacn_source_mem_deinit();
 #endif  // SACN_SOURCE_ENABLED
 #if SACN_RECEIVER_ENABLED
-      if (receiver_mem_initted)
-        sacn_receiver_mem_deinit();
+    if (receiver_mem_initted)
+      sacn_receiver_mem_deinit();
 #endif  // SACN_RECEIVER_ENABLED
-      if (mutex_initted)
-        etcpal_mutex_destroy(&sacn_mutex);
-      if (etcpal_initted)
-        etcpal_deinit(SACN_ETCPAL_FEATURES);
+    if (mutex_initted)
+      etcpal_mutex_destroy(&sacn_mutex);
+    if (etcpal_initted)
+      etcpal_deinit(SACN_ETCPAL_FEATURES);
 
-      sacn_log_params = NULL;
-    }
+    sacn_log_params = NULL;
   }
 
   return res;

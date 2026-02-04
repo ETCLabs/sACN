@@ -182,15 +182,7 @@ etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConf
 etcpal_error_t sacn_init_with_cb(const EtcPalLogParams*     log_params,
                                  const SacnNetintConfig*    sys_netint_config,
                                  const SacnCommonCallbacks* callbacks);
-etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
-                                  const SacnNetintConfig* sys_netint_config,
-                                  sacn_features_t         features);
-etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
-                                          const SacnNetintConfig*    sys_netint_config,
-                                          sacn_features_t            features,
-                                          const SacnCommonCallbacks* callbacks);
 void           sacn_deinit(void);
-void           sacn_deinit_features(sacn_features_t features);
 
 sacn_remote_source_t sacn_get_remote_source_handle(const EtcPalUuid* source_cid);
 etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, EtcPalUuid* source_cid);
