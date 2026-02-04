@@ -219,10 +219,12 @@ public:
 
   static int ProcessManual(TickMode tick_mode);
 
-  static etcpal::Error ResetNetworking(McastMode mcast_mode);
-  static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints);
+  static etcpal::Error ResetNetworking(McastMode mcast_mode, const SacnSendSocketConfig& send_socket_config);
+  static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& netints,
+                                       const SacnSendSocketConfig&      send_socket_config);
   static etcpal::Error ResetNetworking(std::vector<SacnMcastInterface>& sys_netints,
-                                       std::vector<UniverseNetintList>& netint_lists);
+                                       std::vector<UniverseNetintList>& netint_lists,
+                                       const SacnSendSocketConfig&      send_socket_config);
 
 private:
   class TranslatedUniverseConfig
@@ -798,16 +800,20 @@ inline int Source::ProcessManual(TickMode tick_mode = TickMode::kProcessLevelsAn
  * network interfaces.  This will only return #kEtcPalErrNoNetints if none of the interfaces work.
  *
  * @param[in] mcast_mode This controls whether or not multicast traffic is allowed for this universe.
+ * @param send_socket_config Configuration for send sockets (e.g. configurable sockopts).
  * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces were usable by the library.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking(McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
+inline etcpal::Error Source::ResetNetworking(McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces,
+                                             const SacnSendSocketConfig& send_socket_config = {})
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
+
+  netint_config.send_socket_config = send_socket_config;
 
   return sacn_source_reset_networking(&netint_config);
 }
@@ -831,19 +837,23 @@ inline etcpal::Error Source::ResetNetworking(McastMode mcast_mode = McastMode::k
  *
  * @param sys_netints If !empty, this is the list of system interfaces the source API will be limited to, and the status
  * codes are filled in.  If empty, the source API is allowed to use all available system interfaces.
+ * @param send_socket_config Configuration for send sockets (e.g. configurable sockopts).
  * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided were usable by the library.
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sys_netints)
+inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sys_netints,
+                                             const SacnSendSocketConfig&      send_socket_config = {})
 {
-  if (sys_netints.empty())
-    return sacn_source_reset_networking(nullptr);
+  SacnNetintConfig netint_config   = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  netint_config.send_socket_config = send_socket_config;
 
-  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  netint_config.netints = sys_netints.data();
-  netint_config.num_netints = sys_netints.size();
+  if (!sys_netints.empty())
+  {
+    netint_config.netints     = sys_netints.data();
+    netint_config.num_netints = sys_netints.size();
+  }
 
   return sacn_source_reset_networking(&netint_config);
 }
@@ -871,6 +881,7 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sy
  * @param[in, out] per_universe_netint_lists Vector of lists of interfaces the application wants to use for each
  * universe. Must not be empty. Must include all universes of all sources, and nothing more. The status codes are filled
  * in whenever UniverseNetintList::netints is !empty.
+ * @param send_socket_config Configuration for send sockets (e.g. configurable sockopts).
  * @return #kEtcPalErrOk: Networking reset successfully.
  * @return #kEtcPalErrNoNetints: None of the network interfaces provided for a universe were usable by the library.
  * @return #kEtcPalErrInvalid: Invalid parameter provided.
@@ -878,7 +889,8 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sy
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
 inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sys_netints,
-                                             std::vector<UniverseNetintList>& per_universe_netint_lists)
+                                             std::vector<UniverseNetintList>& per_universe_netint_lists,
+                                             const SacnSendSocketConfig&      send_socket_config = {})
 {
   std::vector<SacnSourceUniverseNetintList> netint_lists_c;
   netint_lists_c.reserve(per_universe_netint_lists.size());
@@ -897,10 +909,10 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sy
                    return c_list;
                  });
 
-  SacnNetintConfig sys_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-  sys_netint_config.netints = sys_netints.data();
-  sys_netint_config.num_netints = sys_netints.size();
-
+  SacnNetintConfig sys_netint_config   = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  sys_netint_config.netints            = sys_netints.data();
+  sys_netint_config.num_netints        = sys_netints.size();
+  sys_netint_config.send_socket_config = send_socket_config;
   return sacn_source_reset_networking_per_universe(&sys_netint_config, netint_lists_c.data(), netint_lists_c.size());
 }
 
