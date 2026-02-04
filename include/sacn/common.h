@@ -30,6 +30,7 @@
 #include "etcpal/error.h"
 #include "etcpal/inet.h"
 #include "etcpal/log.h"
+#include "etcpal/socket.h"
 #include "etcpal/uuid.h"
 
 /**
@@ -110,13 +111,69 @@ typedef struct SacnNetintConfig
   bool no_netints;
 } SacnNetintConfig;
 
-#define SACN_NETINT_CONFIG_DEFAULT_INIT \
-  {                                     \
-    NULL, 0, false                      \
-  }
+/** Information about a socket error that occurred. */
+typedef struct SacnSocketErrorInfo
+{
+  /** The EtcPal error returned by etcpal_sendto(). Use WSAGetLastError/errno for a more specific code. */
+  etcpal_error_t error;
+  /** The socket the error occurred on. Modify at your own risk! */
+  etcpal_socket_t socket;
+  /** The message that was being sent when the error occurred. */
+  const void* message;
+  /** The length of the message. */
+  size_t length;
+  /** Flags used in the send operation. */
+  int flags;
+  /** The destination address the message was being sent to. */
+  const EtcPalSockAddr* dest_addr;
+} SacnSocketErrorInfo;
+
+/**
+ * @brief Notify that an error just occurred sending unicast on a socket.
+ *
+ * The lock is taken when this callback is invoked, so don't call back into the library, and don't take too long.
+ *
+ * @param[in] err_info Information about the error that occurred.
+ * @param[in] context Context pointer that was given to sacn_init().
+ */
+typedef void (*SacnUnicastSendErrorCallback)(const SacnSocketErrorInfo* err_info, void* context);
+
+/**
+ * @brief Notify that an error just occurred sending multicast on a socket.
+ *
+ * The lock is taken when this callback is invoked, so don't call back into the library, and don't take too long.
+ *
+ * @param[in] err_info Information about the error that occurred.
+ * @param[in] context Context pointer that was given to sacn_init().
+ */
+typedef void (*SacnMulticastSendErrorCallback)(const SacnSocketErrorInfo* err_info, void* context);
+
+/** A set of callback functions that the library uses to notify the application about sACN events. */
+typedef struct SacnCommonCallbacks
+{
+  SacnUnicastSendErrorCallback   unicast_send_error;   /**< Optional */
+  SacnMulticastSendErrorCallback multicast_send_error; /**< Optional */
+  void*                          context; /**< (optional) Pointer to opaque data passed back with each callback. */
+} SacnCommonCallbacks;
+
+/**
+ * Initializes the members of a SacnNetintConfig to defaults.
+ */
+#define SACN_NETINT_CONFIG_DEFAULT_INIT {NULL, 0, false}
 
 etcpal_error_t sacn_init(const EtcPalLogParams* log_params, const SacnNetintConfig* sys_netint_config);
-void sacn_deinit(void);
+etcpal_error_t sacn_init_with_cb(const EtcPalLogParams*     log_params,
+                                 const SacnNetintConfig*    sys_netint_config,
+                                 const SacnCommonCallbacks* callbacks);
+etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
+                                  const SacnNetintConfig* sys_netint_config,
+                                  sacn_features_t         features);
+etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
+                                          const SacnNetintConfig*    sys_netint_config,
+                                          sacn_features_t            features,
+                                          const SacnCommonCallbacks* callbacks);
+void           sacn_deinit(void);
+void           sacn_deinit_features(sacn_features_t features);
 
 sacn_remote_source_t sacn_get_remote_source_handle(const EtcPalUuid* source_cid);
 etcpal_error_t sacn_get_remote_source_cid(sacn_remote_source_t source_handle, EtcPalUuid* source_cid);

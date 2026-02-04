@@ -52,8 +52,8 @@ typedef enum
   kSource
 } networking_type_t;
 
-etcpal_error_t sacn_sockets_init(const SacnNetintConfig* netint_config);
-void sacn_sockets_deinit(void);
+etcpal_error_t sacn_sockets_init(const SacnNetintConfig* netint_config, const SacnCommonCallbacks* common_callbacks);
+void           sacn_sockets_deinit(void);
 
 etcpal_error_t sacn_sockets_reset_source(const SacnNetintConfig* netint_config);
 etcpal_error_t sacn_sockets_reset_receiver(const SacnNetintConfig* netint_config);

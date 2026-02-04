@@ -62,9 +62,145 @@ constexpr RemoteSourceHandle kInvalidRemoteSourceHandle = SACN_REMOTE_SOURCE_INV
 
 /**
  * @ingroup sacn_cpp_common
+ * @brief A base class for a class that receives common notification callbacks from sACN.
+ */
+class NotifyHandler
+{
+public:
+  NotifyHandler()          = default;
+  virtual ~NotifyHandler() = default;
+
+  /**
+   * @brief Defaulted copy constructor.
+   * @param other Copy source.
+   */
+  NotifyHandler(const NotifyHandler& other) = default;
+
+  /**
+   * @brief Defaulted copy assignment operator.
+   * @param other Copy source.
+   * @return Reference to this.
+   */
+  NotifyHandler& operator=(const NotifyHandler& other) = default;
+
+  /**
+   * @brief Defaulted move constructor.
+   * @param other Move source.
+   */
+  NotifyHandler(NotifyHandler&& other) = default;
+
+  /**
+   * @brief Defaulted move assignment operator.
+   * @param other Move source.
+   * @return Reference to this.
+   */
+  NotifyHandler& operator=(NotifyHandler&& other) = default;
+
+  /**
+   * @brief Notify that an error just occurred sending unicast on a socket.
+   * @param err_info Information about the unicast send error that occurred.
+   */
+  virtual void HandleUnicastSendError(const SacnSocketErrorInfo& err_info) { ETCPAL_UNUSED_ARG(err_info); }
+
+  /**
+   * @brief Notify that an error just occurred sending multicast on a socket.
+   * @param err_info Information about the multicast send error that occurred.
+   */
+  virtual void HandleMulticastSendError(const SacnSocketErrorInfo& err_info) { ETCPAL_UNUSED_ARG(err_info); }
+};
+
+/**
+ * @cond device_c_callbacks
+ * Callbacks from underlying device library to be forwarded
+ */
+namespace internal
+{
+extern "C" inline void CommonCbUnicastSendError(const SacnSocketErrorInfo* err_info, void* context)
+{
+  if (err_info && context)
+    static_cast<NotifyHandler*>(context)->HandleUnicastSendError(*err_info);
+}
+
+extern "C" inline void CommonCbMulticastSendError(const SacnSocketErrorInfo* err_info, void* context)
+{
+  if (err_info && context)
+    static_cast<NotifyHandler*>(context)->HandleMulticastSendError(*err_info);
+}
+
+inline SacnCommonCallbacks GetCommonCallbacks(NotifyHandler* notify_handler)
+{
+  SacnCommonCallbacks callbacks = {internal::CommonCbUnicastSendError, internal::CommonCbMulticastSendError,
+                                   notify_handler};
+  return callbacks;
+}
+
+};  // namespace internal
+
+/**
+ * @endcond
+ */
+
+/**
+ * @ingroup sacn_cpp_common
  * @brief Initialize the sACN library.
  *
  * Wraps sacn_init(). Does all initialization required before the sACN API modules can be
+ * used.
+ *
+ * This is an overload of Init that only takes features (which default to all features). It doesn't specify a logger and
+ * assumes all network interfaces should be used - this is useful for initializing a feature for which neither of these
+ * are relevant (e.g. SACN_FEATURE_DMX_MERGER), since Init can be called again for the rest of the features later.
+ *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
+ *
+ * @param features Mask of sACN features to initialize (defaults to all features).
+ * @param notify_handler Callback handler for common notifications from the library.
+ * @return etcpal::Error::Ok(): Initialization successful.
+ * @return Errors from sacn_init_features().
+ */
+inline etcpal::Error Init(sacn_features_t features = SACN_FEATURES_ALL, NotifyHandler* notify_handler = nullptr)
+{
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  auto             callbacks     = internal::GetCommonCallbacks(notify_handler);
+  return sacn_init_features_with_cb(nullptr, &netint_config, features, notify_handler ? &callbacks : nullptr);
+}
+
+/**
+ * @ingroup sacn_cpp_common
+ * @brief Initialize the sACN library.
+ *
+ * Wraps sacn_init_features(). Does all initialization required before the sACN API modules can be
+ * used.
+ *
+ * This is an overload of Init that only takes a logger & features (which default to all features). It assumes all
+ * network interfaces should be used - this is useful for initializing a feature for which the network is irrelevant
+ * (e.g. SACN_FEATURE_DMX_MERGER), since the rest can be initialized later when calling Init again for all features.
+ *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
+ *
+ * @param log_params (optional) Log parameters for the sACN library to use to log messages. If
+ *                   not provided, no logging will be performed.
+ * @param features Mask of sACN features to initialize (defaults to all features).
+ * @param notify_handler Callback handler for common notifications from the library.
+ * @return etcpal::Error::Ok(): Initialization successful.
+ * @return Errors from sacn_init_features().
+ */
+inline etcpal::Error Init(const EtcPalLogParams* log_params,
+                          sacn_features_t        features       = SACN_FEATURES_ALL,
+                          NotifyHandler*         notify_handler = nullptr)
+{
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  auto             callbacks     = internal::GetCommonCallbacks(notify_handler);
+  return sacn_init_features_with_cb(log_params, &netint_config, features, notify_handler ? &callbacks : nullptr);
+}
+
+/**
+ * @ingroup sacn_cpp_common
+ * @brief Initialize the sACN library.
+ *
+ * Wraps sacn_init_features(). Does all initialization required before the sACN API modules can be
  * used.
  *
  * This is an overload of Init that defaults to using all system interfaces for multicast traffic, but can also be used
@@ -73,17 +209,22 @@ constexpr RemoteSourceHandle kInvalidRemoteSourceHandle = SACN_REMOTE_SOURCE_INV
  * @param log_params (optional) Log parameters for the sACN library to use to log messages. If
  *                   not provided, no logging will be performed.
  * @param mcast_mode This controls whether or not multicast traffic is allowed on the system's network interfaces.
+ * @param features Mask of sACN features to initialize (defaults to all features).
+ * @param notify_handler Callback handler for common notifications from the library.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init().
  */
-inline etcpal::Error Init(const EtcPalLogParams* log_params = nullptr,
-                          McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
+inline etcpal::Error Init(const EtcPalLogParams* log_params,
+                          McastMode              mcast_mode,
+                          sacn_features_t        features       = SACN_FEATURES_ALL,
+                          NotifyHandler*         notify_handler = nullptr)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
-  return sacn_init(log_params, &netint_config);
+  auto callbacks = internal::GetCommonCallbacks(notify_handler);
+  return sacn_init_features_with_cb(log_params, &netint_config, features, notify_handler ? &callbacks : nullptr);
 }
 
 /**
@@ -97,16 +238,22 @@ inline etcpal::Error Init(const EtcPalLogParams* log_params = nullptr,
  *                   performed.
  * @param sys_netints If !empty, this is the list of system interfaces the library will be limited to, and the status
  *                    codes are filled in.  If empty, the library is allowed to use all available system interfaces.
+ * @param features Mask of sACN features to initialize (defaults to all features).
+ * @param notify_handler Callback handler for common notifications from the library.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init().
  */
-inline etcpal::Error Init(const EtcPalLogParams* log_params, std::vector<SacnMcastInterface>& sys_netints)
+inline etcpal::Error Init(const EtcPalLogParams*           log_params,
+                          std::vector<SacnMcastInterface>& sys_netints,
+                          sacn_features_t                  features       = SACN_FEATURES_ALL,
+                          NotifyHandler*                   notify_handler = nullptr)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   netint_config.netints = sys_netints.data();
   netint_config.num_netints = sys_netints.size();
 
-  return sacn_init(log_params, &netint_config);
+  auto callbacks = internal::GetCommonCallbacks(notify_handler);
+  return sacn_init_features_with_cb(log_params, &netint_config, features, notify_handler ? &callbacks : nullptr);
 }
 
 /**
@@ -120,16 +267,21 @@ inline etcpal::Error Init(const EtcPalLogParams* log_params, std::vector<SacnMca
  *
  * @param sys_netints If !empty, this is the list of system interfaces the library will be limited to, and the status
  *                    codes are filled in.  If empty, the library is allowed to use all available system interfaces.
+ * @param features Mask of sACN features to initialize (defaults to all features).
+ * @param notify_handler Callback handler for common notifications from the library.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init().
  */
-inline etcpal::Error Init(std::vector<SacnMcastInterface>& sys_netints)
+inline etcpal::Error Init(std::vector<SacnMcastInterface>& sys_netints,
+                          sacn_features_t                  features       = SACN_FEATURES_ALL,
+                          NotifyHandler*                   notify_handler = nullptr)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   netint_config.netints = sys_netints.data();
   netint_config.num_netints = sys_netints.size();
 
-  return sacn_init(nullptr, &netint_config);
+  auto callbacks = internal::GetCommonCallbacks(notify_handler);
+  return sacn_init_features_with_cb(nullptr, &netint_config, features, notify_handler ? &callbacks : nullptr);
 }
 
 /**
@@ -144,16 +296,23 @@ inline etcpal::Error Init(std::vector<SacnMcastInterface>& sys_netints)
  *
  * @param logger Logger instance for the sACN library to use to log messages.
  * @param mcast_mode This controls whether or not multicast traffic is allowed on the system's network interfaces.
+ * @param features Mask of sACN features to initialize (defaults to all features).
+ * @param notify_handler Callback handler for common notifications from the library.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init().
  */
-inline etcpal::Error Init(const etcpal::Logger& logger, McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces)
+inline etcpal::Error Init(const etcpal::Logger& logger,
+                          McastMode             mcast_mode     = McastMode::kEnabledOnAllInterfaces,
+                          sacn_features_t       features       = SACN_FEATURES_ALL,
+                          NotifyHandler*        notify_handler = nullptr)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
     netint_config.no_netints = true;
 
-  return sacn_init(&logger.log_params(), &netint_config);
+  auto callbacks = internal::GetCommonCallbacks(notify_handler);
+  return sacn_init_features_with_cb(&logger.log_params(), &netint_config, features,
+                                    notify_handler ? &callbacks : nullptr);
 }
 
 /**
@@ -164,18 +323,51 @@ inline etcpal::Error Init(const etcpal::Logger& logger, McastMode mcast_mode = M
  * used.
  *
  * @param logger Logger instance for the sACN library to use to log messages.
+ * @param features Mask of sACN features to initialize (defaults to all features).
+ * @param notify_handler Callback handler for common notifications from the library.
+ * @return etcpal::Error::Ok(): Initialization successful.
+ * @return Errors from sacn_init_features().
+ */
+inline etcpal::Error Init(const etcpal::Logger& logger,
+                          sacn_features_t       features,
+                          NotifyHandler*        notify_handler = nullptr)
+{
+  SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
+  auto             callbacks     = internal::GetCommonCallbacks(notify_handler);
+  return sacn_init_features_with_cb(&logger.log_params(), &netint_config, features,
+                                    notify_handler ? &callbacks : nullptr);
+}
+
+/**
+ * @ingroup sacn_cpp_common
+ * @brief Initialize the sACN library.
+ *
+ * Wraps sacn_init_features(). Does all initialization required before the sACN API modules can be
+ * used.
+ *
+ * Redundant initialization of features is permitted - the library tracks counters for each feature and expects deinit
+ * to be called the same number of times as init for each feature.
+ *
+ * @param logger Logger instance for the sACN library to use to log messages.
  * @param sys_netints If !empty, this is the list of system interfaces the library will be limited to, and the status
  *                    codes are filled in.  If empty, the library is allowed to use all available system interfaces.
+ * @param features Mask of sACN features to initialize (defaults to all features).
+ * @param notify_handler Callback handler for common notifications from the library.
  * @return etcpal::Error::Ok(): Initialization successful.
  * @return Errors from sacn_init().
  */
-inline etcpal::Error Init(const etcpal::Logger& logger, std::vector<SacnMcastInterface>& sys_netints)
+inline etcpal::Error Init(const etcpal::Logger&            logger,
+                          std::vector<SacnMcastInterface>& sys_netints,
+                          sacn_features_t                  features       = SACN_FEATURES_ALL,
+                          NotifyHandler*                   notify_handler = nullptr)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   netint_config.netints = sys_netints.data();
   netint_config.num_netints = sys_netints.size();
 
-  return sacn_init(&logger.log_params(), &netint_config);
+  auto callbacks = internal::GetCommonCallbacks(notify_handler);
+  return sacn_init_features_with_cb(&logger.log_params(), &netint_config, features,
+                                    notify_handler ? &callbacks : nullptr);
 }
 
 /**

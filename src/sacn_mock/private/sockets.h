@@ -27,7 +27,7 @@
 extern "C" {
 #endif
 
-DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_init, const SacnNetintConfig*);
+DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_init, const SacnNetintConfig*, const SacnCommonCallbacks*);
 DECLARE_FAKE_VOID_FUNC(sacn_sockets_deinit);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_source, const SacnNetintConfig*);
 DECLARE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_sockets_reset_receiver, const SacnNetintConfig*);

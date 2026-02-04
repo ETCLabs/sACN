@@ -199,7 +199,7 @@ protected:
     ASSERT_GT(fake_v6_netints_.size(), 0u);
 
     ASSERT_EQ(sacn_receiver_mem_init(1), kEtcPalErrOk);
-    ASSERT_EQ(sacn_sockets_init(nullptr), kEtcPalErrOk);
+    ASSERT_EQ(sacn_sockets_init(nullptr, nullptr), kEtcPalErrOk);
 
     internal_sys_netints_ = sacn_sockets_get_sys_netints(kReceiver);
     ASSERT_NE(internal_sys_netints_, nullptr);
