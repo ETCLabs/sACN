@@ -1487,7 +1487,7 @@ void clear_source_networking()
     etcpal_close(ipv4_unicast_send_socket);
     ipv4_unicast_send_socket = ETCPAL_SOCKET_INVALID;
   }
-  
+
   if (ipv6_unicast_send_socket != ETCPAL_SOCKET_INVALID)
   {
     etcpal_close(ipv6_unicast_send_socket);
