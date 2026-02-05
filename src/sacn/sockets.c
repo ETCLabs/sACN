@@ -1483,9 +1483,16 @@ etcpal_error_t sockets_reset(const SacnNetintConfig* netint_config, sacn_network
 void clear_source_networking()
 {
   if (ipv4_unicast_send_socket != ETCPAL_SOCKET_INVALID)
+  {
     etcpal_close(ipv4_unicast_send_socket);
+    ipv4_unicast_send_socket = ETCPAL_SOCKET_INVALID;
+  }
+  
   if (ipv6_unicast_send_socket != ETCPAL_SOCKET_INVALID)
+  {
     etcpal_close(ipv6_unicast_send_socket);
+    ipv6_unicast_send_socket = ETCPAL_SOCKET_INVALID;
+  }
 
 #if SACN_DYNAMIC_MEM
   if (multicast_send_sockets)
