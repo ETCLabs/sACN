@@ -1712,7 +1712,7 @@ void process_stats_log(SacnRecvThreadContext* context)
       {
         if (etcpal_rbtree_size(&receiver->sources) > 0)
         {
-          SACN_LOG_INFO("Statistics for universe %u:", receiver->keys.universe);
+          SACN_LOG_INFO("RX statistics for universe %u:", receiver->keys.universe);
 
           EtcPalRbIter iter;
           for (SacnTrackedSource* src = etcpal_rbiter_first(&iter, &receiver->sources); src;

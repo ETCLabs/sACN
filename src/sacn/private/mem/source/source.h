@@ -47,6 +47,10 @@ int                 get_num_source_rekeys();
 uint32_t            get_total_source_rekey_time_ms();
 void                add_source_rekey_duration(uint32_t duration_ms);
 void                reset_source_rekey_duration();
+int                 get_source_num_packets_transmitted();
+uint32_t            get_source_total_encrypt_time_ms();
+void                add_source_encrypt_duration(uint32_t duration_ms);
+void                reset_source_encrypt_duration();
 void                remove_sacn_source(size_t index);
 
 #ifdef __cplusplus

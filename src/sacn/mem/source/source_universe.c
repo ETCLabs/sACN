@@ -101,12 +101,18 @@ etcpal_error_t add_sacn_source_universe(SacnSource*                     source,
     universe->has_level_data        = false;
     universe->levels_sent_this_tick = false;
 
+    universe->null_packets_sent          = 0;
+    universe->total_null_encrypt_time_ms = 0;
+
 #if SACN_ETC_PRIORITY_EXTENSION
     universe->pap_packets_sent_before_suppression = 0;
     init_sacn_data_send_buf(universe->pap_send_buf, kSacnStartcodePriority, &source->cid, source->name,
                             config->priority, config->universe, config->sync_universe, config->send_preview);
     universe->has_pap_data       = false;
     universe->pap_sent_this_tick = false;
+
+    universe->dd_packets_sent          = 0;
+    universe->total_dd_encrypt_time_ms = 0;
 #endif
 
     universe->other_sent_this_tick    = false;

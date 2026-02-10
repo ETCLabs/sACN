@@ -59,6 +59,9 @@ static struct SacnSourceMem
   size_t   rekey_interval_number;
   int      num_rekeys;
   uint32_t total_rekey_time_ms;
+
+  int      num_packets_transmitted;
+  uint32_t total_encrypt_time_ms;
 } sacn_pool_source_mem;
 
 /*********************** Private function prototypes *************************/
@@ -92,6 +95,9 @@ etcpal_error_t add_sacn_source(sacn_source_t handle, const SacnSourceConfig* con
   {
     source->universe_discovery_rtp_ssrc         = ((uint32_t)rand() << 16) | (uint32_t)rand();
     source->universe_discovery_next_rtp_seq_num = 0;
+
+    source->disc_packets_sent          = 0;
+    source->total_disc_encrypt_time_ms = 0;
 
     source->handle = handle;
 
@@ -263,6 +269,32 @@ void reset_source_rekey_duration()
 }
 
 // Needs lock
+int get_source_num_packets_transmitted()
+{
+  return sacn_pool_source_mem.num_packets_transmitted;
+}
+
+// Needs lock
+uint32_t get_source_total_encrypt_time_ms()
+{
+  return sacn_pool_source_mem.total_encrypt_time_ms;
+}
+
+// Needs lock
+void add_source_encrypt_duration(uint32_t duration_ms)
+{
+  ++sacn_pool_source_mem.num_packets_transmitted;
+  sacn_pool_source_mem.total_encrypt_time_ms += duration_ms;
+}
+
+// Needs lock
+void reset_source_encrypt_duration()
+{
+  sacn_pool_source_mem.num_packets_transmitted = 0;
+  sacn_pool_source_mem.total_encrypt_time_ms   = 0;
+}
+
+// Needs lock
 void remove_sacn_source(size_t index)
 {
   CLEAR_BUF(&sacn_pool_source_mem.sources[index], universes);
@@ -323,6 +355,9 @@ etcpal_error_t init_sources(void)
   sacn_pool_source_mem.rekey_interval_number = 0;
   sacn_pool_source_mem.num_rekeys            = 0;
   sacn_pool_source_mem.total_rekey_time_ms   = 0;
+
+  sacn_pool_source_mem.num_packets_transmitted = 0;
+  sacn_pool_source_mem.total_encrypt_time_ms   = 0;
 
   if (res == kEtcPalErrOk)
     sources_initialized = true;

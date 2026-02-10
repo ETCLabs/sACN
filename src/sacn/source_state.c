@@ -349,6 +349,79 @@ void process_stats_log(SacnSource* source, bool all_sends_succeeded)
 
   if (etcpal_timer_is_expired(&source->stats_log_timer))
   {
+    if (get_source_num_packets_transmitted() > 0)
+    {
+#if SACN_LOGGING_ENABLED
+      if (SACN_CAN_LOG(ETCPAL_LOG_INFO))
+      {
+        double encrypt_avg_ms =
+            ((double)get_source_total_encrypt_time_ms() / (double)get_source_num_packets_transmitted());
+        SACN_LOG_INFO("Transmitted %d total packets with an average encryption time of %fms.",
+                      get_source_num_packets_transmitted(), encrypt_avg_ms);
+      }
+#endif
+
+#if SACN_LOGGING_ENABLED
+      if (SACN_CAN_LOG(ETCPAL_LOG_INFO))
+      {
+        char cid_str[ETCPAL_UUID_STRING_BYTES];
+        etcpal_uuid_to_string(&source->cid, cid_str);
+
+        SACN_LOG_INFO("TX statistics for source %s (%s):", source->name, cid_str);
+
+        double disc_frequency = (double)source->disc_packets_sent / ((double)kSacnStatsLogInterval / 1000.0);
+        double disc_encrypt_avg_ms =
+            (source->disc_packets_sent == 0)
+                ? 0.0
+                : ((double)source->total_disc_encrypt_time_ms / (double)source->disc_packets_sent);
+        SACN_LOG_INFO("  DISC: %fHz (%d packets, avg. encrypt %fms)", disc_frequency, source->disc_packets_sent,
+                      disc_encrypt_avg_ms);
+      }
+#endif
+
+      for (size_t i = 0; i < source->num_universes; ++i)
+      {
+#if SACN_LOGGING_ENABLED
+        if (SACN_CAN_LOG(ETCPAL_LOG_INFO))
+        {
+          SACN_LOG_INFO("  Universe %u:", source->universes[i].universe_id);
+
+          double null_frequency =
+              (double)source->universes[i].null_packets_sent / ((double)kSacnStatsLogInterval / 1000.0);
+          double null_encrypt_avg_ms =
+              (source->universes[i].null_packets_sent == 0)
+                  ? 0.0
+                  : ((double)source->universes[i].total_null_encrypt_time_ms / (double)source->universes[i].null_packets_sent);
+#if SACN_ETC_PRIORITY_EXTENSION
+          double dd_frequency = (double)source->universes[i].dd_packets_sent / ((double)kSacnStatsLogInterval / 1000.0);
+          double dd_encrypt_avg_ms =
+              (source->universes[i].dd_packets_sent == 0)
+                  ? 0.0
+                  : ((double)source->universes[i].total_dd_encrypt_time_ms / (double)source->universes[i].dd_packets_sent);
+#endif
+
+#if SACN_ETC_PRIORITY_EXTENSION
+          SACN_LOG_INFO("    0x00: %fHz (%d packets, avg. encrypt %fms), 0xDD: %fHz (%d packets, avg. encrypt %fms)",
+                        null_frequency, source->universes[i].null_packets_sent, null_encrypt_avg_ms, dd_frequency,
+                        source->universes[i].dd_packets_sent, dd_encrypt_avg_ms);
+#else
+          SACN_LOG_INFO("    0x00: %fHz (%d packets, avg. encrypt %fms)", null_frequency,
+                        source->universes[i].null_packets_sent, null_encrypt_avg_ms);
+#endif
+        }
+#endif  // SACN_LOGGING_ENABLED
+
+        source->universes[i].null_packets_sent          = 0;
+        source->universes[i].total_null_encrypt_time_ms = 0;
+#if SACN_ETC_PRIORITY_EXTENSION
+        source->universes[i].dd_packets_sent          = 0;
+        source->universes[i].total_dd_encrypt_time_ms = 0;
+#endif
+      }
+
+      reset_source_encrypt_duration();
+    }
+
     if (get_num_source_rekeys() > 0)
     {
 #if SACN_LOGGING_ENABLED
@@ -473,10 +546,16 @@ bool transmit_levels_and_pap_when_needed(SacnSource*             source,
     hdr.ts  = etcpal_getms();
     pack_sacn_rtp_header(universe->level_send_buf, &hdr);
 
-    size_t encrypted_len = SACN_DATA_PACKET_MTU_ENCRYPTED;
+    size_t   encrypted_len          = SACN_DATA_PACKET_MTU_ENCRYPTED;
+    uint32_t before_null_encrypt_ms = etcpal_getms();
     if (sacn_srtp_protect(get_source_srtp_session(), universe->level_send_buf, universe->level_send_buf_encrypted,
                           &encrypted_len) == kEtcPalErrOk)
     {
+      uint32_t null_encrypt_time_ms = etcpal_getms() - before_null_encrypt_ms;
+      ++universe->null_packets_sent;
+      universe->total_null_encrypt_time_ms += null_encrypt_time_ms;
+      add_source_encrypt_duration(null_encrypt_time_ms);
+
       // Send 0x00 data & reset the keep-alive timer
       all_sends_succeeded = send_universe_multicast(source, universe, universe->level_send_buf,
                                                     universe->level_send_buf_encrypted, encrypted_len);
@@ -511,10 +590,16 @@ bool transmit_levels_and_pap_when_needed(SacnSource*             source,
     if (universe->levels_sent_this_tick)
       pack_sequence_number(universe->pap_send_buf, universe->next_seq_num + 1);
 
-    size_t encrypted_len = SACN_DATA_PACKET_MTU_ENCRYPTED;
+    size_t   encrypted_len        = SACN_DATA_PACKET_MTU_ENCRYPTED;
+    uint32_t before_dd_encrypt_ms = etcpal_getms();
     if (sacn_srtp_protect(get_source_srtp_session(), universe->pap_send_buf, universe->pap_send_buf_encrypted,
                           &encrypted_len) == kEtcPalErrOk)
     {
+      uint32_t dd_encrypt_time_ms = etcpal_getms() - before_dd_encrypt_ms;
+      ++universe->dd_packets_sent;
+      universe->total_dd_encrypt_time_ms += dd_encrypt_time_ms;
+      add_source_encrypt_duration(dd_encrypt_time_ms);
+
       // Send 0xDD data & reset the keep-alive timer
       all_sends_succeeded =
           all_sends_succeeded && send_universe_multicast(source, universe, universe->pap_send_buf,
@@ -601,10 +686,16 @@ bool send_termination_multicast(const SacnSource* source, SacnSourceUniverse* un
   bool all_sends_succeeded = false;
 
   // Encrypt the termination packet
-  size_t encrypted_len = SACN_DATA_PACKET_MTU_ENCRYPTED;
+  size_t   encrypted_len          = SACN_DATA_PACKET_MTU_ENCRYPTED;
+  uint32_t before_null_encrypt_ms = etcpal_getms();
   if (sacn_srtp_protect(get_source_srtp_session(), universe->level_send_buf, universe->level_send_buf_encrypted,
                         &encrypted_len) == kEtcPalErrOk)
   {
+    uint32_t null_encrypt_time_ms = etcpal_getms() - before_null_encrypt_ms;
+    ++universe->null_packets_sent;
+    universe->total_null_encrypt_time_ms += null_encrypt_time_ms;
+    add_source_encrypt_duration(null_encrypt_time_ms);
+
     // Send the termination packet on multicast only
     all_sends_succeeded = send_universe_multicast(source, universe, universe->level_send_buf,
                                                   universe->level_send_buf_encrypted, encrypted_len);
@@ -638,11 +729,17 @@ bool send_termination_unicast(const SacnSource* source, SacnSourceUniverse* univ
   pack_sacn_rtp_header(universe->level_send_buf, &hdr);
 
   // Encrypt the termination packet
-  bool   res           = false;
-  size_t encrypted_len = SACN_DATA_PACKET_MTU_ENCRYPTED;
+  bool     res                    = false;
+  size_t   encrypted_len          = SACN_DATA_PACKET_MTU_ENCRYPTED;
+  uint32_t before_null_encrypt_ms = etcpal_getms();
   if (sacn_srtp_protect(get_source_srtp_session(), universe->level_send_buf, universe->level_send_buf_encrypted,
                         &encrypted_len) == kEtcPalErrOk)
   {
+    uint32_t null_encrypt_time_ms = etcpal_getms() - before_null_encrypt_ms;
+    ++universe->null_packets_sent;
+    universe->total_null_encrypt_time_ms += null_encrypt_time_ms;
+    add_source_encrypt_duration(null_encrypt_time_ms);
+
     // Send the termination packet on unicast only
     if (sacn_send_unicast(source->ip_supported, universe->level_send_buf_encrypted, encrypted_len, &dest->dest_addr,
                           &dest->last_send_error) == kEtcPalErrOk)
@@ -687,10 +784,16 @@ bool send_universe_discovery(SacnSource* source)
       hdr.ssrc = source->universe_discovery_rtp_ssrc;
       pack_sacn_rtp_header(source->universe_discovery_send_buf, &hdr);
 
-      size_t encrypted_len = SACN_UNIVERSE_DISCOVERY_PACKET_MTU_ENCRYPTED;
+      size_t   encrypted_len          = SACN_UNIVERSE_DISCOVERY_PACKET_MTU_ENCRYPTED;
+      uint32_t before_disc_encrypt_ms = etcpal_getms();
       if (sacn_srtp_protect(get_source_srtp_session(), source->universe_discovery_send_buf,
                             source->universe_discovery_send_buf_encrypted, &encrypted_len) == kEtcPalErrOk)
       {
+        uint32_t disc_encrypt_time_ms = etcpal_getms() - before_disc_encrypt_ms;
+        ++source->disc_packets_sent;
+        source->total_disc_encrypt_time_ms += disc_encrypt_time_ms;
+        add_source_encrypt_duration(disc_encrypt_time_ms);
+
         // Send multicast on IPv4 and/or IPv6
         for (size_t i = 0; i < source->num_netints; ++i)
         {

@@ -860,6 +860,9 @@ typedef struct SacnSourceUniverse
   bool        has_level_data;
   bool        levels_sent_this_tick;
 
+  int      null_packets_sent;
+  uint32_t total_null_encrypt_time_ms;
+
 #if SACN_ETC_PRIORITY_EXTENSION
   // Start code 0xDD state
   int         pap_packets_sent_before_suppression;
@@ -868,6 +871,9 @@ typedef struct SacnSourceUniverse
   uint8_t     pap_send_buf_encrypted[SACN_DATA_PACKET_MTU_ENCRYPTED];
   bool        has_pap_data;
   bool        pap_sent_this_tick;
+
+  int      dd_packets_sent;
+  uint32_t total_dd_encrypt_time_ms;
 #endif
 
   bool other_sent_this_tick;
@@ -913,8 +919,11 @@ typedef struct SacnSource
   uint8_t universe_discovery_send_buf[SACN_UNIVERSE_DISCOVERY_PACKET_MTU];
   uint8_t universe_discovery_send_buf_encrypted[SACN_UNIVERSE_DISCOVERY_PACKET_MTU_ENCRYPTED];
 
-  uint32_t      universe_discovery_rtp_ssrc;
-  uint16_t      universe_discovery_next_rtp_seq_num;
+  uint32_t universe_discovery_rtp_ssrc;
+  uint16_t universe_discovery_next_rtp_seq_num;
+
+  int      disc_packets_sent;
+  uint32_t total_disc_encrypt_time_ms;
 } SacnSource;
 
 typedef enum
