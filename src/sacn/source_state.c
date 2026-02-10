@@ -377,6 +377,9 @@ void process_stats_log(SacnSource* source, bool all_sends_succeeded)
         SACN_LOG_INFO("  DISC: %fHz (%d packets, avg. encrypt %fms)", disc_frequency, source->disc_packets_sent,
                       disc_encrypt_avg_ms);
       }
+
+      source->disc_packets_sent = 0;
+      source->total_disc_encrypt_time_ms = 0;
 #endif
 
       for (size_t i = 0; i < source->num_universes; ++i)
