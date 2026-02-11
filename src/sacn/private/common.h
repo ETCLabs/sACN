@@ -612,10 +612,16 @@ typedef struct UniverseDataNotification
   SacnUniverseDataCallback         api_callback;
   SacnUniverseDataInternalCallback internal_callback;
   sacn_receiver_t                  receiver_handle;
+#if SACN_ENABLE_SLOT_MIRRORING
+  sacn_receiver_t receiver2_handle;
+#endif
   SacnRemoteSource                 source_info;
   SacnRecvUniverseData             universe_data;
   sacn_thread_id_t                 thread_id;
   void*                            context;
+#if SACN_ENABLE_SLOT_MIRRORING
+  void* context2;
+#endif
 } UniverseDataNotification;
 
 /* Data for the sources_lost() callback */

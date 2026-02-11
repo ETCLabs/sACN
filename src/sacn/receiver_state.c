@@ -925,6 +925,17 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
         return;
       }
 
+#if SACN_ENABLE_SLOT_MIRRORING
+      SacnReceiver* receiver2 = NULL;
+      if (lookup_receiver_by_universe(universe_data->universe_data.universe_id + 1, &receiver2) != kEtcPalErrOk)
+      {
+        // We are not listening to this universe.
+        sacn_receiver_unlock();
+        receiver_cb_unlock();
+        return;
+      }
+#endif
+
       SacnSamplingPeriodNetint* sp_netint =
           etcpal_rbtree_find(&receiver->sampling_period_netints, &read_result->netint);
 
@@ -1030,6 +1041,9 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
           universe_data->api_callback              = receiver->api_callbacks.universe_data;
           universe_data->internal_callback         = receiver->internal_callbacks.universe_data;
           universe_data->receiver_handle           = receiver->keys.handle;
+#if SACN_ENABLE_SLOT_MIRRORING
+          universe_data->receiver2_handle = receiver2->keys.handle;
+#endif
           universe_data->universe_data.universe_id = receiver->keys.universe;
           universe_data->universe_data.is_sampling = (sp_netint != NULL);
 
@@ -1039,6 +1053,9 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
 
           universe_data->thread_id = thread_id;
           universe_data->context   = receiver->api_callbacks.context;
+#if SACN_ENABLE_SLOT_MIRRORING
+          universe_data->context2 = receiver2->api_callbacks.context;
+#endif
         }
       }
 
@@ -1391,14 +1408,14 @@ void deliver_receive_callbacks(const EtcPalSockAddr*            from_addr,
     
     if (universe_data->internal_callback)
     {
-      universe_data->internal_callback(universe_data->receiver_handle, from_addr, &universe_data->source_info,
+      universe_data->internal_callback(universe_data->receiver2_handle, from_addr, &universe_data->source_info,
                                        &universe_data->universe_data, universe_data->thread_id);
     }
 
     if (universe_data->api_callback)
     {
-      universe_data->api_callback(universe_data->receiver_handle, from_addr, &universe_data->source_info,
-                                  &universe_data->universe_data, universe_data->context);
+      universe_data->api_callback(universe_data->receiver2_handle, from_addr, &universe_data->source_info,
+                                  &universe_data->universe_data, universe_data->context2);
     }
 #endif
   }
