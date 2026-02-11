@@ -58,6 +58,10 @@ function(sacn_add_core_library_target target_name)
     target_compile_definitions(${target_name} PUBLIC SACN_ENABLE_SRTP_REKEY_TEST=1)
   endif()
 
+  if(SACN_ENABLE_SLOT_MIRRORING)
+    target_compile_definitions(${target_name} PUBLIC SACN_ENABLE_SLOT_MIRRORING=1)
+  endif()
+
   target_link_libraries(${target_name} PUBLIC EtcPal libSRTP::srtp3 mbedcrypto mbedx509 mbedtls)
   if(NOT COMPILING_AS_OSS)
     target_clang_tidy(${target_name})

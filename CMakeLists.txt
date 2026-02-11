@@ -32,6 +32,7 @@ endif()
 message(STATUS "Using SRTP crypto policy: ${SACN_SRTP_CRYPTO_POLICY}")
 
 option(SACN_ENABLE_SRTP_REKEY_TEST "Enable the SRTP rekey test" OFF)
+option(SACN_ENABLE_SLOT_MIRRORING "Enable slot mirroring to double slots from 512 to 1024" OFF)
 
 ####################### Dependencies & standalone support ######################
 

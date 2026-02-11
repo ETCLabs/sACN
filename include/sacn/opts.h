@@ -189,10 +189,26 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #define SACN_SRTP_REKEY_TEST_ROLLOVER_INTERVAL_MS 250
 #endif
 
+/** @brief Doubles the 512 slots into the next 512, making for 1024.
+ * 
+ * The latter 512 are interpreted as the next subsequent universe.
+ */
+#ifndef SACN_ENABLE_SLOT_MIRRORING
+#define SACN_ENABLE_SLOT_MIRRORING 0
+#endif
+
 #if SACN_ENABLE_SRTP_REKEY_TEST
+#if SACN_ENABLE_SLOT_MIRRORING
+#define SACN_SRTP_CRYPTO_POLICY_STR_POSTFIX " (REKEY TEST & MIRRORING ENABLED)"
+#else
 #define SACN_SRTP_CRYPTO_POLICY_STR_POSTFIX " (REKEY TEST ENABLED)"
+#endif
+#else
+#if SACN_ENABLE_SLOT_MIRRORING
+#define SACN_SRTP_CRYPTO_POLICY_STR_POSTFIX " (MIRRORING ENABLED)"
 #else
 #define SACN_SRTP_CRYPTO_POLICY_STR_POSTFIX ""
+#endif
 #endif
 
 #ifdef SACN_SRTP_CRYPTO_POLICY_DEFAULT

@@ -1384,6 +1384,23 @@ void deliver_receive_callbacks(const EtcPalSockAddr*            from_addr,
       universe_data->api_callback(universe_data->receiver_handle, from_addr, &universe_data->source_info,
                                   &universe_data->universe_data, universe_data->context);
     }
+
+#if SACN_ENABLE_SLOT_MIRRORING
+    ++universe_data->universe_data.universe_id;
+    universe_data->universe_data.values += universe_data->universe_data.slot_range.address_count;
+    
+    if (universe_data->internal_callback)
+    {
+      universe_data->internal_callback(universe_data->receiver_handle, from_addr, &universe_data->source_info,
+                                       &universe_data->universe_data, universe_data->thread_id);
+    }
+
+    if (universe_data->api_callback)
+    {
+      universe_data->api_callback(universe_data->receiver_handle, from_addr, &universe_data->source_info,
+                                  &universe_data->universe_data, universe_data->context);
+    }
+#endif
   }
 }
 

@@ -69,6 +69,10 @@ bool parse_sacn_data_packet(const uint8_t*        buf,
   universe_data->values                   = &buf[88];
   if (universe_data->values + universe_data->slot_range.address_count > buf + buflen)
     return false;
+    
+#if SACN_ENABLE_SLOT_MIRRORING
+  universe_data->slot_range.address_count /= 2;
+#endif
 
   strncpy(source_info->name, (char*)&buf[6], kSacnSourceNameMaxLen);
   // Just in case the string is not null terminated even though it is required to be
@@ -398,8 +402,15 @@ void update_send_buf_data(uint8_t*                   send_buf,
   SET_FORCE_SYNC_OPT(send_buf, (force_sync == kEnableForceSync));
 
   // Update the size/count fields for the new data size (slot count)
+#if SACN_ENABLE_SLOT_MIRRORING
+  SET_DATA_SLOT_COUNT(send_buf, new_data_size * 2);
+#else
   SET_DATA_SLOT_COUNT(send_buf, new_data_size);
+#endif
 
   // Copy data into the send buffer immediately after the start code
   memcpy(&send_buf[SACN_DATA_HEADER_SIZE], new_data, new_data_size);
+#if SACN_ENABLE_SLOT_MIRRORING
+  memcpy(&send_buf[SACN_DATA_HEADER_SIZE + new_data_size], new_data, new_data_size);
+#endif
 }
