@@ -72,6 +72,7 @@ bool parse_sacn_data_packet(const uint8_t*        buf,
     
 #if SACN_ENABLE_SLOT_MIRRORING
   universe_data->slot_range.address_count /= 2;
+  // No need to offset the range, since the mirrored range is identical anyway.
 #endif
 
   strncpy(source_info->name, (char*)&buf[6], kSacnSourceNameMaxLen);

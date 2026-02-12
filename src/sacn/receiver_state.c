@@ -506,6 +506,14 @@ void read_network_and_process(SacnRecvThreadContext* context)
   if (read_res == kEtcPalErrOk)
   {
     handle_incoming(context, &read_result);
+#if SACN_ENABLE_SLOT_MIRRORING
+    if (etcpal_unpack_u32b(&read_result.data[SACN_ROOT_VECTOR_OFFSET]) == ACN_VECTOR_ROOT_E131_DATA)
+    {
+      uint8_t* universe_ptr = &read_result.data[SACN_ROOT_VECTOR_OFFSET + 95];
+      etcpal_pack_u16b(universe_ptr, etcpal_unpack_u16b(universe_ptr) + 1);
+      handle_incoming(context, &read_result);
+    }
+#endif
   }
   else if (read_res != kEtcPalErrTimedOut)
   {
@@ -925,17 +933,6 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
         return;
       }
 
-#if SACN_ENABLE_SLOT_MIRRORING
-      SacnReceiver* receiver2 = NULL;
-      if (lookup_receiver_by_universe(universe_data->universe_data.universe_id + 1, &receiver2) != kEtcPalErrOk)
-      {
-        // We are not listening to this universe.
-        sacn_receiver_unlock();
-        receiver_cb_unlock();
-        return;
-      }
-#endif
-
       SacnSamplingPeriodNetint* sp_netint =
           etcpal_rbtree_find(&receiver->sampling_period_netints, &read_result->netint);
 
@@ -1041,9 +1038,6 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
           universe_data->api_callback              = receiver->api_callbacks.universe_data;
           universe_data->internal_callback         = receiver->internal_callbacks.universe_data;
           universe_data->receiver_handle           = receiver->keys.handle;
-#if SACN_ENABLE_SLOT_MIRRORING
-          universe_data->receiver2_handle = receiver2->keys.handle;
-#endif
           universe_data->universe_data.universe_id = receiver->keys.universe;
           universe_data->universe_data.is_sampling = (sp_netint != NULL);
 
@@ -1053,9 +1047,6 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
 
           universe_data->thread_id = thread_id;
           universe_data->context   = receiver->api_callbacks.context;
-#if SACN_ENABLE_SLOT_MIRRORING
-          universe_data->context2 = receiver2->api_callbacks.context;
-#endif
         }
       }
 
@@ -1401,23 +1392,6 @@ void deliver_receive_callbacks(const EtcPalSockAddr*            from_addr,
       universe_data->api_callback(universe_data->receiver_handle, from_addr, &universe_data->source_info,
                                   &universe_data->universe_data, universe_data->context);
     }
-
-#if SACN_ENABLE_SLOT_MIRRORING
-    ++universe_data->universe_data.universe_id;
-    universe_data->universe_data.values += universe_data->universe_data.slot_range.address_count;
-    
-    if (universe_data->internal_callback)
-    {
-      universe_data->internal_callback(universe_data->receiver2_handle, from_addr, &universe_data->source_info,
-                                       &universe_data->universe_data, universe_data->thread_id);
-    }
-
-    if (universe_data->api_callback)
-    {
-      universe_data->api_callback(universe_data->receiver2_handle, from_addr, &universe_data->source_info,
-                                  &universe_data->universe_data, universe_data->context2);
-    }
-#endif
   }
 }
 
