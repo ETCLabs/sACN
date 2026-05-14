@@ -87,17 +87,10 @@ static void           remove_sockets(sacn_thread_id_t               thread_id,
                                      sacn_socket_cleanup_behavior_t cleanup_behavior);
 
 // Receiving incoming data
-static void handle_incoming(SacnRecvThreadContext*     context,
-                            const uint8_t*             data,
-                            size_t                     datalen,
-                            const EtcPalSockAddr*      from_addr,
-                            const EtcPalMcastNetintId* netint);
-static void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
-                                    const uint8_t*             data,
-                                    size_t                     datalen,
-                                    const EtcPalUuid*          sender_cid,
-                                    const EtcPalSockAddr*      from_addr,
-                                    const EtcPalMcastNetintId* netint);
+static void handle_incoming(SacnRecvThreadContext* context, const SacnReadResult* read_result);
+static void handle_sacn_data_packet(sacn_thread_id_t       thread_id,
+                                    const AcnRootLayerPdu* rlp,
+                                    const SacnReadResult*  read_result);
 static void handle_sacn_extended_packet(SacnRecvThreadContext* context,
                                         const uint8_t*         data,
                                         size_t                 datalen,
@@ -511,7 +504,7 @@ void read_network_and_process(SacnRecvThreadContext* context)
   etcpal_error_t read_res = sacn_read(context, &read_result);
   if (read_res == kEtcPalErrOk)
   {
-    handle_incoming(context, read_result.data, read_result.data_len, &read_result.from_addr, &read_result.netint);
+    handle_incoming(context, &read_result);
   }
   else if (read_res != kEtcPalErrTimedOut)
   {
@@ -775,35 +768,28 @@ void remove_sockets(sacn_thread_id_t               thread_id,
  * Handle an incoming data packet on a receiver socket.
  *
  * [in] context Context for the thread in which the incoming data was received.
- * [in] data Incoming data buffer.
- * [in] datalen Size of data buffer.
- * [in] from_addr Network address from which the data was received.
- * [in] netint ID of network interface on which the data was received.
+ * [in] read_result->data Incoming data buffer.
+ * [in] read_result->data_len Size of data buffer.
+ * [in] read_result->from_addr Network address from which the data was received.
+ * [in] read_result->netint ID of network interface on which the data was received.
  */
-void handle_incoming(SacnRecvThreadContext*     context,
-                     const uint8_t*             data,
-                     size_t                     datalen,
-                     const EtcPalSockAddr*      from_addr,
-                     const EtcPalMcastNetintId* netint)
+void handle_incoming(SacnRecvThreadContext* context, const SacnReadResult* read_result)
 {
-  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(data) || !SACN_ASSERT_VERIFY(from_addr) ||
-      !SACN_ASSERT_VERIFY(netint))
-  {
+  if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(read_result) || !SACN_ASSERT_VERIFY(read_result->data))
     return;
-  }
-
   AcnUdpPreamble preamble;
   if (!acn_parse_udp_preamble(data, datalen, &preamble))
     return;
+  }
 
   AcnRootLayerPdu rlp;
   AcnPdu          lpdu = ACN_PDU_INIT;
   while (acn_parse_root_layer_pdu(preamble.rlp_block, preamble.rlp_block_len, &rlp, &lpdu))
   {
     if (rlp.vector == ACN_VECTOR_ROOT_E131_DATA)
-      handle_sacn_data_packet(context->thread_id, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr, netint);
+      handle_sacn_data_packet(context->thread_id, &rlp, read_result);
     else if (rlp.vector == ACN_VECTOR_ROOT_E131_EXTENDED)
-      handle_sacn_extended_packet(context, rlp.pdata, rlp.data_len, &rlp.sender_cid, from_addr);
+      handle_sacn_extended_packet(context, rlp.pdata, rlp.data_len, &rlp.sender_cid, &read_result->from_addr);
   }
 }
 
@@ -811,21 +797,16 @@ void handle_incoming(SacnRecvThreadContext*     context,
  * Handle an sACN Data packet that has been unpacked from a Root Layer PDU.
  *
  * [in] thread_id ID for the thread in which the data packet was received.
- * [in] data Buffer containing the data packet.
- * [in] datalen Size of buffer.
- * [in] sender_cid CID from which the data was received.
- * [in] from_addr Network address from which the data was received.
- * [in] netint ID of network interface on which the data was received.
+ * [in] rlp->pdata Buffer containing the data packet.
+ * [in] rlp->data_len Size of buffer.
+ * [in] rlp->sender_cid CID from which the data was received.
+ * [in] read_result->from_addr Network address from which the data was received.
+ * [in] read_result->netint ID of network interface on which the data was received.
  */
-void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
-                             const uint8_t*             data,
-                             size_t                     datalen,
-                             const EtcPalUuid*          sender_cid,
-                             const EtcPalSockAddr*      from_addr,
-                             const EtcPalMcastNetintId* netint)
+void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* rlp, const SacnReadResult* read_result)
 {
-  if (!SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid) || !SACN_ASSERT_VERIFY(data) ||
-      !SACN_ASSERT_VERIFY(sender_cid) || !SACN_ASSERT_VERIFY(from_addr) || !SACN_ASSERT_VERIFY(netint))
+  if (!SACN_ASSERT_VERIFY(thread_id != kSacnThreadIdInvalid) || !SACN_ASSERT_VERIFY(rlp) ||
+      !SACN_ASSERT_VERIFY(rlp->pdata) || !SACN_ASSERT_VERIFY(read_result))
   {
     return;
   }
@@ -846,17 +827,17 @@ void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
     bool    is_termination_packet = false;
     bool    parse_res             = false;
 
-    universe_data->source_info.cid = *sender_cid;
+    universe_data->source_info.cid = rlp->sender_cid;
 
-    parse_res = parse_sacn_data_packet(data, datalen, &universe_data->source_info, &seq, &is_termination_packet,
-                                       &universe_data->universe_data);
+    parse_res = parse_sacn_data_packet(rlp->pdata, rlp->data_len, &universe_data->source_info, &seq,
+                                       &is_termination_packet, &universe_data->universe_data);
 
     if (!parse_res)
     {
       if (SACN_CAN_LOG(ETCPAL_LOG_WARNING))
       {
         char cid_str[ETCPAL_UUID_STRING_BYTES];
-        etcpal_uuid_to_string(sender_cid, cid_str);
+        etcpal_uuid_to_string(&rlp->sender_cid, cid_str);
         SACN_LOG_WARNING("Ignoring malformed sACN data packet from component %s", cid_str);
       }
 
@@ -884,7 +865,8 @@ void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
         return;
       }
 
-      SacnSamplingPeriodNetint* sp_netint = etcpal_rbtree_find(&receiver->sampling_period_netints, netint);
+      SacnSamplingPeriodNetint* sp_netint =
+          etcpal_rbtree_find(&receiver->sampling_period_netints, &read_result->netint);
 
       // Drop all packets from netints scheduled for a future sampling period
       if (sp_netint && sp_netint->in_future_sampling_period)
@@ -895,20 +877,20 @@ void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
       }
 
       bool notify                       = false;
-      universe_data->source_info.handle = get_remote_source_handle(sender_cid);
+      universe_data->source_info.handle = get_remote_source_handle(&rlp->sender_cid);
       SacnTrackedSource* src =
           (SacnTrackedSource*)etcpal_rbtree_find(&receiver->sources, &universe_data->source_info.handle);
       if (src)
       {
         // We only associate a source with one netint, so packets received on other netints should be dropped
-        if ((src->netint.ip_type != netint->ip_type) || (src->netint.index != netint->index))
+        if ((src->netint.ip_type != read_result->netint.ip_type) || (src->netint.index != read_result->netint.index))
         {
           // Only drop these after the sampling period, because certain stacks such as lwIP may not always provide the
           // netint ID in PKTINFO right away - plus, dropping these only has value after the sampling period.
           if (receiver->sampling)
           {
-            src->netint =
-                *netint;  // Keep updating the ID (whichever the source ends up with will be the definitive one)
+            // Keep updating the ID (whichever the source ends up with will be the definitive one)
+            src->netint = read_result->netint;
           }
           else
           {
@@ -958,8 +940,8 @@ void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
       }
       else if (!is_termination_packet)
       {
-        process_new_source_data(receiver, &universe_data->source_info, netint, &universe_data->universe_data, seq, &src,
-                                source_limit_exceeded, &notify);
+        process_new_source_data(receiver, &universe_data->source_info, &read_result->netint,
+                                &universe_data->universe_data, seq, &src, source_limit_exceeded, &notify);
 
         if (src)
           universe_data->source_info.handle = src->handle;
@@ -992,8 +974,9 @@ void handle_sacn_data_packet(sacn_thread_id_t           thread_id,
     }
 
     // Deliver callbacks if applicable.
-    deliver_receive_callbacks(from_addr, &universe_data->source_info, universe_data->universe_data.universe_id,
-                              source_limit_exceeded, source_pap_lost, universe_data);
+    deliver_receive_callbacks(&read_result->from_addr, &universe_data->source_info,
+                              universe_data->universe_data.universe_id, source_limit_exceeded, source_pap_lost,
+                              universe_data);
 
     receiver_cb_unlock();
   }
