@@ -447,7 +447,6 @@ TEST_F(TestPdu, ParseSacnDataPacketHandlesInvalid)
 
   SacnRemoteSource     source_info_out;
   SacnRecvUniverseData universe_data_out;
-  uint8_t              seq_out{0u};
   bool                 terminated_out{false};
 
   std::array<uint8_t, kSacnMtu> valid_data{};
