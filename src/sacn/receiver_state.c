@@ -776,10 +776,10 @@ void handle_incoming(SacnRecvThreadContext* context, const SacnReadResult* read_
 {
   if (!SACN_ASSERT_VERIFY(context) || !SACN_ASSERT_VERIFY(read_result) || !SACN_ASSERT_VERIFY(read_result->data))
     return;
+  
   AcnUdpPreamble preamble;
-  if (!acn_parse_udp_preamble(data, datalen, &preamble))
+  if (!acn_parse_udp_preamble(read_result->data, read_result->data_len, &preamble))
     return;
-  }
 
   AcnRootLayerPdu rlp;
   AcnPdu          lpdu = ACN_PDU_INIT;
