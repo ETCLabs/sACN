@@ -208,7 +208,6 @@ protected:
 
     SacnRemoteSource     source_info_out;
     SacnRecvUniverseData universe_data_out;
-    uint8_t              seq_out{0u};
     bool                 terminated_out{false};
     EXPECT_TRUE(parse_sacn_data_packet(&test_buffer_[SACN_FRAMING_OFFSET], kSacnMtu - SACN_FRAMING_OFFSET,
                                        &source_info_out, &terminated_out, &universe_data_out));
@@ -437,7 +436,7 @@ TEST_F(TestPdu, ParseSacnDataPacketHandlesInvalid)
   static const std::vector<uint8_t> kValidData         = {1u, 2u, 3u};
   static const SacnRemoteSource     kValidSourceInfo   = {1u, kEtcPalNullUuid, "Test Name"};
   static const SacnRecvUniverseData kValidUniverseData = {
-      1u, 100u, true, false, kSacnStartcodeDmx, {1, 3}, kValidData.data()};
+      1u, 100u, true, false, 0u, 0u, 0u, kSacnStartcodeDmx, {1, 3}, kValidData.data()};
   static constexpr size_t   kBufLenTooShort           = 87u;
   static constexpr uint32_t kNonDataVector            = (VECTOR_E131_DATA_PACKET + 123u);
   static constexpr uint8_t  kInvalidDmpVector         = 0x04;
