@@ -577,6 +577,12 @@ etcpal_error_t create_unicast_send_socket(etcpal_iptype_t             ip_type,
   etcpal_error_t res =
       etcpal_socket(ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET, ETCPAL_SOCK_DGRAM, socket);
 
+  if (res != kEtcPalErrOk)
+  {
+    SACN_LOG_ERR("Failed to create %s unicast socket: '%s'", ip_type == kEtcPalIpTypeV6 ? "IPv6" : "IPv4",
+                 etcpal_strerror(res));
+  }
+
   if ((res == kEtcPalErrOk) && (config->unicast_sndtimeo_ms > 0))
   {
     res = etcpal_setsockopt(*socket, ETCPAL_SOL_SOCKET, ETCPAL_SO_SNDTIMEO, &config->unicast_sndtimeo_ms,
