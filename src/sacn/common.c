@@ -31,11 +31,6 @@
 #include "sacn/private/source_detector.h"
 #include "sacn/private/source_detector_state.h"
 
-/*************************** Private constants *******************************/
-
-#define SACN_ETCPAL_FEATURES \
-  (ETCPAL_FEATURE_SOCKETS | ETCPAL_FEATURE_TIMERS | ETCPAL_FEATURE_NETINTS | ETCPAL_FEATURE_LOGGING)
-
 /***************************** Global variables ******************************/
 
 const EtcPalLogParams* sacn_log_params;
@@ -173,10 +168,13 @@ etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
       features_to_init = (features_to_init & ~SACN_ALL_NETWORK_FEATURES);
   }
 
-  bool log_params_initted     = false;
-  bool etcpal_initted         = false;
-  bool receiver_mutex_initted = false;
-  bool source_mutex_initted   = false;
+  bool log_params_initted       = false;
+  bool etcpal_logging_initted   = false;
+  bool etcpal_sockets_initted   = false;
+  bool etcpal_timers_initted    = false;
+  bool etcpal_netints_initted   = false;
+  bool receiver_mutex_initted   = false;
+  bool source_mutex_initted     = false;
 #if SACN_RECEIVER_ENABLED
   bool receiver_mem_initted = false;
 #endif  // SACN_RECEIVER_ENABLED
@@ -222,71 +220,154 @@ etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
   if ((features_to_init & SACN_ALL_NETWORK_FEATURES) == SACN_ALL_NETWORK_FEATURES)
   {
     if (res == kEtcPalErrOk)
-      etcpal_initted = ((res = etcpal_init(SACN_ETCPAL_FEATURES)) == kEtcPalErrOk);
+      etcpal_logging_initted = ((res = etcpal_init(ETCPAL_FEATURE_LOGGING)) == kEtcPalErrOk);
+
+    if (res == kEtcPalErrOk)
+    {
+      etcpal_sockets_initted = ((res = etcpal_init(ETCPAL_FEATURE_SOCKETS)) == kEtcPalErrOk);
+      if (!etcpal_sockets_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE ETCPAL SOCKETS!");
+    }
+
+    if (res == kEtcPalErrOk)
+    {
+      etcpal_timers_initted = ((res = etcpal_init(ETCPAL_FEATURE_TIMERS)) == kEtcPalErrOk);
+      if (!etcpal_sockets_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE ETCPAL TIMERS!");
+    }
+
+    if (res == kEtcPalErrOk)
+    {
+      etcpal_netints_initted = ((res = etcpal_init(ETCPAL_FEATURE_NETINTS)) == kEtcPalErrOk);
+      if (!etcpal_sockets_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE ETCPAL NETINTS!");
+    }
 
     if (res == kEtcPalErrOk)
     {
       receiver_mutex_initted = etcpal_mutex_create(&sacn_receiver_mutex);
       if (!receiver_mutex_initted)
+      {
         res = kEtcPalErrSys;
+        SACN_LOG_CRIT("FAILED TO INITIALIZE RECEIVER MUTEX!");
+      }
     }
 
     if (res == kEtcPalErrOk)
     {
       source_mutex_initted = etcpal_mutex_create(&sacn_source_mutex);
       if (!source_mutex_initted)
+      {
         res = kEtcPalErrSys;
+        SACN_LOG_CRIT("FAILED TO INITIALIZE SOURCE MUTEX!");
+      }
     }
 
 #if SACN_RECEIVER_ENABLED
     if (res == kEtcPalErrOk)
+    {
       receiver_mem_initted = ((res = sacn_receiver_mem_init(SACN_RECEIVER_MAX_THREADS)) == kEtcPalErrOk);
+      if (!receiver_mem_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE RECEIVER MEMORY!");
+    }
 #endif  // SACN_RECEIVER_ENABLED
 
 #if SACN_SOURCE_ENABLED
     if (res == kEtcPalErrOk)
+    {
       source_mem_initted = ((res = sacn_source_mem_init()) == kEtcPalErrOk);
+      if (!source_mem_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE SOURCE MEMORY!");
+    }
 #endif  // SACN_SOURCE_ENABLED
 
 #if SACN_MERGE_RECEIVER_ENABLED
     if (res == kEtcPalErrOk)
+    {
       merge_receiver_mem_initted = ((res = sacn_merge_receiver_mem_init(SACN_RECEIVER_MAX_THREADS)) == kEtcPalErrOk);
+      if (!merge_receiver_mem_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE MERGE RECEIVER MEMORY!");
+    }
 #endif  // SACN_MERGE_RECEIVER_ENABLED
 
 #if SACN_SOURCE_DETECTOR_ENABLED
     if (res == kEtcPalErrOk)
+    {
       source_detector_mem_initted = ((res = sacn_source_detector_mem_init()) == kEtcPalErrOk);
+      if (!source_detector_mem_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE SOURCE DETECTOR MEMORY!");
+    }
 #endif  // SACN_SOURCE_DETECTOR_ENABLED
 
     if (res == kEtcPalErrOk)
+    {
       sockets_initted = ((res = sacn_sockets_init(sys_netint_config, callbacks)) == kEtcPalErrOk);
+      if (!sockets_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE SOCKETS!");
+    }
 
 #if SACN_MERGE_RECEIVER_ENABLED
     if (res == kEtcPalErrOk)
+    {
       merge_receiver_initted = ((res = sacn_merge_receiver_init()) == kEtcPalErrOk);
+      if (!merge_receiver_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE MERGE RECEIVER!");
+    }
 #endif  // SACN_MERGE_RECEIVER_ENABLED
 
 #if SACN_SOURCE_DETECTOR_ENABLED
     if (res == kEtcPalErrOk)
+    {
       source_detector_state_initted = ((res = sacn_source_detector_state_init()) == kEtcPalErrOk);
+      if (!source_detector_state_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE SOURCE DETECTOR STATE!");
+    }
+
     if (res == kEtcPalErrOk)
+    {
       source_detector_initted = ((res = sacn_source_detector_init()) == kEtcPalErrOk);
+      if (!source_detector_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE SOURCE DETECTOR!");
+    }
 #endif  // SACN_SOURCE_DETECTOR_ENABLED
 
 #if SACN_RECEIVER_ENABLED
     if (res == kEtcPalErrOk)
+    {
       source_loss_initted = ((res = sacn_source_loss_init()) == kEtcPalErrOk);
+      if (!source_loss_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE SOURCE LOSS!");
+    }
+
     if (res == kEtcPalErrOk)
+    {
       receiver_state_initted = ((res = sacn_receiver_state_init()) == kEtcPalErrOk);
+      if (!receiver_state_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE RECEIVER STATE!");
+    }
+
     if (res == kEtcPalErrOk)
+    {
       receiver_initted = ((res = sacn_receiver_init()) == kEtcPalErrOk);
+      if (!receiver_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE RECEIVER!");
+    }
 #endif  // SACN_RECEIVER_ENABLED
 
 #if SACN_SOURCE_ENABLED
     if (res == kEtcPalErrOk)
+    {
       source_state_initted = ((res = sacn_source_state_init()) == kEtcPalErrOk);
+      if (!source_state_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE SOURCE STATE!");
+    }
+
     if (res == kEtcPalErrOk)
+    {
       source_initted = ((res = sacn_source_init()) == kEtcPalErrOk);
+      if (!source_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE SOURCE!");
+    }
 #endif  // SACN_SOURCE_ENABLED
   }
 
@@ -294,7 +375,11 @@ etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
   if ((features_to_init & SACN_FEATURE_DMX_MERGER) != 0)
   {
     if (res == kEtcPalErrOk)
+    {
       merger_initted = ((res = sacn_dmx_merger_init()) == kEtcPalErrOk);
+      if (!merger_initted)
+        SACN_LOG_CRIT("FAILED TO INITIALIZE DMX MERGER!");
+    }
   }
 #endif  // SACN_DMX_MERGER_ENABLED
 
@@ -361,8 +446,15 @@ etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
       etcpal_mutex_destroy(&sacn_source_mutex);
     if (receiver_mutex_initted)
       etcpal_mutex_destroy(&sacn_receiver_mutex);
-    if (etcpal_initted)
-      etcpal_deinit(SACN_ETCPAL_FEATURES);
+
+    if (etcpal_netints_initted)
+      etcpal_deinit(ETCPAL_FEATURE_NETINTS);
+    if (etcpal_timers_initted)
+      etcpal_deinit(ETCPAL_FEATURE_TIMERS);
+    if (etcpal_sockets_initted)
+      etcpal_deinit(ETCPAL_FEATURE_SOCKETS);
+    if (etcpal_logging_initted)
+      etcpal_deinit(ETCPAL_FEATURE_LOGGING);
     if (log_params_initted)
       sacn_log_params = NULL;
   }
@@ -452,7 +544,8 @@ void sacn_deinit_features(sacn_features_t features)
 #endif  // SACN_RECEIVER_ENABLED
     etcpal_mutex_destroy(&sacn_source_mutex);
     etcpal_mutex_destroy(&sacn_receiver_mutex);
-    etcpal_deinit(SACN_ETCPAL_FEATURES);
+
+    etcpal_deinit(ETCPAL_FEATURE_NETINTS | ETCPAL_FEATURE_TIMERS | ETCPAL_FEATURE_SOCKETS | ETCPAL_FEATURE_LOGGING);
   }
 
   sacn_log_params = NULL;

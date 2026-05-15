@@ -76,7 +76,24 @@ bool WaitForSignal(etcpal::Signal& signal, uint32_t or_until_ms_elapsed)
 class MockLogMessageHandler : public etcpal::LogMessageHandler
 {
 public:
-  MockLogMessageHandler()                                              = default;
+  MockLogMessageHandler()
+  {
+    ON_CALL(*this, HandleLogMessage(_)).WillByDefault(Invoke([&](const EtcPalLogStrings& strings) {
+      std::string syslog = strings.human_readable;
+
+      size_t start = syslog.find('[');
+      size_t end   = syslog.find(']');
+      ASSERT_TRUE((start == 0) && (end > (start + 1)));
+
+      auto category = syslog.substr(start + 1, end - start - 1);
+      if ((category.find("ERR") != std::string::npos) || (category.find("CRIT") != std::string::npos) ||
+          (category.find("ALRT") != std::string::npos) || (category.find("EMRG") != std::string::npos))
+      {
+        ADD_FAILURE() << "Log message (category " << category << ") from sACN library: " << strings.human_readable;
+      }
+    }));
+  }
+
   MockLogMessageHandler(const MockLogMessageHandler& other)            = delete;
   MockLogMessageHandler& operator=(const MockLogMessageHandler& other) = delete;
   MockLogMessageHandler(MockLogMessageHandler&& other)                 = delete;
