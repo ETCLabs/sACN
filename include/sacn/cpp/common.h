@@ -124,7 +124,7 @@ struct LibrarySettings
   NotifyHandler* notify_handler{nullptr};
 
   /** Configuration for send sockets (e.g. configurable sockopts). */
-  SacnSendSocketConfig send_socket_config{0, 0};
+  SacnSendSocketConfig send_socket_config{SACN_SEND_SOCKET_CONFIG_DEFAULT_VALUES};
 
   /** Sets default settings. */
   LibrarySettings() = default;

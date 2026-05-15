@@ -1192,7 +1192,7 @@ etcpal_error_t sacn_source_reset_networking_per_universe(const SacnNetintConfig*
                   get_per_universe_netint_lists_index(source->handle, source->universes[j].universe_id,
                                                       per_universe_netint_lists, num_per_universe_netint_lists, NULL);
 
-              SacnNetintConfig universe_netint_config;
+              SacnNetintConfig universe_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
               universe_netint_config.netints     = per_universe_netint_lists[list_index].netints;
               universe_netint_config.num_netints = per_universe_netint_lists[list_index].num_netints;
               universe_netint_config.no_netints  = per_universe_netint_lists[list_index].no_netints;

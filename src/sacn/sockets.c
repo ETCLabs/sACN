@@ -572,7 +572,9 @@ etcpal_error_t create_unicast_send_socket(etcpal_iptype_t             ip_type,
 {
   if (!SACN_ASSERT_VERIFY(ip_type != kEtcPalIpTypeInvalid) || !SACN_ASSERT_VERIFY(config) ||
       !SACN_ASSERT_VERIFY(socket))
+  {
     return kEtcPalErrSys;
+  }
 
   etcpal_error_t res =
       etcpal_socket(ip_type == kEtcPalIpTypeV6 ? ETCPAL_AF_INET6 : ETCPAL_AF_INET, ETCPAL_SOCK_DGRAM, socket);
@@ -1447,7 +1449,7 @@ etcpal_error_t sockets_init(const SacnNetintConfig* netint_config, sacn_networki
   // Now do some last-minute initialization, then free memory
   if ((res == kEtcPalErrOk) && (net_type == kSource))
   {
-    SacnSendSocketConfig send_socket_config = {0};
+    SacnSendSocketConfig send_socket_config = SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT;
     if (netint_config)
       send_socket_config = netint_config->send_socket_config;
 
@@ -1689,7 +1691,7 @@ size_t apply_netint_config(const SacnNetintConfig* netint_config,
     if (use_all_netints || app_netint)
     {
       // Test, write to sys_netints, & write to app_netint->status
-      SacnSendSocketConfig send_socket_config = {0};
+      SacnSendSocketConfig send_socket_config = SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT;
       if (netint_config)
         send_socket_config = netint_config->send_socket_config;
 
@@ -1915,10 +1917,17 @@ etcpal_error_t test_sacn_source_netint(unsigned int                index,
 
 etcpal_error_t init_unicast_send_sockets(const SacnSendSocketConfig* config)
 {
-  etcpal_error_t result = create_unicast_send_socket(kEtcPalIpTypeV4, config, &ipv4_unicast_send_socket);
+  if (!SACN_ASSERT_VERIFY(config))
+    return kEtcPalErrSys;
+
+  etcpal_error_t result = (config->unicast_ip_support == kSacnIpV6Only)
+                              ? kEtcPalErrOk
+                              : create_unicast_send_socket(kEtcPalIpTypeV4, config, &ipv4_unicast_send_socket);
   if (result == kEtcPalErrOk)
   {
-    result = create_unicast_send_socket(kEtcPalIpTypeV6, config, &ipv6_unicast_send_socket);
+    result = (config->unicast_ip_support == kSacnIpV4Only)
+                 ? kEtcPalErrOk
+                 : create_unicast_send_socket(kEtcPalIpTypeV6, config, &ipv6_unicast_send_socket);
     if (result != kEtcPalErrOk)
     {
       etcpal_close(ipv4_unicast_send_socket);

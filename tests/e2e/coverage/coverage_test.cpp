@@ -458,7 +458,9 @@ protected:
 
     EXPECT_TRUE(logger_.Startup(mock_log_handler_));
 
-    auto res = sacn::Init(logger_);
+    sacn::LibrarySettings settings;
+    settings.send_socket_config.unicast_ip_support = kSacnIpV4Only;
+    auto res = sacn::Init(logger_, sacn::McastMode::kEnabledOnAllInterfaces, SACN_FEATURES_ALL, settings);
     EXPECT_TRUE(res) << "res = " << res.ToString();
   }
 

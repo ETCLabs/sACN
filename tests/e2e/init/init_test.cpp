@@ -298,7 +298,10 @@ TEST_F(InitTest, HandlesNothingInitialized)
 
 TEST_F(InitTest, InitializesDmxMergerFeature)
 {
-  auto res = sacn::Init(SACN_FEATURE_DMX_MERGER);
+  sacn::LibrarySettings settings;
+  settings.send_socket_config.unicast_ip_support = kSacnIpV4Only;
+
+  auto res = sacn::Init(SACN_FEATURE_DMX_MERGER, settings);
   EXPECT_TRUE(res) << "res = " << res.ToString();
   VerifyInit(SACN_FEATURE_DMX_MERGER);
 
@@ -308,11 +311,14 @@ TEST_F(InitTest, InitializesDmxMergerFeature)
 
 TEST_F(InitTest, InitializesAllFeaturesSeparately)
 {
-  auto res = sacn::Init(SACN_FEATURE_DMX_MERGER);
+  sacn::LibrarySettings settings;
+  settings.send_socket_config.unicast_ip_support = kSacnIpV4Only;
+
+  auto res = sacn::Init(SACN_FEATURE_DMX_MERGER, settings);
   EXPECT_TRUE(res) << "res = " << res.ToString();
   VerifyInit(SACN_FEATURE_DMX_MERGER);
 
-  res = sacn::Init();
+  res = sacn::Init(SACN_FEATURES_ALL, settings);
   EXPECT_TRUE(res) << "res = " << res.ToString();
   VerifyInit(SACN_FEATURES_ALL);
 
@@ -324,7 +330,10 @@ TEST_F(InitTest, InitializesAllFeaturesSeparately)
 
 TEST_F(InitTest, InitializesAllFeaturesAtOnce)
 {
-  auto res = sacn::Init();
+  sacn::LibrarySettings settings;
+  settings.send_socket_config.unicast_ip_support = kSacnIpV4Only;
+
+  auto res = sacn::Init(SACN_FEATURES_ALL, settings);
   EXPECT_TRUE(res) << "res = " << res.ToString();
   VerifyInit(SACN_FEATURES_ALL);
 
