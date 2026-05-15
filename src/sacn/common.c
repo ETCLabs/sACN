@@ -168,13 +168,13 @@ etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
       features_to_init = (features_to_init & ~SACN_ALL_NETWORK_FEATURES);
   }
 
-  bool log_params_initted       = false;
-  bool etcpal_logging_initted   = false;
-  bool etcpal_sockets_initted   = false;
-  bool etcpal_timers_initted    = false;
-  bool etcpal_netints_initted   = false;
-  bool receiver_mutex_initted   = false;
-  bool source_mutex_initted     = false;
+  bool log_params_initted     = false;
+  bool etcpal_logging_initted = false;
+  bool etcpal_sockets_initted = false;
+  bool etcpal_timers_initted  = false;
+  bool etcpal_netints_initted = false;
+  bool receiver_mutex_initted = false;
+  bool source_mutex_initted   = false;
 #if SACN_RECEIVER_ENABLED
   bool receiver_mem_initted = false;
 #endif  // SACN_RECEIVER_ENABLED
