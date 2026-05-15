@@ -298,7 +298,8 @@ TEST_F(InitTest, HandlesNothingInitialized)
 
 TEST_F(InitTest, InitializesDmxMergerFeature)
 {
-  EXPECT_TRUE(sacn::Init(SACN_FEATURE_DMX_MERGER));
+  auto res = sacn::Init(SACN_FEATURE_DMX_MERGER);
+  EXPECT_TRUE(res) << "res = " << res.ToString();
   VerifyInit(SACN_FEATURE_DMX_MERGER);
 
   sacn::Deinit(SACN_FEATURE_DMX_MERGER);
@@ -307,9 +308,12 @@ TEST_F(InitTest, InitializesDmxMergerFeature)
 
 TEST_F(InitTest, InitializesAllFeaturesSeparately)
 {
-  EXPECT_TRUE(sacn::Init(SACN_FEATURE_DMX_MERGER));
+  auto res = sacn::Init(SACN_FEATURE_DMX_MERGER);
+  EXPECT_TRUE(res) << "res = " << res.ToString();
   VerifyInit(SACN_FEATURE_DMX_MERGER);
-  EXPECT_TRUE(sacn::Init());
+
+  res = sacn::Init();
+  EXPECT_TRUE(res) << "res = " << res.ToString();
   VerifyInit(SACN_FEATURES_ALL);
 
   sacn::Deinit();
@@ -320,7 +324,8 @@ TEST_F(InitTest, InitializesAllFeaturesSeparately)
 
 TEST_F(InitTest, InitializesAllFeaturesAtOnce)
 {
-  EXPECT_TRUE(sacn::Init());
+  auto res = sacn::Init();
+  EXPECT_TRUE(res) << "res = " << res.ToString();
   VerifyInit(SACN_FEATURES_ALL);
 
   sacn::Deinit();

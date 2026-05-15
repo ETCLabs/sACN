@@ -440,7 +440,9 @@ protected:
     srand(static_cast<unsigned int>(time(nullptr)));
 
     EXPECT_TRUE(logger_.Startup(mock_log_handler_));
-    EXPECT_TRUE(sacn::Init(logger_));
+
+    auto res = sacn::Init(logger_);
+    EXPECT_TRUE(res) << "res = " << res.ToString();
   }
 
   void TearDown() override
