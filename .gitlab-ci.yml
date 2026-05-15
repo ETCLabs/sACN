@@ -57,7 +57,6 @@ linux-gcc-build:
   stage: build
   tags:
     - etc-linux-docker
-    - large
   image: etc-docker.artifactory.etcconnect.com/etc/common-tech/gcc-cmake:llvm18
   parallel:
     matrix:
@@ -79,7 +78,6 @@ linux-clang-build:
   stage: build
   tags:
     - etc-linux-docker
-    - large
   image: etc-docker.artifactory.etcconnect.com/etc/common-tech/clang-cmake-msan:latest
   parallel:
     matrix:
