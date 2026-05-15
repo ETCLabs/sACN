@@ -177,7 +177,8 @@ protected:
     NiceMock<MockReceiverNotifyHandler> notify;
 
     sacn::Receiver::Settings settings;
-    settings.universe_id = kTestUniverse;
+    settings.universe_id  = kTestUniverse;
+    settings.ip_supported = kSacnIpV4Only;
 
     if ((features & kAllOtherFeatures) == kAllOtherFeatures)
     {
@@ -213,7 +214,8 @@ protected:
     NiceMock<MockMergeReceiverNotifyHandler> notify;
 
     sacn::MergeReceiver::Settings settings;
-    settings.universe_id = kTestUniverse;
+    settings.universe_id  = kTestUniverse;
+    settings.ip_supported = kSacnIpV4Only;
 
     if ((features & kAllOtherFeatures) == kAllOtherFeatures)
     {
@@ -242,8 +244,9 @@ protected:
     sacn::Source source;
 
     sacn::Source::Settings settings;
-    settings.cid  = etcpal::Uuid::V4();
-    settings.name = kTestName;
+    settings.cid          = etcpal::Uuid::V4();
+    settings.name         = kTestName;
+    settings.ip_supported = kSacnIpV4Only;
 
     sacn::Source::UniverseSettings universe_settings;
     universe_settings.universe = kTestUniverse;

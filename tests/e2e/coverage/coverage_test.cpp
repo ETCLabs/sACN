@@ -213,8 +213,9 @@ public:
   {
     for (auto& [universe_id, state] : universes_)
     {
-      EXPECT_TRUE(state->merge_receiver.Startup(sacn::MergeReceiver::Settings(universe_id), state->notify,
-                                                initial_mcast_mode_));
+      auto settings         = sacn::MergeReceiver::Settings(universe_id);
+      settings.ip_supported = kSacnIpV4Only;
+      EXPECT_TRUE(state->merge_receiver.Startup(settings, state->notify, initial_mcast_mode_));
     }
   }
 
@@ -296,7 +297,9 @@ public:
     EXPECT_TRUE(source_);
     if (source_)
     {
-      EXPECT_TRUE(source_->source.Startup(sacn::Source::Settings(cid, std::string("Test Source ") + cid.ToString())));
+      auto settings         = sacn::Source::Settings(cid, std::string("Test Source ") + cid.ToString());
+      settings.ip_supported = kSacnIpV4Only;
+      EXPECT_TRUE(source_->source.Startup(settings));
 
       auto& source = *source_;  // Always track the SourceState object even if the TestSource moves
       source_->thread.Start([&source]() {
