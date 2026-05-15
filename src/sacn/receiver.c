@@ -495,9 +495,9 @@ etcpal_error_t sacn_receiver_reset_networking_per_receiver(const SacnNetintConfi
           if (res == kEtcPalErrOk)
           {
             SacnNetintConfig receiver_netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
-            receiver_netint_config.netints     = per_receiver_netint_lists[i].netints;
-            receiver_netint_config.num_netints = per_receiver_netint_lists[i].num_netints;
-            receiver_netint_config.no_netints  = per_receiver_netint_lists[i].no_netints;
+            receiver_netint_config.netints          = per_receiver_netint_lists[i].netints;
+            receiver_netint_config.num_netints      = per_receiver_netint_lists[i].num_netints;
+            receiver_netint_config.no_netints       = per_receiver_netint_lists[i].no_netints;
 
             res = sacn_initialize_receiver_netints(&receiver->netints, receiver->sampling,
                                                    &receiver->sampling_period_netints, &receiver_netint_config);

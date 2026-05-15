@@ -128,6 +128,8 @@ etcpal_error_t sacn_init_features(const EtcPalLogParams*  log_params,
   return sacn_init_features_with_cb(log_params, sys_netint_config, features, NULL);
 }
 
+// NOLINTBEGIN(readability-function-cognitive-complexity)
+
 /**
  * @brief Initialize specific features of the sACN library.
  *
@@ -461,6 +463,8 @@ etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
 
   return res;
 }
+
+// NOLINTEND(readability-function-cognitive-complexity)
 
 /**
  * @brief Deinitialize all features of the sACN library.

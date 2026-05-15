@@ -179,18 +179,12 @@ typedef struct SacnCommonCallbacks
 /**
  * Initializes the members of a SacnSendSocketConfig to defaults.
  */
-#define SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT \
-  {                                          \
-    SACN_SEND_SOCKET_CONFIG_DEFAULT_VALUES   \
-  }                                          \
+#define SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT {SACN_SEND_SOCKET_CONFIG_DEFAULT_VALUES}
 
 /**
  * Initializes the members of a SacnNetintConfig to defaults.
  */
-#define SACN_NETINT_CONFIG_DEFAULT_INIT                  \
-  {                                                      \
-    NULL, 0, false, SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT \
-  }
+#define SACN_NETINT_CONFIG_DEFAULT_INIT {NULL, 0, false, SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT}
 
 /** A mask of desired sACN features. See "sACN feature masks". */
 typedef uint32_t sacn_features_t;
