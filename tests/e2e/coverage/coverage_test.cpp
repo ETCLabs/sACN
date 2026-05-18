@@ -490,7 +490,7 @@ protected:
     source_reset_thread.Start([]() {
       SacnSendSocketConfig send_socket_config = SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT;
       send_socket_config.unicast_ip_support   = kSacnIpV4Only;
-      sacn::Source::ResetNetworking();
+      sacn::Source::ResetNetworking(sacn::McastMode::kEnabledOnAllInterfaces, send_socket_config);
     });
 
     merge_receiver_reset_thread.Join();
