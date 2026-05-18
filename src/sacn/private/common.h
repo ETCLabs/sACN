@@ -29,6 +29,7 @@
 
 #include <limits.h>
 #include "etcpal/common.h"
+#include "etcpal/sem.h"
 #include "etcpal/mutex.h"
 #include "etcpal/log.h"
 #include "etcpal/rbtree.h"
@@ -695,9 +696,16 @@ typedef struct SacnRecvThreadContext
   bool ipv6_bound;
 #endif
 
+  bool                recv_hook_has_data;
+  uint8_t             recv_hook_buf[kSacnMtu];
+  size_t              recv_hook_buf_len;
+  EtcPalSockAddr      recv_hook_from_addr;
+  EtcPalMcastNetintId recv_hook_netint;
+
   // This section is only touched from the thread, outside the lock.
   EtcPalPollContext poll_context;
   bool              poll_context_initialized;
+  etcpal_sem_t      poll_sem;  // So receive hook events can also be processed
   uint8_t           recv_buf[kSacnMtu];
   EtcPalTimer       periodic_timer;
   bool              periodic_timer_started;

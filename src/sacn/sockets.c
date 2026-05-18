@@ -33,6 +33,7 @@
 #include "sacn/private/sockets.h"
 
 #include "etcpal/common.h"
+#include "etcpal/sem.h"
 #include "etcpal/netint.h"
 #include "sacn/private/mem.h"
 #include "sacn/opts.h"
@@ -1169,17 +1170,41 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
   if (!SACN_ASSERT_VERIFY(recv_thread_context) || !SACN_ASSERT_VERIFY(read_result))
     return kEtcPalErrSys;
 
-  EtcPalPollEvent event   = {0};
-  etcpal_error_t poll_res = etcpal_poll_wait(&recv_thread_context->poll_context, &event, SACN_RECEIVER_READ_TIMEOUT_MS);
+  // TODO: Create separate thread for polling with a wait of SACN_RECEIVER_READ_TIMEOUT_MS to avoid favoritism.
+  EtcPalPollEvent poll_event = {0};
+  etcpal_error_t poll_res = etcpal_poll_wait(&recv_thread_context->poll_context, &poll_event, 0 /*0ms (non-blocking)*/);
   if (poll_res == kEtcPalErrOk)
+    etcpal_sem_post(&recv_thread_context->poll_sem);
+
+  etcpal_sem_timed_wait(&recv_thread_context->poll_sem, SACN_RECEIVER_READ_TIMEOUT_MS);
+
+  if (sacn_receiver_lock())
   {
-    if (event.events & ETCPAL_POLL_ERR)
+    if (recv_thread_context->recv_hook_has_data)
     {
-      etcpal_poll_remove_socket(&recv_thread_context->poll_context, event.socket);
-      return event.err;
+      read_result->data      = recv_thread_context->recv_hook_buf;
+      read_result->data_len  = recv_thread_context->recv_hook_buf_len;
+      read_result->from_addr = recv_thread_context->recv_hook_from_addr;
+      read_result->netint    = recv_thread_context->recv_hook_netint;
+
+      recv_thread_context->recv_hook_has_data = false;
+
+      sacn_receiver_unlock();
+      return kEtcPalErrOk;
     }
 
-    if (event.events & ETCPAL_POLL_IN)
+    sacn_receiver_unlock();
+  }
+
+  if (poll_res == kEtcPalErrOk)
+  {
+    if (poll_event.events & ETCPAL_POLL_ERR)
+    {
+      etcpal_poll_remove_socket(&recv_thread_context->poll_context, poll_event.socket);
+      return poll_event.err;
+    }
+
+    if (poll_event.events & ETCPAL_POLL_IN)
     {
       uint8_t control_buf[ETCPAL_MAX_CONTROL_SIZE_PKTINFO] = {0};  // Ancillary data
 
@@ -1189,7 +1214,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
       msg.control      = control_buf;
       msg.controllen   = ETCPAL_MAX_CONTROL_SIZE_PKTINFO;
 
-      int recv_res = etcpal_recvmsg(event.socket, &msg, 0);
+      int recv_res = etcpal_recvmsg(poll_event.socket, &msg, 0);
       if (recv_res > 0)
       {
         if (msg.flags & ETCPAL_MSG_TRUNC)
@@ -1206,7 +1231,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
 #if SACN_RECEIVER_SOCKET_PER_NIC
           if (sacn_receiver_lock())
           {
-            int index = find_socket_ref_by_handle(recv_thread_context, event.socket);
+            int index = find_socket_ref_by_handle(recv_thread_context, poll_event.socket);
 
             if (index >= 0)
             {
@@ -1230,17 +1255,21 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
 
       if (recv_res < 0)
       {
-        etcpal_poll_remove_socket(&recv_thread_context->poll_context, event.socket);
+        etcpal_poll_remove_socket(&recv_thread_context->poll_context, poll_event.socket);
         return (etcpal_error_t)recv_res;
       }
     }
   }
-  return poll_res;
-#else   // SACN_RECEIVER_ENABLED
+
+  if (poll_res == kEtcPalErrTimedOut)
+    etcpal_thread_sleep(SACN_RECEIVER_READ_TIMEOUT_MS);
+
+  return poll_res;  // Either it was RX_NETWORK (kEtcPalErrOk) or it was a poll error (e.g. kEtcPalErrTimedOut)
+#else               // SACN_RECEIVER_ENABLED
   ETCPAL_UNUSED_ARG(recv_thread_context);
   ETCPAL_UNUSED_ARG(read_result);
   return kEtcPalErrNotImpl;
-#endif  // SACN_RECEIVER_ENABLED
+#endif              // SACN_RECEIVER_ENABLED
 }
 
 etcpal_error_t sacn_send_multicast(uint16_t                   universe_id,

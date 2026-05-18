@@ -410,6 +410,15 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context, sa
   context->poll_context_initialized = false;
   context->periodic_timer_started   = false;
 
+  if (!etcpal_sem_create(&context->poll_sem, 0, 20 /*TODO: Configurable SEM_MAX_COUNT*/))
+  {
+    SACN_LOG_CRIT("FAILED TO CREATE RECEIVE HOOK SEMAPHORE!");
+    return kEtcPalErrSys;
+  }
+
+  context->recv_hook_has_data = false;
+  context->recv_hook_buf_len  = 0;
+
   return kEtcPalErrOk;
 }
 
