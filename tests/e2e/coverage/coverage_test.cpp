@@ -76,7 +76,24 @@ bool WaitForSignal(etcpal::Signal& signal, uint32_t or_until_ms_elapsed)
 class MockLogMessageHandler : public etcpal::LogMessageHandler
 {
 public:
-  MockLogMessageHandler()                                              = default;
+  MockLogMessageHandler()
+  {
+    ON_CALL(*this, HandleLogMessage(_)).WillByDefault(Invoke([&](const EtcPalLogStrings& strings) {
+      std::string syslog = strings.human_readable;
+
+      size_t start = syslog.find('[');
+      size_t end   = syslog.find(']');
+      ASSERT_TRUE((start == 0) && (end > (start + 1)));
+
+      auto category = syslog.substr(start + 1, end - start - 1);
+      if ((category.find("ERR") != std::string::npos) || (category.find("CRIT") != std::string::npos) ||
+          (category.find("ALRT") != std::string::npos) || (category.find("EMRG") != std::string::npos))
+      {
+        ADD_FAILURE() << "Log message (category " << category << ") from sACN library: " << strings.human_readable;
+      }
+    }));
+  }
+
   MockLogMessageHandler(const MockLogMessageHandler& other)            = delete;
   MockLogMessageHandler& operator=(const MockLogMessageHandler& other) = delete;
   MockLogMessageHandler(MockLogMessageHandler&& other)                 = delete;
@@ -196,8 +213,9 @@ public:
   {
     for (auto& [universe_id, state] : universes_)
     {
-      EXPECT_TRUE(state->merge_receiver.Startup(sacn::MergeReceiver::Settings(universe_id), state->notify,
-                                                initial_mcast_mode_));
+      auto settings         = sacn::MergeReceiver::Settings(universe_id);
+      settings.ip_supported = kSacnIpV4Only;
+      EXPECT_TRUE(state->merge_receiver.Startup(settings, state->notify, initial_mcast_mode_));
     }
   }
 
@@ -245,7 +263,12 @@ public:
 
   ~TestSourceDetector() { sacn::SourceDetector::Shutdown(); }
 
-  void Startup() { EXPECT_TRUE(sacn::SourceDetector::Startup(notify_, initial_mcast_mode_)); }
+  void Startup()
+  {
+    sacn::SourceDetector::Settings settings;
+    settings.ip_supported = kSacnIpV4Only;
+    EXPECT_TRUE(sacn::SourceDetector::Startup(settings, notify_, initial_mcast_mode_));
+  }
   MockSourceDetectorNotifyHandler& GetNotifyHandler() { return notify_; }
 
 private:
@@ -279,7 +302,9 @@ public:
     EXPECT_TRUE(source_);
     if (source_)
     {
-      EXPECT_TRUE(source_->source.Startup(sacn::Source::Settings(cid, std::string("Test Source ") + cid.ToString())));
+      auto settings         = sacn::Source::Settings(cid, std::string("Test Source ") + cid.ToString());
+      settings.ip_supported = kSacnIpV4Only;
+      EXPECT_TRUE(source_->source.Startup(settings));
 
       auto& source = *source_;  // Always track the SourceState object even if the TestSource moves
       source_->thread.Start([&source]() {
@@ -440,7 +465,11 @@ protected:
     srand(static_cast<unsigned int>(time(nullptr)));
 
     EXPECT_TRUE(logger_.Startup(mock_log_handler_));
-    EXPECT_TRUE(sacn::Init(logger_));
+
+    sacn::LibrarySettings settings;
+    settings.send_socket_config.unicast_ip_support = kSacnIpV4Only;
+    auto res = sacn::Init(logger_, sacn::McastMode::kEnabledOnAllInterfaces, SACN_FEATURES_ALL, settings);
+    EXPECT_TRUE(res) << "res = " << res.ToString();
   }
 
   void TearDown() override
@@ -458,7 +487,11 @@ protected:
 
     merge_receiver_reset_thread.Start([]() { sacn::MergeReceiver::ResetNetworking(); });
     source_detector_reset_thread.Start([]() { sacn::SourceDetector::ResetNetworking(); });
-    source_reset_thread.Start([]() { sacn::Source::ResetNetworking(); });
+    source_reset_thread.Start([]() {
+      SacnSendSocketConfig send_socket_config = SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT;
+      send_socket_config.unicast_ip_support   = kSacnIpV4Only;
+      sacn::Source::ResetNetworking(sacn::McastMode::kEnabledOnAllInterfaces, send_socket_config);
+    });
 
     merge_receiver_reset_thread.Join();
     source_detector_reset_thread.Join();
