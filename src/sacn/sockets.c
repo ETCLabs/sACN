@@ -1260,11 +1260,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
       }
     }
   }
-
-  if (poll_res == kEtcPalErrTimedOut)
-    etcpal_thread_sleep(SACN_RECEIVER_READ_TIMEOUT_MS);
-
-  return poll_res;  // Either it was RX_NETWORK (kEtcPalErrOk) or it was a poll error (e.g. kEtcPalErrTimedOut)
+  return poll_res;
 #else               // SACN_RECEIVER_ENABLED
   ETCPAL_UNUSED_ARG(recv_thread_context);
   ETCPAL_UNUSED_ARG(read_result);
