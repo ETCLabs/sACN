@@ -263,7 +263,12 @@ public:
 
   ~TestSourceDetector() { sacn::SourceDetector::Shutdown(); }
 
-  void Startup() { EXPECT_TRUE(sacn::SourceDetector::Startup(notify_, initial_mcast_mode_)); }
+  void Startup()
+  {
+    sacn::SourceDetector::Settings settings;
+    settings.ip_supported = kSacnIpV4Only;
+    EXPECT_TRUE(sacn::SourceDetector::Startup(settings, notify_, initial_mcast_mode_));
+  }
   MockSourceDetectorNotifyHandler& GetNotifyHandler() { return notify_; }
 
 private:
@@ -482,7 +487,11 @@ protected:
 
     merge_receiver_reset_thread.Start([]() { sacn::MergeReceiver::ResetNetworking(); });
     source_detector_reset_thread.Start([]() { sacn::SourceDetector::ResetNetworking(); });
-    source_reset_thread.Start([]() { sacn::Source::ResetNetworking(); });
+    source_reset_thread.Start([]() {
+      SacnSendSocketConfig send_socket_config = SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT;
+      send_socket_config.unicast_ip_support   = kSacnIpV4Only;
+      sacn::Source::ResetNetworking();
+    });
 
     merge_receiver_reset_thread.Join();
     source_detector_reset_thread.Join();

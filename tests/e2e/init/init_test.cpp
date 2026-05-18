@@ -279,16 +279,19 @@ protected:
 
   void VerifySourceDetectorInit(sacn_features_t features)
   {
+    sacn::SourceDetector::Settings settings;
+    settings.ip_supported = kSacnIpV4Only;
+
     NiceMock<MockSourceDetectorNotifyHandler> notify;
 
     if ((features & kAllOtherFeatures) == kAllOtherFeatures)
     {
-      EXPECT_TRUE(sacn::SourceDetector::Startup(notify));
+      EXPECT_TRUE(sacn::SourceDetector::Startup(settings, notify));
       EXPECT_TRUE(sacn::SourceDetector::ResetNetworking());
     }
     else
     {
-      EXPECT_EQ(sacn::SourceDetector::Startup(notify), kEtcPalErrNotInit);
+      EXPECT_EQ(sacn::SourceDetector::Startup(settings, notify), kEtcPalErrNotInit);
       EXPECT_EQ(sacn::SourceDetector::ResetNetworking(), kEtcPalErrNotInit);
     }
   }
