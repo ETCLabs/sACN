@@ -116,7 +116,6 @@ extern "C" {
 bool parse_sacn_data_packet(const uint8_t*        buf,
                             size_t                buflen,
                             SacnRemoteSource*     source_info,
-                            uint8_t*              seq,
                             bool*                 terminated,
                             SacnRecvUniverseData* universe_data);
 bool parse_framing_layer_vector(const uint8_t* buf, size_t buflen, uint32_t* vector);
