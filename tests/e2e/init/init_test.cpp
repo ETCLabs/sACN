@@ -177,7 +177,8 @@ protected:
     NiceMock<MockReceiverNotifyHandler> notify;
 
     sacn::Receiver::Settings settings;
-    settings.universe_id = kTestUniverse;
+    settings.universe_id  = kTestUniverse;
+    settings.ip_supported = kSacnIpV4Only;
 
     if ((features & kAllOtherFeatures) == kAllOtherFeatures)
     {
@@ -213,7 +214,8 @@ protected:
     NiceMock<MockMergeReceiverNotifyHandler> notify;
 
     sacn::MergeReceiver::Settings settings;
-    settings.universe_id = kTestUniverse;
+    settings.universe_id  = kTestUniverse;
+    settings.ip_supported = kSacnIpV4Only;
 
     if ((features & kAllOtherFeatures) == kAllOtherFeatures)
     {
@@ -242,8 +244,9 @@ protected:
     sacn::Source source;
 
     sacn::Source::Settings settings;
-    settings.cid  = etcpal::Uuid::V4();
-    settings.name = kTestName;
+    settings.cid          = etcpal::Uuid::V4();
+    settings.name         = kTestName;
+    settings.ip_supported = kSacnIpV4Only;
 
     sacn::Source::UniverseSettings universe_settings;
     universe_settings.universe = kTestUniverse;
@@ -276,16 +279,19 @@ protected:
 
   void VerifySourceDetectorInit(sacn_features_t features)
   {
+    sacn::SourceDetector::Settings settings;
+    settings.ip_supported = kSacnIpV4Only;
+
     NiceMock<MockSourceDetectorNotifyHandler> notify;
 
     if ((features & kAllOtherFeatures) == kAllOtherFeatures)
     {
-      EXPECT_TRUE(sacn::SourceDetector::Startup(notify));
+      EXPECT_TRUE(sacn::SourceDetector::Startup(settings, notify));
       EXPECT_TRUE(sacn::SourceDetector::ResetNetworking());
     }
     else
     {
-      EXPECT_EQ(sacn::SourceDetector::Startup(notify), kEtcPalErrNotInit);
+      EXPECT_EQ(sacn::SourceDetector::Startup(settings, notify), kEtcPalErrNotInit);
       EXPECT_EQ(sacn::SourceDetector::ResetNetworking(), kEtcPalErrNotInit);
     }
   }
@@ -298,7 +304,11 @@ TEST_F(InitTest, HandlesNothingInitialized)
 
 TEST_F(InitTest, InitializesDmxMergerFeature)
 {
-  EXPECT_TRUE(sacn::Init(SACN_FEATURE_DMX_MERGER));
+  sacn::LibrarySettings settings;
+  settings.send_socket_config.unicast_ip_support = kSacnIpV4Only;
+
+  auto res = sacn::Init(SACN_FEATURE_DMX_MERGER, settings);
+  EXPECT_TRUE(res) << "res = " << res.ToString();
   VerifyInit(SACN_FEATURE_DMX_MERGER);
 
   sacn::Deinit(SACN_FEATURE_DMX_MERGER);
@@ -307,9 +317,15 @@ TEST_F(InitTest, InitializesDmxMergerFeature)
 
 TEST_F(InitTest, InitializesAllFeaturesSeparately)
 {
-  EXPECT_TRUE(sacn::Init(SACN_FEATURE_DMX_MERGER));
+  sacn::LibrarySettings settings;
+  settings.send_socket_config.unicast_ip_support = kSacnIpV4Only;
+
+  auto res = sacn::Init(SACN_FEATURE_DMX_MERGER, settings);
+  EXPECT_TRUE(res) << "res = " << res.ToString();
   VerifyInit(SACN_FEATURE_DMX_MERGER);
-  EXPECT_TRUE(sacn::Init());
+
+  res = sacn::Init(SACN_FEATURES_ALL, settings);
+  EXPECT_TRUE(res) << "res = " << res.ToString();
   VerifyInit(SACN_FEATURES_ALL);
 
   sacn::Deinit();
@@ -320,7 +336,11 @@ TEST_F(InitTest, InitializesAllFeaturesSeparately)
 
 TEST_F(InitTest, InitializesAllFeaturesAtOnce)
 {
-  EXPECT_TRUE(sacn::Init());
+  sacn::LibrarySettings settings;
+  settings.send_socket_config.unicast_ip_support = kSacnIpV4Only;
+
+  auto res = sacn::Init(SACN_FEATURES_ALL, settings);
+  EXPECT_TRUE(res) << "res = " << res.ToString();
   VerifyInit(SACN_FEATURES_ALL);
 
   sacn::Deinit();

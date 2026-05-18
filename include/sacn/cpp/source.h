@@ -824,8 +824,9 @@ inline int Source::ProcessManual(TickMode tick_mode = TickMode::kProcessLevelsAn
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking(McastMode mcast_mode = McastMode::kEnabledOnAllInterfaces,
-                                             const SacnSendSocketConfig& send_socket_config = {})
+inline etcpal::Error Source::ResetNetworking(
+    McastMode                   mcast_mode         = McastMode::kEnabledOnAllInterfaces,
+    const SacnSendSocketConfig& send_socket_config = SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT)
 {
   SacnNetintConfig netint_config = SACN_NETINT_CONFIG_DEFAULT_INIT;
   if (mcast_mode == McastMode::kDisabledOnAllInterfaces)
@@ -861,8 +862,9 @@ inline etcpal::Error Source::ResetNetworking(McastMode mcast_mode = McastMode::k
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sys_netints,
-                                             const SacnSendSocketConfig&      send_socket_config = {})
+inline etcpal::Error Source::ResetNetworking(
+    std::vector<SacnMcastInterface>& sys_netints,
+    const SacnSendSocketConfig&      send_socket_config = SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT)
 {
   SacnNetintConfig netint_config   = SACN_NETINT_CONFIG_DEFAULT_INIT;
   netint_config.send_socket_config = send_socket_config;
@@ -906,9 +908,10 @@ inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sy
  * @return #kEtcPalErrNotInit: Module not initialized.
  * @return #kEtcPalErrSys: An internal library or system call error occurred.
  */
-inline etcpal::Error Source::ResetNetworking(std::vector<SacnMcastInterface>& sys_netints,
-                                             std::vector<UniverseNetintList>& per_universe_netint_lists,
-                                             const SacnSendSocketConfig&      send_socket_config = {})
+inline etcpal::Error Source::ResetNetworking(
+    std::vector<SacnMcastInterface>& sys_netints,
+    std::vector<UniverseNetintList>& per_universe_netint_lists,
+    const SacnSendSocketConfig&      send_socket_config = SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT)
 {
   std::vector<SacnSourceUniverseNetintList> netint_lists_c;
   netint_lists_c.reserve(per_universe_netint_lists.size());

@@ -101,8 +101,9 @@ typedef struct SacnMcastInterface
 /** Configuration for send sockets (e.g. configurable sockopts). */
 typedef struct SacnSendSocketConfig
 {
-  int unicast_sndtimeo_ms;   /**< Unicast send socket timeout in milliseconds (0 if disabled). */
-  int multicast_sndtimeo_ms; /**< Multicast send socket timeout in milliseconds (0 if disabled). */
+  int               unicast_sndtimeo_ms;   /**< Unicast send socket timeout in milliseconds (0 if disabled). */
+  int               multicast_sndtimeo_ms; /**< Multicast send socket timeout in milliseconds (0 if disabled). */
+  sacn_ip_support_t unicast_ip_support;    /**< Whether to create unicast send sockets for IPv4, IPv6, or both. */
 } SacnSendSocketConfig;
 
 /**
@@ -171,15 +172,19 @@ typedef struct SacnCommonCallbacks
 } SacnCommonCallbacks;
 
 /**
+ * Default values for initializing a SacnSendSocketConfig.
+ */
+#define SACN_SEND_SOCKET_CONFIG_DEFAULT_VALUES 0, 0, kSacnIpV4AndIpV6
+
+/**
+ * Initializes the members of a SacnSendSocketConfig to defaults.
+ */
+#define SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT {SACN_SEND_SOCKET_CONFIG_DEFAULT_VALUES}
+
+/**
  * Initializes the members of a SacnNetintConfig to defaults.
  */
-#define SACN_NETINT_CONFIG_DEFAULT_INIT \
-  {                                     \
-    NULL, 0, false,                     \
-    {                                   \
-      0, 0                              \
-    }                                   \
-  }
+#define SACN_NETINT_CONFIG_DEFAULT_INIT {NULL, 0, false, SACN_SEND_SOCKET_CONFIG_DEFAULT_INIT}
 
 /** A mask of desired sACN features. See "sACN feature masks". */
 typedef uint32_t sacn_features_t;

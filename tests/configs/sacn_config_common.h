@@ -10,4 +10,6 @@ bool SacnTestingAssertHandler(const char* expression, const char* file, const ch
 
 #define SACN_ASSERT_VERIFY(expr) \
   ((expr) ? true : (SacnTestingAssertHandler(#expr, __FILE__, __func__, __LINE__) && false))
+
+#undef SACN_LOGGING_ENABLED
 #define SACN_LOGGING_ENABLED 0
