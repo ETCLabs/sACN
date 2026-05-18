@@ -101,9 +101,9 @@ typedef struct SacnMcastInterface
 /** Configuration for send sockets (e.g. configurable sockopts). */
 typedef struct SacnSendSocketConfig
 {
-  sacn_ip_support_t unicast_ip_support;    /**< Whether to create unicast send sockets for IPv4, IPv6, or both. */
   int               unicast_sndtimeo_ms;   /**< Unicast send socket timeout in milliseconds (0 if disabled). */
   int               multicast_sndtimeo_ms; /**< Multicast send socket timeout in milliseconds (0 if disabled). */
+  sacn_ip_support_t unicast_ip_support;    /**< Whether to create unicast send sockets for IPv4, IPv6, or both. */
 } SacnSendSocketConfig;
 
 /**
@@ -174,7 +174,7 @@ typedef struct SacnCommonCallbacks
 /**
  * Default values for initializing a SacnSendSocketConfig.
  */
-#define SACN_SEND_SOCKET_CONFIG_DEFAULT_VALUES kSacnIpV4AndIpV6, 0, 0
+#define SACN_SEND_SOCKET_CONFIG_DEFAULT_VALUES 0, 0, kSacnIpV4AndIpV6
 
 /**
  * Initializes the members of a SacnSendSocketConfig to defaults.
