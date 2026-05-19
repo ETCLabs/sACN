@@ -361,7 +361,9 @@ protected:
 
   static void RunThreadCycle()
   {
-    read_network_and_process(get_recv_thread_context(0u));
+    SacnRecvThreadContext* context = get_recv_thread_context(0u);
+    poll_network(context);
+    read_network_and_process(context);
     ++seq_num_;
     test_data_.at(SACN_SEQ_OFFSET) = seq_num_;
   }
@@ -464,7 +466,8 @@ TEST_F(TestReceiverState, InitializedThreadDeinitializes)
   EXPECT_EQ(sacn_cleanup_dead_sockets_fake.call_count, 0u);
 
   etcpal_thread_join_fake.custom_fake = [](etcpal_thread_t* thread_id) {
-    EXPECT_EQ(thread_id, &get_recv_thread_context(0)->thread_handle);
+    EXPECT_TRUE((thread_id == &get_recv_thread_context(0)->recv_thread_handle) ||
+                (thread_id == &get_recv_thread_context(0)->network_poll_thread_handle));
     return kEtcPalErrOk;
   };
   sacn_cleanup_dead_sockets_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context) {
@@ -477,7 +480,7 @@ TEST_F(TestReceiverState, InitializedThreadDeinitializes)
 
   sacn_receiver_state_deinit();
 
-  EXPECT_EQ(etcpal_thread_join_fake.call_count, 1u);
+  EXPECT_EQ(etcpal_thread_join_fake.call_count, 2u);
   EXPECT_EQ(sacn_cleanup_dead_sockets_fake.call_count, 1u);
 }
 
@@ -599,10 +602,22 @@ TEST_F(TestReceiverState, AssignReceiverToThreadWorks)
   etcpal_thread_create_fake.custom_fake = [](etcpal_thread_t* thread_id, const EtcPalThreadParams* params,
                                              void (*thread_fn)(void*), void*                       thread_arg) {
     ETCPAL_UNUSED_ARG(thread_fn);
-    EXPECT_EQ(thread_id, &get_recv_thread_context(0)->thread_handle);
-    EXPECT_EQ(params->priority, static_cast<unsigned int>(SACN_RECEIVER_THREAD_PRIORITY));
-    EXPECT_EQ(params->stack_size, static_cast<unsigned int>(SACN_RECEIVER_THREAD_STACK));
-    EXPECT_EQ(strcmp(params->thread_name, "sACN Receive Thread"), 0);
+    EXPECT_TRUE((thread_id == &get_recv_thread_context(0)->recv_thread_handle) ||
+                (thread_id == &get_recv_thread_context(0)->network_poll_thread_handle));
+
+    if (thread_id == &get_recv_thread_context(0)->recv_thread_handle)
+    {
+      EXPECT_EQ(params->priority, static_cast<unsigned int>(SACN_RECEIVER_THREAD_PRIORITY));
+      EXPECT_EQ(params->stack_size, static_cast<unsigned int>(SACN_RECEIVER_THREAD_STACK));
+      EXPECT_EQ(strcmp(params->thread_name, SACN_RECEIVER_THREAD_NAME), 0);
+    }
+    else if (thread_id == &get_recv_thread_context(0)->network_poll_thread_handle)
+    {
+      EXPECT_EQ(params->priority, static_cast<unsigned int>(SACN_NETWORK_POLL_THREAD_PRIORITY));
+      EXPECT_EQ(params->stack_size, static_cast<unsigned int>(SACN_NETWORK_POLL_THREAD_STACK));
+      EXPECT_EQ(strcmp(params->thread_name, SACN_NETWORK_POLL_THREAD_NAME), 0);
+    }
+
     EXPECT_EQ(params->platform_data, nullptr);
     EXPECT_NE(thread_fn, nullptr);
     EXPECT_EQ(thread_arg, get_recv_thread_context(0));
@@ -619,7 +634,7 @@ TEST_F(TestReceiverState, AssignReceiverToThreadWorks)
 #else
   EXPECT_EQ(sacn_add_receiver_socket_fake.call_count, 2u);
 #endif
-  EXPECT_EQ(etcpal_thread_create_fake.call_count, 1u);
+  EXPECT_EQ(etcpal_thread_create_fake.call_count, 2u);
   EXPECT_EQ(sacn_remove_receiver_socket_fake.call_count, 0u);
   EXPECT_EQ(get_recv_thread_context(0)->running, true);
   EXPECT_EQ(get_recv_thread_context(0)->receivers->keys.universe, kTestUniverse);

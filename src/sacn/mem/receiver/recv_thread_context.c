@@ -405,19 +405,47 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context, sa
 
   context->source_detector = NULL;
 
-  etcpal_signal_create(&context->deinit_signal);
   context->running                  = false;
-  context->poll_context_initialized = false;
+  context->network_poll_context_initialized = false;
   context->periodic_timer_started   = false;
 
-  if (!etcpal_sem_create(&context->poll_sem, 0, 20 /*TODO: Configurable SEM_MAX_COUNT*/))
+  context->network_has_data   = false;
+  context->recv_hook_has_data = false;
+  context->recv_hook_buf_len  = 0;
+  context->poll_state         = kCheckNetworkNext;
+
+  if (!etcpal_signal_create(&context->recv_thread_deinit_signal))
+  {
+    SACN_LOG_CRIT("FAILED TO CREATE RECEIVE THREAD DEINIT SIGNAL!");
+    return kEtcPalErrSys;
+  }
+
+  if (!etcpal_signal_create(&context->network_poll_thread_deinit_signal))
+  {
+    SACN_LOG_CRIT("FAILED TO CREATE NETWORK POLL THREAD DEINIT SIGNAL!");
+    return kEtcPalErrSys;
+  }
+
+  if (!etcpal_sem_create(&context->network_sem, 1 /* initial value (i.e. no network data) */,
+                         1 /* can be taken once at most (to prevent unprocessed data from being overwritten) */))
+  {
+    SACN_LOG_CRIT("FAILED TO CREATE NETWORK SEMAPHORE!");
+    return kEtcPalErrSys;
+  }
+
+  if (!etcpal_sem_create(&context->recv_hook_sem, 1 /* initial value (i.e. no receive hook data) */,
+                         1 /* can be taken once at most (to prevent unprocessed data from being overwritten) */))
   {
     SACN_LOG_CRIT("FAILED TO CREATE RECEIVE HOOK SEMAPHORE!");
     return kEtcPalErrSys;
   }
 
-  context->recv_hook_has_data = false;
-  context->recv_hook_buf_len  = 0;
+  if (!etcpal_sem_create(&context->poll_sem, 0 /* 0 events to start */,
+                         2 /* can be 2 events at most (network & hook) */))
+  {
+    SACN_LOG_CRIT("FAILED TO CREATE POLL SEMAPHORE!");
+    return kEtcPalErrSys;
+  }
 
   return kEtcPalErrOk;
 }
@@ -448,7 +476,11 @@ void deinit_recv_thread_context_entry(SacnRecvThreadContext* context)
   CLEAR_BUF(context, subscribes);
   CLEAR_BUF(context, unsubscribes);
 
-  etcpal_signal_destroy(&context->deinit_signal);
+  etcpal_signal_destroy(&context->recv_thread_deinit_signal);
+  etcpal_signal_destroy(&context->network_poll_thread_deinit_signal);
+  etcpal_sem_destroy(&context->network_sem);
+  etcpal_sem_destroy(&context->recv_hook_sem);
+  etcpal_sem_destroy(&context->poll_sem);
 }
 
 bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_socket_t sock, const EtcPalGroupReq* group)

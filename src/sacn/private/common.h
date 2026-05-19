@@ -661,12 +661,20 @@ typedef struct SocketGroupReq
   EtcPalGroupReq  group;  /* The interface and group address to join or leave. */
 } SocketGroupReq;
 
-/* Holds the discrete data used by each receiver thread. */
+typedef enum
+{
+  kCheckNetworkNext,
+  kCheckRecvHookNext
+} sacn_poll_state_t;
+
+/* Holds the discrete data used by each receiver thread (also includes corresponding network poll thread). */
 typedef struct SacnRecvThreadContext
 {
   sacn_thread_id_t thread_id;
-  etcpal_thread_t  thread_handle;
-  etcpal_signal_t  deinit_signal;
+  etcpal_thread_t  recv_thread_handle;
+  etcpal_thread_t  network_poll_thread_handle;
+  etcpal_signal_t  recv_thread_deinit_signal;
+  etcpal_signal_t  network_poll_thread_deinit_signal;
   bool             running;
 
   SacnReceiver* receivers;
@@ -696,17 +704,27 @@ typedef struct SacnRecvThreadContext
   bool ipv6_bound;
 #endif
 
+  etcpal_sem_t    network_sem;  // Binary semaphore indicating if network data is present
+  bool            network_has_data;
+  EtcPalPollEvent network_event;  // Network poll event to use to receive the network data
+
+  etcpal_sem_t        recv_hook_sem;  // Binary semaphore indicating if receive hook data is present
   bool                recv_hook_has_data;
   uint8_t             recv_hook_buf[kSacnMtu];
   size_t              recv_hook_buf_len;
   EtcPalSockAddr      recv_hook_from_addr;
   EtcPalMcastNetintId recv_hook_netint;
 
-  // This section is only touched from the thread, outside the lock.
-  EtcPalPollContext poll_context;
-  bool              poll_context_initialized;
-  etcpal_sem_t      poll_sem;  // So receive hook events can also be processed
-  uint8_t           recv_buf[kSacnMtu];
+  // Sync constructs not covered by the lock:
+  etcpal_sem_t poll_sem;  // Triggers receive thread to process network and/or receive hook events
+
+  // This section is only touched from the network poll thread (outside the lock):
+  EtcPalPollContext network_poll_context;
+  bool              network_poll_context_initialized;  // Technically read by other threads, but set once at init
+
+  // This section is only touched from the receive thread (outside the lock):
+  sacn_poll_state_t poll_state;  // Enforces fairness in case both network and receive hook are active
+  uint8_t           network_recv_buf[kSacnMtu];
   EtcPalTimer       periodic_timer;
   bool              periodic_timer_started;
 } SacnRecvThreadContext;

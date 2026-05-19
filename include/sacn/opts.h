@@ -203,13 +203,40 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #define SACN_RECEIVER_THREAD_NAME "sACN Receive Thread"
 #endif
 
+/**
+ * @brief The priority of each sACN network poll thread.
+ *
+ * This is usually only meaningful on real-time systems.
+ */
+#ifndef SACN_NETWORK_POLL_THREAD_PRIORITY
+#define SACN_NETWORK_POLL_THREAD_PRIORITY ETCPAL_THREAD_DEFAULT_PRIORITY
+#endif
+
+/**
+ * @brief The stack size of each sACN network poll thread.
+ *
+ * It's usually only necessary to worry about this on real-time or embedded systems.
+ */
+#ifndef SACN_NETWORK_POLL_THREAD_STACK
+#define SACN_NETWORK_POLL_THREAD_STACK ETCPAL_THREAD_DEFAULT_STACK
+#endif
+
+/**
+ * @brief The name to assign each sACN network poll thread.
+ *
+ * This is useful for distinguishing the receiver threads from other threads when debugging.
+ */
+#ifndef SACN_NETWORK_POLL_THREAD_NAME
+#define SACN_NETWORK_POLL_THREAD_NAME "sACN Network Poll Thread"
+#endif
+
 /* Infinite read blocks are not supported due to the potential for hangs on shutdown. */
 #if defined(SACN_RECEIVER_READ_TIMEOUT_MS) && SACN_RECEIVER_READ_TIMEOUT_MS < 0
 #undef SACN_RECEIVER_READ_TIMEOUT_MS /* It will get the default value below */
 #endif
 
 /**
- * @brief The maximum amount of time that a call to sacn_read() will block waiting for data, in
+ * @brief The maximum amount of time that a call to sacn_read() or sacn_poll() will block waiting for data, in
  *        milliseconds.
  *
  * It is recommended to keep this time short to avoid delays on shutdown.
