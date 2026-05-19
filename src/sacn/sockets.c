@@ -1203,6 +1203,8 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadRes
           res = process_network(recv_thread_context, read_result, &got_data);
       }
     }
+
+    SACN_ASSERT_VERIFY(got_data);  // Each event should result in data being processed
   }
 
   return res;
