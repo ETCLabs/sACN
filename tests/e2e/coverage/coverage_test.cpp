@@ -615,6 +615,8 @@ TEST_F(CoverageTest, DetectSourcesComingAndGoing)
 
 TEST_F(CoverageTest, ResetNetworkingAtScale)
 {
+  static constexpr uint32_t kWorstCaseWaitMs = 300000u;
+
   static constexpr int kNumUniverses = 25;
   static constexpr int kNumSources   = 2;
 
@@ -669,5 +671,6 @@ TEST_F(CoverageTest, ResetNetworkingAtScale)
 
   ResetNetworking();
 
-  etcpal::Thread::Sleep(11000u);  // Time for source detector to detect sources
+  // Wait for source detector to detect sources
+  EXPECT_TRUE(source_detector.GetNotifyHandler().WaitForSourceUpdated(kWorstCaseWaitMs));
 }
