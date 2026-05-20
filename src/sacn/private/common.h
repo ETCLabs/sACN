@@ -29,10 +29,11 @@
 
 #include <limits.h>
 #include "etcpal/common.h"
-#include "etcpal/sem.h"
 #include "etcpal/mutex.h"
 #include "etcpal/log.h"
+#include "etcpal/queue.h"
 #include "etcpal/rbtree.h"
+#include "etcpal/sem.h"
 #include "etcpal/signal.h"
 #include "etcpal/socket.h"
 #include "etcpal/timer.h"
@@ -661,11 +662,20 @@ typedef struct SocketGroupReq
   EtcPalGroupReq  group;  /* The interface and group address to join or leave. */
 } SocketGroupReq;
 
+typedef struct SacnReadData
+{
+  uint8_t*            data;
+  size_t              data_len;
+  EtcPalSockAddr      from_addr;
+  EtcPalMcastNetintId netint;
+} SacnReadData;
+
 typedef enum
 {
-  kCheckNetworkNext,
-  kCheckRecvHookNext
-} sacn_poll_state_t;
+  kSacnReadEventTimedOut,
+  kSacnReadEventNetwork,
+  kSacnReadEventHook
+} sacn_read_event_t;
 
 /* Holds the discrete data used by each receiver thread (also includes corresponding network poll thread). */
 typedef struct SacnRecvThreadContext
@@ -704,31 +714,23 @@ typedef struct SacnRecvThreadContext
   bool ipv6_bound;
 #endif
 
-  etcpal_sem_t    network_sem;  // Binary semaphore indicating if network data is present
-  bool            network_has_data;
-  // TODO: Switch to read result
-  EtcPalPollEvent network_event;  // Network poll event to use to receive the network data
+  // Data (read from network or receive hook) covered by semaphores instead of the lock:
+  etcpal_sem_t   network_sem;
+  uint8_t        network_buf[kSacnMtu];
+  SacnReadData network_read_data;
 
-  etcpal_sem_t        recv_hook_sem;  // Binary semaphore indicating if receive hook data is present
-  bool                recv_hook_has_data;
-  // TODO: Switch to read result
-  uint8_t             recv_hook_buf[kSacnMtu];
-  size_t              recv_hook_buf_len;
-  EtcPalSockAddr      recv_hook_from_addr;
-  EtcPalMcastNetintId recv_hook_netint;
+  etcpal_sem_t   hook_sem;
+  SacnReadData hook_read_data;  // Points to application-owned buffer
 
-  // Sync constructs not covered by the lock:
-  etcpal_sem_t poll_sem;  // Triggers receive thread to process network and/or receive hook events
+  etcpal_queue_t read_queue;  // Queue of sacn_read_event_t events to process
 
-  // This section is only touched from the network poll thread (outside the lock):
+  // This section is only touched from the receive thread (outside the lock):
   EtcPalPollContext network_poll_context;
   bool              network_poll_context_initialized;  // Technically read by other threads, but set once at init
 
-  // This section is only touched from the receive thread (outside the lock):
-  sacn_poll_state_t poll_state;  // Enforces fairness in case both network and receive hook are active
-  uint8_t           network_recv_buf[kSacnMtu];
-  EtcPalTimer       periodic_timer;
-  bool              periodic_timer_started;
+  // This section is only touched from the process thread (outside the lock):
+  EtcPalTimer             periodic_timer;
+  bool                    periodic_timer_started;
 } SacnRecvThreadContext;
 
 /******************************************************************************

@@ -405,45 +405,40 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context, sa
 
   context->source_detector = NULL;
 
-  context->running                  = false;
+  context->running                          = false;
   context->network_poll_context_initialized = false;
-  context->periodic_timer_started   = false;
+  context->periodic_timer_started           = false;
 
-  context->network_has_data   = false;
-  context->recv_hook_has_data = false;
-  context->recv_hook_buf_len  = 0;
-  context->poll_state         = kCheckNetworkNext;
-
-  if (!etcpal_signal_create(&context->process_thread_deinit_signal))
+  if (!etcpal_signal_create(&context->recv_thread_deinit_signal))
   {
     SACN_LOG_CRIT("FAILED TO CREATE RECEIVE THREAD DEINIT SIGNAL!");
     return kEtcPalErrSys;
   }
 
-  if (!etcpal_signal_create(&context->recv_thread_deinit_signal))
+  if (!etcpal_signal_create(&context->process_thread_deinit_signal))
   {
-    SACN_LOG_CRIT("FAILED TO CREATE NETWORK POLL THREAD DEINIT SIGNAL!");
+    SACN_LOG_CRIT("FAILED TO CREATE PROCESS THREAD DEINIT SIGNAL!");
     return kEtcPalErrSys;
   }
 
-  if (!etcpal_sem_create(&context->network_sem, 1 /* initial value (i.e. no network data) */,
+  if (!etcpal_sem_create(&context->network_sem, 1 /* initial value (i.e. no data) */,
                          1 /* can be taken once at most (to prevent unprocessed data from being overwritten) */))
   {
     SACN_LOG_CRIT("FAILED TO CREATE NETWORK SEMAPHORE!");
     return kEtcPalErrSys;
   }
 
-  if (!etcpal_sem_create(&context->recv_hook_sem, 1 /* initial value (i.e. no receive hook data) */,
+  if (!etcpal_sem_create(&context->hook_sem, 1 /* initial value (i.e. no data) */,
                          1 /* can be taken once at most (to prevent unprocessed data from being overwritten) */))
   {
-    SACN_LOG_CRIT("FAILED TO CREATE RECEIVE HOOK SEMAPHORE!");
+    SACN_LOG_CRIT("FAILED TO CREATE HOOK SEMAPHORE!");
     return kEtcPalErrSys;
   }
 
-  if (!etcpal_sem_create(&context->poll_sem, 0 /* 0 events to start */,
-                         2 /* can be 2 events at most (network & hook) */))
+  if (!etcpal_queue_create(&context->read_queue, 2 /* 2 events at most (network and/or receive hook) */,
+                           sizeof(sacn_read_event_t)))
   {
-    SACN_LOG_CRIT("FAILED TO CREATE POLL SEMAPHORE!");
+    SACN_LOG_CRIT("FAILED TO CREATE READ QUEUE!");
     return kEtcPalErrSys;
   }
 
@@ -476,11 +471,11 @@ void deinit_recv_thread_context_entry(SacnRecvThreadContext* context)
   CLEAR_BUF(context, subscribes);
   CLEAR_BUF(context, unsubscribes);
 
-  etcpal_signal_destroy(&context->process_thread_deinit_signal);
   etcpal_signal_destroy(&context->recv_thread_deinit_signal);
+  etcpal_signal_destroy(&context->process_thread_deinit_signal);
   etcpal_sem_destroy(&context->network_sem);
-  etcpal_sem_destroy(&context->recv_hook_sem);
-  etcpal_sem_destroy(&context->poll_sem);
+  etcpal_sem_destroy(&context->hook_sem);
+  etcpal_queue_destroy(&context->read_queue);
 }
 
 bool remove_socket_group_req(SocketGroupReq* reqs, size_t* num_reqs, etcpal_socket_t sock, const EtcPalGroupReq* group)

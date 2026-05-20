@@ -335,19 +335,23 @@ protected:
     test_data_.at(SACN_SEQ_OFFSET) = sequence_number;
     test_data_netint_              = netint;
 
-    sacn_read_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadResult* read_result) {
-      read_result->from_addr = kTestSockAddr;
-      read_result->data      = test_data_.data();
-      read_result->data_len  = kSacnMtu;
-      read_result->netint    = test_data_netint_;
-      return kEtcPalErrOk;
+    sacn_read_fake.custom_fake = [](SacnRecvThreadContext*) { return kEtcPalErrOk; };
+    sacn_poll_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadData* read_data) {
+      read_data->from_addr = kTestSockAddr;
+      read_data->data      = test_data_.data();
+      read_data->data_len  = kSacnMtu;
+      read_data->netint    = test_data_netint_;
+      return kSacnReadEventNetwork;
     };
   }
 
   static void RemoveTestData()
   {
     test_data_.fill(0u);
-    sacn_read_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadResult*) { return kEtcPalErrTimedOut; };
+    sacn_read_fake.custom_fake = [](SacnRecvThreadContext*) { return kEtcPalErrTimedOut; };
+    sacn_poll_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadData*) {
+      return kSacnReadEventTimedOut;
+    };
   }
 
   void UpdateTestReceiverConfig(const SacnReceiverConfig& config)
@@ -1060,10 +1064,14 @@ TEST_F(TestReceiverThread, CleansDeadSockets)
 
 TEST_F(TestReceiverThread, Reads)
 {
-  sacn_read_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context, SacnReadResult* read_result) {
+  sacn_read_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context) {
     EXPECT_EQ(recv_thread_context, get_recv_thread_context(0u));
-    EXPECT_NE(read_result, nullptr);
     return kEtcPalErrTimedOut;
+  };
+  sacn_poll_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context, SacnReadData* read_data) {
+    EXPECT_EQ(recv_thread_context, get_recv_thread_context(0u));
+    EXPECT_NE(read_data, nullptr);
+    return kSacnReadEventTimedOut;
   };
 
   for (unsigned int i = 1u; i <= 10u; ++i)
