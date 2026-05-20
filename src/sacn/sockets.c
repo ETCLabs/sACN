@@ -841,7 +841,7 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t           thread_id,
 #if SACN_RECEIVER_LIMIT_BIND
     // Limit IPv4 to one bind and IPv6 to one bind for this thread.
     bool perform_bind = (((ip_type == kEtcPalIpTypeV4) && !context->ipv4_bound) ||
-                         ((ip_type == kEtcPalIpTypeV6) && !context->ipv6_bound));
+                          ((ip_type == kEtcPalIpTypeV6) && !context->ipv6_bound));
 #else
     bool perform_bind = true;
 #endif
@@ -1219,7 +1219,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context)
 
           // Obtain the network interface the packet came in on using one of two configured methods
 #if SACN_RECEIVER_SOCKET_PER_NIC
-          if (sacn_receiver_lock())  // TODO: Split out to separate socket lock
+          if (sacn_receiver_sockets_lock())
           {
             int index = find_socket_ref_by_handle(recv_thread_context, poll_event.socket);
 
@@ -1236,7 +1236,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context)
               recv_res = kEtcPalErrNoSockets;
             }
 
-            sacn_receiver_unlock();
+            sacn_receiver_sockets_unlock();
           }
 #else   // SACN_RECEIVER_SOCKET_PER_NIC
           if ((msg.flags & ETCPAL_MSG_CTRUNC) || !get_netint_id(&msg, &recv_thread_context->network_read_data.netint))

@@ -30,6 +30,8 @@ extern "C" {
 DECLARE_FAKE_VALUE_FUNC(bool, sacn_initialized, sacn_features_t);
 DECLARE_FAKE_VALUE_FUNC(bool, sacn_receiver_lock);
 DECLARE_FAKE_VOID_FUNC(sacn_receiver_unlock);
+DECLARE_FAKE_VALUE_FUNC(bool, sacn_receiver_sockets_lock);
+DECLARE_FAKE_VOID_FUNC(sacn_receiver_sockets_unlock);
 DECLARE_FAKE_VALUE_FUNC(bool, sacn_source_lock);
 DECLARE_FAKE_VOID_FUNC(sacn_source_unlock);
 

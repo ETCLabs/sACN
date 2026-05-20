@@ -50,7 +50,8 @@ static struct SacnState
   EtcPalLogParams log_params;
 } sacn_pool_sacn_state;
 
-static etcpal_mutex_t sacn_receiver_mutex;
+static etcpal_mutex_t sacn_receiver_sockets_mutex;
+static etcpal_mutex_t sacn_receiver_state_mutex;
 static etcpal_mutex_t sacn_source_mutex;
 
 /*************************** Function definitions ****************************/
@@ -170,13 +171,14 @@ etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
       features_to_init = (features_to_init & ~SACN_ALL_NETWORK_FEATURES);
   }
 
-  bool log_params_initted     = false;
-  bool etcpal_logging_initted = false;
-  bool etcpal_sockets_initted = false;
-  bool etcpal_timers_initted  = false;
-  bool etcpal_netints_initted = false;
-  bool receiver_mutex_initted = false;
-  bool source_mutex_initted   = false;
+  bool log_params_initted             = false;
+  bool etcpal_logging_initted         = false;
+  bool etcpal_sockets_initted         = false;
+  bool etcpal_timers_initted          = false;
+  bool etcpal_netints_initted         = false;
+  bool receiver_sockets_mutex_initted = false;
+  bool receiver_state_mutex_initted   = false;
+  bool source_mutex_initted           = false;
 #if SACN_RECEIVER_ENABLED
   bool receiver_mem_initted = false;
 #endif  // SACN_RECEIVER_ENABLED
@@ -247,11 +249,21 @@ etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
 
     if (res == kEtcPalErrOk)
     {
-      receiver_mutex_initted = etcpal_mutex_create(&sacn_receiver_mutex);
-      if (!receiver_mutex_initted)
+      receiver_sockets_mutex_initted = etcpal_mutex_create(&sacn_receiver_sockets_mutex);
+      if (!receiver_sockets_mutex_initted)
       {
         res = kEtcPalErrSys;
-        SACN_LOG_CRIT("FAILED TO INITIALIZE RECEIVER MUTEX!");
+        SACN_LOG_CRIT("FAILED TO INITIALIZE RECEIVER SOCKETS MUTEX!");
+      }
+    }
+
+    if (res == kEtcPalErrOk)
+    {
+      receiver_state_mutex_initted = etcpal_mutex_create(&sacn_receiver_state_mutex);
+      if (!receiver_state_mutex_initted)
+      {
+        res = kEtcPalErrSys;
+        SACN_LOG_CRIT("FAILED TO INITIALIZE RECEIVER STATE MUTEX!");
       }
     }
 
@@ -446,8 +458,10 @@ etcpal_error_t sacn_init_features_with_cb(const EtcPalLogParams*     log_params,
 #endif  // SACN_RECEIVER_ENABLED
     if (source_mutex_initted)
       etcpal_mutex_destroy(&sacn_source_mutex);
-    if (receiver_mutex_initted)
-      etcpal_mutex_destroy(&sacn_receiver_mutex);
+    if (receiver_state_mutex_initted)
+      etcpal_mutex_destroy(&sacn_receiver_state_mutex);
+    if (receiver_sockets_mutex_initted)
+      etcpal_mutex_destroy(&sacn_receiver_sockets_mutex);
 
     if (etcpal_netints_initted)
       etcpal_deinit(ETCPAL_FEATURE_NETINTS);
@@ -547,7 +561,8 @@ void sacn_deinit_features(sacn_features_t features)
     sacn_receiver_mem_deinit();
 #endif  // SACN_RECEIVER_ENABLED
     etcpal_mutex_destroy(&sacn_source_mutex);
-    etcpal_mutex_destroy(&sacn_receiver_mutex);
+    etcpal_mutex_destroy(&sacn_receiver_state_mutex);
+    etcpal_mutex_destroy(&sacn_receiver_sockets_mutex);
 
     etcpal_deinit(ETCPAL_FEATURE_NETINTS | ETCPAL_FEATURE_TIMERS | ETCPAL_FEATURE_SOCKETS | ETCPAL_FEATURE_LOGGING);
   }
@@ -650,12 +665,22 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 
 bool sacn_receiver_lock(void)
 {
-  return etcpal_mutex_lock(&sacn_receiver_mutex);
+  return etcpal_mutex_lock(&sacn_receiver_state_mutex);
 }
 
 void sacn_receiver_unlock(void)
 {
-  etcpal_mutex_unlock(&sacn_receiver_mutex);
+  etcpal_mutex_unlock(&sacn_receiver_state_mutex);
+}
+
+bool sacn_receiver_sockets_lock(void)
+{
+  return etcpal_mutex_lock(&sacn_receiver_sockets_mutex);
+}
+
+void sacn_receiver_sockets_unlock(void)
+{
+  etcpal_mutex_unlock(&sacn_receiver_sockets_mutex);
 }
 
 bool sacn_source_lock(void)

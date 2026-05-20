@@ -360,35 +360,41 @@ etcpal_error_t add_receiver_sockets(SacnReceiver* receiver)
   if (!SACN_ASSERT_VERIFY(receiver))
     return kEtcPalErrSys;
 
-  etcpal_error_t ipv4_res = kEtcPalErrNoNetints;
-  etcpal_error_t ipv6_res = kEtcPalErrNoNetints;
-
-  initialize_receiver_sockets(&receiver->sockets);
-
-  if (supports_ipv4(receiver->ip_supported))
+  if (sacn_receiver_sockets_lock())
   {
-    ipv4_res = add_sockets(receiver->thread_id, kEtcPalIpTypeV4, receiver->keys.universe, receiver->netints.netints,
-                           receiver->netints.num_netints, &receiver->sockets);
+    etcpal_error_t ipv4_res = kEtcPalErrNoNetints;
+    etcpal_error_t ipv6_res = kEtcPalErrNoNetints;
+
+    initialize_receiver_sockets(&receiver->sockets);
+
+    if (supports_ipv4(receiver->ip_supported))
+    {
+      ipv4_res = add_sockets(receiver->thread_id, kEtcPalIpTypeV4, receiver->keys.universe, receiver->netints.netints,
+                             receiver->netints.num_netints, &receiver->sockets);
+    }
+
+    if (((ipv4_res == kEtcPalErrOk) || (ipv4_res == kEtcPalErrNoNetints)) && supports_ipv6(receiver->ip_supported))
+    {
+      ipv6_res = add_sockets(receiver->thread_id, kEtcPalIpTypeV6, receiver->keys.universe, receiver->netints.netints,
+                             receiver->netints.num_netints, &receiver->sockets);
+    }
+
+    etcpal_error_t result =
+        (((ipv4_res == kEtcPalErrNoNetints) || (ipv4_res == kEtcPalErrOk)) && (ipv6_res != kEtcPalErrNoNetints))
+            ? ipv6_res
+            : ipv4_res;
+
+    if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
+    {
+      remove_sockets(receiver->thread_id, &receiver->sockets, receiver->keys.universe, receiver->netints.netints,
+                     receiver->netints.num_netints, kQueueSocketCleanup);
+    }
+
+    sacn_receiver_sockets_unlock();
+    return result;
   }
 
-  if (((ipv4_res == kEtcPalErrOk) || (ipv4_res == kEtcPalErrNoNetints)) && supports_ipv6(receiver->ip_supported))
-  {
-    ipv6_res = add_sockets(receiver->thread_id, kEtcPalIpTypeV6, receiver->keys.universe, receiver->netints.netints,
-                           receiver->netints.num_netints, &receiver->sockets);
-  }
-
-  etcpal_error_t result =
-      (((ipv4_res == kEtcPalErrNoNetints) || (ipv4_res == kEtcPalErrOk)) && (ipv6_res != kEtcPalErrNoNetints))
-          ? ipv6_res
-          : ipv4_res;
-
-  if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
-  {
-    remove_sockets(receiver->thread_id, &receiver->sockets, receiver->keys.universe, receiver->netints.netints,
-                   receiver->netints.num_netints, kQueueSocketCleanup);
-  }
-
-  return result;
+  return kEtcPalErrSys;
 }
 
 etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector)
@@ -396,35 +402,41 @@ etcpal_error_t add_source_detector_sockets(SacnSourceDetector* detector)
   if (!SACN_ASSERT_VERIFY(detector))
     return kEtcPalErrSys;
 
-  etcpal_error_t ipv4_res = kEtcPalErrNoNetints;
-  etcpal_error_t ipv6_res = kEtcPalErrNoNetints;
-
-  initialize_receiver_sockets(&detector->sockets);
-
-  if (supports_ipv4(detector->ip_supported))
+  if (sacn_receiver_sockets_lock())
   {
-    ipv4_res = add_sockets(detector->thread_id, kEtcPalIpTypeV4, kSacnDiscoveryUniverse, detector->netints.netints,
-                           detector->netints.num_netints, &detector->sockets);
+    etcpal_error_t ipv4_res = kEtcPalErrNoNetints;
+    etcpal_error_t ipv6_res = kEtcPalErrNoNetints;
+
+    initialize_receiver_sockets(&detector->sockets);
+
+    if (supports_ipv4(detector->ip_supported))
+    {
+      ipv4_res = add_sockets(detector->thread_id, kEtcPalIpTypeV4, kSacnDiscoveryUniverse, detector->netints.netints,
+                             detector->netints.num_netints, &detector->sockets);
+    }
+
+    if (((ipv4_res == kEtcPalErrOk) || (ipv4_res == kEtcPalErrNoNetints)) && supports_ipv6(detector->ip_supported))
+    {
+      ipv6_res = add_sockets(detector->thread_id, kEtcPalIpTypeV6, kSacnDiscoveryUniverse, detector->netints.netints,
+                             detector->netints.num_netints, &detector->sockets);
+    }
+
+    etcpal_error_t result =
+        (((ipv4_res == kEtcPalErrNoNetints) || (ipv4_res == kEtcPalErrOk)) && (ipv6_res != kEtcPalErrNoNetints))
+            ? ipv6_res
+            : ipv4_res;
+
+    if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
+    {
+      remove_sockets(detector->thread_id, &detector->sockets, kSacnDiscoveryUniverse, detector->netints.netints,
+                     detector->netints.num_netints, kQueueSocketCleanup);
+    }
+
+    sacn_receiver_sockets_unlock();
+    return result;
   }
 
-  if (((ipv4_res == kEtcPalErrOk) || (ipv4_res == kEtcPalErrNoNetints)) && supports_ipv6(detector->ip_supported))
-  {
-    ipv6_res = add_sockets(detector->thread_id, kEtcPalIpTypeV6, kSacnDiscoveryUniverse, detector->netints.netints,
-                           detector->netints.num_netints, &detector->sockets);
-  }
-
-  etcpal_error_t result =
-      (((ipv4_res == kEtcPalErrNoNetints) || (ipv4_res == kEtcPalErrOk)) && (ipv6_res != kEtcPalErrNoNetints))
-          ? ipv6_res
-          : ipv4_res;
-
-  if ((result != kEtcPalErrOk) && (ipv4_res == kEtcPalErrOk))
-  {
-    remove_sockets(detector->thread_id, &detector->sockets, kSacnDiscoveryUniverse, detector->netints.netints,
-                   detector->netints.num_netints, kQueueSocketCleanup);
-  }
-
-  return result;
+  return kEtcPalErrSys;
 }
 
 void begin_sampling_period(SacnReceiver* receiver)
@@ -451,8 +463,13 @@ void remove_receiver_sockets(SacnReceiver* receiver, sacn_socket_cleanup_behavio
   if (!SACN_ASSERT_VERIFY(receiver))
     return;
 
-  remove_sockets(receiver->thread_id, &receiver->sockets, receiver->keys.universe, receiver->netints.netints,
-                 receiver->netints.num_netints, cleanup_behavior);
+  if (sacn_receiver_sockets_lock())
+  {
+    remove_sockets(receiver->thread_id, &receiver->sockets, receiver->keys.universe, receiver->netints.netints,
+                   receiver->netints.num_netints, cleanup_behavior);
+
+    sacn_receiver_sockets_unlock();
+  }
 }
 
 /*
@@ -466,8 +483,13 @@ void remove_source_detector_sockets(SacnSourceDetector* detector, sacn_socket_cl
   if (!SACN_ASSERT_VERIFY(detector))
     return;
 
-  remove_sockets(detector->thread_id, &detector->sockets, kSacnDiscoveryUniverse, detector->netints.netints,
-                 detector->netints.num_netints, cleanup_behavior);
+  if (sacn_receiver_sockets_lock())
+  {
+    remove_sockets(detector->thread_id, &detector->sockets, kSacnDiscoveryUniverse, detector->netints.netints,
+                   detector->netints.num_netints, cleanup_behavior);
+
+    sacn_receiver_sockets_unlock();
+  }
 }
 
 /*
@@ -492,7 +514,7 @@ void tick_receive_thread(SacnRecvThreadContext* context)
   if (!SACN_ASSERT_VERIFY(context))
     return;
 
-  if (sacn_receiver_lock())  // TODO: Split out to separate socket lock (audit)
+  if (sacn_receiver_sockets_lock())
   {
     // Unsubscribe before subscribing to avoid surpassing the subscription limit for a socket.
     sacn_unsubscribe_sockets(context);
@@ -502,7 +524,7 @@ void tick_receive_thread(SacnRecvThreadContext* context)
     sacn_cleanup_dead_sockets(context);
     sacn_add_pending_sockets(context);
 
-    sacn_receiver_unlock();
+    sacn_receiver_sockets_unlock();
   }
 
   etcpal_error_t read_res = sacn_read(context);
@@ -643,13 +665,13 @@ void sacn_receive_thread(void* arg)
 
   // Create the poll context
   etcpal_error_t poll_init_res = kEtcPalErrSys;
-  if (sacn_receiver_lock())
+  if (sacn_receiver_sockets_lock())
   {
     poll_init_res = etcpal_poll_context_init(&context->network_poll_context);
     if (poll_init_res == kEtcPalErrOk)
       context->network_poll_context_initialized = true;
 
-    sacn_receiver_unlock();
+    sacn_receiver_sockets_unlock();
   }
 
   if (poll_init_res != kEtcPalErrOk)
@@ -664,12 +686,12 @@ void sacn_receive_thread(void* arg)
     tick_receive_thread(context);
 
   // Destroy the poll context
-  if (sacn_receiver_lock())
+  if (sacn_receiver_sockets_lock())
   {
     etcpal_poll_context_deinit(&context->network_poll_context);
     context->network_poll_context_initialized = false;
 
-    sacn_receiver_unlock();
+    sacn_receiver_sockets_unlock();
   }
 }
 
