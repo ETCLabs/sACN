@@ -613,9 +613,9 @@ TEST_F(TestReceiverState, AssignReceiverToThreadWorks)
     }
     else if (thread_id == &get_recv_thread_context(0)->recv_thread_handle)
     {
-      EXPECT_EQ(params->priority, static_cast<unsigned int>(SACN_NETWORK_POLL_THREAD_PRIORITY));
-      EXPECT_EQ(params->stack_size, static_cast<unsigned int>(SACN_NETWORK_POLL_THREAD_STACK));
-      EXPECT_EQ(strcmp(params->thread_name, SACN_NETWORK_POLL_THREAD_NAME), 0);
+      EXPECT_EQ(params->priority, static_cast<unsigned int>(SACN_PROCESS_THREAD_PRIORITY));
+      EXPECT_EQ(params->stack_size, static_cast<unsigned int>(SACN_PROCESS_THREAD_STACK));
+      EXPECT_EQ(strcmp(params->thread_name, SACN_PROCESS_THREAD_NAME), 0);
     }
 
     EXPECT_EQ(params->platform_data, nullptr);

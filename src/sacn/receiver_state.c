@@ -43,8 +43,8 @@
 static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PRIORITY, SACN_RECEIVER_THREAD_STACK,
                                                          SACN_RECEIVER_THREAD_NAME, NULL};
 
-static const EtcPalThreadParams kNetworkPollThreadParams = {
-    SACN_NETWORK_POLL_THREAD_PRIORITY, SACN_NETWORK_POLL_THREAD_STACK, SACN_NETWORK_POLL_THREAD_NAME, NULL};
+static const EtcPalThreadParams kProcessThreadParams = {
+    SACN_PROCESS_THREAD_PRIORITY, SACN_PROCESS_THREAD_STACK, SACN_PROCESS_THREAD_NAME, NULL};
 
 /****************************** Private types ********************************/
 
@@ -613,11 +613,11 @@ etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
 
   recv_thread_context->running                = true;
   recv_thread_context->periodic_timer_started = false;
-  etcpal_error_t create_res = etcpal_thread_create(&recv_thread_context->recv_thread_handle, &kNetworkPollThreadParams,
+  etcpal_error_t create_res = etcpal_thread_create(&recv_thread_context->recv_thread_handle, &kReceiverThreadParams,
                                                    sacn_receive_thread, recv_thread_context);
   if (create_res == kEtcPalErrOk)
   {
-    create_res = etcpal_thread_create(&recv_thread_context->process_thread_handle, &kReceiverThreadParams,
+    create_res = etcpal_thread_create(&recv_thread_context->process_thread_handle, &kProcessThreadParams,
                                       sacn_process_thread, recv_thread_context);
     if (create_res != kEtcPalErrOk)
     {

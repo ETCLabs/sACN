@@ -204,30 +204,30 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #endif
 
 /**
- * @brief The priority of each sACN network poll thread.
+ * @brief The priority of each sACN process thread.
  *
  * This is usually only meaningful on real-time systems.
  */
-#ifndef SACN_NETWORK_POLL_THREAD_PRIORITY
-#define SACN_NETWORK_POLL_THREAD_PRIORITY ETCPAL_THREAD_DEFAULT_PRIORITY
+#ifndef SACN_PROCESS_THREAD_PRIORITY
+#define SACN_PROCESS_THREAD_PRIORITY ETCPAL_THREAD_DEFAULT_PRIORITY
 #endif
 
 /**
- * @brief The stack size of each sACN network poll thread.
+ * @brief The stack size of each sACN process thread.
  *
  * It's usually only necessary to worry about this on real-time or embedded systems.
  */
-#ifndef SACN_NETWORK_POLL_THREAD_STACK
-#define SACN_NETWORK_POLL_THREAD_STACK ETCPAL_THREAD_DEFAULT_STACK
+#ifndef SACN_PROCESS_THREAD_STACK
+#define SACN_PROCESS_THREAD_STACK ETCPAL_THREAD_DEFAULT_STACK
 #endif
 
 /**
- * @brief The name to assign each sACN network poll thread.
+ * @brief The name to assign each sACN process thread.
  *
  * This is useful for distinguishing the receiver threads from other threads when debugging.
  */
-#ifndef SACN_NETWORK_POLL_THREAD_NAME
-#define SACN_NETWORK_POLL_THREAD_NAME "sACN Network Poll Thread"
+#ifndef SACN_PROCESS_THREAD_NAME
+#define SACN_PROCESS_THREAD_NAME "sACN Process Thread"
 #endif
 
 /* Infinite read blocks are not supported due to the potential for hangs on shutdown. */
