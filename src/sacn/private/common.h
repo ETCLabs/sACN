@@ -671,10 +671,10 @@ typedef enum
 typedef struct SacnRecvThreadContext
 {
   sacn_thread_id_t thread_id;
-  etcpal_thread_t  process_thread_handle;
   etcpal_thread_t  recv_thread_handle;
-  etcpal_signal_t  process_thread_deinit_signal;
+  etcpal_thread_t  process_thread_handle;
   etcpal_signal_t  recv_thread_deinit_signal;
+  etcpal_signal_t  process_thread_deinit_signal;
   bool             running;
 
   SacnReceiver* receivers;

@@ -1159,6 +1159,68 @@ void sacn_unsubscribe_sockets(SacnRecvThreadContext* recv_thread_context)
 }
 
 /*
+ * Poll for network data events on a thread's sockets. Hand off events to receive thread via thread context.
+ *
+ * Blocks up to SACN_RECEIVER_READ_TIMEOUT_MS waiting for data.
+ *
+ * [in,out] recv_thread_context Context representing the thread calling this function.
+ *
+ * Returns kEtcPalErrOk if a new event has been detected on a socket and handed off to the receive thread.
+ * Returns kEtcPalErrTimedOut if the function timed out while waiting for data.
+ * Returns other error codes on error. In this case, calling code should sleep to prevent the
+ * execution thread from spinning constantly when, for example, there are no receivers listening.
+ */
+etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context)
+{
+#if SACN_RECEIVER_ENABLED
+  if (!SACN_ASSERT_VERIFY(recv_thread_context))
+    return kEtcPalErrSys;
+
+  EtcPalPollEvent poll_event = {0};
+  etcpal_error_t  poll_res =
+      etcpal_poll_wait(&recv_thread_context->network_poll_context, &poll_event, SACN_RECEIVER_READ_TIMEOUT_MS);
+
+  if (poll_res == kEtcPalErrOk)
+  {
+    if (poll_event.events & ETCPAL_POLL_ERR)
+    {
+      etcpal_poll_remove_socket(&recv_thread_context->network_poll_context, poll_event.socket);
+      return poll_event.err;
+    }
+
+    // Wait for old event to be processed so we don't overwrite it.
+    while (!etcpal_sem_timed_wait(&recv_thread_context->network_sem, SACN_RECEIVER_READ_TIMEOUT_MS))
+    {
+      // Also make sure we can still shut down if needed.
+      if (etcpal_signal_try_wait(&recv_thread_context->recv_thread_deinit_signal))
+      {
+        etcpal_signal_post(&recv_thread_context->recv_thread_deinit_signal);  // Re-post for higher level
+        return kEtcPalErrOk;
+      }
+    }
+
+    // Now place the new event, the old one should be cleared out by now.
+    if (sacn_receiver_lock())  // TODO: Rely on semaphores
+    {
+      SACN_ASSERT_VERIFY(!recv_thread_context->network_has_data);
+      recv_thread_context->network_has_data = true;
+      recv_thread_context->network_event    = poll_event;
+
+      sacn_receiver_unlock();
+    }
+
+    // Notify the receive thread to process this event.
+    SACN_ASSERT_VERIFY(etcpal_sem_post(&recv_thread_context->poll_sem));
+  }
+
+  return poll_res;
+#else   // SACN_RECEIVER_ENABLED
+  ETCPAL_UNUSED_ARG(recv_thread_context);
+  return kEtcPalErrNotImpl;
+#endif  // SACN_RECEIVER_ENABLED
+}
+
+/*
  * Read and process input data for a thread's sockets.
  *
  * Blocks up to SACN_RECEIVER_READ_TIMEOUT_MS waiting for data.
@@ -1322,68 +1384,6 @@ etcpal_error_t process_network(SacnRecvThreadContext* recv_thread_context, SacnR
   }
 
   return kEtcPalErrOk;
-}
-
-/*
- * Poll for network data events on a thread's sockets. Hand off events to receive thread via thread context.
- *
- * Blocks up to SACN_RECEIVER_READ_TIMEOUT_MS waiting for data.
- *
- * [in,out] recv_thread_context Context representing the thread calling this function.
- *
- * Returns kEtcPalErrOk if a new event has been detected on a socket and handed off to the receive thread.
- * Returns kEtcPalErrTimedOut if the function timed out while waiting for data.
- * Returns other error codes on error. In this case, calling code should sleep to prevent the
- * execution thread from spinning constantly when, for example, there are no receivers listening.
- */
-etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context)
-{
-#if SACN_RECEIVER_ENABLED
-  if (!SACN_ASSERT_VERIFY(recv_thread_context))
-    return kEtcPalErrSys;
-
-  EtcPalPollEvent poll_event = {0};
-  etcpal_error_t  poll_res =
-      etcpal_poll_wait(&recv_thread_context->network_poll_context, &poll_event, SACN_RECEIVER_READ_TIMEOUT_MS);
-
-  if (poll_res == kEtcPalErrOk)
-  {
-    if (poll_event.events & ETCPAL_POLL_ERR)
-    {
-      etcpal_poll_remove_socket(&recv_thread_context->network_poll_context, poll_event.socket);
-      return poll_event.err;
-    }
-
-    // Wait for old event to be processed so we don't overwrite it.
-    while (!etcpal_sem_timed_wait(&recv_thread_context->network_sem, SACN_RECEIVER_READ_TIMEOUT_MS))
-    {
-      // Also make sure we can still shut down if needed.
-      if (etcpal_signal_try_wait(&recv_thread_context->recv_thread_deinit_signal))
-      {
-        etcpal_signal_post(&recv_thread_context->recv_thread_deinit_signal);  // Re-post for higher level
-        return kEtcPalErrOk;
-      }
-    }
-
-    // Now place the new event, the old one should be cleared out by now.
-    if (sacn_receiver_lock())  // TODO: Rely on semaphores
-    {
-      SACN_ASSERT_VERIFY(!recv_thread_context->network_has_data);
-      recv_thread_context->network_has_data = true;
-      recv_thread_context->network_event    = poll_event;
-
-      sacn_receiver_unlock();
-    }
-
-    // Notify the receive thread to process this event.
-    SACN_ASSERT_VERIFY(etcpal_sem_post(&recv_thread_context->poll_sem));
-  }
-
-  return poll_res;
-#else   // SACN_RECEIVER_ENABLED
-  ETCPAL_UNUSED_ARG(recv_thread_context);
-  return kEtcPalErrNotImpl;
-#endif  // SACN_RECEIVER_ENABLED
 }
 
 etcpal_error_t sacn_send_multicast(uint16_t                   universe_id,
