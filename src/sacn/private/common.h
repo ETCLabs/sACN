@@ -715,11 +715,11 @@ typedef struct SacnRecvThreadContext
 #endif
 
   // Data (read from network or receive hook) covered by semaphores instead of the lock:
-  etcpal_sem_t   network_sem;
-  uint8_t        network_buf[kSacnMtu];
+  etcpal_sem_t network_sem;
+  uint8_t      network_buf[kSacnMtu];
   SacnReadData network_read_data;
 
-  etcpal_sem_t   hook_sem;
+  etcpal_sem_t hook_sem;
   SacnReadData hook_read_data;  // Points to application-owned buffer
 
   etcpal_queue_t read_queue;  // Queue of sacn_read_event_t events to process
@@ -729,8 +729,8 @@ typedef struct SacnRecvThreadContext
   bool              network_poll_context_initialized;  // Technically read by other threads, but set once at init
 
   // This section is only touched from the process thread (outside the lock):
-  EtcPalTimer             periodic_timer;
-  bool                    periodic_timer_started;
+  EtcPalTimer periodic_timer;
+  bool        periodic_timer_started;
 } SacnRecvThreadContext;
 
 /******************************************************************************

@@ -349,9 +349,7 @@ protected:
   {
     test_data_.fill(0u);
     sacn_read_fake.custom_fake = [](SacnRecvThreadContext*) { return kEtcPalErrTimedOut; };
-    sacn_poll_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadData*) {
-      return kSacnReadEventTimedOut;
-    };
+    sacn_poll_fake.custom_fake = [](SacnRecvThreadContext*, SacnReadData*) { return kSacnReadEventTimedOut; };
   }
 
   void UpdateTestReceiverConfig(const SacnReceiverConfig& config)

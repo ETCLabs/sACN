@@ -43,8 +43,8 @@
 static const EtcPalThreadParams kReceiverThreadParams = {SACN_RECEIVER_THREAD_PRIORITY, SACN_RECEIVER_THREAD_STACK,
                                                          SACN_RECEIVER_THREAD_NAME, NULL};
 
-static const EtcPalThreadParams kProcessThreadParams = {
-    SACN_PROCESS_THREAD_PRIORITY, SACN_PROCESS_THREAD_STACK, SACN_PROCESS_THREAD_NAME, NULL};
+static const EtcPalThreadParams kProcessThreadParams = {SACN_PROCESS_THREAD_PRIORITY, SACN_PROCESS_THREAD_STACK,
+                                                        SACN_PROCESS_THREAD_NAME, NULL};
 
 /****************************** Private types ********************************/
 
@@ -94,7 +94,7 @@ static void           remove_sockets(sacn_thread_id_t               thread_id,
 static void handle_incoming(SacnRecvThreadContext* context, const SacnReadData* read_data);
 static void handle_sacn_data_packet(sacn_thread_id_t       thread_id,
                                     const AcnRootLayerPdu* rlp,
-                                    const SacnReadData*  read_data);
+                                    const SacnReadData*    read_data);
 static void handle_sacn_extended_packet(SacnRecvThreadContext* context,
                                         const uint8_t*         data,
                                         size_t                 datalen,
@@ -546,7 +546,7 @@ void tick_process_thread(SacnRecvThreadContext* context)
   if (!SACN_ASSERT_VERIFY(context))
     return;
 
-  SacnReadData read_data;
+  SacnReadData      read_data;
   sacn_read_event_t read_event = sacn_poll(context, &read_data);
   if (read_event != kSacnReadEventTimedOut)
   {
@@ -935,8 +935,7 @@ void handle_sacn_data_packet(sacn_thread_id_t thread_id, const AcnRootLayerPdu* 
         return;
       }
 
-      SacnSamplingPeriodNetint* sp_netint =
-          etcpal_rbtree_find(&receiver->sampling_period_netints, &read_data->netint);
+      SacnSamplingPeriodNetint* sp_netint = etcpal_rbtree_find(&receiver->sampling_period_netints, &read_data->netint);
 
       // Drop all packets from netints scheduled for a future sampling period
       if (sp_netint && sp_netint->in_future_sampling_period)

@@ -841,7 +841,7 @@ etcpal_error_t sacn_add_receiver_socket(sacn_thread_id_t           thread_id,
 #if SACN_RECEIVER_LIMIT_BIND
     // Limit IPv4 to one bind and IPv6 to one bind for this thread.
     bool perform_bind = (((ip_type == kEtcPalIpTypeV4) && !context->ipv4_bound) ||
-                          ((ip_type == kEtcPalIpTypeV6) && !context->ipv6_bound));
+                         ((ip_type == kEtcPalIpTypeV6) && !context->ipv6_bound));
 #else
     bool perform_bind = true;
 #endif
@@ -1291,11 +1291,11 @@ sacn_read_event_t sacn_poll(SacnRecvThreadContext* recv_thread_context, SacnRead
   }
 
   return read_event;
-#else               // SACN_RECEIVER_ENABLED
+#else   // SACN_RECEIVER_ENABLED
   ETCPAL_UNUSED_ARG(recv_thread_context);
   ETCPAL_UNUSED_ARG(read_data);
   return kSacnReadEventTimedOut;
-#endif              // SACN_RECEIVER_ENABLED
+#endif  // SACN_RECEIVER_ENABLED
 }
 
 etcpal_error_t sacn_send_multicast(uint16_t                   universe_id,
