@@ -1220,7 +1220,7 @@ etcpal_error_t process_recv_hook(SacnRecvThreadContext* recv_thread_context, Sac
   if (!SACN_ASSERT_VERIFY(recv_thread_context) || !SACN_ASSERT_VERIFY(read_result) || !SACN_ASSERT_VERIFY(got_data))
     return kEtcPalErrSys;
 
-  if (sacn_receiver_lock())
+  if (sacn_receiver_lock())  // TODO: Rely on semaphores
   {
     if (recv_thread_context->recv_hook_has_data)
     {
@@ -1230,7 +1230,7 @@ etcpal_error_t process_recv_hook(SacnRecvThreadContext* recv_thread_context, Sac
       read_result->netint    = recv_thread_context->recv_hook_netint;
 
       recv_thread_context->recv_hook_has_data = false;
-      SACN_ASSERT_VERIFY(etcpal_sem_post(&recv_thread_context->recv_hook_sem));
+      SACN_ASSERT_VERIFY(etcpal_sem_post(&recv_thread_context->recv_hook_sem));  // TODO: Not good! Data is a pointer.
 
       *got_data = true;
     }
@@ -1247,7 +1247,7 @@ etcpal_error_t process_network(SacnRecvThreadContext* recv_thread_context, SacnR
     return kEtcPalErrSys;
 
   EtcPalPollEvent poll_event = {0};
-  if (sacn_receiver_lock())
+  if (sacn_receiver_lock())  // TODO: Rely on semaphores
   {
     if (recv_thread_context->network_has_data)
     {
@@ -1274,7 +1274,7 @@ etcpal_error_t process_network(SacnRecvThreadContext* recv_thread_context, SacnR
       msg.control      = control_buf;
       msg.controllen   = ETCPAL_MAX_CONTROL_SIZE_PKTINFO;
 
-      int recv_res = etcpal_recvmsg(poll_event.socket, &msg, 0);
+      int recv_res = etcpal_recvmsg(poll_event.socket, &msg, 0);  // TODO: This hangs - move to other thread
       if (recv_res > 0)
       {
         if (msg.flags & ETCPAL_MSG_TRUNC)
@@ -1289,7 +1289,7 @@ etcpal_error_t process_network(SacnRecvThreadContext* recv_thread_context, SacnR
 
           // Obtain the network interface the packet came in on using one of two configured methods
 #if SACN_RECEIVER_SOCKET_PER_NIC
-          if (sacn_receiver_lock())
+          if (sacn_receiver_lock())  // TODO: Split out to separate socket lock
           {
             int index = find_socket_ref_by_handle(recv_thread_context, poll_event.socket);
 
@@ -1366,7 +1366,7 @@ etcpal_error_t sacn_poll(SacnRecvThreadContext* recv_thread_context)
     }
 
     // Now place the new event, the old one should be cleared out by now.
-    if (sacn_receiver_lock())
+    if (sacn_receiver_lock())  // TODO: Rely on semaphores
     {
       SACN_ASSERT_VERIFY(!recv_thread_context->network_has_data);
       recv_thread_context->network_has_data = true;

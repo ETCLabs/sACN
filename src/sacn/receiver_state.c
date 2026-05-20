@@ -530,7 +530,7 @@ void poll_network(SacnRecvThreadContext* context)
   if (!SACN_ASSERT_VERIFY(context))
     return;
 
-  if (sacn_receiver_lock())
+  if (sacn_receiver_lock())  // TODO: Split out to separate socket lock (audit)
   {
     // Unsubscribe before subscribing to avoid surpassing the subscription limit for a socket.
     sacn_unsubscribe_sockets(context);
@@ -636,7 +636,7 @@ etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
  * The receiver thread function. Receives from network or receive hook, forwarding sACN data, and processes
  * periodic timeouts for sACN receivers.
  */
-void sacn_receive_thread(void* arg)
+void sacn_receive_thread(void* arg)  // TODO: Rename to process thread (& down the chain)
 {
   if (!SACN_ASSERT_VERIFY(arg))
     return;
@@ -657,7 +657,7 @@ void sacn_receive_thread(void* arg)
 /*
  * The network poll thread function. Manages sockets and polls the network, forwarding events to the receive thread.
  */
-void sacn_network_poll_thread(void* arg)
+void sacn_network_poll_thread(void* arg)  // TODO: Rename to receive thread (& down the chain)
 {
   if (!SACN_ASSERT_VERIFY(arg))
     return;

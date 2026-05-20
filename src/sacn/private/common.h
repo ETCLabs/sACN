@@ -706,10 +706,12 @@ typedef struct SacnRecvThreadContext
 
   etcpal_sem_t    network_sem;  // Binary semaphore indicating if network data is present
   bool            network_has_data;
+  // TODO: Switch to read result
   EtcPalPollEvent network_event;  // Network poll event to use to receive the network data
 
   etcpal_sem_t        recv_hook_sem;  // Binary semaphore indicating if receive hook data is present
   bool                recv_hook_has_data;
+  // TODO: Switch to read result
   uint8_t             recv_hook_buf[kSacnMtu];
   size_t              recv_hook_buf_len;
   EtcPalSockAddr      recv_hook_from_addr;
