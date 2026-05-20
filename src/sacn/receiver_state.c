@@ -74,8 +74,8 @@ static bool receiver_handle_in_use(int handle_val, void* cookie);
 
 static etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context);
 
+static void sacn_process_thread(void* arg);
 static void sacn_receive_thread(void* arg);
-static void sacn_network_poll_thread(void* arg);
 
 static etcpal_error_t add_sockets(sacn_thread_id_t           thread_id,
                                   etcpal_iptype_t            ip_type,
@@ -157,11 +157,11 @@ void sacn_receiver_state_deinit(void)
       SacnRecvThreadContext* thread_context = get_recv_thread_context(i);
       if (thread_context && thread_context->running)
       {
+        etcpal_signal_post(&thread_context->process_thread_deinit_signal);
         etcpal_signal_post(&thread_context->recv_thread_deinit_signal);
-        etcpal_signal_post(&thread_context->network_poll_thread_deinit_signal);
         threads_ids_to_deinit[num_threads_to_deinit]               = thread_context->thread_id;
-        threads_handles_to_deinit[num_threads_to_deinit * 2]       = &thread_context->recv_thread_handle;
-        threads_handles_to_deinit[(num_threads_to_deinit * 2) + 1] = &thread_context->network_poll_thread_handle;
+        threads_handles_to_deinit[num_threads_to_deinit * 2]       = &thread_context->process_thread_handle;
+        threads_handles_to_deinit[(num_threads_to_deinit * 2) + 1] = &thread_context->recv_thread_handle;
         ++num_threads_to_deinit;
       }
     }
@@ -487,13 +487,13 @@ void remove_all_receiver_sockets(sacn_socket_cleanup_behavior_t cleanup_behavior
 /*
  * Called in a loop by each receiver thread to manage incoming data and state for receivers and/or the source detector.
  */
-void read_network_and_process(SacnRecvThreadContext* context)
+void tick_process_thread(SacnRecvThreadContext* context)
 {
   if (!SACN_ASSERT_VERIFY(context))
     return;
 
   SacnReadResult read_result;
-  etcpal_error_t read_res = sacn_read(context, &read_result);
+  etcpal_error_t read_res = sacn_read_REMOVE_THIS(context, &read_result);
   if (read_res == kEtcPalErrOk)
   {
     handle_incoming(context, &read_result);
@@ -525,7 +525,7 @@ void read_network_and_process(SacnRecvThreadContext* context)
 /*
  * Called in a loop by each network poll thread to manage sockets and poll for incoming data.
  */
-void poll_network(SacnRecvThreadContext* context)
+void tick_receive_thread(SacnRecvThreadContext* context)
 {
   if (!SACN_ASSERT_VERIFY(context))
     return;
@@ -543,12 +543,12 @@ void poll_network(SacnRecvThreadContext* context)
     sacn_receiver_unlock();
   }
 
-  etcpal_error_t poll_res = sacn_poll(context);
-  if ((poll_res != kEtcPalErrOk) && (poll_res != kEtcPalErrTimedOut))
+  etcpal_error_t read_res = sacn_read(context);
+  if ((read_res != kEtcPalErrOk) && (read_res != kEtcPalErrTimedOut))
   {
-    if (poll_res != kEtcPalErrNoSockets)
+    if (read_res != kEtcPalErrNoSockets)
     {
-      SACN_LOG_WARNING("Error occurred while attempting to poll sACN incoming data: '%s'.", etcpal_strerror(poll_res));
+      SACN_LOG_WARNING("Error occurred while attempting to poll sACN incoming data: '%s'.", etcpal_strerror(read_res));
     }
     etcpal_thread_sleep(SACN_RECEIVER_READ_TIMEOUT_MS);
   }
@@ -613,16 +613,16 @@ etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
 
   recv_thread_context->running                = true;
   recv_thread_context->periodic_timer_started = false;
-  etcpal_error_t create_res = etcpal_thread_create(&recv_thread_context->recv_thread_handle, &kReceiverThreadParams,
-                                                   sacn_receive_thread, recv_thread_context);
+  etcpal_error_t create_res = etcpal_thread_create(&recv_thread_context->process_thread_handle, &kReceiverThreadParams,
+                                                   sacn_process_thread, recv_thread_context);
   if (create_res == kEtcPalErrOk)
   {
-    create_res = etcpal_thread_create(&recv_thread_context->network_poll_thread_handle, &kNetworkPollThreadParams,
-                                      sacn_network_poll_thread, recv_thread_context);
+    create_res = etcpal_thread_create(&recv_thread_context->recv_thread_handle, &kNetworkPollThreadParams,
+                                      sacn_receive_thread, recv_thread_context);
     if (create_res != kEtcPalErrOk)
     {
-      etcpal_signal_post(&recv_thread_context->recv_thread_deinit_signal);
-      etcpal_thread_join(&recv_thread_context->recv_thread_handle);
+      etcpal_signal_post(&recv_thread_context->process_thread_deinit_signal);
+      etcpal_thread_join(&recv_thread_context->process_thread_handle);
     }
   }
 
@@ -636,17 +636,17 @@ etcpal_error_t start_receiver_thread(SacnRecvThreadContext* recv_thread_context)
  * The receiver thread function. Receives from network or receive hook, forwarding sACN data, and processes
  * periodic timeouts for sACN receivers.
  */
-void sacn_receive_thread(void* arg)  // TODO: Rename to process thread (& down the chain)
+void sacn_process_thread(void* arg)
 {
   if (!SACN_ASSERT_VERIFY(arg))
     return;
 
   SacnRecvThreadContext* context = (SacnRecvThreadContext*)arg;
 
-  while (!etcpal_signal_try_wait(&context->recv_thread_deinit_signal))
-    read_network_and_process(context);
+  while (!etcpal_signal_try_wait(&context->process_thread_deinit_signal))
+    tick_process_thread(context);
 
-  // Set running back to false (assuming network poll thread is also shutting down).
+  // Set running back to false (assuming receive thread is also shutting down).
   if (sacn_receiver_lock())
   {
     context->running = false;
@@ -657,7 +657,7 @@ void sacn_receive_thread(void* arg)  // TODO: Rename to process thread (& down t
 /*
  * The network poll thread function. Manages sockets and polls the network, forwarding events to the receive thread.
  */
-void sacn_network_poll_thread(void* arg)  // TODO: Rename to receive thread (& down the chain)
+void sacn_receive_thread(void* arg)
 {
   if (!SACN_ASSERT_VERIFY(arg))
     return;
@@ -683,8 +683,8 @@ void sacn_network_poll_thread(void* arg)  // TODO: Rename to receive thread (& d
     return;
   }
 
-  while (!etcpal_signal_try_wait(&context->network_poll_thread_deinit_signal))
-    poll_network(context);
+  while (!etcpal_signal_try_wait(&context->recv_thread_deinit_signal))
+    tick_receive_thread(context);
 
   // Destroy the poll context
   if (sacn_receiver_lock())

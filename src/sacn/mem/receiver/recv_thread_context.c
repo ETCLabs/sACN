@@ -414,13 +414,13 @@ etcpal_error_t init_recv_thread_context_entry(SacnRecvThreadContext* context, sa
   context->recv_hook_buf_len  = 0;
   context->poll_state         = kCheckNetworkNext;
 
-  if (!etcpal_signal_create(&context->recv_thread_deinit_signal))
+  if (!etcpal_signal_create(&context->process_thread_deinit_signal))
   {
     SACN_LOG_CRIT("FAILED TO CREATE RECEIVE THREAD DEINIT SIGNAL!");
     return kEtcPalErrSys;
   }
 
-  if (!etcpal_signal_create(&context->network_poll_thread_deinit_signal))
+  if (!etcpal_signal_create(&context->recv_thread_deinit_signal))
   {
     SACN_LOG_CRIT("FAILED TO CREATE NETWORK POLL THREAD DEINIT SIGNAL!");
     return kEtcPalErrSys;
@@ -476,8 +476,8 @@ void deinit_recv_thread_context_entry(SacnRecvThreadContext* context)
   CLEAR_BUF(context, subscribes);
   CLEAR_BUF(context, unsubscribes);
 
+  etcpal_signal_destroy(&context->process_thread_deinit_signal);
   etcpal_signal_destroy(&context->recv_thread_deinit_signal);
-  etcpal_signal_destroy(&context->network_poll_thread_deinit_signal);
   etcpal_sem_destroy(&context->network_sem);
   etcpal_sem_destroy(&context->recv_hook_sem);
   etcpal_sem_destroy(&context->poll_sem);

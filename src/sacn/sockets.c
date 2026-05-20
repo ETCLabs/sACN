@@ -1171,7 +1171,7 @@ void sacn_unsubscribe_sockets(SacnRecvThreadContext* recv_thread_context)
  * Returns other error codes on error. In this case, calling code should sleep to prevent the
  * execution thread from spinning constantly when, for example, there are no receivers listening.
  */
-etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadResult* read_result)
+etcpal_error_t sacn_read_REMOVE_THIS(SacnRecvThreadContext* recv_thread_context, SacnReadResult* read_result)
 {
 #if SACN_RECEIVER_ENABLED
   if (!SACN_ASSERT_VERIFY(recv_thread_context) || !SACN_ASSERT_VERIFY(read_result))
@@ -1336,7 +1336,7 @@ etcpal_error_t process_network(SacnRecvThreadContext* recv_thread_context, SacnR
  * Returns other error codes on error. In this case, calling code should sleep to prevent the
  * execution thread from spinning constantly when, for example, there are no receivers listening.
  */
-etcpal_error_t sacn_poll(SacnRecvThreadContext* recv_thread_context)
+etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context)
 {
 #if SACN_RECEIVER_ENABLED
   if (!SACN_ASSERT_VERIFY(recv_thread_context))
@@ -1358,9 +1358,9 @@ etcpal_error_t sacn_poll(SacnRecvThreadContext* recv_thread_context)
     while (!etcpal_sem_timed_wait(&recv_thread_context->network_sem, SACN_RECEIVER_READ_TIMEOUT_MS))
     {
       // Also make sure we can still shut down if needed.
-      if (etcpal_signal_try_wait(&recv_thread_context->network_poll_thread_deinit_signal))
+      if (etcpal_signal_try_wait(&recv_thread_context->recv_thread_deinit_signal))
       {
-        etcpal_signal_post(&recv_thread_context->network_poll_thread_deinit_signal);  // Re-post for higher level
+        etcpal_signal_post(&recv_thread_context->recv_thread_deinit_signal);  // Re-post for higher level
         return kEtcPalErrOk;
       }
     }

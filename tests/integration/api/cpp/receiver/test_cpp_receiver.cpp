@@ -473,8 +473,8 @@ protected:
   {
     sacn_thread_id_t       thread_id           = 0;
     SacnRecvThreadContext* recv_thread_context = get_recv_thread_context(thread_id);
-    poll_network(recv_thread_context);
-    read_network_and_process(recv_thread_context);
+    tick_receive_thread(recv_thread_context);
+    tick_process_thread(recv_thread_context);
 
     if (increment_sequence_num)
     {

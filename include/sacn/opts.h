@@ -236,7 +236,7 @@ bool sacn_assert_verify_fail(const char* exp, const char* file, const char* func
 #endif
 
 /**
- * @brief The maximum amount of time that a call to sacn_read() or sacn_poll() will block waiting for data, in
+ * @brief The maximum amount of time that a call to sacn_read() will block waiting for data, in
  *        milliseconds.
  *
  * It is recommended to keep this time short to avoid delays on shutdown.

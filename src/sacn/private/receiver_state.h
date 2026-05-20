@@ -49,8 +49,8 @@ void            begin_sampling_period(SacnReceiver* receiver);
 void            remove_receiver_sockets(SacnReceiver* receiver, sacn_socket_cleanup_behavior_t cleanup_behavior);
 void remove_source_detector_sockets(SacnSourceDetector* detector, sacn_socket_cleanup_behavior_t cleanup_behavior);
 void remove_all_receiver_sockets(sacn_socket_cleanup_behavior_t cleanup_behavior);
-void read_network_and_process(SacnRecvThreadContext* context);
-void poll_network(SacnRecvThreadContext* context);
+void tick_process_thread(SacnRecvThreadContext* context);
+void tick_receive_thread(SacnRecvThreadContext* context);
 void terminate_sources_on_removed_netints(SacnReceiver* receiver);
 
 bool receiver_cb_lock();

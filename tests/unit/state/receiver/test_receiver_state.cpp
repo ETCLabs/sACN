@@ -362,8 +362,8 @@ protected:
   static void RunThreadCycle()
   {
     SacnRecvThreadContext* context = get_recv_thread_context(0u);
-    poll_network(context);
-    read_network_and_process(context);
+    tick_receive_thread(context);
+    tick_process_thread(context);
     ++seq_num_;
     test_data_.at(SACN_SEQ_OFFSET) = seq_num_;
   }
@@ -466,8 +466,8 @@ TEST_F(TestReceiverState, InitializedThreadDeinitializes)
   EXPECT_EQ(sacn_cleanup_dead_sockets_fake.call_count, 0u);
 
   etcpal_thread_join_fake.custom_fake = [](etcpal_thread_t* thread_id) {
-    EXPECT_TRUE((thread_id == &get_recv_thread_context(0)->recv_thread_handle) ||
-                (thread_id == &get_recv_thread_context(0)->network_poll_thread_handle));
+    EXPECT_TRUE((thread_id == &get_recv_thread_context(0)->process_thread_handle) ||
+                (thread_id == &get_recv_thread_context(0)->recv_thread_handle));
     return kEtcPalErrOk;
   };
   sacn_cleanup_dead_sockets_fake.custom_fake = [](SacnRecvThreadContext* recv_thread_context) {
@@ -602,16 +602,16 @@ TEST_F(TestReceiverState, AssignReceiverToThreadWorks)
   etcpal_thread_create_fake.custom_fake = [](etcpal_thread_t* thread_id, const EtcPalThreadParams* params,
                                              void (*thread_fn)(void*), void*                       thread_arg) {
     ETCPAL_UNUSED_ARG(thread_fn);
-    EXPECT_TRUE((thread_id == &get_recv_thread_context(0)->recv_thread_handle) ||
-                (thread_id == &get_recv_thread_context(0)->network_poll_thread_handle));
+    EXPECT_TRUE((thread_id == &get_recv_thread_context(0)->process_thread_handle) ||
+                (thread_id == &get_recv_thread_context(0)->recv_thread_handle));
 
-    if (thread_id == &get_recv_thread_context(0)->recv_thread_handle)
+    if (thread_id == &get_recv_thread_context(0)->process_thread_handle)
     {
       EXPECT_EQ(params->priority, static_cast<unsigned int>(SACN_RECEIVER_THREAD_PRIORITY));
       EXPECT_EQ(params->stack_size, static_cast<unsigned int>(SACN_RECEIVER_THREAD_STACK));
       EXPECT_EQ(strcmp(params->thread_name, SACN_RECEIVER_THREAD_NAME), 0);
     }
-    else if (thread_id == &get_recv_thread_context(0)->network_poll_thread_handle)
+    else if (thread_id == &get_recv_thread_context(0)->recv_thread_handle)
     {
       EXPECT_EQ(params->priority, static_cast<unsigned int>(SACN_NETWORK_POLL_THREAD_PRIORITY));
       EXPECT_EQ(params->stack_size, static_cast<unsigned int>(SACN_NETWORK_POLL_THREAD_STACK));

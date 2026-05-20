@@ -103,8 +103,8 @@ void           sacn_add_pending_sockets(SacnRecvThreadContext* recv_thread_conte
 void           sacn_cleanup_dead_sockets(SacnRecvThreadContext* recv_thread_context);
 void           sacn_subscribe_sockets(SacnRecvThreadContext* recv_thread_context);
 void           sacn_unsubscribe_sockets(SacnRecvThreadContext* recv_thread_context);
-etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context, SacnReadResult* read_result);
-etcpal_error_t sacn_poll(SacnRecvThreadContext* recv_thread_context);
+etcpal_error_t sacn_read_REMOVE_THIS(SacnRecvThreadContext* recv_thread_context, SacnReadResult* read_result);
+etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context);
 
 // Source sending functions
 etcpal_error_t sacn_send_multicast(uint16_t                   universe_id,

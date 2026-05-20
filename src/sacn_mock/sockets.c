@@ -62,8 +62,8 @@ DEFINE_FAKE_VOID_FUNC(sacn_add_pending_sockets, SacnRecvThreadContext*);
 DEFINE_FAKE_VOID_FUNC(sacn_cleanup_dead_sockets, SacnRecvThreadContext*);
 DEFINE_FAKE_VOID_FUNC(sacn_subscribe_sockets, SacnRecvThreadContext*);
 DEFINE_FAKE_VOID_FUNC(sacn_unsubscribe_sockets, SacnRecvThreadContext*);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_read, SacnRecvThreadContext*, SacnReadResult*);
-DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_poll, SacnRecvThreadContext*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_read_REMOVE_THIS, SacnRecvThreadContext*, SacnReadResult*);
+DEFINE_FAKE_VALUE_FUNC(etcpal_error_t, sacn_read, SacnRecvThreadContext*);
 DEFINE_FAKE_VALUE_FUNC(etcpal_error_t,
                        sacn_send_multicast,
                        uint16_t,
@@ -95,8 +95,8 @@ void sacn_sockets_reset_all_fakes(void)
   RESET_FAKE(sacn_cleanup_dead_sockets);
   RESET_FAKE(sacn_subscribe_sockets);
   RESET_FAKE(sacn_unsubscribe_sockets);
+  RESET_FAKE(sacn_read_REMOVE_THIS);
   RESET_FAKE(sacn_read);
-  RESET_FAKE(sacn_poll);
   RESET_FAKE(sacn_send_multicast);
   RESET_FAKE(sacn_send_unicast);
 }
