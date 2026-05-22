@@ -885,6 +885,7 @@ void reset_transmission_suppression(const SacnSource*                           
       etcpal_timer_start(&universe->level_keep_alive_timer, source->keep_alive_interval);
   }
 
+#if SACN_ETC_PRIORITY_EXTENSION
   if ((behavior == kResetPap) || (behavior == kResetLevelAndPap))
   {
     universe->pap_packets_sent_before_suppression = 0;
@@ -892,6 +893,7 @@ void reset_transmission_suppression(const SacnSource*                           
     if (universe->has_pap_data)
       etcpal_timer_start(&universe->pap_keep_alive_timer, source->pap_keep_alive_interval);
   }
+#endif
 }
 
 // Needs lock
@@ -911,7 +913,9 @@ void set_source_name(SacnSource* source, const char* new_name)
 
     // Update the source name in this universe's send buffers
     strncpy((char*)(&universe->level_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, kSacnSourceNameMaxLen);
+#if SACN_ETC_PRIORITY_EXTENSION
     strncpy((char*)(&universe->pap_send_buf[SACN_SOURCE_NAME_OFFSET]), new_name, kSacnSourceNameMaxLen);
+#endif
 
     // Reset transmission suppression for start codes 0x00 and 0xDD
     reset_transmission_suppression(source, universe, kResetLevelAndPap);
@@ -983,7 +987,9 @@ void disable_pap_data(SacnSourceUniverse* universe)
   if (!SACN_ASSERT_VERIFY(universe))
     return;
 
+#if SACN_ETC_PRIORITY_EXTENSION
   universe->has_pap_data = false;
+#endif
 }
 
 // Needs lock
@@ -1067,7 +1073,9 @@ void set_universe_priority(const SacnSource* source, SacnSourceUniverse* univers
 
   universe->priority                        = priority;
   universe->level_send_buf[SACN_PRI_OFFSET] = priority;
+#if SACN_ETC_PRIORITY_EXTENSION
   universe->pap_send_buf[SACN_PRI_OFFSET]   = priority;
+#endif
   reset_transmission_suppression(source, universe, kResetLevelAndPap);
 }
 
@@ -1079,7 +1087,9 @@ void set_preview_flag(const SacnSource* source, SacnSourceUniverse* universe, bo
 
   universe->send_preview = preview;
   SET_PREVIEW_OPT(universe->level_send_buf, preview);
+#if SACN_ETC_PRIORITY_EXTENSION
   SET_PREVIEW_OPT(universe->pap_send_buf, preview);
+#endif
   reset_transmission_suppression(source, universe, kResetLevelAndPap);
 }
 
@@ -1120,7 +1130,9 @@ void reset_universe(SacnSourceUniverse* universe)
   universe->termination_state     = kNotTerminating;
   universe->num_terminations_sent = 0;
   universe->has_level_data        = false;
+#if SACN_ETC_PRIORITY_EXTENSION
   universe->has_pap_data          = false;
+#endif
 }
 
 // Needs lock
