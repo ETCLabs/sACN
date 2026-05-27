@@ -1248,13 +1248,14 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context)
       if (recv_res < 0)
       {
         etcpal_poll_remove_socket(&recv_thread_context->network_poll_context, poll_event.socket);
+        etcpal_sem_post(&recv_thread_context->network_sem);  // Give semaphore back since we're not pushing to the queue
         return (etcpal_error_t)recv_res;
       }
-    }
 
-    // Notify the process thread to process this data. It will give the semaphore back once it's done processing.
-    sacn_read_event_t read_event = kSacnReadEventNetwork;
-    SACN_ASSERT_VERIFY(etcpal_queue_timed_send(&recv_thread_context->read_queue, &read_event, ETCPAL_NO_WAIT));
+      // Notify the process thread to process this data. It will give the semaphore back once it's done processing.
+      sacn_read_event_t read_event = kSacnReadEventNetwork;
+      SACN_ASSERT_VERIFY(etcpal_queue_timed_send(&recv_thread_context->read_queue, &read_event, ETCPAL_NO_WAIT));
+    }
   }
   return poll_res;
 #else   // SACN_RECEIVER_ENABLED
