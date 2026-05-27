@@ -1248,7 +1248,9 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context)
       if (recv_res < 0)
       {
         etcpal_poll_remove_socket(&recv_thread_context->network_poll_context, poll_event.socket);
-        etcpal_sem_post(&recv_thread_context->network_sem);  // Give semaphore back since we're not pushing to the queue
+
+        // Give semaphore back since we're not pushing to the queue.
+        SACN_ASSERT_VERIFY(etcpal_sem_post(&recv_thread_context->network_sem));
         return (etcpal_error_t)recv_res;
       }
 
