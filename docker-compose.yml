@@ -8,10 +8,17 @@ services:
     command: sleep infinity
 
   gcc-cmake:
-    image: etc-docker.artifactory.etcconnect.com/etc/common-tech/gcc-cmake:llvm18
+    image: etc-docker.artifactory.etcconnect.com/etc/common-tech-containers/gcc13-llvm21-cmake3.31.11:v1
     volumes:
       # Mount the root folder that contains .git
       - .:/sacn:cached
+    command: sleep infinity
+
+  gcc-cmake-claude:
+    image: etc-docker.artifactory.etcconnect.com/etc/common-tech-containers/gcc13-llvm21-cmake3.31.11:v1
+    volumes:
+      # Mount the root folder that contains .git
+      - .:/c/git/sacn-claude:cached
     command: sleep infinity
 
   doxygen:

@@ -22,6 +22,7 @@ option(SACN_ENABLE_E2E_TESTS "Enable the end-to-end sACN tests (requires SACN_BU
 option(SACN_BUILD_EXAMPLES "Build the sACN example applications" OFF)
 option(SACN_BUILD_TEST_TOOLS "Build the sACN test tools (typically used in development only)" OFF)
 option(SACN_INSTALL_PDBS "Include PDBs in sACN install target" ON)
+option(SACN_SANDBOX_MODE "Enable if running in a sandboxed environment to disable dependency fetching" OFF)
 
 ####################### Dependencies & standalone support ######################
 
@@ -29,7 +30,10 @@ include(${SACN_CMAKE}/OssDependencyTools.cmake)
 determine_compile_environment()
 
 if(NOT COMPILING_AS_OSS)
-  include(${SACN_CMAKE}/AddCMakeTools.cmake)
+  if(NOT SACN_SANDBOX_MODE)
+    include(${SACN_CMAKE}/AddCMakeTools.cmake)
+  endif()
+  
   include(${CMAKE_TOOLS_MODULES}/QualityGateHelpers.cmake)
   
   # While the functions below already check for standalone, this check is performed to avoid the risk of unknown

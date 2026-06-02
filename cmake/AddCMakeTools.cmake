@@ -21,4 +21,4 @@ FetchContent_Declare(
   GIT_TAG ${CMAKE_TOOLS_GIT_TAG}
 )
 FetchContent_MakeAvailable(cmake_tools)
-set(CMAKE_TOOLS_MODULES ${cmake_tools_SOURCE_DIR}/modules)
+set(CMAKE_TOOLS_MODULES "${cmake_tools_SOURCE_DIR}/modules" CACHE PATH "Path to CMake Tools module directory")
