@@ -7,6 +7,7 @@ set(SACN_ROOT ${CMAKE_CURRENT_LIST_DIR})
 set(SACN_INCLUDE ${CMAKE_CURRENT_LIST_DIR}/include)
 set(SACN_SRC ${CMAKE_CURRENT_LIST_DIR}/src)
 set(SACN_CMAKE ${CMAKE_CURRENT_LIST_DIR}/cmake)
+set(SACN_EXTERNAL ${CMAKE_CURRENT_LIST_DIR}/external)
 
 ###################### Compile Options and Configuration ######################
 
@@ -22,6 +23,18 @@ option(SACN_ENABLE_E2E_TESTS "Enable the end-to-end sACN tests (requires SACN_BU
 option(SACN_BUILD_EXAMPLES "Build the sACN example applications" OFF)
 option(SACN_BUILD_TEST_TOOLS "Build the sACN test tools (typically used in development only)" OFF)
 option(SACN_INSTALL_PDBS "Include PDBs in sACN install target" ON)
+set(SACN_OFFLINE_DEPENDENCIES_PATH "" CACHE PATH
+  "Path to pre-downloaded dependencies directory (e.g. -DSACN_OFFLINE_DEPENDENCIES_PATH=../external)."
+)
+
+if(SACN_OFFLINE_DEPENDENCIES_PATH)
+  get_filename_component(SACN_OFFLINE_DEPENDENCIES_PATH ${SACN_OFFLINE_DEPENDENCIES_PATH}
+    ABSOLUTE
+    BASE_DIR ${CMAKE_BINARY_DIR}
+  )
+  
+  set(FETCHCONTENT_FULLY_DISCONNECTED ON CACHE BOOL "Disable FetchContent downloads." FORCE)
+endif()
 
 ####################### Dependencies & standalone support ######################
 
@@ -29,7 +42,12 @@ include(${SACN_CMAKE}/OssDependencyTools.cmake)
 determine_compile_environment()
 
 if(NOT COMPILING_AS_OSS)
-  include(${SACN_CMAKE}/AddCMakeTools.cmake)
+  if(SACN_OFFLINE_DEPENDENCIES_PATH)
+    set(CMAKE_TOOLS_MODULES ${SACN_OFFLINE_DEPENDENCIES_PATH}/cmake_tools/modules)
+  else()
+    include(${SACN_CMAKE}/AddCMakeTools.cmake)
+  endif()
+  
   include(${CMAKE_TOOLS_MODULES}/QualityGateHelpers.cmake)
   
   # While the functions below already check for standalone, this check is performed to avoid the risk of unknown

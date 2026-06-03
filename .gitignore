@@ -10,6 +10,11 @@
 # CMake
 build*/
 
+# Ignore dependencies that are fetched by CMake (everything in external besides fff)
+external/*
+!external/fff/
+!external/fff/**
+
 # MSVC and Qt
 *.VC.db
 *.VC.opendb
