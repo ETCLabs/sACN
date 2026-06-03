@@ -19,6 +19,7 @@ FetchContent_Declare(
   cmake_tools
   GIT_REPOSITORY ${CMAKE_TOOLS_GIT_REPO}
   GIT_TAG ${CMAKE_TOOLS_GIT_TAG}
+  SOURCE_DIR ${SACN_EXTERNAL}/cmake_tools
 )
 FetchContent_MakeAvailable(cmake_tools)
 set(CMAKE_TOOLS_MODULES ${cmake_tools_SOURCE_DIR}/modules)
