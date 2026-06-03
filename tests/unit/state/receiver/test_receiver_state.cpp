@@ -292,8 +292,7 @@ protected:
     RESET_FAKE(source_pap_lost);
     RESET_FAKE(source_limit_exceeded);
 
-    sacn_read_fake.return_val       = kEtcPalErrTimedOut;
-    etcpal_sem_post_fake.return_val = true;
+    sacn_read_fake.return_val = kEtcPalErrTimedOut;
 
     test_receiver_ = AddReceiver();
     ASSERT_NE(test_receiver_, nullptr);
