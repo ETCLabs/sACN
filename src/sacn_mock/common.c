@@ -42,7 +42,8 @@ void sacn_common_reset_all_fakes(void)
   RESET_FAKE(sacn_source_lock);
   RESET_FAKE(sacn_source_unlock);
 
-  sacn_initialized_fake.return_val   = true;
-  sacn_receiver_lock_fake.return_val = true;
-  sacn_source_lock_fake.return_val   = true;
+  sacn_initialized_fake.return_val           = true;
+  sacn_receiver_lock_fake.return_val         = true;
+  sacn_receiver_sockets_lock_fake.return_val = true;
+  sacn_source_lock_fake.return_val           = true;
 }

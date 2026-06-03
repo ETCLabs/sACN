@@ -607,13 +607,13 @@ TEST_F(TestReceiverState, AssignReceiverToThreadWorks)
     EXPECT_TRUE((thread_id == &get_recv_thread_context(0)->process_thread_handle) ||
                 (thread_id == &get_recv_thread_context(0)->recv_thread_handle));
 
-    if (thread_id == &get_recv_thread_context(0)->process_thread_handle)
+    if (thread_id == &get_recv_thread_context(0)->recv_thread_handle)
     {
       EXPECT_EQ(params->priority, static_cast<unsigned int>(SACN_RECEIVER_THREAD_PRIORITY));
       EXPECT_EQ(params->stack_size, static_cast<unsigned int>(SACN_RECEIVER_THREAD_STACK));
       EXPECT_EQ(strcmp(params->thread_name, SACN_RECEIVER_THREAD_NAME), 0);
     }
-    else if (thread_id == &get_recv_thread_context(0)->recv_thread_handle)
+    else if (thread_id == &get_recv_thread_context(0)->process_thread_handle)
     {
       EXPECT_EQ(params->priority, static_cast<unsigned int>(SACN_PROCESS_THREAD_PRIORITY));
       EXPECT_EQ(params->stack_size, static_cast<unsigned int>(SACN_PROCESS_THREAD_STACK));
