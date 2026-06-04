@@ -50,7 +50,15 @@ macos-build:
     # To restore the full build/test, remove the three temporary commands below and un-comment the two ORIGINAL lines.
     - cmake --build . --target e2e_coverage_test_dynamic
     - cmake --build . --target e2e_coverage_test_static
-    - ctest --output-on-failure -R CoverageTest
+    # Use -V (verbose) instead of --output-on-failure so the SACN-DIAG printouts ALWAYS show, even when a
+    # run passes (--output-on-failure only dumps captured stdout for FAILED tests, which is why nothing showed).
+    # Loop the run a few times to try to catch the flaky failure; stop at the first failing iteration.
+    # Adjust the iteration count in the "for" list below; narrow to a single test with e.g. -R DetectSourcesComingAndGoing.
+    - |
+        for run in 1 2 3 4 5; do
+          echo "================ DetectSourcesComingAndGoing loop iteration $run ================"
+          ctest -V -R DetectSourcesComingAndGoing || exit 1
+        done
     # --- ORIGINAL (re-enable when done) ---
     # - cmake --build .
     # - ctest --output-on-failure
