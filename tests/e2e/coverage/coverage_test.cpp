@@ -29,6 +29,9 @@
 #include "etcpal/cpp/netint.h"
 #include "etcpal/cpp/signal.h"
 #include "etcpal/cpp/thread.h"
+#include "etcpal/timer.h"  // SACN-DIAG (temporary diagnostics)
+
+#include <cstdio>  // SACN-DIAG (temporary diagnostics)
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -138,10 +141,16 @@ public:
   MockSourceDetectorNotifyHandler()
   {
     ON_CALL(*this, HandleSourceUpdated(_, _, _, _))
-        .WillByDefault(Invoke([&](sacn::RemoteSourceHandle, const etcpal::Uuid&, const std::string&,
-                                  const std::vector<uint16_t>&) { handle_source_updated_signal_.Notify(); }));
+        .WillByDefault(Invoke([&](sacn::RemoteSourceHandle, const etcpal::Uuid&, const std::string& name,
+                                  const std::vector<uint16_t>&) {
+          printf("[SACN-DIAG %u] TEST cb HandleSourceUpdated: name='%s'\n", etcpal_getms(), name.c_str());  // SACN-DIAG
+          fflush(stdout);                                                                                   // SACN-DIAG
+          handle_source_updated_signal_.Notify();
+        }));
     ON_CALL(*this, HandleSourceExpired(_, _, _))
-        .WillByDefault(Invoke([&](sacn::RemoteSourceHandle, const etcpal::Uuid&, const std::string&) {
+        .WillByDefault(Invoke([&](sacn::RemoteSourceHandle, const etcpal::Uuid&, const std::string& name) {
+          printf("[SACN-DIAG %u] TEST cb HandleSourceExpired: name='%s'\n", etcpal_getms(), name.c_str());  // SACN-DIAG
+          fflush(stdout);                                                                                   // SACN-DIAG
           handle_source_expired_signal_.Notify();
         }));
   }
@@ -594,6 +603,8 @@ TEST_F(CoverageTest, DetectSourcesComingAndGoing)
   EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceUpdated(_, _, _, _)).Times(AtLeast(1));
   EXPECT_CALL(source_detector.GetNotifyHandler(), HandleSourceExpired(_, _, _)).Times(AtLeast(1));
   source_detector.Startup();
+  printf("[SACN-DIAG %u] TEST: detector started, creating %d sources\n", etcpal_getms(), kNumTestSources);  // SACN-DIAG
+  fflush(stdout);                                                                                            // SACN-DIAG
 
   std::vector<TestSource> sources;
   for (int i = 0; i < kNumTestSources; ++i)
@@ -605,12 +616,23 @@ TEST_F(CoverageTest, DetectSourcesComingAndGoing)
     sources.push_back(std::move(source));
   }
 
-  EXPECT_TRUE(source_detector.GetNotifyHandler().WaitForSourceUpdated(kWorstCaseWaitMs));
+  printf("[SACN-DIAG %u] TEST: waiting for first source-updated...\n", etcpal_getms());  // SACN-DIAG
+  fflush(stdout);                                                                        // SACN-DIAG
+  bool diag_updated = source_detector.GetNotifyHandler().WaitForSourceUpdated(kWorstCaseWaitMs);  // SACN-DIAG
+  printf("[SACN-DIAG %u] TEST: WaitForSourceUpdated returned %d; destroying all %d sources\n", etcpal_getms(),  // SACN-DIAG
+         (int)diag_updated, kNumTestSources);                                                                   // SACN-DIAG
+  fflush(stdout);                                                                                               // SACN-DIAG
+  EXPECT_TRUE(diag_updated);
 
   for (int i = 0; i < kNumTestSources; ++i)
     sources.pop_back();
 
-  EXPECT_TRUE(source_detector.GetNotifyHandler().WaitForSourceExpired(kWorstCaseWaitMs));
+  printf("[SACN-DIAG %u] TEST: all sources destroyed; waiting for source-expired...\n", etcpal_getms());  // SACN-DIAG
+  fflush(stdout);                                                                                         // SACN-DIAG
+  bool diag_expired = source_detector.GetNotifyHandler().WaitForSourceExpired(kWorstCaseWaitMs);  // SACN-DIAG
+  printf("[SACN-DIAG %u] TEST: WaitForSourceExpired returned %d\n", etcpal_getms(), (int)diag_expired);  // SACN-DIAG
+  fflush(stdout);                                                                                        // SACN-DIAG
+  EXPECT_TRUE(diag_expired);
 }
 
 TEST_F(CoverageTest, ResetNetworkingAtScale)

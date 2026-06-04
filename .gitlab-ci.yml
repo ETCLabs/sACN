@@ -46,8 +46,14 @@ macos-build:
     - mkdir build
     - cd build
     - cmake ${GLOBAL_CMAKE_OPTIONS} ${SANITIZER_DEFS} ..
-    - cmake --build .
-    - ctest --output-on-failure
+    # TEMPORARY (flaky CoverageTest investigation): build & run only the CoverageTest tests to speed up the pipeline.
+    # To restore the full build/test, remove the three temporary commands below and un-comment the two ORIGINAL lines.
+    - cmake --build . --target e2e_coverage_test_dynamic
+    - cmake --build . --target e2e_coverage_test_static
+    - ctest --output-on-failure -R CoverageTest
+    # --- ORIGINAL (re-enable when done) ---
+    # - cmake --build .
+    # - ctest --output-on-failure
   artifacts:
     when: always
     reports:

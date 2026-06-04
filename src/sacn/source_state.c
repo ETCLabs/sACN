@@ -31,6 +31,8 @@
 #include "etcpal/rbtree.h"
 #include "etcpal/timer.h"
 
+#include <stdio.h>  // SACN-DIAG (temporary diagnostics)
+
 #if SACN_SOURCE_ENABLED || DOXYGEN
 
 // Suppress strncpy() warning on Windows/MSVC.
@@ -285,6 +287,9 @@ bool process_universe_discovery(SacnSource* source)
   bool all_sends_succeeded = true;
   if (!source->terminating && etcpal_timer_is_expired(&source->universe_discovery_timer))
   {
+    printf("[SACN-DIAG %u] SOURCE sending discovery: name='%s' num_active_universes=%d\n", etcpal_getms(),  // SACN-DIAG
+           source->name, (int)source->num_active_universes);                                                // SACN-DIAG
+    fflush(stdout);                                                                                         // SACN-DIAG
     all_sends_succeeded = send_universe_discovery(source);
     etcpal_timer_reset(&source->universe_discovery_timer);
   }
@@ -814,6 +819,8 @@ void set_source_terminating(SacnSource* source)
   {
     // Set the source's terminating flag
     source->terminating = true;
+    printf("[SACN-DIAG %u] SOURCE set_terminating: name='%s'\n", etcpal_getms(), source->name);  // SACN-DIAG
+    fflush(stdout);                                                                              // SACN-DIAG
 
     // Set terminating for the removal of each universe of this source
     for (size_t i = 0; i < source->num_universes; ++i)

@@ -23,6 +23,8 @@
 
 #include "sacn/private/source_detector_state.h"
 
+#include <stdio.h>  // SACN-DIAG (temporary diagnostics)
+
 #if SACN_SOURCE_DETECTOR_ENABLED || DOXYGEN
 
 /**************************** Private variables ******************************/
@@ -143,12 +145,36 @@ void process_source_detector(SacnRecvThreadContext* recv_thread_context)
       SacnSourceDetector* source_detector = recv_thread_context->source_detector;
       if (source_detector)
       {
+        // SACN-DIAG: throttled heartbeat to prove this expiry-check thread is alive and show each source's timer.
+        static uint32_t diag_last_ms = 0u;                                  // SACN-DIAG
+        uint32_t        diag_now_ms  = etcpal_getms();                      // SACN-DIAG
+        bool            diag_emit    = ((diag_now_ms - diag_last_ms) >= 2000u);  // SACN-DIAG
+        if (diag_emit)                                                      // SACN-DIAG
+        {                                                                   // SACN-DIAG
+          diag_last_ms = diag_now_ms;                                       // SACN-DIAG
+          printf("[SACN-DIAG %u] DETECTOR expiry-check alive: tracking %d source(s)\n", diag_now_ms,  // SACN-DIAG
+                 (int)get_num_universe_discovery_sources());                // SACN-DIAG
+          fflush(stdout);                                                   // SACN-DIAG
+        }                                                                   // SACN-DIAG
+
         EtcPalRbIter iter;
         for (SacnUniverseDiscoverySource* source = get_first_universe_discovery_source(&iter); source;
              source                              = get_next_universe_discovery_source(&iter))
         {
+          if (diag_emit)                                                    // SACN-DIAG
+          {                                                                 // SACN-DIAG
+            printf("[SACN-DIAG %u]   source handle=%u name='%s' expired=%d remaining=%ums\n", diag_now_ms,  // SACN-DIAG
+                   (unsigned)source->handle, source->name,                  // SACN-DIAG
+                   (int)etcpal_timer_is_expired(&source->expiration_timer), // SACN-DIAG
+                   etcpal_timer_remaining(&source->expiration_timer));      // SACN-DIAG
+            fflush(stdout);                                                 // SACN-DIAG
+          }                                                                 // SACN-DIAG
+
           if (etcpal_timer_is_expired(&source->expiration_timer))
           {
+            printf("[SACN-DIAG %u] DETECTOR source EXPIRED: handle=%u name='%s'\n", etcpal_getms(),  // SACN-DIAG
+                   (unsigned)source->handle, source->name);                 // SACN-DIAG
+            fflush(stdout);                                                 // SACN-DIAG
             source_expired.callback = source_detector->callbacks.source_expired;
             source_expired.context  = source_detector->callbacks.context;
             add_sacn_source_detector_expired_source(&source_expired, source->handle, source->name);
@@ -167,6 +193,9 @@ void process_source_detector(SacnRecvThreadContext* recv_thread_context)
     {
       for (size_t i = 0; i < source_expired.num_expired_sources; ++i)
       {
+        printf("[SACN-DIAG %u] DETECTOR firing source_expired callback: handle=%u name='%s'\n", etcpal_getms(),  // SACN-DIAG
+               (unsigned)source_expired.expired_sources[i].handle, source_expired.expired_sources[i].name);       // SACN-DIAG
+        fflush(stdout);                                                                                           // SACN-DIAG
         source_expired.callback(source_expired.expired_sources[i].handle, &source_expired.expired_sources[i].cid,
                                 source_expired.expired_sources[i].name, source_expired.context);
       }
@@ -268,6 +297,10 @@ void process_universe_discovery_page(SacnSourceDetector* source_detector, const 
     if (find_or_add_source(source_detector, page, &source, &limit_exceeded) == kEtcPalErrOk)
     {
       etcpal_timer_reset(&source->expiration_timer);
+      printf("[SACN-DIAG %u] DETECTOR got discovery: handle=%u name='%s' page=%d/%d (timer reset, expires in %ums)\n",  // SACN-DIAG
+             etcpal_getms(), (unsigned)source->handle, source->name, page->page, page->last_page,                       // SACN-DIAG
+             etcpal_timer_remaining(&source->expiration_timer));                                                        // SACN-DIAG
+      fflush(stdout);                                                                                                   // SACN-DIAG
 
       // The pages are tracked here to make sure that source_updated only notifies when the universe list is a complete
       // set of consecutive pages, from 0 to the last page. It's assumed the pages have been sent in order.
