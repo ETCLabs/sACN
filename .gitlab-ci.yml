@@ -40,8 +40,8 @@ macos-build:
   parallel:
     matrix:
       - SANITIZER_DEFS:
-          - -DSACN_ENABLE_ASAN=ON -DSACN_ENABLE_UBSAN=ON
-          - -DSACN_ENABLE_TSAN=ON
+          - -DSACN_ENABLE_E2E_TESTS=ON -DSACN_ENABLE_ASAN=ON -DSACN_ENABLE_UBSAN=ON
+          - -DSACN_ENABLE_E2E_TESTS=ON -DSACN_ENABLE_TSAN=ON
   script:
     - mkdir build
     - cd build
