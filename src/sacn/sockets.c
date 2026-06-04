@@ -1185,7 +1185,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context)
     if (poll_event.events & ETCPAL_POLL_IN)
     {
       // Wait for old data to be processed so we don't overwrite it.
-      while (!etcpal_sem_timed_wait(&recv_thread_context->network_sem, SACN_RECEIVER_READ_TIMEOUT_MS))
+      while (!sacn_sem_timed_wait(&recv_thread_context->network_sem, SACN_RECEIVER_READ_TIMEOUT_MS))
       {
         // Also make sure we can still shut down if needed.
         if (etcpal_signal_try_wait(&recv_thread_context->recv_thread_deinit_signal))
@@ -1250,7 +1250,7 @@ etcpal_error_t sacn_read(SacnRecvThreadContext* recv_thread_context)
         etcpal_poll_remove_socket(&recv_thread_context->network_poll_context, poll_event.socket);
 
         // Give semaphore back since we're not pushing to the queue.
-        SACN_ASSERT_VERIFY(etcpal_sem_post(&recv_thread_context->network_sem));
+        SACN_ASSERT_VERIFY(sacn_sem_post(&recv_thread_context->network_sem));
         return (etcpal_error_t)recv_res;
       }
 

@@ -554,7 +554,7 @@ void tick_process_thread(SacnRecvThreadContext* context)
 
     // We're done processing the data, so give the corresponding semaphore back.
     SACN_ASSERT_VERIFY(
-        etcpal_sem_post((read_event == kSacnReadEventNetwork) ? &context->network_sem : &context->hook_sem));
+        sacn_sem_post((read_event == kSacnReadEventNetwork) ? &context->network_sem : &context->hook_sem));
   }
 
   if (!context->periodic_timer_started)

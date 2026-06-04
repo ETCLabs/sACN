@@ -910,6 +910,12 @@ void sacn_receiver_sockets_unlock(void);
 bool sacn_source_lock(void);
 void sacn_source_unlock(void);
 
+// Wrappers around the etcpal_sem functions used by the receive/process threads. These exist so the semaphore
+// operations can be mocked in unit tests - etcpal_sem_post/etcpal_sem_timed_wait can be macros on some platforms,
+// which can't be faked directly with FFF.
+bool sacn_sem_post(etcpal_sem_t* sem);
+bool sacn_sem_timed_wait(etcpal_sem_t* sem, int timeout_ms);
+
 bool sacn_initialized(sacn_features_t features);
 
 #ifdef __cplusplus

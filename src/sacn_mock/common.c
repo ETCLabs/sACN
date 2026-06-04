@@ -31,6 +31,8 @@ DEFINE_FAKE_VALUE_FUNC(bool, sacn_receiver_sockets_lock);
 DEFINE_FAKE_VOID_FUNC(sacn_receiver_sockets_unlock);
 DEFINE_FAKE_VALUE_FUNC(bool, sacn_source_lock);
 DEFINE_FAKE_VOID_FUNC(sacn_source_unlock);
+DEFINE_FAKE_VALUE_FUNC(bool, sacn_sem_post, etcpal_sem_t*);
+DEFINE_FAKE_VALUE_FUNC(bool, sacn_sem_timed_wait, etcpal_sem_t*, int);
 
 void sacn_common_reset_all_fakes(void)
 {
@@ -41,9 +43,13 @@ void sacn_common_reset_all_fakes(void)
   RESET_FAKE(sacn_receiver_sockets_unlock);
   RESET_FAKE(sacn_source_lock);
   RESET_FAKE(sacn_source_unlock);
+  RESET_FAKE(sacn_sem_post);
+  RESET_FAKE(sacn_sem_timed_wait);
 
   sacn_initialized_fake.return_val           = true;
   sacn_receiver_lock_fake.return_val         = true;
   sacn_receiver_sockets_lock_fake.return_val = true;
   sacn_source_lock_fake.return_val           = true;
+  sacn_sem_post_fake.return_val              = true;
+  sacn_sem_timed_wait_fake.return_val        = true;
 }

@@ -693,6 +693,16 @@ void sacn_source_unlock(void)
   etcpal_mutex_unlock(&sacn_source_mutex);
 }
 
+bool sacn_sem_post(etcpal_sem_t* sem)
+{
+  return etcpal_sem_post(sem);
+}
+
+bool sacn_sem_timed_wait(etcpal_sem_t* sem, int timeout_ms)
+{
+  return etcpal_sem_timed_wait(sem, timeout_ms);
+}
+
 bool sacn_initialized(sacn_features_t features)
 {
   if (((features & SACN_FEATURE_DMX_MERGER) != 0) && (sacn_pool_sacn_state.dmx_merger_feature_init_count == 0))
