@@ -40,24 +40,18 @@ macos-build:
   parallel:
     matrix:
       - SANITIZER_DEFS:
-          - -DSACN_ENABLE_E2E_TESTS=ON -DSACN_ENABLE_ASAN=ON -DSACN_ENABLE_UBSAN=ON
-          - -DSACN_ENABLE_E2E_TESTS=ON -DSACN_ENABLE_TSAN=ON
+          - -DSACN_ENABLE_ASAN=ON -DSACN_ENABLE_UBSAN=ON
+          - -DSACN_ENABLE_TSAN=ON
   script:
     - mkdir build
     - cd build
     - cmake ${GLOBAL_CMAKE_OPTIONS} ${SANITIZER_DEFS} ..
-    # TEMPORARY (flaky CoverageTest investigation): build & run only the CoverageTest tests to speed up the pipeline.
-    # To restore the full build/test, remove the three temporary commands below and un-comment the two ORIGINAL lines.
-    - cmake --build . --target e2e_coverage_test_dynamic
-    - cmake --build . --target e2e_coverage_test_static
-    # Use -V (verbose) instead of --output-on-failure so the SACN-DIAG printouts ALWAYS show, even when a
-    # run passes (--output-on-failure only dumps captured stdout for FAILED tests, which is why nothing showed).
-    # Loop the run a few times to try to catch the flaky failure; stop at the first failing iteration.
-    # Adjust the iteration count in the "for" list below; narrow to a single test with e.g. -R DetectSourcesComingAndGoing.
+    - cmake --build .
     - ctest --output-on-failure
-    # --- ORIGINAL (re-enable when done) ---
-    # - cmake --build .
-    # - ctest --output-on-failure
+    # TODO: Fix for flakey E2E tests on Mac is to build and run them separately (CPU/network issue?):
+    - cmake -DSACN_ENABLE_E2E_TESTS=ON ${GLOBAL_CMAKE_OPTIONS} ${SANITIZER_DEFS} ..
+    - cmake --build .
+    - ctest --output-on-failure -R CoverageTest
   artifacts:
     when: always
     reports:
