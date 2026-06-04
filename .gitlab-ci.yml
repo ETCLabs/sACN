@@ -54,11 +54,7 @@ macos-build:
     # run passes (--output-on-failure only dumps captured stdout for FAILED tests, which is why nothing showed).
     # Loop the run a few times to try to catch the flaky failure; stop at the first failing iteration.
     # Adjust the iteration count in the "for" list below; narrow to a single test with e.g. -R DetectSourcesComingAndGoing.
-    - |
-        for run in 1 2 3 4 5; do
-          echo "================ DetectSourcesComingAndGoing loop iteration $run ================"
-          ctest -V -R DetectSourcesComingAndGoing || exit 1
-        done
+    - ctest --output-on-failure
     # --- ORIGINAL (re-enable when done) ---
     # - cmake --build .
     # - ctest --output-on-failure
