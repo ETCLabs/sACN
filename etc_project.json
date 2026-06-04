@@ -3,7 +3,7 @@
     {
       "name": "EtcPal",
       "gitlabPath": "etc/common-tech/general/etcpal",
-      "gitTag": "ETCPAL-225"
+      "version": "1.0.0.28"
     },
     {
       "name": "GSL",
