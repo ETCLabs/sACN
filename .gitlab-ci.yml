@@ -48,7 +48,7 @@ macos-build:
     - cmake ${GLOBAL_CMAKE_OPTIONS} ${SANITIZER_DEFS} ..
     - cmake --build .
     - ctest --output-on-failure
-    # TODO: Fix for flakey E2E tests on Mac is to build and run them separately (CPU/network issue?):
+    # TODO: Fix for flakey E2E tests on Mac is to build and run them separately:
     - cmake -DSACN_ENABLE_E2E_TESTS=ON ${GLOBAL_CMAKE_OPTIONS} ${SANITIZER_DEFS} ..
     - cmake --build .
     - ctest --output-on-failure -R CoverageTest
