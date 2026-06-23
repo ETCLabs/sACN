@@ -335,11 +335,11 @@ etcpal_error_t send_multicast(uint16_t universe_id, const uint8_t* send_buf, con
     return kEtcPalErrNotInit;
 
   // Try to send the data (ignore errors)
-  const size_t kSendBufLength =
+  const size_t send_buf_length =
       (size_t)ACN_UDP_PREAMBLE_SIZE + (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
 
   etcpal_error_t res        = kEtcPalErrOk;
-  int            sendto_res = etcpal_sendto(sock, send_buf, kSendBufLength, 0, &dest);
+  int            sendto_res = etcpal_sendto(sock, send_buf, send_buf_length, 0, &dest);
   if (sendto_res < 0)
   {
     res = (etcpal_error_t)sendto_res;
@@ -349,7 +349,7 @@ etcpal_error_t send_multicast(uint16_t universe_id, const uint8_t* send_buf, con
       err_info.error     = res;
       err_info.socket    = sock;
       err_info.message   = send_buf;
-      err_info.length    = kSendBufLength;
+      err_info.length    = send_buf_length;
       err_info.flags     = 0;
       err_info.dest_addr = &dest;
       sacn_common_callbacks.multicast_send_error(&err_info, sacn_common_callbacks.context);
@@ -392,11 +392,11 @@ etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_ad
   sockaddr_dest.port = kSacnPort;
 
   // Try to send the data (ignore errors)
-  const size_t kSendBufLength =
+  const size_t send_buf_length =
       (size_t)ACN_UDP_PREAMBLE_SIZE + (size_t)ACN_PDU_LENGTH((&send_buf[ACN_UDP_PREAMBLE_SIZE]));
 
   etcpal_error_t res        = kEtcPalErrOk;
-  int            sendto_res = etcpal_sendto(sock, send_buf, kSendBufLength, 0, &sockaddr_dest);
+  int            sendto_res = etcpal_sendto(sock, send_buf, send_buf_length, 0, &sockaddr_dest);
   if (sendto_res < 0)
   {
     res = (etcpal_error_t)sendto_res;
@@ -406,7 +406,7 @@ etcpal_error_t send_unicast(const uint8_t* send_buf, const EtcPalIpAddr* dest_ad
       err_info.error     = res;
       err_info.socket    = sock;
       err_info.message   = send_buf;
-      err_info.length    = kSendBufLength;
+      err_info.length    = send_buf_length;
       err_info.flags     = 0;
       err_info.dest_addr = &sockaddr_dest;
       sacn_common_callbacks.unicast_send_error(&err_info, sacn_common_callbacks.context);
@@ -489,12 +489,12 @@ etcpal_error_t create_multicast_send_socket(const EtcPalMcastNetintId*  netint_i
 
   if (res == kEtcPalErrOk)
   {
-    const int kTtl = SACN_SOURCE_MULTICAST_TTL;
-    res            = etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_TTL, &kTtl, sizeof kTtl);
+    const int ttl = SACN_SOURCE_MULTICAST_TTL;
+    res           = etcpal_setsockopt(new_sock, sockopt_ip_level, ETCPAL_IP_MULTICAST_TTL, &ttl, sizeof ttl);
 
     if (res != kEtcPalErrOk)
     {
-      SACN_LOG_ERR("Failed to set %s IP_MULTICAST_TTL socket option to %d: '%s'", sockopt_ip_level_str, kTtl,
+      SACN_LOG_ERR("Failed to set %s IP_MULTICAST_TTL socket option to %d: '%s'", sockopt_ip_level_str, ttl,
                    etcpal_strerror(res));
     }
   }

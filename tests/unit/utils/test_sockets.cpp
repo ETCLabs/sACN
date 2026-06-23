@@ -615,9 +615,9 @@ TEST_F(TestSockets, AddReceiverSocketBindsAfterCreateSocketFails)
   static constexpr uint16_t         kUniverse = 1u;
 #if SACN_RECEIVER_SOCKET_PER_NIC && !SACN_RECEIVER_LIMIT_BIND
   ASSERT_EQ(fake_v4_netint_ids_.size(), fake_v6_netint_ids_.size());
-  const unsigned int kNumBindsPerSuccessfulAdd = static_cast<unsigned int>(fake_v4_netint_ids_.size());
+  const unsigned int num_binds_per_successful_add = static_cast<unsigned int>(fake_v4_netint_ids_.size());
 #else
-  const size_t kNumBindsPerSuccessfulAdd = 1u;
+  const size_t num_binds_per_successful_add = 1u;
 #endif
 
   std::vector<etcpal_socket_t> sockets;
@@ -659,12 +659,12 @@ TEST_F(TestSockets, AddReceiverSocketBindsAfterCreateSocketFails)
 
   EXPECT_EQ(AddReceiverSockets(kThreadId, kEtcPalIpTypeV4, kUniverse, fake_v4_netint_ids_, sockets), kEtcPalErrOk);
 
-  expected_bind_count += kNumBindsPerSuccessfulAdd;
+  expected_bind_count += num_binds_per_successful_add;
   EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
 
   EXPECT_EQ(AddReceiverSockets(kThreadId, kEtcPalIpTypeV6, kUniverse, fake_v6_netint_ids_, sockets), kEtcPalErrOk);
 
-  expected_bind_count += kNumBindsPerSuccessfulAdd;
+  expected_bind_count += num_binds_per_successful_add;
   EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
 }
 
