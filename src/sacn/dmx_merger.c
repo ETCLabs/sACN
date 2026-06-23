@@ -1666,6 +1666,7 @@ etcpal_error_t remove_sacn_dmx_merger_pap(sacn_dmx_merger_t merger, sacn_dmx_mer
     memset(source_state->source.address_priority,
            (source_state->source.universe_priority == 0) ? 1 : source_state->source.universe_priority,
            SACN_DMX_MERGER_MAX_SLOTS);
+    source_state->pap_count = SACN_DMX_MERGER_MAX_SLOTS;
 
     // Only merge priorities for levels that have come in.
     merge_new_priorities(merger_state, source_state, 0, source_state->source.valid_level_count);
