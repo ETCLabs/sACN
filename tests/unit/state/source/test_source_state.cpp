@@ -2187,8 +2187,8 @@ TEST_F(TestSourceState, SetSourceNameWorks)
 
 TEST_F(TestSourceState, GetSourceUniversesWorks)
 {
-  const size_t kNumUniverses  = 7u;
-  const size_t kContainerSize = kNumUniverses * 2u;
+  static constexpr size_t kNumUniverses  = 7u;
+  const size_t            container_size = kNumUniverses * 2u;
 
   sacn_source_t source = AddSource(kTestSourceConfig);
 
@@ -2199,21 +2199,21 @@ TEST_F(TestSourceState, GetSourceUniversesWorks)
     ++universe_config.universe;
   }
 
-  std::array<uint16_t, kContainerSize> universes{};
+  std::array<uint16_t, container_size> universes{};
 
   size_t num_universes = get_source_universes(GetSource(source), universes.data(), 1u);
   EXPECT_EQ(num_universes, kNumUniverses);
 
   EXPECT_EQ(universes[0], kTestUniverseConfig.universe);
-  for (uint16_t i = 1u; i < kContainerSize; ++i)
+  for (uint16_t i = 1u; i < container_size; ++i)
     EXPECT_EQ(universes.at(i), 0u);
 
-  num_universes = get_source_universes(GetSource(source), universes.data(), kContainerSize);
+  num_universes = get_source_universes(GetSource(source), universes.data(), container_size);
   EXPECT_EQ(num_universes, kNumUniverses);
 
   for (uint16_t i = 0u; i < kNumUniverses; ++i)
     EXPECT_EQ(universes.at(i), kTestUniverseConfig.universe + i);
-  for (uint16_t i = kNumUniverses; i < kContainerSize; ++i)
+  for (uint16_t i = kNumUniverses; i < container_size; ++i)
     EXPECT_EQ(universes.at(i), 0u);
 
   size_t num_terminating = 0u;
@@ -2224,7 +2224,7 @@ TEST_F(TestSourceState, GetSourceUniversesWorks)
     ++num_terminating;
   }
 
-  num_universes = get_source_universes(GetSource(source), universes.data(), kContainerSize);
+  num_universes = get_source_universes(GetSource(source), universes.data(), container_size);
   EXPECT_EQ(num_universes, kNumUniverses - num_terminating);
 
   for (uint16_t i = 0u; i < (kNumUniverses - num_terminating); ++i)
