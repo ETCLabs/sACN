@@ -496,29 +496,29 @@ TEST_F(TestSockets, AddReceiverSocketWorks)
   static constexpr size_t kNumAddsPerIteration = 2u;
 #if SACN_RECEIVER_SOCKET_PER_NIC
   ASSERT_EQ(fake_v4_netints_.size(), fake_v6_netints_.size());
-  const size_t kNumSocketsPerAdd = fake_v4_netints_.size();
+  const size_t num_sockets_per_add = fake_v4_netints_.size();
 #else
-  const size_t kNumSocketsPerAdd = 1u;
+  const size_t num_sockets_per_add = 1u;
 #endif
-  const size_t kNumSocketsPerIteration = kNumSocketsPerAdd * kNumAddsPerIteration;
-  const size_t kTotalNumSockets        = kNumIterations * kNumSocketsPerIteration;
+  const size_t num_sockets_per_iteration = num_sockets_per_add * kNumAddsPerIteration;
+  const size_t total_num_sockets         = kNumIterations * num_sockets_per_iteration;
 
   SacnRecvThreadContext* context = get_recv_thread_context(0);
   ASSERT_NE(context, nullptr);
   ASSERT_NE(context->socket_refs, nullptr);
 
   uint16_t universe = 1u;
-  for (size_t i = 0u; i < kTotalNumSockets; i += kNumSocketsPerIteration)
+  for (size_t i = 0u; i < total_num_sockets; i += num_sockets_per_iteration)
   {
     for (size_t j = 0u; j < SACN_RECEIVER_MAX_SUBS_PER_SOCKET; ++j)
     {
-      EXPECT_EQ(context->num_socket_refs, j ? (i + kNumSocketsPerIteration) : i);
+      EXPECT_EQ(context->num_socket_refs, j ? (i + num_sockets_per_iteration) : i);
 
       std::vector<etcpal_socket_t> ipv4_sockets;
       EXPECT_EQ(AddReceiverSockets(0, kEtcPalIpTypeV4, universe, fake_v4_netint_ids_, ipv4_sockets), kEtcPalErrOk);
-      ASSERT_EQ(ipv4_sockets.size(), kNumSocketsPerAdd);
-      EXPECT_EQ(context->num_socket_refs, j ? (i + kNumSocketsPerIteration) : (i + kNumSocketsPerAdd));
-      for (size_t k = 0u; k < kNumSocketsPerAdd; ++k)
+      ASSERT_EQ(ipv4_sockets.size(), num_sockets_per_add);
+      EXPECT_EQ(context->num_socket_refs, j ? (i + num_sockets_per_iteration) : (i + num_sockets_per_add));
+      for (size_t k = 0u; k < num_sockets_per_add; ++k)
       {
         auto socket_refs = gsl::make_span(context->socket_refs, context->num_socket_refs);
         EXPECT_EQ(socket_refs[i + k].socket.ip_type, kEtcPalIpTypeV4);
@@ -531,16 +531,16 @@ TEST_F(TestSockets, AddReceiverSocketWorks)
 
       std::vector<etcpal_socket_t> ipv6_sockets;
       EXPECT_EQ(AddReceiverSockets(0, kEtcPalIpTypeV6, universe, fake_v6_netint_ids_, ipv6_sockets), kEtcPalErrOk);
-      ASSERT_EQ(ipv6_sockets.size(), kNumSocketsPerAdd);
-      EXPECT_EQ(context->num_socket_refs, i + (2u * kNumSocketsPerAdd));
-      for (size_t k = 0u; k < kNumSocketsPerAdd; ++k)
+      ASSERT_EQ(ipv6_sockets.size(), num_sockets_per_add);
+      EXPECT_EQ(context->num_socket_refs, i + (2u * num_sockets_per_add));
+      for (size_t k = 0u; k < num_sockets_per_add; ++k)
       {
         auto socket_refs = gsl::make_span(context->socket_refs, context->num_socket_refs);
-        EXPECT_EQ(socket_refs[i + kNumSocketsPerAdd + k].socket.ip_type, kEtcPalIpTypeV6);
-        EXPECT_EQ(socket_refs[i + kNumSocketsPerAdd + k].refcount, j + 1u);
-        EXPECT_EQ(socket_refs[i + kNumSocketsPerAdd + k].socket.handle, ipv6_sockets[k]);
+        EXPECT_EQ(socket_refs[i + num_sockets_per_add + k].socket.ip_type, kEtcPalIpTypeV6);
+        EXPECT_EQ(socket_refs[i + num_sockets_per_add + k].refcount, j + 1u);
+        EXPECT_EQ(socket_refs[i + num_sockets_per_add + k].socket.handle, ipv6_sockets[k]);
 #if SACN_RECEIVER_SOCKET_PER_NIC
-        EXPECT_EQ(socket_refs[i + kNumSocketsPerAdd + k].socket.ifindex, fake_v6_netints_[k]);
+        EXPECT_EQ(socket_refs[i + num_sockets_per_add + k].socket.ifindex, fake_v6_netints_[k]);
 #endif
       }
 
@@ -555,9 +555,9 @@ TEST_F(TestSockets, AddReceiverSocketBindsAfterRemoveUnbinds)
   static constexpr uint16_t         kUniverse = 1u;
 #if SACN_RECEIVER_SOCKET_PER_NIC && !SACN_RECEIVER_LIMIT_BIND
   ASSERT_EQ(fake_v4_netint_ids_.size(), fake_v6_netint_ids_.size());
-  const unsigned int kNumBindsPerAdd = static_cast<unsigned int>(fake_v4_netint_ids_.size());
+  const unsigned int num_binds_per_add = static_cast<unsigned int>(fake_v4_netint_ids_.size());
 #else
-  const unsigned int kNumBindsPerAdd = 1u;
+  const unsigned int num_binds_per_add = 1u;
 #endif
 
   std::vector<etcpal_socket_t> sockets;
@@ -567,7 +567,7 @@ TEST_F(TestSockets, AddReceiverSocketBindsAfterRemoveUnbinds)
 
   EXPECT_EQ(AddReceiverSockets(kThreadId, kEtcPalIpTypeV4, kUniverse, fake_v4_netint_ids_, sockets), kEtcPalErrOk);
 
-  expected_bind_count += kNumBindsPerAdd;
+  expected_bind_count += num_binds_per_add;
   EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
 
   RemoveReceiverSockets(kThreadId, sockets, kUniverse, fake_netint_ids_, kPerformAllSocketCleanupNow);
@@ -575,7 +575,7 @@ TEST_F(TestSockets, AddReceiverSocketBindsAfterRemoveUnbinds)
 
   EXPECT_EQ(AddReceiverSockets(kThreadId, kEtcPalIpTypeV4, kUniverse, fake_v4_netint_ids_, sockets), kEtcPalErrOk);
 
-  expected_bind_count += kNumBindsPerAdd;
+  expected_bind_count += num_binds_per_add;
   EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
 
   // Also consider queued close, which in this case is considered unbinding.
@@ -584,12 +584,12 @@ TEST_F(TestSockets, AddReceiverSocketBindsAfterRemoveUnbinds)
 
   EXPECT_EQ(AddReceiverSockets(kThreadId, kEtcPalIpTypeV4, kUniverse, fake_v4_netint_ids_, sockets), kEtcPalErrOk);
 
-  expected_bind_count += kNumBindsPerAdd;
+  expected_bind_count += num_binds_per_add;
   EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
 
   EXPECT_EQ(AddReceiverSockets(kThreadId, kEtcPalIpTypeV6, kUniverse, fake_v6_netint_ids_, sockets), kEtcPalErrOk);
 
-  expected_bind_count += kNumBindsPerAdd;
+  expected_bind_count += num_binds_per_add;
   EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
 
   RemoveReceiverSockets(kThreadId, sockets, kUniverse, fake_netint_ids_, kPerformAllSocketCleanupNow);
@@ -597,7 +597,7 @@ TEST_F(TestSockets, AddReceiverSocketBindsAfterRemoveUnbinds)
 
   EXPECT_EQ(AddReceiverSockets(kThreadId, kEtcPalIpTypeV6, kUniverse, fake_v6_netint_ids_, sockets), kEtcPalErrOk);
 
-  expected_bind_count += kNumBindsPerAdd;
+  expected_bind_count += num_binds_per_add;
   EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
 
   RemoveReceiverSockets(kThreadId, sockets, kUniverse, fake_netint_ids_, kQueueSocketCleanup);
@@ -605,7 +605,7 @@ TEST_F(TestSockets, AddReceiverSocketBindsAfterRemoveUnbinds)
 
   EXPECT_EQ(AddReceiverSockets(kThreadId, kEtcPalIpTypeV6, kUniverse, fake_v6_netint_ids_, sockets), kEtcPalErrOk);
 
-  expected_bind_count += kNumBindsPerAdd;
+  expected_bind_count += num_binds_per_add;
   EXPECT_EQ(etcpal_bind_fake.call_count, expected_bind_count);
 }
 
@@ -941,7 +941,7 @@ TEST_F(TestSockets, AddAllNetintsToSamplingPeriodWorks)
 TEST_F(TestSockets, SendTransmitsMinimumLength)
 {
   constexpr uint16_t        kTestUniverseId = 123u;
-  const EtcPalIpAddr        kTestAddr       = etcpal::IpAddr::FromString("10.101.40.50").get();
+  const EtcPalIpAddr        test_addr       = etcpal::IpAddr::FromString("10.101.40.50").get();
   static constexpr uint16_t kTestLength     = 123u;
 
   std::array<uint8_t, kSacnMtu> send_buf{};
@@ -957,7 +957,7 @@ TEST_F(TestSockets, SendTransmitsMinimumLength)
   etcpal_error_t tmp_err = kEtcPalErrOk;
   EXPECT_EQ(sacn_send_multicast(kTestUniverseId, kSacnIpV4AndIpV6, send_buf.data(), fake_netint_ids_.data()),
             kEtcPalErrOk);
-  EXPECT_EQ(sacn_send_unicast(kSacnIpV4AndIpV6, send_buf.data(), &kTestAddr, &tmp_err), kEtcPalErrOk);
+  EXPECT_EQ(sacn_send_unicast(kSacnIpV4AndIpV6, send_buf.data(), &test_addr, &tmp_err), kEtcPalErrOk);
 
   EXPECT_EQ(etcpal_sendto_fake.call_count, 2u);
 }
