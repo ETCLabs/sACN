@@ -696,48 +696,48 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_handle), kEtcPalErrOk);
 
   // Make constants for source data about to be fed in.
-  const uint8_t kSource1Value     = 50;
-  const uint8_t kSource2Value     = 70;
-  const uint8_t kSource1Priority  = 128;
-  const uint8_t kSource2Priority1 = 1;    // This should be less than kSource1Priority.
-  const uint8_t kSource2Priority2 = 255;  // This should be greater than kSource1Priority.
+  const uint8_t source_1_value      = 50;
+  const uint8_t source_2_value      = 70;
+  const uint8_t source_1_priority   = 128;
+  const uint8_t source_2_priority_1 = 1;    // This should be less than source_1_priority.
+  const uint8_t source_2_priority_2 = 255;  // This should be greater than source_1_priority.
 
   // Feed in data from source 1 with a universe priority.
-  uint8_t priority        = kSource1Priority;
-  auto    source_1_values = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS, kSource1Value);
+  uint8_t priority        = source_1_priority;
+  auto    source_1_values = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS, source_1_value);
 
   UpdateLevels(source_1_handle, source_1_values);
   UpdateUniversePriority(source_1_handle, priority);
 
   // Feed in data from source 2 with per-address-priorities, one half lower and one half higher.
-  auto source_2_values         = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS, kSource2Value);
-  auto source_2_priorities     = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS / 2, kSource2Priority1);
-  auto source_2_priorities_pt2 = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS / 2, kSource2Priority2);
+  auto source_2_values         = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS, source_2_value);
+  auto source_2_priorities     = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS / 2, source_2_priority_1);
+  auto source_2_priorities_pt2 = std::vector<uint8_t>(SACN_DMX_MERGER_MAX_SLOTS / 2, source_2_priority_2);
   source_2_priorities.insert(source_2_priorities.end(), source_2_priorities_pt2.begin(), source_2_priorities_pt2.end());
 
   UpdateLevels(source_2_handle, source_2_values);
   UpdatePap(source_2_handle, source_2_priorities);
-  UpdateUniversePriority(source_2_handle, kSource2Priority2);
+  UpdateUniversePriority(source_2_handle, source_2_priority_2);
 
   // Before removing a source, check the output.
   for (int i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
   {
     if (i < (SACN_DMX_MERGER_MAX_SLOTS / 2))
     {
-      EXPECT_EQ(merger_config_.levels[i], kSource1Value);
-      EXPECT_EQ(merger_config_.per_address_priorities[i], kSource1Priority);
+      EXPECT_EQ(merger_config_.levels[i], source_1_value);
+      EXPECT_EQ(merger_config_.per_address_priorities[i], source_1_priority);
       EXPECT_EQ(merger_config_.owners[i], source_1_handle);
     }
     else
     {
-      EXPECT_EQ(merger_config_.levels[i], kSource2Value);
-      EXPECT_EQ(merger_config_.per_address_priorities[i], kSource2Priority2);
+      EXPECT_EQ(merger_config_.levels[i], source_2_value);
+      EXPECT_EQ(merger_config_.per_address_priorities[i], source_2_priority_2);
       EXPECT_EQ(merger_config_.owners[i], source_2_handle);
     }
   }
 
   EXPECT_TRUE(*merger_config_.per_address_priorities_active);
-  EXPECT_EQ(*merger_config_.universe_priority, kSource2Priority2);
+  EXPECT_EQ(*merger_config_.universe_priority, source_2_priority_2);
 
   // Now remove source 2 and confirm success.
   EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_2_handle), kEtcPalErrOk);
@@ -745,13 +745,13 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
   // The output should be just source 1 now.
   for (int i = 0; i < SACN_DMX_MERGER_MAX_SLOTS; ++i)
   {
-    EXPECT_EQ(merger_config_.levels[i], kSource1Value);
-    EXPECT_EQ(merger_config_.per_address_priorities[i], kSource1Priority);
+    EXPECT_EQ(merger_config_.levels[i], source_1_value);
+    EXPECT_EQ(merger_config_.per_address_priorities[i], source_1_priority);
     EXPECT_EQ(merger_config_.owners[i], source_1_handle);
   }
 
   EXPECT_FALSE(*merger_config_.per_address_priorities_active);
-  EXPECT_EQ(*merger_config_.universe_priority, kSource1Priority);
+  EXPECT_EQ(*merger_config_.universe_priority, source_1_priority);
 
   // Now remove source 1 and confirm success.
   EXPECT_EQ(sacn_dmx_merger_remove_source(merger_handle_, source_1_handle), kEtcPalErrOk);
