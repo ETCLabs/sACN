@@ -1322,8 +1322,9 @@ MergerState* construct_merger_state(sacn_dmx_merger_t handle, const SacnDmxMerge
     // Initialize merger state.
     merger_state->handle = handle;
 
-    const int kMaxValidHandleValue = 0xffff - 1;  // This is the max VALID value, therefore invalid - 1 (0xffff - 1)
-    init_int_handle_manager(&merger_state->source_handle_mgr, kMaxValidHandleValue, source_handle_in_use, merger_state);
+    const int max_valid_handle_value = 0xffff - 1;  // This is the max VALID value, therefore invalid - 1 (0xffff - 1)
+    init_int_handle_manager(&merger_state->source_handle_mgr, max_valid_handle_value, source_handle_in_use,
+                            merger_state);
 
     etcpal_rbtree_init(&merger_state->source_state_lookup, source_state_lookup_compare_func,
                        dmx_merger_rb_node_alloc_func, dmx_merger_rb_node_dealloc_func);
