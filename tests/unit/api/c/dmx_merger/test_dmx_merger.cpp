@@ -1369,6 +1369,28 @@ TEST_F(TestDmxMergerUpdate, StopSourcePapWorks)
   VerifyMergeResults();
 }
 
+TEST_F(TestDmxMergerUpdate, ShortPapAfterRemovePapReleasesTrailingSlots)
+{
+  static constexpr size_t kShortPapCount = 10u;
+  ASSERT_LT(kShortPapCount, static_cast<size_t>(SACN_DMX_MERGER_MAX_SLOTS));
+
+  const std::vector<uint8_t> full_levels(SACN_DMX_MERGER_MAX_SLOTS, 77u);
+  const std::vector<uint8_t> first_pap(kShortPapCount, 200u);
+  const std::vector<uint8_t> second_pap(kShortPapCount, 150u);
+
+  UpdateLevels(merge_source_1_, full_levels);
+  UpdateUniversePriority(merge_source_1_, kValidPriority);
+
+  UpdatePap(merge_source_1_, first_pap);
+
+  EXPECT_EQ(sacn_dmx_merger_remove_pap(merger_handle_, merge_source_1_), kEtcPalErrOk);
+
+  UpdatePap(merge_source_1_, second_pap);
+
+  UpdateExpectedMergeResults(merge_source_1_, kValidPriority, full_levels, second_pap);
+  VerifyMergeResults();
+}
+
 TEST_F(TestDmxMerger, StopSourcePapErrNotFoundWorks)
 {
   sacn_dmx_merger_source_t source = kSacnDmxMergerSourceInvalid;
