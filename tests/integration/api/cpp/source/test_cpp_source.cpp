@@ -271,18 +271,18 @@ TEST_F(TestSource, AddUniverseHandlesTerminationCorrectly)
 
 TEST_F(TestSource, AddUnicastDestHandlesTerminationCorrectly)
 {
-  const etcpal::IpAddr kTestAddr = etcpal::IpAddr::FromString("10.101.1.1");
+  const etcpal::IpAddr test_addr = etcpal::IpAddr::FromString("10.101.1.1");
 
   Start();
   EXPECT_EQ(source_.AddUniverse(Source::UniverseSettings(kTestUniverse)).code(), kEtcPalErrOk);
 
-  EXPECT_EQ(source_.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrOk);
+  EXPECT_EQ(source_.AddUnicastDestination(kTestUniverse, test_addr).code(), kEtcPalErrOk);
   source_.UpdateLevels(kTestUniverse, kTestBuffer.data(), kTestBuffer.size());
-  EXPECT_EQ(source_.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrExists);
+  EXPECT_EQ(source_.AddUnicastDestination(kTestUniverse, test_addr).code(), kEtcPalErrExists);
   source_.UpdateLevels(kTestUniverse, nullptr, 0u);
-  EXPECT_EQ(source_.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrExists);
-  source_.RemoveUnicastDestination(kTestUniverse, kTestAddr);
-  EXPECT_EQ(source_.AddUnicastDestination(kTestUniverse, kTestAddr).code(), kEtcPalErrOk);
+  EXPECT_EQ(source_.AddUnicastDestination(kTestUniverse, test_addr).code(), kEtcPalErrExists);
+  source_.RemoveUnicastDestination(kTestUniverse, test_addr);
+  EXPECT_EQ(source_.AddUnicastDestination(kTestUniverse, test_addr).code(), kEtcPalErrOk);
 }
 
 TEST_F(TestSource, UniverseRemovalUsesOldNetintsAsAllowedByPerUniverseReset)

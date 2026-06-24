@@ -696,11 +696,11 @@ TEST_F(TestDmxMerger, RemoveSourceUpdatesMergeOutput)
   EXPECT_EQ(sacn_dmx_merger_add_source(merger_handle_, &source_2_handle), kEtcPalErrOk);
 
   // Make constants for source data about to be fed in.
-  const uint8_t kSource1Value     = 50;
-  const uint8_t kSource2Value     = 70;
-  const uint8_t kSource1Priority  = 128;
-  const uint8_t kSource2Priority1 = 1;    // This should be less than kSource1Priority.
-  const uint8_t kSource2Priority2 = 255;  // This should be greater than kSource1Priority.
+  static constexpr uint8_t kSource1Value     = 50;
+  static constexpr uint8_t kSource2Value     = 70;
+  static constexpr uint8_t kSource1Priority  = 128;
+  static constexpr uint8_t kSource2Priority1 = 1;    // This should be less than kSource1Priority.
+  static constexpr uint8_t kSource2Priority2 = 255;  // This should be greater than kSource1Priority.
 
   // Feed in data from source 1 with a universe priority.
   uint8_t priority        = kSource1Priority;

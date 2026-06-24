@@ -68,7 +68,10 @@ enum
   /* How long to wait for a 0xdd packet once a new source is discovered */
   kSacnWaitForPriority = 1500,
   /* Length of the sampling period for a new universe */
-  kSacnSampleTime = 1500
+  kSacnSampleTime = 1500,
+
+  /* This is the max VALID value, therefore invalid - 1 (0xFFFF - 1) */
+  kSacnMaxValidSourceHandleValue = 0xFFFF - 1
 };
 
 /*

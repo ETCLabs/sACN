@@ -2187,8 +2187,8 @@ TEST_F(TestSourceState, SetSourceNameWorks)
 
 TEST_F(TestSourceState, GetSourceUniversesWorks)
 {
-  const size_t kNumUniverses  = 7u;
-  const size_t kContainerSize = kNumUniverses * 2u;
+  static constexpr size_t kNumUniverses  = 7u;
+  static constexpr size_t kContainerSize = kNumUniverses * 2u;
 
   sacn_source_t source = AddSource(kTestSourceConfig);
 
