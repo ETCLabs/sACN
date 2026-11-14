@@ -20,6 +20,7 @@
 #include "sacn/private/source_detector_state.h"
 
 #include <array>
+#include <vector>
 #include "etcpal_mock/common.h"
 #include "etcpal_mock/timer.h"
 #include "etcpal/cpp/error.h"
@@ -471,4 +472,54 @@ TEST_F(TestSourceDetectorState, SourceUpdatedFiltersNonAscendingLists)
   EXPECT_EQ(source_updated_fake.call_count, 1u);
   ProcessUniverseDiscoveryPages(test_cid, ascending_list);
   EXPECT_EQ(source_updated_fake.call_count, 2u);
+}
+
+// SACN-405: A universe discovery packet declaring a PDU length larger than the received datagram must be ignored,
+// without reading past the end of the datagram.
+TEST_F(TestSourceDetectorState, IgnoresUniverseDiscoveryLengthLargerThanBuffer)
+{
+  static const std::vector<uint16_t> kUniversesInPacket = {1u, 2u, 3u, 4u};
+
+  // Exactly-sized heap buffer so that any read past the end is caught by AddressSanitizer.
+  std::vector<uint8_t> buf(8u + (kUniversesInPacket.size() * 2u));
+  CreateUniverseDiscoveryBuffer(kUniversesInPacket.data(), kUniversesInPacket.size(), 0u, 0u, buf.data());
+  uint8_t* const pdu = buf.data();
+  // Not a constant expression - passing a constant > 0xFF to ACN_PDU_PACK_NORMAL_LEN() trips MSVC warning C4310.
+  uint16_t declared_length = 0xFFFu;  // Lie about the length
+  ACN_PDU_PACK_NORMAL_LEN(pdu, declared_length);
+
+  etcpal::Uuid          cid = etcpal::Uuid::V4();
+  SacnRecvThreadContext context;
+  context.source_detector = detector_;
+  handle_sacn_universe_discovery_packet(&context, buf.data(), buf.size(), &cid.get(), &kTestSourceAddr,
+                                        kTestName.c_str());
+
+  EXPECT_EQ(source_updated_fake.call_count, 0u);
+  EXPECT_EQ(limit_exceeded_fake.call_count, 0u);
+}
+
+// SACN-405: A universe discovery packet with more than SACN_MAX_UNIVERSES_PER_PAGE universes must be ignored, without
+// overflowing the universe buffer (a fixed-size stack buffer in static memory builds).
+TEST_F(TestSourceDetectorState, IgnoresUniverseDiscoveryPageLargerThanMax)
+{
+  static constexpr size_t kMaxPduLength         = 0xFFFu;
+  static constexpr size_t kNumUniversesInPacket = (kMaxPduLength - 8u) / 2u;  // 2043
+  static_assert(kNumUniversesInPacket > SACN_MAX_UNIVERSES_PER_PAGE, "Test must exceed the per-page maximum");
+
+  std::vector<uint16_t> universes_in_packet;
+  for (size_t i = 0u; i < kNumUniversesInPacket; ++i)
+    universes_in_packet.push_back(static_cast<uint16_t>(i + 1u));
+
+  std::vector<uint8_t> buf(8u + (kNumUniversesInPacket * 2u));
+  size_t               buf_len =
+      CreateUniverseDiscoveryBuffer(universes_in_packet.data(), universes_in_packet.size(), 0u, 0u, buf.data());
+  ASSERT_EQ(buf_len, buf.size());
+
+  etcpal::Uuid          cid = etcpal::Uuid::V4();
+  SacnRecvThreadContext context;
+  context.source_detector = detector_;
+  handle_sacn_universe_discovery_packet(&context, buf.data(), buf_len, &cid.get(), &kTestSourceAddr, kTestName.c_str());
+
+  EXPECT_EQ(source_updated_fake.call_count, 0u);
+  EXPECT_EQ(limit_exceeded_fake.call_count, 0u);
 }

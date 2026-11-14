@@ -20,6 +20,7 @@
 #include "sacn/private/pdu.h"
 
 #include <array>
+#include <vector>
 #include <gsl/span>
 #include <string_view>
 #include "etcpal/cpp/uuid.h"
@@ -511,4 +512,77 @@ TEST_F(TestPdu, PackSacnDmpLayerHeaderWorks)
   TestPackDmpLayerHeader(0x12, 0x3456);
   TestPackDmpLayerHeader(0xFE, 0xDCBA);
   TestPackDmpLayerHeader(0xFF, 0xFFFF);
+}
+
+// SACN-405: A universe discovery layer that declares a PDU length larger than the received buffer must be rejected.
+TEST_F(TestPdu, ParseSacnUniverseDiscoveryLayerRejectsLengthLargerThanBuffer)
+{
+  static constexpr size_t kNumUniversesInBuffer = 4u;
+
+  // Exactly-sized heap buffer so that any read past the end is caught by AddressSanitizer.
+  std::vector<uint8_t> buf(8u + (kNumUniversesInBuffer * 2u));
+  ACN_PDU_SET_V_FLAG(buf[0]);
+  ACN_PDU_SET_H_FLAG(buf[0]);
+  ACN_PDU_SET_D_FLAG(buf[0]);
+  uint8_t* const pdu = buf.data();
+  // Not a constant expression - passing a constant > 0xFF to ACN_PDU_PACK_NORMAL_LEN() trips MSVC warning C4310.
+  uint16_t declared_length = 0xFFFu;  // Maximum declared length - far larger than buf
+  ACN_PDU_PACK_NORMAL_LEN(pdu, declared_length);
+  etcpal_pack_u32b(&buf[2], VECTOR_UNIVERSE_DISCOVERY_UNIVERSE_LIST);
+  buf[6] = 0u;  // page
+  buf[7] = 0u;  // last page
+  for (size_t i = 0u; i < kNumUniversesInBuffer; ++i)
+    etcpal_pack_u16b(&buf[8u + (i * 2u)], static_cast<uint16_t>(i + 1u));
+
+  int            page          = -1;
+  int            last_page     = -1;
+  const uint8_t* universes     = nullptr;
+  size_t         num_universes = 0u;
+  EXPECT_FALSE(
+      parse_sacn_universe_discovery_layer(buf.data(), buf.size(), &page, &last_page, &universes, &num_universes));
+  EXPECT_EQ(universes, nullptr);
+  EXPECT_EQ(num_universes, 0u);
+
+  // Don't stop on a bad result - feed the library's outputs into the library's list parser, so that an over-count
+  // reads past the end of the datagram within the library (caught by AddressSanitizer).
+  std::vector<uint16_t> universe_list(num_universes);
+  EXPECT_TRUE(parse_sacn_universe_list(universes, num_universes, universe_list.data()));
+}
+
+// SACN-405: A universe discovery layer with more than SACN_MAX_UNIVERSES_PER_PAGE universes must be rejected, since
+// callers (e.g. static memory builds) parse the universe list into a buffer of that size.
+TEST_F(TestPdu, ParseSacnUniverseDiscoveryLayerRejectsMoreThanMaxUniversesPerPage)
+{
+  static constexpr size_t kMaxPduLength         = 0xFFFu;
+  static constexpr size_t kNumUniversesInBuffer = (kMaxPduLength - 8u) / 2u;  // 2043
+  static_assert(kNumUniversesInBuffer > SACN_MAX_UNIVERSES_PER_PAGE, "Test must exceed the per-page maximum");
+
+  std::vector<uint8_t> buf(kMaxPduLength);
+  ACN_PDU_SET_V_FLAG(buf[0]);
+  ACN_PDU_SET_H_FLAG(buf[0]);
+  ACN_PDU_SET_D_FLAG(buf[0]);
+  uint8_t* const pdu = buf.data();
+  // Not a constant expression - passing a constant > 0xFF to ACN_PDU_PACK_NORMAL_LEN() trips MSVC warning C4310.
+  size_t declared_length = kMaxPduLength;
+  ACN_PDU_PACK_NORMAL_LEN(pdu, declared_length);
+  etcpal_pack_u32b(&buf[2], VECTOR_UNIVERSE_DISCOVERY_UNIVERSE_LIST);
+  buf[6] = 0u;  // page
+  buf[7] = 0u;  // last page
+  for (size_t i = 0u; i < kNumUniversesInBuffer; ++i)
+    etcpal_pack_u16b(&buf[8u + (i * 2u)], static_cast<uint16_t>(i + 1u));
+
+  int            page          = -1;
+  int            last_page     = -1;
+  const uint8_t* universes     = nullptr;
+  size_t         num_universes = 0u;
+  EXPECT_FALSE(
+      parse_sacn_universe_discovery_layer(buf.data(), buf.size(), &page, &last_page, &universes, &num_universes));
+  EXPECT_EQ(universes, nullptr);
+  EXPECT_EQ(num_universes, 0u);
+
+  // Don't stop on a bad result - feed the library's outputs into the library's list parser with a
+  // SACN_MAX_UNIVERSES_PER_PAGE-sized buffer (as the static-memory caller does), so that an over-count writes past the
+  // end of the buffer within the library (caught by AddressSanitizer).
+  std::array<uint16_t, SACN_MAX_UNIVERSES_PER_PAGE> universe_list{};
+  EXPECT_TRUE(parse_sacn_universe_list(universes, num_universes, universe_list.data()));
 }

@@ -18,7 +18,12 @@ function(sacn_test_setup target_name config_dir)
     target_clang_tidy(${target_name})
   endif()
   set_target_properties(${target_name} PROPERTIES CXX_STANDARD 20 FOLDER tests)
-  gtest_discover_tests(${target_name} EXTRA_ARGS "--gtest_output=xml:${TEST_BIN_DIR}/test-results/")
+  # Generous discovery timeout: on busy macOS CI runners, the first launch of a freshly linked binary
+  # (code signature verification / malware scan) can exceed the 5 second default.
+  gtest_discover_tests(${target_name}
+    EXTRA_ARGS "--gtest_output=xml:${TEST_BIN_DIR}/test-results/"
+    DISCOVERY_TIMEOUT 60
+  )
 endfunction()
 
 function(sacn_add_test test_name config_dir)

@@ -123,10 +123,18 @@ bool parse_sacn_universe_discovery_layer(const uint8_t*  buf,
   if (etcpal_unpack_u32b(&buf[2]) != VECTOR_UNIVERSE_DISCOVERY_UNIVERSE_LIST)
     return false;
 
+  // SACN-405 - Open-source library ETCLabs/sACN out-of-bounds READ & WRITE on embedded platforms
+  size_t universe_count  = (size_t)(pdu_length - 8) / 2;
+  size_t max_from_buflen = (buflen - 8) / 2;
+  if (universe_count > max_from_buflen)
+    return false;
+  if (universe_count > SACN_MAX_UNIVERSES_PER_PAGE)  // See universes[] in handle_sacn_universe_discovery_packet()
+    return false;
+
   *page          = buf[6];
   *last_page     = buf[7];
   *universes     = (buflen > kSacnUniverseDiscoveryLayerMinSize) ? &buf[8] : NULL;
-  *num_universes = (pdu_length - 8) / 2;
+  *num_universes = universe_count;
 
   return true;
 }
