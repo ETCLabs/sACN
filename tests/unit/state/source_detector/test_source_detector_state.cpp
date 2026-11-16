@@ -168,6 +168,29 @@ protected:
     return static_cast<size_t>(pcur - buffer);  // Bytes written
   }
 
+  // Hands the library a single-page universe discovery PDU listing universes 1..num_universes. The heap buffer is
+  // exactly (declared PDU length + buf_len_delta) bytes, so AddressSanitizer catches any read past its end.
+  void ProcessUniverseDiscoveryPageWithBufLenDelta(size_t num_universes, int buf_len_delta)
+  {
+    std::vector<uint16_t> universes;
+    for (size_t i = 0u; i < num_universes; ++i)
+      universes.push_back(static_cast<uint16_t>(i + 1u));
+
+    // 8 bytes of universe discovery layer header (flags & length: 2, vector: 4, page: 1, last page: 1), plus 2 bytes
+    // per universe, plus 1 spare zero byte so buf can extend one byte past the PDU when buf_len_delta is +1.
+    std::vector<uint8_t> full(8u + (num_universes * 2u) + 1u);
+    // Page 0 of 0, i.e. a complete single-page list.
+    size_t pdu_len = CreateUniverseDiscoveryBuffer(universes.data(), universes.size(), 0u, 0u, full.data());
+
+    std::vector<uint8_t> buf(full.begin(), full.begin() + static_cast<std::ptrdiff_t>(pdu_len) + buf_len_delta);
+
+    etcpal::Uuid          cid = etcpal::Uuid::V4();
+    SacnRecvThreadContext context;
+    context.source_detector = detector_;
+    handle_sacn_universe_discovery_packet(&context, buf.data(), buf.size(), &cid.get(), &kTestSourceAddr,
+                                          kTestName.c_str());
+  }
+
   void ProcessSourceDetector()
   {
     SacnRecvThreadContext context;
@@ -520,6 +543,62 @@ TEST_F(TestSourceDetectorState, IgnoresUniverseDiscoveryPageLargerThanMax)
   context.source_detector = detector_;
   handle_sacn_universe_discovery_packet(&context, buf.data(), buf_len, &cid.get(), &kTestSourceAddr, kTestName.c_str());
 
+  EXPECT_EQ(source_updated_fake.call_count, 0u);
+  EXPECT_EQ(limit_exceeded_fake.call_count, 0u);
+}
+
+// SACN-405 boundary tests: buffer exactly the declared PDU length, one byte larger, and one byte smaller.
+static size_t expected_num_universes = 0u;
+
+static void ExpectUniverses1ToN(sacn_remote_source_t /*handle*/,
+                                const EtcPalUuid* /*cid*/,
+                                const char* /*name*/,
+                                const uint16_t* sourced_universes,
+                                size_t          num_sourced_universes,
+                                void* /*context*/)
+{
+  ASSERT_EQ(num_sourced_universes, expected_num_universes);
+  for (size_t i = 0u; i < num_sourced_universes; ++i)
+    EXPECT_EQ(sourced_universes[i], static_cast<uint16_t>(i + 1u));
+}
+
+TEST_F(TestSourceDetectorState, AcceptsUniverseDiscoveryBufferExactlyPduLength)
+{
+  expected_num_universes          = 4u;
+  source_updated_fake.custom_fake = ExpectUniverses1ToN;
+  ProcessUniverseDiscoveryPageWithBufLenDelta(expected_num_universes, 0);
+  EXPECT_EQ(source_updated_fake.call_count, 1u);
+}
+
+TEST_F(TestSourceDetectorState, AcceptsUniverseDiscoveryBufferOneByteLargerThanPduLength)
+{
+  expected_num_universes          = 4u;
+  source_updated_fake.custom_fake = ExpectUniverses1ToN;
+  ProcessUniverseDiscoveryPageWithBufLenDelta(expected_num_universes, 1);
+  EXPECT_EQ(source_updated_fake.call_count, 1u);
+}
+
+TEST_F(TestSourceDetectorState, IgnoresUniverseDiscoveryBufferOneByteSmallerThanPduLength)
+{
+  ProcessUniverseDiscoveryPageWithBufLenDelta(4u, -1);
+  EXPECT_EQ(source_updated_fake.call_count, 0u);
+  EXPECT_EQ(limit_exceeded_fake.call_count, 0u);
+}
+
+// SACN-405 boundary tests: exactly SACN_MAX_UNIVERSES_PER_PAGE universes, and one more than that.
+TEST_F(TestSourceDetectorState, AcceptsUniverseDiscoveryPageOfExactlyMax)
+{
+  ASSERT_LE(SACN_MAX_UNIVERSES_PER_PAGE, kTestMaxUniverses);
+  expected_num_universes          = SACN_MAX_UNIVERSES_PER_PAGE;
+  source_updated_fake.custom_fake = ExpectUniverses1ToN;
+  ProcessUniverseDiscoveryPageWithBufLenDelta(expected_num_universes, 0);
+  EXPECT_EQ(source_updated_fake.call_count, 1u);
+}
+
+TEST_F(TestSourceDetectorState, IgnoresUniverseDiscoveryPageOneMoreThanMax)
+{
+  ASSERT_LE(SACN_MAX_UNIVERSES_PER_PAGE + 1, kTestMaxUniverses);
+  ProcessUniverseDiscoveryPageWithBufLenDelta(SACN_MAX_UNIVERSES_PER_PAGE + 1u, 0);
   EXPECT_EQ(source_updated_fake.call_count, 0u);
   EXPECT_EQ(limit_exceeded_fake.call_count, 0u);
 }
